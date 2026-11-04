@@ -40,6 +40,23 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
+/**
+ * Dial design experiments, switchable on a debug build without a rebuild:
+ * `adb shell setprop debug.ts.dial BGSH` then relaunch. B bezel (0 none, 1 ring, 2 disc, 3 scallop),
+ * G graduations (0 none, 1 eight dots, 2 dots every 15°, 3 fine ticks), S sky marks (0 hidden, 1 shown),
+ * H hub (0 none, 1 circle, 2 cookie 12, 3 cookie 9, 4 sunny).
+ */
+object DialVariant {
+    val code: String = runCatching {
+        Class.forName("android.os.SystemProperties").getMethod("get", String::class.java)
+            .invoke(null, "debug.ts.dial") as String
+    }.getOrNull()?.takeIf { it.length == 4 && it.all(Char::isDigit) } ?: "1312"
+    val bezel get() = code[0].digitToInt()
+    val graduations get() = code[1].digitToInt()
+    val sky get() = code[2] == '1'
+    val hub get() = code[3].digitToInt()
+}
+
 class RadarCompassView(
     context: Context
 ) : BaseCompassView(context) {
@@ -103,8 +120,8 @@ class RadarCompassView(
         numVerticesPerRadius = 18,
         radius = 1f,
         innerRadius = 0.96f,
-        rounding = androidx.graphics.shapes.CornerRounding(0.09f, smoothing = 1f),
-        innerRounding = androidx.graphics.shapes.CornerRounding(0.09f, smoothing = 1f)
+        rounding = androidx.graphics.shapes.CornerRounding(0.09f),
+        innerRounding = androidx.graphics.shapes.CornerRounding(0.09f)
     )
 
     @Composable
@@ -174,7 +191,7 @@ class RadarCompassView(
 
     /** The dial's outer radius: the whole canvas, so sky marks and beacons ride on the bezel's outer edge. */
     private val outerRadius: Float
-        get() = min(canvasWidth, canvasHeight) / 2f
+        get() = min(canvasWidth, canvasHeight) / 2f - iconSize * 0.8f
 
     private fun drawRadar() {
         val nativeCanvas = canvas ?: return
@@ -183,8 +200,11 @@ class RadarCompassView(
         if (shouldDrawDial) drawBezel(nativeCanvas)
         drawCompassLayers()
         if (shouldDrawDial) {
-            drawDots(nativeCanvas)
-            drawHub(nativeCanvas)
+            when (DialVariant.graduations) {
+                1, 2 -> drawDots(nativeCanvas, if (DialVariant.graduations == 1) 45 else 15)
+                3 -> drawFineTicks(nativeCanvas)
+            }
+            if (DialVariant.hub != 0) drawHub(nativeCanvas)
             drawCardinalDirections(nativeCanvas)
         }
         drawRangeLabel(nativeCanvas)
@@ -199,7 +219,7 @@ class RadarCompassView(
         paint.isAntiAlias = true
         paint.isFilterBitmap = true
         paint.colorFilter = PorterDuffColorFilter(primaryColor, PorterDuff.Mode.SRC_IN)
-        nativeCanvas.drawBitmap(bitmap, canvasWidth / 2f - iconSize / 2f, centerPixel.y - outerRadius - iconSize * 0.55f, paint)
+        nativeCanvas.drawBitmap(bitmap, canvasWidth / 2f - iconSize / 2f, centerPixel.y - outerRadius - iconSize * 0.75f, paint)
         paint.colorFilter = null
     }
 
@@ -209,6 +229,26 @@ class RadarCompassView(
      */
     private fun drawBezel(nativeCanvas: AndroidCanvas) {
         val r = outerRadius
+        when (DialVariant.bezel) {
+            0 -> return
+            1 -> {
+                paint.reset()
+                paint.isAntiAlias = true
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = dp(2f)
+                paint.color = secondaryColor
+                nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, r * DOT_RING, paint)
+                return
+            }
+            2 -> {
+                paint.reset()
+                paint.isAntiAlias = true
+                paint.style = Paint.Style.FILL
+                paint.color = secondaryColor
+                nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, r * DOT_RING + dp(4f), paint)
+                return
+            }
+        }
         val path = bezelPolygon.toPath().apply {
             transform(android.graphics.Matrix().apply {
                 setScale(r, r)
@@ -223,12 +263,33 @@ class RadarCompassView(
     }
 
     /** A ring of dots every 15°, larger every 45°: graduations that read at a glance without 72 hairlines. */
-    private fun drawDots(nativeCanvas: AndroidCanvas) {
+    /** Fine ticks every 5°, longer every 45°, the classic instrument graduation. */
+    private fun drawFineTicks(nativeCanvas: AndroidCanvas) {
+        paint.reset()
+        paint.isAntiAlias = true
+        paint.style = Paint.Style.STROKE
+        paint.strokeCap = Paint.Cap.ROUND
+        val outer = outerRadius * DOT_RING
+        for (degrees in 0 until 360 step 5) {
+            if (degrees % 90 == 0) continue
+            val major = degrees % 45 == 0
+            paint.color = textColor
+            paint.alpha = if (major) 220 else 80
+            paint.strokeWidth = if (major) dp(2.5f) else dp(1.2f)
+            val len = if (major) dp(12f) else dp(7f)
+            val rad = Math.toRadians((degrees - 90).toDouble())
+            val c = cos(rad).toFloat()
+            val sn = sin(rad).toFloat()
+            nativeCanvas.drawLine(centerPixel.x + c * outer, centerPixel.y + sn * outer, centerPixel.x + c * (outer - len), centerPixel.y + sn * (outer - len), paint)
+        }
+    }
+
+    private fun drawDots(nativeCanvas: AndroidCanvas, step: Int) {
         paint.reset()
         paint.isAntiAlias = true
         paint.style = Paint.Style.FILL
         val radius = outerRadius * DOT_RING
-        for (degrees in 0 until 360 step 15) {
+        for (degrees in 0 until 360 step step) {
             if (degrees % 90 == 0) continue
             val major = degrees % 45 == 0
             paint.color = textColor
@@ -249,7 +310,13 @@ class RadarCompassView(
      */
     private fun drawHub(nativeCanvas: AndroidCanvas) {
         val side = outerRadius * 2f * HUB
-        val path = hubPolygon.toPath().apply {
+        val polygon = when (DialVariant.hub) {
+            1 -> androidx.compose.material3.MaterialShapes.Circle
+            3 -> androidx.compose.material3.MaterialShapes.Cookie9Sided
+            4 -> androidx.compose.material3.MaterialShapes.Sunny
+            else -> hubPolygon
+        }
+        val path = polygon.toPath().apply {
             transform(android.graphics.Matrix().apply {
                 setScale(side, side)
                 postTranslate(centerPixel.x - side / 2f, centerPixel.y - side / 2f)
@@ -291,7 +358,7 @@ class RadarCompassView(
     }
 
     private fun drawDirection(nativeCanvas: AndroidCanvas, degrees: Float, text: String, isNorth: Boolean) {
-        val radius = outerRadius * DOT_RING
+        val radius = outerRadius * LETTER_RING
         val rad = Math.toRadians((degrees - 90).toDouble())
         val x = centerPixel.x + cos(rad).toFloat() * radius
         val y = centerPixel.y + sin(rad).toFloat() * radius
@@ -303,7 +370,7 @@ class RadarCompassView(
         if (isNorth) {
             paint.style = Paint.Style.FILL
             paint.color = primaryColor
-            nativeCanvas.drawCircle(x, y, cardinalSize * 0.95f, paint)
+            nativeCanvas.drawCircle(x, y, cardinalSize * 0.9f, paint)
         }
         paint.color = if (isNorth) onPrimaryColor else textColor
         paint.textSize = cardinalSize
@@ -320,6 +387,9 @@ class RadarCompassView(
         if (reference.opacity == 0f) {
             return
         }
+        if (!DialVariant.sky && reference.icon != TrailIcons.ArrowTarget && reference.tint == null) {
+            return
+        }
 
         val bitmap = getBitmap(reference.icon, sizeDp)
         paint.reset()
@@ -332,7 +402,7 @@ class RadarCompassView(
 
         nativeCanvas.save()
         nativeCanvas.rotate(reference.bearing, centerPixel.x, centerPixel.y)
-        nativeCanvas.translate(centerPixel.x, centerPixel.y - outerRadius + iconSize / 2f + dp(5f))
+        nativeCanvas.translate(centerPixel.x, centerPixel.y - outerRadius * MARK_RING)
         // The sun and moon ride the rim on a small disc of their own (a warm tertiary disc for the sun, a secondary one for the moon),
         // so the moon's pale art never reads as a hole in the dial.
         // A beacon is a waypoint dot in its own colour, ringed in the dial's surface (Apple Compass-style): the wedge
@@ -450,9 +520,15 @@ class RadarCompassView(
 
     private companion object {
         /** Where the dots, letters and turn arc sit, as a fraction of the outer radius. */
-        const val DOT_RING = 0.80f
+        const val DOT_RING = 0.84f
+
+        /** The cardinal letters sit outside the ring (Apple Compass), leaving the inside to the reading and marks. */
+        const val LETTER_RING = 0.95f
+
+        /** The sun, moon and beacons ride just inside the ticks. */
+        const val MARK_RING = 0.68f
 
         /** The hub's width as a fraction of the dial's diameter. */
-        const val HUB = 0.52f
+        const val HUB = 0.50f
     }
 }

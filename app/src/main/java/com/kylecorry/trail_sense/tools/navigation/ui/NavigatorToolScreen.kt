@@ -1089,13 +1089,13 @@ private fun NavigationTitle(
             text = state.title,
             style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
             maxLines = 1
         )
         Text(
             text = state.direction,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+            color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
         )
     }
@@ -1207,18 +1207,40 @@ private fun NavigatorHost(
                     .padding(vertical = TrailSenseSpacing.md)
             )
             views.navigationSheet.Content()
+            // The two things most people come here for: go back to a place they saved, or save where they stand
+            // (the car, the camp). Two plain, labelled buttons; no hidden long press.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = TrailSenseSpacing.xs, bottom = TrailSenseSpacing.lg),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
-                NavigatorIconButton(
-                    icon = TrailSenseIcons.Filled.LocationOn,
-                    label = stringResource(R.string.beacons),
+                androidx.compose.material3.FilledTonalButton(
                     onClick = { views.onBeaconClick?.invoke() },
-                    onLongClick = { views.onBeaconLongClick?.invoke() }
-                )
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Icon(TrailSenseIcons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text(
+                        stringResource(R.string.navigation_places),
+                        modifier = Modifier.padding(start = TrailSenseSpacing.sm),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                androidx.compose.material3.Button(
+                    onClick = { views.onBeaconLongClick?.invoke() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text(
+                        stringResource(R.string.navigation_save_spot),
+                        modifier = Modifier.padding(start = TrailSenseSpacing.sm),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
         }
     }

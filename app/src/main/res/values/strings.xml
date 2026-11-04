@@ -51,6 +51,8 @@
     <string name="duration_second_format">%ds</string>
     <string name="direction_north">N</string>
     <string name="direction_north_full">North</string>
+    <string name="navigation_places">Places</string>
+    <string name="navigation_save_spot">Save spot</string>
     <string name="direction_north_east_full">Northeast</string>
     <string name="direction_east_full">East</string>
     <string name="direction_south_east_full">Southeast</string>
