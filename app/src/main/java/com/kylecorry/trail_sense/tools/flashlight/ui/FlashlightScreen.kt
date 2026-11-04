@@ -582,6 +582,8 @@ private class MorphShape(private val morph: Morph, private val progress: Float) 
 /** No torch on this phone: the screen is the light. The kit's big layered mark, warm copy, one clear action. */
 @Composable
 private fun NoFlashlight(onOpenScreenFlashlight: () -> Unit) {
+    // Centred in the whole instrument area, so the mark and its action sit in the middle of the screen.
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     TrailSenseEmptyState(
         icon = TrailIcons.ScreenFlashlight,
         title = stringResource(R.string.flashlight_unavailable_title),
@@ -591,6 +593,7 @@ private fun NoFlashlight(onOpenScreenFlashlight: () -> Unit) {
         onAction = onOpenScreenFlashlight,
         actionModifier = Modifier.testTag("screen_flashlight_btn")
     )
+    }
 }
 
 @Composable
