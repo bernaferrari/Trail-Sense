@@ -484,9 +484,9 @@ private class MetalDetectorController(
 
 
 /**
- * Metal detector: the field strength is the hero on a card that turns to the error tone while metal is near, with
- * the live chart under it; the direction dial (when enabled) follows, then the threshold and sensitivity controls
- * as one group. Sound and vibration are toggles in the top bar.
+ * Metal detector: the field well is the hero, with the reading inside, the live trace round its rim, and the verdict
+ * and one quiet accuracy line under it; the direction dial (when enabled) follows, then the threshold and
+ * sensitivity controls as one group. Sound and vibration are toggles in the top bar.
  */
 @Composable
 private fun MetalDetectorScreen(
@@ -632,8 +632,9 @@ private fun MetalDetectorScreen(
 /**
  * The hero answers one question, "is there metal here, and how close?", with one living object: a field well whose
  * centre shape swells and morphs from a soft cookie into a spiky burst as the field strays from normal, with rings
- * rippling out of it faster the stronger it gets. The reading sits inside it; the verdict is the headline under it.
- * Calm is the scheme's primary; metal is error. The trace and the sensor's accuracy follow in a quiet card.
+ * rippling out of it faster the stronger it gets. The well's rim is the trace: the last few seconds of the field
+ * run round it from the top, inside the dashed normal band while all is calm and out past it near metal. The
+ * reading sits inside, the verdict under it, and the sensor's accuracy as one quiet line.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -654,12 +655,20 @@ private fun MetalHero(
     val core by animateColorAsState(if (metalDetected) scheme.error else scheme.primary, effects, label = "core")
     val onCore by animateColorAsState(if (metalDetected) scheme.onError else scheme.onPrimary, effects, label = "onCore")
     val verdictColor by animateColorAsState(if (metalDetected) scheme.error else scheme.onSurface, effects, label = "verdict")
+    val band = scheme.onPrimaryContainer
+    val metalInk = scheme.error
+    val now = scheme.tertiary
 
-    // How far outside the normal band the latest reading is: 0 inside it, 1 well beyond.
+    // How far outside the normal band the latest reading is: 0 inside it, 1 well beyond. Nothing until calibrated.
     val last = chartReadings.lastOrNull()
     val halfBand = ((upperThreshold - lowerThreshold) / 2f).coerceAtLeast(0.1f)
     val middle = (upperThreshold + lowerThreshold) / 2f
-    val target = if (last == null) 0f else ((kotlin.math.abs(last - middle) / halfBand - 0.5f) / 1.5f).coerceIn(0f, 1f)
+    val calibrated = middle > 0.5f
+    val target = if (last == null || !calibrated) {
+        0f
+    } else {
+        ((kotlin.math.abs(last - middle) / halfBand - 0.5f) / 1.5f).coerceIn(0f, 1f)
+    }
     val strength by animateFloatAsState(
         if (metalDetected) target.coerceAtLeast(0.6f) else target,
         MaterialTheme.motionScheme.defaultSpatialSpec(),
@@ -677,29 +686,68 @@ private fun MetalHero(
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .widthIn(max = 360.dp),
+                .widthIn(max = 360.dp)
+                .testTag("metal_chart"),
             contentAlignment = Alignment.Center
         ) {
             Canvas(Modifier.fillMaxSize()) {
                 val radius = size.minDimension / 2f
-                // The well, and three rings rippling out of the core.
+                // The rim (the trace's track) and the well, with three rings rippling out of the core inside it.
                 drawCircle(well.copy(alpha = 0.55f), radius)
                 drawCircle(well, radius * 0.78f)
                 repeat(3) { i ->
                     val t = (ripple + i / 3f) % 1f
                     drawCircle(
                         core.copy(alpha = (0.10f + 0.35f * strength) * (1f - t)),
-                        radius = radius * (0.42f + 0.56f * t),
+                        radius = radius * (0.42f + 0.36f * t),
                         style = Stroke(width = (2f + 3f * strength).dp.toPx())
                     )
                 }
+
+                // The rim: the normal band between two dashed circles, and the trace running round it.
+                val mid = radius * 0.89f
+                val reach = radius * 0.095f
+                val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(4.dp.toPx(), 5.dp.toPx())
+                )
+                listOf(mid - reach / 2f, mid + reach / 2f).forEach { r ->
+                    drawCircle(band.copy(alpha = 0.35f), r, style = Stroke(width = 1.dp.toPx(), pathEffect = dash))
+                }
+                if (calibrated && chartReadings.size > 1) {
+                    val count = chartReadings.size
+                    fun point(age: Int, value: Float): androidx.compose.ui.geometry.Offset {
+                        // Newest at the top; older readings run back anticlockwise.
+                        val angle = Math.toRadians((-90.0 - age * 360.0 / TRACE_CAPACITY))
+                        val deviation = ((value - middle) / halfBand).coerceIn(-2f, 2f) * reach / 2f
+                        val r = mid + deviation
+                        return androidx.compose.ui.geometry.Offset(
+                            center.x + r * kotlin.math.cos(angle).toFloat(),
+                            center.y + r * kotlin.math.sin(angle).toFloat()
+                        )
+                    }
+                    for (age in 0 until count - 1) {
+                        val newer = chartReadings[count - 1 - age]
+                        val older = chartReadings[count - 2 - age]
+                        val outside = kotlin.math.abs(newer - middle) > halfBand
+                        drawLine(
+                            color = if (outside) metalInk else core,
+                            start = point(age, newer),
+                            end = point(age + 1, older),
+                            strokeWidth = 2.5.dp.toPx(),
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                            alpha = 1f - age.toFloat() / TRACE_CAPACITY
+                        )
+                    }
+                    // "Now" is the one accent: a plain tertiary dot where the trace is being written.
+                    drawCircle(now, 4.dp.toPx(), point(0, chartReadings.last()))
+                }
+
                 // The core: grows and sharpens as the field strengthens.
                 val coreSize = radius * 2f * (0.50f + 0.18f * strength)
                 val path = morph.toPath(strength)
@@ -711,59 +759,32 @@ private fun MetalHero(
                 path.transform(matrix)
                 drawPath(path.asComposePath(), core)
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TrailSenseReading(
-                    value = fieldValue,
-                    unit = fieldUnit,
-                    color = onCore,
-                    unitColor = onCore.copy(alpha = 0.75f),
-                    style = MaterialTheme.typography.displayMedium,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .testTag("metal_detector_title")
-                        .semantics { contentDescription = title }
-                )
-            }
+            TrailSenseReading(
+                value = fieldValue,
+                unit = fieldUnit,
+                color = onCore,
+                unitColor = onCore.copy(alpha = 0.75f),
+                style = MaterialTheme.typography.displayMedium,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .testTag("metal_detector_title")
+                    .semantics { contentDescription = title }
+            )
         }
         Text(
             text = stringResource(if (metalDetected) R.string.metal_detected else R.string.metal_not_detected),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
             color = verdictColor,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = TrailSenseSpacing.lg)
         )
-
-        // The trace, quietly: the last moments of the field against its normal band, with the sensor's accuracy.
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
-            color = scheme.surfaceContainerLow
-        ) {
-            Column(
-                modifier = Modifier.padding(TrailSenseSpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        stringResource(R.string.metal_detector_field),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    AccuracyBadge(magnetometer = magnetometer, onClick = onAccuracyClick)
-                }
-                MetalChart(
-                    data = chartReadings,
-                    lowerThreshold = lowerThreshold,
-                    upperThreshold = upperThreshold,
-                    lineColor = core,
-                    inkColor = scheme.onSurfaceVariant,
-                    metalColor = scheme.error,
-                    nowColor = scheme.tertiary
-                )
-            }
-        }
+        AccuracyBadge(magnetometer = magnetometer, onClick = onAccuracyClick)
     }
 }
+
+/** How many readings the rim holds: one full turn. */
+private const val TRACE_CAPACITY = 150
 
 /**
  * The threshold as one thick rounded track that fills to the value, with the value itself riding in the thumb, so
@@ -882,7 +903,7 @@ private fun AccuracyBadge(
     // A plain label, no pill, dot or icon: the sensor's accuracy in words, tappable for the tips.
     Text(
         text = stringResource(R.string.metal_detector_accuracy, badge.name),
-        style = MaterialTheme.typography.labelMedium,
+        style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .clip(CircleShape)
@@ -954,117 +975,5 @@ private fun MagnetometerDirection(
             fontWeight = FontWeight.SemiBold,
             color = if (detected) scheme.primary else scheme.onSurface
         )
-    }
-}
-
-/** The live trace: one line, the dashed limits of the normal band, words in the gutter and a tertiary "now" dot. */
-@Composable
-private fun MetalChart(
-    data: List<Float>,
-    lowerThreshold: Float,
-    upperThreshold: Float,
-    lineColor: Color,
-    inkColor: Color,
-    metalColor: Color,
-    nowColor: Color
-) {
-    val normalLabel = stringResource(R.string.metal_detector_normal)
-    val metalLabel = stringResource(R.string.metal_detector_metal)
-    val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 12.sp.toPx() }
-
-    // Holds its height while the first readings arrive, so nothing jumps.
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(dimensionResource(R.dimen.chart_height))
-            .testTag("metal_chart")
-    ) {
-        if (data.isEmpty()) {
-            return@Box
-        }
-
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val minimum = min(30f, data.minOrNull() ?: 30f)
-            val maximum = max(70f, data.maxOrNull() ?: 70f)
-            val range = (maximum - minimum).takeIf { it > 0f } ?: 1f
-            // The family chart: words in a gutter at the left, the trace in a rounded panel beside them.
-            val gutter = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter.toPx()
-            val inset = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset.toPx()
-            val plotLeft = gutter
-            val plotWidth = size.width - gutter
-            fun x(index: Int): Float {
-                val span = plotWidth - inset * 2
-                return if (data.size <= 1) {
-                    plotLeft + inset + span
-                } else {
-                    plotLeft + inset + index.toFloat() / (data.size - 1).toFloat() * span
-                }
-            }
-
-            fun y(value: Float): Float {
-                return size.height - ((value - minimum) / range).coerceIn(0f, 1f) * size.height
-            }
-
-            // Beyond the dashed limits is where metal shows; the gutter words name the bands.
-            val top = y(upperThreshold)
-            val bottom = y(lowerThreshold)
-            val panel = androidx.compose.ui.graphics.Path().apply {
-                addRoundRect(
-                    androidx.compose.ui.geometry.RoundRect(
-                        plotLeft, 0f, size.width, size.height,
-                        androidx.compose.ui.geometry.CornerRadius(18.dp.toPx())
-                    )
-                )
-            }
-            clipPath(panel) {
-            val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
-            listOf(top, bottom).forEach { yLine ->
-                drawLine(
-                    color = inkColor.copy(alpha = 0.45f),
-                    start = androidx.compose.ui.geometry.Offset(plotLeft, yLine),
-                    end = androidx.compose.ui.geometry.Offset(size.width, yLine),
-                    strokeWidth = 1.5.dp.toPx(),
-                    pathEffect = dash
-                )
-            }
-
-            val line = androidx.compose.ui.graphics.Path().apply {
-                data.forEachIndexed { index, value ->
-                    if (index == 0) moveTo(x(index), y(value)) else lineTo(x(index), y(value))
-                }
-            }
-            drawPath(
-                line,
-                lineColor,
-                style = Stroke(
-                    width = 3.dp.toPx(),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                    join = androidx.compose.ui.graphics.StrokeJoin.Round
-                )
-            )
-            val last = data.last()
-            val now = androidx.compose.ui.geometry.Offset(x(data.lastIndex), y(last))
-            // "Now" is the chart's one accent: a plain tertiary dot, no halo.
-            drawCircle(nowColor, 6.dp.toPx(), now)
-            }
-
-            // Word labels for the bands, in the gutter, right-aligned against the panel: no trace can cross them.
-            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                textSize = labelSize
-                textAlign = android.graphics.Paint.Align.RIGHT
-                typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
-            }
-            val pad = gutter - 8.dp.toPx()
-            drawIntoCanvas { canvas ->
-                paint.color = inkColor.copy(alpha = 0.8f).toArgb()
-                if (bottom - top > labelSize * 1.4f) {
-                    canvas.nativeCanvas.drawText(normalLabel, pad, (top + bottom) / 2f + labelSize / 3f, paint)
-                }
-                if (top > labelSize * 1.6f) {
-                    paint.color = metalColor.toArgb()
-                    canvas.nativeCanvas.drawText(metalLabel, pad, labelSize + 2.dp.toPx(), paint)
-                }
-            }
-        }
     }
 }

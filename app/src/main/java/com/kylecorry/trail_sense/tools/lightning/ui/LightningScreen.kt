@@ -3,10 +3,9 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -14,32 +13,21 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -48,24 +36,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
@@ -75,32 +64,40 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.icons.trail.BaselineRefresh24
 import com.kylecorry.trail_sense.shared.icons.trail.Thunder
-import com.kylecorry.trail_sense.shared.icons.trail.TorchOn
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
-import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.max
+
+/** A strike closer than this is dangerous: the 30-second flash-to-thunder rule. */
+private const val DANGER_METERS = 10_000f
+
+/** The sky the object shows at rest; it widens if the thunder takes longer to arrive. */
+private const val SKY_METERS = 15_000f
+
+/** A previous strike shows as a ghost ring only while it belongs to the same storm. */
+private val GHOST_MAX_AGE: Duration = Duration.ofMinutes(30)
+
+private enum class StrikeStage { Ready, Counting, Result }
 
 /**
- * Lightning distance, an instrument: one ring holds the distance, with sound waves rolling out of it while you wait
- * for the thunder. Under it, one standard filled button names the event to tap for next (the flash, then the thunder). The
- * previous strike sits below as a quiet list.
+ * Lightning distance, like the boil timer: the object is the storm seen from above. The flash lights it, then the
+ * sound spreads out of the middle as rings at the speed of sound until you tap at the thunder, and the front stops
+ * where the strike is. A dashed circle marks the danger zone; the previous strike of the same storm is a ghost
+ * ring. One instruction (or verdict) line and one button that names what to tap for next: Lightning, Thunder, Again.
  */
 @Composable
 fun LightningScreen(
@@ -130,75 +127,125 @@ fun LightningScreen(
 
     LaunchedEffect(Unit) {
         units = prefs.baseDistanceUnits
-        lightningTime = null
-        strike = null
         lastStrike = withContext(Dispatchers.IO) {
             repo.getLast()
         }
     }
 
-    LaunchedEffect(lightningTime, strike) {
+    // While counting, the sound front moves every frame.
+    LaunchedEffect(lightningTime) {
+        if (lightningTime == null) return@LaunchedEffect
         while (true) {
+            withFrameNanos { }
             now = Instant.now()
-            delay(20)
         }
     }
 
-    val currentDistance = lightningTime?.let { getDistance(it, now) } ?: strike?.value?.distance
-    val relativeDistance = currentDistance?.convertTo(units)?.toRelativeDistance()
-    val isDangerous = relativeDistance?.let { Meteorology.isLightningStrikeDangerous(it) } ?: false
-
-    val waitingForThunder = lightningTime != null
-    val distanceValue = relativeDistance?.let {
-        DecimalFormatter.format(it.value, Units.getDecimalPlaces(it.units), false)
-    } ?: "—"
-    val distanceUnit = formatService.getDistanceUnitName(relativeDistance?.units ?: units, true)
+    val stage = when {
+        lightningTime != null -> StrikeStage.Counting
+        strike != null -> StrikeStage.Result
+        else -> StrikeStage.Ready
+    }
+    val meters = when (stage) {
+        StrikeStage.Counting -> getDistance(lightningTime!!, now).meters().value
+        StrikeStage.Result -> strike!!.value.distance.meters().value
+        StrikeStage.Ready -> null
+    }
+    val isDangerous = stage == StrikeStage.Result && (meters ?: Float.MAX_VALUE) <= DANGER_METERS
+    val relative = meters?.let { Distance.meters(it).convertTo(units).toRelativeDistance() }
+    val distanceValue = relative?.let { DecimalFormatter.format(it.value, Units.getDecimalPlaces(it.units), false) }
+    val distanceUnit = formatService.getDistanceUnitName(relative?.units ?: units, true)
     val elapsed = lightningTime?.let { Duration.between(it, now).toMillis() / 1000f }
+    val ghostMeters = lastStrike
+        ?.takeIf { Duration.between(it.time, Instant.now()) <= GHOST_MAX_AGE }
+        ?.value?.distance?.meters()?.value
+    val dangerLabel = Distance.meters(DANGER_METERS).convertTo(units).toRelativeDistance().let {
+        formatService.formatDistance(it, 0, false)
+    }
 
-    // An instrument with the large title like the other instruments; the ring, then its one button, then the
-    // previous strike as a quiet list.
-    com.kylecorry.trail_sense.shared.views.compose.TrailSensePage(
+    TrailSensePage(
         title = stringResource(R.string.tool_lightning_title),
-        onBack = com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack(),
+        onBack = rememberTrailSenseBack(),
         backLabel = stringResource(R.string.back),
         modifier = modifier
     ) {
-        item(key = "strike") {
+        item(key = "storm") {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // One question: how far away was that strike? The ring answers it; the verdict says if it is too
-                // close. The ring is a display only: the button under it is the one thing to tap.
-                StrikeHero(
+                StormSky(
+                    stage = stage,
+                    meters = meters,
                     value = distanceValue,
                     unit = distanceUnit,
-                    hint = when {
-                        isDangerous -> stringResource(R.string.lightning_dangerously_close)
-                        waitingForThunder -> stringResource(R.string.lightning_hint_thunder)
-                        else -> stringResource(R.string.lightning_hint_both_taps)
-                    },
-                    danger = isDangerous,
                     elapsedSeconds = elapsed,
-                    flash = flash.value,
-                    modifier = Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)
+                    danger = isDangerous,
+                    ghostMeters = ghostMeters,
+                    dangerLabel = dangerLabel,
+                    flash = flash.value
                 )
-                Box(Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)) {
-                    StrikeButton(
-                        waitingForThunder = waitingForThunder,
-                        onClick = {
-                            val startedAt = lightningTime
-                            if (startedAt == null) {
+                // The one line: what to do next, or the verdict once the thunder came.
+                val line = when {
+                    stage == StrikeStage.Ready -> stringResource(R.string.lightning_hint_flash)
+                    stage == StrikeStage.Counting -> stringResource(R.string.lightning_hint_thunder)
+                    isDangerous -> stringResource(R.string.lightning_verdict_danger)
+                    else -> stringResource(R.string.lightning_verdict_calm)
+                }
+                val lineColor by animateColorAsState(
+                    if (isDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    MaterialTheme.motionScheme.defaultEffectsSpec(),
+                    label = "lineColor"
+                )
+                Text(
+                    text = line,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = lineColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(top = TrailSenseSpacing.lg, start = TrailSenseSpacing.lg, end = TrailSenseSpacing.lg)
+                        .testTag("lightning_verdict")
+                )
+            }
+        }
+
+        item(key = "action") {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.md),
+                contentAlignment = Alignment.Center
+            ) {
+                TrailSenseButton(
+                    text = stringResource(
+                        when (stage) {
+                            StrikeStage.Ready -> R.string.lightning
+                            StrikeStage.Counting -> R.string.thunder
+                            StrikeStage.Result -> R.string.lightning_again
+                        }
+                    ),
+                    icon = when (stage) {
+                        StrikeStage.Ready -> Icons.Rounded.Bolt
+                        StrikeStage.Counting -> TrailIcons.Thunder
+                        StrikeStage.Result -> TrailIcons.BaselineRefresh24
+                    },
+                    style = if (stage == StrikeStage.Result) TrailSenseButtonStyle.Tonal else TrailSenseButtonStyle.Filled,
+                    onClick = {
+                        when (stage) {
+                            StrikeStage.Ready -> {
                                 lightningTime = Instant.now()
+                                now = Instant.now()
                                 scope.launch {
-                                    flash.snapTo(0.9f)
-                                    flash.animateTo(0f, tween(550))
+                                    flash.snapTo(1f)
+                                    flash.animateTo(0f, tween(700, easing = FastOutSlowInEasing))
                                 }
-                            } else {
-                                val distance = getDistance(startedAt, Instant.now())
-                                val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
-                                strike?.let { lastStrike = it }
+                            }
+
+                            StrikeStage.Counting -> {
+                                val thunder = Instant.now()
+                                val distance = getDistance(lightningTime!!, thunder)
+                                val currentStrike = Reading(LightningStrike(0, distance), thunder)
                                 strike = currentStrike
                                 lightningTime = null
                                 scope.launch {
@@ -207,177 +254,193 @@ fun LightningScreen(
                                     }
                                 }
                             }
-                        }
-                    )
-                }
-            }
-        }
 
-        item(key = "previous") {
-            AnimatedVisibility(
-                visible = lastStrike != null,
-                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
-                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.lg)
-            ) {
-                val last = lastStrike
-                if (last != null) {
-                    val distance = last.value.distance.convertTo(units).toRelativeDistance()
-                    val distanceText = formatService.formatDistance(
-                        distance,
-                        Units.getDecimalPlaces(distance.units),
-                        false
-                    )
-                    val dangerous = Meteorology.isLightningStrikeDangerous(distance)
-                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup(
-                        title = stringResource(R.string.previous)
-                    ) {
-                        row { position ->
-                            SkyValueRow(
-                                title = stringResource(R.string.sky_strike_last_distance),
-                                value = distanceText,
-                                valueColor = if (dangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-                                position = position
-                            )
+                            StrikeStage.Result -> {
+                                // This strike becomes the ghost the next one is compared against.
+                                lastStrike = strike
+                                strike = null
+                            }
                         }
-                        row { position ->
-                            SkyValueRow(
-                                title = stringResource(R.string.sky_strike_time),
-                                value = formatService.formatTime(last.time, includeSeconds = false),
-                                position = position
-                            )
-                        }
-                    }
-                }
+                    },
+                    modifier = Modifier
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
+                        .fillMaxWidth()
+                        .testTag("lightning_button")
+                )
             }
         }
     }
 }
 
 /**
- * The instrument: one ring on the plain page. Idle it is a still track with the bolt inside; while you count, sound
- * waves roll out of it (their motion is the count) and the distance grows inside. Its colour is primary, or error
- * when the strike is dangerously close. The verdict sits right under it as headlineMedium.
+ * The storm from above. The face is still at rest, with the danger zone as a dashed circle. The flash lights the
+ * whole face for a moment; while counting, the filled sound front grows from the middle at the speed of sound with
+ * rings rolling out inside it; at the thunder the front stops at the strike, red inside the danger zone.
  */
 @Composable
-private fun StrikeHero(
-    value: String,
+private fun StormSky(
+    stage: StrikeStage,
+    meters: Float?,
+    value: String?,
     unit: String,
-    hint: String,
-    danger: Boolean,
     elapsedSeconds: Float?,
-    flash: Float,
-    modifier: Modifier = Modifier
+    danger: Boolean,
+    ghostMeters: Float?,
+    dangerLabel: String,
+    flash: Float
 ) {
     val scheme = MaterialTheme.colorScheme
-    val accent by animateColorAsState(
-        if (danger) scheme.error else scheme.primary,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "strikeAccent"
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<androidx.compose.ui.graphics.Color>()
+    val accent by animateColorAsState(if (danger) scheme.error else scheme.primary, effects, label = "accent")
+    val zoneFill by animateColorAsState(
+        if (danger) scheme.errorContainer else scheme.surfaceContainerHigh,
+        effects,
+        label = "zone"
     )
-    val track = scheme.surfaceContainerHigh
-    val counting = elapsedSeconds != null
-    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            Modifier
-                .widthIn(max = 320.dp)
-                .fillMaxWidth()
-                .aspectRatio(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            val waves = rememberInfiniteTransition(label = "waves")
-            val phase by waves.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(tween(1800, easing = LinearEasing), RepeatMode.Restart),
-                label = "wavePhase"
+    val face = scheme.surfaceContainerLow
+    val zoneLine = if (danger) scheme.error else scheme.outline
+    val ghostColor = scheme.onSurfaceVariant
+    val ink = if (danger) scheme.onErrorContainer else scheme.onSurface
+    val labelStyle = MaterialTheme.typography.labelMedium.copy(color = scheme.onSurfaceVariant)
+    val measurer = rememberTextMeasurer()
+
+    // The sky widens if the sound goes beyond it, so the front never leaves the object.
+    val sky by animateFloatAsState(
+        targetValue = max(SKY_METERS, (meters ?: 0f) * 1.15f),
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "sky"
+    )
+    // The front settles with a spring when the thunder stops it.
+    val front by animateFloatAsState(
+        targetValue = meters ?: 0f,
+        animationSpec = if (stage == StrikeStage.Counting) {
+            tween(0)
+        } else {
+            MaterialTheme.motionScheme.defaultSpatialSpec()
+        },
+        label = "front"
+    )
+    val rolling by rememberInfiniteTransition(label = "sound").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Restart),
+        label = "roll"
+    )
+    val description = value?.let { "$it $unit" } ?: stringResource(R.string.lightning_hint_flash)
+
+    Box(
+        modifier = Modifier
+            .padding(vertical = TrailSenseSpacing.sm)
+            .widthIn(max = 320.dp)
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .testTag("lightning_sky")
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.matchParentSize()) {
+            val radius = size.minDimension / 2f
+            val perMeter = radius / sky
+            // The face, lit by the flash.
+            drawCircle(lerp(face, scheme.primaryContainer, flash), radius)
+
+            // The danger zone: a dashed circle; filled red once a strike lands inside it.
+            val zone = DANGER_METERS * perMeter
+            drawCircle(zoneFill.copy(alpha = if (danger) 0.7f else 0.6f), zone)
+            drawCircle(
+                zoneLine.copy(alpha = 0.7f),
+                zone,
+                style = Stroke(
+                    width = 1.5.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
+                )
             )
-            Canvas(Modifier.matchParentSize()) {
-                val center = Offset(size.width / 2f, size.height / 2f)
-                val core = size.minDimension * 0.34f
-                val maxRadius = size.minDimension / 2f
-                // The flash lights the ring's face for a moment.
-                drawCircle(androidx.compose.ui.graphics.lerp(track, accent.copy(alpha = 0.35f), flash), radius = core, center = center)
-                drawCircle(accent, radius = core, center = center, style = Stroke(width = 3.dp.toPx()))
-                if (counting) {
-                    repeat(3) { index ->
-                        val t = (phase + index / 3f) % 1f
+            val label = measurer.measure(dangerLabel, labelStyle)
+            drawText(
+                label,
+                topLeft = Offset(center.x - label.size.width / 2f, center.y - zone + 6.dp.toPx())
+            )
+
+            // The last strike of this storm, as a ghost to compare with.
+            ghostMeters?.let { ghost ->
+                drawCircle(
+                    ghostColor.copy(alpha = 0.45f),
+                    (ghost * perMeter).coerceAtMost(radius - 2.dp.toPx()),
+                    style = Stroke(
+                        width = 2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 5.dp.toPx()))
+                    )
+                )
+            }
+
+            // The sound: a soft filled disc out to the front, rings rolling out inside it while you wait.
+            if (stage != StrikeStage.Ready && front > 0f) {
+                val r = (front * perMeter).coerceAtMost(radius)
+                drawCircle(accent.copy(alpha = 0.14f), r)
+                if (stage == StrikeStage.Counting) {
+                    // Each ring is a second-and-a-bit of sound; they keep the front's speed.
+                    val spacing = 343f * 1.2f * perMeter
+                    var ring = r - rolling * spacing
+                    while (ring > 0f) {
                         drawCircle(
-                            color = accent.copy(alpha = (1f - t) * 0.5f),
-                            radius = core + t * (maxRadius - core),
-                            center = center,
-                            style = Stroke(width = (6.dp.toPx() * (1f - t)).coerceAtLeast(1f))
+                            accent.copy(alpha = 0.45f * (ring / r)),
+                            ring,
+                            style = Stroke(width = 2.dp.toPx())
                         )
+                        ring -= spacing
                     }
                 }
+                drawCircle(accent, r, style = Stroke(width = 4.dp.toPx()))
             }
-            if (value == "—") {
-                // At rest the ring is a stopwatch at zero, so it reads as a display, not as a second button.
-                Text(
-                    stringResource(R.string.sky_seconds_short, DecimalFormatter.format(0f, 1, true)),
-                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                    color = scheme.onSurfaceVariant
-                )
-            } else {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            value,
-                            style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
-                            fontWeight = FontWeight.SemiBold,
-                            color = scheme.onSurface,
-                            modifier = Modifier.alignByBaseline()
-                        )
-                        Text(
-                            unit,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = scheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(start = TrailSenseSpacing.xs)
-                                .alignByBaseline()
-                        )
+
+            // The flash itself: a burst of light that fades from the middle.
+            if (flash > 0f) {
+                drawCircle(scheme.primary.copy(alpha = 0.35f * flash), radius * (0.4f + 0.6f * (1f - flash)))
+            }
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                Icons.Rounded.Bolt,
+                contentDescription = null,
+                tint = lerp(if (stage == StrikeStage.Ready) scheme.onSurfaceVariant else accent, scheme.primary, flash),
+                modifier = Modifier
+                    .size(if (value == null) 56.dp else 28.dp)
+                    .graphicsLayer {
+                        scaleX = 1f + 0.4f * flash
+                        scaleY = 1f + 0.4f * flash
                     }
-                    if (elapsedSeconds != null) {
-                        Text(
-                            stringResource(
-                                R.string.sky_seconds_short,
-                                DecimalFormatter.format(elapsedSeconds, 1, true)
-                            ),
-                            style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-                            color = scheme.onSurfaceVariant
-                        )
-                    }
+            )
+            if (value != null) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        value,
+                        style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold,
+                        color = ink,
+                        modifier = Modifier
+                            .alignByBaseline()
+                            .testTag("lightning_title")
+                    )
+                    Text(
+                        unit,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = ink.copy(alpha = 0.75f),
+                        modifier = Modifier
+                            .padding(start = TrailSenseSpacing.xs)
+                            .alignByBaseline()
+                    )
+                }
+                if (elapsedSeconds != null) {
+                    Text(
+                        stringResource(R.string.sky_seconds_short, DecimalFormatter.format(elapsedSeconds, 1, true)),
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        color = scheme.onSurfaceVariant
+                    )
                 }
             }
         }
-        Text(
-            hint,
-            style = if (danger) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
-            fontWeight = if (danger) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (danger) scheme.error else scheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-        )
     }
-}
-
-/**
- * The one action: the family's standard filled button (56 dp, full width) that names the event to tap for next.
- */
-@Composable
-private fun StrikeButton(
-    waitingForThunder: Boolean,
-    onClick: () -> Unit
-) {
-    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-        text = stringResource(if (waitingForThunder) R.string.thunder else R.string.lightning),
-        onClick = onClick,
-        icon = if (waitingForThunder) TrailIcons.Thunder else androidx.compose.material.icons.Icons.Rounded.Bolt,
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 private fun getDistance(lightning: Instant, thunder: Instant): Distance {
