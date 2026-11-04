@@ -5,27 +5,16 @@ package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,8 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
@@ -56,8 +45,14 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlinx.coroutines.launch
 import java.time.Duration
 
@@ -94,6 +89,10 @@ fun TemperatureEstimationToolScreen() {
     )
 }
 
+/**
+ * The estimate leads; under it the weather where you are (the temperature field fills itself from the
+ * thermometer with the button at its end), then the two elevations as their own group.
+ */
 @Composable
 private fun TemperatureEstimationScreen(
     prefs: UserPreferences,
@@ -175,30 +174,29 @@ private fun TemperatureEstimationScreen(
     val humidity = humidityText.toFloatOrNull()
     val humidityError = humidityText.isNotEmpty() && (humidity == null || humidity !in 0f..100f)
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val weatherTitle = stringResource(R.string.weather)
+    val elevationTitle = stringResource(R.string.elevation)
+    val autofillLabel = stringResource(R.string.autofill)
+    val humidityErrorText = stringResource(R.string.humidity_must_be_between_0_and_100)
+    val labels = TemperatureLabels(
+        baseElevation = stringResource(R.string.base_elevation),
+        destinationElevation = stringResource(R.string.destination_elevation),
+        currentTemperature = stringResource(R.string.current_temperature),
+        humidity = stringResource(R.string.humidity),
+        windSpeed = stringResource(R.string.wind_speed)
+    )
+
+    TrailSensePage(
+        title = stringResource(R.string.tool_temperature_estimation_title),
+        onBack = rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .padding(top = TrailSenseSpacing.md, bottom = TrailSenseSpacing.xxxl),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-            // Hero result
-            Card(
+        item("estimate") {
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.extraLarge,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
                 Column(
                     modifier = Modifier
@@ -209,113 +207,113 @@ private fun TemperatureEstimationScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.estimated),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        style = MaterialTheme.typography.titleSmall
                     )
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            // Inputs
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-            ) {
-                DistanceInputRow(
-                    value = baseElevationText,
-                    onValueChange = { baseElevationText = it },
-                    unit = baseElevationUnit,
-                    unitName = formatService.getDistanceUnitName(baseElevationUnit, true),
-                    label = stringResource(R.string.base_elevation),
-                    onPickUnit = { picker = Picker.BaseElevation },
-                    enabled = !isLoading
-                )
-                DistanceInputRow(
-                    value = destElevationText,
-                    onValueChange = { destElevationText = it },
-                    unit = destElevationUnit,
-                    unitName = formatService.getDistanceUnitName(destElevationUnit, true),
-                    label = stringResource(R.string.destination_elevation),
-                    onPickUnit = { picker = Picker.DestinationElevation },
-                    enabled = !isLoading
-                )
-                UnitInputRow(
-                    value = baseTemperatureText,
-                    onValueChange = { baseTemperatureText = it },
-                    unitName = formatService.getTemperatureUnitName(baseTemperatureUnit, true),
-                    label = stringResource(R.string.current_temperature),
-                    onPickUnit = { picker = Picker.Temperature },
-                    enabled = !isLoading
-                )
-                OutlinedTextField(
-                    value = humidityText,
-                    onValueChange = { humidityText = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.humidity)) },
-                    isError = humidityError,
-                    supportingText = {
-                        if (humidityError) {
-                            Text(stringResource(R.string.humidity_must_be_between_0_and_100))
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true
-                )
-                UnitInputRow(
-                    value = windSpeedText,
-                    onValueChange = { windSpeedText = it },
-                    unitName = formatService.getSpeedUnitName(
-                        windSpeedUnit.distance,
-                        windSpeedUnit.time,
-                        true
-                    ),
-                    label = stringResource(R.string.wind_speed),
-                    onPickUnit = { picker = Picker.WindSpeed },
-                    enabled = !isLoading
-                )
-            }
-
-            Button(
-                onClick = {
-                    scope.launch {
-                        isLoading = true
-                        readThermometer()
-                        setThermometerFieldFromSensor()
-                        isLoading = false
-                    }
-                },
-                enabled = !isLoading,
-                shape = MaterialTheme.shapes.large,
-                contentPadding = ButtonDefaults.ContentPadding,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text(
-                        stringResource(R.string.autofill),
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                        maxLines = 1
                     )
                 }
             }
         }
+
+        trailSenseSection(key = "weather", title = weatherTitle) {
+            row { position ->
+                TrailSenseInputField(
+                    value = baseTemperatureText,
+                    onValueChange = { baseTemperatureText = it },
+                    label = labels.currentTemperature,
+                    position = position,
+                    enabled = !isLoading,
+                    unit = formatService.getTemperatureUnitName(baseTemperatureUnit, true),
+                    onUnitClick = { picker = Picker.Temperature },
+                    trailingIcon = {
+                        Box(
+                            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                IconButton(
+                                    onClick = {
+                                        scope.launch {
+                                            isLoading = true
+                                            readThermometer()
+                                            setThermometerFieldFromSensor()
+                                            isLoading = false
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.thermometer),
+                                        contentDescription = autofillLabel
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+            row { position ->
+                TrailSenseInputField(
+                    value = humidityText,
+                    onValueChange = { humidityText = it },
+                    label = labels.humidity,
+                    position = position,
+                    isError = humidityError,
+                    errorText = humidityErrorText,
+                    unit = "%"
+                )
+            }
+            row { position ->
+                TrailSenseInputField(
+                    value = windSpeedText,
+                    onValueChange = { windSpeedText = it },
+                    label = labels.windSpeed,
+                    position = position,
+                    enabled = !isLoading,
+                    unit = formatService.getSpeedUnitName(windSpeedUnit.distance, windSpeedUnit.time, true),
+                    onUnitClick = { picker = Picker.WindSpeed }
+                )
+            }
+        }
+
+        trailSenseSection(key = "elevation", title = elevationTitle) {
+            row { position ->
+                TrailSenseInputField(
+                    value = baseElevationText,
+                    onValueChange = { baseElevationText = it },
+                    label = labels.baseElevation,
+                    position = position,
+                    enabled = !isLoading,
+                    unit = formatService.getDistanceUnitName(baseElevationUnit, true),
+                    onUnitClick = { picker = Picker.BaseElevation }
+                )
+            }
+            row { position ->
+                TrailSenseInputField(
+                    value = destElevationText,
+                    onValueChange = { destElevationText = it },
+                    label = labels.destinationElevation,
+                    position = position,
+                    enabled = !isLoading,
+                    unit = formatService.getDistanceUnitName(destElevationUnit, true),
+                    onUnitClick = { picker = Picker.DestinationElevation }
+                )
+            }
         }
     }
 
     when (picker) {
         Picker.BaseElevation -> UnitPickerDialog(
-            title = stringResource(R.string.base_elevation),
+            title = labels.baseElevation,
             units = elevationUnits,
+            selected = baseElevationUnit,
             getName = { formatService.getDistanceUnitName(it, true) },
             onSelect = {
                 baseElevationUnit = it
@@ -325,8 +323,9 @@ private fun TemperatureEstimationScreen(
         )
 
         Picker.DestinationElevation -> UnitPickerDialog(
-            title = stringResource(R.string.destination_elevation),
+            title = labels.destinationElevation,
             units = elevationUnits,
+            selected = destElevationUnit,
             getName = { formatService.getDistanceUnitName(it, true) },
             onSelect = {
                 destElevationUnit = it
@@ -336,8 +335,9 @@ private fun TemperatureEstimationScreen(
         )
 
         Picker.Temperature -> UnitPickerDialog(
-            title = stringResource(R.string.current_temperature),
+            title = labels.currentTemperature,
             units = temperatureUnitOptions,
+            selected = baseTemperatureUnit,
             getName = { formatService.getTemperatureUnitName(it, true) },
             onSelect = {
                 baseTemperatureUnit = it
@@ -347,8 +347,9 @@ private fun TemperatureEstimationScreen(
         )
 
         Picker.WindSpeed -> UnitPickerDialog(
-            title = stringResource(R.string.wind_speed),
+            title = labels.windSpeed,
             units = speedUnits,
+            selected = windSpeedUnit,
             getName = { formatService.getSpeedUnitName(it.distance, it.time, true) },
             onSelect = {
                 windSpeedUnit = it
@@ -361,84 +362,29 @@ private fun TemperatureEstimationScreen(
     }
 }
 
-@Composable
-private fun DistanceInputRow(
-    value: String,
-    onValueChange: (String) -> Unit,
-    unit: DistanceUnits,
-    unitName: String,
-    label: String,
-    onPickUnit: () -> Unit,
-    enabled: Boolean
-) {
-    UnitInputRow(value, onValueChange, unitName, label, onPickUnit, enabled)
-}
-
-@Composable
-private fun UnitInputRow(
-    value: String,
-    onValueChange: (String) -> Unit,
-    unitName: String,
-    label: String,
-    onPickUnit: () -> Unit,
-    enabled: Boolean
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.weight(1f),
-            label = { Text(label) },
-            enabled = enabled,
-            shape = MaterialTheme.shapes.medium,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true
-        )
-        FilledTonalButton(
-            onClick = onPickUnit,
-            enabled = enabled,
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Text(unitName, style = MaterialTheme.typography.labelLarge)
-        }
-    }
-}
+private data class TemperatureLabels(
+    val baseElevation: String,
+    val destinationElevation: String,
+    val currentTemperature: String,
+    val humidity: String,
+    val windSpeed: String
+)
 
 @Composable
 private fun <T> UnitPickerDialog(
     title: String,
     units: List<T>,
+    selected: T,
     getName: (T) -> String,
     onSelect: (T) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column {
-                units.forEach { unit ->
-                    TextButton(
-                        onClick = { onSelect(unit) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = getName(unit),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.done))
-            }
-        }
+    TrailSenseOptionsDialog(
+        title = title,
+        options = units.map { getName(it) to it },
+        selected = selected,
+        onSelect = onSelect,
+        onDismiss = onDismiss
     )
 }
 
