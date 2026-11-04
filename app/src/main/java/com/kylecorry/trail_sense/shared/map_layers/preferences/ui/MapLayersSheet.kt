@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.content.Context
 import android.text.Spanned
 import android.text.style.URLSpan
@@ -475,7 +477,7 @@ private fun MapLayersContent(
             item("additional_layers") {
                 TrailSenseListItem(
                     title = stringResource(R.string.additional_layers),
-                    icon = painterResource(R.drawable.ic_add),
+                    icon = rememberVectorPainter(TrailIcons.Add),
                     onClick = onAddLayers,
                     animateEntrance = false,
                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)

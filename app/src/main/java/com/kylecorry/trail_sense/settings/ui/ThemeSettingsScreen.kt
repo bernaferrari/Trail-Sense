@@ -86,10 +86,10 @@ fun ThemeSettingsScreen(
     }
 
     val modes = listOf(
-        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto), Icons.Rounded.BrightnessAuto),
         TrailSenseChoice(ThemeMode.Light, stringResource(R.string.theme_light), Icons.Rounded.LightMode),
         TrailSenseChoice(ThemeMode.Dark, stringResource(R.string.theme_dark), Icons.Rounded.DarkMode),
-        TrailSenseChoice(ThemeMode.Sun, stringResource(R.string.theme_mode_sun), Icons.Rounded.WbTwilight)
+        TrailSenseChoice(ThemeMode.Sun, stringResource(R.string.theme_mode_sun), Icons.Rounded.WbTwilight),
+        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto), Icons.Rounded.BrightnessAuto)
     )
     val palettes = TrailSensePalette.entries.filter { it != TrailSensePalette.Wallpaper || wallpaperAvailable }
     val paletteNames = mapOf(

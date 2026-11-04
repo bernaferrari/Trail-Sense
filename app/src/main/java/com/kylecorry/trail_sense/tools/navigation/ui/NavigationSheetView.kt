@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -175,7 +176,7 @@ class NavigationSheetView(private val context: Context) {
                     if (state.showCancel) {
                         IconButton(onClick = ::requestCancelNavigation) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_cancel),
+                                imageVector = TrailIcons.Cancel,
                                 contentDescription = stringResource(R.string.stop),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )

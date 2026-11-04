@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.units.Temperature
@@ -50,7 +51,7 @@ class TemperatureWeatherField(
 
                 ThermometerSource.Sensor -> context.getString(R.string.sensor)
             },
-            icon = R.drawable.thermometer,
+            icon = TrailIcons.Thermometer,
             iconTint = color,
             trailingText = value
         ) {

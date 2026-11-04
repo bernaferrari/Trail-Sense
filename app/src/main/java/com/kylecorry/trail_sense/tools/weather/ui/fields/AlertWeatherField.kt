@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
@@ -20,7 +21,7 @@ class AlertWeatherField(private val alerts: List<WeatherAlert>) : WeatherField {
         return WeatherListItem(
             id = 6293,
             title = title,
-            icon = R.drawable.ic_alert,
+            icon = TrailIcons.Alert,
             iconTint = AppColor.Yellow.color,
             trailingText = description
         ) {

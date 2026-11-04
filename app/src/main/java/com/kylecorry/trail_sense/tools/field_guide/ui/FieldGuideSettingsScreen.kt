@@ -2,18 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,19 +9,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
-import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
+import com.kylecorry.trail_sense.settings.ui.goBack
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideNameDisplay
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
@@ -50,80 +38,57 @@ fun FieldGuideSettingsToolScreen(host: TrailSenseDestinationHost) {
     val formatter = remember { FieldGuideFormatService(prefs) }
     var nameDisplay by remember { mutableStateOf(prefs.fieldGuide.nameDisplay) }
 
+    val nameTitle = stringResource(R.string.field_guide_name_display)
     val nameOptions = listOf(
-        FieldGuideNameDisplay.Common to stringResource(R.string.common_name),
-        FieldGuideNameDisplay.Scientific to stringResource(R.string.scientific_name),
-        FieldGuideNameDisplay.Both to stringResource(R.string.both_names)
+        TrailSenseChoice(FieldGuideNameDisplay.Common, stringResource(R.string.field_guide_name_common)),
+        TrailSenseChoice(FieldGuideNameDisplay.Scientific, stringResource(R.string.field_guide_name_scientific)),
+        TrailSenseChoice(FieldGuideNameDisplay.Both, stringResource(R.string.field_guide_name_both))
     )
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    TrailSensePage(
+        title = stringResource(R.string.field_guide),
+        onBack = host::goBack,
+        backLabel = stringResource(R.string.back)
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = TrailSenseSize.maximumContentWidth),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    top = TrailSenseSpacing.lg,
-                    bottom = TrailSenseSpacing.xxxl
-                ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-            ) {
-                item("title") {
-                    Text(
-                        text = stringResource(R.string.field_guide),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                item("name_display") {
-                    SettingsPickerRow(
-                        label = stringResource(R.string.field_guide_name_display),
-                        selected = nameOptions.first { it.first == nameDisplay }.second,
-                        onClick = {
-                            Pickers.item(
-                                context,
-                                context.getString(R.string.field_guide_name_display),
-                                nameOptions.map { it.second },
-                                nameOptions.indexOfFirst { it.first == nameDisplay }.coerceAtLeast(0)
-                            ) { index ->
-                                if (index != null) {
-                                    val selected = nameOptions[index].first
-                                    prefs.fieldGuide.nameDisplay = selected
-                                    nameDisplay = selected
-                                }
-                            }
+        trailSenseSection("name_display", title = nameTitle) {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
+                    TrailSenseConnectedChoice(
+                        options = nameOptions,
+                        selected = nameDisplay,
+                        label = nameTitle,
+                        onSelect = {
+                            prefs.fieldGuide.nameDisplay = it
+                            nameDisplay = it
                         }
                     )
                 }
-                item("built_in_pages") {
-                    SettingsActionRow(
-                        label = stringResource(R.string.built_in_pages),
-                        onClick = {
-                            scope.launch {
-                                val pages = withContext(Dispatchers.IO) {
-                                    repo.getAllPages()
-                                        .filter { it.isReadOnly }
-                                        .sortedBy { formatter.formatName(it).lowercase() }
-                                }
-                                showBuiltInPagesPicker(context, formatter, pages) { changed ->
-                                    scope.launch {
-                                        withContext(Dispatchers.IO) {
-                                            changed.forEach { (page, hidden) ->
-                                                repo.setPageHidden(page.id, hidden)
-                                            }
+            }
+        }
+        trailSenseSection("pages") {
+            row { position ->
+                SettingsActionRow(
+                    label = stringResource(R.string.built_in_pages),
+                    onClick = {
+                        scope.launch {
+                            val pages = withContext(Dispatchers.IO) {
+                                repo.getAllPages()
+                                    .filter { it.isReadOnly }
+                                    .sortedBy { formatter.formatName(it).lowercase() }
+                            }
+                            showBuiltInPagesPicker(context, formatter, pages) { changed ->
+                                scope.launch {
+                                    withContext(Dispatchers.IO) {
+                                        changed.forEach { (page, hidden) ->
+                                            repo.setPageHidden(page.id, hidden)
                                         }
                                     }
                                 }
                             }
                         }
-                    )
-                }
+                    },
+                    position = position
+                )
             }
         }
     }

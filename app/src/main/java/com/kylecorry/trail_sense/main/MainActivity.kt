@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.main
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import android.Manifest
 import android.app.Activity
 import android.app.PendingIntent
@@ -804,8 +806,11 @@ private fun MainActivityContent(
                 .windowInsetsPadding(rootInsets)
         ) {
             errorBanner.Content()
+            val stack by navigator.backStack.collectAsState()
+            val currentId = stack.lastOrNull()?.destination?.id
             MainAdaptiveNavigation(
                 state = bottomNavigation,
+                showBar = currentId == null || bottomNavigation.contains(currentId),
                 onItemClick = onBottomNavigationItemSelected,
                 onItemLongClick = onBottomNavigationItemLongSelected,
                 modifier = Modifier
@@ -815,6 +820,7 @@ private fun MainActivityContent(
                 Box(modifier = Modifier.fillMaxSize()) {
                     TrailSenseComposeNavHost(
                         navigator = navigator,
+                        isTabRoot = { bottomNavigation.contains(it) },
                         modifier = Modifier.fillMaxSize()
                     )
                     quickActionsSheet.Content(

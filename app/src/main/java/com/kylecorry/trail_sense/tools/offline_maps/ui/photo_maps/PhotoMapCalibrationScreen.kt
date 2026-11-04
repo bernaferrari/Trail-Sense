@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.shape.CircleShape
@@ -726,7 +727,7 @@ private class PhotoMapCalibrationPanelState(
                     )
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_location),
+                        imageVector = TrailIcons.Location,
                         contentDescription = context.getString(R.string.location),
                         modifier = Modifier.size(24.dp)
                     )
@@ -762,7 +763,7 @@ private class PhotoMapCalibrationPanelState(
                 )
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_help),
+                    imageVector = TrailIcons.Help,
                     contentDescription = context.getString(R.string.help),
                     modifier = Modifier.size(24.dp)
                 )
@@ -787,7 +788,7 @@ private class PhotoMapCalibrationPanelState(
                     )
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_prev),
+                        imageVector = TrailIcons.Prev,
                         contentDescription = context.getString(R.string.previous),
                         modifier = Modifier.size(24.dp)
                     )

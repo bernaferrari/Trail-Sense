@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -20,7 +21,7 @@ class LastUpdatedWeatherField(private val time: Instant?) : WeatherField {
         return WeatherListItem(
             8,
             context.getString(R.string.last_updated),
-            icon = R.drawable.ic_update,
+            icon = TrailIcons.Update,
             iconTint = color,
             trailingText = formatter.formatDateTime(
                 time.toZonedDateTime(),

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTopBar
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
@@ -686,43 +689,36 @@ private fun OfflineMapListHeader(
     modifier: Modifier = Modifier
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
-    Row(
-        modifier = modifier
-            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.md)
-            .padding(vertical = TrailSenseSpacing.sm)
-            .testTag("map_list_title"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        if (showSort) Box {
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("map_list_menu_btn")
-            ) {
-                Icon(
-                    imageVector = TrailSenseIcons.Filled.MoreVert,
-                    contentDescription = stringResource(R.string.sort)
-                )
-            }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(sortMenuText) },
-                    onClick = {
-                        isMenuOpen = false
-                        onToolbarAction(OfflineMapToolbarAction.Sort)
-                    }
-                )
+    TrailSenseTopBar(
+        title = title,
+        modifier = modifier.testTag("map_list_title"),
+        backLabel = stringResource(R.string.back),
+        actions = {
+            if (showSort) Box {
+                IconButton(
+                    onClick = { isMenuOpen = true },
+                    modifier = Modifier.testTag("map_list_menu_btn")
+                ) {
+                    Icon(
+                        imageVector = TrailSenseIcons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.sort)
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuOpen,
+                    onDismissRequest = { isMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(sortMenuText) },
+                        onClick = {
+                            isMenuOpen = false
+                            onToolbarAction(OfflineMapToolbarAction.Sort)
+                        }
+                    )
+                }
             }
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -890,7 +886,7 @@ private fun PhotoMapRow(
     TrailSenseListItem(
         title = map.name,
         subtitle = mapTypeSubtitle(subtitle, R.string.map_type_photo, onMap),
-        icon = painterResource(R.drawable.maps),
+        icon = rememberVectorPainter(TrailIcons.Maps),
         iconTint = Color(AppColor.Gray.color),
         onClick = { onAction(MapAction.View) },
         trailing = {
@@ -924,7 +920,7 @@ private fun PhotoMapMenu(
             modifier = Modifier.testTag("photo_map_menu_${map.name}")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_menu_dots),
+                imageVector = TrailIcons.MenuDots,
                 contentDescription = stringResource(R.string.details),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -982,7 +978,7 @@ private fun VectorMapRow(
     TrailSenseListItem(
         title = map.name,
         subtitle = mapTypeSubtitle(subtitle, R.string.map_type_trail, onMap),
-        icon = painterResource(R.drawable.maps),
+        icon = rememberVectorPainter(TrailIcons.Maps),
         iconTint = Color(AppColor.Gray.color),
         onClick = { onAction(VectorMapAction.View) },
         trailing = {
@@ -1016,7 +1012,7 @@ private fun VectorMapMenu(
             modifier = Modifier.testTag("vector_map_menu_${map.name}")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_menu_dots),
+                imageVector = TrailIcons.MenuDots,
                 contentDescription = stringResource(R.string.details),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1092,7 +1088,7 @@ private fun MapGroupRow(
     TrailSenseListItem(
         title = group.name,
         subtitle = stringResource(R.plurals.map_group_summary, count, count),
-        icon = painterResource(R.drawable.ic_map_group),
+        icon = rememberVectorPainter(TrailIcons.MapGroup),
         iconTint = Color(AppColor.Gray.color),
         onClick = { onAction(MapGroupAction.View) },
         trailing = {
@@ -1102,7 +1098,7 @@ private fun MapGroupRow(
                     modifier = Modifier.testTag("map_group_menu_${group.name}")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_menu_dots),
+                        imageVector = TrailIcons.MenuDots,
                         contentDescription = stringResource(R.string.details),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
