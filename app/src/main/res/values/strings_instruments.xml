@@ -3,4 +3,7 @@
     <!-- Bubble level -->
     <string name="level_is_level">Level</string>
     <string name="level_off_by">Off by %1$s</string>
+
+    <!-- Clinometer -->
+    <string name="clinometer_vertical">Vertical</string>
 </resources>

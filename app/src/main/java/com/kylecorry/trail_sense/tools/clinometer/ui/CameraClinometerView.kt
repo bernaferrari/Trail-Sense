@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
@@ -58,7 +59,11 @@ private fun CameraClinometerContent(
 ) {
     val context = LocalContext.current
     val formatter = FormatService.getInstance(context)
-    val dialColor = Color(Resources.color(context, R.color.colorSecondary))
+    val dialColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer
+    val ink = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer
+    val needle = androidx.compose.material3.MaterialTheme.colorScheme.primary
+    val status = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors()
+    val danger = androidx.compose.material3.MaterialTheme.colorScheme.error
     val density = LocalDensity.current
     val tickLength = with(density) { 4.dp.toPx() }
     val tickStroke = with(density) { 2.dp.toPx() }
@@ -76,31 +81,31 @@ private fun CameraClinometerContent(
 
         drawRect(dialColor)
 
-        fun zone(start: Float, end: Float, color: Int) {
+        fun zone(start: Float, end: Float, color: Color) {
             drawRect(
-                color = Color(color).copy(alpha = 150f / 255f),
+                color = color,
                 topLeft = Offset(0f, min(getY(start), getY(end))),
                 size = Size(tickLength, (getY(start) - getY(end)).absoluteValue)
             )
         }
 
-        zone(45f, 30f, AppColor.Red.color)
-        zone(-30f, -45f, AppColor.Red.color)
-        zone(60f, 45f, AppColor.Yellow.color)
-        zone(-45f, -60f, AppColor.Yellow.color)
-        zone(90f, 60f, AppColor.Green.color)
-        zone(-60f, -90f, AppColor.Green.color)
-        zone(30f, -30f, AppColor.Green.color)
+        zone(45f, 30f, danger)
+        zone(-30f, -45f, danger)
+        zone(60f, 45f, status.caution)
+        zone(-45f, -60f, status.caution)
+        zone(90f, 60f, status.good)
+        zone(-60f, -90f, status.good)
+        zone(30f, -30f, status.good)
 
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.WHITE
+            color = ink.copy(alpha = 0.8f).toArgb()
             textAlign = Paint.Align.CENTER
             this.textSize = textSize
         }
         for (i in -90..90 step tickInterval) {
             val y = getY(i.toFloat())
             drawLine(
-                Color.White,
+                ink.copy(alpha = 0.6f),
                 Offset(0f, y),
                 Offset(tickLength, y),
                 tickStroke,
@@ -121,13 +126,13 @@ private fun CameraClinometerContent(
         val current = getY(inclination)
         if (start != null) {
             drawRect(
-                color = Color.White.copy(alpha = 100f / 255f),
+                color = needle.copy(alpha = 0.3f),
                 topLeft = Offset(0f, min(start, current)),
                 size = Size(size.width, (start - current).absoluteValue)
             )
         } else {
             drawLine(
-                Color.White,
+                needle,
                 Offset(0f, current),
                 Offset(size.width, current),
                 needleStroke,
