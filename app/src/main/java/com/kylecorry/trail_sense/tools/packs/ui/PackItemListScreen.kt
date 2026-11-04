@@ -1,7 +1,26 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.toShape
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesMiniBar
+import com.kylecorry.trail_sense.tools.beacons.ui.places.placesJoinNext
+import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.shared.icons.trail.*
 
 import android.os.Bundle
@@ -457,6 +476,8 @@ private fun PackItemScreen(
             ExtendedFloatingActionButton(
                 onClick = onAddItem,
                 modifier = Modifier.testTag("add_btn"),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.add)) }
             )
@@ -466,18 +487,11 @@ private fun PackItemScreen(
 
         if (items.isEmpty()) {
             item(key = "empty") {
-                TrailSenseEmptyState(
+                PlacesEmptyState(
                     icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.inventory_empty_text),
                     description = stringResource(R.string.packs_items_empty_description),
-                    action = {
-                        FilledTonalButton(onClick = onAddItem) {
-                            Text(stringResource(R.string.create_item_title))
-                        }
-                    },
-                    modifier = Modifier
-                        .fillParentMaxHeight(0.8f)
-                        .testTag("inventory_empty_text")
+                    modifier = Modifier.testTag("inventory_empty_text")
                 )
             }
             return@TrailSensePage
@@ -494,9 +508,17 @@ private fun PackItemScreen(
         }
 
         groups.forEachIndexed { index, (category, categoryItems) ->
+            item(key = "category_header_${index}_${category.id}") {
+                CategoryHeader(
+                    category = category,
+                    name = categoryNames.getString(category),
+                    packed = categoryItems.count { it.isFullyPacked },
+                    total = categoryItems.size,
+                    modifier = Modifier.placesJoinNext(true)
+                )
+            }
             trailSenseSection(
-                key = "category_${index}_${category.id}",
-                title = categoryNames.getString(category)
+                key = "category_${index}_${category.id}"
             ) {
                 categoryItems.forEach { item ->
                     row { position ->
@@ -517,6 +539,51 @@ private fun PackItemScreen(
     }
 }
 
+/** A category's header: its icon on a small cookie, its name, and how many of its items are packed. */
+@Composable
+private fun CategoryHeader(
+    category: ItemCategory,
+    name: String,
+    packed: Int,
+    total: Int,
+    modifier: Modifier = Modifier
+) {
+    val iconMapper = remember { ItemCategoryIconMapper() }
+    val status = trailSenseStatusColors()
+    val done = packed == total
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.lg, top = TrailSenseSpacing.md, bottom = TrailSenseSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PlacesBadge(
+            containerColor = if (done) status.goodContainer else MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = if (done) status.onGoodContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+            icon = iconMapper.getIconVector(category),
+            shape = MaterialShapes.Cookie6Sided.toShape(),
+            size = 32.dp,
+            iconScale = 0.55f
+        )
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Text(
+            name,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            "$packed / $total",
+            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+            color = if (done) status.good else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * How packed the list is, as the Spotlight: the percentage large beside a cookie that turns green with a check when
+ * everything's in, the packed weight as a pill, a thick wavy bar and the item count.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PackHeroCard(
@@ -528,35 +595,41 @@ private fun PackHeroCard(
 ) {
     val progress by animateFloatAsState(
         targetValue = packedFraction,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "packedProgress"
     )
-    val content = MaterialTheme.colorScheme.onSecondaryContainer
+    val done = packedCount.second > 0 && packedCount.first >= packedCount.second
+    val colors = trailSenseToneColors(if (done) TrailSenseTone.Good else TrailSenseTone.Primary)
+    val content = colors.content
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        color = colors.container,
         contentColor = content
     ) {
         Column(
             modifier = Modifier.padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = totalPercentPacked,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("total_percent_packed"),
-                    style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum")
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                TrailSenseShapeBadge(
+                    icon = if (done) TrailIcons.Check else TrailIcons.ToolPack,
+                    shape = MaterialShapes.Cookie12Sided.toShape(),
+                    size = 64.dp,
+                    containerColor = colors.accent,
+                    contentColor = colors.onAccent
                 )
-                if (showWeightOverview) {
+                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                Column(Modifier.weight(1f)) {
                     Text(
-                        text = totalPackedWeight,
-                        modifier = Modifier
-                            .padding(start = TrailSenseSpacing.md)
-                            .testTag("total_packed_weight"),
-                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        text = totalPercentPacked,
+                        modifier = Modifier.testTag("total_percent_packed"),
+                        style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = stringResource(R.string.packs_items_packed, packedCount.first, packedCount.second),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                         color = content.copy(alpha = 0.82f)
                     )
                 }
@@ -565,15 +638,38 @@ private fun PackHeroCard(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp),
-                color = MaterialTheme.colorScheme.primary,
+                    .height(12.dp),
+                color = colors.accent,
                 trackColor = content.copy(alpha = 0.16f)
             )
-            Text(
-                text = stringResource(R.string.packs_items_packed, packedCount.first, packedCount.second),
-                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                color = content.copy(alpha = 0.82f)
-            )
+            if (showWeightOverview) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                    contentColor = content
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(TrailIcons.Weight, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(TrailSenseSpacing.md))
+                        Text(
+                            stringResource(R.string.weight),
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = totalPackedWeight,
+                            modifier = Modifier.testTag("total_packed_weight"),
+                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -622,6 +718,22 @@ private fun PackItemRow(
             )
         },
         trailing = {
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                Text(
+                    text = count,
+                    modifier = Modifier.testTag("item_count"),
+                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (item.isFullyPacked) trailSenseStatusColors().good else MaterialTheme.colorScheme.primary
+                )
+                if (item.desiredAmount != 0.0) {
+                    PlacesMiniBar(
+                        item.percentPacked / 100f,
+                        color = if (item.isFullyPacked) trailSenseStatusColors().good else MaterialTheme.colorScheme.primary,
+                        width = 48.dp
+                    )
+                }
+            }
             PacksOverflowMenu(
                 contentDescription = stringResource(R.string.packs_more_options),
                 modifier = Modifier.testTag("item_menu"),
@@ -637,20 +749,13 @@ private fun PackItemRow(
         Text(
             text = item.name,
             modifier = Modifier.testTag("item_title"),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = titleColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-            Text(
-                text = count,
-                modifier = Modifier.testTag("item_count"),
-                style = supporting.copy(fontFeatureSettings = "tnum"),
-                color = supportingColor
-            )
             if (packedWeight != null) {
-                Text("·", style = supporting, color = supportingColor)
                 Text(
                     text = packedWeight,
                     modifier = Modifier.testTag("item_weight"),
@@ -659,7 +764,7 @@ private fun PackItemRow(
                 )
             }
             if (item.isOptional) {
-                Text("·", style = supporting, color = supportingColor)
+                if (packedWeight != null) Text("·", style = supporting, color = supportingColor)
                 Text(
                     text = stringResource(R.string.packing_list_optional),
                     modifier = Modifier.testTag("item_optional"),
