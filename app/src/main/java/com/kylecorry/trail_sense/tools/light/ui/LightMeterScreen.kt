@@ -51,18 +51,32 @@ import com.kylecorry.sol.science.optics.Optics
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material3.TextButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricRow
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.max
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LightMeterScreen(
     modifier: Modifier = Modifier
@@ -108,229 +122,106 @@ fun LightMeterScreen(
         Optics.luxToCandela(maxLux, it)
     } ?: 0f
 
-    val beamDistanceText = beamDistance?.let {
-        val beamDist = Optics.lightBeamDistance(candela).convertTo(it.units)
-        stringResource(R.string.beam_distance, formatter.formatDistance(beamDist))
-    }.orEmpty()
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    var showUnitPicker by remember { mutableStateOf(false) }
+    val luxText = formatter.formatLux(illuminance)
+    val distanceLabel = stringResource(R.string.distance_from_flashlight)
+    val previewLabel = stringResource(R.string.preview)
+
+    // The live illuminance is the hero; once a distance is entered the flashlight's strength and reach follow it
+    // as a metric strip, then the beam preview, then the one input that drives them.
+    TrailSensePage(
+        title = stringResource(R.string.tool_light_meter_title),
+        modifier = modifier,
+        actions = {
+            TextButton(
+                onClick = { maxLux = 0f },
+                modifier = Modifier.testTag("reset_btn")
+            ) {
+                Text(stringResource(R.string.reset))
+            }
+        }
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
+        item("hero") {
             Column(
                 modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-            ) {
-            // Hero: live illuminance reading in a bold tonal card.
-            LightHeroCard(
-                lux = illuminance,
-                luxText = formatter.formatLux(illuminance),
-                candelaText = if (beamDistance == null) "" else formatter.formatCandela(candela),
-                beamDistanceText = beamDistanceText
-            )
-
-            // Beam visualization grouped in a surface card.
-            LightBeamCard(
-                candela = candela,
-                units = beamDistanceUnit
-            )
-
-            // Controls: distance input + unit selection + reset.
-            LightControls(
-                distanceUnits = distanceUnits,
-                beamDistanceUnit = beamDistanceUnit,
-                beamDistanceAmount = beamDistanceAmount,
-                formatter = formatter,
-                onAmountChange = {
-                    beamDistanceAmount = it
-                    maxLux = 0f
-                },
-                onUnitSelected = {
-                    beamDistanceUnit = it
-                    maxLux = 0f
-                }
-            )
-
-            TrailSenseButton(
-                text = stringResource(R.string.reset),
-                onClick = { maxLux = 0f },
-                modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("reset_btn")
-            )
-        }
-        }
-    }
-}
-
-@Composable
-private fun LightHeroCard(
-    lux: Float,
-    luxText: String,
-    candelaText: String,
-    beamDistanceText: String
-) {
-    val animatedLux by animateFloatAsState(
-        targetValue = lux,
-        animationSpec = TrailSenseAnimation.standardSpring,
-        label = "luxValue"
-    )
-    // Drive a subtle brightness ramp on the hero based on the live reading so the
-    // card visibly reacts to light. Purely cosmetic; the displayed text is exact.
-    val brightness = (ln(animatedLux + 1f) / ln(10001f)).coerceIn(0f, 1f)
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("light_title"),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            // Sun-like indicator whose glow tracks the measured illuminance.
-            Box(
-                modifier = Modifier.height(8.dp).fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                    .padding(vertical = TrailSenseSpacing.lg)
+                    .testTag("light_title"),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
-                Surface(
-                    shape = RoundedCornerShape(TrailSenseSpacing.xs),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f + 0.75f * brightness),
-                    modifier = Modifier
-                        .fillMaxWidth(0.2f + 0.6f * brightness)
-                        .height(6.dp)
-                ) {}
-            }
-            Text(
-                text = luxText,
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                textAlign = TextAlign.Center
-            )
-            if (candelaText.isNotEmpty()) {
-                Text(
-                    text = candelaText,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textAlign = TextAlign.Center
-                )
-            }
-            if (beamDistanceText.isNotEmpty()) {
-                Text(
-                    text = beamDistanceText,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("beam_distance_text"),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                // Preserve the test target even when empty (matches original behavior).
-                Text(
-                    text = beamDistanceText,
-                    modifier = Modifier.testTag("beam_distance_text"),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LightBeamCard(
-    candela: Float,
-    units: DistanceUnits
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer
-    ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            Text(
-                text = stringResource(R.string.preview),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            LightBeamChart(
-                candela = candela,
-                units = units,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(125.dp)
-                    .testTag("light_chart")
-            )
-        }
-    }
-}
-
-@Composable
-private fun LightControls(
-    distanceUnits: List<DistanceUnits>,
-    beamDistanceUnit: DistanceUnits,
-    beamDistanceAmount: String,
-    formatter: FormatService,
-    onAmountChange: (String) -> Unit,
-    onUnitSelected: (DistanceUnits) -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer
-    ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            Text(
-                text = stringResource(R.string.distance_from_flashlight),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            OutlinedTextField(
-                value = beamDistanceAmount,
-                onValueChange = onAmountChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("beam_distance"),
-                label = { Text(stringResource(R.string.distance)) },
-                suffix = { Text(formatter.getDistanceUnitName(beamDistanceUnit, true)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                shape = MaterialTheme.shapes.medium,
-                singleLine = true
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-            ) {
-                distanceUnits.forEach { unit ->
-                    TrailSenseChip(
-                        text = formatter.getDistanceUnitName(unit, true),
-                        selected = unit == beamDistanceUnit,
-                        onClick = { onUnitSelected(unit) }
+                TrailSenseReading(value = luxText)
+                AnimatedVisibility(
+                    visible = beamDistance != null,
+                    enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
+                        fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+                    exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
+                        fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
+                ) {
+                    TrailSenseMetricRow(
+                        items = listOf(
+                            TrailSenseMetricItem(
+                                label = stringResource(R.string.light_meter_intensity),
+                                value = formatter.formatCandela(candela)
+                            ),
+                            TrailSenseMetricItem(
+                                label = stringResource(R.string.light_meter_reach),
+                                value = beamDistance?.let {
+                                    formatter.formatDistance(Optics.lightBeamDistance(candela).convertTo(it.units))
+                                } ?: "--"
+                            )
+                        )
                     )
                 }
             }
         }
+
+        trailSenseSection("distance", title = distanceLabel) {
+            row { position ->
+                TrailSenseInputField(
+                    value = beamDistanceAmount,
+                    onValueChange = {
+                        beamDistanceAmount = it
+                        maxLux = 0f
+                    },
+                    label = stringResource(R.string.distance),
+                    modifier = Modifier.testTag("beam_distance"),
+                    position = position,
+                    unit = formatter.getDistanceUnitName(beamDistanceUnit, true),
+                    onUnitClick = { showUnitPicker = true }
+                )
+            }
+        }
+
+        trailSenseSection("preview", title = previewLabel) {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
+                    LightBeamChart(
+                        candela = candela,
+                        units = beamDistanceUnit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(125.dp)
+                            .testTag("light_chart")
+                    )
+                }
+            }
+        }
+    }
+
+    if (showUnitPicker) {
+        TrailSenseOptionsDialog(
+            title = stringResource(R.string.distance),
+            options = distanceUnits.map { formatter.getDistanceUnitName(it, false) to it },
+            selected = beamDistanceUnit,
+            onSelect = {
+                beamDistanceUnit = it
+                maxLux = 0f
+                showUnitPicker = false
+            },
+            onDismiss = { showUnitPicker = false }
+        )
     }
 }
 
@@ -340,10 +231,9 @@ private fun LightBeamChart(
     units: DistanceUnits,
     modifier: Modifier = Modifier
 ) {
-    val shape = MaterialTheme.shapes.medium
     Surface(
         modifier = modifier,
-        shape = shape,
+        shape = RoundedCornerShape(TrailSenseShape.groupInner * 2),
         color = Color.Black
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
