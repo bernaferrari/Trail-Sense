@@ -49,6 +49,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.sound.ISoundPlayer
@@ -62,7 +63,8 @@ import com.kylecorry.trail_sense.shared.morse.Signal
 import com.kylecorry.trail_sense.shared.morse.SignalPlayer
 import com.kylecorry.trail_sense.shared.morse.Signals
 import com.kylecorry.trail_sense.shared.morse.asSignal
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
@@ -235,29 +237,18 @@ fun WhistleScreen(
     }
 
     // One question: is it whistling, and what is it saying?
-    TrailSenseInstrumentScaffold(
+    // A standard page with the large title, like the other instruments; the pad is the one live object.
+    TrailSensePage(
         title = stringResource(R.string.tool_whistle_title),
+        onBack = rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back),
         modifier = modifier
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .widthIn(max = TrailSenseSize.maximumContentWidth)
-                .align(Alignment.TopCenter)
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
-                .padding(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
-                    top = TrailSenseSpacing.xs,
-                    bottom = TrailSenseSpacing.xxxl
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-        ) {
+        item(key = "pad") {
             Column(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
                 HoldToWhistlePad(
                     active = currentSignal == WHISTLE,
@@ -274,21 +265,22 @@ fun WhistleScreen(
                     },
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (playingSignal?.loop == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
             }
+        }
 
-            // Emergency calls first, then the conversational ones, each drawing its rhythm.
-            val (emergency, calls) = signals.partition { it.loop }
-            listOf(
-                stringResource(R.string.whistle_emergency) to emergency,
-                stringResource(R.string.whistle_signals) to calls
-            ).forEach { (title, group) ->
-                TrailSenseRowGroup(
-                    title = title,
-                    footer = if (group === calls) stringResource(R.string.whistle_legend) else null
-                ) {
+        // Emergency calls first, then the conversational ones, each drawing its rhythm. Whether a call repeats is
+        // said once per group, in its footer, rather than on every row.
+        val (emergency, calls) = signals.partition { it.loop }
+        listOf(
+            Triple("emergency", R.string.whistle_emergency to emergency, R.string.whistle_signal_repeats),
+            Triple("signals", R.string.whistle_signals to calls, R.string.whistle_legend)
+        ).forEach { (key, titled, footer) ->
+            val (title, group) = titled
+            item(key = key) {
+                TrailSenseRowGroup(title = stringResource(title), footer = stringResource(footer)) {
                     group.forEach { signal ->
                         row { position ->
                             WhistleSignalRow(
@@ -306,9 +298,9 @@ fun WhistleScreen(
 }
 
 /**
- * One signal as a quiet row: its glyph in a cookie (red for the emergency calls), the name, and the pattern itself
- * drawn as a strip of blasts (long pills and short dots), so "three long" and "dot dot dot dash dash dash" read
- * without the guide. Playing turns the badge into a primary stop control.
+ * One signal as a quiet row: its glyph in a cookie, the name, and the pattern itself drawn as a strip of blasts (long
+ * pills and short dots), so "three long" and "dot dot dot dash dash dash" read without the guide. Playing turns the
+ * badge into a primary stop control. No row is red: the error colour is kept for real danger, not for a button.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -319,19 +311,15 @@ private fun WhistleSignalRow(
     onClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    val badgeColor = when {
-        playing -> scheme.primary
-        signal.loop -> scheme.errorContainer
-        else -> scheme.secondaryContainer
-    }
-    val badgeContent = when {
-        playing -> scheme.onPrimary
-        signal.loop -> scheme.onErrorContainer
-        else -> scheme.onSecondaryContainer
-    }
+    val badgeColor = if (playing) scheme.primary else scheme.secondaryContainer
+    val badgeContent = if (playing) scheme.onPrimary else scheme.onSecondaryContainer
+    val playingLabel = stringResource(R.string.whistle_playing)
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        // The stop badge and the lit rhythm show it playing; screen readers hear it.
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics { if (playing) stateDescription = playingLabel },
         shape = trailSenseGroupShape(position),
         color = scheme.surfaceContainerLow
     ) {
@@ -359,18 +347,6 @@ private fun WhistleSignalRow(
                     playing = playing
                 )
             }
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
-            Text(
-                text = stringResource(
-                    when {
-                        playing -> R.string.whistle_playing
-                        signal.loop -> R.string.whistle_repeats_short
-                        else -> R.string.whistle_once
-                    }
-                ),
-                style = MaterialTheme.typography.labelLarge,
-                color = if (playing) scheme.primary else scheme.onSurfaceVariant
-            )
         }
     }
 }
@@ -473,7 +449,7 @@ private fun HoldToWhistlePad(
 
     Box(
         modifier = Modifier
-            .widthIn(max = 240.dp)
+            .widthIn(max = 192.dp)
             .fillMaxWidth()
             .aspectRatio(1f),
         contentAlignment = Alignment.Center
@@ -519,7 +495,7 @@ private fun HoldToWhistlePad(
             TrailIcons.ToolWhistle,
             contentDescription = null,
             tint = contentColor,
-            modifier = Modifier.size(96.dp)
+            modifier = Modifier.size(72.dp)
         )
     }
 }
