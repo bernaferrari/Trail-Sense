@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the expressive pass of the sky and knowledge tools (weather, astronomy, guides, sensors). -->
+<resources>
+    <string name="sky_strike_distance">Strike distance</string>
+    <string name="sky_seconds_short">%s s</string>
+    <string name="sky_strike_time">Time</string>
+    <string name="sky_strike_last_distance">Distance</string>
+    <string name="sky_temperature_change">%s from here</string>
+    <string name="sky_temperature_hint">Enter the temperature where you are, then a destination elevation, humidity or wind.</string>
+</resources>
