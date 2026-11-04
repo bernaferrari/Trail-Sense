@@ -15,6 +15,7 @@
     <string name="whistle_repeats_short">Repeats</string>
     <string name="whistle_once">Once</string>
     <string name="whistle_whistling">Whistling</string>
+    <string name="whistle_legend">Bars are long blasts, dots are short ones.</string>
 
     <!-- Flashlight -->
     <string name="flashlight_turns_off_in">Off in %1$s</string>
@@ -43,6 +44,7 @@
 
     <!-- White noise -->
     <string name="white_noise_tap_to_play">Tap to play</string>
+    <string name="white_noise_tap_to_stop">Tap to stop</string>
 
     <!-- Battery -->
     <string name="battery_charging">Charging</string>
