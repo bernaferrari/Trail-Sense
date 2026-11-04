@@ -160,9 +160,12 @@ fun trailSenseAreaUnder(line: Path, startX: Float, endX: Float, bottom: Float): 
     close()
 }
 
-/** "Now": a dot with a soft halo and a ring of the panel's colour so it lifts off the line. */
-fun DrawScope.drawTrailSenseNowDot(center: Offset, color: Color, ring: Color) {
-    drawCircle(color.copy(alpha = 0.16f), radius = 14.dp.toPx(), center = center)
-    drawCircle(ring, radius = 8.dp.toPx(), center = center)
-    drawCircle(color, radius = 6.dp.toPx(), center = center)
+/**
+ * "Now" (or a selected point): WiFi Weakspot's inspect marker. A thin vertical line across the plot, from [top] to
+ * [bottom], and a small dot where it meets the line, with no halo.
+ */
+fun DrawScope.drawTrailSenseNowDot(center: Offset, color: Color, ring: Color, top: Float = 0f, bottom: Float = size.height) {
+    drawLine(color.copy(alpha = 0.65f), Offset(center.x, top), Offset(center.x, bottom), strokeWidth = 1.dp.toPx())
+    drawCircle(ring, radius = 6.dp.toPx(), center = center)
+    drawCircle(color, radius = 4.5.dp.toPx(), center = center)
 }
