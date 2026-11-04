@@ -2,6 +2,14 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+
 import androidx.compose.ui.graphics.Color
 import com.kylecorry.trail_sense.tools.tools.ui.accent
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
@@ -132,12 +140,16 @@ private fun SettingsScreen(
     onEmailDeveloper: () -> Unit
 ) {
     val context = LocalContext.current
-    val toolItems = remember {
-        AlphabeticalToolSort()
-            .sort(Tools.getTools(context))
-            .first()
-            .tools
-            .filter { it.settingsNavAction != null }
+    val toolGroups = remember {
+        com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort(context)
+            .sort(Tools.getTools(context).filter { it.settingsNavAction != null })
+            .filter { it.tools.isNotEmpty() }
+    }
+    // Live values for the quick controls, read again whenever the screen comes back from a sub-page.
+    var quick by remember { mutableStateOf(readQuickSettings(context)) }
+    androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+        quick = readQuickSettings(context)
+        onPauseOrDispose { }
     }
 
     val generalTitle = stringResource(R.string.general)
@@ -152,49 +164,72 @@ private fun SettingsScreen(
         onBack = onBack,
         backLabel = stringResource(R.string.back)
     ) {
-        // Keepout's settings grid: the everyday destinations as tiles, each with its own colour in the well.
-        item("general") {
-            Column {
-                TrailSenseGroupHeader(generalTitle)
-                TrailSenseTileGrid(
-                    listOf(
-                        settingsTile(R.string.pref_unit_settings, stringResource(R.string.units), TrailIcons.Ruler, TrailSenseAccents.Sky, ::go),
-                        settingsTile(R.string.pref_theme_settings, stringResource(R.string.pref_theme_title), TrailIcons.Theme, TrailSenseAccents.Blush, ::go),
-                        settingsTile(R.string.pref_sensor_settings, stringResource(R.string.sensors), TrailIcons.Sensors, TrailSenseAccents.Seafoam, ::go),
-                        settingsTile(R.string.pref_privacy_settings, stringResource(R.string.privacy), TrailIcons.Visible, TrailSenseAccents.Lavender, ::go),
-                        settingsTile(R.string.pref_error_settings, stringResource(R.string.errors), TrailIcons.Alert, TrailSenseAccents.Coral, ::go),
-                        settingsTile(R.string.pref_backup_settings, stringResource(R.string.backup_restore), TrailIcons.BackupRestore, TrailSenseAccents.Leaf, ::go)
+        // Quick controls: the two settings people change most, with their live state, as two tiles.
+        item("quick") {
+            TrailSenseStatGrid(
+                columns = 2,
+                stats = listOf(
+                    TrailSenseStat(
+                        label = stringResource(R.string.units),
+                        value = quick.units,
+                        tone = TrailSenseTone.Primary,
+                        icon = TrailIcons.Ruler,
+                        onClick = { go(R.string.pref_unit_settings) }
+                    ),
+                    TrailSenseStat(
+                        label = stringResource(R.string.pref_theme_title),
+                        value = quick.theme,
+                        tone = TrailSenseTone.Secondary,
+                        icon = TrailIcons.Theme,
+                        onClick = { go(R.string.pref_theme_settings) }
                     )
                 )
-            }
+            )
         }
 
-        trailSenseSection("tools", title = toolsTitle) {
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.tools),
-                    subtitle = stringResource(R.string.settings_tools_summary),
-                    icon = rememberVectorPainter(TrailIcons.Apps),
-                    accent = TrailSenseAccents.Apricot,
-                    position = position,
-                    onClick = { go(R.string.pref_tool_settings_header_key) }
-                )
-            }
-        }
-
-        // Each tool's own settings, as a grid in its category's colour, so the long list reads at a glance.
-        item("tool_grid") {
-            TrailSenseTileGrid(
-                toolItems.map { tool ->
-                    TrailSenseTile(
-                        key = tool.id,
-                        title = tool.name,
-                        accent = tool.category.accent(),
-                        icon = { Icon(tool.icon, contentDescription = null, modifier = Modifier.size(22.dp)) },
-                        onClick = { tool.settingsNavAction?.let(onNavigate) }
+        // The rest of the app's own pages as one segmented list, each with a line on what lives inside.
+        trailSenseSection("general", title = generalTitle) {
+            listOf(
+                Triple(R.string.pref_sensor_settings, R.string.sensors, R.string.sky_settings_sensors_summary) to TrailIcons.Sensors,
+                Triple(R.string.pref_privacy_settings, R.string.privacy, R.string.sky_settings_privacy_summary) to TrailIcons.Visible,
+                Triple(R.string.pref_error_settings, R.string.errors, R.string.sky_settings_errors_summary) to TrailIcons.Alert,
+                Triple(R.string.pref_backup_settings, R.string.backup_restore, R.string.sky_settings_backup_summary) to TrailIcons.BackupRestore
+            ).forEach { (keys, icon) ->
+                row { position ->
+                    SettingsNavRow(
+                        title = stringResource(keys.second),
+                        subtitle = stringResource(keys.third),
+                        icon = rememberVectorPainter(icon),
+                        accent = TrailSenseAccents.Seafoam,
+                        position = position,
+                        onClick = { go(keys.first) }
                     )
                 }
-            )
+            }
+        }
+
+        // Tools: the shared tool settings as the section's lead card, then each tool's own page grouped by its
+        // family, in the family's colour, one row each so long names never wrap.
+        item("tools_lead") {
+            Column {
+                TrailSenseGroupHeader(toolsTitle)
+                SettingsToolsLead(onClick = { go(R.string.pref_tool_settings_header_key) })
+            }
+        }
+        toolGroups.forEachIndexed { index, group ->
+            trailSenseSection("tools_$index", title = group.categoryName) {
+                group.tools.forEach { tool ->
+                    row { position ->
+                        SettingsNavRow(
+                            title = tool.name,
+                            icon = rememberVectorPainter(tool.icon),
+                            accent = tool.category.accent(),
+                            position = position,
+                            onClick = { tool.settingsNavAction?.let(onNavigate) }
+                        )
+                    }
+                }
+            }
         }
 
         trailSenseSection("advanced", title = advancedTitle) {
@@ -401,6 +436,72 @@ private fun SettingsNavRow(
 }
 
 private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
+
+private data class QuickSettings(val units: String, val theme: String)
+
+private fun readQuickSettings(context: android.content.Context): QuickSettings {
+    val prefs = com.kylecorry.trail_sense.shared.UserPreferences(context)
+    val units = context.getString(
+        if (prefs.distanceUnits == com.kylecorry.trail_sense.shared.UserPreferences.DistanceUnits.Meters) {
+            R.string.metric
+        } else {
+            R.string.sky_units_imperial
+        }
+    )
+    val theme = context.getString(
+        when (prefs.theme) {
+            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Light -> R.string.theme_light
+            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Dark -> R.string.theme_dark
+            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Black -> R.string.theme_black
+            com.kylecorry.trail_sense.shared.UserPreferences.Theme.SunriseSunset -> R.string.theme_mode_sun
+            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Night -> R.string.theme_night_vision
+            else -> R.string.theme_mode_auto
+        }
+    )
+    return QuickSettings(units, theme)
+}
+
+/** The shared tool settings as a toned lead card: a big shaped badge, a short title and one line. */
+@Composable
+private fun SettingsToolsLead(onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    // The badge turns a petal-step while pressed.
+    val turn by animateFloatAsState(if (pressed) 30f else 0f, TrailSenseAnimation.quickSpring, label = "toolsLeadTurn")
+    Surface(
+        shape = RoundedCornerShape(com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape.groupOuter),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape.groupOuter))
+            .clickable(interactionSource = interaction, indication = ripple(), role = Role.Button, onClick = onClick)
+    ) {
+        Row(Modifier.padding(TrailSenseSpacing.lg), verticalAlignment = Alignment.CenterVertically) {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge(
+                icon = TrailIcons.Apps,
+                shape = androidx.compose.material3.MaterialShapes.Cookie9Sided.toShape(),
+                size = 56.dp,
+                modifier = Modifier.graphicsLayer { rotationZ = turn }
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.tools),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                )
+                Text(
+                    stringResource(R.string.sky_settings_tools_summary),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+        }
+    }
+}
+
 
 private fun settingsTile(
     key: Int,
