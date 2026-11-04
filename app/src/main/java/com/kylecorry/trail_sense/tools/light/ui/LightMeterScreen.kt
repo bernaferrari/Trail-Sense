@@ -158,8 +158,9 @@ fun LightMeterScreen(
     val luxText = formatter.formatLux(illuminance)
     val previewLabel = stringResource(R.string.preview)
 
-    // The live illuminance is the hero: one star number, a plain verdict and a worded scale. Peak and the beam's
-    // strength sit in quiet tiles under it, then the beam card where the distance input and its preview live together.
+    // One question: how bright is it here?
+    // One live object, a ring that fills with the light, the reading inside it and the verdict under it. Peak and
+    // the beam's strength follow as one quiet list, then the beam preview where the distance input lives.
     TrailSensePage(
         title = stringResource(R.string.tool_light_meter_title),
         modifier = modifier
@@ -172,48 +173,34 @@ fun LightMeterScreen(
             )
         }
 
-        item("metrics") {
-            val stats = buildList {
-                if (maxLux > 0f) {
-                    add(
-                        TrailSenseStat(
-                            label = stringResource(R.string.light_meter_peak_label),
-                            value = formatter.formatLux(maxLux),
-                            supportingText = stringResource(R.string.light_meter_tap_to_reset),
-                            onClick = { maxLux = 0f },
-                            testTag = "light_peak"
-                        )
-                    )
-                }
-                if (beamDistance != null) {
-                    add(
-                        TrailSenseStat(
-                            label = stringResource(R.string.light_meter_intensity),
-                            value = formatter.formatCandela(candela)
-                        )
-                    )
-                    add(
-                        TrailSenseStat(
-                            label = stringResource(R.string.light_meter_reach),
-                            value = formatter.formatDistance(Optics.lightBeamDistance(candela).convertTo(beamDistance.units)),
-                            tone = if (candela > 0f) TrailSenseTone.Tertiary else TrailSenseTone.Neutral
-                        )
+        trailSenseSection("metrics") {
+            if (maxLux > 0f) {
+                row { position ->
+                    LightValueRow(
+                        label = stringResource(R.string.light_meter_peak_label),
+                        value = formatter.formatLux(maxLux),
+                        supportingText = stringResource(R.string.light_meter_tap_to_reset),
+                        position = position,
+                        onClick = { maxLux = 0f },
+                        modifier = Modifier.testTag("light_peak")
                     )
                 }
             }
-            AnimatedVisibility(
-                visible = stats.isNotEmpty(),
-                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                    fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                    fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
-            ) {
-                TrailSenseStatGrid(
-                    stats = stats,
-                    modifier = Modifier.padding(top = TrailSenseSpacing.sm),
-                    columns = stats.size.coerceIn(1, 3),
-                    valueStyle = MaterialTheme.typography.titleLarge
-                )
+            if (beamDistance != null) {
+                row { position ->
+                    LightValueRow(
+                        label = stringResource(R.string.light_meter_intensity),
+                        value = formatter.formatCandela(candela),
+                        position = position
+                    )
+                }
+                row { position ->
+                    LightValueRow(
+                        label = stringResource(R.string.light_meter_reach),
+                        value = formatter.formatDistance(Optics.lightBeamDistance(candela).convertTo(beamDistance.units)),
+                        position = position
+                    )
+                }
             }
         }
 
@@ -222,7 +209,7 @@ fun LightMeterScreen(
                 // The input and the scene it drives, as one card.
                 Surface(
                     shape = trailSenseGroupShape(position),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                    color = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
                     Column(
                         modifier = Modifier.padding(TrailSenseSpacing.sm),
@@ -294,7 +281,10 @@ private fun lightScalePosition(lux: Float): Float {
     return 1f
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+/**
+ * The instrument: a thick ring that fills along the worded light scale (dark, dim, indoor, daylight), with the
+ * reading inside it and the verdict as the headline under it.
+ */
 @Composable
 private fun LightHero(
     luxText: String,
@@ -304,18 +294,6 @@ private fun LightHero(
     val scheme = MaterialTheme.colorScheme
     val position = lightScalePosition(illuminance)
     val animatedPosition by animateFloatAsState(position, MaterialTheme.motionScheme.slowSpatialSpec(), label = "lux")
-    val band = (position * 4f).toInt().coerceIn(0, 3)
-    // Night is calm secondary, indoor light primary, daylight the warm tertiary.
-    val tone = when (band) {
-        0 -> TrailSenseTone.Secondary
-        1, 2 -> TrailSenseTone.Primary
-        else -> TrailSenseTone.Tertiary
-    }
-    val colors = trailSenseToneColors(tone)
-    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
-    val container by animateColorAsState(colors.container, effects, label = "lightContainer")
-    val content by animateColorAsState(colors.content, effects, label = "lightContent")
-    val accent by animateColorAsState(colors.accent, effects, label = "lightAccent")
     val verdict = stringResource(
         when {
             illuminance < 1f -> R.string.light_verdict_dark
@@ -326,125 +304,95 @@ private fun LightHero(
             else -> R.string.light_verdict_sun
         }
     )
-    // The badge grows more rays as the light grows, and turns slowly once it is bright.
-    val shape = when (band) {
-        0 -> MaterialShapes.Cookie4Sided
-        1 -> MaterialShapes.Cookie7Sided
-        2 -> MaterialShapes.Sunny
-        else -> MaterialShapes.VerySunny
-    }
-    val spin by rememberInfiniteTransition(label = "lightSpin").animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(20_000, easing = LinearEasing), RepeatMode.Restart),
-        label = "lightSpinAngle"
-    )
+    // "Pitch dark · your eyes need..." reads as a headline and its explanation.
+    val headline = verdict.substringBefore(" · ")
+    val detail = verdict.substringAfter(" · ", "").replaceFirstChar { it.uppercase() }
+    val track = scheme.surfaceContainerHigh
+    val fill = scheme.primary
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = container,
-        contentColor = content
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = TrailSenseSpacing.sm),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        Box(
+            modifier = Modifier
+                .size(260.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-                    Text(
-                        text = luxText,
-                        style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = verdict,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = content.copy(alpha = 0.85f)
-                    )
-                }
-                Spacer(Modifier.width(TrailSenseSpacing.md))
-                Box(contentAlignment = Alignment.Center) {
-                    TrailSenseShapeBadge(
-                        shape = shape.toShape(),
-                        size = 76.dp,
-                        containerColor = accent,
-                        contentColor = colors.onAccent,
-                        modifier = Modifier.graphicsLayer { rotationZ = if (band >= 2) spin else 0f }
-                    )
-                    androidx.compose.material3.Icon(
-                        imageVector = if (band == 0) TrailIcons.Moon else TrailIcons.SunRays,
-                        contentDescription = null,
-                        tint = colors.onAccent,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+            Canvas(Modifier.fillMaxSize()) {
+                val stroke = 22.dp.toPx()
+                val inset = stroke / 2f
+                val arcSize = Size(size.width - stroke, size.height - stroke)
+                drawArc(
+                    color = track,
+                    startAngle = 135f,
+                    sweepAngle = 270f,
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = arcSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                )
+                drawArc(
+                    color = fill,
+                    startAngle = 135f,
+                    sweepAngle = (270f * animatedPosition).coerceAtLeast(0.5f),
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = arcSize,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                )
             }
-            LightScale(position = animatedPosition, band = band, accent = accent, content = content)
+            Text(
+                text = luxText,
+                style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
+        }
+        Text(
+            text = headline,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+        if (detail.isNotEmpty()) {
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodyLarge,
+                color = scheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
 
-/** A thick worded scale: four rounded segments, the one holding the reading filled, and a marker on it. */
+/** A quiet value row: its label on the left, the value on the right. */
 @Composable
-private fun LightScale(position: Float, band: Int, accent: Color, content: Color) {
-    val labels = listOf(
-        stringResource(R.string.light_level_dark),
-        stringResource(R.string.light_level_dim),
-        stringResource(R.string.light_scale_indoor),
-        stringResource(R.string.light_level_daylight)
+private fun LightValueRow(
+    label: String,
+    value: String,
+    position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
+    supportingText: String? = null,
+    onClick: (() -> Unit)? = null
+) {
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem(
+        title = label,
+        subtitle = supportingText,
+        position = position,
+        onClick = onClick,
+        modifier = modifier,
+        trailing = {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
     )
-    val track = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.6f)
-    val marker = MaterialTheme.colorScheme.surfaceContainerLowest
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-        Canvas(
-            Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-        ) {
-            val gap = 3.dp.toPx()
-            val barHeight = 12.dp.toPx()
-            val top = (size.height - barHeight) / 2f
-            val segment = (size.width - gap * 3) / 4f
-            for (i in 0 until 4) {
-                val left = i * (segment + gap)
-                val outer = barHeight / 2f
-                val inner = 3.dp.toPx()
-                val path = Path().apply {
-                    addRoundRect(
-                        androidx.compose.ui.geometry.RoundRect(
-                            left = left,
-                            top = top,
-                            right = left + segment,
-                            bottom = top + barHeight,
-                            topLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(if (i == 0) outer else inner),
-                            bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(if (i == 0) outer else inner),
-                            topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(if (i == 3) outer else inner),
-                            bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(if (i == 3) outer else inner)
-                        )
-                    )
-                }
-                drawPath(path, if (i <= band) accent.copy(alpha = if (i == band) 1f else 0.45f) else track)
-            }
-            val x = (position * size.width).coerceIn(size.height / 2f, size.width - size.height / 2f)
-            drawCircle(content, size.height / 2f, Offset(x, size.height / 2f))
-            drawCircle(marker, size.height / 2f - 3.dp.toPx(), Offset(x, size.height / 2f))
-        }
-        Row {
-            labels.forEachIndexed { index, label ->
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (index == band) FontWeight.Bold else FontWeight.Medium,
-                    color = content.copy(alpha = if (index == band) 1f else 0.7f),
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
 }
 
 @Composable

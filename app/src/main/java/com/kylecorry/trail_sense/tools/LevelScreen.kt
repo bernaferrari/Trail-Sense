@@ -58,8 +58,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontWeight
@@ -69,12 +69,13 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 
 /**
- * Bubble level: a scalloped bezel holding a liquid bubble that stretches toward the tilt, then the tilt as the star
- * number with a plain verdict under it, and X and Y as quiet tiles. Once the phone is level the bezel smooths into a
- * true circle, turns green, pulses once and gives a haptic tick.
+ * Bubble level: one live object, a scalloped bezel holding a bubble that stretches toward the tilt, with the tilt
+ * and the verdict right under it and X and Y as one quiet list. Once the phone is level the bezel smooths into a
+ * true circle, turns green and gives one haptic tick.
  */
 @Composable
 fun LevelScreen(modifier: Modifier = Modifier) {
+    // One question: is it level, and if not, which side is high?
     val context = LocalContext.current
     val view = LocalView.current
     val formatService = remember { FormatService.getInstance(context) }
@@ -145,7 +146,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
             ) {
                 LevelBezel(xAngle = xAngle, yAngle = yAngle, isLevel = isLevel)
             }
-            // The star number and its verdict, then the two axes as quiet tiles.
+            // The reading and its verdict, then the two axes as one quiet list.
             val statusColors = trailSenseStatusColors()
             val starColor by animateColorAsState(
                 if (isLevel) statusColors.good else MaterialTheme.colorScheme.onSurface,
@@ -155,9 +156,9 @@ fun LevelScreen(modifier: Modifier = Modifier) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = formattedTilt,
-                    style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+                    style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
-                    color = starColor,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1
                 )
                 Text(
@@ -171,21 +172,32 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                             else -> R.string.level_top_high
                         }
                     ),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = starColor
                 )
             }
-            TrailSenseStatGrid(
-                stats = listOf(
-                    TrailSenseStat(label = "X", value = formattedX),
-                    TrailSenseStat(label = "Y", value = formattedY)
-                ),
-                columns = 2,
-                valueStyle = MaterialTheme.typography.titleLarge
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                AxisRow("X", formattedX, TrailSenseGroupPosition(isFirst = true, isLast = false))
+                AxisRow("Y", formattedY, TrailSenseGroupPosition(isFirst = false, isLast = true))
+            }
         }
     }
+}
+
+@Composable
+private fun AxisRow(label: String, value: String, position: TrailSenseGroupPosition) {
+    TrailSenseListItem(
+        title = label,
+        position = position,
+        trailing = {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    )
 }
 
 private const val LEVEL_TOLERANCE_DEGREES = 1.0f
@@ -207,7 +219,7 @@ private class LevelMorphShape(private val morph: Morph, private val progress: Fl
 
 /**
  * The bezel: a twelve-sided cookie in the primary tone that smooths into a circle and turns good once level,
- * around a deep round face. A soft ring pulses out of the rim at the moment it locks.
+ * around a deep round face.
  */
 @Composable
 private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
@@ -218,12 +230,6 @@ private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "bezel"
     )
-    // The bezel turns a little with the tilt direction, like liquid catching in the ridges.
-    val turn by animateFloatAsState(
-        targetValue = if (isLevel) 0f else (xAngle - yAngle) * 0.6f,
-        animationSpec = TrailSenseAnimation.standardSpring,
-        label = "bezelTurn"
-    )
     val smooth by animateFloatAsState(
         targetValue = if (isLevel) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
@@ -231,15 +237,6 @@ private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
     )
     val morph = remember { Morph(MaterialShapes.Cookie12Sided, MaterialShapes.Circle) }
     val shape = remember(smooth) { LevelMorphShape(morph, smooth) }
-    val pulse = remember { Animatable(0f) }
-    LaunchedEffect(isLevel) {
-        if (isLevel) {
-            pulse.snapTo(0f)
-            pulse.animateTo(1f, androidx.compose.animation.core.tween(700))
-        }
-    }
-    val pulseColor = statusColors.good
-
     Box(
         modifier = Modifier
             .widthIn(max = 320.dp)
@@ -247,21 +244,10 @@ private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
             .aspectRatio(1f),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val p = pulse.value
-            if (p > 0f && p < 1f) {
-                drawCircle(
-                    color = pulseColor.copy(alpha = 0.35f * (1f - p)),
-                    radius = size.minDimension / 2f * (0.92f + 0.08f * p),
-                    style = Stroke(width = 10.dp.toPx() * (1f - p) + 1f)
-                )
-            }
-        }
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp)
-                .graphicsLayer { rotationZ = turn },
+                .padding(8.dp),
             shape = shape,
             color = bezel
         ) {}
@@ -293,7 +279,6 @@ private fun BubbleFace(xAngle: Float, yAngle: Float, isLevel: Boolean, modifier:
     )
     val tick = scheme.onSurfaceVariant
     val ring = scheme.outline.copy(alpha = 0.6f)
-    val band = scheme.primaryContainer.copy(alpha = 0.28f)
     val animatedX by animateFloatAsState(xAngle, TrailSenseAnimation.standardSpring, label = "bubbleX")
     val animatedY by animateFloatAsState(yAngle, TrailSenseAnimation.standardSpring, label = "bubbleY")
 
@@ -306,8 +291,6 @@ private fun BubbleFace(xAngle: Float, yAngle: Float, isLevel: Boolean, modifier:
         val dy = (animatedY / MAX_ANGLE).coerceIn(-1f, 1f)
         val bubbleCenter = center + Offset(dx * travel, dy * travel)
 
-        // A filled inner band for the first 15°, so the target zone reads as a place, not a hairline.
-        drawCircle(band, travel / 3f, center)
         // The level zone: a soft filled target the bubble settles into.
         drawCircle(targetColor, bubbleRadius + 10.dp.toPx(), center)
         drawCircle(
@@ -355,11 +338,5 @@ private fun BubbleFace(xAngle: Float, yAngle: Float, isLevel: Boolean, modifier:
             )
             drawOval(bubbleColor, topLeft = bubbleCenter - Offset(w / 2f, h / 2f), size = Size(w, h))
         }
-        // A highlight so it reads as a drop of liquid, not a dot.
-        drawCircle(
-            Color.White.copy(alpha = 0.35f),
-            bubbleRadius * 0.28f,
-            bubbleCenter + Offset(-bubbleRadius * 0.35f, -bubbleRadius * 0.35f)
-        )
     }
 }

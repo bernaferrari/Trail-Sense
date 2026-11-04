@@ -77,11 +77,10 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import kotlinx.coroutines.launch
 
 /**
- * A converter as two connected panels: what you type on a quiet surface panel, the answer large on the primary panel
- * under it, each with its unit as a chip. A scalloped badge sits on the seam: it swaps the units (and spins) where
- * that makes sense, or simply points down. The answer rolls in when it changes and can be copied with one tap.
- * Idle, the answer panel shows a dashed placeholder and a plain instruction rather than a dim dummy value, and a row
- * of quick starts (paste, or a round amount) sits under the pair.
+ * A converter as one group of two rows: what you type, then the answer as the screen's one emphasised value, each
+ * with its unit as a chip. A tonal badge sits on the seam: it swaps the units where that makes sense, or simply
+ * points down. The answer rolls in when it changes and can be copied with one tap. Idle, the answer row shows a
+ * plain instruction, and a row of quick starts (paste, or a round amount) sits under the pair.
  */
 @Composable
 internal fun ConvertPair(
@@ -117,7 +116,7 @@ internal fun ConvertPair(
                 // From
                 Surface(
                     shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = true, isLast = false)),
-                    color = scheme.surfaceContainerHigh,
+                    color = scheme.surfaceContainerLow,
                     contentColor = scheme.onSurface
                 ) {
                     Column(
@@ -165,8 +164,8 @@ internal fun ConvertPair(
                 // To
                 Surface(
                     shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = true)),
-                    color = scheme.primaryContainer,
-                    contentColor = scheme.onPrimaryContainer
+                    color = scheme.surfaceContainerLow,
+                    contentColor = scheme.onSurface
                 ) {
                     Column(
                         Modifier
@@ -175,7 +174,7 @@ internal fun ConvertPair(
                             .padding(TrailSenseSpacing.lg),
                         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
                     ) {
-                        TileHeader(toLabel, toUnit, onToUnitClick, scheme.onPrimaryContainer.copy(alpha = 0.8f), scheme.primary, scheme.onPrimary)
+                        TileHeader(toLabel, toUnit, onToUnitClick, scheme.onSurfaceVariant, scheme.secondaryContainer, scheme.onSecondaryContainer)
                         val enter = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()
                         val fade = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
                         AnimatedContent(
@@ -188,31 +187,12 @@ internal fun ConvertPair(
                             label = "result"
                         ) { text ->
                             if (text.isBlank()) {
-                                Column(
-                                    Modifier.padding(horizontal = TrailSenseSpacing.lg),
-                                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                                ) {
-                                    val ghost = scheme.onPrimaryContainer.copy(alpha = 0.45f)
-                                    Canvas(
-                                        Modifier
-                                            .fillMaxWidth(0.6f)
-                                            .height(40.dp)
-                                    ) {
-                                        drawRoundRect(
-                                            color = ghost,
-                                            cornerRadius = CornerRadius(size.height / 2f),
-                                            style = Stroke(
-                                                width = 2.dp.toPx(),
-                                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))
-                                            )
-                                        )
-                                    }
-                                    Text(
-                                        placeholder,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
+                                Text(
+                                    placeholder,
+                                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = scheme.onSurfaceVariant
+                                )
                             } else {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
@@ -239,9 +219,9 @@ internal fun ConvertPair(
                                                 scaleX = copyPop.value
                                                 scaleY = copyPop.value
                                             },
-                                        shape = MaterialShapes.Cookie6Sided.toShape(),
-                                        color = scheme.primary,
-                                        contentColor = scheme.onPrimary
+                                        shape = CircleShape,
+                                        color = Color.Transparent,
+                                        contentColor = scheme.onSurfaceVariant
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Icon(
@@ -270,8 +250,8 @@ internal fun ConvertPair(
                     },
                     modifier = badgeModifier,
                     shape = MaterialShapes.Cookie9Sided.toShape(),
-                    color = scheme.primary,
-                    contentColor = scheme.onPrimary
+                    color = scheme.secondaryContainer,
+                    contentColor = scheme.onSecondaryContainer
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -287,8 +267,8 @@ internal fun ConvertPair(
                 Surface(
                     modifier = badgeModifier,
                     shape = MaterialShapes.Cookie9Sided.toShape(),
-                    color = scheme.primary,
-                    contentColor = scheme.onPrimary
+                    color = scheme.secondaryContainer,
+                    contentColor = scheme.onSecondaryContainer
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(Icons.Rounded.ArrowDownward, contentDescription = null, modifier = Modifier.size(24.dp))

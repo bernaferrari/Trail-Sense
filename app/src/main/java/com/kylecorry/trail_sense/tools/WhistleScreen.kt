@@ -234,6 +234,7 @@ fun WhistleScreen(
         currentSignal = signal.key
     }
 
+    // One question: is it whistling, and what is it saying?
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.tool_whistle_title),
         modifier = modifier
@@ -254,36 +255,34 @@ fun WhistleScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
-            HoldToWhistlePad(
-                active = currentSignal == WHISTLE,
-                onPress = ::playContinuous,
-                onRelease = ::stopContinuous
-            )
-
-            // Emergency calls first, as a pair of big tiles; then the conversational ones, each drawing its rhythm.
-            val (emergency, calls) = signals.partition { it.loop }
-            Column(Modifier.fillMaxWidth()) {
-                TrailSenseGroupHeader(stringResource(R.string.whistle_emergency))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min),
-                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-                ) {
-                    emergency.forEachIndexed { index, signal ->
-                        EmergencyTile(
-                            signal = signal,
-                            playing = currentSignal == signal.key,
-                            shape = trailSenseGridCellShape(index, emergency.size, 0, 1),
-                            onClick = { toggleSignal(signal) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                        )
-                    }
-                }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                HoldToWhistlePad(
+                    active = currentSignal == WHISTLE,
+                    onPress = ::playContinuous,
+                    onRelease = ::stopContinuous
+                )
+                // The verdict: what the whistle is doing right now.
+                val playingSignal = signals.firstOrNull { it.key == currentSignal }
+                Text(
+                    text = when {
+                        currentSignal == WHISTLE -> stringResource(R.string.whistle_whistling)
+                        playingSignal != null -> playingSignal.label
+                        else -> stringResource(R.string.whistle_hold)
+                    },
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (playingSignal?.loop == true) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
             }
+
+            // Emergency calls first, then the conversational ones, each drawing its rhythm.
+            val (emergency, calls) = signals.partition { it.loop }
             listOf(
+                stringResource(R.string.whistle_emergency) to emergency,
                 stringResource(R.string.whistle_signals) to calls
             ).forEach { (title, group) ->
                 TrailSenseRowGroup(
@@ -307,9 +306,9 @@ fun WhistleScreen(
 }
 
 /**
- * One signal: a shaped badge with its own glyph, the name, and the pattern itself drawn as a strip of blasts (long
- * pills and short dots), so "three long" and "dot dot dot dash dash dash" read without the guide. Playing turns the
- * row primary and the badge into a stop control.
+ * One signal as a quiet row: its glyph in a cookie (red for the emergency calls), the name, and the pattern itself
+ * drawn as a strip of blasts (long pills and short dots), so "three long" and "dot dot dot dash dash dash" read
+ * without the guide. Playing turns the badge into a primary stop control.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -320,35 +319,21 @@ private fun WhistleSignalRow(
     onClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    val container by animateColorAsState(
-        when {
-            playing -> scheme.primaryContainer
-            signal.loop -> scheme.errorContainer
-            else -> scheme.surfaceContainerLow
-        },
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "signalRow"
-    )
     val badgeColor = when {
         playing -> scheme.primary
-        signal.loop -> scheme.error
+        signal.loop -> scheme.errorContainer
         else -> scheme.secondaryContainer
     }
     val badgeContent = when {
         playing -> scheme.onPrimary
-        signal.loop -> scheme.onError
-        else -> scheme.onSecondaryContainer
-    }
-    val ink = when {
-        playing -> scheme.onPrimaryContainer
         signal.loop -> scheme.onErrorContainer
-        else -> scheme.onSurface
+        else -> scheme.onSecondaryContainer
     }
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = trailSenseGroupShape(position),
-        color = container
+        color = scheme.surfaceContainerLow
     ) {
         Row(
             modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
@@ -356,7 +341,7 @@ private fun WhistleSignalRow(
         ) {
             TrailSenseShapeBadge(
                 icon = if (playing) TrailIcons.BaselineStop24 else signal.icon,
-                shape = signal.shape.toShape(),
+                shape = MaterialShapes.Cookie9Sided.toShape(),
                 size = 48.dp,
                 containerColor = badgeColor,
                 contentColor = badgeContent
@@ -366,88 +351,26 @@ private fun WhistleSignalRow(
                 Text(
                     signal.label,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = ink
+                    color = scheme.onSurface
                 )
                 SignalRhythm(
                     signal = signal.signal,
-                    color = if (playing) scheme.primary else if (signal.loop) scheme.error else scheme.secondary,
+                    color = if (playing) scheme.primary else scheme.onSurfaceVariant,
                     playing = playing
                 )
             }
             Spacer(Modifier.width(TrailSenseSpacing.sm))
-            // The row is the button; the pill says what a tap does, in the screen's warm action colour.
-            Surface(
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = if (playing) scheme.primary else scheme.tertiaryContainer,
-                contentColor = if (playing) scheme.onPrimary else scheme.onTertiaryContainer
-            ) {
-                Row(
-                    modifier = Modifier.padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.md, top = 6.dp, bottom = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        if (playing) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(TrailSenseSpacing.xs))
-                    Text(
-                        text = stringResource(
-                            when {
-                                playing -> R.string.whistle_playing
-                                signal.loop -> R.string.whistle_repeats_short
-                                else -> R.string.whistle_once
-                            }
-                        ),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** An emergency call as a tall error-toned tile: solid starburst, name, its rhythm, and whether it repeats. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun EmergencyTile(
-    signal: WhistleSignal,
-    playing: Boolean,
-    shape: androidx.compose.ui.graphics.Shape,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val scheme = MaterialTheme.colorScheme
-    val container = scheme.errorContainer
-    val content = scheme.onErrorContainer
-    Surface(onClick = onClick, modifier = modifier, shape = shape, color = container, contentColor = content) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            TrailSenseShapeBadge(
-                icon = if (playing) TrailIcons.BaselineStop24 else signal.icon,
-                shape = signal.shape.toShape(),
-                size = 56.dp,
-                containerColor = scheme.error,
-                contentColor = scheme.onError
+            Text(
+                text = stringResource(
+                    when {
+                        playing -> R.string.whistle_playing
+                        signal.loop -> R.string.whistle_repeats_short
+                        else -> R.string.whistle_once
+                    }
+                ),
+                style = MaterialTheme.typography.labelLarge,
+                color = if (playing) scheme.primary else scheme.onSurfaceVariant
             )
-            Text(signal.label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            SignalRhythm(signal = signal.signal, color = content, playing = playing, height = 16.dp)
-            Surface(
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = if (playing) scheme.error else content.copy(alpha = 0.12f),
-                contentColor = if (playing) scheme.onError else content
-            ) {
-                Text(
-                    stringResource(if (playing) R.string.whistle_playing else R.string.whistle_repeats_short),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = 4.dp)
-                )
-            }
         }
     }
 }
@@ -502,8 +425,8 @@ private fun SignalRhythm(
 }
 
 /**
- * The hero: a large saturated cookie that whistles while held. Primary at rest; while sounding it turns to the
- * error tone, spins slowly and sends shockwave rings out behind it, so the state reads from across a campsite.
+ * The instrument: a large primary cookie that whistles while held. While sounding it squeezes from nine scallops
+ * into twelve and sends rings out behind it, so the state reads from across a campsite.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -516,12 +439,12 @@ private fun HoldToWhistlePad(
     val currentOnRelease by rememberUpdatedState(onRelease)
     val scheme = MaterialTheme.colorScheme
     val containerColor by animateColorAsState(
-        targetValue = if (active) scheme.error else scheme.tertiary,
+        targetValue = scheme.primary,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "whistleContainer"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (active) scheme.onError else scheme.onTertiary,
+        targetValue = scheme.onPrimary,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "whistleContent"
     )
@@ -537,12 +460,6 @@ private fun HoldToWhistlePad(
         animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Restart),
         label = "wave"
     )
-    val spin by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(9000, easing = LinearEasing), RepeatMode.Restart),
-        label = "spin"
-    )
     val label = stringResource(R.string.whistle_hold)
     // Held, the nine soft scallops tighten into twelve: the pad visibly squeezes.
     val squeeze by animateFloatAsState(
@@ -552,7 +469,7 @@ private fun HoldToWhistlePad(
     )
     val morph = remember { androidx.graphics.shapes.Morph(MaterialShapes.Cookie9Sided, MaterialShapes.Cookie12Sided) }
     val padShape = remember(squeeze) { WhistleMorphShape(morph, squeeze) }
-    val ring = scheme.error
+    val ring = scheme.primary
 
     Box(
         modifier = Modifier
@@ -581,7 +498,6 @@ private fun HoldToWhistlePad(
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
-                    rotationZ = if (active) spin else 0f
                 }
                 .semantics {
                     contentDescription = label
@@ -599,26 +515,12 @@ private fun HoldToWhistlePad(
             color = containerColor,
             contentColor = contentColor
         ) {}
-        // Content sits outside the spinning surface so the icon and label stay upright.
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                TrailIcons.ToolWhistle,
-                contentDescription = null,
-                tint = contentColor,
-                modifier = Modifier.size(80.dp)
-            )
-            Spacer(Modifier.height(TrailSenseSpacing.md))
-            Text(
-                text = if (active) stringResource(R.string.whistle_whistling) else label,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = contentColor,
-                textAlign = TextAlign.Center
-            )
-        }
+        Icon(
+            TrailIcons.ToolWhistle,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(96.dp)
+        )
     }
 }
 

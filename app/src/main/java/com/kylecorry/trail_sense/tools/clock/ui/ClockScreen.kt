@@ -182,6 +182,7 @@ private fun ClockScreen(
     val dateText = formatService.formatDate(myTime)
     val showAnalogClock = prefs.clock.showAnalogClock
 
+    // One question: is this clock right?
     TrailSensePage(
         title = stringResource(R.string.tool_clock_title),
         onBack = rememberTrailSenseBack(),
@@ -229,7 +230,7 @@ private fun ClockScreen(
                 Text(
                     text = timeText,
                     style = (if (showAnalogClock) {
-                        MaterialTheme.typography.headlineLarge
+                        MaterialTheme.typography.displaySmall
                     } else {
                         MaterialTheme.typography.displayLarge
                     }).copy(fontFeatureSettings = "tnum"),
@@ -240,100 +241,48 @@ private fun ClockScreen(
                 )
                 Text(
                     text = dateText,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                // The verdict: how far the device clock drifts from GPS.
+                Text(
+                    text = when {
+                        isUpdatingClock -> stringResource(R.string.clock_waiting_for_gps)
+                        isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
+                        else -> stringResource(R.string.no_gps_signal)
+                    },
+                    modifier = Modifier.padding(top = TrailSenseSpacing.md),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
             }
         }
 
         item("source") {
-            val offset = getClockOffset(Duration.between(systemTime, gpsTime))
-            val tone = when {
-                isUpdatingClock || !isGpsTime -> TrailSenseTone.Secondary
-                offset.seconds <= 1L -> TrailSenseTone.Good
-                else -> TrailSenseTone.Caution
-            }
-            val colors = trailSenseToneColors(tone)
-            val container by animateColorAsState(colors.container, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "clockCard")
-            // One card: where the time comes from, how far the device clock drifts, and the one action that fixes it.
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.extraLarge,
-                color = container,
-                contentColor = colors.content
+            // The one action: set the system time from GPS.
+            AnimatedVisibility(
+                visible = !isUpdatingClock,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
             ) {
-                Column(
-                    modifier = Modifier.padding(TrailSenseSpacing.lg),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                Button(
+                    onClick = {
+                        requestExactAlarms {
+                            onScheduleNextMinute(gpsTime, systemTime)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .testTag("pip_button")
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(contentAlignment = Alignment.Center) {
-                            TrailSenseShapeBadge(
-                                icon = if (isGpsTime) TrailIcons.Satellite else TrailIcons.ToolClock,
-                                shape = (if (tone == TrailSenseTone.Caution) {
-                                    androidx.compose.material3.MaterialShapes.SoftBurst
-                                } else {
-                                    androidx.compose.material3.MaterialShapes.Cookie9Sided
-                                }).toShape(),
-                                size = 52.dp,
-                                containerColor = colors.accent,
-                                contentColor = colors.onAccent
-                            )
-                            if (isUpdatingClock) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(60.dp),
-                                    strokeWidth = 3.dp,
-                                    color = colors.accent
-                                )
-                            }
-                        }
-                        Spacer(Modifier.width(TrailSenseSpacing.lg))
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                stringResource(
-                                    if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
-                                ),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = colors.content.copy(alpha = 0.8f)
-                            )
-                            Text(
-                                text = when {
-                                    isUpdatingClock -> stringResource(R.string.clock_waiting_for_gps)
-                                    isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
-                                    else -> stringResource(R.string.no_gps_signal)
-                                },
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                            )
-                        }
-                    }
-                    AnimatedVisibility(
-                        visible = !isUpdatingClock,
-                        enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
-                        exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
-                    ) {
-                        Button(
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiary,
-                                contentColor = MaterialTheme.colorScheme.onTertiary
-                            ),
-                            onClick = {
-                                requestExactAlarms {
-                                    onScheduleNextMinute(gpsTime, systemTime)
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .testTag("pip_button")
-                        ) {
-                            Text(
-                                stringResource(R.string.pip_button),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
+                    Text(
+                        stringResource(R.string.pip_button),
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }

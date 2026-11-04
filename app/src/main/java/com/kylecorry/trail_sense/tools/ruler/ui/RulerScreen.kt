@@ -51,6 +51,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.PaddingValues
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -145,8 +147,9 @@ fun RulerScreen(
     val ratioLabel = stringResource(R.string.map_scale_ratio)
     val verbalLabel = stringResource(R.string.map_scale_verbal)
 
-    // The ruler runs down the screen's edge; the measurement is the hero beside it, then the units, then the map
-    // scale that turns the measurement into a distance on the ground.
+    // One question: how long is it?
+    // The ruler runs down the screen's edge and is the live object; the measurement sits plainly beside it, then the
+    // units, then the map scale as one group that ends in the distance on the ground.
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.tool_ruler_title),
         modifier = modifier
@@ -207,17 +210,19 @@ fun RulerScreen(
                     modifier = Modifier.testTag("ruler_unit_btn")
                 )
 
-                // The map scale as one tonal card that ends in its answer: the distance on the ground.
-                Surface(
+                // The map scale as one group that ends in its answer: the distance on the ground.
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surfaceContainer
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
                 ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(TrailSenseSpacing.md)) {
-                    TrailSenseGroupHeader(
-                        stringResource(R.string.map_scale_title),
-                        modifier = Modifier.testTag("map_scale_title")
-                    )
+                TrailSenseGroupHeader(
+                    stringResource(R.string.map_scale_title),
+                    modifier = Modifier.testTag("map_scale_title")
+                )
+                TrailSenseGroupCard(
+                    position = TrailSenseGroupPosition(isFirst = true, isLast = false),
+                    contentPadding = PaddingValues(TrailSenseSpacing.md)
+                ) {
                     TrailSenseConnectedChoice(
                         options = listOf(
                             TrailSenseChoice(MapScaleMode.Fractional, ratioLabel),
@@ -255,35 +260,31 @@ fun RulerScreen(
                             )
                         }
                     }
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.sm, top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.sm),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.ruler_on_the_ground),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = mapDistanceValue ?: stringResource(
-                                if (currentDistance == null) R.string.ruler_measure_first else R.string.ruler_enter_scale
-                            ),
-                            style = if (mapDistanceValue != null) {
-                                MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum")
-                            } else {
-                                MaterialTheme.typography.bodyMedium
-                            },
-                            fontWeight = if (mapDistanceValue != null) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (mapDistanceValue != null) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                            modifier = Modifier.semantics { contentDescription = mapDistance }
-                        )
-                    }
+                }
+                TrailSenseGroupCard(
+                    position = TrailSenseGroupPosition(isFirst = false, isLast = true)
+                ) {
+                    Text(
+                        text = stringResource(R.string.ruler_on_the_ground),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = mapDistanceValue ?: stringResource(
+                            if (currentDistance == null) R.string.ruler_measure_first else R.string.ruler_enter_scale
+                        ),
+                        style = if (mapDistanceValue != null) {
+                            MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum")
+                        } else {
+                            MaterialTheme.typography.bodyMedium
+                        },
+                        fontWeight = if (mapDistanceValue != null) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (mapDistanceValue != null) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.semantics { contentDescription = mapDistance }
+                    )
                 }
                 }
             }
@@ -497,57 +498,34 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLabels(
 }
 
 /**
- * The length: once measured, the star number in large tabular figures; before that, a calm instruction with an
- * arrow pointing at the ruler instead of a dash.
+ * The length: once measured, the one display value in large tabular figures; before that, a calm instruction.
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RulerLength(measurement: String, hint: String, modifier: Modifier = Modifier) {
-    val scheme = MaterialTheme.colorScheme
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = scheme.primaryContainer,
-        contentColor = scheme.onPrimaryContainer
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.sm)
+            .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.lg)
-                .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-        ) {
+        if (measurement.isNotEmpty()) {
             Text(
-                stringResource(R.string.ruler_length),
-                style = MaterialTheme.typography.labelLarge,
-                color = scheme.onPrimaryContainer.copy(alpha = 0.78f)
+                text = measurement,
+                style = (if (measurement.length > 8) {
+                    MaterialTheme.typography.displaySmall
+                } else {
+                    MaterialTheme.typography.displayMedium
+                }).copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
-            if (measurement.isNotEmpty()) {
-                Text(
-                    text = measurement,
-                    style = (if (measurement.length > 8) {
-                        MaterialTheme.typography.displaySmall
-                    } else {
-                        MaterialTheme.typography.displayMedium
-                    }).copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
-                )
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge(
-                        icon = com.kylecorry.trail_sense.shared.icons.trail.TrailIcons.KeyboardArrowRight,
-                        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
-                        size = 44.dp,
-                        iconRotation = 180f
-                    )
-                    Spacer(Modifier.width(TrailSenseSpacing.md))
-                    Text(
-                        text = hint,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+        } else {
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

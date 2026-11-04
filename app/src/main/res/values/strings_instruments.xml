@@ -18,6 +18,8 @@
     <string name="water_boil_seconds_left">Seconds left</string>
     <string name="water_boil_for">Boil for</string>
     <string name="water_boil_left">Left</string>
+    <string name="water_boil_verdict_idle">Start once it\'s boiling</string>
+    <string name="water_boil_verdict_running">Keep it at a rolling boil</string>
 
     <!-- Whistle -->
     <string name="whistle_emergency">Emergency</string>
@@ -79,6 +81,8 @@
     <!-- Declination -->
     <string name="declination_verdict_east">Magnetic north is %1$s east of true north</string>
     <string name="declination_verdict_west">Magnetic north is %1$s west of true north</string>
+    <string name="declination_east_of_true">East of true north</string>
+    <string name="declination_west_of_true">West of true north</string>
     <string name="declination_verdict_aligned">Magnetic north lines up with true north here</string>
     <string name="declination_magnetic_to_true">Magnetic to true</string>
     <string name="declination_true_to_magnetic">True to magnetic</string>

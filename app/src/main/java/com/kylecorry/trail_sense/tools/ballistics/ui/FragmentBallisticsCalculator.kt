@@ -1,5 +1,15 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
+
+import com.kylecorry.trail_sense.shared.views.compose.drawTrailSenseNowDot
+
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath
+
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset
+
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
@@ -204,7 +214,7 @@ private fun TrajectoryCard(
                         zeroDistance = zeroDistance,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp)
+                            .height(180.dp)
                             .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
                     )
                     BallisticsTable(
@@ -221,8 +231,8 @@ private fun TrajectoryCard(
 }
 
 /**
- * The flight of the bullet: line of sight dashed, the path rising through it and dropping away as a thick primary
- * curve over a soft fill, with a dot where it crosses back at the zero distance.
+ * The flight of the bullet in the family's chart frame: words in the gutter (above and below the line of sight),
+ * the line of sight dashed, the path as one primary line, and a dot where it crosses back at the zero distance.
  */
 @Composable
 private fun TrajectoryChart(
@@ -234,44 +244,38 @@ private fun TrajectoryChart(
     val line = scheme.primary
     val sight = scheme.onSurfaceVariant.copy(alpha = 0.5f)
     val zeroColor = scheme.tertiary
-    Canvas(modifier = modifier) {
-        if (trajectory.size < 2) return@Canvas
-        val maxX = trajectory.maxOf { it.distance.meters().value }.coerceAtLeast(1f)
-        val drops = trajectory.map { it.drop.meters().value }
-        val top = drops.max().coerceAtLeast(0f)
-        val bottom = drops.min().coerceAtMost(0f)
-        val range = (top - bottom).takeIf { it > 0f } ?: 1f
-        val pad = 10.dp.toPx()
-        fun px(m: Float) = pad + (m / maxX) * (size.width - pad * 2)
-        fun py(m: Float) = pad + (top - m) / range * (size.height - pad * 2)
+    val ring = scheme.surfaceContainerLow
+    TrailSenseChartFrame(
+        yLabels = listOf(stringResource(R.string.above), stringResource(R.string.below)),
+        modifier = modifier
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            if (trajectory.size < 2) return@Canvas
+            val maxX = trajectory.maxOf { it.distance.meters().value }.coerceAtLeast(1f)
+            val drops = trajectory.map { it.drop.meters().value }
+            val top = drops.max().coerceAtLeast(0f)
+            val bottom = drops.min().coerceAtMost(0f)
+            val range = (top - bottom).takeIf { it > 0f } ?: 1f
+            val pad = TrailSenseChartInset.toPx()
+            fun px(m: Float) = pad + (m / maxX) * (size.width - pad * 2)
+            fun py(m: Float) = pad + (top - m) / range * (size.height - pad * 2)
 
-        drawLine(
-            sight,
-            Offset(0f, py(0f)),
-            Offset(size.width, py(0f)),
-            2.dp.toPx(),
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
-        )
-        val curve = Path().apply {
-            trajectory.forEachIndexed { i, p ->
-                val x = px(p.distance.meters().value)
-                val y = py(p.drop.meters().value)
-                if (i == 0) moveTo(x, y) else lineTo(x, y)
-            }
-        }
-        val area = Path().apply {
-            addPath(curve)
-            lineTo(px(trajectory.last().distance.meters().value), size.height)
-            lineTo(px(trajectory.first().distance.meters().value), size.height)
-            close()
-        }
-        drawPath(area, Brush.verticalGradient(listOf(line.copy(alpha = 0.28f), line.copy(alpha = 0f))))
-        drawPath(curve, line, style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-        zeroDistance?.let {
-            val zx = px(it.meters().value)
-            if (zx in 0f..size.width) {
-                drawCircle(zeroColor.copy(alpha = 0.3f), 11.dp.toPx(), Offset(zx, py(0f)))
-                drawCircle(zeroColor, 6.dp.toPx(), Offset(zx, py(0f)))
+            drawLine(
+                sight,
+                Offset(0f, py(0f)),
+                Offset(size.width, py(0f)),
+                2.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
+            )
+            val curve = trailSenseSmoothPath(
+                trajectory.map { Offset(px(it.distance.meters().value), py(it.drop.meters().value)) }
+            )
+            drawPath(curve, line, style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            zeroDistance?.let {
+                val zx = px(it.meters().value)
+                if (zx in 0f..size.width) {
+                    drawTrailSenseNowDot(Offset(zx, py(0f)), zeroColor, ring)
+                }
             }
         }
     }

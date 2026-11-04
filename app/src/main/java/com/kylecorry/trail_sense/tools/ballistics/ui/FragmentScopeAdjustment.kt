@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
+
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.heightIn
@@ -367,8 +369,8 @@ private fun MissSide(
                     topEnd = if (index == options.lastIndex) outer else inner,
                     bottomEnd = if (index == options.lastIndex) outer else inner
                 ),
-                color = if (checked) scheme.primary else scheme.secondaryContainer,
-                contentColor = if (checked) scheme.onPrimary else scheme.onSecondaryContainer
+                color = if (checked) scheme.secondary else scheme.secondaryContainer,
+                contentColor = if (checked) scheme.onSecondary else scheme.onSecondaryContainer
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
@@ -383,38 +385,41 @@ private fun MissSide(
     }
 }
 
-/** The answer of a ballistics page as a Spotlight: a shaped badge, the label above, the value large and SemiBold. */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+/** The answer of a ballistics page as calm emphasised type: the value large and SemiBold, its name under it. */
 @Composable
 internal fun BallisticsHero(
     label: String,
     value: String,
     valueTag: String,
     style: TextStyle = MaterialTheme.typography.displaySmall,
-    icon: androidx.compose.ui.graphics.vector.ImageVector = TrailIcons.Ballistics
+    @Suppress("UNUSED_PARAMETER") icon: androidx.compose.ui.graphics.vector.ImageVector = TrailIcons.Ballistics
 ) {
-    TrailSenseSpotlight(
-        title = value,
-        eyebrow = label,
-        titleStyle = style,
+    Column(
         modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.sm)
             .testTag(valueTag)
             .semantics(mergeDescendants = true) {},
-        badge = {
-            TrailSenseShapeBadge(
-                icon = icon,
-                shape = MaterialShapes.Burst.toShape(),
-                size = 64.dp
-            )
-        }
-    )
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+    ) {
+        Text(
+            value,
+            style = style.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 /**
- * The scope hero: a reticle showing where the shot landed and the way back to the centre, beside the two turret
- * moves as badges with arrows ("4 clicks" right, "2 clicks" up).
+ * The answer, plainly: the turret moves as emphasised type ("4 clicks right", "2 clicks up"), beside a small reticle
+ * showing where the shot landed and the way back to the centre. No card.
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ScopeHero(
     adjustmentX: ScopeAdjustment?,
@@ -424,113 +429,77 @@ private fun ScopeHero(
     description: String
 ) {
     val scheme = MaterialTheme.colorScheme
-    val waitingState = adjustmentX == null && adjustmentY == null
-    val onTargetState = !waitingState && (adjustmentX?.clicks ?: 0) == 0 && (adjustmentY?.clicks ?: 0) == 0
-    // Idle is a calm secondary, a correction to dial is primary, on target is good.
-    val tone = when {
-        waitingState -> com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Secondary
-        onTargetState -> com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Good
-        else -> com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Primary
-    }
-    val colors = com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors(tone)
-    val container by androidx.compose.animation.animateColorAsState(
-        colors.container, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "scopeHero"
-    )
-    val content by androidx.compose.animation.animateColorAsState(
-        colors.content, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "scopeHeroContent"
-    )
-    Surface(
+    val waiting = adjustmentX == null && adjustmentY == null
+    val onTarget = !waiting && (adjustmentX?.clicks ?: 0) == 0 && (adjustmentY?.clicks ?: 0) == 0
+    Row(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.sm)
             .testTag("adjustment_amount")
             .semantics(mergeDescendants = true) { contentDescription = description },
-        shape = MaterialTheme.shapes.extraLarge,
-        color = container,
-        contentColor = content
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
-            modifier = Modifier.padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
-            Text(
-                stringResource(R.string.scope_adjustment),
-                style = MaterialTheme.typography.labelLarge,
-                color = content.copy(alpha = 0.78f)
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Reticle(
-                    missX = missX,
-                    missY = missY,
-                    ink = content,
-                    modifier = Modifier.size(148.dp)
+            when {
+                waiting -> {
+                    Text(
+                        stringResource(R.string.ballistics_waiting),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        stringResource(R.string.ballistics_waiting_hint),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = scheme.onSurfaceVariant
+                    )
+                }
+
+                onTarget -> Text(
+                    stringResource(R.string.ballistics_on_target),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.SemiBold
                 )
-                Spacer(Modifier.width(TrailSenseSpacing.xl))
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-                ) {
-                    val waiting = adjustmentX == null && adjustmentY == null
-                    val onTarget = !waiting && (adjustmentX?.clicks ?: 0) == 0 && (adjustmentY?.clicks ?: 0) == 0
-                    when {
-                        waiting -> {
-                            Text(
-                                stringResource(R.string.ballistics_waiting),
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                stringResource(R.string.ballistics_waiting_hint),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = content.copy(alpha = 0.8f)
-                            )
-                        }
 
-                        onTarget -> {
-                            TrailSenseShapeBadge(
-                                icon = TrailIcons.Check,
-                                shape = MaterialShapes.Sunny.toShape(),
-                                size = 52.dp,
-                                containerColor = colors.accent,
-                                contentColor = colors.onAccent
-                            )
-                            Text(
-                                stringResource(R.string.ballistics_on_target),
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
-                        else -> {
-                            TurretMove(adjustmentX, MaterialShapes.Cookie9Sided)
-                            TurretMove(adjustmentY, MaterialShapes.Cookie6Sided)
-                        }
-                    }
+                else -> {
+                    TurretMove(adjustmentX)
+                    TurretMove(adjustmentY)
                 }
             }
         }
+        Spacer(Modifier.width(TrailSenseSpacing.lg))
+        Reticle(
+            missX = missX,
+            missY = missY,
+            ink = scheme.onSurfaceVariant,
+            modifier = Modifier.size(120.dp)
+        )
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun TurretMove(adjustment: ScopeAdjustment?, shape: androidx.graphics.shapes.RoundedPolygon) {
+private fun TurretMove(adjustment: ScopeAdjustment?) {
     val scheme = MaterialTheme.colorScheme
     val none = adjustment == null || adjustment.clicks == 0
     Row(verticalAlignment = Alignment.CenterVertically) {
-        TrailSenseShapeBadge(
-            icon = if (none) TrailIcons.Check else TrailIcons.Arrow,
-            shape = shape.toShape(),
-            size = 44.dp,
-            containerColor = if (none) scheme.surfaceContainerLowest.copy(alpha = 0.7f) else scheme.primary,
-            contentColor = if (none) scheme.onPrimaryContainer else scheme.onPrimary,
-            iconRotation = when (adjustment?.direction) {
-                ScopeDirection.Right -> 90f
-                ScopeDirection.Down -> 180f
-                ScopeDirection.Left -> 270f
-                else -> 0f
-            }
+        androidx.compose.material3.Icon(
+            imageVector = if (none) TrailIcons.Check else TrailIcons.Arrow,
+            contentDescription = null,
+            tint = scheme.onSurfaceVariant,
+            modifier = Modifier
+                .size(24.dp)
+                .graphicsLayer {
+                    rotationZ = when (adjustment?.direction) {
+                        ScopeDirection.Right -> 90f
+                        ScopeDirection.Down -> 180f
+                        ScopeDirection.Left -> 270f
+                        else -> 0f
+                    }
+                }
         )
-        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Spacer(Modifier.width(TrailSenseSpacing.sm))
         Column {
             Text(
                 text = if (adjustment == null) {
@@ -538,7 +507,7 @@ private fun TurretMove(adjustment: ScopeAdjustment?, shape: androidx.graphics.sh
                 } else {
                     pluralStringResource(R.plurals.ballistics_clicks, adjustment.clicks, adjustment.clicks)
                 },
-                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
@@ -550,7 +519,7 @@ private fun TurretMove(adjustment: ScopeAdjustment?, shape: androidx.graphics.sh
                     null -> stringResource(R.string.ballistics_enter_distance)
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
+                color = scheme.onSurfaceVariant
             )
         }
     }
@@ -560,18 +529,9 @@ private fun TurretMove(adjustment: ScopeAdjustment?, shape: androidx.graphics.sh
 @Composable
 private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
-    // A dot travels along the correction from the impact back to the centre, over and over.
-    val travel by androidx.compose.animation.core.rememberInfiniteTransition(label = "correction").animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            androidx.compose.animation.core.tween(1400, easing = androidx.compose.animation.core.FastOutSlowInEasing)
-        ),
-        label = "correctionTravel"
-    )
     val hit = scheme.tertiary
     val path = scheme.primary
-    val face = scheme.surfaceContainerLowest.copy(alpha = 0.7f)
+    val face = scheme.surfaceContainerLow
     val x by animateFloatAsState(missX, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missX")
     val y by animateFloatAsState(missY, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missY")
     Canvas(modifier = modifier) {
@@ -600,10 +560,7 @@ private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphic
                 StrokeCap.Round,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
             )
-            drawCircle(hit.copy(alpha = 0.3f), 13.dp.toPx(), impact)
             drawCircle(hit, 8.dp.toPx(), impact)
-            val moving = impact + (center - impact) * travel
-            drawCircle(path.copy(alpha = 1f - travel * 0.6f), 5.dp.toPx(), moving)
         }
     }
 }
