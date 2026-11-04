@@ -303,15 +303,7 @@ private fun PackListScreen(
             )
         },
         floatingActionButton = {
-            // With nothing packed yet the FAB is the one way in: it starts the first list straight away.
-            if (loaded && packs.isEmpty()) ExtendedFloatingActionButton(
-                onClick = onCreatePack,
-                modifier = Modifier.testTag("add_btn"),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                icon = { Icon(TrailIcons.ToolPack, contentDescription = null) },
-                text = { Text(stringResource(R.string.new_packing_list)) }
-            )
+            // No FAB while empty: the empty state's in-flow button starts the first list.
             if (loaded && packs.isNotEmpty()) Box {
                 ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
@@ -359,7 +351,11 @@ private fun PackListScreen(
                     description = stringResource(R.string.packs_empty_description),
                     modifier = Modifier
                         .fillParentMaxHeight(0.78f)
-                        .testTag("empty_text")
+                        .testTag("empty_text"),
+                    actionLabel = stringResource(R.string.new_packing_list),
+                    actionIcon = Icons.Rounded.Add,
+                    onAction = onCreatePack,
+                    actionModifier = Modifier.testTag("add_btn")
                 )
             }
             return@TrailSensePage

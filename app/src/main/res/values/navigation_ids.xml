@@ -31,7 +31,6 @@
     <item name="action_settings_to_power_settings" type="id" />
     <item name="action_settings_to_privacy_settings" type="id" />
     <item name="action_settings_to_sensor_settings" type="id" />
-    <item name="action_settings_to_theme_settings" type="id" />
     <item name="action_settings_to_unit_settings" type="id" />
     <item name="action_tideList_to_createTide" type="id" />
     <item name="action_tides_to_tideList" type="id" />
@@ -119,7 +118,6 @@
     <item name="sightingListFragment" type="id" />
     <item name="signalFinderFragment" type="id" />
     <item name="temperatureEstimationFragment" type="id" />
-    <item name="themeSettingsFragment" type="id" />
     <item name="thermometerSettingsFragment" type="id" />
     <item name="tideListFragment" type="id" />
     <item name="tideSettingsFragment" type="id" />

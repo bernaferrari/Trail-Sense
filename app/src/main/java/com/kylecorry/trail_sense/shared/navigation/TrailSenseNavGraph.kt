@@ -194,15 +194,6 @@ object TrailSenseNavGraph {
                     .build())
             )
             putAction(
-                R.id.action_settings_to_theme_settings,
-                NavAction(R.id.themeSettingsFragment, NavOptions.Builder()
-                    .setEnterAnim(R.anim.slide_in_right)
-                    .setExitAnim(R.anim.slide_out_left)
-                    .setPopEnterAnim(R.anim.slide_in_left)
-                    .setPopExitAnim(R.anim.slide_out_right)
-                    .build())
-            )
-            putAction(
                 R.id.action_settings_to_backup_settings,
                 NavAction(R.id.backupSettingsFragment, NavOptions.Builder()
                     .setEnterAnim(R.anim.slide_in_right)
@@ -1168,16 +1159,6 @@ object TrailSenseNavGraph {
                     .setPopExitAnim(R.anim.slide_out_right)
                     .build())
             )
-            graph.addDestination(this)
-        }
-
-        composeNavigator.createDestination().apply {
-            id = R.id.themeSettingsFragment
-            label = "ThemeSettingsScreen"
-            addArgument(ARG_DESTINATION, NavArgument.Builder()
-                .setType(NavType.StringType)
-                .setDefaultValue(DESTINATION_THEME_SETTINGS)
-                .build())
             graph.addDestination(this)
         }
 

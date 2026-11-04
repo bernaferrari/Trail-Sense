@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
-import com.kylecorry.trail_sense.settings.ui.ThemeSettingsScreen
 import com.kylecorry.trail_sense.main.theme.ThemeChoices
 import android.content.Context
 import android.content.Intent
@@ -1299,44 +1298,6 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    internal fun ThemeSettings() {
-        val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
-        val prefs = remember { UserPreferences(requireContext()) }
-        val widgetThemeOptions = remember { widgetThemeOptions() }
-        var widgetTheme by remember { mutableStateOf(getDefaultWidgetTheme(cache)) }
-
-        ThemeSettingsScreen(
-            prefs = prefs,
-            wallpaperAvailable = remember { DynamicColors.isDynamicColorAvailable() },
-            widgetTheme = optionLabel(widgetThemeOptions, widgetTheme),
-            nightFullscreen = getBoolean(cache, R.string.pref_night_mode_fullscreen, false),
-            compassWallpaperColors = getBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, false),
-            onBack = { requireActivity().onBackPressedDispatcher.onBackPressed() },
-            onThemeChanged = {
-                prefs.theme = it
-                requireMainActivity().reloadTheme()
-            },
-            onPaletteChanged = { ThemeChoices.changed() },
-            onCompassWallpaperColorsChanged = {
-                putBoolean(cache, R.string.pref_use_dynamic_colors_on_compass, it)
-            },
-            onPickWidgetTheme = {
-                pickOption(getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
-                    widgetTheme = it
-                    putString(cache, R.string.pref_default_widget_theme, it)
-                    Tools.triggerWidgetUpdate(requireContext(), null)
-                }
-            },
-            onCompactModeChanged = { requireMainActivity().changeBottomNavLabelsVisibility(it) },
-            onShowAllLabelsChanged = { requireMainActivity().showAllBottomNavLabels(it) },
-            onNightFullscreenChanged = {
-                putBoolean(cache, R.string.pref_night_mode_fullscreen, it)
-                requireMainActivity().reloadTheme()
-            }
-        )
-    }
-
-    @Composable
     internal fun ExperimentalSettings() {
         val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
         val userPrefs = remember { UserPreferences(requireContext()) }
@@ -1837,6 +1798,9 @@ class TrailSenseComposeDestinationHost(
     @Composable
     internal fun ToolsSettings() {
         val prefs = remember { UserPreferences(requireContext()) }
+        val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
+        val widgetThemeOptions = remember { widgetThemeOptions() }
+        var widgetTheme by remember { mutableStateOf(getDefaultWidgetTheme(cache)) }
         val tools = remember {
             AlphabeticalToolSort().sort(Tools.getTools(requireContext())).first().tools
         }
@@ -1865,6 +1829,20 @@ class TrailSenseComposeDestinationHost(
                         label = stringResource(R.string.widget_pref_title),
                         summary = stringResource(R.string.widget_bottom_sheet_instructions),
                         onClick = { pickWidgets(prefs) },
+                        position = position
+                    )
+                }
+                row { position ->
+                    SettingsPickerRow(
+                        label = stringResource(R.string.default_widget_theme),
+                        selected = optionLabel(widgetThemeOptions, widgetTheme),
+                        onClick = {
+                            pickOption(getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
+                                widgetTheme = it
+                                putString(cache, R.string.pref_default_widget_theme, it)
+                                Tools.triggerWidgetUpdate(requireContext(), null)
+                            }
+                        },
                         position = position
                     )
                 }

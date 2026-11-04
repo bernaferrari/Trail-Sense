@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -874,15 +875,17 @@ private fun BacktrackRow(
     val isOn = state == FeatureState.On
     val frequencyText = frequency?.let { formatService.formatDuration(it, short = true, includeSeconds = true) }
 
-    // A switch says on or off by itself; no card, no pulse, no spinning badge.
+    // A switch says on or off by itself; no card, no pulse, no spinning badge. Its label names Backtrack and its
+    // state, so the group needs no header of its own.
     TrailSenseRowGroup(
-        modifier = Modifier.testTag("backtrack_play_bar"),
-        title = stringResource(R.string.backtrack)
+        modifier = Modifier
+            .padding(top = TrailSenseSpacing.sm)
+            .testTag("backtrack_play_bar")
     ) {
         row { position ->
             Box(Modifier.testTag("play_bar_title")) {
                 TrailSenseSwitchRow(
-                    label = stringResource(if (isOn) R.string.places_backtrack_recording else R.string.off),
+                    label = stringResource(if (isOn) R.string.places_backtrack_on_title else R.string.places_backtrack_off_title),
                     summary = stringResource(
                         if (isOn) R.string.places_backtrack_on_description else R.string.places_backtrack_off_description
                     ),

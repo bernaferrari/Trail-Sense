@@ -149,7 +149,7 @@ private class PlaceBeaconController(private val host: TrailSenseDestinationHost)
     private val isComplete = IsBeaconFormDataComplete()
     private var hasChanges = DoesBeaconFormDataHaveChanges(CreateBeaconData.empty)
 
-    private var editingBeaconId: Long? = null
+    private var editingBeaconId by mutableStateOf<Long?>(null)
     private var initialLocation: GeoUri? = null
     private var backCallback: OnBackPressedCallback? = null
 
@@ -209,6 +209,7 @@ private class PlaceBeaconController(private val host: TrailSenseDestinationHost)
 
         PlaceBeaconScreen(
             data = data,
+            isEditing = editingBeaconId != null,
             groupName = groupName.ifBlank { stringResource(R.string.no_group) },
             canSave = isComplete.isSatisfiedBy(data),
             hikingDistanceUnits = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
@@ -406,6 +407,7 @@ private class PlaceBeaconController(private val host: TrailSenseDestinationHost)
 @Composable
 private fun PlaceBeaconScreen(
     data: CreateBeaconData,
+    isEditing: Boolean = false,
     groupName: String,
     canSave: Boolean,
     hikingDistanceUnits: List<com.kylecorry.sol.units.DistanceUnits>,
@@ -436,7 +438,7 @@ private fun PlaceBeaconScreen(
 
     Box(modifier = modifier.testTag("create_beacon_title")) {
         TrailSensePage(
-            title = stringResource(R.string.create_beacon),
+            title = stringResource(if (isEditing) R.string.edit_beacon else R.string.create_beacon),
             onBack = { dispatcher?.onBackPressed() },
             backLabel = stringResource(R.string.back),
             modifier = Modifier.testTag("create_beacon_scroll"),

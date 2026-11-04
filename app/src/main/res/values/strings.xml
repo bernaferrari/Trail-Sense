@@ -525,6 +525,7 @@
     <string name="backtrack">Backtrack</string>
     <string name="backtrack_notification_channel_description">Backtrack location updates</string>
     <string name="create_beacon">Create beacon</string>
+    <string name="edit_beacon">Edit beacon</string>
     <string name="pref_backtrack_enabled" translatable="false">pref_backtrack_enabled</string>
     <string name="waypoint_time_format">%1$s, %2$s</string>
     <string name="pref_backtrack_enabled_summary">Record location history</string>
@@ -790,7 +791,6 @@
     <string name="us_customary_units_summary">Miles, feet, Fahrenheit, inHg, pounds</string>
     <string name="privacy">Privacy</string>
     <string name="pref_privacy_settings" translatable="false">pref_privacy_settings</string>
-    <string name="pref_theme_settings" translatable="false">pref_theme_settings</string>
     <string name="pref_unit_settings" translatable="false">pref_unit_settings</string>
     <string name="pref_experimental_metal_direction" translatable="false">pref_experimental_metal_direction</string>
     <string name="pref_experimental_metal_direction_title">Show metal direction</string>
@@ -2163,7 +2163,7 @@
     <string name="beacon_direction_value" translatable="false">%1$s %2$s</string>
     <!-- Family redesign: paths, comms, experimentation -->
     <string name="paths_clear_search">Clear search</string>
-    <string name="paths_empty_description">Start Backtrack to record where you walk, or tap add to make a path.</string>
+    <string name="paths_empty_description">Paths you record or add appear here.</string>
     <plurals name="path_points_count">
         <item quantity="one">%d point</item>
         <item quantity="other">%d points</item>

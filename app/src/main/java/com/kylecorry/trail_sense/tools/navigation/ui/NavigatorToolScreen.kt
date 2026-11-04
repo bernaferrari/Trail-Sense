@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -1048,34 +1049,18 @@ private class NavigatorDataPointState(
     var onClick by mutableStateOf<(() -> Unit)?>(null)
 
     @Composable
-    fun Content(modifier: Modifier = Modifier, shape: Shape = androidx.compose.foundation.shape.CircleShape) {
-        // A quiet chip: altitude and speed support the heading, they don't compete with it (no tint, no bold).
-        Surface(
-            modifier = modifier,
-            shape = shape,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            onClick = { onClick?.invoke() },
-            enabled = onClick != null
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-            }
-        }
+    fun Content(modifier: Modifier = Modifier) {
+        // Quiet supporting text, not a chip: altitude and speed support the heading, they don't compete with it.
+        Text(
+            text = title,
+            modifier = modifier
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(TrailSenseSpacing.sm))
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
+                .padding(horizontal = TrailSenseSpacing.xs, vertical = TrailSenseSpacing.xxs),
+            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
+        )
     }
 }
 
@@ -1157,13 +1142,20 @@ private fun NavigatorHost(
                 .padding(horizontal = TrailSenseSpacing.lg)
         ) {
             NavigationTitle(views.navigationTitle)
-            // Altitude and speed as two small chips under the heading, so the heading stays the one star number.
+            // Altitude and speed as one quiet line under the coordinates, so the heading stays the one star number.
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.CenterHorizontally),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = -TrailSenseSpacing.sm),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 views.altitude.Content()
+                Text(
+                    text = "·",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 views.speed.Content()
             }
             BoxWithConstraints(
@@ -1263,7 +1255,7 @@ private fun createNavigatorViews(
     )
 }
 
-/** The beacon button: an Expressive medium FAB; long press navigates to the last beacon. */
+/** The beacon button: a standard tonal FAB; long press navigates to the last beacon. */
 @OptIn(ExperimentalFoundationApi::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun NavigatorIconButton(
@@ -1275,19 +1267,19 @@ private fun NavigatorIconButton(
 ) {
     androidx.compose.material3.Surface(
         modifier = modifier
-            .size(64.dp)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
+            .size(56.dp)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
             .combinedClickable(
                 onClickLabel = contentDescription,
                 onLongClickLabel = stringResource(R.string.navigate),
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-        // Picking a place to go is the screen's one main action: the warm tertiary role.
-        color = MaterialTheme.colorScheme.tertiaryContainer,
-        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        shadowElevation = 2.dp
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        // A standard tonal FAB: the dial carries the colour, the button doesn't outshout it.
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shadowElevation = 1.dp
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(

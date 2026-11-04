@@ -45,7 +45,6 @@ object SettingsToolRegistration : ToolRegistration {
                 R.id.thermometerSettingsFragment,
                 R.id.cameraSettingsFragment,
                 R.id.toolsSettingsFragment,
-                R.id.themeSettingsFragment,
                 R.id.backupSettingsFragment
                 // TODO: Add all the tool settings
             ),

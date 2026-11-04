@@ -231,9 +231,11 @@ fun RulerScreen(
                         selected = scaleMode,
                         onSelect = { scaleMode = it },
                         modifier = Modifier
-                            .padding(bottom = TrailSenseSpacing.md)
                             .testTag(if (scaleMode == MapScaleMode.Fractional) "map_ratio_btn" else "map_verbal_btn")
                     )
+                }
+                // The scale's numbers are rows of the group themselves, so each field reads as a field (not a
+                // borderless one on a card of the same colour).
                     val enterSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
                     val exitSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
                     AnimatedContent(
@@ -260,7 +262,6 @@ fun RulerScreen(
                             )
                         }
                     }
-                }
                 TrailSenseGroupCard(
                     position = TrailSenseGroupPosition(isFirst = false, isLast = true)
                 ) {
@@ -523,7 +524,7 @@ private fun RulerLength(measurement: String, hint: String, modifier: Modifier = 
         } else {
             Text(
                 text = hint,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -549,7 +550,7 @@ private fun FractionalScaleInput(
             value = from,
             onValueChange = onFromChanged,
             label = stringResource(R.string.distance_from),
-            position = TrailSenseGroupPosition.Single,
+            position = MIDDLE,
             modifier = Modifier
                 .weight(1f)
                 .testTag("fractional_map_from")
@@ -557,7 +558,7 @@ private fun FractionalScaleInput(
         Text(
             text = stringResource(R.string.map_fractional_separator),
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .padding(horizontal = TrailSenseSpacing.xs)
                 .testTag("textView12")
@@ -566,9 +567,9 @@ private fun FractionalScaleInput(
             value = to,
             onValueChange = onToChanged,
             label = stringResource(R.string.distance_to),
-            position = TrailSenseGroupPosition.Single,
+            position = MIDDLE,
             modifier = Modifier
-                .weight(2f)
+                .weight(1f)
                 .testTag("fractional_map_to")
         )
     }
@@ -594,7 +595,7 @@ private fun VerbalScaleInput(
             units = formatService.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
             defaultUnit = DistanceUnits.Centimeters,
             onValueChange = onFromChanged,
-            position = TrailSenseGroupPosition(isFirst = true, isLast = false),
+            position = MIDDLE,
             modifier = Modifier.testTag("verbal_map_scale_from")
         )
         DistanceAmountInput(
@@ -603,7 +604,7 @@ private fun VerbalScaleInput(
             units = formatService.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
             defaultUnit = DistanceUnits.Meters,
             onValueChange = onToChanged,
-            position = TrailSenseGroupPosition(isFirst = false, isLast = true),
+            position = MIDDLE,
             modifier = Modifier.testTag("verbal_map_scale_to")
         )
     }
@@ -653,6 +654,9 @@ private fun DistanceAmountInput(
         )
     }
 }
+
+/** An inner row of the map scale group: tight corners on every side. */
+private val MIDDLE = TrailSenseGroupPosition(isFirst = false, isLast = false)
 
 private fun calculateMapDistance(
     currentDistance: Distance?,
