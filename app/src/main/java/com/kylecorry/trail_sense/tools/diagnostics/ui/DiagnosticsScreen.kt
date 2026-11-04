@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
+import androidx.compose.ui.semantics.stateDescription
+
+import androidx.compose.ui.semantics.semantics
+
 import androidx.compose.animation.core.animateFloat
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
 import androidx.compose.material3.CircularProgressIndicator
@@ -148,6 +152,7 @@ internal fun DiagnosticsScreen(
     val errors = items.filter { it.result.severity == ToolDiagnosticSeverity.Error }
     val warnings = items.filter { it.result.severity == ToolDiagnosticSeverity.Warning }
 
+    // One question: is anything stopping a tool from working? The issue count answers it; each issue is one row.
     val toolsTitle = stringResource(R.string.sky_diagnostics_tools)
     TrailSensePage(
         title = stringResource(R.string.diagnostics),
@@ -165,8 +170,6 @@ internal fun DiagnosticsScreen(
             )
         }
 
-        // The counts live in the hero's severity bar rather than a second row of tiles.
-
         diagnosticsSection("errors", R.string.errors, errors, onShowDiagnostic)
         diagnosticsSection("warnings", R.string.diagnostics_warnings, warnings, onShowDiagnostic)
 
@@ -176,8 +179,6 @@ internal fun DiagnosticsScreen(
                     title = stringResource(R.string.pref_sensor_details_title),
                     subtitle = stringResource(R.string.diagnostics_sensor_details_summary),
                     icon = Icons.Default.Sensors,
-                    accent = TrailSenseAccents.Sky,
-                    badgeShape = MaterialShapes.Cookie9Sided.toShape(),
                     position = position,
                     onClick = onShowSensorDetails,
                     modifier = Modifier.testTag("diagnostics_title"),
@@ -189,8 +190,6 @@ internal fun DiagnosticsScreen(
                     title = stringResource(R.string.export_logs),
                     subtitle = stringResource(R.string.diagnostics_export_logs_summary),
                     icon = Icons.Default.Download,
-                    accent = TrailSenseAccents.Lavender,
-                    badgeShape = MaterialShapes.Clover4Leaf.toShape(),
                     position = position,
                     onClick = onExportLogs,
                     modifier = Modifier.testTag("download_logs")
@@ -209,7 +208,7 @@ private fun LazyListScope.diagnosticsSection(
     if (items.isEmpty()) return
     item(key = key) {
         TrailSenseRowGroup(
-            title = "${stringResource(title)} · ${items.size}",
+            title = stringResource(title),
             modifier = Modifier.animateItem()
         ) {
             items.forEach { item ->
@@ -228,19 +227,6 @@ private fun LazyListScope.diagnosticsSection(
 @Composable
 private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int, checks: Int, reported: Int) {
     val issueCount = errorCount + warningCount
-    val tone = when {
-        errorCount > 0 -> TrailSenseTone.Error
-        warningCount > 0 -> TrailSenseTone.Caution
-        loaded -> TrailSenseTone.Good
-        else -> TrailSenseTone.Secondary
-    }
-    val colors = trailSenseToneColors(tone)
-    val icon = when {
-        errorCount > 0 -> Icons.Default.ErrorOutline
-        warningCount > 0 -> Icons.Default.WarningAmber
-        loaded -> Icons.Default.CheckCircle
-        else -> Icons.Default.HourglassEmpty
-    }
     val title = when {
         issueCount > 0 -> pluralStringResource(R.plurals.diagnostics_issue_count, issueCount, issueCount)
         loaded -> stringResource(R.string.no_issues)
@@ -256,90 +242,45 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "diagnosticsProgress"
     )
-    // While the checks run the badge turns slowly; once they are in it settles.
-    val spin = androidx.compose.animation.core.rememberInfiniteTransition(label = "diagnosticsSpin")
-    val turning by spin.animateFloat(
-        0f, 360f,
-        androidx.compose.animation.core.infiniteRepeatable(
-            androidx.compose.animation.core.tween(8_000, easing = androidx.compose.animation.core.LinearEasing)
-        ),
-        label = "diagnosticsTurn"
-    )
-    val status = trailSenseStatusColors()
-    TrailSenseSpotlight(
-        title = title,
-        supportingText = supporting,
-        tone = tone,
-        titleStyle = MaterialTheme.typography.headlineMedium,
-        modifier = Modifier
+    // The answer on the plain page: how many issues, what to do about them, and how many checks have reported.
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.lg)
             .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
-            .then(if (issueCount == 0 && loaded) Modifier.testTag("empty_text") else Modifier),
-        badge = {
-            // The health ring: fills as the checks report, around a badge whose shape says the state.
-            Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
-                if (loaded) {
-                    CircularProgressIndicator(
-                        progress = { 1f },
-                        modifier = Modifier.size(96.dp),
-                        color = colors.accent,
-                        trackColor = colors.content.copy(alpha = 0.12f),
-                        strokeWidth = 8.dp
-                    )
-                } else {
-                    CircularWavyProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier.size(96.dp),
-                        color = colors.accent,
-                        trackColor = colors.content.copy(alpha = 0.12f)
-                    )
-                }
-                TrailSenseShapeBadge(
-                    icon = icon,
-                    shape = when (tone) {
-                        TrailSenseTone.Error -> MaterialShapes.SoftBurst.toShape()
-                        TrailSenseTone.Caution -> MaterialShapes.Pentagon.toShape()
-                        TrailSenseTone.Good -> MaterialShapes.Cookie9Sided.toShape()
-                        else -> MaterialShapes.Cookie6Sided.toShape()
-                    },
-                    size = 64.dp,
-                    containerColor = colors.accent,
-                    contentColor = colors.onAccent,
-                    modifier = Modifier.graphicsLayer { rotationZ = if (loaded) 0f else turning }
-                )
-            }
-        }
+            .then(if (issueCount == 0 && loaded) Modifier.testTag("empty_text") else Modifier)
     ) {
-        // Severity in one place: a proportional bar of errors, warnings and passing checks, with its legend.
-        val passing = (checks - issueCount).coerceAtLeast(0)
-        val segments = listOf(
-            errorCount to MaterialTheme.colorScheme.error,
-            warningCount to status.caution,
-            passing to status.good
-        ).filter { it.first > 0 }
-        if (loaded && segments.isNotEmpty()) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(14.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                segments.forEach { (count, color) ->
-                    Box(
-                        Modifier
-                            .weight(count.toFloat())
-                            .fillMaxHeight()
-                            .background(color, androidx.compose.foundation.shape.CircleShape)
-                    )
-                }
-            }
+        Text(
+            title,
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (supporting != null) {
+            Text(
+                supporting,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+            )
+        }
+        if (loaded) {
             Text(
                 listOfNotNull(
                     errorCount.takeIf { it > 0 }?.let { "$it ${stringResource(R.string.errors)}" },
                     warningCount.takeIf { it > 0 }?.let { "$it ${stringResource(R.string.diagnostics_warnings)}" },
                     stringResource(R.string.sky_diagnostics_checks_count, reported.coerceAtMost(checks), checks)
                 ).joinToString(" · "),
-                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                color = colors.content.copy(alpha = 0.82f)
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            // While the checks run, the bar fills as they report: the motion carries the progress.
+            androidx.compose.material3.LinearWavyProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.md)
             )
         }
     }
@@ -352,90 +293,24 @@ private fun DiagnosticListItem(
     onClick: () -> Unit
 ) {
     val severity = item.result.severity
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.985f else 1f,
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "diagnosticPress"
-    )
-
-    // The row itself carries a breath of its severity, so red and amber read beyond the small icon.
-    Surface(
-        color = androidx.compose.ui.graphics.lerp(
-            MaterialTheme.colorScheme.surfaceContainerLow,
-            statusContainerColor(severity),
-            0.32f
-        ),
-        shape = trailSenseGroupShape(position),
-
-        modifier = Modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp)
-                .clickable(
-                    interactionSource = interaction,
-                    indication = ripple(),
-                    role = Role.Button,
-                    onClick = onClick
-                )
-                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = if (severity == ToolDiagnosticSeverity.Error) {
-                    MaterialShapes.SoftBurst.toShape()
-                } else {
-                    MaterialShapes.Pentagon.toShape()
-                },
-                color = statusContainerColor(severity),
-                contentColor = onStatusContainerColor(severity),
-                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = statusIcon(severity),
-                        contentDescription = stringResource(
-                            if (severity == ToolDiagnosticSeverity.Error) R.string.error else R.string.warning
-                        ),
-                        modifier = Modifier.size(TrailSenseSize.leadingIcon)
-                    )
-                }
-            }
-
-            Spacer(Modifier.width(TrailSenseSpacing.md))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                Text(
-                    text = item.result.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = item.result.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
+    val isError = severity == ToolDiagnosticSeverity.Error
+    val severityLabel = stringResource(if (isError) R.string.error else R.string.warning)
+    SkyValueRow(
+        title = item.result.name,
+        subtitle = item.result.description,
+        icon = statusIcon(severity),
+        iconContainerColor = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
+        iconContentColor = if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+        position = position,
+        onClick = onClick,
+        modifier = Modifier.semantics {
+            stateDescription = severityLabel
+        },
+        trailing = {
             Spacer(Modifier.width(TrailSenseSpacing.sm))
             DiagnosticsChevron()
         }
-    }
+    )
 }
 
 @Composable
@@ -445,22 +320,6 @@ private fun DiagnosticsChevron() {
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onSurfaceVariant
     )
-}
-
-@Composable
-private fun statusContainerColor(severity: ToolDiagnosticSeverity): Color {
-    return when (severity) {
-        ToolDiagnosticSeverity.Error -> MaterialTheme.colorScheme.errorContainer
-        ToolDiagnosticSeverity.Warning -> trailSenseStatusColors().cautionContainer
-    }
-}
-
-@Composable
-private fun onStatusContainerColor(severity: ToolDiagnosticSeverity): Color {
-    return when (severity) {
-        ToolDiagnosticSeverity.Error -> MaterialTheme.colorScheme.onErrorContainer
-        ToolDiagnosticSeverity.Warning -> trailSenseStatusColors().onCautionContainer
-    }
 }
 
 private fun statusIcon(severity: ToolDiagnosticSeverity): ImageVector {
