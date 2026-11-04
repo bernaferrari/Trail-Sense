@@ -301,8 +301,8 @@ fun <T> TrailSenseConnectedChoice(
                 colors = ToggleButtonDefaults.toggleButtonColors(
                     checkedContainerColor = MaterialTheme.colorScheme.primary,
                     checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
                 contentPadding = PaddingValues(horizontal = TrailSenseSpacing.sm)
             ) {

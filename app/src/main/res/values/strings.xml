@@ -2276,4 +2276,5 @@
     <string name="light_level_daylight">Daylight</string>
     <string name="light_level_sun">Direct sun</string>
     <string name="light_meter_preview_hint">Enter the distance, then shine the flashlight at the phone to see how far it reaches.</string>
+    <string name="climate_monthly_total">Monthly total</string>
 </resources>

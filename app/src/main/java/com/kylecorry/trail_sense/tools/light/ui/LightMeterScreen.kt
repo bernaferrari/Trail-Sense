@@ -5,6 +5,12 @@ package com.kylecorry.trail_sense.tools.light.ui
 import android.graphics.Paint
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -251,63 +257,31 @@ private fun LightHero(
             else -> R.string.light_level_sun
         }
     )
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = scheme.primaryContainer,
-        contentColor = scheme.onPrimaryContainer
-    ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    stringResource(R.string.light_meter_illuminance),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = scheme.onPrimaryContainer.copy(alpha = 0.8f),
-                    modifier = Modifier.weight(1f)
-                )
-                Text(description, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-            }
-            Text(
-                text = luxText,
-                style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold
+    TrailSenseSpotlight(
+        modifier = modifier,
+        eyebrow = stringResource(R.string.light_meter_illuminance),
+        title = luxText,
+        titleStyle = MaterialTheme.typography.displaySmall,
+        supportingText = listOfNotNull(description, peakText).joinToString(" · "),
+        badge = {
+            TrailSenseShapeBadge(
+                icon = TrailIcons.Sun,
+                shape = MaterialShapes.Sunny.toShape(),
+                size = 64.dp
             )
-            LinearWavyProgressIndicator(
-                progress = { animatedLevel },
-                modifier = Modifier.fillMaxWidth(),
-                color = scheme.primary,
-                trackColor = scheme.onPrimaryContainer.copy(alpha = 0.14f)
-            )
-            AnimatedVisibility(
-                visible = peakText != null,
-                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                    fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                    fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        peakText.orEmpty(),
-                        style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                        modifier = Modifier.weight(1f)
-                    )
-                    FilledTonalButton(
-                        onClick = onResetPeak,
-                        shapes = ButtonDefaults.shapes(),
-                        modifier = Modifier.testTag("reset_btn"),
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = scheme.surfaceContainerLowest.copy(alpha = 0.7f),
-                            contentColor = scheme.onSurface
-                        )
-                    ) {
-                        Text(stringResource(R.string.light_meter_reset_peak))
-                    }
-                }
-            }
+        },
+        actions = if (peakText != null) {
+            listOf(TrailSenseSpotlightAction(stringResource(R.string.light_meter_reset_peak), onClick = onResetPeak))
+        } else {
+            emptyList()
         }
+    ) {
+        LinearWavyProgressIndicator(
+            progress = { animatedLevel },
+            modifier = Modifier.fillMaxWidth(),
+            color = scheme.primary,
+            trackColor = scheme.onPrimaryContainer.copy(alpha = 0.14f)
+        )
     }
 }
 

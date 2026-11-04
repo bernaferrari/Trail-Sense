@@ -165,6 +165,7 @@ fun TrailSenseReading(
                 text = value,
                 style = style.copy(fontFeatureSettings = "tnum"),
                 color = color,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                 maxLines = 1
             )
             if (!unit.isNullOrBlank()) {

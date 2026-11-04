@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
 import androidx.compose.ui.text.input.KeyboardType
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
@@ -173,6 +176,8 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
             elevation = this@ClimateController.elevation,
             temperatureRange = getTemperatureRangeText(),
             precipitationTitle = getPrecipitationTitle(),
+            highLow = getHighLow(),
+            precipitationValue = getPrecipitationValue(),
             climateZoneTitle = climateClassification?.first.orEmpty(),
             climateZoneDescription = climateClassification?.second.orEmpty(),
             ecologyDescription = getEcologySummary(),
@@ -294,6 +299,17 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
             range.end.convertTo(temperatureUnits)
         )
         return getString(R.string.slash_separated_pair, highValue, lowValue)
+    }
+
+    private fun getHighLow(): Pair<String, String>? {
+        val range = temperatures?.firstOrNull { it.first == date }?.second ?: return null
+        return formatter.formatTemperature(range.end.convertTo(temperatureUnits)) to
+            formatter.formatTemperature(range.start.convertTo(temperatureUnits))
+    }
+
+    private fun getPrecipitationValue(): String? {
+        val value = precipitation?.get(date.month)?.convertTo(precipitationDistanceUnits) ?: return null
+        return formatter.formatDistance(value, if (precipitationDistanceUnits.isMetric) 0 else 1)
     }
 
     private fun getPrecipitationTitle(): String {
@@ -520,6 +536,8 @@ private fun ClimateScreen(
     elevation: Distance?,
     temperatureRange: String?,
     precipitationTitle: String,
+    highLow: Pair<String, String>? = null,
+    precipitationValue: String? = null,
     climateZoneTitle: String,
     climateZoneDescription: String,
     ecologyDescription: String,
@@ -561,15 +579,33 @@ private fun ClimateScreen(
         modifier = modifier.testTag("climate_scroll")
     ) {
         // The one thing the screen is for: what the chosen day is typically like here.
+        // The one thing the screen is for: what the chosen day is typically like here, as three coloured tiles.
         item(key = "hero") {
-            TrailSenseHeroCard(
+            TrailSenseStatGrid(
                 modifier = Modifier.testTag("climate_title"),
-                eyebrow = stringResource(R.string.temperature),
-                title = temperatureRange ?: "--",
-                supportingText = precipitationTitle,
-                icon = rememberVectorPainter(TrailIcons.TemperatureRange),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                columns = 2,
+                valueStyle = MaterialTheme.typography.headlineMedium,
+                stats = listOf(
+                    TrailSenseStat(
+                        label = stringResource(R.string.high),
+                        value = highLow?.first ?: "--",
+                        tone = TrailSenseTone.Tertiary,
+                        icon = TrailIcons.TemperatureRange
+                    ),
+                    TrailSenseStat(
+                        label = stringResource(R.string.low),
+                        value = highLow?.second ?: "--",
+                        tone = TrailSenseTone.Primary,
+                        icon = TrailIcons.TemperatureRange
+                    ),
+                    TrailSenseStat(
+                        label = precipitationLabel,
+                        value = precipitationValue ?: "--",
+                        supportingText = stringResource(R.string.climate_monthly_total),
+                        tone = TrailSenseTone.Secondary,
+                        icon = TrailIcons.LightRain
+                    )
+                )
             )
         }
 

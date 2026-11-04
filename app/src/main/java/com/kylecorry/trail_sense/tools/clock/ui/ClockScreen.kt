@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
+import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
@@ -198,11 +199,11 @@ private fun ClockScreen(
             ) {
                 if (showAnalogClock) {
                     Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        shape = androidx.compose.material3.MaterialShapes.Cookie12Sided.toShape(),
+                        color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier
                             .padding(bottom = TrailSenseSpacing.lg)
-                            .size(280.dp)
+                            .size(300.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             AnalogClock(time = myTime.toLocalTime())
@@ -212,10 +213,11 @@ private fun ClockScreen(
                 Text(
                     text = timeText,
                     style = (if (showAnalogClock) {
-                        MaterialTheme.typography.displaySmall
+                        MaterialTheme.typography.displayMedium
                     } else {
                         MaterialTheme.typography.displayLarge
                     }).copy(fontFeatureSettings = "tnum"),
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     maxLines = 1
@@ -289,26 +291,23 @@ private fun ClockScreen(
 
 @Composable
 private fun AnalogClock(time: LocalTime) {
-    val outline = MaterialTheme.colorScheme.outline
+    val face = MaterialTheme.colorScheme.onPrimaryContainer
     val primary = MaterialTheme.colorScheme.primary
-    val onSurface = MaterialTheme.colorScheme.onSurface
-    val secondary = MaterialTheme.colorScheme.secondary
+    val second = MaterialTheme.colorScheme.tertiary
+    val container = MaterialTheme.colorScheme.primaryContainer
 
-    Canvas(modifier = Modifier.size(250.dp)) {
+    Canvas(modifier = Modifier.size(232.dp)) {
         val radius = min(size.width, size.height) / 2f
         val center = Offset(size.width / 2f, size.height / 2f)
-        drawCircle(outline, radius = radius, center = center, style = Stroke(width = 4f))
 
-        for (tick in 0 until 60) {
-            val angle = tick / 60f * 360f - 90f
-            val startRadius = radius * if (tick % 5 == 0) 0.86f else 0.92f
-            val endRadius = radius * 0.96f
-            drawLine(
-                color = if (tick % 5 == 0) onSurface else outline,
-                start = center.pointAt(startRadius, angle),
-                end = center.pointAt(endRadius, angle),
-                strokeWidth = if (tick % 5 == 0) 4f else 2f,
-                cap = StrokeCap.Round
+        // Twelve hour marks as dots, the quarters larger: a face that reads at a glance without a ring of ticks.
+        for (hourMark in 0 until 12) {
+            val angle = hourMark / 12f * 360f - 90f
+            val quarter = hourMark % 3 == 0
+            drawCircle(
+                color = face.copy(alpha = if (quarter) 0.9f else 0.45f),
+                radius = if (quarter) 5.dp.toPx() else 3.dp.toPx(),
+                center = center.pointAt(radius * 0.9f, angle)
             )
         }
 
@@ -318,27 +317,29 @@ private fun AnalogClock(time: LocalTime) {
         val secondAngle = (time.second / 60f) * 360f - 90f
 
         drawLine(
-            color = onSurface,
+            color = face,
             start = center,
-            end = center.pointAt(radius * 0.48f, hourAngle),
-            strokeWidth = 10f,
+            end = center.pointAt(radius * 0.46f, hourAngle),
+            strokeWidth = 14.dp.toPx(),
             cap = StrokeCap.Round
         )
         drawLine(
             color = primary,
             start = center,
-            end = center.pointAt(radius * 0.72f, minuteAngle),
-            strokeWidth = 6f,
+            end = center.pointAt(radius * 0.7f, minuteAngle),
+            strokeWidth = 9.dp.toPx(),
             cap = StrokeCap.Round
         )
         drawLine(
-            color = secondary,
-            start = center,
-            end = center.pointAt(radius * 0.8f, secondAngle),
-            strokeWidth = 3f,
+            color = second,
+            start = center.pointAt(radius * 0.14f, secondAngle + 180f),
+            end = center.pointAt(radius * 0.78f, secondAngle),
+            strokeWidth = 2.5.dp.toPx(),
             cap = StrokeCap.Round
         )
-        drawCircle(primary, radius = 7f, center = center)
+        drawCircle(second, radius = 6.dp.toPx(), center = center.pointAt(radius * 0.78f, secondAngle))
+        drawCircle(second, radius = 7.dp.toPx(), center = center)
+        drawCircle(container, radius = 3.dp.toPx(), center = center)
     }
 }
 

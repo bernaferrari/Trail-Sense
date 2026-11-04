@@ -67,6 +67,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
@@ -135,6 +136,7 @@ fun RulerScreen(
         }.orEmpty()
     }
 
+    val tapHint = stringResource(R.string.ruler_tap_hint)
     val cmLabel = getUnitText(DistanceUnits.Centimeters)
     val inLabel = getUnitText(DistanceUnits.Inches)
     val ratioLabel = stringResource(R.string.map_scale_ratio)
@@ -177,35 +179,14 @@ fun RulerScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec()),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                ) {
-                    TrailSenseReading(
-                        value = measurement.ifEmpty { "--" },
-                        style = MaterialTheme.typography.displayMedium,
-                        modifier = Modifier.testTag("measurement")
-                    )
-                    if (mapDistance.isNotEmpty()) {
-                        Text(
-                            text = mapDistance,
-                            modifier = Modifier.testTag("map_distance"),
-                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                            color = MaterialTheme.colorScheme.primary,
-                            textAlign = TextAlign.Center
-                        )
-                    } else if (measurement.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.ruler_tap_hint),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+                TrailSenseSpotlight(
+                    eyebrow = stringResource(R.string.tool_ruler_title),
+                    title = measurement.ifEmpty { "--" },
+                    titleStyle = MaterialTheme.typography.displaySmall,
+                    supportingText = mapDistance.takeIf { it.isNotEmpty() }
+                        ?: if (measurement.isEmpty()) tapHint else null,
+                    modifier = Modifier.testTag("measurement")
+                )
 
                 TrailSenseConnectedChoice(
                     options = listOf(
@@ -275,9 +256,9 @@ internal fun RulerCanvas(
     onDistanceSelected: (Distance) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val lineColor = MaterialTheme.colorScheme.onSurface
+    val lineColor = MaterialTheme.colorScheme.onPrimaryContainer
     val highlightColor = MaterialTheme.colorScheme.primary
-    val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
+    val surfaceColor = MaterialTheme.colorScheme.primaryContainer
     Canvas(
         modifier = modifier
             .background(surfaceColor)
