@@ -355,7 +355,7 @@ private fun StrikeHero(
         }
         Text(
             hint,
-            style = if (danger) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+            style = if (danger) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
             fontWeight = if (danger) FontWeight.SemiBold else FontWeight.Normal,
             color = if (danger) scheme.error else scheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

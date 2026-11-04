@@ -727,7 +727,7 @@ private fun MetalHero(
         }
         Text(
             text = stringResource(if (metalDetected) R.string.metal_detected else R.string.metal_not_detected),
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
             color = verdictColor,
             textAlign = TextAlign.Center

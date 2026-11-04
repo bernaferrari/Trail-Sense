@@ -502,7 +502,7 @@ private fun CreateTideScreen(
                     TrailSenseGroupCard(position = position) {
                         Text(
                             text = stringResource(R.string.frequency),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
@@ -553,7 +553,7 @@ private fun CreateTideScreen(
                         TrailSenseGroupCard(position = position) {
                             Text(
                                 text = stringResource(R.string.lunitidal_interval),
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
@@ -596,7 +596,7 @@ private fun CreateTideScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.add),
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }

@@ -350,7 +350,7 @@ private fun LightHero(
         }
         Text(
             text = headline,
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )

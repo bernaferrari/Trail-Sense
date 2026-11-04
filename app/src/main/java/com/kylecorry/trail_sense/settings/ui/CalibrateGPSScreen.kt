@@ -497,7 +497,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                     TrailSenseGroupCard(position = position) {
                         Text(
                             text = powerTitle,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
                         )
                         TrailSenseConnectedChoice(

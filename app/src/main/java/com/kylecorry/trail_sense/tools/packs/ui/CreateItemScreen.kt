@@ -413,7 +413,7 @@ private fun CategoryInput(
         ) {
             Text(
                 text = stringResource(R.string.category),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (selected.isNotBlank()) {

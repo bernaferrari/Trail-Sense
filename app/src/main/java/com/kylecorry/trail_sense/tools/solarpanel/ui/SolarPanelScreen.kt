@@ -409,7 +409,7 @@ private fun SolarHero(
         )
         Text(
             text = verdict,
-            style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
+            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
             color = if (aligned) status.good else scheme.onSurface,
             textAlign = TextAlign.Center

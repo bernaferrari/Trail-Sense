@@ -26,7 +26,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,16 +65,29 @@ fun TrailSenseInputField(
     unit: String? = null,
     onUnitClick: (() -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null
+    trailingIcon: (@Composable () -> Unit)? = null,
+    /** Makes the field a read-only picker: tapping it calls this (to open a choice) instead of typing. */
+    onClick: (() -> Unit)? = null
 ) {
     // The same tone as the list rows, so a field and a row in one group read as one object.
     val container = MaterialTheme.colorScheme.surfaceContainer
+    val interactionSource = remember { MutableInteractionSource() }
+    if (onClick != null) {
+        val currentOnClick by rememberUpdatedState(onClick)
+        LaunchedEffect(interactionSource) {
+            interactionSource.interactions.collect {
+                if (it is PressInteraction.Release) currentOnClick()
+            }
+        }
+    }
     TextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
         label = { Text(label) },
         enabled = enabled,
+        readOnly = onClick != null,
+        interactionSource = interactionSource,
         isError = isError,
         singleLine = true,
         leadingIcon = leadingIcon,

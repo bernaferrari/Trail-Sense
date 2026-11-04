@@ -430,7 +430,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                 TrailSenseGroupCard(position = position) {
                     Text(
                         text = sunMoonTitle,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
                     )
                     TrailSenseConnectedChoice(
@@ -448,7 +448,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                 TrailSenseGroupCard(position = position) {
                     Text(
                         text = dialShapeTitle,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
                     )
                     TrailSenseConnectedChoice(

@@ -426,8 +426,7 @@ private fun SoundTile(
         ) {
             Text(
                 label,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
             if (selected) {

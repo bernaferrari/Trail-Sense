@@ -100,7 +100,7 @@ fun ScreenFlashlightScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.brightness),
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
                     Text(

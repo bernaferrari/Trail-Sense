@@ -79,6 +79,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
@@ -579,7 +580,7 @@ private fun <T, U> UnitAmountField(
     }
 }
 
-/** A choice from a list, as a row: the label, what's chosen under it, a dialog to change it. */
+/** A choice from a list, as a read-only field of the group (so it reads like the fields beside it); tapping opens the choice. */
 @Composable
 internal fun <T> UnitPickerField(
     label: String,
@@ -592,11 +593,18 @@ internal fun <T> UnitPickerField(
     var isOpen by remember { mutableStateOf(false) }
     val selectedName = options.firstOrNull { it.second == selected }?.first
 
-    TrailSenseListItem(
-        title = label,
-        trailingText = selectedName,
+    TrailSenseInputField(
+        value = selectedName.orEmpty(),
+        onValueChange = {},
+        label = label,
         position = position,
         onClick = { isOpen = true },
+        trailingIcon = {
+            androidx.compose.material3.Icon(
+                androidx.compose.material.icons.Icons.Rounded.ArrowDropDown,
+                contentDescription = null
+            )
+        },
         modifier = modifier
     )
 
