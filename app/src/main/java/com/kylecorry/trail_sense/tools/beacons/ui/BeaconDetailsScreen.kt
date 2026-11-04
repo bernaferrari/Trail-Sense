@@ -365,8 +365,20 @@ private fun BeaconDetailsScreen(
 
         // How far is this place, and which way? The distance answers it; Navigate is the one filled action.
         item(key = "hero") {
+            // The beacon's own mark (the shape, colour and icon it has on the map) leads the header, so the page
+            // is recognisably this place.
+            Row(verticalAlignment = Alignment.Top) {
+            BeaconShapeMark(
+                shape = beacon.shape,
+                color = ComposeColor(beacon.color),
+                icon = beacon.icon?.icon ?: TrailIcons.Location,
+                size = 56.dp,
+                modifier = Modifier.padding(start = TrailSenseSpacing.lg, top = TrailSenseSpacing.md)
+            )
             com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue(
-                modifier = Modifier.testTag("beacon_distance"),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("beacon_distance"),
                 value = distance.ifBlank { placeholder },
                 verdict = direction?.ifBlank { null },
                 below = {
@@ -391,6 +403,7 @@ private fun BeaconDetailsScreen(
                     }
                 }
             )
+            }
         }
 
         item(key = "conditions") {
