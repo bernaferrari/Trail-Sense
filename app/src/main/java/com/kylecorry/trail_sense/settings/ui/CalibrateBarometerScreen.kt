@@ -2,42 +2,14 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -57,9 +29,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
@@ -190,8 +161,10 @@ private class CalibrateBarometerController(private val host: TrailSenseDestinati
 
         setChartState?.invoke(
             PressureChartData(
-                displayReadings.map { it.copy(value = it.value.convertTo(units)) },
-                displayRawReadings.map { it.copy(value = it.value.convertTo(units)) }
+                displayReadings.map { Reading(it.value.convertTo(units).value, it.time) },
+                displayRawReadings.map { Reading(it.value.convertTo(units).value, it.time) },
+                margin = Pressure.hpa(1f).convertTo(units).value,
+                minRange = Pressure.hpa(40f).convertTo(units).value
             )
         )
     }
@@ -249,6 +222,15 @@ private class CalibrateBarometerController(private val host: TrailSenseDestinati
         }
     }
 
+    fun goBack() {
+        host.goBack()
+    }
+
+    fun formatOffsetSummary(offset: Float): String {
+        val sign = if (offset > 0f) "+" else ""
+        return host.getString(R.string.barometer_offset_applied, sign + formatOffset(offset))
+    }
+
     fun formatOffset(offset: Float): String {
         return formatService.formatPressure(
             Pressure.hpa(offset).convertTo(units),
@@ -296,374 +278,142 @@ private data class PressureState(
 )
 
 private data class PressureChartData(
-    val data: List<Reading<Pressure>>,
-    val raw: List<Reading<Pressure>>
+    val data: List<Reading<Float>>,
+    val raw: List<Reading<Float>>,
+    val margin: Float,
+    val minRange: Float
 )
 
 @Composable
 private fun CalibrateBarometerContent(controller: CalibrateBarometerController) {
-        val prefs = controller.prefs
-        val formatService = controller.formatService
-        val dash = stringResource(R.string.dash)
-        var pressure by remember { mutableStateOf(dash) }
-        var pressureAvailable by remember { mutableStateOf(false) }
-        var chartData by remember {
-            mutableStateOf(PressureChartData(emptyList(), emptyList()))
-        }
-        var useSeaLevelPressure by remember {
-            mutableStateOf(controller.getBoolean(R.string.pref_use_sea_level_pressure, true))
-        }
-        var pressureSmoothing by remember {
-            mutableStateOf(controller.getInt(R.string.pref_barometer_pressure_smoothing, 150))
-        }
-        var adjustForTemperature by remember {
-            mutableStateOf(controller.getBoolean(R.string.pref_adjust_for_temperature, false))
-        }
-        var barometerOffset by remember {
-            mutableStateOf(prefs.weather.barometerOffset)
-        }
-
-        controller.setPressureState {
-            pressure = it.pressure
-            pressureAvailable = it.pressureAvailable
-        }
-        controller.setChartState {
-            chartData = it
-        }
-        controller.setBarometerOffset {
-            barometerOffset = it
-        }
-
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .align(Alignment.TopCenter),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    top = TrailSenseSpacing.lg,
-                    bottom = TrailSenseSpacing.xxxl
-                ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-                item("title") {
-                    Text(
-                        text = stringResource(R.string.barometer),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(
-                            top = TrailSenseSpacing.sm,
-                            bottom = TrailSenseSpacing.xs
-                        )
-                    )
-                }
-
-                item("pressure_hero") {
-                    BarometerPressureHero(pressure = pressure)
-                }
-
-                item("chart_section") {
-                    CalibrateBarometerSection(
-                        title = stringResource(R.string.pressure)
-                    ) {
-                        PressureChartView(
-                            data = chartData.data,
-                            raw = chartData.raw
-                        )
-                    }
-                }
-
-                item("calibration_section") {
-                    CalibrateBarometerSection(
-                        title = stringResource(R.string.barometer)
-                    ) {
-                        SettingsSwitchRow(
-                            label = stringResource(R.string.pref_use_sea_level_pressure_title),
-                            checked = useSeaLevelPressure,
-                            onCheckedChange = {
-                                useSeaLevelPressure = it
-                                controller.putBoolean(R.string.pref_use_sea_level_pressure, it)
-                                controller.updateChart()
-                            }
-                        )
-                        TrailSenseDivider()
-                        BarometerSmoothingRow(
-                            smoothing = pressureSmoothing,
-                            summary = formatService.formatPercentage(
-                                pressureSmoothing / 10f
-                            ),
-                            onSmoothingChange = {
-                                pressureSmoothing = it
-                                controller.putInt(R.string.pref_barometer_pressure_smoothing, it)
-                            },
-                            modifier = Modifier
-                        )
-                        TrailSenseDivider()
-                        SettingsSwitchRow(
-                            label = stringResource(R.string.pref_adjust_for_temperature_title),
-                            summary = stringResource(R.string.pref_adjust_for_temperature_summary),
-                            checked = adjustForTemperature,
-                            enabled = useSeaLevelPressure,
-                            onCheckedChange = {
-                                adjustForTemperature = it
-                                controller.putBoolean(R.string.pref_adjust_for_temperature, it)
-                                controller.updateChart()
-                            }
-                        )
-                        TrailSenseDivider()
-                        SettingsActionRow(
-                            label = stringResource(R.string.barometer_offset),
-                            summary = controller.formatOffset(barometerOffset),
-                            enabled = pressureAvailable,
-                            onClick = {
-                                controller.pickBarometerOffset {
-                                    barometerOffset = it
-                                }
-                            }
-                        )
-                        SettingsActionRow(
-                            label = stringResource(R.string.reset_calibration),
-                            onClick = {
-                                controller.resetBarometerOffset {
-                                    barometerOffset = it
-                                }
-                            }
-                        )
-                    }
-                }
-
-                item("info") {
-                    Text(
-                        text = stringResource(R.string.pref_barometer_info_summary),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(
-                            horizontal = TrailSenseSpacing.md,
-                            vertical = TrailSenseSpacing.xs
-                        )
-                    )
-                }
-            }
-            }
-        }
-}
-
-@Composable
-private fun BarometerPressureHero(
-    pressure: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Row(
-            modifier = Modifier.padding(TrailSenseSpacing.xl),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(56.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_barometer),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                Text(
-                    text = stringResource(R.string.pressure),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-                Text(
-                    text = pressure,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
+    val prefs = controller.prefs
+    val formatService = controller.formatService
+    val dash = stringResource(R.string.dash)
+    var pressure by remember { mutableStateOf(dash) }
+    var pressureAvailable by remember { mutableStateOf(false) }
+    var chartData by remember { mutableStateOf<PressureChartData?>(null) }
+    var useSeaLevelPressure by remember {
+        mutableStateOf(controller.getBoolean(R.string.pref_use_sea_level_pressure, true))
     }
-}
+    var pressureSmoothing by remember {
+        mutableStateOf(controller.getInt(R.string.pref_barometer_pressure_smoothing, 150))
+    }
+    var adjustForTemperature by remember {
+        mutableStateOf(controller.getBoolean(R.string.pref_adjust_for_temperature, false))
+    }
+    var barometerOffset by remember { mutableStateOf(prefs.weather.barometerOffset) }
 
-@Composable
-private fun CalibrateBarometerSection(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(
-                start = TrailSenseSpacing.lg,
-                bottom = TrailSenseSpacing.sm
+    controller.setPressureState {
+        pressure = it.pressure
+        pressureAvailable = it.pressureAvailable
+    }
+    controller.setChartState { chartData = it }
+    controller.setBarometerOffset { barometerOffset = it }
+
+    val pressureTitle = stringResource(R.string.pressure)
+    val seaLevelTitle = stringResource(R.string.pref_use_sea_level_pressure_title)
+    val historyTitle = stringResource(R.string.history)
+    val calibrationTitle = stringResource(R.string.calibrate)
+    val noData = stringResource(R.string.no_data)
+    val chartLegend = stringResource(R.string.calibration_chart_legend)
+    val offsetFooter = stringResource(R.string.barometer_offset_explanation)
+    val barometerIcon = painterResource(R.drawable.ic_barometer)
+
+    TrailSensePage(
+        title = stringResource(R.string.barometer),
+        onBack = controller::goBack,
+        backLabel = stringResource(R.string.back)
+    ) {
+        item("hero") {
+            CalibrationHero(
+                label = if (useSeaLevelPressure) seaLevelTitle else pressureTitle,
+                value = pressure,
+                icon = barometerIcon,
+                supportingText = if (barometerOffset != 0f) {
+                    controller.formatOffsetSummary(barometerOffset)
+                } else {
+                    null
+                }
             )
-        )
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            color = Color.Transparent
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-private fun PressureChartView(
-    data: List<Reading<Pressure>>,
-    raw: List<Reading<Pressure>>,
-    modifier: Modifier = Modifier
-) {
-    val primary = MaterialTheme.colorScheme.primary
-    val grid = MaterialTheme.colorScheme.outlineVariant
-    val rawColor = Color(AppColor.Gray.color).copy(alpha = 0.2f)
-    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupInner),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(dimensionResource(R.dimen.chart_height))
-            .padding(TrailSenseSpacing.lg),
-        contentAlignment = Alignment.Center
-    ) {
-        if (data.isEmpty()) {
-            Text(
-                text = stringResource(R.string.no_data),
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            return@Box
         }
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val startTime = data.firstOrNull()?.time ?: raw.firstOrNull()?.time ?: Instant.now()
-            val points = data.map {
-                Duration.between(startTime, it.time).toMillis() / 3_600_000f to it.value.value
-            }
-            val rawPoints = raw.map {
-                Duration.between(startTime, it.time).toMillis() / 3_600_000f to it.value.value
-            }
-            val allPoints = points + rawPoints
-            val units = data.firstOrNull()?.value?.units ?: PressureUnits.Hpa
-            val margin = Pressure.hpa(1f).convertTo(units).value
-            val minRange = Pressure.hpa(40f).convertTo(units).value
-            val minX = allPoints.minOfOrNull { it.first } ?: 0f
-            val maxX = allPoints.maxOfOrNull { it.first } ?: 1f
-            val minYValue = allPoints.minOfOrNull { it.second } ?: 0f
-            val maxYValue = allPoints.maxOfOrNull { it.second } ?: 1f
-            val yMinimum = minYValue - margin
-            val yMaximum = max(maxYValue + margin, yMinimum + minRange)
-            val xRange = (maxX - minX).takeIf { it > 0f } ?: 1f
-            val yRange = (yMaximum - yMinimum).takeIf { it > 0f } ?: 1f
-
-            fun x(value: Float): Float {
-                return ((value - minX) / xRange).coerceIn(0f, 1f) * size.width
-            }
-
-            fun y(value: Float): Float {
-                return size.height - ((value - yMinimum) / yRange).coerceIn(0f, 1f) * size.height
-            }
-
-            repeat(5) { index ->
-                val y = index / 4f * size.height
-                drawLine(
-                    color = grid,
-                    start = androidx.compose.ui.geometry.Offset(0f, y),
-                    end = androidx.compose.ui.geometry.Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx()
+        trailSenseSection("history", title = historyTitle, footer = chartLegend) {
+            row { position ->
+                CalibrationHistoryChart(
+                    data = chartData?.data,
+                    raw = chartData?.raw.orEmpty(),
+                    margin = chartData?.margin ?: 0f,
+                    minRange = chartData?.minRange ?: 0f,
+                    emptyText = noData,
+                    position = position
                 )
             }
+        }
 
-            fun drawSeries(points: List<Pair<Float, Float>>, color: Color, strokeWidth: Float) {
-                points.zipWithNext().forEach { (start, end) ->
-                    drawLine(
-                        color = color,
-                        start = androidx.compose.ui.geometry.Offset(x(start.first), y(start.second)),
-                        end = androidx.compose.ui.geometry.Offset(x(end.first), y(end.second)),
-                        strokeWidth = strokeWidth
+        trailSenseSection("pressure", title = pressureTitle) {
+            row { position ->
+                SettingsSwitchRow(
+                    label = seaLevelTitle,
+                    checked = useSeaLevelPressure,
+                    onCheckedChange = {
+                        useSeaLevelPressure = it
+                        controller.putBoolean(R.string.pref_use_sea_level_pressure, it)
+                        controller.updateChart()
+                    },
+                    position = position
+                )
+            }
+            if (useSeaLevelPressure) {
+                row { position ->
+                    SettingsSwitchRow(
+                        label = stringResource(R.string.pref_adjust_for_temperature_title),
+                        summary = stringResource(R.string.pref_adjust_for_temperature_summary),
+                        checked = adjustForTemperature,
+                        onCheckedChange = {
+                            adjustForTemperature = it
+                            controller.putBoolean(R.string.pref_adjust_for_temperature, it)
+                            controller.updateChart()
+                        },
+                        position = position
                     )
                 }
             }
+            row { position ->
+                CalibrationSliderRow(
+                    title = stringResource(R.string.smoothing),
+                    summary = stringResource(R.string.smoothing_summary),
+                    value = pressureSmoothing,
+                    valueLabel = formatService.formatPercentage(pressureSmoothing / 10f),
+                    range = 0..1000,
+                    onValueChange = {
+                        pressureSmoothing = it
+                        controller.putInt(R.string.pref_barometer_pressure_smoothing, it)
+                    },
+                    position = position
+                )
+            }
+        }
 
-            drawSeries(rawPoints, rawColor, 2.dp.toPx())
-            drawSeries(points, primary, 2.dp.toPx())
+        trailSenseSection("calibration", title = calibrationTitle, footer = offsetFooter) {
+            if (pressureAvailable) {
+                row { position ->
+                    SettingsPickerRow(
+                        label = stringResource(R.string.barometer_offset),
+                        selected = controller.formatOffset(barometerOffset),
+                        onClick = { controller.pickBarometerOffset { barometerOffset = it } },
+                        position = position
+                    )
+                }
+            }
+            if (barometerOffset != 0f) {
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.reset_calibration),
+                        onClick = { controller.resetBarometerOffset { barometerOffset = it } },
+                        position = position
+                    )
+                }
+            }
         }
     }
-    }
-}
-
-@Composable
-private fun BarometerSmoothingRow(
-    smoothing: Int,
-    summary: String,
-    onSmoothingChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupInner),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-    Column(
-        modifier = Modifier.padding(
-            horizontal = TrailSenseSpacing.lg,
-            vertical = TrailSenseSpacing.md
-        )
-    ) {
-        Text(
-            text = stringResource(R.string.smoothing),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = summary,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Slider(
-            value = smoothing.toFloat(),
-            onValueChange = {
-                onSmoothingChange(it.roundToInt().coerceIn(0, 1000))
-            },
-            valueRange = 0f..1000f,
-            steps = 999
-        )
-    }
-    }
-}
-
-@Composable
-private fun TrailSenseDivider() {
-    Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
 }
