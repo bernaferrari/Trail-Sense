@@ -525,6 +525,7 @@
     <string name="backtrack">Backtrack</string>
     <string name="backtrack_notification_channel_description">Backtrack location updates</string>
     <string name="create_beacon">Create beacon</string>
+    <string name="edit_beacon">Edit beacon</string>
     <string name="pref_backtrack_enabled" translatable="false">pref_backtrack_enabled</string>
     <string name="waypoint_time_format">%1$s, %2$s</string>
     <string name="pref_backtrack_enabled_summary">Record location history</string>
@@ -1311,7 +1312,7 @@
     <string name="astronomy_rise">Rise</string>
     <string name="horizon">Horizon</string>
     <string name="offline_maps_summary">Use photos, PDFs, and map files offline</string>
-    <string name="map_empty_description">Add a photo, PDF, or map file to use the map tools.</string>
+    <string name="map_empty_description">Add a photo, PDF, or map file.</string>
     <string name="add_offline_map">Add offline map</string>
     <string name="photo_map_disclaimer">Always carry a physical map for backup and verify the accuracy of Trail Sense.\n\nMap files are not included with Trail Sense and must be downloaded or calibrated from a photo. You can find maps to download at https://kylecorry.com/Trail-Sense/offline_maps.html</string>
     <string name="photo_map_disclaimer_shown" translatable="false">photo_map_disclaimer_shown_v2</string>
@@ -2163,7 +2164,7 @@
     <string name="beacon_direction_value" translatable="false">%1$s %2$s</string>
     <!-- Family redesign: paths, comms, experimentation -->
     <string name="paths_clear_search">Clear search</string>
-    <string name="paths_empty_description">Start Backtrack to record where you walk, or tap add to make a path.</string>
+    <string name="paths_empty_description">Paths you record or add appear here.</string>
     <plurals name="path_points_count">
         <item quantity="one">%d point</item>
         <item quantity="other">%d points</item>

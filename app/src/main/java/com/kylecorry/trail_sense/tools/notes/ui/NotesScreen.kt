@@ -115,8 +115,8 @@ fun NotesScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier,
         floatingActionButton = {
-            // One anchored action for both states: the empty notebook only tells the story, the FAB starts the note.
-            if (loaded) ExtendedFloatingActionButton(
+            // The FAB only once there are notes; the empty notebook carries its own in-flow button.
+            if (loaded && items.isNotEmpty()) ExtendedFloatingActionButton(
                 onClick = onAdd,
                 modifier = Modifier.testTag("add_btn"),
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -137,7 +137,11 @@ fun NotesScreen(
                     description = stringResource(R.string.notes_empty_description),
                     modifier = Modifier
                         .fillParentMaxHeight(0.78f)
-                        .testTag("notes_empty_text")
+                        .testTag("notes_empty_text"),
+                    actionLabel = stringResource(R.string.places_notes_new),
+                    actionIcon = TrailIcons.Add,
+                    onAction = onAdd,
+                    actionModifier = Modifier.testTag("add_btn")
                 )
             }
         } else {
