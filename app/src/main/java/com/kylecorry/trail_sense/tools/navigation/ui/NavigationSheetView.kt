@@ -261,7 +261,7 @@ class NavigationSheetView(private val context: Context) {
                         ) {
                             Text(
                                 text = distance.value,
-                                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                                style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
                                 fontWeight = FontWeight.SemiBold,
                                 color = scheme.onSurface,
                                 maxLines = 1
@@ -531,13 +531,8 @@ class NavigationSheetView(private val context: Context) {
             ZonedDateTime.now().plus(duration).toLocalTime(),
             includeSeconds = false
         )
-        return SheetDetail(
-            formatter.join(
-                context.getString(R.string.navigation_arrive_format, arrival),
-                formatter.formatDuration(duration, duration.toHours() >= LONG_DURATION_HOURS),
-                separator = FormatService.Separator.Dot
-            )
-        )
+        // The arrival time only: the duration is the same fact said a second way.
+        return SheetDetail(context.getString(R.string.navigation_arrive_format, arrival))
     }
 
     private fun directionState(guidance: Guidance, values: NavigationSensorValues): DirectionState {
@@ -680,7 +675,6 @@ class NavigationSheetView(private val context: Context) {
         private const val ON_TARGET_DEGREES = 5f
         private const val WRONG_DIRECTION_DEGREES = 45f
         private const val LARGE_DISTANCE_THRESHOLD = 100f
-        private const val LONG_DURATION_HOURS = 100L
         private const val NON_BREAKING_SPACE = ' '
     }
 }
