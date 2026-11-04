@@ -196,73 +196,57 @@ object CustomUiUtils {
             }
         }
 
+        fun publishDistance() {
+            onDistanceChange(
+                mapDistance(amountText, secondaryAmountText, selectedUnit, showFeetAndInches, allowNegative)
+            )
+        }
+
+        val pickUnit = {
+            Pickers.item(
+                context,
+                "",
+                displayUnits.map { it.longName },
+                displayUnits.indexOfFirst { it.unit == selectedUnit }
+            ) { idx ->
+                if (idx != null) {
+                    selectedUnit = displayUnits[idx].unit
+                    publishDistance()
+                }
+            }
+        }
+        val unitName = displayUnits.firstOrNull { it.unit == selectedUnit }?.shortName ?: ""
+
+        // The kit's field, with the unit as its trailing button; feet and inches are two fields side by side.
         Row(
             modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                 value = amountText,
                 onValueChange = {
                     amountText = it
-                    onDistanceChange(
-                        mapDistance(
-                            amountText,
-                            secondaryAmountText,
-                            selectedUnit,
-                            showFeetAndInches,
-                            allowNegative
-                        )
-                    )
+                    publishDistance()
                 },
-                label = { Text(if (showSecondaryAmount) context.getString(R.string.unit_feet) else hint) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                label = if (showSecondaryAmount) context.getString(R.string.unit_feet) else hint,
+                keyboardType = KeyboardType.Number,
+                unit = if (showSecondaryAmount) null else unitName,
+                onUnitClick = if (showSecondaryAmount || displayUnits.isEmpty()) null else pickUnit,
                 modifier = Modifier.weight(1f)
             )
             if (showSecondaryAmount) {
-                OutlinedTextField(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                     value = secondaryAmountText,
                     onValueChange = {
                         secondaryAmountText = it
-                        onDistanceChange(
-                            mapDistance(
-                                amountText,
-                                secondaryAmountText,
-                                selectedUnit,
-                                showFeetAndInches,
-                                allowNegative
-                            )
-                        )
+                        publishDistance()
                     },
-                    label = { Text(context.getString(R.string.unit_inches)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    label = context.getString(R.string.unit_inches),
+                    keyboardType = KeyboardType.Number,
+                    unit = unitName,
+                    onUnitClick = if (displayUnits.isEmpty()) null else pickUnit,
                     modifier = Modifier.weight(1f)
                 )
-            }
-            TextButton(
-                onClick = {
-                    Pickers.item(
-                        context,
-                        "",
-                        displayUnits.map { it.longName },
-                        displayUnits.indexOfFirst { it.unit == selectedUnit }
-                    ) { idx ->
-                        if (idx != null) {
-                            selectedUnit = displayUnits[idx].unit
-                            onDistanceChange(
-                                mapDistance(
-                                    amountText,
-                                    secondaryAmountText,
-                                    selectedUnit,
-                                    showFeetAndInches,
-                                    allowNegative
-                                )
-                            )
-                        }
-                    }
-                },
-                enabled = displayUnits.isNotEmpty()
-            ) {
-                Text(displayUnits.firstOrNull { it.unit == selectedUnit }?.shortName ?: "")
             }
         }
     }
@@ -637,17 +621,15 @@ object CustomUiUtils {
                     .fillMaxWidth()
                     .padding(horizontal = 28.dp)
             ) {
-                OutlinedTextField(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                     value = amount,
                     onValueChange = {
                         amount = it
                         updateSelected()
                     },
-                    label = { Text(context.getString(R.string.pressure)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                TextButton(
-                    onClick = {
+                    label = context.getString(R.string.pressure),
+                    unit = formatService.getPressureUnitName(unit),
+                    onUnitClick = {
                         Pickers.item(
                             context,
                             title,
@@ -659,11 +641,8 @@ object CustomUiUtils {
                                 updateSelected()
                             }
                         }
-                    },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text(formatService.getPressureUnitName(unit))
-                }
+                    }
+                )
             }
         }
 

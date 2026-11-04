@@ -166,55 +166,6 @@ internal fun FieldGuideThumbnail(
     )
 }
 
-/**
- * A form field shaped as a row of its group: filled with the group's tone, no outline, an underline only while
- * focused. Several of these in a group read as one card of inputs.
- */
-@Composable
-internal fun FieldGuideTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    position: TrailSenseGroupPosition,
-    modifier: Modifier = Modifier,
-    singleLine: Boolean = true,
-    minLines: Int = 1,
-    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    enabled: Boolean = true,
-    isError: Boolean = false,
-    supportingText: String? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp),
-        label = { Text(label) },
-        singleLine = singleLine,
-        minLines = minLines,
-        maxLines = maxLines,
-        enabled = enabled,
-        isError = isError,
-        supportingText = supportingText?.let { { Text(it) } },
-        keyboardOptions = keyboardOptions,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        shape = trailSenseGroupShape(position),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            errorContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        )
-    )
-}
-
 /** A full-bleed photo inside a hero or group card. */
 @Composable
 internal fun FieldGuideBitmapImage(

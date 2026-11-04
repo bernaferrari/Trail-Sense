@@ -187,11 +187,14 @@ fun ToolsScreen(
                 }
 
                 item("search") {
-                    ToolSearchField(
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar(
                         value = filter,
                         onValueChange = { filter = it },
-                        focusRequester = searchFocusRequester,
-                        modifier = Modifier.fillMaxWidth()
+                        placeholder = stringResource(R.string.search_tools),
+                        clearContentDescription = stringResource(R.string.clouds_clear),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(searchFocusRequester)
                     )
                 }
 
@@ -275,47 +278,3 @@ private fun ToolRow(
     )
 }
 
-@Composable
-private fun ToolSearchField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    focusRequester: FocusRequester,
-    modifier: Modifier = Modifier
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        leadingIcon = {
-            Icon(Icons.Rounded.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        },
-        trailingIcon = {
-            AnimatedContent(
-                targetState = value.isNotEmpty(),
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                label = "searchClear"
-            ) { shown ->
-                if (shown) {
-                    IconButton(onClick = { onValueChange("") }) {
-                        Icon(
-                            Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.clouds_clear),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        },
-        placeholder = { Text(stringResource(R.string.search_tools), style = MaterialTheme.typography.bodyLarge) },
-        singleLine = true,
-        shape = CircleShape,
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        ),
-        modifier = modifier.focusRequester(focusRequester)
-    )
-}

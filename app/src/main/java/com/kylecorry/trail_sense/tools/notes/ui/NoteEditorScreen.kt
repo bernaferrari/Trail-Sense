@@ -94,22 +94,25 @@ fun NoteEditorScreen(
     ) {
         item(key = "fields") {
             Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                NoteField(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                     value = title,
                     onValueChange = { title = it },
                     label = stringResource(R.string.note_title_hint),
                     position = TrailSenseGroupPosition(isFirst = true, isLast = false),
-                    textStyle = MaterialTheme.typography.titleMedium,
-                    singleLine = true,
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+                    capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
+                    imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                     modifier = Modifier.testTag("title_edit")
                 )
-                NoteField(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                     value = content,
                     onValueChange = { content = it },
                     label = stringResource(R.string.contents),
                     position = TrailSenseGroupPosition(isFirst = false, isLast = true),
-                    textStyle = MaterialTheme.typography.bodyLarge,
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+                    capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
                     singleLine = false,
+                    minLines = 12,
                     modifier = Modifier.testTag("content_edit")
                 )
             }
@@ -123,38 +126,3 @@ fun NoteEditorScreen(
     }
 }
 
-@Composable
-private fun NoteField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    position: TrailSenseGroupPosition,
-    textStyle: TextStyle,
-    singleLine: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val container = MaterialTheme.colorScheme.surfaceContainer
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        label = { Text(label) },
-        textStyle = textStyle,
-        shape = trailSenseGroupShape(position),
-        singleLine = singleLine,
-        minLines = if (singleLine) 1 else 12,
-        keyboardOptions = KeyboardOptions(
-            capitalization = KeyboardCapitalization.Sentences,
-            keyboardType = KeyboardType.Text,
-            imeAction = if (singleLine) ImeAction.Next else ImeAction.Default
-        ),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = container,
-            unfocusedContainerColor = container,
-            disabledContainerColor = container,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        )
-    )
-}

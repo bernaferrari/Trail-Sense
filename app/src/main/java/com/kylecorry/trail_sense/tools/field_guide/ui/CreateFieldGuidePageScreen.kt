@@ -63,6 +63,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.exifinterface.media.ExifInterface
@@ -381,23 +382,25 @@ private fun CreateFieldGuidePageContent(
 
             trailSenseSection(key = "names") {
                 row { position ->
-                    FieldGuideTextField(
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                         value = page.name,
                         onValueChange = onNameChange,
                         label = nameLabel,
                         position = position,
                         modifier = Modifier.testTag("name"),
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                        keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Sentences
                     )
                 }
                 row { position ->
-                    FieldGuideTextField(
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                         value = page.scientificName.orEmpty(),
                         onValueChange = onScientificNameChange,
                         label = scientificNameLabel,
                         position = position,
                         modifier = Modifier.testTag("scientific_name"),
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                        keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Sentences
                     )
                 }
             }
@@ -421,7 +424,7 @@ private fun CreateFieldGuidePageContent(
 
             trailSenseSection(key = "notes", title = notesTitle) {
                 row { position ->
-                    FieldGuideTextField(
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                         value = page.notes.orEmpty(),
                         onValueChange = onNotesChange,
                         label = notesTitle,
@@ -429,7 +432,8 @@ private fun CreateFieldGuidePageContent(
                         singleLine = false,
                         minLines = 6,
                         modifier = Modifier.testTag("notes"),
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                        keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Sentences
                     )
                 }
             }

@@ -32,7 +32,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesFilledField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -627,14 +626,13 @@ private fun TideTextInput(
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PlacesFilledField(
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
         value = text,
         onValueChange = onTextChange,
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag(tag),
-        label = { Text(label) },
-        singleLine = true
+        modifier = modifier.testTag(tag),
+        label = label,
+        keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+        inCard = true
     )
 }
 
@@ -721,7 +719,8 @@ private fun TideLocationInput(
             }
         }
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-        PlacesFilledField(
+        val isInvalidLocation = locationText.isNotBlank() && parsedCoordinate == null
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
             value = locationText,
             onValueChange = {
                 locationText = it
@@ -730,23 +729,16 @@ private fun TideLocationInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("utm"),
-            label = {
-                Text(
-                    if (isRequired) {
-                        stringResource(R.string.field_required, stringResource(R.string.location))
-                    } else {
-                        stringResource(R.string.location)
-                    }
-                )
+            label = if (isRequired) {
+                stringResource(R.string.field_required, stringResource(R.string.location))
+            } else {
+                stringResource(R.string.location)
             },
-            isError = locationText.isNotBlank() && parsedCoordinate == null,
-            supportingText = {
-                if (locationText.isNotBlank() && parsedCoordinate == null) {
-                    Text(stringResource(R.string.coordinate_input_invalid_location))
-                }
-            },
-            singleLine = true,
-            enabled = !isLoadingLocation
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+            isError = isInvalidLocation,
+            errorText = stringResource(R.string.coordinate_input_invalid_location),
+            enabled = !isLoadingLocation,
+            inCard = true
         )
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
         IconButton(
@@ -899,7 +891,7 @@ private fun LunitidalIntervalInput(
                 )
             )
         }
-        PlacesFilledField(
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
             value = hoursText,
             onValueChange = {
                 hoursText = it.filter(Char::isDigit).take(2)
@@ -908,14 +900,12 @@ private fun LunitidalIntervalInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("duration_hours"),
-            label = { Text(stringResource(R.string.hours)) },
-            singleLine = true,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            )
+            label = stringResource(R.string.hours),
+            keyboardType = KeyboardType.Number,
+            inCard = true
         )
         Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-        PlacesFilledField(
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
             value = minutesText,
             onValueChange = {
                 minutesText = it.filter(Char::isDigit).take(2)
@@ -924,11 +914,9 @@ private fun LunitidalIntervalInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("duration_minutes"),
-            label = { Text(stringResource(R.string.minutes)) },
-            singleLine = true,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            )
+            label = stringResource(R.string.minutes),
+            keyboardType = KeyboardType.Number,
+            inCard = true
         )
     }
 }

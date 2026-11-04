@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -51,8 +52,9 @@ import androidx.compose.ui.text.input.TextFieldValue
  */
 
 /**
- * A filled, borderless text field shaped as one row of a group. A unit, when given, is a tonal button at the end
- * that opens the unit choice, so the number and what it's measured in read as one thing.
+ * The app's one text field: filled, borderless, shaped as one row of a group. A unit, when given, is a tonal button
+ * at the end that opens the unit choice, so the number and what it's measured in read as one thing. Fields laid out
+ * side by side inside a card pass [inCard] (a raised tone and 16 dp corners, so they show against the card).
  */
 @Composable
 fun TrailSenseInputField(
@@ -74,7 +76,12 @@ fun TrailSenseInputField(
     /** False for free text that wraps (a note); [minLines] then sets its resting height. */
     singleLine: Boolean = true,
     minLines: Int = 1,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.None
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    /** A quiet line under the field; [errorText] takes its place while [isError]. */
+    supportingText: String? = null,
+    imeAction: ImeAction = ImeAction.Default,
+    inCard: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     if (onClick != null) {
@@ -96,15 +103,24 @@ fun TrailSenseInputField(
         isError = isError,
         singleLine = singleLine,
         minLines = minLines,
+        maxLines = maxLines,
         leadingIcon = leadingIcon,
-        supportingText = if (isError && errorText != null) {
-            { Text(errorText) }
-        } else {
-            null
+        supportingText = when {
+            isError && errorText != null -> {
+                { Text(errorText) }
+            }
+            supportingText != null -> {
+                { Text(supportingText) }
+            }
+            else -> null
         },
-        keyboardOptions = KeyboardOptions(capitalization = capitalization, keyboardType = keyboardType),
-        shape = trailSenseGroupShape(position),
-        colors = trailSenseInputColors(),
+        keyboardOptions = KeyboardOptions(
+            capitalization = capitalization,
+            keyboardType = keyboardType,
+            imeAction = imeAction
+        ),
+        shape = if (inCard) RoundedCornerShape(16.dp) else trailSenseGroupShape(position),
+        colors = trailSenseInputColors(inCard),
         trailingIcon = when {
             unit != null && onUnitClick != null -> {
                 {
@@ -177,8 +193,12 @@ fun TrailSenseInputField(
 
 /** The same tone as the list rows, so a field and a row in one group read as one object; no indicator line. */
 @Composable
-private fun trailSenseInputColors(): TextFieldColors {
-    val container = MaterialTheme.colorScheme.surfaceContainer
+private fun trailSenseInputColors(inCard: Boolean = false): TextFieldColors {
+    val container = if (inCard) {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    } else {
+        MaterialTheme.colorScheme.surfaceContainer
+    }
     return TextFieldDefaults.colors(
         focusedContainerColor = container,
         unfocusedContainerColor = container,

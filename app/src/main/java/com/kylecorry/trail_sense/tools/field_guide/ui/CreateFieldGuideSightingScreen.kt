@@ -471,7 +471,7 @@ private fun CoordinateInput(
     }
 
     val isInvalid = locationText.isNotBlank() && parsedCoordinate == null
-    FieldGuideTextField(
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
         value = locationText,
         onValueChange = {
             locationText = it
@@ -481,8 +481,9 @@ private fun CoordinateInput(
         position = position,
         modifier = modifier.testTag("location"),
         enabled = !isLoadingLocation,
+        keyboardType = KeyboardType.Text,
         isError = isInvalid,
-        supportingText = if (isInvalid) stringResource(R.string.coordinate_input_invalid_location) else null,
+        errorText = stringResource(R.string.coordinate_input_invalid_location),
         leadingIcon = {
             SightingAutofillButton(
                 isLoading = isLoadingLocation,
@@ -601,7 +602,7 @@ private fun ElevationInput(
         }
     }
 
-    FieldGuideTextField(
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
         value = elevationText,
         onValueChange = {
             elevationText = it
@@ -611,7 +612,7 @@ private fun ElevationInput(
         position = position,
         modifier = modifier.testTag("elevation"),
         enabled = !isLoadingElevation,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardType = KeyboardType.Decimal,
         leadingIcon = {
             SightingAutofillButton(
                 isLoading = isLoadingElevation,
@@ -708,7 +709,7 @@ private fun NotesInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    FieldGuideTextField(
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
         value = notes.orEmpty(),
         onValueChange = { onNotesChange(it.ifBlank { null }) },
         label = stringResource(R.string.tool_notes_title),
@@ -717,7 +718,8 @@ private fun NotesInput(
         singleLine = false,
         minLines = 6,
         maxLines = 8,
-        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+        keyboardType = KeyboardType.Text,
+        capitalization = KeyboardCapitalization.Sentences
     )
 }
 

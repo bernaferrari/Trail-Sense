@@ -22,7 +22,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesFilledField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -380,15 +379,13 @@ private fun PackTextInput(
 
         else -> androidx.compose.ui.text.input.KeyboardType.Text
     }
-    PlacesFilledField(
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
         value = text,
         onValueChange = onTextChange,
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag(tag),
-        label = { Text(label) },
-        singleLine = true,
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType)
+        modifier = modifier.testTag(tag),
+        label = label,
+        keyboardType = keyboardType,
+        inCard = true
     )
 }
 
@@ -490,7 +487,7 @@ private fun WeightInput(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top
     ) {
-        PlacesFilledField(
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
             value = amountText,
             onValueChange = {
                 amountText = it
@@ -499,24 +496,18 @@ private fun WeightInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("item_weight_input"),
-            label = {
-                Text(
-                    if (unit == WeightUnits.Pounds) {
-                        stringResource(R.string.pounds)
-                    } else {
-                        stringResource(R.string.weight)
-                    }
-                )
+            label = if (unit == WeightUnits.Pounds) {
+                stringResource(R.string.pounds)
+            } else {
+                stringResource(R.string.weight)
             },
-            singleLine = true,
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-            )
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+            inCard = true
         )
 
         if (unit == WeightUnits.Pounds) {
             Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-            PlacesFilledField(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                 value = ouncesText,
                 onValueChange = {
                     ouncesText = it
@@ -525,11 +516,9 @@ private fun WeightInput(
                 modifier = Modifier
                     .weight(1f)
                     .testTag("item_weight_ounces_input"),
-                label = { Text(stringResource(R.string.ounces_weight)) },
-                singleLine = true,
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                )
+                label = stringResource(R.string.ounces_weight),
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                inCard = true
             )
         }
 

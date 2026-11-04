@@ -514,8 +514,7 @@ object Pickers {
                     label = hint?.let { { Text(it.toString()) } },
                     singleLine = keyboard != KeyboardType.Text,
                     keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { confirm() }),
-                    shape = RoundedCornerShape(16.dp)
+                    keyboardActions = KeyboardActions(onDone = { confirm() })
                 )
             }
             LaunchedEffect(Unit) { focus.requestFocus() }
