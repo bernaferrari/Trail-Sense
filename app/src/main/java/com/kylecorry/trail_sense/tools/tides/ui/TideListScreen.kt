@@ -246,7 +246,7 @@ private fun TideListScreen(
                     onAction = onCreate,
                     actionModifier = Modifier.testTag("add_btn"),
                     modifier = Modifier
-                        .fillParentMaxHeight(0.8f)
+                        .fillParentMaxHeight(0.9f)
                         .testTag("tide_empty_text")
                 )
             }

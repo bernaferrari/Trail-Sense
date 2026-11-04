@@ -350,7 +350,7 @@ private fun PackListScreen(
                     title = stringResource(R.string.no_packing_lists),
                     description = stringResource(R.string.packs_empty_description),
                     modifier = Modifier
-                        .fillParentMaxHeight(0.78f)
+                        .fillParentMaxHeight(0.9f)
                         .testTag("empty_text"),
                     actionLabel = stringResource(R.string.new_packing_list),
                     actionIcon = Icons.Rounded.Add,

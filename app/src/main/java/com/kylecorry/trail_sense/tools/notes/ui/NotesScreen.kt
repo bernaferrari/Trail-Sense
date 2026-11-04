@@ -136,7 +136,7 @@ fun NotesScreen(
                     title = stringResource(R.string.notes_empty_text),
                     description = stringResource(R.string.notes_empty_description),
                     modifier = Modifier
-                        .fillParentMaxHeight(0.78f)
+                        .fillParentMaxHeight(0.9f)
                         .testTag("notes_empty_text"),
                     actionLabel = stringResource(R.string.places_notes_new),
                     actionIcon = TrailIcons.Add,

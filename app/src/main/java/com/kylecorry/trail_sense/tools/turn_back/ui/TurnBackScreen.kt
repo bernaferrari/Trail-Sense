@@ -328,7 +328,7 @@ private fun TurnBackScreen(
                     title = stringResource(R.string.places_turn_back_idle_title),
                     description = stringResource(R.string.turn_back_empty_description),
                     modifier = Modifier
-                        .fillParentMaxHeight(0.85f)
+                        .fillParentMaxHeight(0.9f)
                         .testTag("instructions"),
                     actionLabel = stringResource(R.string.places_turn_back_set_return_time),
                     onAction = { onPickReturnTime(returnTime) },

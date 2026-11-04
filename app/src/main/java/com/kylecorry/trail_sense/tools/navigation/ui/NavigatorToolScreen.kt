@@ -1298,7 +1298,7 @@ private fun NavigatorHost(
                 androidx.compose.material3.Button(
                     onClick = { views.onBeaconLongClick?.invoke() },
                     modifier = Modifier
-                        .weight(1.25f)
+                        .weight(1f)
                         .height(56.dp)
                 ) {
                     Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(24.dp))

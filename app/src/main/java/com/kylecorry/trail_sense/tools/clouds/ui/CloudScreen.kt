@@ -343,7 +343,7 @@ private fun CloudScreen(
                     title = stringResource(R.string.no_clouds),
                     description = stringResource(R.string.clouds_empty_description),
                     modifier = Modifier
-                        .fillParentMaxHeight(0.86f)
+                        .fillParentMaxHeight(0.9f)
                         .testTag("cloud_empty_text"),
                     action = {
                         Box {

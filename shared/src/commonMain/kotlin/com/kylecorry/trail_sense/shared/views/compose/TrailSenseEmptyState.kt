@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
  * The calm empty state: the icon in one still cookie in the feature's [tone], a headline, one line of warm copy, and at
  * most one filled primary action. Screens with an empty state show no second "add" button (no FAB) beside it.
  *
- * Given a bounded height, the group's centre sits at a fixed optical position, [EmptyStateCentre] (40 %) of the
+ * Given a bounded height, the group's centre sits at a fixed optical position, [EmptyStateCentre] (50 %, truly centred) of the
  * height, on every screen; in a list (unbounded height) it simply wraps its content.
  */
 @Composable
@@ -113,17 +113,17 @@ fun TrailSenseEmptyState(
                 }
                 if (actionLabel != null && onAction != null) {
                     Spacer(Modifier.height(TrailSenseSpacing.xl))
+                    // A standard Material button: its own padding and type, 56 dp tall, so the label never clips.
                     Button(
                         onClick = onAction,
                         shapes = ButtonDefaults.shapes(),
-                        modifier = actionModifier.heightIn(min = ButtonDefaults.MediumContainerHeight),
-                        contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight)
+                        modifier = actionModifier.heightIn(min = 56.dp)
                     ) {
                         if (actionIcon != null) {
-                            Icon(actionIcon, contentDescription = null, modifier = Modifier.size(ButtonDefaults.iconSizeFor(ButtonDefaults.MediumContainerHeight)))
-                            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(ButtonDefaults.MediumContainerHeight)))
+                            Icon(actionIcon, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
                         }
-                        Text(actionLabel, style = ButtonDefaults.textStyleFor(ButtonDefaults.MediumContainerHeight))
+                        Text(actionLabel, style = MaterialTheme.typography.titleSmall)
                     }
                 }
                 if (secondaryActionLabel != null && onSecondaryAction != null) {
@@ -139,9 +139,13 @@ fun TrailSenseEmptyState(
             }
         }
     ) { measurables, constraints ->
-        val placeable = measurables.first().measure(constraints.copy(minWidth = 0, minHeight = 0))
+        // Measured at its natural height and never cropped: if the room is short, the state grows instead (it used to
+        // clip its own button, which read as a cut-off label).
+        val placeable = measurables.first().measure(
+            constraints.copy(minWidth = 0, minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity)
+        )
         val width = if (constraints.hasBoundedWidth) constraints.maxWidth else placeable.width
-        val height = if (constraints.hasBoundedHeight) constraints.maxHeight else placeable.height
+        val height = if (constraints.hasBoundedHeight) maxOf(constraints.maxHeight, placeable.height) else placeable.height
         val y = (height * EmptyStateCentre - placeable.height / 2f).toInt()
             .coerceIn(0, (height - placeable.height).coerceAtLeast(0))
         layout(width, height) {
@@ -151,4 +155,4 @@ fun TrailSenseEmptyState(
 }
 
 /** Where the empty state's centre sits, as a fraction of the height it is given (slightly above the middle). */
-private const val EmptyStateCentre = 0.4f
+private const val EmptyStateCentre = 0.5f

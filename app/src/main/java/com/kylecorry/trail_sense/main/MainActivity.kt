@@ -811,7 +811,8 @@ private fun MainActivityContent(
             val currentId = stack.lastOrNull()?.destination?.id
             MainAdaptiveNavigation(
                 state = bottomNavigation,
-                showBar = currentId == null || bottomNavigation.contains(currentId),
+                // The bar stays put on every screen (hiding it on each push read as cheap and jumpy).
+                showBar = true,
                 onItemClick = onBottomNavigationItemSelected,
                 onItemLongClick = onBottomNavigationItemLongSelected,
                 modifier = Modifier

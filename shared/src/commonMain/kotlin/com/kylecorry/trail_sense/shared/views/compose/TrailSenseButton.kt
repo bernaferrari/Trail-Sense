@@ -28,11 +28,10 @@ fun TrailSenseButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary
         ),
-        contentPadding = ButtonDefaults.contentPaddingFor(buttonHeight)
     ) {
         Text(
             text = text,
-            style = ButtonDefaults.textStyleFor(buttonHeight)
+            style = MaterialTheme.typography.titleSmall
         )
     }
 }

@@ -139,11 +139,7 @@ fun TrailSensePage(
         // so its FAB clears the gesture/navigation bar itself.
         floatingActionButton = {
             androidx.compose.foundation.layout.Box(
-                if (onBack != null) {
-                    androidx.compose.ui.Modifier.windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars)
-                } else {
-                    androidx.compose.ui.Modifier
-                }
+                androidx.compose.ui.Modifier
             ) { floatingActionButton() }
         },
         topBar = {
@@ -199,7 +195,7 @@ fun TrailSensePage(
                     .fillMaxSize()
                     .widthIn(max = TrailSenseSize.maximumContentWidth),
                 // Screens opened from another one have no bottom bar, so the last row clears the gesture bar here.
-                contentPadding = if (onBack != null) {
+                contentPadding = if (false) {
                     val navigationBar = androidx.compose.foundation.layout.WindowInsets.navigationBars
                         .asPaddingValues().calculateBottomPadding()
                     val direction = androidx.compose.ui.platform.LocalLayoutDirection.current

@@ -685,7 +685,7 @@ private fun OfflineMapListScreen(
                         title = stringResource(R.string.no_offline_maps),
                         description = stringResource(R.string.map_empty_description),
                         modifier = Modifier
-                            .fillParentMaxHeight(0.78f)
+                            .fillParentMaxHeight(0.9f)
                             .testTag("map_empty_text"),
                         actionLabel = stringResource(R.string.add_offline_map),
                         actionIcon = TrailSenseIcons.Filled.Add,
