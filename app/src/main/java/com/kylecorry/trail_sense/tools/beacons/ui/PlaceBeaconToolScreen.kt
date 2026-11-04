@@ -728,9 +728,9 @@ private fun CoordinateInput(
     val sensors = remember { SensorSubsystem.getInstance(context) }
     val gps = remember { SensorService(context).getGPS() }
     val scope = rememberCoroutineScope()
-    var coordinateText by remember(coordinate, formatter) {
-        mutableStateOf(coordinate?.let { formatter.formatLocation(it) }.orEmpty())
-    }
+    // The text is the user's: it starts from the coordinate and is replaced only when the coordinate changes from
+    // outside (GPS, a picked beacon), never in response to their own typing.
+    var coordinateText by remember { mutableStateOf(coordinate?.let { formatter.formatLocation(it) }.orEmpty()) }
     val parsedCoordinate = remember(coordinateText) {
         Coordinate.parse(coordinateText)
     }
@@ -754,8 +754,10 @@ private fun CoordinateInput(
 
     // Follow the coordinate only when it changes from outside (GPS, a picked beacon, an edit loaded later): while
     // typing, a partial entry parses to nothing, and replacing the text then would erase what was typed.
+    // A coordinate that arrives later (editing a saved beacon) fills an empty field; GPS and picked beacons set the
+    // text themselves.
     LaunchedEffect(coordinate) {
-        if (coordinate != null && Coordinate.parse(coordinateText) != coordinate) {
+        if (coordinate != null && coordinateText.isBlank()) {
             coordinateText = formatter.formatLocation(coordinate)
         }
     }
