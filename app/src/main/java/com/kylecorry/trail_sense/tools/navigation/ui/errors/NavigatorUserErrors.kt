@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.errors
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
@@ -31,12 +32,12 @@ class NavigatorUserErrors(
         GPSDiagnosticScanner.GPS_UNAVAILABLE to UserError(
             ErrorBannerReason.NoGPS,
             host.getString(R.string.location_disabled),
-            R.drawable.satellite
+            TrailIcons.Satellite
         ),
         GPSDiagnosticScanner.LOCATION_UNSET to UserError(
             ErrorBannerReason.LocationNotSet,
             host.getString(R.string.location_not_set),
-            R.drawable.satellite,
+            TrailIcons.Satellite,
             host.getString(R.string.set)
         ) {
             val navController = host.findNavController()
@@ -46,7 +47,7 @@ class NavigatorUserErrors(
         GPSDiagnosticScanner.GPS_TIMED_OUT to UserError(
             ErrorBannerReason.GPSTimeout,
             host.getString(R.string.gps_signal_lost),
-            R.drawable.satellite
+            TrailIcons.Satellite
         ),
         MagnetometerDiagnosticScanner.MAGNETOMETER_POOR to UserError(
             ErrorBannerReason.CompassPoor,
@@ -54,7 +55,7 @@ class NavigatorUserErrors(
                 R.string.compass_calibrate_toast,
                 formatter.formatQuality(Quality.Poor).lowercase(Locale.getDefault())
             ),
-            R.drawable.ic_compass_icon,
+            TrailIcons.CompassIcon,
             host.getString(R.string.how)
         ) {
             onDisplayAccuracyTips()
@@ -63,7 +64,7 @@ class NavigatorUserErrors(
         MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE to UserError(
             ErrorBannerReason.NoCompass,
             host.getString(R.string.no_sensor_message, host.getString(R.string.pref_compass_sensor_title).lowercase()),
-            R.drawable.ic_compass_icon
+            TrailIcons.CompassIcon
         )
     )
 

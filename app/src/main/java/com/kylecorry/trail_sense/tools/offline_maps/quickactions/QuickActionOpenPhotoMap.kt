@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -24,7 +25,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.photo_maps)
+        setIcon(TrailIcons.PhotoMaps)
     }
 
     override fun onLongClick(): Boolean {

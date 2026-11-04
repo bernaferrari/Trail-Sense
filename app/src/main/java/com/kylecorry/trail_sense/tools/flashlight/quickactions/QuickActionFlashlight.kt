@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.flashlight.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.luna.topics.generic.distinct
@@ -21,7 +22,7 @@ class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinat
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.flashlight)
+        setIcon(TrailIcons.Flashlight)
     }
 
     override fun onClick() {

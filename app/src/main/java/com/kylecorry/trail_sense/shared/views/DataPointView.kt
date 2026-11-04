@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.views
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.view.Gravity
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,14 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun DataPointContent(
     title: String,
     description: String,
-    @DrawableRes icon: Int?,
+    icon: ImageVector?,
     tint: Color,
     showDescription: Boolean,
     gravity: Int,
@@ -37,7 +37,7 @@ fun DataPointContent(
     ) {
         if (icon != null) {
             Icon(
-                painter = painterResource(icon),
+                painter = rememberVectorPainter(icon),
                 contentDescription = null,
                 tint = tint.copy(alpha = 0.75f),
                 modifier = Modifier.testTag("data_point_image")

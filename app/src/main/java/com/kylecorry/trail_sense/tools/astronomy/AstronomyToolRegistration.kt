@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
@@ -44,7 +45,7 @@ object AstronomyToolRegistration : ToolRegistration {
         return Tool(
             Tools.ASTRONOMY,
             context.getString(R.string.astronomy),
-            R.drawable.ic_astronomy,
+            TrailIcons.Astronomy,
             R.id.action_astronomy,
             ToolCategory.Time,
             guideId = R.raw.guide_tool_astronomy,

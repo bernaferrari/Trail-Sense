@@ -92,7 +92,9 @@ fun TrailSenseComposeNavHost(
                 permissionAction.value = null
                 action?.invoke()
             }
-            val arguments = entry.arguments ?: Bundle()
+            // Stable per entry: a fresh Bundle each recomposition would rebuild the screen's host (and its sensors)
+            // on every frame of a transition.
+            val arguments = remember(entry.id) { entry.arguments ?: Bundle() }
             val host = remember(entry.id, activity, rootView, lifecycleOwner, arguments) {
                 TrailSenseComposeDestinationHost(
                     context = context,

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.data
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.sense.location.IGPS
@@ -33,7 +34,7 @@ class UpdateAstronomyLayerCommand(
                 markers.add(
                     MappableReferencePoint(
                         1,
-                        R.drawable.ic_sun,
+                        TrailIcons.Sun,
                         fromTrueNorth(astro.sunBearing)
                     )
                 )
@@ -41,7 +42,7 @@ class UpdateAstronomyLayerCommand(
                 markers.add(
                     MappableReferencePoint(
                         1,
-                        R.drawable.ic_sun,
+                        TrailIcons.Sun,
                         fromTrueNorth(astro.sunBearing),
                         opacity = 0.5f
                     )

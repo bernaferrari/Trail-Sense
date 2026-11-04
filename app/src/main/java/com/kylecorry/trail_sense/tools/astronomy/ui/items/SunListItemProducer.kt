@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.astronomy.SunTimesMode
@@ -44,7 +45,7 @@ class SunListItemProducer(context: Context) : BaseAstroListItemProducer(context)
                 R.string.daylight_duration,
                 formatter.formatDuration(daylight, false)
             ),
-            icon(R.drawable.ic_sun),
+            icon(TrailIcons.Sun),
             data = riseSetTransit(times)
         ) {
             val advancedData = listOf(

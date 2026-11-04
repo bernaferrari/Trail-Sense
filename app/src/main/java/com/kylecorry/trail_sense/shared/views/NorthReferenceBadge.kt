@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Resources
@@ -59,7 +59,7 @@ class NorthReferenceBadgeState(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
-                    painter = painterResource(formatter.getCompassReferenceIcon(useTrueNorth)),
+                    painter = rememberVectorPainter(formatter.getCompassReferenceIcon(useTrueNorth)),
                     contentDescription = text,
                     tint = Color(Resources.androidTextColorSecondary(context)),
                     modifier = Modifier.size(16.dp)

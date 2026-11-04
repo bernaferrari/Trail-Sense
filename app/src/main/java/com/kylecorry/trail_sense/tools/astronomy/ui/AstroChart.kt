@@ -1,9 +1,10 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Paint
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,8 +44,8 @@ class AstroChart(
 
     private var renderVersion by mutableIntStateOf(0)
     private var startTime = Instant.now()
-    private val bitmapLoader = BitmapLoader(context)
-    private var previousMoonImage = R.drawable.ic_moon
+    private val bitmapLoader = BitmapLoader()
+    private var previousMoonImage = TrailIcons.Moon
     private val imageSize = Resources.dp(context, 24f).toInt()
 
     private var showBands = false
@@ -54,8 +55,8 @@ class AstroChart(
     private var moonPosition: Vector2? = null
     private var moonTilt = 0f
     private var moonBitmap: Bitmap? = null
-    private var moonImage = bitmapLoader.load(R.drawable.ic_moon, imageSize)
-    private val sunImage = bitmapLoader.load(R.drawable.ic_sun, imageSize)
+    private var moonImage = bitmapLoader.load(TrailIcons.Moon, imageSize)
+    private val sunImage = bitmapLoader.load(TrailIcons.Sun, imageSize)
 
     fun setBands(show: Boolean) {
         if (show == showBands) return
@@ -78,7 +79,7 @@ class AstroChart(
         renderVersion++
     }
 
-    fun setMoonImage(@DrawableRes icon: Int) {
+    fun setMoonImage(icon: ImageVector) {
         moonBitmap = null
         moonImage = bitmapLoader.load(icon, imageSize)
         if (icon != previousMoonImage) {

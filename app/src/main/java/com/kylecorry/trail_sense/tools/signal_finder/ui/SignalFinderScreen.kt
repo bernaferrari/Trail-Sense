@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.signal_finder.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular1
 import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular2
@@ -214,7 +215,7 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
             UserError(
                 ErrorBannerReason.LocationPermissionDenied,
                 host.getString(R.string.location_required_for_cell_signals),
-                R.drawable.signal_cellular_outline,
+                TrailIcons.SignalCellularOutline,
                 host.getString(R.string.settings)
             ) {
                 banner.dismiss(ErrorBannerReason.LocationPermissionDenied)

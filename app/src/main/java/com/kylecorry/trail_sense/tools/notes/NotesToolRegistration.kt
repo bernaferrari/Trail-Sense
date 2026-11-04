@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.notes
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.notes.quickactions.QuickActionCreateNote
@@ -15,7 +16,7 @@ object NotesToolRegistration : ToolRegistration {
         return Tool(
             Tools.NOTES,
             context.getString(R.string.tool_notes_title),
-            R.drawable.ic_tool_notes,
+            TrailIcons.ToolNotes,
             R.id.fragmentToolNotes,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_notes,

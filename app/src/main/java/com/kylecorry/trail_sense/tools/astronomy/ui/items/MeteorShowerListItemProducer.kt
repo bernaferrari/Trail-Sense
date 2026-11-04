@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
@@ -31,7 +32,7 @@ class MeteorShowerListItemProducer(context: Context) : BaseAstroListItemProducer
             3,
             context.getString(R.string.meteor_shower),
             rate,
-            icon(R.drawable.ic_meteor, secondaryColor),
+            icon(TrailIcons.Meteor, secondaryColor),
             data = times
         ) {
             val advancedData = listOf(

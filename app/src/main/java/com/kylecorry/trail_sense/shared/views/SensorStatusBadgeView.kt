@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import androidx.compose.foundation.shape.CircleShape
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -129,7 +130,7 @@ class SensorStatusBadgeView(
         this.gps = gps
         this.compassSensor = compass
         gpsStatusBadgeProvider = gps?.let { GpsStatusBadgeProvider(it, context) }
-        compassStatusBadgeProvider = SensorStatusBadgeProvider(compass, context, R.drawable.ic_compass_icon)
+        compassStatusBadgeProvider = SensorStatusBadgeProvider(compass, context, TrailIcons.CompassIcon)
         // Immediately update so badges don't show stale data
         updateBadges()
     }

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
@@ -19,7 +20,7 @@ class QuickActionBacktrack(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_tool_backtrack)
+        setIcon(TrailIcons.ToolBacktrack)
     }
 
     override fun onLongClick(): Boolean {

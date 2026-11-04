@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.view.View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -458,7 +460,7 @@ private fun PhotoMapHeader(
         ) {
             if (showRecenter) {
                 HeaderImageButton(
-                    icon = R.drawable.ic_recenter,
+                    icon = TrailIcons.Recenter,
                     contentDescription = stringResource(R.string.center),
                     tag = "map_recenter_btn",
                     onClick = { _ -> onRecenter() }
@@ -492,7 +494,7 @@ private fun PhotoMapHeader(
             }
 
             HeaderImageButton(
-                icon = R.drawable.ic_menu_dots,
+                icon = TrailIcons.MenuDots,
                 contentDescription = stringResource(R.string.map_options),
                 tag = "map_menu_btn",
                 onClick = onMenuClick
@@ -503,7 +505,7 @@ private fun PhotoMapHeader(
 
 @Composable
 private fun HeaderImageButton(
-    icon: Int,
+    icon: ImageVector,
     contentDescription: String,
     tag: String,
     onClick: (View) -> Unit
@@ -520,7 +522,7 @@ private fun HeaderImageButton(
         )
     ) {
         Icon(
-            painter = painterResource(icon),
+            painter = rememberVectorPainter(icon),
             contentDescription = contentDescription
         )
     }

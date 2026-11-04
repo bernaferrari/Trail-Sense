@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.text.buildSpannedString
@@ -66,8 +67,8 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
         )
     }
 
-    protected fun icon(resource: Int, tint: Int? = null, rotation: Float = 0f): AstronomyListIcon {
-        return AstronomyListIcon(resource, tint, rotation)
+    protected fun icon(vector: ImageVector, tint: Int? = null, rotation: Float = 0f): AstronomyListIcon {
+        return AstronomyListIcon(vector, tint, rotation)
     }
 
     protected fun icon(bitmap: Bitmap): AstronomyListIcon {

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.Vibrate
 import com.kylecorry.trail_sense.shared.icons.trail.VolumeUp
@@ -702,7 +703,7 @@ private fun AccuracyBadge(
     }
 
     val provider = remember(magnetometer, context) {
-        SensorStatusBadgeProvider(magnetometer, context, R.drawable.ic_compass_icon)
+        SensorStatusBadgeProvider(magnetometer, context, TrailIcons.CompassIcon)
     }
     var badge by remember { mutableStateOf(provider.getBadge()) }
 

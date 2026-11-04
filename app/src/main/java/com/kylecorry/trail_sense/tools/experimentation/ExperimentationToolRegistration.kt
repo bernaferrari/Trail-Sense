@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.experimentation
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.debugging.isDebug
@@ -13,7 +14,7 @@ object ExperimentationToolRegistration : ToolRegistration {
         return Tool(
             Tools.EXPERIMENTATION,
             "Experimentation",
-            R.drawable.ic_experimental,
+            TrailIcons.Experimental,
             R.id.experimentationFragment,
             ToolCategory.Other,
             isExperimental = true,

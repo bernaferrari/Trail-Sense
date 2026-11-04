@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.guide.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
@@ -12,7 +13,7 @@ class QuickActionUserGuide(btn: QuickActionButtonView, host: TrailSenseDestinati
     QuickActionButton(btn, host) {
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.user_guide)
+        setIcon(TrailIcons.UserGuide)
     }
 
     override fun onClick() {

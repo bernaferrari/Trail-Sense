@@ -1,24 +1,21 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.graphics.Bitmap
-import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.icons.toBitmap
 
-class DrawerBitmapLoader(private val drawer: ICanvasDrawer) {
+/**
+ * Loads icon bitmaps for a canvas. The [drawer] is kept so callers still tie a loader to the canvas it draws on.
+ */
+class DrawerBitmapLoader(@Suppress("unused") private val drawer: ICanvasDrawer) {
 
-    private val icons = mutableMapOf<Int, Bitmap>()
+    private val icons = mutableMapOf<ImageVector, Bitmap>()
     private val lock = Any()
 
-    fun load(@DrawableRes id: Int, size: Int): Bitmap {
+    fun load(icon: ImageVector, size: Int): Bitmap {
         return synchronized(lock) {
-            val bitmap = if (icons.containsKey(id)) {
-                icons[id]
-            } else {
-                val bm = drawer.loadImage(id, size, size)
-                icons[id] = bm
-                icons[id]
-            }
-            bitmap!!
+            icons.getOrPut(icon) { icon.toBitmap(size, size) }
         }
     }
 

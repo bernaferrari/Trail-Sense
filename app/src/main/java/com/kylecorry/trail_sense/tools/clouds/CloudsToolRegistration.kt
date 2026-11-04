@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clouds
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.clouds.quickactions.QuickActionScanCloud
@@ -15,7 +16,7 @@ object CloudsToolRegistration : ToolRegistration {
         return Tool(
             Tools.CLOUDS,
             context.getString(R.string.clouds),
-            R.drawable.ic_tool_clouds,
+            TrailIcons.ToolClouds,
             R.id.cloudFragment,
             ToolCategory.Weather,
             guideId = R.raw.guide_tool_clouds,

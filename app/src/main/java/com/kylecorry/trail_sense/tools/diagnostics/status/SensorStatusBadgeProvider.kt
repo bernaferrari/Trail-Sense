@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.diagnostics.status
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
-import androidx.annotation.DrawableRes
 import com.kylecorry.andromeda.core.sensors.ISensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.sense.mock.MockSensor
@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 class SensorStatusBadgeProvider(
     private val sensor: ISensor,
     private val context: Context,
-    @DrawableRes private val icon: Int
+    private val icon: ImageVector
 ) : StatusBadgeProvider {
 
     private val formatter = FormatService.getInstance(context)

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import android.Manifest
@@ -621,7 +622,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             MainBottomNavigationItem(
                 id = R.id.action_experimental_tools,
                 title = getString(R.string.tools),
-                icon = R.drawable.apps,
+                icon = TrailIcons.Apps,
                 selectedIcon = TrailSenseIcons.Filled.Apps,
                 unselectedIcon = TrailSenseIcons.Outlined.Apps
             )

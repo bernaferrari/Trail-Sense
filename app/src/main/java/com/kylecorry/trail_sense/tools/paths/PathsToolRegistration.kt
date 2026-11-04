@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
@@ -36,7 +37,7 @@ object PathsToolRegistration : ToolRegistration {
         return Tool(
             Tools.PATHS,
             context.getString(R.string.paths),
-            R.drawable.ic_tool_backtrack,
+            TrailIcons.ToolBacktrack,
             R.id.fragmentBacktrack,
             ToolCategory.Location,
             guideId = R.raw.guide_tool_paths,

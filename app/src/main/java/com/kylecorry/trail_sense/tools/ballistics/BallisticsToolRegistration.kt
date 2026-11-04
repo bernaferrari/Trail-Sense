@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ballistics
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -12,7 +13,7 @@ object BallisticsToolRegistration : ToolRegistration {
         return Tool(
             Tools.BALLISTICS,
             context.getString(R.string.ballistics),
-            R.drawable.ballistics,
+            TrailIcons.Ballistics,
             R.id.fragmentToolBallistics,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_ballistics

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.content.Context
@@ -43,7 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -545,13 +546,13 @@ private fun MapLayerHeader(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             MapLayerHeaderIconButton(
-                icon = R.drawable.ic_arrow_up_widget,
+                icon = TrailIcons.ArrowUpWidget,
                 contentDescription = stringResource(R.string.move_layer_up),
                 enabled = canMoveUp,
                 onClick = onMoveUp
             )
             MapLayerHeaderIconButton(
-                icon = R.drawable.ic_arrow_down_widget,
+                icon = TrailIcons.ArrowDownWidget,
                 contentDescription = stringResource(R.string.move_layer_down),
                 enabled = canMoveDown,
                 onClick = onMoveDown
@@ -583,8 +584,8 @@ private fun MapLayerHeader(
         Spacer(Modifier.width(TrailSenseSpacing.md))
 
         Icon(
-            painter = painterResource(
-                if (isExpanded) R.drawable.ic_drop_down_expanded else R.drawable.ic_drop_down
+            painter = rememberVectorPainter(
+                if (isExpanded) TrailIcons.DropDownExpanded else TrailIcons.DropDown
             ),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -594,7 +595,7 @@ private fun MapLayerHeader(
 
 @Composable
 private fun MapLayerHeaderIconButton(
-    icon: Int,
+    icon: ImageVector,
     contentDescription: String,
     enabled: Boolean,
     onClick: () -> Unit
@@ -605,7 +606,7 @@ private fun MapLayerHeaderIconButton(
         modifier = Modifier.size(48.dp)
     ) {
         Icon(
-            painter = painterResource(icon),
+            painter = rememberVectorPainter(icon),
             contentDescription = contentDescription,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.alpha(if (enabled) 1f else 0.4f)

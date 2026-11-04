@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.shared.icons.trail.Location
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -139,7 +141,7 @@ class ARGuidanceManagerTest {
         withTimeout(5000) { manager.targetState.first { it === state } }
     }
 
-    private fun state(name: String) = ARGuidanceTargetState(ARGuidanceDisplayState(name, 0), mock())
+    private fun state(name: String) = ARGuidanceTargetState(ARGuidanceDisplayState(name, TrailIcons.Location), mock())
 
     private fun target(state: ARGuidanceTargetState) = object : ARGuidanceTarget {
         override suspend fun refresh(request: ARGuidanceRefreshRequest) = state

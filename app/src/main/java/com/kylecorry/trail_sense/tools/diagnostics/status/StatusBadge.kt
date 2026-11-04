@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.tools.diagnostics.status
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.annotation.ColorInt
-import androidx.annotation.DrawableRes
 
 data class StatusBadge(
     val name: String,
     @ColorInt val color: Int,
-    @DrawableRes val icon: Int,
+    val icon: ImageVector,
     val isHealthy: Boolean = false
 )

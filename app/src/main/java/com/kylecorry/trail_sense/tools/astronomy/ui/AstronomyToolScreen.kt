@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
@@ -598,7 +599,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             val error = UserError(
                 ErrorBannerReason.LocationNotSet,
                 host.getString(R.string.location_not_set),
-                R.drawable.satellite,
+                TrailIcons.Satellite,
                 host.getString(R.string.set)
             ) {
                 activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
@@ -608,7 +609,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             gpsErrorShown = true
         } else if (gps is CachedGPS && location == Coordinate.zero) {
             val error = UserError(
-                ErrorBannerReason.NoGPS, host.getString(R.string.location_disabled), R.drawable.satellite
+                ErrorBannerReason.NoGPS, host.getString(R.string.location_disabled), TrailIcons.Satellite
             )
             (host.mainActivity).errorBanner.report(error)
             gpsErrorShown = true
@@ -869,11 +870,11 @@ private fun AstronomyDetailRow(item: AstronomyListItem, position: TrailSenseGrou
 
 @Composable
 private fun rememberAstronomyIconPainter(icon: com.kylecorry.trail_sense.tools.astronomy.ui.items.AstronomyListIcon): Painter {
-    val context = LocalContext.current
     val bitmap = icon.bitmap
-    return remember(context, icon.resource, bitmap) {
-        val image = bitmap ?: requireNotNull(ContextCompat.getDrawable(context, icon.resource)).toBitmap()
-        BitmapPainter(image.asImageBitmap())
+    return if (bitmap != null) {
+        remember(bitmap) { BitmapPainter(bitmap.asImageBitmap()) }
+    } else {
+        rememberVectorPainter(requireNotNull(icon.vector))
     }
 }
 

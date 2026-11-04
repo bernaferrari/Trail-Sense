@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.activity.OnBackPressedCallback
@@ -37,7 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -388,9 +389,9 @@ class PhotoMapCalibrationController(
 
         views.mapCalibrationBottomPanel.notice = notice
         views.mapCalibrationBottomPanel.icon = when {
-            notice.isNotBlank() -> R.drawable.ic_alert
-            manager.isCalibrated(calibrationIndex) -> R.drawable.ic_check_outline
-            else -> R.drawable.ic_info
+            notice.isNotBlank() -> TrailIcons.Alert
+            manager.isCalibrated(calibrationIndex) -> TrailIcons.CheckOutline
+            else -> TrailIcons.Info
         }
         views.mapCalibrationBottomPanel.iconTint = when {
             notice.isNotBlank() -> Color(getErrorColor())
@@ -544,8 +545,8 @@ private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibratio
     return PhotoMapCalibrationViews(
         previewButton = PhotoMapTextButtonState(context.getString(R.string.preview)),
         calibrationMap = MapCalibrationView(context).apply { id = R.id.calibration_map },
-        zoomOutBtn = PhotoMapIconButtonState(R.drawable.ic_zoom_out, R.string.zoom_out),
-        zoomInBtn = PhotoMapIconButtonState(R.drawable.ic_add, R.string.zoom_in),
+        zoomOutBtn = PhotoMapIconButtonState(TrailIcons.ZoomOut, R.string.zoom_out),
+        zoomInBtn = PhotoMapIconButtonState(TrailIcons.Add, R.string.zoom_in),
         mapCalibrationBottomPanel = PhotoMapCalibrationPanelState(context)
     )
 }
@@ -560,7 +561,7 @@ private class PhotoMapCalibrationPanelState(
 
     var title by mutableStateOf("")
     var notice by mutableStateOf("")
-    var icon by mutableStateOf(R.drawable.ic_info)
+    var icon by mutableStateOf(TrailIcons.Info)
     var iconTint by mutableStateOf(Color(Resources.androidTextColorSecondary(context)))
     var nextText by mutableStateOf(context.getString(R.string.next))
     var showPrevious by mutableStateOf(false)
@@ -662,7 +663,7 @@ private class PhotoMapCalibrationPanelState(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    painter = painterResource(icon),
+                    painter = rememberVectorPainter(icon),
                     contentDescription = null,
                     tint = iconTint,
                     modifier = Modifier.size(24.dp)
@@ -836,10 +837,10 @@ private class PhotoMapTextButtonState(
 }
 
 private class PhotoMapIconButtonState(
-    icon: Int,
+    icon: ImageVector,
     @StringRes private val contentDescription: Int
 ) {
-    var iconRes by mutableIntStateOf(icon)
+    var icon by mutableStateOf(icon)
     var isOn by mutableStateOf(false)
     var onClick by mutableStateOf({})
 
@@ -865,7 +866,7 @@ private class PhotoMapIconButtonState(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(iconRes),
+                    painter = rememberVectorPainter(icon),
                     contentDescription = stringResource(contentDescription),
                     tint = foreground,
                     modifier = Modifier.size(24.dp)

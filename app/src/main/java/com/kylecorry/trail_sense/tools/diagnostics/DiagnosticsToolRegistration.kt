@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.diagnostics
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -12,7 +13,7 @@ object DiagnosticsToolRegistration : ToolRegistration {
         return Tool(
             Tools.DIAGNOSTICS,
             context.getString(R.string.diagnostics),
-            R.drawable.ic_alert,
+            TrailIcons.Alert,
             R.id.diagnosticsFragment,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_diagnostics

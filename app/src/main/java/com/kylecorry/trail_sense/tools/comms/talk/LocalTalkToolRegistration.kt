@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.comms.talk
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
@@ -14,7 +15,7 @@ object LocalTalkToolRegistration : ToolRegistration {
         return Tool(
             Tools.LOCAL_TALK,
             context.getString(R.string.local_talk),
-            R.drawable.volume_up,
+            TrailIcons.VolumeUp,
             R.id.fragmentLocalTalk,
             ToolCategory.Communication,
             isExperimental = true,

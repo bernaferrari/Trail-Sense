@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.flashlight
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
@@ -38,7 +39,7 @@ object FlashlightToolRegistration : ToolRegistration {
         return Tool(
             Tools.FLASHLIGHT,
             context.getString(R.string.flashlight_title),
-            R.drawable.flashlight,
+            TrailIcons.Flashlight,
             R.id.fragmentToolFlashlight,
             ToolCategory.Signaling,
             initialize = {

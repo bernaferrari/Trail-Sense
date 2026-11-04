@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
@@ -52,7 +53,7 @@ class MyElevationLayer : OverlayLayer() {
         map: IMapView
     ) {
         val loader = bitmapLoader ?: DrawerBitmapLoader(drawer).also { bitmapLoader = it }
-        val elevationIcon = loader.load(R.drawable.ic_altitude, drawer.sp(20f).toInt())
+        val elevationIcon = loader.load(TrailIcons.Altitude, drawer.sp(20f).toInt())
 
         drawer.push()
         drawer.translate(drawer.dp(bottomLeft.x), drawer.canvas.height + drawer.dp(bottomLeft.y))

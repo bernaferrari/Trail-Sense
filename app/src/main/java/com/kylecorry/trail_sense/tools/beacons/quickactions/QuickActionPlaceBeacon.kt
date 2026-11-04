@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -24,7 +25,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_location)
+        setIcon(TrailIcons.Location)
     }
 
     override fun onClick() {

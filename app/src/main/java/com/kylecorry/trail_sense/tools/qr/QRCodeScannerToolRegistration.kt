@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.qr
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -13,7 +14,7 @@ object QRCodeScannerToolRegistration : ToolRegistration {
         return Tool(
             Tools.QR_CODE_SCANNER,
             context.getString(R.string.qr_code_scanner),
-            R.drawable.ic_qr_code,
+            TrailIcons.QrCode,
             R.id.scanQrFragment,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_qr_code_scanner,

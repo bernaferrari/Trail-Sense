@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -74,7 +75,7 @@ class ARSatelliteLayer(
                 }
 
                 val satelliteImageSize = drawer.dp(24f).toInt()
-                val satelliteBitmap = bitmapLoader?.load(R.drawable.satellite, satelliteImageSize)
+                val satelliteBitmap = bitmapLoader?.load(TrailIcons.Satellite, satelliteImageSize)
 
 
                 val satelliteMarkers = gps.satelliteDetails?.map {

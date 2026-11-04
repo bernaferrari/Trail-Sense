@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Path
 import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.canvas.CanvasDrawer
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.astronomy.eclipse.LunarEclipseShadow
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
@@ -14,10 +15,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.astronomy.domain.MoonTilt
 
 class LunarEclipseImageMapper(private val context: Context) {
-
-    private val moonDrawable by lazy {
-        Resources.drawable(context, R.drawable.ic_moon)
-    }
 
     fun getEclipseImage(
         moon: CelestialObservation,
@@ -33,10 +30,7 @@ class LunarEclipseImageMapper(private val context: Context) {
         tilt?.let {
             drawer.rotate(it.parallacticAngle, width / 2f, height / 2f)
         }
-        moonDrawable?.let {
-            it.setBounds(0, 0, width, height)
-            it.draw(canvas)
-        }
+        canvas.drawBitmap(TrailIcons.Moon.toBitmap(width, height), 0f, 0f, null)
         drawer.pop()
 
         val shadowOffset = Trigonometry.getAngularOffset(

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.field_guide
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Bundle
 import com.kylecorry.trail_sense.R
@@ -20,7 +21,7 @@ object FieldGuideToolRegistration : ToolRegistration {
         return Tool(
             Tools.FIELD_GUIDE,
             context.getString(R.string.field_guide),
-            R.drawable.field_guide,
+            TrailIcons.FieldGuide,
             R.id.fieldGuideFragment,
             ToolCategory.Books,
             settingsNavAction = R.id.fieldGuideSettingsFragment,

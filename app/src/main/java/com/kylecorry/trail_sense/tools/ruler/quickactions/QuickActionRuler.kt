@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ruler.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.fillMaxSize
@@ -71,7 +72,7 @@ class QuickActionRuler(
 
         host.addOverlayView(ruler)
 
-        setIcon(R.drawable.ruler)
+        setIcon(TrailIcons.Ruler)
     }
 
     override fun onClick() {

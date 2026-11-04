@@ -1,31 +1,20 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import android.content.Context
 import android.graphics.Bitmap
-import androidx.annotation.DrawableRes
-import androidx.core.graphics.drawable.toBitmap
-import com.kylecorry.andromeda.core.system.Resources
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.toBitmap
 
-class BitmapLoader(private val context: Context) {
+class BitmapLoader {
 
-    private val icons = mutableMapOf<Int, Bitmap>()
+    private val icons = mutableMapOf<Pair<ImageVector, Int>, Bitmap>()
 
-    fun load(@DrawableRes id: Int, size: Int): Bitmap {
-        val bitmap = if (icons.containsKey(id)) {
-            icons[id]
-        } else {
-            val drawable = Resources.drawable(context, id)
-            val bm = drawable?.toBitmap(size, size)
-            icons[id] = bm!!
-            icons[id]
-        }
-        return bitmap!!
+    fun load(icon: ImageVector, size: Int): Bitmap {
+        return icons.getOrPut(icon to size) { icon.toBitmap(size, size) }
     }
 
-    fun unload(@DrawableRes id: Int) {
-        if (icons.containsKey(id)) {
-            icons.remove(id)?.recycle()
-        }
+    fun unload(icon: ImageVector) {
+        // The bitmaps are shared with the vector bitmap cache, so they are released rather than recycled
+        icons.keys.filter { it.first == icon }.forEach { icons.remove(it) }
     }
 
     fun clear() {

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.GeographicARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
@@ -22,7 +23,7 @@ data class BearingGuidanceTarget(
         return ARGuidanceTargetState(
             ARGuidanceDisplayState(
                 request.context.getString(R.string.bearing),
-                R.drawable.ic_compass_icon
+                TrailIcons.CompassIcon
             ),
             point
         )

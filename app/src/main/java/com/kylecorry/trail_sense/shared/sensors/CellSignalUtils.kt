@@ -1,18 +1,18 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.R
 
 object CellSignalUtils {
 
-    @DrawableRes
-    fun getCellQualityImage(quality: Quality?): Int {
+    fun getCellQualityImage(quality: Quality?): ImageVector {
         return when (quality) {
-            Quality.Poor -> R.drawable.signal_cellular_1
-            Quality.Moderate -> R.drawable.signal_cellular_2
-            Quality.Good -> R.drawable.signal_cellular_3
-            else -> R.drawable.signal_cellular_outline
+            Quality.Poor -> TrailIcons.SignalCellular1
+            Quality.Moderate -> TrailIcons.SignalCellular2
+            Quality.Good -> TrailIcons.SignalCellular3
+            else -> TrailIcons.SignalCellularOutline
         }
     }
 

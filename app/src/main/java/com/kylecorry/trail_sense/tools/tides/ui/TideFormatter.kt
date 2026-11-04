@@ -16,11 +16,11 @@ class TideFormatter(private val context: Context) {
         }
     }
 
-    fun getTideTypeImage(tideType: TideType?): Int {
+    fun getTideTypeImage(tideType: TideType?): ImageVector {
         return when (tideType) {
-            TideType.High -> R.drawable.ic_tide_high
-            TideType.Low -> R.drawable.ic_tide_low
-            null -> R.drawable.ic_tide_half
+            TideType.High -> TrailIcons.TideHigh
+            TideType.Low -> TrailIcons.TideLow
+            null -> TrailIcons.TideHalf
         }
     }
 

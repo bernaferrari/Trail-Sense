@@ -60,7 +60,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -254,7 +254,7 @@ private fun Tool.tile(onClick: (Tool) -> Unit, onLongClick: (Tool) -> Unit) = Tr
     key = id,
     title = name,
     accent = category.accent(),
-    icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(22.dp)) },
+    icon = { Icon(rememberVectorPainter(icon), contentDescription = null, modifier = Modifier.size(22.dp)) },
     onClick = { onClick(this) },
     onLongClick = { onLongClick(this) }
 )
@@ -269,7 +269,7 @@ private fun ToolRow(
     TrailSenseListItem(
         title = tool.name,
         subtitle = tool.description,
-        icon = painterResource(tool.icon),
+        icon = rememberVectorPainter(tool.icon),
         iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
         onClick = onClick,
         onLongClick = onLongClick,

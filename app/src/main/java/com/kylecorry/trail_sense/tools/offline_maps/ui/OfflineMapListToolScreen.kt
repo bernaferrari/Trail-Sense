@@ -41,7 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -1064,11 +1064,11 @@ private fun MapVisibilityButton(
         modifier = Modifier.testTag(tag)
     ) {
         Icon(
-            painter = painterResource(
+            painter = rememberVectorPainter(
                 if (visible) {
-                    R.drawable.ic_visible
+                    TrailIcons.Visible
                 } else {
-                    R.drawable.ic_not_visible
+                    TrailIcons.NotVisible
                 }
             ),
             contentDescription = stringResource(if (visible) R.string.hide else R.string.show),

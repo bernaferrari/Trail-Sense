@@ -49,7 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -976,7 +976,7 @@ private fun BeaconRow(
             Units.getDecimalPlaces(distance.units),
             false
         ),
-        icon = painterResource(getBeaconIcon(beacon, formatService)),
+        icon = rememberVectorPainter(getBeaconIcon(beacon, formatService)),
         iconTint = Color(getBeaconIconTint(beacon, formatService)),
         position = position,
         onClick = { onAction(BeaconAction.View) },
@@ -1122,9 +1122,9 @@ private fun BeaconGroupMenuItem(
 }
 
 
-private fun getBeaconIcon(beacon: Beacon, formatService: FormatService): Int {
+private fun getBeaconIcon(beacon: Beacon, formatService: FormatService): ImageVector {
     if (beacon.owner == BeaconOwner.User) {
-        return beacon.icon?.icon ?: R.drawable.bubble
+        return beacon.icon?.icon ?: TrailIcons.Bubble
     }
 
     return CellSignalUtils.getCellQualityImage(getCellSignalQuality(beacon, formatService))

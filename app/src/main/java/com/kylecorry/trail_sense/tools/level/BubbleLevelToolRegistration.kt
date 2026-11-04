@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.level
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -13,7 +14,7 @@ object BubbleLevelToolRegistration : ToolRegistration {
         return Tool(
             Tools.BUBBLE_LEVEL,
             context.getString(R.string.tool_bubble_level_title),
-            R.drawable.level,
+            TrailIcons.Level,
             R.id.levelFragment,
             ToolCategory.Angles,
             context.getString(R.string.tool_bubble_level_summary),

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clouds.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -12,7 +13,7 @@ class QuickActionScanCloud(button: QuickActionButtonView, host: TrailSenseDestin
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.cloud_scanner)
+        setIcon(TrailIcons.CloudScanner)
     }
 
     override fun onClick() {

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.diagnostics.status
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.annotation.ColorInt
 import com.kylecorry.andromeda.sense.location.GPS
@@ -22,7 +23,7 @@ class GpsStatusBadgeProvider(private val gps: ISatelliteGPS, private val context
     private val prefs = UserPreferences(context)
 
     override fun getBadge(): StatusBadge {
-        return StatusBadge(getName(), getColor(), R.drawable.satellite)
+        return StatusBadge(getName(), getColor(), TrailIcons.Satellite)
     }
 
     @ColorInt

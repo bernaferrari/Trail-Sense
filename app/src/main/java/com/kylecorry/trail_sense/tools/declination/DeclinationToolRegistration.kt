@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.declination
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -13,7 +14,7 @@ object DeclinationToolRegistration : ToolRegistration {
         return Tool(
             Tools.DECLINATION,
             context.getString(R.string.declination),
-            R.drawable.declination,
+            TrailIcons.Declination,
             R.id.toolDeclinationFragment,
             ToolCategory.Location,
             guideId = R.raw.guide_tool_declination,

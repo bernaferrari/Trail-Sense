@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
@@ -66,7 +67,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -1217,13 +1218,13 @@ private class ArCalibrationPanelView {
 }
 
 private class ArGuideIconView {
-    private var icon by mutableIntStateOf(R.drawable.ic_location)
+    private var icon by mutableStateOf(TrailIcons.Location)
     private var iconRotation by mutableStateOf(0f)
     private var iconTint by mutableIntStateOf(Color.WHITE)
     private var backgroundTint by mutableIntStateOf(Color.TRANSPARENT)
 
     fun setState(
-        icon: Int,
+        icon: ImageVector,
         iconRotation: Float,
         iconTint: Int,
         backgroundTint: Int
@@ -1247,7 +1248,7 @@ private class ArGuideIconView {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(icon),
+                    painter = rememberVectorPainter(icon),
                     contentDescription = null,
                     modifier = Modifier
                         .size(TrailSenseSize.compactIcon)

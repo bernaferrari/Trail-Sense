@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -9,18 +10,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 
-class PhotoMapIconButton(icon: Int) {
+class PhotoMapIconButton(icon: ImageVector) {
 
-    private var iconRes by mutableIntStateOf(icon)
+    private var iconVector by mutableStateOf(icon)
     private var isOn by mutableStateOf(false)
     private var buttonVisible by mutableStateOf(true)
     private var alphaState by mutableStateOf(1f)
@@ -42,8 +42,8 @@ class PhotoMapIconButton(icon: Int) {
         clickListener = listener
     }
 
-    fun setImageResource(icon: Int) {
-        iconRes = icon
+    fun setIcon(icon: ImageVector) {
+        iconVector = icon
     }
 
     fun setState(isOn: Boolean) {
@@ -79,7 +79,7 @@ class PhotoMapIconButton(icon: Int) {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(iconRes),
+                    painter = rememberVectorPainter(iconVector),
                     contentDescription = null,
                     tint = foreground,
                     modifier = Modifier.size(24.dp)

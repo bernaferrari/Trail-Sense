@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
@@ -32,9 +33,9 @@ class SolarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
             EclipseFormatter.type(context, eclipse),
             icon(
                 if (eclipse.isTotal) {
-                    R.drawable.ic_total_solar_eclipse
+                    TrailIcons.TotalSolarEclipse
                 } else {
-                    R.drawable.ic_partial_solar_eclipse
+                    TrailIcons.PartialSolarEclipse
                 }
             ),
             data = times

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.guide
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.guide.quickactions.QuickActionUserGuide
@@ -14,7 +15,7 @@ object UserGuideToolRegistration : ToolRegistration {
         return Tool(
             Tools.USER_GUIDE,
             context.getString(R.string.tool_user_guide_title),
-            R.drawable.user_guide,
+            TrailIcons.UserGuide,
             R.id.guideListFragment,
             ToolCategory.Books,
             context.getString(R.string.tool_user_guide_summary),

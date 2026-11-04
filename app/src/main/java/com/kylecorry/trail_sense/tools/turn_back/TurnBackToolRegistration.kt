@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.turn_back
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
@@ -18,7 +19,7 @@ object TurnBackToolRegistration : ToolRegistration {
         return Tool(
             Tools.TURN_BACK,
             context.getString(R.string.tool_turn_back),
-            R.drawable.ic_undo,
+            TrailIcons.Undo,
             R.id.turnBackFragment,
             ToolCategory.Time,
             guideId = R.raw.guide_tool_turn_back,

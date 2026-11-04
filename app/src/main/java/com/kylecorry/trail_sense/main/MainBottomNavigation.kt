@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.withTimeoutOrNull
-import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -62,7 +61,7 @@ class MainBottomNavigationState {
 data class MainBottomNavigationItem(
     @IdRes val id: Int,
     val title: String,
-    @DrawableRes val icon: Int,
+    val icon: ImageVector,
     val selectedIcon: ImageVector? = null,
     val unselectedIcon: ImageVector? = null,
     val visible: Boolean = true
@@ -94,7 +93,7 @@ fun MainAdaptiveNavigation(
         if (vector != null) {
             Icon(imageVector = vector, contentDescription = null)
         } else {
-            Icon(painter = painterResource(item.icon), contentDescription = null)
+            Icon(imageVector = item.icon, contentDescription = null)
         }
     }
 

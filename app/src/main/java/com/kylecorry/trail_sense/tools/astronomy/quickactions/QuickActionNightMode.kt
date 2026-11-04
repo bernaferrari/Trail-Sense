@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.R
@@ -15,7 +16,7 @@ class QuickActionNightMode(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_astronomy)
+        setIcon(TrailIcons.Astronomy)
         setState(prefs.theme == UserPreferences.Theme.Night)
     }
 

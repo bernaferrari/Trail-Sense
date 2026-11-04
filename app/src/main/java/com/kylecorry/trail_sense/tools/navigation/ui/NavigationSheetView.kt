@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.view.View
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -124,7 +124,7 @@ class NavigationSheetView(private val context: Context) {
                 ) {
                     if (state.titleIcon != null) {
                         Icon(
-                            painter = painterResource(state.titleIcon),
+                            painter = rememberVectorPainter(state.titleIcon),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
@@ -159,7 +159,7 @@ class NavigationSheetView(private val context: Context) {
                     if (state.showDirection) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                painter = painterResource(state.arrowIcon),
+                                painter = rememberVectorPainter(state.arrowIcon),
                                 contentDescription = null,
                                 tint = state.arrowColor,
                                 modifier = Modifier
@@ -207,7 +207,7 @@ class NavigationSheetView(private val context: Context) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     if (stat.valueIcon != null) {
                                         Icon(
-                                            painter = painterResource(stat.valueIcon),
+                                            painter = rememberVectorPainter(stat.valueIcon),
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onSurface,
                                             modifier = Modifier
@@ -225,7 +225,7 @@ class NavigationSheetView(private val context: Context) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     if (stat.labelIcon != null) {
                                         Icon(
-                                            painter = painterResource(stat.labelIcon),
+                                            painter = rememberVectorPainter(stat.labelIcon),
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier
@@ -361,18 +361,18 @@ class NavigationSheetView(private val context: Context) {
             gain != null -> stats += SheetStat(
                 formatElevationChange(gain),
                 context.getString(R.string.navigation_remaining_gain),
-                valueIcon = R.drawable.ic_triangle_up
+                valueIcon = TrailIcons.TriangleUp
             )
 
             loss != null -> stats += SheetStat(
                 formatElevationChange(loss),
                 context.getString(R.string.navigation_remaining_loss),
-                valueIcon = R.drawable.ic_triangle_down
+                valueIcon = TrailIcons.TriangleDown
             )
         }
         model = direction.asModel(
             title = beacon.name,
-            titleIcon = R.drawable.ic_location,
+            titleIcon = TrailIcons.Location,
             titleDescription = titled(R.string.beacon, beacon.name),
             subtitle = formatter.join(
                 formatter.formatLocation(beacon.coordinate),
@@ -408,7 +408,7 @@ class NavigationSheetView(private val context: Context) {
         val title = formatBearing(guidance.targetBearing.value)
         model = direction.asModel(
             title = title,
-            titleIcon = R.drawable.ic_compass_icon,
+            titleIcon = TrailIcons.CompassIcon,
             titleDescription = titled(R.string.bearing, title),
             showCancel = isNavigating,
             stats = stats
@@ -436,13 +436,13 @@ class NavigationSheetView(private val context: Context) {
             stats += SheetStat(
                 gainText,
                 lossText,
-                valueIcon = R.drawable.ic_triangle_up,
-                labelIcon = R.drawable.ic_triangle_down
+                valueIcon = TrailIcons.TriangleUp,
+                labelIcon = TrailIcons.TriangleDown
             )
         }
         model = direction.asModel(
             title = name,
-            titleIcon = R.drawable.ic_tool_backtrack,
+            titleIcon = TrailIcons.ToolBacktrack,
             titleDescription = titled(R.string.path, name),
             showCancel = isNavigating,
             showProgress = true,
@@ -467,7 +467,7 @@ class NavigationSheetView(private val context: Context) {
         val bearingText = formatBearing(guidance.targetBearing.value)
         if (!hasCompass) {
             return DirectionState(
-                arrowIcon = R.drawable.ic_compass_unavailable,
+                arrowIcon = TrailIcons.CompassUnavailable,
                 arrowRotation = 0f,
                 arrowColor = Color(Resources.androidTextColorSecondary(context)),
                 bearingText = bearingText
@@ -475,7 +475,7 @@ class NavigationSheetView(private val context: Context) {
         }
         val turn = deltaAngle(values.bearing.value, guidance.targetBearing.value)
         return DirectionState(
-            arrowIcon = R.drawable.ic_navigation_arrow,
+            arrowIcon = TrailIcons.NavigationArrow,
             arrowRotation = turn,
             arrowColor = Color(directionColor(turn.absoluteValue)),
             bearingText = bearingText
@@ -529,19 +529,19 @@ class NavigationSheetView(private val context: Context) {
     private data class SheetStat(
         val value: String,
         val label: String,
-        @DrawableRes val valueIcon: Int? = null,
-        @DrawableRes val labelIcon: Int? = null
+        val valueIcon: ImageVector? = null,
+        val labelIcon: ImageVector? = null
     )
 
     private data class DirectionState(
-        @DrawableRes val arrowIcon: Int,
+        val arrowIcon: ImageVector,
         val arrowRotation: Float,
         val arrowColor: Color,
         val bearingText: String
     ) {
         fun asModel(
             title: String,
-            @DrawableRes titleIcon: Int,
+            titleIcon: ImageVector,
             titleDescription: String,
             subtitle: String? = null,
             showCancel: Boolean,
@@ -569,12 +569,12 @@ class NavigationSheetView(private val context: Context) {
 
     private data class SheetModel(
         val title: String = "",
-        @DrawableRes val titleIcon: Int? = null,
+        val titleIcon: ImageVector? = null,
         val titleDescription: String? = null,
         val subtitle: String? = null,
         val showCancel: Boolean = false,
         val showDirection: Boolean = false,
-        @DrawableRes val arrowIcon: Int = R.drawable.ic_navigation_arrow,
+        val arrowIcon: ImageVector = TrailIcons.NavigationArrow,
         val arrowRotation: Float = 0f,
         val arrowColor: Color = Color.Unspecified,
         val bearingText: String = "",

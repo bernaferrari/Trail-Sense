@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -20,7 +20,7 @@ abstract class BaseCompassView(
     protected val context: Context
 ) : ICompassView {
 
-    private val bitmapLoader by lazy { BitmapLoader(context) }
+    private val bitmapLoader by lazy { BitmapLoader() }
     protected val prefs by lazy { UserPreferences(context) }
     protected var renderVersion by mutableIntStateOf(0)
 
@@ -107,7 +107,7 @@ abstract class BaseCompassView(
         bitmapLoader.clear()
     }
 
-    protected fun getBitmap(@DrawableRes id: Int, size: Int): Bitmap {
+    protected fun getBitmap(id: ImageVector, size: Int): Bitmap {
         return bitmapLoader.load(id, size)
     }
 

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.light
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.hardware.Sensor
 import com.kylecorry.andromeda.sense.Sensors
@@ -15,7 +16,7 @@ object LightMeterToolRegistration : ToolRegistration {
         return Tool(
             Tools.LIGHT_METER,
             context.getString(R.string.tool_light_meter_title),
-            R.drawable.flashlight,
+            TrailIcons.Flashlight,
             R.id.toolLightFragment,
             ToolCategory.Power,
             context.getString(R.string.guide_light_meter_description),

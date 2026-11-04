@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.whitenoise
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
@@ -24,7 +25,7 @@ object WhiteNoiseToolRegistration : ToolRegistration {
         return Tool(
             Tools.WHITE_NOISE,
             context.getString(R.string.tool_white_noise_title),
-            R.drawable.ic_tool_white_noise,
+            TrailIcons.ToolWhiteNoise,
             R.id.fragmentToolWhiteNoise,
             ToolCategory.Other,
             context.getString(R.string.tool_white_noise_summary),

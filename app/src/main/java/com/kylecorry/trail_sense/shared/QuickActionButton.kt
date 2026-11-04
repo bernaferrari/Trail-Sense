@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
-import androidx.annotation.DrawableRes
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -65,7 +65,7 @@ abstract class QuickActionButton(
         return false
     }
 
-    protected fun setIcon(@DrawableRes icon: Int) {
+    protected fun setIcon(icon: ImageVector) {
         button.setIcon(icon)
         if (!wasStateSet) {
             setState(false)

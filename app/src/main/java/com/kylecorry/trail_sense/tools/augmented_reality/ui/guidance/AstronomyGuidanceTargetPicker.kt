@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Dialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onDefault
@@ -76,7 +78,7 @@ class AstronomyGuidanceTargetPicker(
                         AstronomyGuidanceTarget(astronomyService, AstronomySelection.Sun),
                         view.context.getString(R.string.sun),
                         if (sunAltitude > 0f) null else notVisible,
-                        R.drawable.ic_sun,
+                        TrailIcons.Sun,
                         sortOrder = if (sunAltitude > 0f) 0 else 2
                     )
                 )
@@ -110,7 +112,7 @@ class AstronomyGuidanceTargetPicker(
                         ),
                         it.first.readableName(),
                         if (it.second.altitude > 0f) null else notVisible,
-                        R.drawable.ic_meteor,
+                        TrailIcons.Meteor,
                         sortOrder = if (it.second.altitude > 0f) 4 else 5
                     )
                 )
@@ -151,7 +153,7 @@ class AstronomyGuidanceTargetPicker(
                             ),
                             "${view.context.getString(R.string.star)}: ${it.first.name}",
                             if (it.second.second > 0f) null else notVisible,
-                            R.drawable.ic_star,
+                            TrailIcons.Star,
                             iconTint = Colors.fromColorTemperature(
                                 Astronomy.getColorTemperature(it.first)
                             ),
@@ -255,7 +257,7 @@ class AstronomyGuidanceTargetPicker(
                         TrailSenseListItem(
                             title = option.name,
                             subtitle = option.subtitle,
-                            icon = painterResource(option.icon),
+                            icon = rememberVectorPainter(option.icon),
                             iconTint = option.iconTint?.let { Color(it) }
                                 ?: MaterialTheme.colorScheme.primary,
                             iconRotation = option.iconRotation,
@@ -274,7 +276,7 @@ class AstronomyGuidanceTargetPicker(
         val target: ARGuidanceTarget,
         val name: String,
         val subtitle: String? = null,
-        val icon: Int,
+        val icon: ImageVector,
         val iconTint: Int? = null,
         val iconRotation: Float = 0f,
         val sortOrder: Int

@@ -88,7 +88,9 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     val levelDescription = stringResource(
         R.string.bubble_level_angles,
         formattedX,
-        formattedY
+        formattedY,
+        // The string gained the overall tilt upstream; passing two arguments crashed the tool on open.
+        formatService.formatDegrees(hypot(xAngle.toDouble(), yAngle.toDouble()).toFloat(), 1)
     )
 
     // The bubble is the instrument; the two angles under it are the hero reading, in the accent tone once level.

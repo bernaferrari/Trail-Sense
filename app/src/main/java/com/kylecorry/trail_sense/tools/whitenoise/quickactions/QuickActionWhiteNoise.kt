@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.whitenoise.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.trail_sense.R
@@ -25,7 +26,7 @@ class QuickActionWhiteNoise(btn: QuickActionButtonView, host: TrailSenseDestinat
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_tool_white_noise)
+        setIcon(TrailIcons.ToolWhiteNoise)
     }
 
     override fun onClick() {

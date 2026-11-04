@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Color
@@ -157,7 +158,7 @@ class RadarCompassView(
     }
 
     private fun drawAzimuth(nativeCanvas: AndroidCanvas) {
-        val bitmap = getBitmap(R.drawable.ic_arrow_target, iconSize)
+        val bitmap = getBitmap(TrailIcons.ArrowTarget, iconSize)
         paint.reset()
         paint.isAntiAlias = true
         paint.isFilterBitmap = true
@@ -346,7 +347,7 @@ class RadarCompassView(
             return
         }
 
-        val bitmap = getBitmap(reference.drawableId, sizeDp)
+        val bitmap = getBitmap(reference.icon, sizeDp)
         paint.reset()
         paint.isAntiAlias = true
         paint.isFilterBitmap = true

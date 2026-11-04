@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -76,7 +77,7 @@ class LinearCompassView(
 
     private fun drawAzimuth() {
         val nativeCanvas = canvas ?: return
-        val bitmap = getBitmap(R.drawable.ic_arrow_target, iconSize)
+        val bitmap = getBitmap(TrailIcons.ArrowTarget, iconSize)
         paint.reset()
         paint.isAntiAlias = true
         paint.isFilterBitmap = true
@@ -132,7 +133,7 @@ class LinearCompassView(
         val nativeCanvas = canvas ?: return
         val sizeDp = size?.let { dp(it.toFloat()).toInt() } ?: iconSize
         val x = toPixel(reference.bearing).coerceIn(0f, canvasWidth)
-        val bitmap = getBitmap(reference.drawableId, sizeDp)
+        val bitmap = getBitmap(reference.icon, sizeDp)
         paint.reset()
         paint.isAntiAlias = true
         paint.isFilterBitmap = true

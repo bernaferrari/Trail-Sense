@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.astronomy.locators.Planet
@@ -34,7 +35,7 @@ class AstronomyGuidanceTarget(
                 ARGuidanceTargetState(
                     ARGuidanceDisplayState(
                         request.context.getString(R.string.sun),
-                        R.drawable.ic_sun
+                        TrailIcons.Sun
                     ),
                     SphericalARPoint(
                         astronomyService.getSunAzimuth(location, time).value,
@@ -91,7 +92,7 @@ class AstronomyGuidanceTarget(
                 ARGuidanceTargetState(
                     ARGuidanceDisplayState(
                         "${request.context.getString(R.string.star)}: ${selection.star.name}",
-                        R.drawable.ic_star
+                        TrailIcons.Star
                     ),
                     SphericalARPoint(
                         position.azimuth.value,
@@ -110,7 +111,7 @@ class AstronomyGuidanceTarget(
                 ARGuidanceTargetState(
                     ARGuidanceDisplayState(
                         selection.shower.readableName(),
-                        R.drawable.ic_meteor
+                        TrailIcons.Meteor
                     ),
                     SphericalARPoint(
                         position.azimuth.value,

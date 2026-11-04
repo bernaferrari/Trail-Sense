@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Bundle
 import com.kylecorry.trail_sense.R
@@ -49,7 +50,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
         return Tool(
             Tools.OFFLINE_MAPS,
             context.getString(R.string.offline_maps),
-            R.drawable.photo_maps,
+            TrailIcons.PhotoMaps,
             R.id.mapListFragment,
             ToolCategory.Location,
             context.getString(R.string.offline_maps_summary),

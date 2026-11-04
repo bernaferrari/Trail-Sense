@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.dem.colors.ElevationColorStrategy
@@ -46,7 +47,7 @@ object MapToolRegistration : ToolRegistration {
         return Tool(
             Tools.MAP,
             context.getString(R.string.map),
-            R.drawable.maps,
+            TrailIcons.Maps,
             R.id.mapFragment,
             ToolCategory.Location,
             settingsNavAction = R.id.mapSettingsFragment,

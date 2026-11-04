@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
@@ -489,7 +490,7 @@ class ARAstronomyLayer(
             astro.getVisibleMeteorShowers(location, time, if (drawBelowHorizon) null else horizon)
         val markers = showers.mapNotNull {
             val bitmap =
-                bitmapLoader?.load(R.drawable.meteor_shower_radiant, drawer.dp(100f).toInt())
+                bitmapLoader?.load(TrailIcons.MeteorShowerRadiant, drawer.dp(100f).toInt())
                     ?: return@mapNotNull null
             val alpha = if (it.second.altitude < horizon) 30 / belowHorizonAlphaDivisor else 30
             ARMarker(

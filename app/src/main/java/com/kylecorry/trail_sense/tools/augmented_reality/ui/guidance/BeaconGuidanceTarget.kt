@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.R
@@ -13,7 +14,7 @@ data class BeaconGuidanceTarget(
         return ARGuidanceTargetState(
             ARGuidanceDisplayState(
                 beacon.name,
-                beacon.icon?.icon ?: R.drawable.ic_location,
+                beacon.icon?.icon ?: TrailIcons.Location,
                 iconTint = Colors.mostContrastingColor(Color.WHITE, Color.BLACK, beacon.color),
                 iconBackgroundTint = beacon.color
             ),

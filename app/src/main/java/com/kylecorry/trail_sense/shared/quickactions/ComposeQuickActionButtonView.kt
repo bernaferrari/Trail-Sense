@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.animateColorAsState
 import android.view.MotionEvent
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -30,14 +30,14 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
     override var isVisible by mutableStateOf(false)
     override var contentDescription by mutableStateOf<CharSequence?>(null)
     var isClickable by mutableStateOf(true)
-    private var iconRes by mutableIntStateOf(0)
+    private var iconVector by mutableStateOf<ImageVector?>(null)
     private var isOn by mutableStateOf(false)
     private var onClick: (() -> Unit)? = null
     private var onLongClick: (() -> Boolean)? = null
     private var onTouch: ((event: MotionEvent) -> Boolean)? = null
 
-    override fun setIcon(@DrawableRes icon: Int) {
-        iconRes = icon
+    override fun setIcon(icon: ImageVector) {
+        iconVector = icon
     }
 
     override fun setState(isOn: Boolean) {
@@ -59,7 +59,8 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        if (!isVisible || iconRes == 0) {
+        val icon = iconVector
+        if (!isVisible || icon == null) {
             Box(modifier = modifier.size(48.dp))
             return
         }
@@ -98,7 +99,7 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(iconRes),
+                    imageVector = icon,
                     contentDescription = contentDescription?.toString(),
                     tint = tint,
                     modifier = Modifier.size(24.dp)

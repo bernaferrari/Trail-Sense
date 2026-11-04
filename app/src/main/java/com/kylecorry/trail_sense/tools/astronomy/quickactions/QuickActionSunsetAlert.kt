@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.toast
@@ -29,7 +30,7 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, host: TrailSenseDestina
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_sunset_notification)
+        setIcon(TrailIcons.SunsetNotification)
     }
 
     override fun onLongClick(): Boolean {

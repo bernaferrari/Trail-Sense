@@ -40,7 +40,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -211,7 +211,7 @@ private fun SettingsScreen(
                 row { position ->
                     SettingsNavRow(
                         title = tool.name,
-                        icon = painterResource(tool.icon),
+                        icon = rememberVectorPainter(tool.icon),
                         position = position,
                         onClick = { tool.settingsNavAction?.let(onNavigate) }
                     )

@@ -16,7 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -67,7 +67,7 @@ fun PathPointRow(
         title = title,
         subtitle = listOfNotNull(subtitle, networkText).joinToString(" · ").ifBlank { null },
         icon = point.cellSignal?.let {
-            painterResource(CellSignalUtils.getCellQualityImage(it.quality))
+            rememberVectorPainter(CellSignalUtils.getCellQualityImage(it.quality))
         },
         iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
         trailing = {

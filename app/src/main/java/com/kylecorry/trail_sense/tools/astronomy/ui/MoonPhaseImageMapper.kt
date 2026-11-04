@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -8,10 +9,10 @@ import android.graphics.Path
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
-import androidx.annotation.DrawableRes
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.withSave
-import com.kylecorry.andromeda.core.system.Resources
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
@@ -21,25 +22,21 @@ import kotlin.math.abs
 
 class MoonPhaseImageMapper(private val context: Context? = null) {
 
-    private val moonDrawable by lazy {
-        context?.let { Resources.drawable(it, R.drawable.ic_moon) }
-    }
     private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = SHADOW_COLOR
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
     }
 
-    @DrawableRes
-    fun getPhaseImage(phase: MoonTruePhase): Int {
+    fun getPhaseImage(phase: MoonTruePhase): ImageVector {
         return when (phase) {
-            MoonTruePhase.FirstQuarter -> R.drawable.ic_moon_first_quarter
-            MoonTruePhase.Full -> R.drawable.ic_moon
-            MoonTruePhase.ThirdQuarter -> R.drawable.ic_moon_third_quarter
-            MoonTruePhase.New -> R.drawable.ic_moon_new
-            MoonTruePhase.WaningCrescent -> R.drawable.ic_moon_waning_crescent
-            MoonTruePhase.WaningGibbous -> R.drawable.ic_moon_waning_gibbous
-            MoonTruePhase.WaxingCrescent -> R.drawable.ic_moon_waxing_crescent
-            MoonTruePhase.WaxingGibbous -> R.drawable.ic_moon_waxing_gibbous
+            MoonTruePhase.FirstQuarter -> TrailIcons.MoonFirstQuarter
+            MoonTruePhase.Full -> TrailIcons.Moon
+            MoonTruePhase.ThirdQuarter -> TrailIcons.MoonThirdQuarter
+            MoonTruePhase.New -> TrailIcons.MoonNew
+            MoonTruePhase.WaningCrescent -> TrailIcons.MoonWaningCrescent
+            MoonTruePhase.WaningGibbous -> TrailIcons.MoonWaningGibbous
+            MoonTruePhase.WaxingCrescent -> TrailIcons.MoonWaxingCrescent
+            MoonTruePhase.WaxingGibbous -> TrailIcons.MoonWaxingGibbous
         }
     }
 
@@ -56,10 +53,7 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
             tilt?.let {
                 rotate(it.parallacticAngle, width / 2f, height / 2f)
             }
-            moonDrawable?.let {
-                it.setBounds(0, 0, width, height)
-                it.draw(this)
-            }
+            drawBitmap(TrailIcons.Moon.toBitmap(width, height), 0f, 0f, null)
 
             tilt?.let {
                 val rotationAdjustment = if (phaseAngle < 180) {

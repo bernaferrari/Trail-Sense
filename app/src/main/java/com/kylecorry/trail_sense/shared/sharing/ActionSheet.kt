@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sharing
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -86,7 +87,7 @@ private fun ActionTile(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                painter = painterResource(action.icon),
+                painter = rememberVectorPainter(action.icon),
                 contentDescription = action.name,
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(28.dp)
@@ -110,9 +111,9 @@ private fun ActionSheetContentPreview() {
             title = "Share",
             subtitle = "Choose a format",
             actions = listOf(
-                ActionItem("Text", R.drawable.ic_altitude, {}),
-                ActionItem("QR", R.drawable.ic_qr_code, {}),
-                ActionItem("Map", R.drawable.ic_map_group, {})
+                ActionItem("Text", TrailIcons.Altitude, {}),
+                ActionItem("QR", TrailIcons.QrCode, {}),
+                ActionItem("Map", TrailIcons.MapGroup, {})
             ),
             onAction = {}
         )

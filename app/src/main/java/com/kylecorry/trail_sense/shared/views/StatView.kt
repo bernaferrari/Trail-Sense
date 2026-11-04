@@ -1,13 +1,14 @@
 package com.kylecorry.trail_sense.shared.views
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
 import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.DrawableRes
-import androidx.core.content.ContextCompat
+import android.graphics.drawable.BitmapDrawable
+import com.kylecorry.trail_sense.shared.icons.toBitmap
 import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
 import com.kylecorry.trail_sense.R
@@ -31,8 +32,8 @@ class StatView(context: Context, attrs: AttributeSet? = null) : LinearLayout(con
     fun show(
         valueText: String?,
         labelText: String,
-        @DrawableRes valueIcon: Int? = null,
-        @DrawableRes labelIcon: Int? = null,
+        valueIcon: ImageVector? = null,
+        labelIcon: ImageVector? = null,
         description: String? = null
     ) {
         isVisible = valueText != null
@@ -54,9 +55,9 @@ class StatView(context: Context, attrs: AttributeSet? = null) : LinearLayout(con
 
 private const val ICON_SIZE_RATIO = 0.8f
 
-private fun TextView.setStartIcon(@DrawableRes icon: Int?) {
-    val drawable = icon?.let { ContextCompat.getDrawable(context, it) }
+private fun TextView.setStartIcon(icon: ImageVector?) {
     val size = (textSize * ICON_SIZE_RATIO).roundToInt()
+    val drawable = icon?.let { BitmapDrawable(resources, it.toBitmap(size, size)) }
     drawable?.setBounds(0, 0, size, size)
     setCompoundDrawablesRelative(drawable, null, null, null)
     compoundDrawablePadding = size / 2

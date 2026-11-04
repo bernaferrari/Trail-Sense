@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.whistle
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.volume.SystemVolumeAction
@@ -17,7 +18,7 @@ object WhistleToolRegistration : ToolRegistration {
         return Tool(
             Tools.WHISTLE,
             context.getString(R.string.tool_whistle_title),
-            R.drawable.ic_tool_whistle,
+            TrailIcons.ToolWhistle,
             R.id.toolWhistleFragment,
             ToolCategory.Signaling,
             guideId = R.raw.guide_tool_whistle,

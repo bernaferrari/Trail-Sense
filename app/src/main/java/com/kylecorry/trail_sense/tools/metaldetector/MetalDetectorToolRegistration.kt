@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.metaldetector
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -18,7 +19,7 @@ object MetalDetectorToolRegistration : ToolRegistration {
         return Tool(
             Tools.METAL_DETECTOR,
             context.getString(R.string.tool_metal_detector_title),
-            R.drawable.ic_tool_metal_detector,
+            TrailIcons.ToolMetalDetector,
             R.id.fragmentToolMetalDetector,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_metal_detector,

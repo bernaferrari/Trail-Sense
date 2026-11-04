@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toDrawable
+import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.sol.units.Coordinate
@@ -47,12 +49,10 @@ class AstronomyDayViewDecorator(private val location: Coordinate) : AndromedaDay
                 size,
                 moonTilt
             ).toDrawable(context.resources).apply { setBounds(0, 0, size, size) },
-            if (hasMeteorShower) createIndicatorDrawable(
-                context,
-                R.drawable.ic_meteor,
-                size,
-                Resources.androidTextColorSecondary(context)
-            ) else null,
+            if (hasMeteorShower) {
+                TrailIcons.Meteor.toBitmap(size, size, Resources.androidTextColorSecondary(context))
+                    .toDrawable(context.resources).apply { setBounds(0, 0, size, size) }
+            } else null,
             lunarEclipseDrawable,
             solarEclipseDrawable
         )

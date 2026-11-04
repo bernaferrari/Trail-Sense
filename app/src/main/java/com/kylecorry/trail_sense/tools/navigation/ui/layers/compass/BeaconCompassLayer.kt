@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
@@ -101,7 +102,7 @@ class BeaconCompassLayer(
             markers.add(
                 MappableReferencePoint(
                     it.id,
-                    R.drawable.ic_arrow_target,
+                    TrailIcons.ArrowTarget,
                     bearing,
                     it.color,
                     opacity = opacity

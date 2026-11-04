@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.whistle.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.view.MotionEvent
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -35,7 +36,7 @@ class QuickActionWhistle(btn: QuickActionButtonView, host: TrailSenseDestination
             }
         }
 
-        setIcon(R.drawable.ic_tool_whistle)
+        setIcon(TrailIcons.ToolWhistle)
         button.setOnTouchListener { event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 whistle?.on()

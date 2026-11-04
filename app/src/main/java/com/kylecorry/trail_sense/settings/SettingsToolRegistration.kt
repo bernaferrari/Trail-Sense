@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.settings
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
@@ -25,7 +26,7 @@ object SettingsToolRegistration : ToolRegistration {
         return Tool(
             Tools.SETTINGS,
             context.getString(R.string.settings),
-            R.drawable.ic_settings,
+            TrailIcons.Settings,
             R.id.action_settings,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_settings,

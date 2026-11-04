@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -63,7 +64,7 @@ object BeaconsToolRegistration : ToolRegistration {
         return Tool(
             Tools.BEACONS,
             context.getString(R.string.beacons),
-            R.drawable.ic_location,
+            TrailIcons.Location,
             R.id.beacon_list,
             ToolCategory.Location,
             guideId = R.raw.guide_tool_beacons,

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -22,7 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.markdown.MarkdownService
@@ -41,7 +42,7 @@ data class SurvivalGuideListItem(
     val id: Long,
     val title: String,
     val subtitle: String?,
-    val icon: Int,
+    val icon: ImageVector,
     val tag: String?,
     val onClick: () -> Unit
 )
@@ -182,7 +183,7 @@ private fun SurvivalGuideRow(item: SurvivalGuideListItem, position: TrailSenseGr
     SurvivalGuideGroupRow(
         title = item.title,
         subtitle = subtitle,
-        icon = painterResource(item.icon),
+        icon = rememberVectorPainter(item.icon),
         position = position,
         onClick = item.onClick,
         modifier = Modifier.testTag("guide_item"),

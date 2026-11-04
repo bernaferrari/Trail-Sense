@@ -62,7 +62,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -536,7 +536,7 @@ class WeatherTitleState {
     val rightButton = ComposeQuickActionButtonView()
     var title by mutableStateOf("")
     var subtitle by mutableStateOf("")
-    var icon by mutableStateOf<Int?>(null)
+    var icon by mutableStateOf<ImageVector?>(null)
     var onTitleClick by mutableStateOf<(() -> Unit)?>(null)
 }
 
@@ -1029,7 +1029,7 @@ private fun WeatherHeroCard(
             ) {
                 state.icon?.let {
                     Icon(
-                        painter = painterResource(it),
+                        painter = rememberVectorPainter(it),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier

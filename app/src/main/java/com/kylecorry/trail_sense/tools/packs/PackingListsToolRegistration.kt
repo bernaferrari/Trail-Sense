@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -12,7 +13,7 @@ object PackingListsToolRegistration : ToolRegistration {
         return Tool(
             Tools.PACKING_LISTS,
             context.getString(R.string.packing_lists),
-            R.drawable.ic_tool_pack,
+            TrailIcons.ToolPack,
             R.id.packListFragment,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_packing_lists,

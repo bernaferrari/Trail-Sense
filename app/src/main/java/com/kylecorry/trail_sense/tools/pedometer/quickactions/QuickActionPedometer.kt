@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.topics.generic.ITopic
@@ -18,7 +19,7 @@ class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.steps)
+        setIcon(TrailIcons.Steps)
     }
 
     override fun onLongClick(): Boolean {

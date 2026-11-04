@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import android.content.Context
@@ -463,7 +464,7 @@ private class MapController(
                             host,
                             formatter.formatLocation(location),
                             listOf(
-                                ActionItem(host.getString(R.string.beacon), R.drawable.ic_location) {
+                                ActionItem(host.getString(R.string.beacon), TrailIcons.Location) {
                                     val bundle = Bundle().apply {
                                         putParcelable("initial_location", GeoUri(location))
                                     }
@@ -473,7 +474,7 @@ private class MapController(
                                     )
                                     manager.setSelectedLocation(null)
                                 },
-                                ActionItem(host.getString(R.string.navigate), R.drawable.ic_beacon) {
+                                ActionItem(host.getString(R.string.navigate), TrailIcons.Beacon) {
                                     navigator.navigateTo(
                                         location,
                                         formatter.formatLocation(location),
@@ -481,7 +482,7 @@ private class MapController(
                                     )
                                     manager.setSelectedLocation(null)
                                 },
-                                ActionItem(host.getString(R.string.distance), R.drawable.ruler) {
+                                ActionItem(host.getString(R.string.distance), TrailIcons.Ruler) {
                                     startDistanceMeasurement(location, true)
                                     manager.setSelectedLocation(null)
                                 },

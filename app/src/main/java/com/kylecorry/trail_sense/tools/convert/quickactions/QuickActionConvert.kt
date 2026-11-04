@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.convert.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
@@ -11,7 +12,7 @@ class QuickActionConvert(btn: QuickActionButtonView, host: TrailSenseDestination
     QuickActionButton(btn, host) {
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_tool_distance_convert)
+        setIcon(TrailIcons.ToolDistanceConvert)
     }
 
     override fun onClick() {

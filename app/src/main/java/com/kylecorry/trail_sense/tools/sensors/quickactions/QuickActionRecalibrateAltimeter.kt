@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.sensors.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
@@ -27,7 +28,7 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.refresh_altitude)
+        setIcon(TrailIcons.RefreshAltitude)
     }
 
     override fun onClick() {

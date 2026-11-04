@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
@@ -24,7 +25,7 @@ object TidesToolRegistration : ToolRegistration {
         return Tool(
             Tools.TIDES,
             context.getString(R.string.tides),
-            R.drawable.ic_tide_table,
+            TrailIcons.TideTable,
             R.id.tidesFragment,
             ToolCategory.Time,
             guideId = R.raw.guide_tool_tides,

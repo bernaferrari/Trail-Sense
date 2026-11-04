@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sharing
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -55,17 +56,17 @@ object Share {
         )
 
         val icons = mapOf(
-            ShareAction.Copy to R.drawable.ic_copy,
-            ShareAction.QR to R.drawable.ic_qr_code,
-            ShareAction.Send to R.drawable.ic_send,
-            ShareAction.Maps to R.drawable.maps,
-            ShareAction.File to R.drawable.ic_file,
-            ShareAction.Navigate to R.drawable.ic_beacon,
-            ShareAction.Open to R.drawable.ic_open
+            ShareAction.Copy to TrailIcons.Copy,
+            ShareAction.QR to TrailIcons.QrCode,
+            ShareAction.Send to TrailIcons.Send,
+            ShareAction.Maps to TrailIcons.Maps,
+            ShareAction.File to TrailIcons.File,
+            ShareAction.Navigate to TrailIcons.Beacon,
+            ShareAction.Open to TrailIcons.Open
         )
 
         val actionItems = actions.sortedBy { it.ordinal }.map {
-            ActionItem(titles[it] ?: "", icons[it] ?: R.drawable.ic_send) {
+            ActionItem(titles[it] ?: "", icons[it] ?: TrailIcons.Send) {
                 onAction(it)
             }
         }

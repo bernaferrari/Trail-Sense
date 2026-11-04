@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.hardware.Sensor
 import com.kylecorry.andromeda.notify.Notify
@@ -42,7 +43,7 @@ object PedometerToolRegistration : ToolRegistration {
         return Tool(
             Tools.PEDOMETER,
             context.getString(R.string.pedometer),
-            R.drawable.steps,
+            TrailIcons.Steps,
             R.id.fragmentToolPedometer,
             ToolCategory.Distance,
             guideId = R.raw.guide_tool_pedometer,

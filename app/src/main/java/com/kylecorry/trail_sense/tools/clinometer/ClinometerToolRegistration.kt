@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -18,7 +19,7 @@ object ClinometerToolRegistration : ToolRegistration {
         return Tool(
             Tools.CLINOMETER,
             context.getString(R.string.clinometer_title),
-            R.drawable.clinometer,
+            TrailIcons.Clinometer,
             R.id.clinometerFragment,
             ToolCategory.Angles,
             context.getString(R.string.tool_clinometer_summary),

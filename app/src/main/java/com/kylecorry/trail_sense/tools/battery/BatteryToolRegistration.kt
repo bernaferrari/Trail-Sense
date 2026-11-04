@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.battery
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.battery.quickactions.QuickActionLowPowerMode
@@ -17,7 +18,7 @@ object BatteryToolRegistration : ToolRegistration {
         return Tool(
             Tools.BATTERY,
             context.getString(R.string.tool_battery_title),
-            R.drawable.ic_tool_battery,
+            TrailIcons.ToolBattery,
             R.id.fragmentToolBattery,
             ToolCategory.Power,
             guideId = R.raw.guide_tool_battery,

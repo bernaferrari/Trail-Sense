@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.lightning
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -12,7 +13,7 @@ object LightningStrikeDistanceToolRegistration : ToolRegistration {
         return Tool(
             Tools.LIGHTNING_STRIKE_DISTANCE,
             context.getString(R.string.tool_lightning_title),
-            R.drawable.ic_torch_on,
+            TrailIcons.TorchOn,
             R.id.fragmentToolLightning,
             ToolCategory.Weather,
             context.getString(R.string.tool_lightning_description),

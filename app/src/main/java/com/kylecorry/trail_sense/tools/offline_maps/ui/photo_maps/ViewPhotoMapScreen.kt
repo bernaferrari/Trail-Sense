@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Bundle
 import androidx.compose.foundation.layout.Arrangement
@@ -269,15 +270,15 @@ class ViewPhotoMapController(
                     host,
                     formatService.formatLocation(location),
                     listOf(
-                        ActionItem(host.getString(R.string.beacon), R.drawable.ic_location) {
+                        ActionItem(host.getString(R.string.beacon), TrailIcons.Location) {
                             createBeacon(location)
                             selectLocation(null)
                         },
-                        ActionItem(host.getString(R.string.navigate), R.drawable.ic_beacon) {
+                        ActionItem(host.getString(R.string.navigate), TrailIcons.Beacon) {
                             navigateTo(location)
                             selectLocation(null)
                         },
-                        ActionItem(host.getString(R.string.distance), R.drawable.ruler) {
+                        ActionItem(host.getString(R.string.distance), TrailIcons.Ruler) {
                             startDistanceMeasurement(arrayOf(gps.location, location))
                             selectLocation(null)
                         },
@@ -507,7 +508,7 @@ class ViewPhotoMapController(
                 views.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
                 // Show as locked
-                views.lockBtn.setImageResource(R.drawable.satellite)
+                views.lockBtn.setIcon(TrailIcons.Satellite)
                 views.lockBtn.setState(true)
 
                 // Reset brightness
@@ -525,7 +526,7 @@ class ViewPhotoMapController(
                 views.map.mapAzimuth = -compass.rawBearing
 
                 // Show as locked
-                views.lockBtn.setImageResource(R.drawable.ic_compass_icon)
+                views.lockBtn.setIcon(TrailIcons.CompassIcon)
                 views.lockBtn.setState(true)
 
                 // Reset brightness
@@ -540,7 +541,7 @@ class ViewPhotoMapController(
                 views.map.mapAzimuth = getDefaultMapAzimuth(keepMapUp)
 
                 // Show as unlocked
-                views.lockBtn.setImageResource(R.drawable.satellite)
+                views.lockBtn.setIcon(TrailIcons.Satellite)
                 views.lockBtn.setState(false)
 
                 // Reset brightness
@@ -561,7 +562,7 @@ class ViewPhotoMapController(
                 views.map.isZoomEnabled = false
 
                 // Show as locked
-                views.lockBtn.setImageResource(R.drawable.lock)
+                views.lockBtn.setIcon(TrailIcons.Lock)
                 views.lockBtn.setState(true)
 
                 // Full brightness
@@ -730,15 +731,15 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
     }
 
     val attribution = MapAttributionState()
-    val lockBtn = PhotoMapIconButton(R.drawable.satellite).apply {
+    val lockBtn = PhotoMapIconButton(TrailIcons.Satellite).apply {
         alpha = 0.86f
     }
 
-    val zoomOutBtn = PhotoMapIconButton(R.drawable.ic_zoom_out).apply {
+    val zoomOutBtn = PhotoMapIconButton(TrailIcons.ZoomOut).apply {
         alpha = 0.86f
     }
 
-    val zoomInBtn = PhotoMapIconButton(R.drawable.ic_add).apply {
+    val zoomInBtn = PhotoMapIconButton(TrailIcons.Add).apply {
         alpha = 0.86f
     }
 

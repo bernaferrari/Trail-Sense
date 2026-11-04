@@ -45,7 +45,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -540,7 +540,7 @@ private fun PlaceBeaconScreen(
                 row { position ->
                     TrailSenseListItem(
                         title = stringResource(R.string.icon),
-                        icon = painterResource(data.icon?.icon ?: R.drawable.bubble),
+                        icon = rememberVectorPainter(data.icon?.icon ?: TrailIcons.Bubble),
                         iconTint = Color(data.color.color),
                         position = position,
                         onClick = onIconClick,

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.view.MotionEvent
-import androidx.annotation.DrawableRes
 
 /**
  * An abstraction over the widget backing a quick action button. This lets quick actions work with
@@ -11,7 +11,7 @@ interface QuickActionButtonView {
     var isVisible: Boolean
     var contentDescription: CharSequence?
 
-    fun setIcon(@DrawableRes icon: Int)
+    fun setIcon(icon: ImageVector)
     fun setState(isOn: Boolean)
     fun setOnClickListener(listener: (() -> Unit)?)
     fun setOnLongClickListener(listener: (() -> Boolean)?)

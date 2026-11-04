@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.notes.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
@@ -11,7 +12,7 @@ class QuickActionCreateNote(btn: QuickActionButtonView, host: TrailSenseDestinat
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_tool_notes)
+        setIcon(TrailIcons.ToolNotes)
     }
 
     override fun onClick() {

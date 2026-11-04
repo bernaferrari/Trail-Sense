@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
@@ -22,7 +23,7 @@ object NavigationToolRegistration : ToolRegistration {
         return Tool(
             Tools.NAVIGATION,
             context.getString(R.string.navigation),
-            R.drawable.ic_compass_icon,
+            TrailIcons.CompassIcon,
             R.id.action_navigation,
             ToolCategory.Location,
             guideId = R.raw.guide_tool_navigation,

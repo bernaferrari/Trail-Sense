@@ -36,7 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -350,7 +350,7 @@ private fun BeaconDetailsScreen(
                 eyebrow = stringResource(R.string.distance),
                 title = distance.ifBlank { placeholder },
                 supportingText = direction,
-                icon = painterResource(beacon.icon?.icon ?: R.drawable.ic_location),
+                icon = rememberVectorPainter(beacon.icon?.icon ?: TrailIcons.Location),
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {

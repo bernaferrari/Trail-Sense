@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.quickactions
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.alerts.toast
@@ -25,7 +26,7 @@ class QuickActionWeatherMonitor(
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(R.drawable.ic_weather)
+        setIcon(TrailIcons.Weather)
     }
 
     override fun onLongClick(): Boolean {

@@ -1,10 +1,11 @@
 package com.kylecorry.trail_sense.shared
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateUtils
 import android.text.format.Formatter
-import androidx.annotation.DrawableRes
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
@@ -61,18 +62,17 @@ class FormatService private constructor(private val context: Context) {
     private val prefs by lazy { UserPreferences(context) }
     private val strings by lazy { ResourceCache(context.resources) }
 
-    @DrawableRes
-    fun getWeatherImage(condition: WeatherCondition?): Int {
+    fun getWeatherImage(condition: WeatherCondition?): ImageVector {
         return when (condition) {
-            WeatherCondition.Clear -> R.drawable.sunny
-            WeatherCondition.Overcast -> R.drawable.cloudy
-            WeatherCondition.Precipitation -> R.drawable.ic_precipitation
-            WeatherCondition.Storm -> R.drawable.storm
-            WeatherCondition.Wind -> R.drawable.wind
-            WeatherCondition.Rain -> R.drawable.light_rain
-            WeatherCondition.Snow -> R.drawable.ic_precipitation_snow
-            WeatherCondition.Thunderstorm -> R.drawable.storm
-            null -> R.drawable.steady
+            WeatherCondition.Clear -> TrailIcons.Sunny
+            WeatherCondition.Overcast -> TrailIcons.Cloudy
+            WeatherCondition.Precipitation -> TrailIcons.Precipitation
+            WeatherCondition.Storm -> TrailIcons.Storm
+            WeatherCondition.Wind -> TrailIcons.Wind
+            WeatherCondition.Rain -> TrailIcons.LightRain
+            WeatherCondition.Snow -> TrailIcons.PrecipitationSnow
+            WeatherCondition.Thunderstorm -> TrailIcons.Storm
+            null -> TrailIcons.Steady
         }
     }
 
@@ -887,12 +887,11 @@ class FormatService private constructor(private val context: Context) {
         return strings.filterNotNull().joinToString(separatorString)
     }
 
-    @DrawableRes
-    fun getCompassReferenceIcon(isTrueNorth: Boolean = prefs.compass.useTrueNorth): Int {
+    fun getCompassReferenceIcon(isTrueNorth: Boolean = prefs.compass.useTrueNorth): ImageVector {
         return if (isTrueNorth) {
-            R.drawable.ic_star
+            TrailIcons.Star
         } else {
-            R.drawable.ic_tool_metal_detector
+            TrailIcons.ToolMetalDetector
         }
     }
 

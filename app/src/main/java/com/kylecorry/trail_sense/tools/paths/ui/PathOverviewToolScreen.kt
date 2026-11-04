@@ -601,7 +601,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
                 else -> null
             }
             name?.let {
-                ActionItem(it, R.drawable.ic_menu_dots) {
+                ActionItem(it, TrailIcons.MenuDots) {
                     when (action) {
                         PathAction.Export -> exportPath(path)
                         PathAction.Rename -> renamePath(path)
@@ -1327,7 +1327,6 @@ private fun createPathOverviewViews(context: Context): PathOverviewViews {
 
     val pathImage = MapView(context).apply {
         id = R.id.path_image
-        setBackgroundResource(R.drawable.rounded_rectangle)
         backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.colorSecondary))
         keepScreenOn = true
     }

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
-import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiag
 data class Tool(
     override val id: Long,
     val name: String,
-    @DrawableRes val icon: Int,
+    val icon: ImageVector,
     @IdRes val navAction: Int,
     val category: ToolCategory,
     val description: String? = null,

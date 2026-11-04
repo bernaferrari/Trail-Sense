@@ -553,7 +553,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
             ErrorBannerReason.LocationNotSet,
             getString(R.string.location_not_set) + "\n" +
                     getString(R.string.for_historic_temperatures),
-            R.drawable.satellite,
+            TrailIcons.Satellite,
             getString(R.string.set)
         ) {
             activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)

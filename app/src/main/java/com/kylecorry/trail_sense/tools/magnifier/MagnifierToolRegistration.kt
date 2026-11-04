@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.magnifier
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.trail_sense.R
@@ -14,7 +15,7 @@ object MagnifierToolRegistration : ToolRegistration {
         return Tool(
             Tools.MAGNIFIER,
             context.getString(R.string.tool_magnifier_title),
-            R.drawable.ic_magnifier,
+            TrailIcons.Magnifier,
             R.id.magnifierFragment,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_magnifier,
