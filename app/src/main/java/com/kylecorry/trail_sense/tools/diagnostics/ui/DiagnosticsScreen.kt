@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.MaterialShapes
@@ -178,7 +179,11 @@ internal fun DiagnosticsScreen(
                     TrailSenseStat(
                         label = stringResource(R.string.sky_diagnostics_checks),
                         value = "${results.size.coerceAtMost(toolDiagnostics.size)}/${toolDiagnostics.size}",
-                        tone = if (loaded && items.isEmpty()) TrailSenseTone.Good else TrailSenseTone.Neutral,
+                        tone = when {
+                            !loaded -> TrailSenseTone.Secondary
+                            errors.isEmpty() -> TrailSenseTone.Good
+                            else -> TrailSenseTone.Neutral
+                        },
                         icon = Icons.Default.CheckCircle
                     )
                 ),
@@ -403,7 +408,10 @@ private fun DiagnosticListItem(
             }
 
             Spacer(Modifier.width(TrailSenseSpacing.sm))
-            DiagnosticsChevron()
+            TrailSenseValueChip(
+                text = stringResource(if (severity == ToolDiagnosticSeverity.Error) R.string.error else R.string.warning),
+                tone = if (severity == ToolDiagnosticSeverity.Error) TrailSenseTone.Error else TrailSenseTone.Caution
+            )
         }
     }
 }
