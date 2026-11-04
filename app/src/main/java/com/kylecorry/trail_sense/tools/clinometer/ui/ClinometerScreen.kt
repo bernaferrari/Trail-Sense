@@ -788,7 +788,10 @@ private fun ClinometerHost(
                             modifier = Modifier.fillMaxSize()
                         )
                         views.arView.Content(Modifier.fillMaxSize())
-                        ClinometerSight(Modifier.fillMaxSize())
+                        ClinometerSight(
+                            inclination = views.cameraClinometer.inclination,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
                 if (views.clinometerInstructions.isVisible) {
@@ -817,16 +820,27 @@ private fun ClinometerHost(
                         icon = rememberVectorPainter(risk.icon),
                         position = TrailSenseGroupPosition(isFirst = true, isLast = false),
                         trailing = {
-                            Text(
-                                text = risk.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = when (risk.tone) {
-                                    TrailSenseTone.Error -> scheme.error
-                                    TrailSenseTone.Caution -> scheme.tertiary
-                                    else -> scheme.onSurfaceVariant
-                                }
-                            )
+                            // The risk as a role chip, so High reads as a warning on dark and light alike.
+                            val (chip, onChip) = when (risk.tone) {
+                                TrailSenseTone.Error -> scheme.errorContainer to scheme.onErrorContainer
+                                TrailSenseTone.Caution -> scheme.tertiaryContainer to scheme.onTertiaryContainer
+                                else -> scheme.secondaryContainer to scheme.onSecondaryContainer
+                            }
+                            androidx.compose.material3.Surface(
+                                shape = androidx.compose.foundation.shape.CircleShape,
+                                color = chip,
+                                contentColor = onChip
+                            ) {
+                                Text(
+                                    text = risk.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(
+                                        horizontal = TrailSenseSpacing.md,
+                                        vertical = TrailSenseSpacing.xs
+                                    )
+                                )
+                            }
                         }
                     )
                 }
@@ -849,12 +863,29 @@ private fun ClinometerHost(
     }
 }
 
-/** The camera's sight: a primary level line across the picture, broken by a ring at the centre where you aim. */
+/**
+ * The camera's sight: a primary level line across the picture, broken by a ring at the centre where you aim. In
+ * the corner, the slope seen from the side: a small protractor with the horizon, the line of sight at the measured
+ * angle and the wedge between them filled, so the angle is drawn, not only stated. The avalanche band (30 to 45
+ * degrees) is marked in tertiary on its rim, and the sight swings to the angle on a spring.
+ */
 @Composable
-private fun ClinometerSight(modifier: Modifier = Modifier) {
-    val color = MaterialTheme.colorScheme.primary
+private fun ClinometerSight(inclination: Float, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val color = scheme.primary
+    val band = scheme.tertiary
     // A faint dark edge so the sight reads on a bright sky as well as on dark ground.
     val halo = ComposeColor.Black.copy(alpha = 0.25f)
+    val scrim = ComposeColor.Black.copy(alpha = 0.45f)
+    val chalk = ComposeColor.White
+    val angle by androidx.compose.animation.core.animateFloatAsState(
+        inclination.coerceIn(-90f, 90f),
+        androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioLowBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
+        ),
+        label = "sightAngle"
+    )
     androidx.compose.foundation.Canvas(modifier) {
         val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
         val ring = 14.dp.toPx()
@@ -879,6 +910,41 @@ private fun ClinometerSight(modifier: Modifier = Modifier) {
             drawCircle(c, ring, center, style = androidx.compose.ui.graphics.drawscope.Stroke(w))
         }
         drawCircle(color, 3.dp.toPx(), center)
+
+        // The side view: a half-disc protractor in the lower left, facing the slope.
+        val radius = min(size.height * 0.22f, 64.dp.toPx())
+        val pivot = androidx.compose.ui.geometry.Offset(16.dp.toPx(), size.height - 16.dp.toPx() - radius)
+        val box = androidx.compose.ui.geometry.Size(radius * 2f, radius * 2f)
+        val topLeft = pivot - androidx.compose.ui.geometry.Offset(radius, radius)
+        drawArc(scrim, -90f, 180f, true, topLeft, box)
+        // The avalanche band, above and below the horizon.
+        listOf(-45f, 30f).forEach { start ->
+            drawArc(
+                band,
+                start,
+                15f,
+                false,
+                topLeft + androidx.compose.ui.geometry.Offset(2.dp.toPx(), 2.dp.toPx()),
+                androidx.compose.ui.geometry.Size(box.width - 4.dp.toPx(), box.height - 4.dp.toPx()),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx())
+            )
+        }
+        // The wedge from the horizon to the line of sight (screen angles run clockwise, so up is negative).
+        drawArc(color.copy(alpha = 0.45f), min(0f, -angle), kotlin.math.abs(angle), true, topLeft, box)
+        drawLine(
+            chalk.copy(alpha = 0.7f),
+            pivot,
+            pivot + androidx.compose.ui.geometry.Offset(radius, 0f),
+            2.dp.toPx(),
+            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))
+        )
+        val radians = Math.toRadians(-angle.toDouble())
+        val tip = pivot + androidx.compose.ui.geometry.Offset(
+            (radius * kotlin.math.cos(radians)).toFloat(),
+            (radius * kotlin.math.sin(radians)).toFloat()
+        )
+        drawLine(color, pivot, tip, stroke, androidx.compose.ui.graphics.StrokeCap.Round)
+        drawCircle(color, 4.dp.toPx(), pivot)
     }
 }
 
