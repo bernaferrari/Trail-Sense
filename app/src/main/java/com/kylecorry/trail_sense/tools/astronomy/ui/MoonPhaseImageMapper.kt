@@ -27,6 +27,15 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
     }
 
+    private val litPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.WHITE
+    }
+
+    private val plainShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.BLACK
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
+    }
+
     fun getPhaseImage(phase: MoonTruePhase): ImageVector {
         return when (phase) {
             MoonTruePhase.FirstQuarter -> TrailIcons.MoonFirstQuarter
@@ -40,11 +49,17 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
         }
     }
 
+    /**
+     * The phase as a bitmap. [plain] draws a clean disc (pure white lit face, opaque black shadow, a smooth terminator)
+     * for screens that recolour it with [moonPhaseColorMatrix]; otherwise it is the textured moon icon under a
+     * translucent shadow, for widgets and the calendar.
+     */
     fun getPhaseImage(
         phaseAngle: Float,
         width: Int,
         height: Int,
-        tilt: MoonTilt? = null
+        tilt: MoonTilt? = null,
+        plain: Boolean = false
     ): Bitmap {
         checkNotNull(context) { "MoonPhaseImageMapper requires a context to draw a phase bitmap" }
         val output = createBitmap(width, height)
@@ -53,7 +68,11 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
             tilt?.let {
                 rotate(it.parallacticAngle, width / 2f, height / 2f)
             }
-            drawBitmap(TrailIcons.Moon.toBitmap(width, height), 0f, 0f, null)
+            if (plain) {
+                drawCircle(width / 2f, height / 2f, minOf(width, height) / 2f, litPaint)
+            } else {
+                drawBitmap(TrailIcons.Moon.toBitmap(width, height), 0f, 0f, null)
+            }
 
             tilt?.let {
                 val rotationAdjustment = if (phaseAngle < 180) {
@@ -63,7 +82,7 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
                 }
                 rotate(-(it.brightLimbAngleFromNorth + rotationAdjustment), width / 2f, height / 2f)
             }
-            drawShadow(this, phaseAngle, width.toFloat(), height.toFloat(), shadowPaint)
+            drawShadow(this, phaseAngle, width.toFloat(), height.toFloat(), if (plain) plainShadowPaint else shadowPaint)
         }
         return output
     }

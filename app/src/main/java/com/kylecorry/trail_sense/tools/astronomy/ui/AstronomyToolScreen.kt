@@ -62,6 +62,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -501,7 +505,8 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                     phase.phaseAngle,
                     size,
                     size,
-                    tilt
+                    tilt,
+                    plain = true
                 )
             )
         }
@@ -668,7 +673,8 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                     phase.phaseAngle,
                     size,
                     size,
-                    tilt
+                    tilt,
+                    plain = true
                 )
             )
             plotMoonImage(data.moon, currentSeekChartTime)
@@ -795,32 +801,25 @@ private fun AstronomyTitle(
     state: AstronomyTitleState,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = TrailSenseSpacing.lg, top = TrailSenseSpacing.sm),
-        verticalAlignment = Alignment.Top
+            .padding(horizontal = TrailSenseSpacing.lg)
+            .testTag("astronomy_title")
     ) {
-        Column(Modifier.weight(1f)) {
+        Text(
+            text = state.title,
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (state.subtitle.isNotEmpty()) {
             Text(
-                text = state.title,
-                style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                text = state.subtitle,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
             )
-            if (state.subtitle.isNotEmpty()) {
-                Text(
-                    text = state.subtitle,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
-                )
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-            // The user's quick actions, quiet like app-bar actions: no filled disc louder than the countdown.
-            state.leftButton.Content(offContainerColor = Color.Transparent, offContentColor = MaterialTheme.colorScheme.onSurfaceVariant)
-            state.rightButton.Content(offContainerColor = Color.Transparent, offContentColor = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -831,7 +830,6 @@ private fun AstronomyDetailList(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.testTag("astronomy_detail_list")) {
-        TrailSenseGroupHeader(stringResource(R.string.astronomy))
         Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
             items.forEachIndexed { index, item ->
                 AstronomyDetailRow(item, TrailSenseGroupPosition.at(index, items.size))
@@ -848,7 +846,7 @@ private fun AstronomyDetailList(
 private fun AstronomyDetailRow(item: AstronomyListItem, position: TrailSenseGroupPosition) {
     Surface(
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -910,36 +908,43 @@ private fun AstronomyIconChip(
     rotation: Float,
     isPhase: Boolean = false
 ) {
-    val shadow = MaterialTheme.colorScheme.outlineVariant
+    val shadow = MaterialTheme.colorScheme.surfaceContainerHighest
+    val primary = MaterialTheme.colorScheme.primary
     Surface(
         shape = MaterialShapes.Cookie6Sided.toShape(),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        modifier = Modifier.size(44.dp)
+        color = primary.copy(alpha = 0.12f),
+        contentColor = primary,
+        modifier = Modifier.size(40.dp)
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (isPhase) {
-                // A drawn phase (the moon) keeps its shape: recoloured, not flattened into one tint, so the moon's
-                // badge shows tonight's phase and never looks like the sun's.
-                androidx.compose.foundation.Image(
-                    painter = icon,
-                    contentDescription = null,
-                    colorFilter = remember(shadow) {
-                        androidx.compose.ui.graphics.ColorFilter.colorMatrix(
-                            androidx.compose.ui.graphics.ColorMatrix(moonPhaseColorMatrix(shadow, MoonLit))
-                        )
-                    },
-                    modifier = Modifier
+                // A drawn phase (the moon) keeps its shape: a clean disc, the lit part pale and the shadow a quiet
+                // tone with a hairline rim, so tonight's phase reads even as a thin crescent.
+                Box(
+                    Modifier
                         .size(26.dp)
-                        .rotate(rotation)
-                )
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, androidx.compose.foundation.shape.CircleShape)
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = icon,
+                        contentDescription = null,
+                        colorFilter = remember(shadow) {
+                            androidx.compose.ui.graphics.ColorFilter.colorMatrix(
+                                androidx.compose.ui.graphics.ColorMatrix(moonPhaseColorMatrix(shadow, MoonLit))
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .rotate(rotation)
+                    )
+                }
             } else {
                 Icon(
                     painter = icon,
                     contentDescription = null,
-                    tint = if (tint == Color.Unspecified) MaterialTheme.colorScheme.onSecondaryContainer else tint,
+                    tint = if (tint == Color.Unspecified) primary else tint,
                     modifier = Modifier
-                        .size(26.dp)
+                        .size(22.dp)
                         .rotate(rotation)
                 )
             }
@@ -952,7 +957,7 @@ private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 44.dp + TrailSenseSpacing.md),
+            .padding(start = 40.dp + TrailSenseSpacing.md),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
         verticalAlignment = Alignment.Top
     ) {
@@ -990,20 +995,28 @@ private fun AstronomyScreen(
 ) {
     // One question: how long until the light changes? The countdown to sunrise or sunset answers it; the day's chart
     // and the bodies' times sit under it as quiet evidence.
-    Surface(
+    TrailSensePage(
+        title = stringResource(R.string.astronomy),
         modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+        actions = {
+            // The user's quick actions, quiet like any app-bar action.
+            listOf(views.astronomyTitle.leftButton, views.astronomyTitle.rightButton)
+                .filter { it.isVisible }
+                .forEach {
+                    it.Content(
+                        modifier = Modifier.size(48.dp),
+                        offContainerColor = Color.Transparent,
+                        offContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+        }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
+        item(key = "title") {
             AstronomyTitle(views.astronomyTitle)
+        }
 
-            // The day being charted heads the chart, straight on the page.
+        // The day being charted heads the chart, straight on the page.
+        item(key = "day") {
             Column {
                 views.displayDate.Content()
                 views.sunMoonChart.Content(
@@ -1013,10 +1026,12 @@ private fun AstronomyScreen(
                         .testTag("sunMoonChart")
                 )
             }
+        }
 
-            if (views.timeSeeker.isVisible) {
+        if (views.timeSeeker.isVisible) {
+            item(key = "seeker") {
                 TrailSenseCard(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     shape = RoundedCornerShape(TrailSenseShape.groupOuter)
                 ) {
                     views.timeSeekerDetails.Content()
@@ -1030,12 +1045,16 @@ private fun AstronomyScreen(
                             .testTag("time_seeker")
                     )
                 }
-            } else {
+            }
+        } else {
+            item(key = "bodies") {
                 AstronomyDetailList(
                     items = astronomyItems,
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (views.button3d.isVisible) {
+            }
+            if (views.button3d.isVisible) {
+                item(key = "3d") {
                     views.button3d.Content()
                 }
             }
@@ -1149,19 +1168,23 @@ private class AstronomyTextButtonState(
     @Composable
     fun Content() {
         // A way in, not the point of the page: tonal, with the AR icon. The page has no primary fill.
+        val height = androidx.compose.material3.ButtonDefaults.MediumContainerHeight
         androidx.compose.material3.FilledTonalButton(
             onClick = onClick,
+            shapes = androidx.compose.material3.ButtonDefaults.shapes(),
+            contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(height),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .heightIn(min = height)
+                .testTag("button_3d")
         ) {
             Icon(
                 imageVector = TrailIcons.Camera,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.iconSizeFor(height))
             )
-            Spacer(Modifier.size(TrailSenseSpacing.sm))
-            Text(text, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.size(androidx.compose.material3.ButtonDefaults.iconSpacingFor(height)))
+            Text(text, style = androidx.compose.material3.ButtonDefaults.textStyleFor(height))
         }
     }
 }
@@ -1178,8 +1201,8 @@ private fun AstronomyHostPreview() {
 }
 
 /**
- * The charted day as a compact header on the chart's own surface: round previous/next buttons at the ends and the
- * date as a tonal pill in the middle (tap to pick, long-press for today), with search beside it when it applies.
+ * The charted day, like Tides and Climate: the date on the left (tap to pick one, long-press for today), then search
+ * when it applies and the previous / next arrows on the right.
  */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -1192,31 +1215,27 @@ private fun AstronomyDateHeader(
     onCalendarLongPress: () -> Unit,
     onSearch: () -> Unit
 ) {
+    val variant = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         Modifier
             .fillMaxWidth()
             .padding(bottom = TrailSenseSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = onPrevious,
-            modifier = Modifier.testTag("prev_date")
-        ) {
-            Icon(
-                TrailIcons.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.previous),
-                modifier = Modifier.rotate(180f)
-            )
-        }
-        Box(
+        Row(
             modifier = Modifier
                 .weight(1f)
-                .height(40.dp)
-                .clip(androidx.compose.foundation.shape.CircleShape)
-                .combinedClickable(onClick = onPickDate, onLongClick = onCalendarLongPress)
+                .heightIn(min = 48.dp)
+                .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                .combinedClickable(
+                    onClickLabel = stringResource(R.string.date),
+                    onLongClickLabel = stringResource(R.string.today),
+                    onClick = onPickDate,
+                    onLongClick = onCalendarLongPress
+                )
+                .padding(horizontal = TrailSenseSpacing.lg)
                 .testTag("date_btn"),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 date,
@@ -1224,7 +1243,17 @@ private fun AstronomyDateHeader(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 modifier = Modifier
+                    .weight(1f, fill = false)
                     .testTag("date")
+            )
+            Icon(
+                TrailIcons.KeyboardArrowRight,
+                contentDescription = null,
+                tint = variant,
+                modifier = Modifier
+                    .padding(start = TrailSenseSpacing.xs)
+                    .size(20.dp)
+                    .rotate(90f)
             )
         }
         if (searchEnabled) {
@@ -1232,14 +1261,25 @@ private fun AstronomyDateHeader(
                 onClick = onSearch,
                 modifier = Modifier.testTag("search_btn")
             ) {
-                Icon(TrailIcons.Search, contentDescription = stringResource(R.string.search))
+                Icon(TrailIcons.Search, contentDescription = stringResource(R.string.search), tint = variant)
             }
+        }
+        IconButton(
+            onClick = onPrevious,
+            modifier = Modifier.testTag("prev_date")
+        ) {
+            Icon(
+                TrailIcons.KeyboardArrowRight,
+                contentDescription = stringResource(R.string.previous),
+                tint = variant,
+                modifier = Modifier.rotate(180f)
+            )
         }
         IconButton(
             onClick = onNext,
             modifier = Modifier.testTag("next_date")
         ) {
-            Icon(TrailIcons.KeyboardArrowRight, contentDescription = stringResource(R.string.next))
+            Icon(TrailIcons.KeyboardArrowRight, contentDescription = stringResource(R.string.next), tint = variant)
         }
     }
 }

@@ -53,7 +53,8 @@ class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context
                     phase.phaseAngle,
                     imageSize,
                     imageSize,
-                    tilt
+                    tilt,
+                    plain = true
                 )
             ),
             data = riseSetTransit(times)
