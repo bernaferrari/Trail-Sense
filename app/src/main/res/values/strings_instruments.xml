@@ -57,6 +57,7 @@
     <string name="cliff_ready">Drop a stone, tap Start</string>
     <string name="cliff_falling">Falling · %1$s</string>
     <string name="cliff_fell_for">Fell for %1$s</string>
+    <string name="cliff_again">Again</string>
 
     <!-- Magnifier -->
     <string name="magnifier_close_up">Close-up</string>
