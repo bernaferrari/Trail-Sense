@@ -93,14 +93,19 @@ fun PlacesBearingField(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                PlacesBadge(
-                    containerColor = if (isSet) scheme.primary else scheme.surfaceContainerHighest,
-                    contentColor = if (isSet) scheme.onPrimary else scheme.onSurfaceVariant,
-                    icon = TrailIcons.NavigationArrow,
-                    shape = MaterialShapes.Cookie4Sided.toShape(),
-                    size = 52.dp,
-                    iconRotation = bearing ?: 0f
-                )
+                // Unset: a small empty compass with a dashed ring, waiting for a direction. Set: the arrow cookie.
+                if (isSet) {
+                    PlacesBadge(
+                        containerColor = scheme.primary,
+                        contentColor = scheme.onPrimary,
+                        icon = TrailIcons.NavigationArrow,
+                        shape = MaterialShapes.Cookie9Sided.toShape(),
+                        size = 52.dp,
+                        iconRotation = bearing ?: 0f
+                    )
+                } else {
+                    PlacesEmptyDial(size = 52.dp)
+                }
                 Spacer(Modifier.width(TrailSenseSpacing.lg))
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -165,7 +170,7 @@ fun PlacesBearingField(
                 }
                 buttons.forEachIndexed { index, kind ->
                     val outer = 24.dp
-                    val inner = 8.dp
+                    val inner = 6.dp
                     val first = index == 0
                     val last = index == buttons.lastIndex
                     val shape = RoundedCornerShape(
@@ -174,11 +179,16 @@ fun PlacesBearingField(
                         topEnd = if (last) outer else inner,
                         bottomEnd = if (last) outer else inner
                     )
-                    val weight = if (kind == 0) 2.2f else 0.8f
+                    val weight = if (kind == 0) 2f else 1f
                     when (kind) {
+                        // Taking the bearing from the compass is the field's one main action: the warm role.
                         0 -> Button(
                             onClick = onCompassClick,
                             shape = shape,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = scheme.tertiary,
+                                contentColor = scheme.onTertiary
+                            ),
                             modifier = Modifier
                                 .weight(weight)
                                 .heightIn(min = 48.dp)
@@ -306,4 +316,35 @@ private fun PlacesBearingDialog(
             }
         }
     )
+}
+
+/** A compass with no direction yet: a tinted disc, a dashed ring and a dot where the needle will pivot. */
+@Composable
+fun PlacesEmptyDial(size: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier) {
+    val disc = MaterialTheme.colorScheme.surfaceContainerHighest
+    val ring = MaterialTheme.colorScheme.outline
+    val north = MaterialTheme.colorScheme.primary
+    androidx.compose.foundation.Canvas(modifier.size(size)) {
+        val radius = this.size.minDimension / 2
+        drawCircle(disc, radius = radius)
+        drawCircle(
+            ring,
+            radius = radius - 6.dp.toPx(),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 2.dp.toPx(),
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(4.dp.toPx(), 4.dp.toPx())
+                )
+            )
+        )
+        // North tick, so it still reads as a compass.
+        drawLine(
+            north,
+            androidx.compose.ui.geometry.Offset(center.x, 3.dp.toPx()),
+            androidx.compose.ui.geometry.Offset(center.x, 10.dp.toPx()),
+            strokeWidth = 3.dp.toPx(),
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        drawCircle(ring, radius = 3.dp.toPx())
+    }
 }
