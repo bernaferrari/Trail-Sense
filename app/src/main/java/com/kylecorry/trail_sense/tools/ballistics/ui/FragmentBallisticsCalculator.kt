@@ -244,7 +244,7 @@ private fun TrajectoryChart(
     val line = scheme.primary
     val sight = scheme.onSurfaceVariant.copy(alpha = 0.5f)
     val zeroColor = scheme.tertiary
-    val ring = scheme.surfaceContainerLow
+    val ring = scheme.surfaceContainer
     TrailSenseChartFrame(
         yLabels = listOf(stringResource(R.string.above), stringResource(R.string.below)),
         modifier = modifier
