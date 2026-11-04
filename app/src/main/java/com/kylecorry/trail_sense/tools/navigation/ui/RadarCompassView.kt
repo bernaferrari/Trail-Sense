@@ -671,11 +671,53 @@ class RadarCompassView(
         if (isSky) skyBearings.add(shownBearing)
         nativeCanvas.save()
         nativeCanvas.rotate(shownBearing, centerPixel.x, centerPixel.y)
-        nativeCanvas.translate(centerPixel.x, centerPixel.y - outerRadius * when (DialVariant.bezel) { 4 -> 0.86f; 5 -> 0.58f; 6 -> 0.62f; else -> MARK_RING })
+        val isTarget = reference.icon == TrailIcons.ArrowTarget
+        val markRadius = if (isTarget && DialVariant.bezel == 6) {
+            // Destinations sit just outside the dial, on the page, pointing in at their bearing.
+            outerRadius * WAVY_RADIUS + dp(12f)
+        } else {
+            outerRadius * when (DialVariant.bezel) { 4 -> 0.86f; 5 -> 0.58f; 6 -> 0.62f; else -> MARK_RING }
+        }
+        nativeCanvas.translate(centerPixel.x, centerPixel.y - markRadius)
         // The sun and moon ride the rim on a small disc of their own (a warm tertiary disc for the sun, a secondary one for the moon),
         // so the moon's pale art never reads as a hole in the dial.
         // A beacon is a waypoint dot in its own colour, ringed in the dial's surface (Apple Compass-style): the wedge
         // and arc already point at it, so it doesn't need an arrow of its own. Its icon, if any, rides on top.
+        if (isTarget && DialVariant.bezel == 6) {
+            // A solid rounded wedge pointing in at the bearing, in the beacon's colour (tertiary for a plain
+            // bearing). A beacon with a chosen shape shows that shape instead. No rings, no borders.
+            val mark = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = reference.tint ?: turnColor
+                alpha = (255 * reference.opacity).toInt()
+                style = Paint.Style.FILL
+                pathEffect = android.graphics.CornerPathEffect(dp(3f))
+            }
+            val polygon = reference.shape
+            if (polygon != null) {
+                val side = dp(20f)
+                val path = polygon.toPath().apply {
+                    transform(android.graphics.Matrix().apply {
+                        setScale(side, side)
+                        postTranslate(-side / 2f, -side / 2f)
+                    })
+                }
+                mark.pathEffect = null
+                nativeCanvas.drawPath(path, mark)
+            } else {
+                val w = dp(11f)
+                val h = dp(13f)
+                nativeCanvas.drawPath(Path().apply {
+                    moveTo(0f, h / 2f)
+                    lineTo(-w, -h / 2f)
+                    lineTo(w, -h / 2f)
+                    close()
+                }, mark)
+            }
+            nativeCanvas.restore()
+            paint.alpha = 255
+            paint.colorFilter = null
+            return
+        }
         if (reference.icon == TrailIcons.ArrowTarget) {
             val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha = (255 * reference.opacity).toInt() }
             if (reference.shape == null) {

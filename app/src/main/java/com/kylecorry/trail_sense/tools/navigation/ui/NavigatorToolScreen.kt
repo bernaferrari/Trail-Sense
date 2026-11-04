@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -1233,15 +1234,16 @@ private fun NavigatorHost(
                     .fillMaxWidth()
             ) {
                 // The dial is the screen's one object: it runs past the page margins to nearly the full width.
-                val compassSize = minOf(maxWidth + TrailSenseSpacing.lg * 2 - TrailSenseSpacing.sm * 2, maxHeight - 72.dp)
+                val compassSize = minOf(maxWidth, maxHeight - 72.dp)
                 Column(
                     Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(Modifier.requiredSize(compassSize)) {
+                    Box(Modifier.size(compassSize)) {
                         val radarModifier = Modifier.fillMaxSize()
                         views.radarCompass.Content(radarModifier)
-                        views.radarCompassMap.Content(radarModifier)
+                        // Nearby paths are a quiet hint under the dial's marks, not a stripe across it.
+                        views.radarCompassMap.Content(radarModifier.then(Modifier.alpha(0.4f)))
                         if (DialVariant.bezel != 5 || DialVariant.hub != 0) {
                             NavigationTitle(views.navigationTitle, Modifier.align(Alignment.Center))
                         }

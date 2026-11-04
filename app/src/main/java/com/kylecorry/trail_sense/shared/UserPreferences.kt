@@ -440,11 +440,11 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
             val maxLength = MAX_BOTTOM_NAVIGATION_ITEMS - 1
             return (cache.getIntArray(context.getString(R.string.pref_bottom_navigation_tools))
                 ?.map { it.toLong() }
+                // Four tabs with Tools (the family's bar): the three most used, everything else one tap away.
                 ?: listOf(
                     Tools.NAVIGATION,
                     Tools.MAP,
-                    Tools.WEATHER,
-                    Tools.ASTRONOMY
+                    Tools.WEATHER
                 ))
                 .padRight(maxLength, 0)
                 .subList(0, maxLength)

@@ -27,7 +27,13 @@ class NavigationCompassLayerManager {
         host.inBackground {
             view.setLayersWithPreferences(
                 NavigationToolRegistration.MAP_ID,
+                // On a compass the centre is always you, so the "my location" arrow is noise there.
                 repo.getActiveLayerIds(NavigationToolRegistration.MAP_ID)
+                    .filterNot {
+                        // ...and the line to the destination: the dial's rim marker already points at it.
+                        it == com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource.SOURCE_ID ||
+                            it == com.kylecorry.trail_sense.tools.navigation.map_layers.NavigationGeoJsonSource.SOURCE_ID
+                    }
             )
 
             key += 1
