@@ -22,6 +22,9 @@
     <string name="places_maps_file_formats">JPG, PNG, PDF or Mapsforge</string>
     <string name="places_maps_camera_hint">Photograph a paper map or sign</string>
     <string name="places_maps_blank_hint">Draw on an empty map</string>
+    <string name="places_map_source_photo">Photo</string>
+    <string name="places_map_source_pdf">PDF</string>
+    <string name="places_map_source_file">Map file</string>
     <string name="places_maps_you_are_on">You are on this map</string>
     <!-- Packing lists -->
     <string name="places_packs_all">All lists</string>

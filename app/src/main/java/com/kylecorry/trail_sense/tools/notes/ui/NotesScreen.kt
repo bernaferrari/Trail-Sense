@@ -115,13 +115,14 @@ fun NotesScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier,
         floatingActionButton = {
-            if (loaded && items.isNotEmpty()) ExtendedFloatingActionButton(
+            // One anchored action for both states: the empty notebook only tells the story, the FAB starts the note.
+            if (loaded) ExtendedFloatingActionButton(
                 onClick = onAdd,
                 modifier = Modifier.testTag("add_btn"),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.add)) }
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                icon = { Icon(TrailIcons.Edit, contentDescription = null) },
+                text = { Text(stringResource(if (items.isEmpty()) R.string.places_notes_new else R.string.add)) }
             )
         }
     ) {
@@ -133,12 +134,11 @@ fun NotesScreen(
                     icon = TrailIcons.ToolNotes,
                     title = stringResource(R.string.notes_empty_text),
                     description = stringResource(R.string.notes_empty_description),
-                    actionLabel = stringResource(R.string.places_notes_new),
-                    actionIcon = TrailIcons.Add,
-                    onAction = onAdd,
-                    actionModifier = Modifier.testTag("add_btn"),
+                    // A warm notebook: a pencil, ruled lines and a date ride round the page.
+                    tone = TrailSenseTone.Tertiary,
+                    accents = listOf(TrailIcons.Edit, TrailIcons.Summary, TrailIcons.Date),
                     modifier = Modifier
-                        .fillParentMaxHeight(0.8f)
+                        .fillParentMaxHeight(0.78f)
                         .testTag("notes_empty_text")
                 )
             }

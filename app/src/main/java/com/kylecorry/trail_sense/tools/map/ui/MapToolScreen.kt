@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -839,23 +840,64 @@ private fun MapEmptyState(
     ) {
         Text(
             text = stringResource(R.string.map),
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.headlineLarge,
             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(
                 start = TrailSenseSpacing.lg + TrailSenseSpacing.xs,
                 end = TrailSenseSpacing.lg,
-                top = TrailSenseSpacing.xl
+                top = TrailSenseSpacing.lg
             )
         )
+        // A folded map with a pin, its layers and a photo of a paper map: what this tab becomes once you add one.
         TrailSenseEmptyState(
             icon = TrailSenseIcons.Filled.Map,
             title = stringResource(R.string.no_offline_maps),
             description = stringResource(R.string.map_empty_description),
             actionLabel = stringResource(R.string.add_offline_map),
             actionIcon = TrailSenseIcons.Filled.Add,
-            onAction = onAddMap
+            onAction = onAddMap,
+            tone = com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Primary,
+            accents = listOf(TrailIcons.Location, TrailIcons.Layers, TrailIcons.Camera),
+            modifier = Modifier.padding(bottom = TrailSenseSpacing.xxxl),
+            action = { MapSourceChips(onAddMap) }
         )
+    }
+}
+
+/** What you can bring in, as three small tonal chips under the button; each opens the same add flow. */
+@Composable
+private fun MapSourceChips(onAddMap: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val sources = listOf(
+        Triple(stringResource(R.string.places_map_source_photo), TrailIcons.Camera, scheme.tertiaryContainer to scheme.onTertiaryContainer),
+        Triple(stringResource(R.string.places_map_source_pdf), TrailIcons.File, scheme.secondaryContainer to scheme.onSecondaryContainer),
+        Triple(stringResource(R.string.places_map_source_file), TrailIcons.Layers, scheme.primaryContainer to scheme.onPrimaryContainer)
+    )
+    androidx.compose.foundation.layout.Row(
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(TrailSenseSpacing.xs)
+    ) {
+        sources.forEach { (label, icon, colors) ->
+            androidx.compose.material3.Surface(
+                onClick = onAddMap,
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = colors.first,
+                contentColor = colors.second
+            ) {
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    androidx.compose.material3.Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(TrailSenseSpacing.xs))
+                    Text(label, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
     }
 }
 

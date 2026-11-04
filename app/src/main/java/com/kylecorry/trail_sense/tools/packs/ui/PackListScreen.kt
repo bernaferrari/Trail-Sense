@@ -305,6 +305,15 @@ private fun PackListScreen(
             )
         },
         floatingActionButton = {
+            // With nothing packed yet the FAB is the one way in: it starts the first list straight away.
+            if (loaded && packs.isEmpty()) ExtendedFloatingActionButton(
+                onClick = onCreatePack,
+                modifier = Modifier.testTag("add_btn"),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                icon = { Icon(TrailIcons.ToolPack, contentDescription = null) },
+                text = { Text(stringResource(R.string.new_packing_list)) }
+            )
             if (loaded && packs.isNotEmpty()) Box {
                 ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
@@ -348,12 +357,13 @@ private fun PackListScreen(
                     icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.no_packing_lists),
                     description = stringResource(R.string.packs_empty_description),
-                    actionLabel = stringResource(R.string.new_packing_list),
-                    actionIcon = TrailIcons.Add,
-                    onAction = onCreatePack,
-                    actionModifier = Modifier.testTag("add_btn"),
+                    // A pack being filled: a tick, a jacket and a meal orbit the backpack.
+                    tone = TrailSenseTone.Good,
+                    accents = listOf(TrailIcons.Check, TrailIcons.CategoryClothing, TrailIcons.CategoryFood),
+                    secondaryActionLabel = stringResource(R.string.import_packing_list),
+                    onSecondaryAction = onImportPack,
                     modifier = Modifier
-                        .fillParentMaxHeight(0.8f)
+                        .fillParentMaxHeight(0.78f)
                         .testTag("empty_text")
                 )
             }

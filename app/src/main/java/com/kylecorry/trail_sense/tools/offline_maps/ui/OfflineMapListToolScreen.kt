@@ -29,6 +29,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -677,6 +678,9 @@ private fun OfflineMapListScreen(
                         title = stringResource(R.string.no_offline_maps),
                         description = stringResource(R.string.map_empty_description),
                         modifier = Modifier.testTag("map_empty_text"),
+                        // The three ways in ride the mark: a file, a photo of a paper map, a pencil for a blank one.
+                        tone = TrailSenseTone.Secondary,
+                        accents = listOf(TrailIcons.File, TrailIcons.Camera, TrailIcons.Edit),
                         action = { MapSourceHints(onCreateAction) }
                     )
                 }
@@ -788,35 +792,49 @@ private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
         R.string.places_maps_camera_hint,
         R.string.places_maps_blank_hint
     )
-    val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Cookie9Sided, MaterialShapes.Cookie9Sided)
-    Spacer(Modifier.height(TrailSenseSpacing.xl))
+    // Each way in has its own colour and cookie; the file import is the recommended path, so it leads in primary.
+    val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Cookie7Sided, MaterialShapes.Cookie6Sided)
+    val badgeColors = listOf(
+        scheme.primary to scheme.onPrimary,
+        scheme.tertiaryContainer to scheme.onTertiaryContainer,
+        scheme.secondaryContainer to scheme.onSecondaryContainer
+    )
+    Spacer(Modifier.height(TrailSenseSpacing.lg))
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
         entries.forEachIndexed { index, (label, icon, action) ->
+            val recommended = index == 0
             PlacesRow(
                 title = stringResource(label),
                 subtitle = stringResource(subtitles[index]),
                 position = TrailSenseGroupPosition.at(index, entries.size),
                 modifier = if (index == 0) Modifier.testTag("add_btn") else Modifier,
+                containerColor = if (recommended) scheme.primaryContainer else scheme.surfaceContainerHigh,
                 leading = {
                     PlacesBadge(
-                        containerColor = scheme.primaryContainer,
-                        contentColor = scheme.onPrimaryContainer,
+                        containerColor = badgeColors[index].first,
+                        contentColor = badgeColors[index].second,
                         icon = icon,
                         shape = shapes[index].toShape(),
-                        size = 44.dp
+                        size = 48.dp
                     )
                 },
                 onClick = { onAction(action) },
                 actions = {
-                    Icon(
-                        TrailIcons.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = scheme.onSurfaceVariant,
-                        modifier = Modifier.padding(end = TrailSenseSpacing.md)
-                    )
+                    Surface(
+                        shape = CircleShape,
+                        color = if (recommended) scheme.primary else scheme.surfaceContainerHighest,
+                        contentColor = if (recommended) scheme.onPrimary else scheme.onSurface,
+                        modifier = Modifier
+                            .padding(end = TrailSenseSpacing.sm)
+                            .size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(TrailIcons.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(20.dp))
+                        }
+                    }
                 }
             )
         }
