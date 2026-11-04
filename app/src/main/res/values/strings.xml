@@ -2163,4 +2163,8 @@
     <string name="field_guide_name_both">Both</string>
     <string name="thermometer_source_explanation">Historic estimates the air temperature from past weather where you are. Sensor reads your phone\'s own thermometer, which runs warm while the phone is in use or in a pocket.</string>
     <string name="thermometer_calibration_explanation">To calibrate the sensor, note what your phone reads and what a real thermometer reads at the same time, once when it\'s cold and once when it\'s warm.</string>
+    <!-- Family redesign: utilities -->
+    <string name="convert_swap_units">Swap units</string>
+    <string name="ballistics_trajectory">Trajectory</string>
+    <string name="ballistics_trajectory_empty">Enter a sight-in range and muzzle velocity to see the trajectory.</string>
 </resources>

@@ -1,28 +1,15 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,14 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.preferences.IPreferences
@@ -54,8 +36,22 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 
+/**
+ * Scope adjustment: the clicks to dial lead, then the scope setup, then each miss as a group of how far and which
+ * side (a segmented choice, not two look-alike buttons).
+ */
 @Composable
 fun ScopeAdjustmentPage(
     modifier: Modifier = Modifier
@@ -107,115 +103,124 @@ fun ScopeAdjustmentPage(
         "${it.direction.name} ${it.clicks} clicks"
     }.ifBlank { stringResource(R.string.none) }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = TrailSenseSpacing.xl,
-                    top = TrailSenseSpacing.xl,
-                    end = TrailSenseSpacing.xl,
-                    bottom = TrailSenseSpacing.xxxl
-                ),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-        ) {
-            // Hero readout — the calculated scope adjustment
-            ScopeAdjustmentHero(adjustmentText = adjustmentText)
+    BallisticsForm(modifier = modifier) {
+        BallisticsHero(
+            label = stringResource(R.string.scope_adjustment),
+            value = adjustmentText,
+            valueTag = "adjustment_amount",
+            style = MaterialTheme.typography.headlineMedium
+        )
 
-            // Setup group
-            TrailSenseCard {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
-                    ScopeSectionHeader(
-                        icon = R.drawable.ballistics,
-                        title = stringResource(R.string.adjustment_per_click)
-                    )
-                    UnitPickerField(
-                        label = stringResource(R.string.adjustment_per_click),
-                        selected = selectedClickAmount,
-                        options = clickAmounts.map { amount ->
-                            stringResource(amount.first.first, amount.first.second) to amount.second
-                        },
-                        onSelected = setDistancePerClick,
-                        modifier = Modifier.testTag("click_amount")
-                    )
-                    DistanceField(
-                        label = stringResource(R.string.distance_to_target),
-                        value = distanceToTarget,
-                        units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
-                        defaultUnit = DistanceUnits.Yards,
-                        onValueChange = { setDistanceToTarget(it ?: Distance.from(0f, DistanceUnits.Yards)) },
-                        modifier = Modifier.testTag("distance_to_target")
-                    )
-                }
+        TrailSenseRowGroup {
+            row { position ->
+                UnitPickerField(
+                    label = stringResource(R.string.adjustment_per_click),
+                    selected = selectedClickAmount,
+                    options = clickAmounts.map { amount ->
+                        stringResource(amount.first.first, amount.first.second) to amount.second
+                    },
+                    onSelected = setDistancePerClick,
+                    position = position,
+                    modifier = Modifier.testTag("click_amount")
+                )
             }
-
-            // Windage miss group
-            TrailSenseCard {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
-                    ScopeSectionHeader(
-                        icon = R.drawable.ic_arrow,
-                        title = stringResource(R.string.windage_miss)
-                    )
-                    DistanceField(
-                        label = stringResource(R.string.distance),
-                        value = offsetX,
-                        units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
-                        defaultUnit = DistanceUnits.Inches,
-                        onValueChange = { offsetX = it ?: Distance.from(0f, DistanceUnits.Inches) },
-                        modifier = Modifier.testTag("miss_distance_x")
-                    )
-                    ToggleRow(
-                        options = listOf(
-                            stringResource(R.string.left) to ScopeDirection.Left,
-                            stringResource(R.string.right) to ScopeDirection.Right
-                        ),
-                        selected = offsetDirectionX,
-                        onSelected = { offsetDirectionX = it },
-                        modifier = Modifier.testTag("miss_direction_x")
-                    )
-                }
+            row { position ->
+                DistanceField(
+                    label = stringResource(R.string.distance_to_target),
+                    value = distanceToTarget,
+                    units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+                    defaultUnit = DistanceUnits.Yards,
+                    onValueChange = { setDistanceToTarget(it ?: Distance.from(0f, DistanceUnits.Yards)) },
+                    position = position,
+                    modifier = Modifier.testTag("distance_to_target")
+                )
             }
+        }
 
-            // Elevation miss group
-            TrailSenseCard {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
-                    ScopeSectionHeader(
-                        icon = R.drawable.ic_arrow_up,
-                        title = stringResource(R.string.elevation_miss)
-                    )
-                    DistanceField(
-                        label = stringResource(R.string.distance),
-                        value = offsetY,
-                        units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
-                        defaultUnit = DistanceUnits.Inches,
-                        onValueChange = { offsetY = it ?: Distance.from(0f, DistanceUnits.Inches) },
-                        modifier = Modifier.testTag("miss_distance_y")
-                    )
-                    ToggleRow(
-                        options = listOf(
-                            stringResource(R.string.above) to ScopeDirection.Up,
-                            stringResource(R.string.below) to ScopeDirection.Down
-                        ),
-                        selected = offsetDirectionY,
-                        onSelected = { offsetDirectionY = it },
-                        modifier = Modifier.testTag("miss_direction_y")
-                    )
-                }
+        MissGroup(
+            title = stringResource(R.string.windage_miss),
+            offset = offsetX,
+            onOffsetChange = { offsetX = it ?: Distance.from(0f, DistanceUnits.Inches) },
+            options = listOf(
+                TrailSenseChoice(ScopeDirection.Left, stringResource(R.string.left)),
+                TrailSenseChoice(ScopeDirection.Right, stringResource(R.string.right))
+            ),
+            direction = offsetDirectionX,
+            onDirectionChange = { offsetDirectionX = it },
+            fieldTag = "miss_distance_x",
+            directionTag = "miss_direction_x"
+        )
+
+        MissGroup(
+            title = stringResource(R.string.elevation_miss),
+            offset = offsetY,
+            onOffsetChange = { offsetY = it ?: Distance.from(0f, DistanceUnits.Inches) },
+            options = listOf(
+                TrailSenseChoice(ScopeDirection.Up, stringResource(R.string.above)),
+                TrailSenseChoice(ScopeDirection.Down, stringResource(R.string.below))
+            ),
+            direction = offsetDirectionY,
+            onDirectionChange = { offsetDirectionY = it },
+            fieldTag = "miss_distance_y",
+            directionTag = "miss_direction_y"
+        )
+    }
+}
+
+/** One miss: how far off, then which side, as one group. */
+@Composable
+private fun MissGroup(
+    title: String,
+    offset: Distance,
+    onOffsetChange: (Distance?) -> Unit,
+    options: List<TrailSenseChoice<ScopeDirection>>,
+    direction: ScopeDirection,
+    onDirectionChange: (ScopeDirection) -> Unit,
+    fieldTag: String,
+    directionTag: String
+) {
+    val formatter = remember { DependencyRegistry.get<FormatService>() }
+    TrailSenseRowGroup(title = title) {
+        row { position ->
+            DistanceField(
+                label = stringResource(R.string.distance),
+                value = offset,
+                units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
+                defaultUnit = DistanceUnits.Inches,
+                onValueChange = onOffsetChange,
+                position = position,
+                modifier = Modifier.testTag(fieldTag)
+            )
+        }
+        row { position ->
+            TrailSenseGroupCard(
+                position = position,
+                contentPadding = PaddingValues(TrailSenseSpacing.sm)
+            ) {
+                TrailSenseConnectedChoice(
+                    options = options,
+                    selected = direction,
+                    onSelect = onDirectionChange,
+                    modifier = Modifier.testTag(directionTag)
+                )
             }
         }
     }
 }
 
+/** The answer of a ballistics page, on the accent tone, its label above. */
 @Composable
-private fun ScopeAdjustmentHero(adjustmentText: String) {
+internal fun BallisticsHero(
+    label: String,
+    value: String,
+    valueTag: String,
+    style: TextStyle = MaterialTheme.typography.displaySmall
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
         Column(
             modifier = Modifier
@@ -225,78 +230,30 @@ private fun ScopeAdjustmentHero(adjustmentText: String) {
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
         ) {
             Text(
-                text = stringResource(R.string.scope_adjustment),
+                text = label,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
             )
             Text(
-                text = adjustmentText,
-                modifier = Modifier.testTag("adjustment_amount"),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                text = value,
+                modifier = Modifier.testTag(valueTag),
+                style = style.copy(fontFeatureSettings = "tnum"),
                 textAlign = TextAlign.Center
             )
         }
     }
 }
 
-@Composable
-private fun ScopeSectionHeader(icon: Int, title: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}
-
+/** A ballistics page is a plain column; the page around it owns scrolling and gutters. */
 @Composable
 internal fun BallisticsForm(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            content = content
-        )
-    }
-}
-
-@Composable
-internal fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurface
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg),
+        content = content
     )
 }
 
@@ -307,18 +264,22 @@ internal fun DistanceField(
     units: List<DistanceUnits>,
     defaultUnit: DistanceUnits,
     onValueChange: (Distance?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single
 ) {
+    val formatter = remember { DependencyRegistry.get<FormatService>() }
     UnitAmountField(
         label = label,
         value = value,
         units = units,
         defaultUnit = defaultUnit,
-        getUnitName = { DependencyRegistry.get<FormatService>().getDistanceUnitName(it) },
+        getUnitName = { formatter.getDistanceUnitName(it) },
+        getShortUnitName = { formatter.getDistanceUnitName(it, true) },
         getAmount = { it.value },
         getUnit = { it.units },
         createValue = { amount, unit -> Distance.from(amount, unit) },
         onValueChange = onValueChange,
+        position = position,
         modifier = modifier
     )
 }
@@ -330,18 +291,22 @@ internal fun SpeedField(
     units: List<DistanceUnits>,
     defaultUnit: DistanceUnits,
     onValueChange: (Speed?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single
 ) {
+    val formatter = remember { DependencyRegistry.get<FormatService>() }
     UnitAmountField(
         label = label,
         value = value,
         units = units,
         defaultUnit = defaultUnit,
-        getUnitName = { DependencyRegistry.get<FormatService>().getBulletSpeedUnitName(it) },
+        getUnitName = { formatter.getBulletSpeedUnitName(it) },
+        getShortUnitName = { formatter.getBulletSpeedUnitName(it, true) },
         getAmount = { it.value },
         getUnit = { it.distanceUnits },
         createValue = { amount, unit -> Speed.from(amount, unit, TimeUnits.Seconds) },
         onValueChange = onValueChange,
+        position = position,
         modifier = modifier
     )
 }
@@ -353,22 +318,27 @@ internal fun WeightField(
     units: List<WeightUnits>,
     defaultUnit: WeightUnits,
     onValueChange: (Weight?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single
 ) {
+    val formatter = remember { DependencyRegistry.get<FormatService>() }
     UnitAmountField(
         label = label,
         value = value,
         units = units,
         defaultUnit = defaultUnit,
-        getUnitName = { DependencyRegistry.get<FormatService>().getWeightUnitName(it) },
+        getUnitName = { formatter.getWeightUnitName(it) },
+        getShortUnitName = { formatter.getWeightUnitName(it, true) },
         getAmount = { it.value },
         getUnit = { it.units },
         createValue = { amount, unit -> Weight.from(amount, unit) },
         onValueChange = onValueChange,
+        position = position,
         modifier = modifier
     )
 }
 
+/** An amount and its unit as one field: the unit is the tonal button at its end. */
 @Composable
 private fun <T, U> UnitAmountField(
     label: String,
@@ -376,119 +346,78 @@ private fun <T, U> UnitAmountField(
     units: List<U>,
     defaultUnit: U,
     getUnitName: (U) -> String,
+    getShortUnitName: (U) -> String,
     getAmount: (T) -> Float,
     getUnit: (T) -> U,
     createValue: (Float, U) -> T,
     onValueChange: (T?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single
 ) {
     var amountText by remember { mutableStateOf(value?.let { DecimalFormatter.format(getAmount(it), 5, false) } ?: "") }
     var unit by remember { mutableStateOf(value?.let(getUnit) ?: defaultUnit) }
+    var isPickingUnit by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = amountText,
-            onValueChange = {
-                amountText = it
-                onValueChange(it.toFloatOrNull()?.let { amount -> createValue(amount, unit) })
-            },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(label) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        UnitPickerField(
-            label = stringResource(R.string.units),
-            selected = unit,
+    TrailSenseInputField(
+        value = amountText,
+        onValueChange = {
+            amountText = it
+            onValueChange(it.toFloatOrNull()?.let { amount -> createValue(amount, unit) })
+        },
+        label = label,
+        position = position,
+        unit = getShortUnitName(unit),
+        onUnitClick = { isPickingUnit = true },
+        modifier = modifier
+    )
+
+    if (isPickingUnit) {
+        TrailSenseOptionsDialog(
+            title = stringResource(R.string.units),
             options = units.map { getUnitName(it) to it },
-            onSelected = {
+            selected = unit,
+            onSelect = {
                 unit = it
+                isPickingUnit = false
                 onValueChange(amountText.toFloatOrNull()?.let { amount -> createValue(amount, it) })
-            }
+            },
+            onDismiss = { isPickingUnit = false }
         )
     }
 }
 
+/** A choice from a list, as a row: the label, what's chosen under it, a dialog to change it. */
 @Composable
 internal fun <T> UnitPickerField(
     label: String,
     selected: T,
     options: List<Pair<String, T>>,
     onSelected: (T) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single
 ) {
     var isOpen by remember { mutableStateOf(false) }
-    val selectedName = options.firstOrNull { it.second == selected }?.first.orEmpty()
+    val selectedName = options.firstOrNull { it.second == selected }?.first
 
-    OutlinedButton(
+    TrailSenseListItem(
+        title = label,
+        subtitle = selectedName,
+        position = position,
         onClick = { isOpen = true },
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = if (selectedName.isBlank()) label else "$label: $selectedName",
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
+        modifier = modifier
+    )
 
     if (isOpen) {
-        AlertDialog(
-            onDismissRequest = { isOpen = false },
-            title = { Text(label) },
-            text = {
-                Column {
-                    options.forEach { option ->
-                        TextButton(
-                            onClick = {
-                                onSelected(option.second)
-                                isOpen = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = option.first,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
+        TrailSenseOptionsDialog(
+            title = label,
+            options = options,
+            selected = selected,
+            onSelect = {
+                onSelected(it)
+                isOpen = false
             },
-            confirmButton = {
-                TextButton(onClick = { isOpen = false }) {
-                    Text(stringResource(R.string.done))
-                }
-            }
+            onDismiss = { isOpen = false }
         )
-    }
-}
-
-@Composable
-internal fun <T> ToggleRow(
-    options: List<Pair<String, T>>,
-    selected: T,
-    onSelected: (T) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        options.forEach { option ->
-            val isSelected = option.second == selected
-            OutlinedButton(
-                onClick = { onSelected(option.second) },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = option.first,
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
-                )
-            }
-        }
     }
 }
 
