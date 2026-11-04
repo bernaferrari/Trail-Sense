@@ -76,7 +76,6 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
@@ -285,6 +284,7 @@ private fun CloudScreen(
         clouds.groupBy { it.time.toZonedDateTime().toLocalDate() }.toList()
     }
 
+    // One question: what are the clouds saying? The latest cloud and what it may bring answer it; the log sits below.
     TrailSensePage(
         title = stringResource(R.string.clouds),
         // "Last 48h" only means something once there is a log to scope.
@@ -303,11 +303,11 @@ private fun CloudScreen(
             // On an empty log the page's own button is the one way in, so the floating one waits for the first cloud.
             if (!(loaded && clouds.isEmpty())) {
                 Box {
+                    // The screen's one main action, in primary.
                     ExtendedFloatingActionButton(
                         onClick = { isCreateMenuOpen = true },
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.testTag("add_btn"),
                         icon = {
                             Icon(
@@ -340,9 +340,6 @@ private fun CloudScreen(
                     icon = TrailIcons.Cloud,
                     title = stringResource(R.string.no_clouds),
                     description = stringResource(R.string.clouds_empty_description),
-                    // A sky diary's three ways in ride the satellites: the camera, a photo, by hand.
-                    tone = TrailSenseTone.Tertiary,
-                    accents = listOf(TrailIcons.Camera, TrailIcons.File, TrailIcons.Edit),
                     modifier = Modifier
                         .fillParentMaxHeight(0.86f)
                         .testTag("cloud_empty_text"),
@@ -350,10 +347,6 @@ private fun CloudScreen(
                         Box {
                             androidx.compose.material3.Button(
                                 onClick = { isCreateMenuOpen = true },
-                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiary,
-                                    contentColor = MaterialTheme.colorScheme.onTertiary
-                                ),
                                 modifier = Modifier
                                     .heightIn(min = 56.dp)
                                     .testTag("add_btn"),
@@ -380,7 +373,6 @@ private fun CloudScreen(
             item(key = "latest") {
                 CloudSkyHero(
                     reading = latest,
-                    count = clouds.size,
                     onClick = { onCloudClick(latest) },
                     onImageClick = { onCloudImageClick(latest) }
                 )
@@ -522,13 +514,12 @@ private fun CloudReadingRow(
 }
 
 /**
- * The latest cloud as the screen's hero, on a sky that follows the time of day: its photo in a puffy shape, its name
- * and what it may bring, and how many clouds are in the log.
+ * The latest cloud on the plain page: its photo, its name in emphasised type, and what it may bring as the one verdict
+ * line. Tap it for the details.
  */
 @Composable
 private fun CloudSkyHero(
     reading: Reading<CloudObservation>,
-    count: Int,
     onClick: () -> Unit,
     onImageClick: () -> Unit
 ) {
@@ -537,63 +528,43 @@ private fun CloudSkyHero(
     val formatter = remember(context) { FormatService.getInstance(context) }
     val cloud = reading.value.genus
     val name = details.getCloudName(cloud)
-    val hour = java.time.LocalTime.now().hour
     val scheme = MaterialTheme.colorScheme
-    val sky = if (hour in 7..18) {
-        listOf(scheme.primaryContainer, scheme.tertiaryContainer)
-    } else {
-        listOf(scheme.secondaryContainer, scheme.primaryContainer)
-    }
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(TrailSenseShape.hero),
-        color = Color.Transparent,
-        contentColor = scheme.onPrimaryContainer,
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+            .clickable(onClick = onClick)
+            .padding(TrailSenseSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            Modifier
-                .background(androidx.compose.ui.graphics.Brush.linearGradient(sky))
-                .padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CloudThumbnail(
-                    drawable = details.getCloudImage(context, cloud),
-                    contentDescription = name,
-                    onClick = onImageClick,
-                    size = 104.dp,
-                    shape = MaterialShapes.Puffy.toShape()
-                )
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        formatter.formatTime(reading.time, includeSeconds = false),
-                        style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                        color = scheme.onPrimaryContainer.copy(alpha = 0.78f)
-                    )
-                    Text(
-                        name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                TrailSenseShapeBadge(
-                    text = count.toString(),
-                    shape = MaterialShapes.Cookie9Sided.toShape(),
-                    size = 52.dp,
-                    containerColor = scheme.primary,
-                    contentColor = scheme.onPrimary
-                )
-            }
+        Column(Modifier.weight(1f)) {
+            Text(
+                name,
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = scheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
             Text(
                 details.getCloudForecast(cloud),
                 style = MaterialTheme.typography.bodyLarge,
-                color = scheme.onPrimaryContainer.copy(alpha = 0.88f)
+                color = scheme.onSurface,
+                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+            )
+            Text(
+                formatter.formatTime(reading.time, includeSeconds = false),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                color = scheme.onSurfaceVariant
             )
         }
+        Spacer(Modifier.width(TrailSenseSpacing.lg))
+        CloudThumbnail(
+            drawable = details.getCloudImage(context, cloud),
+            contentDescription = name,
+            onClick = onImageClick,
+            size = 88.dp
+        )
     }
 }
 
