@@ -165,7 +165,7 @@ fun DeclinationScreen(
 
         trailSenseSection(
             key = "location",
-            title = context.getString(R.string.location),
+            title = null,
             footer = if (isLocationUpToDate) null else context.getString(R.string.loading)
         ) {
             row { position ->
