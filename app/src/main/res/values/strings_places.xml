@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Beacons -->
+    <string name="places_nearest_beacon">Nearest beacon</string>
+    <string name="places_beacon_direction">%1$s · %2$s</string>
+    <string name="places_beacon_empty_action">Place a beacon</string>
+    <string name="places_hidden">Hidden</string>
+    <!-- Paths -->
+    <string name="places_paths_empty_action">Start Backtrack</string>
+    <string name="places_backtrack_recording">Recording</string>
+    <string name="places_backtrack_on_description">Your trail is being saved as you walk.</string>
+    <string name="places_backtrack_off_description">Start it to save your trail as you walk.</string>
+    <string name="places_backtrack_every">Every %1$s</string>
+</resources>

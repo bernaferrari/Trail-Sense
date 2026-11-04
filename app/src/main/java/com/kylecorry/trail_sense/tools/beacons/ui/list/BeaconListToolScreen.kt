@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -102,6 +104,16 @@ import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
+import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.CreateBeaconGroupCommand
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.DeleteBeaconCommand
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.MoveBeaconCommand
@@ -797,6 +809,39 @@ private fun BeaconListScreen(
                 )
             }
         ) {
+            if (!loaded) {
+                item(key = "search") {
+                    TrailSenseSearchBar(
+                        value = searchText,
+                        onValueChange = onSearchChange,
+                        placeholder = stringResource(R.string.search),
+                        clearContentDescription = stringResource(R.string.beacon_search_clear),
+                        modifier = Modifier.testTag("searchbox")
+                    )
+                }
+                return@TrailSensePage
+            }
+
+            val beacons = items.filterIsInstance<Beacon>()
+            val distances = beacons.associate { beacon ->
+                beacon.id to Distance.meters(currentLocation.distanceTo(beacon.coordinate))
+            }
+            val farthest = distances.values.maxOfOrNull { it.meters().value } ?: 0f
+            val nearest = beacons.minByOrNull { distances[it.id]?.meters()?.value ?: Float.MAX_VALUE }
+            val showSpotlight = searchText.isBlank() && nearest != null && currentLocation != Coordinate.zero
+
+            if (showSpotlight && nearest != null) {
+                item(key = "nearest") {
+                    NearestBeaconSpotlight(
+                        beacon = nearest,
+                        currentLocation = currentLocation,
+                        formatService = formatService,
+                        baseDistanceUnits = baseDistanceUnits,
+                        onAction = { onBeaconAction(nearest, it) }
+                    )
+                }
+            }
+
             item(key = "search") {
                 TrailSenseSearchBar(
                     value = searchText,
@@ -807,52 +852,103 @@ private fun BeaconListScreen(
                 )
             }
 
-            if (!loaded) return@TrailSensePage
-
             if (items.isEmpty()) {
                 item(key = "empty") {
                     val isSearching = searchText.isNotBlank()
-                    TrailSenseEmptyState(
-                        icon = if (isSearching) Icons.Default.Search else Icons.Default.Place,
+                    PlacesEmptyState(
+                        icon = if (isSearching) TrailIcons.Search else TrailIcons.Beacon,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_beacons),
                         description = if (isSearching) {
                             null
                         } else {
                             stringResource(R.string.beacon_list_empty_description)
                         },
-                        modifier = Modifier
-                            .heightIn(max = 480.dp)
-                            .testTag("beacon_empty_text")
+                        actionLabel = if (isSearching) null else stringResource(R.string.places_beacon_empty_action),
+                        actionIcon = TrailIcons.Location,
+                        onAction = { onCreateAction(BeaconCreateAction.CreateBeacon) },
+                        modifier = Modifier.testTag("beacon_empty_text")
                     )
                 }
             } else {
-                item(key = "beacons") {
-                    TrailSenseRowGroup(modifier = Modifier.testTag("beacon_list")) {
-                        items.forEach { item ->
-                            row { position ->
-                                when (item) {
-                                    is Beacon -> BeaconRow(
-                                        beacon = item,
-                                        position = position,
-                                        formatService = formatService,
-                                        baseDistanceUnits = baseDistanceUnits,
-                                        currentLocation = currentLocation,
-                                        onAction = { onBeaconAction(item, it) }
-                                    )
+                placesGroup(
+                    key = "beacons",
+                    items = items,
+                    itemKey = { (if (it is BeaconGroup) "g" else "b") + it.id }
+                ) { item, position, joinModifier ->
+                    val rowModifier = if (position.isFirst) joinModifier.testTag("beacon_list") else joinModifier
+                    when (item) {
+                        is Beacon -> BeaconRow(
+                            beacon = item,
+                            position = position,
+                            formatService = formatService,
+                            baseDistanceUnits = baseDistanceUnits,
+                            currentLocation = currentLocation,
+                            proximity = distances[item.id]?.let { d ->
+                                if (farthest <= 0f) 1f else 1f - (d.meters().value / farthest) * 0.9f
+                            },
+                            modifier = rowModifier,
+                            onAction = { onBeaconAction(item, it) }
+                        )
 
-                                    is BeaconGroup -> BeaconGroupRow(
-                                        group = item,
-                                        position = position,
-                                        onAction = { onGroupAction(item, it) }
-                                    )
-                                }
-                            }
-                        }
+                        is BeaconGroup -> BeaconGroupRow(
+                            group = item,
+                            position = position,
+                            modifier = rowModifier,
+                            onAction = { onGroupAction(item, it) }
+                        )
                     }
                 }
             }
         }
     }
+}
+
+/**
+ * The list's focal point: the closest beacon on a saturated card, its colour as a cookie badge holding an arrow
+ * that points the way (north up), and the two things you'd do with it.
+ */
+@Composable
+private fun NearestBeaconSpotlight(
+    beacon: Beacon,
+    currentLocation: Coordinate,
+    formatService: FormatService,
+    baseDistanceUnits: DistanceUnits,
+    onAction: (BeaconAction) -> Unit
+) {
+    val bearing = remember(beacon.coordinate, currentLocation) { currentLocation.bearingTo(beacon.coordinate) }
+    val distance = remember(beacon.coordinate, currentLocation, baseDistanceUnits) {
+        Distance.meters(currentLocation.distanceTo(beacon.coordinate)).convertTo(baseDistanceUnits).toRelativeDistance()
+    }
+    val distanceText = formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false)
+    val directionText = "${formatService.formatDirection(bearing.direction)} ${
+        formatService.formatDegrees(bearing.value, replace360 = true)
+    }"
+    TrailSenseSpotlight(
+        eyebrow = stringResource(R.string.places_nearest_beacon),
+        title = distanceText,
+        titleStyle = MaterialTheme.typography.displaySmall,
+        supportingText = stringResource(R.string.places_beacon_direction, beacon.name, directionText),
+        tone = TrailSenseTone.Primary,
+        badge = {
+            TrailSenseShapeBadge(
+                icon = TrailIcons.NavigationArrow,
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                size = 72.dp,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                iconRotation = bearing.value
+            )
+        },
+        actions = listOf(
+            TrailSenseSpotlightAction(
+                stringResource(R.string.navigate),
+                TrailIcons.NavigationArrow
+            ) { onAction(BeaconAction.Navigate) },
+            TrailSenseSpotlightAction(stringResource(R.string.details), TrailIcons.Info) {
+                onAction(BeaconAction.View)
+            }
+        )
+    )
 }
 
 @Composable
@@ -961,6 +1057,8 @@ private fun BeaconRow(
     formatService: FormatService,
     baseDistanceUnits: DistanceUnits,
     currentLocation: Coordinate,
+    proximity: Float?,
+    modifier: Modifier = Modifier,
     onAction: (BeaconAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -968,20 +1066,42 @@ private fun BeaconRow(
         val meters = NavigationService().navigate(beacon.coordinate, currentLocation, 0f).distance
         Distance.meters(meters).convertTo(baseDistanceUnits).toRelativeDistance()
     }
+    val bearing = remember(beacon.coordinate, currentLocation) { currentLocation.bearingTo(beacon.coordinate) }
+    val hasLocation = currentLocation != Coordinate.zero
+    val badgeColor = Color(getBeaconBadgeColor(beacon, formatService))
+    val badgeContent = if (badgeColor.luminance() > 0.5f) Color.Black else Color.White
+    val subtitle = listOfNotNull(
+        if (hasLocation) formatService.formatDirection(bearing.direction) else null,
+        beacon.elevation?.let {
+            formatService.formatElevation(Distance.meters(it).convertTo(baseDistanceUnits))
+        },
+        if (!beacon.visible && !beacon.temporary) stringResource(R.string.places_hidden) else null
+    ).joinToString(" · ").ifBlank { null }
 
-    TrailSenseListItem(
+    PlacesRow(
         title = beacon.name,
-        subtitle = formatService.formatDistance(
-            distance,
-            Units.getDecimalPlaces(distance.units),
-            false
-        ),
-        icon = rememberVectorPainter(getBeaconIcon(beacon, formatService)),
-        iconTint = Color(getBeaconIconTint(beacon, formatService)),
+        subtitle = subtitle,
         position = position,
+        modifier = modifier,
+        dimmed = !beacon.visible && !beacon.temporary,
+        leading = {
+            PlacesBadge(
+                containerColor = badgeColor,
+                contentColor = badgeContent,
+                icon = getBeaconIcon(beacon, formatService),
+                shape = if (beacon.owner == BeaconOwner.User) {
+                    MaterialShapes.Cookie9Sided.toShape()
+                } else {
+                    MaterialShapes.Pentagon.toShape()
+                }
+            )
+        },
+        value = formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false),
+        valueColor = MaterialTheme.colorScheme.primary,
+        barFraction = if (hasLocation) proximity else null,
         onClick = { onAction(BeaconAction.View) },
         onLongClick = { onAction(BeaconAction.Navigate) },
-        trailing = {
+        actions = {
             BeaconRowActions(
                 beacon = beacon,
                 menuOpen = menuOpen,
@@ -1068,17 +1188,31 @@ private fun BeaconMenuItem(
 private fun BeaconGroupRow(
     group: BeaconGroup,
     position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
     onAction: (BeaconGroupAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
 
-    TrailSenseListItem(
+    PlacesRow(
         title = group.name,
         subtitle = pluralStringResource(R.plurals.beacon_group_summary, group.count, group.count),
-        icon = rememberVectorPainter(TrailIcons.BeaconGroup),
         position = position,
+        modifier = modifier,
+        leading = {
+            PlacesBadge(
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                text = group.count.toString(),
+                shape = MaterialShapes.Clover4Leaf.toShape()
+            )
+        },
         onClick = { onAction(BeaconGroupAction.Open) },
-        trailing = {
+        actions = {
+            Icon(
+                TrailIcons.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Box {
                 IconButton(
                     onClick = { menuOpen = true },
@@ -1124,24 +1258,17 @@ private fun BeaconGroupMenuItem(
 
 private fun getBeaconIcon(beacon: Beacon, formatService: FormatService): ImageVector {
     if (beacon.owner == BeaconOwner.User) {
-        return beacon.icon?.icon ?: TrailIcons.Bubble
+        return beacon.icon?.icon ?: TrailIcons.Location
     }
 
     return CellSignalUtils.getCellQualityImage(getCellSignalQuality(beacon, formatService))
 }
 
-private fun getBeaconIconTint(beacon: Beacon, formatService: FormatService): Int {
+private fun getBeaconBadgeColor(beacon: Beacon, formatService: FormatService): Int {
     if (beacon.owner == BeaconOwner.User) {
-        return if (beacon.icon == null) {
-            beacon.color
-        } else {
-            val background = Color(beacon.color)
-            if (background.luminance() > 0.5f) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-        }
+        return beacon.color
     }
-
-    val backgroundColor = CustomUiUtils.getQualityColor(getCellSignalQuality(beacon, formatService))
-    return Colors.mostContrastingColor(android.graphics.Color.WHITE, android.graphics.Color.BLACK, backgroundColor)
+    return CustomUiUtils.getQualityColor(getCellSignalQuality(beacon, formatService))
 }
 
 private fun getCellSignalQuality(beacon: Beacon, formatService: FormatService): Quality {

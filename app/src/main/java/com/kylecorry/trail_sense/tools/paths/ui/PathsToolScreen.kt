@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.paths.ui
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -47,6 +49,24 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.luminance
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -660,13 +680,18 @@ private fun PathsScreen(
             if (isLoaded && items.isEmpty()) {
                 item(key = "empty") {
                     val isSearching = searchText.isNotBlank()
-                    TrailSenseEmptyState(
-                        icon = if (isSearching) Icons.Rounded.Search else TrailIcons.ToolBacktrack,
+                    PlacesEmptyState(
+                        icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_paths),
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
-                        modifier = Modifier
-                            .heightIn(max = 420.dp)
-                            .testTag("waypoints_empty_text")
+                        actionLabel = if (isSearching || backtrackState == FeatureState.On) {
+                            null
+                        } else {
+                            stringResource(R.string.places_paths_empty_action)
+                        },
+                        actionIcon = TrailIcons.BaselinePlayArrow24,
+                        onAction = onBacktrackToggleClick,
+                        modifier = Modifier.testTag("waypoints_empty_text")
                     )
                 }
             }
@@ -682,6 +707,7 @@ private fun PathsScreen(
                 )
             }
 
+            val longest = paths.maxOfOrNull { it.metadata.distance.meters().value } ?: 0f
             groupedRows(
                 rows = paths,
                 key = { "path_${it.id}" }
@@ -691,6 +717,7 @@ private fun PathsScreen(
                     position = position,
                     formatService = formatService,
                     baseDistanceUnits = baseDistanceUnits,
+                    share = if (longest > 0f) path.metadata.distance.meters().value / longest else 0f,
                     onAction = { onPathAction(path, it) }
                 )
             }
@@ -820,9 +847,11 @@ private fun PathsCreateMenu(
 }
 
 /**
- * Backtrack, the recorder that fills this list: one row at the top, tinted when it is recording. Tapping the row
- * changes how often it records; the round button starts or stops it.
+ * Backtrack, the recorder that fills this list, as the screen's focal point: a saturated card that turns green while
+ * recording, the trail mark on a cookie that turns slowly while it works, a big start/stop button at its side and the
+ * recording interval as its one action.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BacktrackRow(
     state: FeatureState,
@@ -832,49 +861,66 @@ private fun BacktrackRow(
     onToggleClick: () -> Unit
 ) {
     val isOn = state == FeatureState.On
-    val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
-        " · ${
-            formatService.formatDuration(
-                it,
-                short = true,
-                includeSeconds = true
-            )
-        }"
-    } ?: "")
-    val container by animateColorAsState(
-        targetValue = if (isOn) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        },
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "backtrackContainer"
+    val tone = if (isOn) TrailSenseTone.Good else TrailSenseTone.Primary
+    val colors = trailSenseToneColors(tone)
+    val frequencyText = frequency?.let { formatService.formatDuration(it, short = true, includeSeconds = true) }
+    val turn by rememberInfiniteTransition(label = "backtrack").animateFloat(
+        0f,
+        360f,
+        infiniteRepeatable(tween(12_000, easing = LinearEasing)),
+        label = "turn"
     )
 
     Box(modifier = Modifier.testTag("backtrack_play_bar")) {
-        TrailSenseListItem(
-            title = stringResource(R.string.backtrack),
-            subtitle = subtitle,
-            icon = rememberVectorPainter(TrailIcons.ToolBacktrack),
-            position = TrailSenseGroupPosition.Single,
-            containerColor = container,
-            onClick = onFrequencyClick,
+        TrailSenseSpotlight(
+            modifier = Modifier.testTag("play_bar_title"),
+            eyebrow = stringResource(R.string.backtrack),
+            title = stringResource(if (isOn) R.string.places_backtrack_recording else R.string.off),
+            supportingText = stringResource(
+                if (isOn) R.string.places_backtrack_on_description else R.string.places_backtrack_off_description
+            ),
+            tone = tone,
+            badge = {
+                Box(Modifier.rotate(if (isOn) turn else 0f)) {
+                    TrailSenseShapeBadge(
+                        icon = TrailIcons.ToolBacktrack,
+                        shape = MaterialShapes.Cookie9Sided.toShape(),
+                        size = 64.dp,
+                        containerColor = colors.accent,
+                        contentColor = colors.onAccent,
+                        iconRotation = if (isOn) -turn else 0f
+                    )
+                }
+            },
             trailing = {
                 FilledIconButton(
                     onClick = onToggleClick,
+                    shapes = IconButtonDefaults.shapes(),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = colors.accent,
+                        contentColor = colors.onAccent
+                    ),
                     modifier = Modifier
-                        .size(TrailSenseSize.minimumTouchTarget)
+                        .size(64.dp)
                         .testTag("play_btn")
                 ) {
                     Icon(
                         painter = rememberVectorPainter(
                             if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
                         ),
-                        contentDescription = stringResource(if (isOn) R.string.stop else R.string.start)
+                        contentDescription = stringResource(if (isOn) R.string.stop else R.string.start),
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             },
-            modifier = Modifier.testTag("play_bar_title")
+            actions = listOf(
+                TrailSenseSpotlightAction(
+                    label = frequencyText?.let { stringResource(R.string.places_backtrack_every, it) }
+                        ?: stringResource(R.string.frequency),
+                    icon = TrailIcons.ToolClock,
+                    onClick = onFrequencyClick
+                )
+            )
         )
     }
 }
@@ -885,6 +931,7 @@ private fun PathRow(
     position: TrailSenseGroupPosition,
     formatService: FormatService,
     baseDistanceUnits: DistanceUnits,
+    share: Float,
     onAction: (PathAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -897,21 +944,41 @@ private fun PathRow(
         Units.getDecimalPlaces(distance.units),
         false
     )
-    val subtitle = if (path.temporary) {
-        "${stringResource(R.string.temporary)} · $distanceString"
+    val durationString = path.metadata.duration?.let {
+        val length = Duration.between(it.start, it.end)
+        if (length.isZero || length.isNegative) null else formatService.formatDuration(length, short = true)
+    }
+    val subtitle = listOfNotNull(
+        if (path.temporary) stringResource(R.string.temporary) else null,
+        durationString,
+        pluralStringResource(R.plurals.path_points_count, path.metadata.waypoints, path.metadata.waypoints)
+    ).joinToString(" · ")
+    val pathColor = androidx.compose.ui.graphics.Color(path.style.color)
+    val onPathColor = if (pathColor.luminance() > 0.5f) {
+        androidx.compose.ui.graphics.Color.Black
     } else {
-        distanceString
+        androidx.compose.ui.graphics.Color.White
     }
 
-    TrailSenseListItem(
+    PlacesRow(
         title = title,
         subtitle = subtitle,
-        icon = rememberVectorPainter(getPathIcon(path)),
-        iconTint = androidx.compose.ui.graphics.Color(path.style.color),
         position = position,
+        dimmed = !path.style.visible,
+        leading = {
+            PlacesBadge(
+                containerColor = pathColor,
+                contentColor = onPathColor,
+                icon = getPathIcon(path),
+                shape = if (path.temporary) MaterialShapes.Pill.toShape() else MaterialShapes.Cookie6Sided.toShape()
+            )
+        },
+        value = distanceString,
+        valueColor = MaterialTheme.colorScheme.primary,
+        barFraction = share,
         onClick = { onAction(PathAction.Show) },
         onLongClick = { menuOpen = true },
-        trailing = {
+        actions = {
             PathRowActions(
                 path = path,
                 title = title,
@@ -999,15 +1066,21 @@ private fun PathGroupRow(
     var menuOpen by remember { mutableStateOf(false) }
     val count = group.count ?: 0
 
-    TrailSenseListItem(
+    PlacesRow(
         title = group.name,
         subtitle = pluralStringResource(R.plurals.path_group_summary, count, count),
-        icon = rememberVectorPainter(TrailIcons.PathGroup),
-        iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
         position = position,
+        leading = {
+            PlacesBadge(
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                text = count.toString(),
+                shape = MaterialShapes.Clover4Leaf.toShape()
+            )
+        },
         onClick = { onAction(PathGroupAction.Open) },
         onLongClick = { menuOpen = true },
-        trailing = {
+        actions = {
             Box {
                 IconButton(
                     onClick = { menuOpen = true },
