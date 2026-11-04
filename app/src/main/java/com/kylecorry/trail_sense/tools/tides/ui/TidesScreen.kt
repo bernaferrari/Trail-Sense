@@ -294,14 +294,22 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         }
     }
 
+    /**
+     * The verdict: which way the water is going and until when ("Falling until 12:45 PM"). The next turn is implied
+     * by the direction, so a "Low" tide that is still falling never reads as "Next: Low".
+     */
     fun getNextTideText(): String? {
         val tide = nextTide ?: return null
-        val name = host.getString(if (tide.isHigh) R.string.high_tide else R.string.low_tide)
-        return host.getString(
-            R.string.tides_next_tide,
-            name,
-            formatService.formatTime(tide.time.toLocalTime(), includeSeconds = false)
-        )
+        val time = formatService.formatTime(tide.time.toLocalTime(), includeSeconds = false)
+        return when (current?.rising) {
+            true -> host.getString(R.string.tides_rising_until, time)
+            false -> host.getString(R.string.tides_falling_until, time)
+            null -> host.getString(
+                R.string.tides_next_tide,
+                host.getString(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
+                time
+            )
+        }
     }
 
     fun getCurrentTideIcon(): ImageVector {
@@ -355,10 +363,8 @@ private fun TidesScreen(
 ) {
     // One question: what is the tide doing now? The tide now answers it, with which way it is going and when it
     // turns as the one verdict line. The day's chart and its highs and lows sit below as a quiet list.
-    val verdict = listOfNotNull(
-        isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) },
-        nextTide
-    ).joinToString(" · ").ifBlank { null }
+    val verdict = nextTide
+        ?: isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) }
 
     TrailSensePage(
         title = stringResource(R.string.tides),
@@ -447,10 +453,9 @@ private fun TidesScreen(
                         }
                     }
                 }
-                val now = Instant.now()
-                val next = tides.firstOrNull { it.time.toInstant().isAfter(now) }
+                // The next turn is already the verdict above, so the day's table stays plain.
                 tides.forEach { tide ->
-                    row { position -> TideRow(tide = tide, position = position, isNext = tide == next) }
+                    row { position -> TideRow(tide = tide, position = position) }
                 }
             }
         }
@@ -556,6 +561,8 @@ private fun TideChartView(
     val formatter = remember(context) { FormatService.getInstance(context) }
     val dailyData = daily
     val levelColor = MaterialTheme.colorScheme.primary
+    // Tertiary is the screen's one accent: now.
+    val nowColor = MaterialTheme.colorScheme.tertiary
     val ringColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     val axisLabels = remember(formatter) {
@@ -618,20 +625,31 @@ private fun TideChartView(
                         style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                     )
 
+                    val currentLevel = dailyData.waterLevels.minByOrNull {
+                        Duration.between(Instant.now(), it.time).abs()
+                    }?.takeIf { displayDate == LocalDate.now() }
+                    val nowCenter = currentLevel?.let { Offset(x(it.time), y(it.value)) }
+
+                    // Highs and lows are small hollow marks; one that sits under the now dot is left out, so now
+                    // never looks like two dots stuck together.
+                    val clearance = 16.dp.toPx()
                     dailyData.tides.forEach { tide ->
                         val reading = dailyData.waterLevels.minByOrNull {
                             Duration.between(tide.time.toInstant(), it.time).abs()
                         } ?: return@forEach
                         val center = Offset(x(reading.time), y(reading.value))
-                        drawCircle(color = ringColor, radius = 6.dp.toPx(), center = center)
-                        drawCircle(color = levelColor, radius = 4.dp.toPx(), center = center)
+                        if (nowCenter != null && (center - nowCenter).getDistance() < clearance) return@forEach
+                        drawCircle(color = ringColor, radius = 4.dp.toPx(), center = center)
+                        drawCircle(
+                            color = levelColor,
+                            radius = 4.dp.toPx(),
+                            center = center,
+                            style = Stroke(width = 2.dp.toPx())
+                        )
                     }
 
-                    val currentLevel = dailyData.waterLevels.minByOrNull {
-                        Duration.between(Instant.now(), it.time).abs()
-                    }
-                    if (currentLevel != null && displayDate == LocalDate.now()) {
-                        drawTrailSenseNowDot(Offset(x(currentLevel.time), y(currentLevel.value)), levelColor, ringColor)
+                    if (nowCenter != null) {
+                        drawTrailSenseNowDot(nowCenter, nowColor, ringColor)
                     }
                 }
             }
@@ -662,8 +680,7 @@ private fun TideChartView(
 @Composable
 private fun TideRow(
     tide: Tide,
-    position: TrailSenseGroupPosition,
-    isNext: Boolean = false
+    position: TrailSenseGroupPosition
 ) {
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
@@ -700,7 +717,7 @@ private fun TideRow(
                 modifier = Modifier.padding(end = TrailSenseSpacing.md),
                 style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold,
-                color = if (isNext) scheme.primary else scheme.onSurface
+                color = scheme.onSurface
             )
         }
     ) {
@@ -710,18 +727,14 @@ private fun TideRow(
             style = MaterialTheme.typography.titleMedium,
             color = scheme.onSurface
         )
-        Text(
-            text = listOfNotNull(
-                if (isNext) stringResource(R.string.next) else null,
-                if (height == null) {
-                    stringResource(R.string.estimated)
-                } else {
-                    formatter.formatDistance(Distance.meters(height).convertTo(units), 2, true)
-                }
-            ).joinToString(" · "),
-            style = MaterialTheme.typography.bodyMedium,
-            color = scheme.onSurfaceVariant
-        )
+        // A measured height when the table has one; estimated tides say so once, in the footer below.
+        if (height != null) {
+            Text(
+                text = formatter.formatDistance(Distance.meters(height).convertTo(units), 2, true),
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant
+            )
+        }
     }
 }
 
@@ -733,7 +746,7 @@ private fun TidesScreenPreview() {
             title = "High (1.20 ft)",
             subtitle = "Harbor",
             isRising = true,
-            nextTide = "Next: Low at 3:42 PM",
+            nextTide = "Rising until 3:42 PM",
             icon = TrailIcons.TideHigh,
             isLoading = false,
             displayDate = LocalDate.now(),

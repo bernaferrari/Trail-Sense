@@ -2176,6 +2176,8 @@
     <string name="packs_items_packed">%1$d of %2$d items packed</string>
     <string name="tides_rising">Rising</string>
     <string name="tides_falling">Falling</string>
+    <string name="tides_rising_until">Rising until %1$s</string>
+    <string name="tides_falling_until">Falling until %1$s</string>
     <string name="tides_next_tide">Next: %1$s at %2$s</string>
     <string name="tides_more_options">More options</string>
     <string name="tides_hidden">Hidden</string>
