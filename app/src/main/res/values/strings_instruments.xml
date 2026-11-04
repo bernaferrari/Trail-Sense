@@ -7,6 +7,8 @@
     <string name="level_left_high">Left side is high</string>
     <string name="level_top_high">Top edge is high</string>
     <string name="level_bottom_high">Bottom edge is high</string>
+    <string name="level_hint_flat">Checking the surface the phone lies on</string>
+    <string name="level_hint_edge">Checking the edge the phone stands on</string>
 
     <!-- Clinometer -->
     <string name="clinometer_vertical">Vertical</string>
