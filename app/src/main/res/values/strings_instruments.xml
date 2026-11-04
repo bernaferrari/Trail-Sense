@@ -18,4 +18,16 @@
 
     <!-- Flashlight -->
     <string name="flashlight_turns_off_in">Off in %1$s</string>
+
+    <!-- Metal detector -->
+    <string name="metal_detector_field">Magnetic field</string>
+
+    <!-- Solar panel aligner -->
+    <string name="solar_aligned">Aligned</string>
+    <string name="solar_align_to_collect">Point the panel to collect</string>
+    <string name="solar_tilt_up">Tilt up %1$s</string>
+    <string name="solar_tilt_down">Tilt down %1$s</string>
+    <string name="solar_turn_left">Turn left %1$s</string>
+    <string name="solar_turn_right">Turn right %1$s</string>
+    <string name="solar_now">Now %1$s</string>
 </resources>
