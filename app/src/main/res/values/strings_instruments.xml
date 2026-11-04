@@ -51,4 +51,13 @@
 
     <!-- Signal finder -->
     <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
+
+    <!-- Ballistics -->
+    <plurals name="ballistics_clicks">
+        <item quantity="one">%d click</item>
+        <item quantity="other">%d clicks</item>
+    </plurals>
+    <string name="ballistics_up">Up</string>
+    <string name="ballistics_down">Down</string>
+    <string name="ballistics_enter_distance">Enter the distance to target</string>
 </resources>

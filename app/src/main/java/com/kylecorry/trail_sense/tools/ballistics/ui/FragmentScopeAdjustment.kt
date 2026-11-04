@@ -1,5 +1,28 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Arrow
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.icons.trail.Ballistics
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -104,11 +127,14 @@ fun ScopeAdjustmentPage(
     }.ifBlank { stringResource(R.string.none) }
 
     BallisticsForm(modifier = modifier) {
-        BallisticsHero(
-            label = stringResource(R.string.scope_adjustment),
-            value = adjustmentText,
-            valueTag = "adjustment_amount",
-            style = MaterialTheme.typography.headlineMedium
+        ScopeHero(
+            adjustmentX = adjustmentX,
+            adjustmentY = adjustmentY,
+            missX = offsetX.convertTo(DistanceUnits.Inches).value *
+                (if (offsetDirectionX == ScopeDirection.Left) -1f else 1f),
+            missY = offsetY.convertTo(DistanceUnits.Inches).value *
+                (if (offsetDirectionY == ScopeDirection.Down) -1f else 1f),
+            description = adjustmentText
         )
 
         TrailSenseRowGroup {
@@ -208,38 +234,167 @@ private fun MissGroup(
     }
 }
 
-/** The answer of a ballistics page, on the accent tone, its label above. */
+/** The answer of a ballistics page as a Spotlight: a shaped badge, the label above, the value large and SemiBold. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun BallisticsHero(
     label: String,
     value: String,
     valueTag: String,
-    style: TextStyle = MaterialTheme.typography.displaySmall
+    style: TextStyle = MaterialTheme.typography.displaySmall,
+    icon: androidx.compose.ui.graphics.vector.ImageVector = TrailIcons.Ballistics
 ) {
+    TrailSenseSpotlight(
+        title = value,
+        eyebrow = label,
+        titleStyle = style,
+        modifier = Modifier
+            .testTag(valueTag)
+            .semantics(mergeDescendants = true) {},
+        badge = {
+            TrailSenseShapeBadge(
+                icon = icon,
+                shape = MaterialShapes.Burst.toShape(),
+                size = 64.dp
+            )
+        }
+    )
+}
+
+/**
+ * The scope hero: a reticle showing where the shot landed and the way back to the centre, beside the two turret
+ * moves as badges with arrows ("4 clicks" right, "2 clicks" up).
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ScopeHero(
+    adjustmentX: ScopeAdjustment?,
+    adjustmentY: ScopeAdjustment?,
+    missX: Float,
+    missY: Float,
+    description: String
+) {
+    val scheme = MaterialTheme.colorScheme
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("adjustment_amount")
+            .semantics(mergeDescendants = true) { contentDescription = description },
+        shape = MaterialTheme.shapes.extraLarge,
+        color = scheme.primaryContainer,
+        contentColor = scheme.onPrimaryContainer
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TrailSenseSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-                textAlign = TextAlign.Center
+                stringResource(R.string.scope_adjustment),
+                style = MaterialTheme.typography.labelLarge,
+                color = scheme.onPrimaryContainer.copy(alpha = 0.78f)
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Reticle(
+                    missX = missX,
+                    missY = missY,
+                    modifier = Modifier.size(136.dp)
+                )
+                Spacer(Modifier.width(TrailSenseSpacing.xl))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                ) {
+                    TurretMove(adjustmentX, MaterialShapes.Cookie9Sided)
+                    TurretMove(adjustmentY, MaterialShapes.Cookie6Sided)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun TurretMove(adjustment: ScopeAdjustment?, shape: androidx.graphics.shapes.RoundedPolygon) {
+    val scheme = MaterialTheme.colorScheme
+    val none = adjustment == null || adjustment.clicks == 0
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TrailSenseShapeBadge(
+            icon = if (none) TrailIcons.Check else TrailIcons.Arrow,
+            shape = shape.toShape(),
+            size = 44.dp,
+            containerColor = if (none) scheme.surfaceContainerLowest.copy(alpha = 0.7f) else scheme.primary,
+            contentColor = if (none) scheme.onPrimaryContainer else scheme.onPrimary,
+            iconRotation = when (adjustment?.direction) {
+                ScopeDirection.Right -> 90f
+                ScopeDirection.Down -> 180f
+                ScopeDirection.Left -> 270f
+                else -> 0f
+            }
+        )
+        Spacer(Modifier.width(TrailSenseSpacing.md))
+        Column {
+            Text(
+                text = if (adjustment == null) {
+                    stringResource(R.string.dash)
+                } else {
+                    pluralStringResource(R.plurals.ballistics_clicks, adjustment.clicks, adjustment.clicks)
+                },
+                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = value,
-                modifier = Modifier.testTag(valueTag),
-                style = style.copy(fontFeatureSettings = "tnum"),
-                textAlign = TextAlign.Center
+                text = when (adjustment?.direction) {
+                    ScopeDirection.Left -> stringResource(R.string.left)
+                    ScopeDirection.Right -> stringResource(R.string.right)
+                    ScopeDirection.Up -> stringResource(R.string.ballistics_up)
+                    ScopeDirection.Down -> stringResource(R.string.ballistics_down)
+                    null -> stringResource(R.string.ballistics_enter_distance)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
             )
+        }
+    }
+}
+
+/** Where the shot hit (x right, y up, any unit), scaled so the furthest miss sits near the edge. */
+@Composable
+private fun Reticle(missX: Float, missY: Float, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val ink = scheme.onPrimaryContainer
+    val hit = scheme.tertiary
+    val path = scheme.primary
+    val face = scheme.surfaceContainerLowest.copy(alpha = 0.7f)
+    val x by animateFloatAsState(missX, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missX")
+    val y by animateFloatAsState(missY, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missY")
+    Canvas(modifier = modifier) {
+        val radius = size.minDimension / 2f
+        drawCircle(face, radius, center)
+        listOf(0.33f, 0.66f).forEach {
+            drawCircle(ink.copy(alpha = 0.18f), radius * it, center, style = Stroke(1.5.dp.toPx()))
+        }
+        val gap = 8.dp.toPx()
+        val stroke = 2.dp.toPx()
+        drawLine(ink.copy(alpha = 0.55f), Offset(center.x - radius + 6.dp.toPx(), center.y), Offset(center.x - gap, center.y), stroke, StrokeCap.Round)
+        drawLine(ink.copy(alpha = 0.55f), Offset(center.x + gap, center.y), Offset(center.x + radius - 6.dp.toPx(), center.y), stroke, StrokeCap.Round)
+        drawLine(ink.copy(alpha = 0.55f), Offset(center.x, center.y - radius + 6.dp.toPx()), Offset(center.x, center.y - gap), stroke, StrokeCap.Round)
+        drawLine(ink.copy(alpha = 0.55f), Offset(center.x, center.y + gap), Offset(center.x, center.y + radius - 6.dp.toPx()), stroke, StrokeCap.Round)
+        drawCircle(path, 3.dp.toPx(), center)
+
+        val largest = maxOf(kotlin.math.abs(x), kotlin.math.abs(y))
+        if (largest > 0f) {
+            val scale = radius * 0.7f / largest
+            val impact = Offset(center.x + x * scale, center.y - y * scale)
+            drawLine(
+                path,
+                impact,
+                center,
+                3.dp.toPx(),
+                StrokeCap.Round,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
+            )
+            drawCircle(hit.copy(alpha = 0.3f), 13.dp.toPx(), impact)
+            drawCircle(hit, 8.dp.toPx(), impact)
         }
     }
 }

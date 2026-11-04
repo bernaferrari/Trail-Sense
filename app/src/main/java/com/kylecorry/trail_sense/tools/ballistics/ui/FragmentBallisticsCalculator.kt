@@ -1,5 +1,16 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.dp
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -186,13 +197,80 @@ private fun TrajectoryCard(
                     textAlign = TextAlign.Center
                 )
 
-                else -> BallisticsTable(
-                    trajectory = trajectory,
-                    zeroDistance = zeroDistance,
-                    bulletSpeed = bulletSpeed,
-                    formatter = formatter,
-                    prefs = prefs
-                )
+                else -> Column {
+                    TrajectoryChart(
+                        trajectory = trajectory,
+                        zeroDistance = zeroDistance,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+                    )
+                    BallisticsTable(
+                        trajectory = trajectory,
+                        zeroDistance = zeroDistance,
+                        bulletSpeed = bulletSpeed,
+                        formatter = formatter,
+                        prefs = prefs
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The flight of the bullet: line of sight dashed, the path rising through it and dropping away as a thick primary
+ * curve over a soft fill, with a dot where it crosses back at the zero distance.
+ */
+@Composable
+private fun TrajectoryChart(
+    trajectory: List<TrajectoryPoint>,
+    zeroDistance: Distance?,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val line = scheme.primary
+    val sight = scheme.onSurfaceVariant.copy(alpha = 0.5f)
+    val zeroColor = scheme.tertiary
+    Canvas(modifier = modifier) {
+        if (trajectory.size < 2) return@Canvas
+        val maxX = trajectory.maxOf { it.distance.meters().value }.coerceAtLeast(1f)
+        val drops = trajectory.map { it.drop.meters().value }
+        val top = drops.max().coerceAtLeast(0f)
+        val bottom = drops.min().coerceAtMost(0f)
+        val range = (top - bottom).takeIf { it > 0f } ?: 1f
+        val pad = 10.dp.toPx()
+        fun px(m: Float) = pad + (m / maxX) * (size.width - pad * 2)
+        fun py(m: Float) = pad + (top - m) / range * (size.height - pad * 2)
+
+        drawLine(
+            sight,
+            Offset(0f, py(0f)),
+            Offset(size.width, py(0f)),
+            2.dp.toPx(),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
+        )
+        val curve = Path().apply {
+            trajectory.forEachIndexed { i, p ->
+                val x = px(p.distance.meters().value)
+                val y = py(p.drop.meters().value)
+                if (i == 0) moveTo(x, y) else lineTo(x, y)
+            }
+        }
+        val area = Path().apply {
+            addPath(curve)
+            lineTo(px(trajectory.last().distance.meters().value), size.height)
+            lineTo(px(trajectory.first().distance.meters().value), size.height)
+            close()
+        }
+        drawPath(area, Brush.verticalGradient(listOf(line.copy(alpha = 0.28f), line.copy(alpha = 0f))))
+        drawPath(curve, line, style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+        zeroDistance?.let {
+            val zx = px(it.meters().value)
+            if (zx in 0f..size.width) {
+                drawCircle(zeroColor.copy(alpha = 0.3f), 11.dp.toPx(), Offset(zx, py(0f)))
+                drawCircle(zeroColor, 6.dp.toPx(), Offset(zx, py(0f)))
             }
         }
     }
@@ -234,7 +312,7 @@ private fun BallisticsTable(
     // A plain column: the page already scrolls, and a trajectory is a few dozen rows at most.
     Column(modifier = Modifier.fillMaxWidth()) {
         BallisticsTableRow(values = headers, header = true)
-        trajectory.forEach { point ->
+        trajectory.forEachIndexed { index, point ->
             val values = listOf(
                 DecimalFormatter.format(point.time, 2),
                 DecimalFormatter.format(
@@ -250,7 +328,7 @@ private fun BallisticsTable(
                 ),
                 DecimalFormatter.format(point.drop.convertTo(smallUnits).value, 1)
             )
-            BallisticsTableRow(values = values)
+            BallisticsTableRow(values = values, striped = index % 2 == 0)
         }
     }
 }
@@ -258,12 +336,17 @@ private fun BallisticsTable(
 @Composable
 private fun BallisticsTableRow(
     values: List<String>,
-    header: Boolean = false
+    header: Boolean = false,
+    striped: Boolean = false
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.sm),
+            .padding(horizontal = TrailSenseSpacing.sm)
+            .background(
+                if (striped) MaterialTheme.colorScheme.surfaceContainerHigh else androidx.compose.ui.graphics.Color.Transparent,
+                MaterialTheme.shapes.medium
+            ),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
         values.forEach { value ->
@@ -277,8 +360,9 @@ private fun BallisticsTableRow(
                 } else {
                     MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum")
                 },
+                fontWeight = if (header) androidx.compose.ui.text.font.FontWeight.SemiBold else null,
                 color = if (header) {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                    MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurface
                 }
