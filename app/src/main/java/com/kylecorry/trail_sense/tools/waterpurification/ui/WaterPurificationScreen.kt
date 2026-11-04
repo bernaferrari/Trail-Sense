@@ -233,7 +233,8 @@ internal fun WaterPurificationScreen(
                             isRunning -> StepState.Done
                             index == steps.lastIndex -> StepState.Next
                             else -> StepState.Todo
-                        }
+                        },
+                        index = index
                     )
                 }
             }
@@ -370,12 +371,17 @@ private fun WaterStep(
     position: TrailSenseGroupPosition,
     number: String,
     text: String,
-    state: StepState
+    state: StepState,
+    index: Int = 0
 ) {
     val scheme = MaterialTheme.colorScheme
     val status = trailSenseStatusColors()
     val rowColor by animateColorAsState(
-        if (state == StepState.Next) scheme.primaryContainer else scheme.surfaceContainerLow,
+        when (state) {
+            StepState.Next -> scheme.primaryContainer
+            StepState.Done -> trailSenseStatusColors().goodContainer.copy(alpha = 0.5f)
+            StepState.Todo -> if (index == 0) scheme.secondaryContainer.copy(alpha = 0.55f) else scheme.tertiaryContainer.copy(alpha = 0.55f)
+        },
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "stepRow"
     )
@@ -416,8 +422,8 @@ private fun WaterStep(
                     text = number,
                     shape = MaterialShapes.Cookie9Sided.toShape(),
                     size = 44.dp,
-                    containerColor = scheme.secondaryContainer,
-                    contentColor = scheme.onSecondaryContainer
+                    containerColor = if (index == 0) scheme.secondary else scheme.tertiary,
+                    contentColor = if (index == 0) scheme.onSecondary else scheme.onTertiary
                 )
             }
           }
