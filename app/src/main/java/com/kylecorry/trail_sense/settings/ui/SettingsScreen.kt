@@ -386,21 +386,8 @@ private fun SettingsNavRow(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // The family's icon well: 40 dp, 12 dp corners, a 12% primary tint.
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                contentColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(TrailSenseSize.compactIcon)
-                    )
-                }
-            }
+            // WiFi Weakspot's icon well, the same on every settings row.
+            SettingsRowIcon(painter = icon)
             Spacer(Modifier.width(TrailSenseSpacing.lg))
 
             Column(

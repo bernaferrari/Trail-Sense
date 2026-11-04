@@ -91,7 +91,7 @@ fun <M> TrailSenseAppearancePicker(
     styleTitle: String,
     modifier: Modifier = Modifier
 ) {
-    val card = MaterialTheme.colorScheme.surfaceContainerLow
+    val card = MaterialTheme.colorScheme.surfaceContainer
     val seed = selectedPalette.seed
     val colorsBottom by animateDpAsState(
         if (seed != null) TrailSenseShape.groupInner else TrailSenseShape.groupOuter,

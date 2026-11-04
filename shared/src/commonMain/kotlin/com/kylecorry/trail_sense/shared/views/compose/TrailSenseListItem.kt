@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import kotlinx.coroutines.delay
  *   (one switch, icon button or chevron), never both.
  * - State colour comes from the caller only for real meaning: error for danger, tertiary for attention.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TrailSenseListItem(
     title: String,
@@ -121,7 +123,7 @@ fun TrailSenseListItem(
         ) {
             if (icon != null) {
                 Surface(
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
                     color = iconTint.copy(alpha = 0.12f),
                     contentColor = iconTint,
                     modifier = Modifier.size(40.dp)
@@ -134,7 +136,7 @@ fun TrailSenseListItem(
                             contentDescription = null,
                             tint = iconTint,
                             modifier = Modifier
-                                .size(TrailSenseSize.leadingIcon)
+                                .size(22.dp)
                                 .rotate(iconRotation)
                         )
                     }

@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.ModeNight
 import androidx.compose.material.icons.rounded.WbTwilight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -82,10 +83,10 @@ fun ThemeAppearanceControls(
         onThemeChanged(next.toTheme())
     }
     val modes = listOf(
-        // Plain labels, centred: three words need no icons.
-        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto)),
-        TrailSenseChoice(ThemeMode.Light, stringResource(R.string.theme_light)),
-        TrailSenseChoice(ThemeMode.Dark, stringResource(R.string.theme_dark))
+        // WiFi Weakspot's set: each mode with its icon; the chosen one trades it for a check.
+        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto), Icons.Rounded.BrightnessAuto),
+        TrailSenseChoice(ThemeMode.Light, stringResource(R.string.theme_light), Icons.Rounded.LightMode),
+        TrailSenseChoice(ThemeMode.Dark, stringResource(R.string.theme_dark), Icons.Rounded.DarkMode)
     )
     // Eight choices in two even rows: the wallpaper, then seven clearly different hues.
     val palettes = listOf(
@@ -144,6 +145,7 @@ fun ThemeAppearanceControls(
         row { position ->
             SettingsSwitchRow(
                 label = stringResource(R.string.theme_night_vision),
+                icon = Icons.Rounded.ModeNight,
                 summary = stringResource(R.string.theme_night_vision_summary),
                 checked = choice.night,
                 onCheckedChange = { update(choice.copy(night = it)) },

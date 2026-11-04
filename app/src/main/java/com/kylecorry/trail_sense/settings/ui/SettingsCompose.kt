@@ -26,6 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.toShape
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -85,7 +87,8 @@ fun SettingsSwitchRow(
     modifier: Modifier = Modifier,
     summary: String? = null,
     enabled: Boolean = true,
-    position: TrailSenseGroupPosition = SettingsInnerPosition
+    position: TrailSenseGroupPosition = SettingsInnerPosition,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
     // A checked switch says so itself: the row keeps the group's tone so a group reads as one object.
     val containerColor = MaterialTheme.colorScheme.surfaceContainer
@@ -106,10 +109,14 @@ fun SettingsSwitchRow(
                     role = Role.Switch,
                     onValueChange = onCheckedChange
                 )
-                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            if (icon != null) {
+                SettingsRowIcon(icon)
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.titleMedium,
@@ -141,11 +148,13 @@ fun SettingsActionRow(
     summary: String? = null,
     enabled: Boolean = true,
     trailing: (@Composable () -> Unit)? = null,
-    position: TrailSenseGroupPosition = SettingsInnerPosition
+    position: TrailSenseGroupPosition = SettingsInnerPosition,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
     TrailSenseListItem(
         title = label,
         subtitle = summary,
+        icon = icon?.let { androidx.compose.ui.graphics.vector.rememberVectorPainter(it) },
         trailing = trailing ?: {
             Box(
                 modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
@@ -191,7 +200,8 @@ fun SettingsPickerRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    position: TrailSenseGroupPosition = SettingsInnerPosition
+    position: TrailSenseGroupPosition = SettingsInnerPosition,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
     SettingsActionRow(
         label = label,
@@ -199,7 +209,8 @@ fun SettingsPickerRow(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        position = position
+        position = position,
+        icon = icon
     )
 }
 
@@ -214,24 +225,30 @@ fun <T> SettingsChoiceRow(
     selected: T,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
-    position: TrailSenseGroupPosition = SettingsInnerPosition
+    position: TrailSenseGroupPosition = SettingsInnerPosition,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null
 ) {
+    // WiFi Weakspot's settings block: the icon and title as a row, the choice full width under it.
     TrailSenseGroupCard(
         position = position,
         modifier = modifier,
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
-            top = TrailSenseSpacing.md,
-            bottom = TrailSenseSpacing.lg
-        )
+        contentPadding = PaddingValues(16.dp)
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
-        )
+        androidx.compose.foundation.layout.Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 12.dp)
+        ) {
+            if (icon != null) {
+                SettingsRowIcon(icon)
+                // Same gap as a list row's icon, so block and row titles line up.
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
         TrailSenseConnectedChoice(
             options = options,
             selected = selected,
@@ -292,5 +309,37 @@ fun SettingsSliderRow(
             steps = steps,
             modifier = Modifier.fillMaxWidth()
         )
+    }
+}
+
+/** WiFi Weakspot's row icon: a 40 dp Cookie6 in a 12% primary tint, the glyph in primary. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SettingsRowIcon(icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Surface(
+        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+        contentColor = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.size(40.dp)
+    ) {
+        androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
+            androidx.compose.material3.Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
+        }
+    }
+}
+
+/** [SettingsRowIcon] for a painter (rows that carry drawable or vector painters). */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SettingsRowIcon(painter: androidx.compose.ui.graphics.painter.Painter) {
+    Surface(
+        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+        contentColor = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.size(40.dp)
+    ) {
+        androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
+            androidx.compose.material3.Icon(painter, contentDescription = null, modifier = Modifier.size(22.dp))
+        }
     }
 }

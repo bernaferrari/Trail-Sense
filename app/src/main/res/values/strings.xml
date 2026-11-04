@@ -2147,7 +2147,7 @@
     <string name="theme_black_background">Black background</string>
     <string name="theme_black_background_summary">Pure black in dark mode, easier on OLED screens and the battery</string>
     <string name="theme_night_vision">Night vision</string>
-    <string name="theme_night_vision_summary">A dim red screen that keeps your eyes adjusted to the dark</string>
+    <string name="theme_night_vision_summary">A dim red screen for the dark</string>
     <string name="theme_palette_wallpaper">Wallpaper colors</string>
     <string name="theme_palette_orange">Orange</string>
     <string name="theme_palette_amber">Amber</string>

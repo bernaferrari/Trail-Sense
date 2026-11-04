@@ -53,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
@@ -358,42 +359,22 @@ fun trailSenseChoiceColors() = ToggleButtonDefaults.toggleButtonColors(
  */
 @Composable
 fun RowScope.TrailSenseChoiceContent(label: String, icon: ImageVector?, checked: Boolean) {
-    val slot = ToggleButtonDefaults.IconSize
-    val gap = ToggleButtonDefaults.IconSpacing
+    // As in WiFi Weakspot: the icon (the check when chosen) and the label, centred together in the button.
     val shown = if (checked) Icons.Rounded.Check else icon
-    androidx.compose.ui.layout.Layout(
-        content = {
-            Box(Modifier.size(slot), contentAlignment = Alignment.Center) {
-                if (shown != null) {
-                    Icon(shown, contentDescription = null, modifier = Modifier.size(slot))
-                }
-            }
-            Text(
-                label,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    ) { measurables, constraints ->
-        val lead = (slot + gap).roundToPx()
-        val slotPlaceable = measurables[0].measure(androidx.compose.ui.unit.Constraints())
-        val bounded = constraints.hasBoundedWidth
-        val text = measurables[1].measure(
-            androidx.compose.ui.unit.Constraints(
-                maxWidth = if (bounded) (constraints.maxWidth - lead).coerceAtLeast(0) else androidx.compose.ui.unit.Constraints.Infinity
-            )
-        )
-        // Wrapping (scrollable rows): room for the slot on both sides, so the label stays centred.
-        val width = if (bounded) constraints.maxWidth else text.width + 2 * lead
-        val height = maxOf(slotPlaceable.height, text.height).coerceAtLeast(constraints.minHeight)
-        val centred = (width - text.width) / 2
-        val textX = centred.coerceAtLeast(lead)
-        layout(width, height) {
-            slotPlaceable.place(textX - lead, (height - slotPlaceable.height) / 2)
-            text.place(textX, (height - text.height) / 2)
-        }
+    if (shown != null) {
+        Icon(shown, contentDescription = null, modifier = Modifier.size(ToggleButtonDefaults.IconSize))
+        androidx.compose.foundation.layout.Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
     }
+    // Shrinks a step or two rather than truncating ("Kilograms" in a three-way choice).
+    Text(
+        label,
+        style = MaterialTheme.typography.labelLarge,
+        maxLines = 1,
+        autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(
+            minFontSize = 11.sp,
+            maxFontSize = MaterialTheme.typography.labelLarge.fontSize
+        )
+    )
 }
 
 /** A group card holding anything (a chart, a choice, a preview) with the group's shape and tone. */

@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import androidx.compose.material.icons.rounded.Straighten
+import androidx.compose.material.icons.rounded.Thermostat
+import androidx.compose.material.icons.rounded.Scale
+import androidx.compose.material.icons.rounded.Compress
 import com.kylecorry.trail_sense.main.theme.ThemeChoices
 import android.content.Context
 import android.content.Intent
@@ -958,6 +962,7 @@ class TrailSenseComposeDestinationHost(
             trailSenseSection("measurements", title = measurementsTitle) {
                 row { position ->
                     UnitChoiceRow(
+                        icon = androidx.compose.material.icons.Icons.Rounded.Straighten,
                         label = stringResource(R.string.distance),
                         options = distanceOptions,
                         selected = distanceUnits,
@@ -971,6 +976,7 @@ class TrailSenseComposeDestinationHost(
                 if (hasBarometer) {
                     row { position ->
                         UnitPickerRow(
+                            icon = androidx.compose.material.icons.Icons.Rounded.Compress,
                             label = stringResource(R.string.pressure),
                             options = pressureOptions,
                             selected = pressureUnits,
@@ -984,6 +990,7 @@ class TrailSenseComposeDestinationHost(
                 }
                 row { position ->
                     UnitChoiceRow(
+                        icon = androidx.compose.material.icons.Icons.Rounded.Thermostat,
                         label = stringResource(R.string.temperature),
                         options = temperatureOptions,
                         selected = temperatureUnits,
@@ -996,6 +1003,7 @@ class TrailSenseComposeDestinationHost(
                 }
                 row { position ->
                     UnitChoiceRow(
+                        icon = androidx.compose.material.icons.Icons.Rounded.Scale,
                         label = stringResource(R.string.weight),
                         options = weightOptions,
                         selected = weightUnits,
@@ -3005,7 +3013,8 @@ class TrailSenseComposeDestinationHost(
         options: List<SettingsOption>,
         selected: String,
         onSelected: (String) -> Unit,
-        position: TrailSenseGroupPosition
+        position: TrailSenseGroupPosition,
+        icon: androidx.compose.ui.graphics.vector.ImageVector? = null
     ) {
         SettingsPickerRow(
             label = label,
@@ -3013,7 +3022,8 @@ class TrailSenseComposeDestinationHost(
             onClick = {
                 pickOption(label, options, selected, onSelected)
             },
-            position = position
+            position = position,
+            icon = icon
         )
     }
 
@@ -3024,14 +3034,16 @@ class TrailSenseComposeDestinationHost(
         options: List<SettingsOption>,
         selected: String,
         onSelected: (String) -> Unit,
-        position: TrailSenseGroupPosition
+        position: TrailSenseGroupPosition,
+        icon: androidx.compose.ui.graphics.vector.ImageVector? = null
     ) {
         SettingsChoiceRow(
             label = label,
             options = remember(options) { options.map { TrailSenseChoice(it.value, it.label) } },
             selected = selected,
             onSelect = onSelected,
-            position = position
+            position = position,
+            icon = icon
         )
     }
 
