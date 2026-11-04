@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -99,7 +100,7 @@ internal fun ErrorHandlerScreen(
             onClick = onRestartApp,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TrailSenseSize.minimumTouchTarget)
+                .heightIn(min = 56.dp)
                 .widthIn(max = 480.dp)
         ) {
             Icon(Icons.Default.Refresh, contentDescription = null)

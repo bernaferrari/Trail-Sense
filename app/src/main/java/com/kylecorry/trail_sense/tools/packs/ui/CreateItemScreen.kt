@@ -542,7 +542,7 @@ private fun WeightInput(
                 onClick = { isOpen = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .heightIn(min = 56.dp)
                     .testTag("item_weight_unit")
             ) {
                 Text(unit?.let { formatService.getWeightUnitName(it) }.orEmpty())

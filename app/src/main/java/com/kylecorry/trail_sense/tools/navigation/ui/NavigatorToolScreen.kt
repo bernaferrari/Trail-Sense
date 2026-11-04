@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
@@ -1284,7 +1285,7 @@ private fun NavigatorHost(
                     onClick = { views.onBeaconClick?.invoke() },
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp)
+                        .heightIn(min = 56.dp)
                 ) {
                     Icon(TrailSenseIcons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(24.dp))
                     Text(
@@ -1299,7 +1300,7 @@ private fun NavigatorHost(
                     onClick = { views.onBeaconLongClick?.invoke() },
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp)
+                        .heightIn(min = 56.dp)
                 ) {
                     Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(24.dp))
                     Text(

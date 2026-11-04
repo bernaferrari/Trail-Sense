@@ -107,7 +107,7 @@ internal fun ExperimentationContent() {
                                 ?.navigate(R.id.pluginsSettingsFragment)
                         },
                         // The same optical centre as the other empty screens.
-                        modifier = Modifier.fillParentMaxHeight(0.78f)
+                        modifier = Modifier.fillParentMaxHeight(0.9f)
                     )
                 }
             }
