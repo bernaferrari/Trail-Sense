@@ -7,4 +7,6 @@
     <string name="sky_strike_last_distance">Distance</string>
     <string name="sky_temperature_change">%s from here</string>
     <string name="sky_temperature_hint">Enter the temperature where you are, then a destination elevation, humidity or wind.</string>
+    <string name="sky_experimentation_empty">Install a Trail Sense plugin and it will show up here, with the features it adds.</string>
+    <string name="sky_experimentation_features">Features</string>
 </resources>

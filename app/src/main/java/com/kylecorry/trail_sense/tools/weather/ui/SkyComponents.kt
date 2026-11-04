@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -250,6 +251,112 @@ internal fun SkyPill(
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1
             )
+        }
+    }
+}
+
+/**
+ * The sky tools' empty state: a large expressive shape in the primary container with a small companion shape in the
+ * tertiary one tucked against it, a warm headline, one line of help, and the actions below.
+ */
+@Composable
+internal fun SkyEmptyState(
+    icon: ImageVector,
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    shape: Shape = MaterialShapes.Cookie12Sided.toShape(),
+    companionShape: Shape = MaterialShapes.Sunny.toShape(),
+    companionIcon: ImageVector? = null,
+    action: (@Composable () -> Unit)? = null
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xxl),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(Modifier.size(200.dp)) {
+            SkyFocalShape(
+                icon = icon,
+                shape = shape,
+                size = 168.dp,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+            SkyFocalShape(
+                icon = companionIcon,
+                shape = companionShape,
+                size = 72.dp,
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
+        }
+        Spacer(Modifier.size(TrailSenseSpacing.xl))
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (description != null) {
+            Spacer(Modifier.size(TrailSenseSpacing.sm))
+            Text(
+                description,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.widthIn(max = 340.dp)
+            )
+        }
+        if (action != null) {
+            Spacer(Modifier.size(TrailSenseSpacing.xl))
+            action()
+        }
+    }
+}
+
+/** One button of a [SkyConnectedButtons] row. */
+internal data class SkyButton(val label: String, val icon: ImageVector?, val onClick: () -> Unit, val tag: String? = null)
+
+/** Buttons joined into one control (QuietGuard's connected buttons): round outside, tight where they meet. */
+@Composable
+internal fun SkyConnectedButtons(buttons: List<SkyButton>, modifier: Modifier = Modifier, primaryFirst: Boolean = true) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+        buttons.forEachIndexed { index, button ->
+            val first = index == 0
+            val last = index == buttons.lastIndex
+            val shape = RoundedCornerShape(
+                topStart = if (first) 28.dp else 8.dp,
+                bottomStart = if (first) 28.dp else 8.dp,
+                topEnd = if (last) 28.dp else 8.dp,
+                bottomEnd = if (last) 28.dp else 8.dp
+            )
+            val strong = primaryFirst && first
+            androidx.compose.material3.Button(
+                onClick = button.onClick,
+                shape = shape,
+                colors = if (strong) {
+                    androidx.compose.material3.ButtonDefaults.buttonColors()
+                } else {
+                    androidx.compose.material3.ButtonDefaults.filledTonalButtonColors()
+                },
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 56.dp)
+                    .then(if (button.tag != null) Modifier.testTag(button.tag) else Modifier)
+            ) {
+                if (button.icon != null) {
+                    Icon(button.icon, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(TrailSenseSpacing.sm))
+                }
+                Text(button.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }
