@@ -79,6 +79,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
@@ -594,24 +595,54 @@ private fun WeatherHost(
     val tendency = weatherItems.firstOrNull { it.id == 2L }
     val rows = weatherItems.filter { it.id != WEATHER_ALERT_ID && it.id != 1L && it.id != 2L }
 
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+    val storm = isStorm(views.weatherTitle.condition)
+    // A standard page: the large title, and the two quick actions (clouds, temperature) in the bar instead of
+    // floating in the forecast's corners.
+    TrailSensePage(
+        title = stringResource(R.string.weather),
+        modifier = modifier.testTag("weather_list"),
+        actions = {
+            listOf(views.weatherTitle.leftButton, views.weatherTitle.rightButton)
+                .filter { it.isVisible }
+                .forEach {
+                    it.Content(
+                        modifier = Modifier.size(48.dp),
+                        offContainerColor = Color.Transparent,
+                        offContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+        }
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("weather_list"),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
             item(key = "weather_hero") {
                 WeatherHeroCard(
                     state = views.weatherTitle,
-                    alert = alert,
                     isUpdating = isWeatherUpdating,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            // An alert is one plain row under the forecast: the warning role, and the error role only in a storm.
+            if (alert != null) {
+                item(key = "weather_alert") {
+                    SkyValueRow(
+                        title = alert.title,
+                        value = alert.trailingText,
+                        icon = TrailIcons.Alert,
+                        iconContainerColor = if (storm) {
+                            MaterialTheme.colorScheme.errorContainer
+                        } else {
+                            MaterialTheme.colorScheme.tertiaryContainer
+                        },
+                        iconContentColor = if (storm) {
+                            MaterialTheme.colorScheme.onErrorContainer
+                        } else {
+                            MaterialTheme.colorScheme.onTertiaryContainer
+                        },
+                        position = TrailSenseGroupPosition.Single,
+                        onClick = alert.onClick,
+                        modifier = Modifier.testTag("weather_item_${alert.id}")
+                    )
+                }
             }
 
             item(key = "weather_monitor") {
@@ -637,19 +668,16 @@ private fun WeatherHost(
                 )
             }
 
+            // The other readings as one headerless group: the page title already says "Weather".
             if (rows.isNotEmpty()) {
                 item(key = "weather_readouts") {
-                    Column {
-                        TrailSenseGroupHeader(stringResource(R.string.weather))
-                        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                            rows.forEachIndexed { index, item ->
-                                WeatherListItemRow(item, TrailSenseGroupPosition.at(index, rows.size))
-                            }
+                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                        rows.forEachIndexed { index, item ->
+                            WeatherListItemRow(item, TrailSenseGroupPosition.at(index, rows.size))
                         }
                     }
                 }
             }
-        }
     }
 }
 
@@ -738,6 +766,9 @@ private fun WeatherPressureSection(
         }
         Spacer(Modifier.height(TrailSenseSpacing.lg))
         if (data.data.size >= 2) {
+            // A steady pressure has nothing to show in a tall box: the chart shrinks to a compact strip.
+            val values = data.data.map { it.value.convertTo(PressureUnits.Hpa).value }
+            val isFlat = (values.maxOrNull() ?: 0f) - (values.minOrNull() ?: 0f) < 1f
             WeatherPressureChart(
                 data = data.data,
                 raw = data.raw,
@@ -745,7 +776,7 @@ private fun WeatherPressureSection(
                 onMarkerSelected = onMarkerSelected,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(168.dp)
+                    .height(if (isFlat) 112.dp else 168.dp)
                     .testTag("chart")
             )
             WeatherChartAxis(data, formatService)
@@ -1022,20 +1053,20 @@ private fun isStorm(condition: WeatherCondition?): Boolean =
     condition == WeatherCondition.Storm || condition == WeatherCondition.Thunderstorm
 
 /**
- * The forecast. Calm on a quiet surface with its shape in primary; for a storm the whole card turns errorContainer
- * and its shape bursts: the one moment this screen raises its voice.
+ * The forecast, straight on the page: its shape in primary, the condition in display type and one line under it.
+ * Only for a storm does it gain a container: errorContainer, its shape bursting, the one moment this screen raises
+ * its voice.
  */
 @Composable
 private fun WeatherHeroCard(
     state: WeatherTitleState,
-    alert: WeatherListItem?,
     isUpdating: Boolean,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
     val storm = isStorm(state.condition)
     val container by androidx.compose.animation.animateColorAsState(
-        if (storm) scheme.errorContainer else scheme.surfaceContainerLow,
+        if (storm) scheme.errorContainer else Color.Transparent,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "weatherHero"
     )
@@ -1054,29 +1085,22 @@ private fun WeatherHeroCard(
                 .padding(TrailSenseSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                state.leftButton.Content(offContainerColor = scheme.surfaceContainerHighest)
-                SkyFocalShape(
-                    // The clear-sky glyph is a bare disc; a sun with rays reads as the sun inside the shape.
-                    icon = if (state.condition == WeatherCondition.Clear) {
-                        androidx.compose.material.icons.Icons.Rounded.WbSunny
-                    } else {
-                        state.icon ?: TrailIcons.Weather
-                    },
-                    shape = if (storm) MaterialShapes.Burst.toShape() else MaterialShapes.Cookie12Sided.toShape(),
-                    size = 96.dp,
-                    containerColor = if (storm) scheme.error else scheme.primary,
-                    contentColor = if (storm) scheme.onError else scheme.onPrimary
-                )
-                state.rightButton.Content(offContainerColor = scheme.surfaceContainerHighest)
-            }
+            SkyFocalShape(
+                // The clear-sky glyph is a bare disc; a sun with rays reads as the sun inside the shape.
+                icon = if (state.condition == WeatherCondition.Clear) {
+                    androidx.compose.material.icons.Icons.Rounded.WbSunny
+                } else {
+                    state.icon ?: TrailIcons.Weather
+                },
+                shape = if (storm) MaterialShapes.Burst.toShape() else MaterialShapes.Cookie12Sided.toShape(),
+                size = 88.dp,
+                containerColor = if (storm) scheme.error else scheme.primary,
+                contentColor = if (storm) scheme.onError else scheme.onPrimary
+            )
             Spacer(Modifier.height(TrailSenseSpacing.lg))
             Text(
                 text = state.title,
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.displaySmall,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
@@ -1088,30 +1112,6 @@ private fun WeatherHeroCard(
                     color = secondaryContent,
                     textAlign = TextAlign.Center
                 )
-            }
-            // An alert is one tappable line under the forecast: danger red only in a storm.
-            if (alert != null) {
-                Surface(
-                    onClick = { alert.onClick?.invoke() },
-                    shape = RoundedCornerShape(50),
-                    color = if (storm) scheme.error else scheme.secondaryContainer,
-                    contentColor = if (storm) scheme.onError else scheme.onSecondaryContainer,
-                    modifier = Modifier
-                        .padding(top = TrailSenseSpacing.md)
-                        .testTag("weather_item_${alert.id}")
-                ) {
-                    Row(
-                        Modifier.padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(TrailIcons.Alert, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(TrailSenseSpacing.sm))
-                        Text(
-                            listOfNotNull(alert.title, alert.trailingText).joinToString(" · "),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                }
             }
             AnimatedVisibility(visible = isUpdating) {
                 Row(
