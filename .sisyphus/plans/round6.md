@@ -40,3 +40,17 @@ what single move would make them? Do that.
 
 Compile with `./gradlew :app:compileDebugKotlin -q`. Commit in small groups in your worktree. Final report:
 per screen, one line on what changed, plus any kit wishes.
+
+## Addendum: what the family does that we don't (from /tmp/ts/family_gap.md — read its "Family DNA",
+## "The path to 9/10" and "Per-screen one-liners" sections)
+- **One star number + a verdict sentence.** The hero's number is ~3x any other text (displayMedium+, SemiBold),
+  followed directly by a plain-language titleMedium verdict ("Pressure steady — no change expected", "Camp Muir is
+  2.87 km southeast", "Your clock is 1 second fast"). Move secondary stats OUT of the hero into small tiles below.
+- **Colour has a job.** The single main action on a screen uses the tertiary (warm) role; good/caution/error
+  for states; everything else neutral surfaceContainer*. No decorative rainbow of pastels.
+- **Data as a designed object.** Charts get word axes or labelled bands (Low/Normal/High, Dark/Dim/Indoor/Daylight),
+  a filled gradient under a 3dp curve, a "now" dot with halo, a floating delta pill; no numeric dashed grids.
+- **Segmented-card lists**: one group, 24dp outer / 6dp inner, 2dp gaps, 72dp rows, one trailing element
+  (state pill, value + micro-bar, switch, or chevron) — instead of stacks of separate cards.
+- **Shapes carry state**: a scallop badge that fills with the value or changes shape/colour with the state
+  (e.g. Bubble Level ring turns Good-green when level), reused in hero and rows.
