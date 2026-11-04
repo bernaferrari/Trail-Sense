@@ -807,8 +807,8 @@ private fun MainActivityContent(
                 .windowInsetsPadding(rootInsets)
         ) {
             errorBanner.Content()
-            val stack by navigator.backStack.collectAsState()
-            val currentId = stack.lastOrNull()?.destination?.id
+            // (No back-stack read here: the bar no longer depends on it, and reading it before the nav host
+            // attached the navigator crashed every theme change.)
             MainAdaptiveNavigation(
                 state = bottomNavigation,
                 // The bar stays put on every screen (hiding it on each push read as cheap and jumpy).
