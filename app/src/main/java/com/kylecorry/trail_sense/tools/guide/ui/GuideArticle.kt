@@ -253,7 +253,7 @@ private fun ArticleImage(block: ArticleBlock.Image) {
     val image = bitmap ?: return
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         androidx.compose.foundation.Image(
