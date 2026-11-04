@@ -160,6 +160,14 @@ private fun GuideRow(
         accent = categoryAccents[categoryIndex % categoryAccents.size],
         badgeShape = categoryShape(categoryIndex),
         position = position,
+        // Each shelf carries a breath of its hue, so sections read as families rather than one grey list.
+        containerColor = androidx.compose.ui.graphics.lerp(
+            MaterialTheme.colorScheme.surfaceContainerLow,
+            com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors(
+                categoryAccents[categoryIndex % categoryAccents.size]
+            ).container,
+            0.3f
+        ),
         onClick = onClick,
         trailing = {
             Icon(

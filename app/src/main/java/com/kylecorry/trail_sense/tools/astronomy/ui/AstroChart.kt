@@ -110,8 +110,15 @@ class AstroChart(
         val lineColor = scheme.outlineVariant
         val sunColor = scheme.tertiary
         val moonColor = scheme.primary.copy(alpha = 0.7f)
-        val nightColor = scheme.primary.copy(alpha = 0.55f)
+        val nightColor = scheme.primaryContainer
         val horizonColor = scheme.outline
+        // The horizon's name sits just under its line at the left, inside the night band, clear of the curves.
+        val horizonPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = scheme.onPrimaryContainer.copy(alpha = 0.75f).toArgb()
+            textSize = Resources.sp(context, 11f)
+            textAlign = Paint.Align.LEFT
+            isFakeBoldText = true
+        }
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = textColor.copy(alpha = 0.7f).toArgb()
             textSize = Resources.sp(context, 10f)
@@ -145,10 +152,10 @@ class AstroChart(
             val bottom = size.height - 24.dp.toPx()
 
             if (showBands) {
-                drawBand(AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL, MIN_Y, nightColor.copy(alpha = 0.06f), left, right, top, bottom)
-                drawBand(AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL, MIN_Y, nightColor.copy(alpha = 0.12f), left, right, top, bottom)
-                drawBand(AstronomyService.SUN_MIN_ALTITUDE_CIVIL, MIN_Y, nightColor.copy(alpha = 0.24f), left, right, top, bottom)
-                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.5f), left, right, top, bottom)
+                drawBand(AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL, MIN_Y, nightColor.copy(alpha = 0.25f), left, right, top, bottom)
+                drawBand(AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL, MIN_Y, nightColor.copy(alpha = 0.3f), left, right, top, bottom)
+                drawBand(AstronomyService.SUN_MIN_ALTITUDE_CIVIL, MIN_Y, nightColor.copy(alpha = 0.4f), left, right, top, bottom)
+                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.6f), left, right, top, bottom)
                 listOf(
                     AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL,
                     AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL,
@@ -157,15 +164,15 @@ class AstroChart(
                     drawHorizontal(it, lineColor, left, right, top, bottom, dashed = true)
                 }
             } else {
-                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.18f), left, right, top, bottom)
+                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.85f), left, right, top, bottom)
             }
 
             drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
             drawContext.canvas.nativeCanvas.drawText(
                 context.getString(R.string.horizon),
-                right - 24.dp.toPx(),
-                toScreen(Vector2(0f, 5f), left, right, top, bottom).y,
-                textPaint
+                left + 6.dp.toPx(),
+                toScreen(Vector2(0f, 0f), left, right, top, bottom).y + 14.dp.toPx(),
+                horizonPaint
             )
 
             drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.28f), left, right, top, bottom)

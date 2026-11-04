@@ -711,11 +711,7 @@ private fun SensorDetailsScreen(
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
-    val tone = when {
-        poor == 0 && moderate == 0 -> TrailSenseTone.Good
-        good >= total / 2 -> TrailSenseTone.Caution
-        else -> TrailSenseTone.Error
-    }
+    val tone = if (poor == 0 && moderate == 0) TrailSenseTone.Good else TrailSenseTone.Secondary
     val colors = trailSenseToneColors(tone)
     val status = trailSenseStatusColors()
     val goodColor = status.good
@@ -760,9 +756,9 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
                 TrailSenseShapeBadge(
                     text = good.toString(),
                     shape = MaterialShapes.Cookie9Sided.toShape(),
-                    size = 56.dp,
-                    containerColor = colors.accent,
-                    contentColor = colors.onAccent
+                    size = 60.dp,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }

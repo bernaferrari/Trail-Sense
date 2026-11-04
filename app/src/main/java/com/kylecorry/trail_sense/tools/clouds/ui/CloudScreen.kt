@@ -298,49 +298,28 @@ private fun CloudScreen(
             }
         },
         floatingActionButton = {
-            Box {
-                ExtendedFloatingActionButton(
-                    onClick = { isCreateMenuOpen = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.testTag("add_btn"),
-                    icon = {
-                        Icon(
-                            imageVector = TrailIcons.Add,
-                            contentDescription = null
-                        )
-                    },
-                    text = { Text(stringResource(R.string.add)) }
-                )
-                DropdownMenu(
-                    expanded = isCreateMenuOpen,
-                    onDismissRequest = { isCreateMenuOpen = false },
-                    shape = RoundedCornerShape(TrailSenseSpacing.lg),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.camera)) },
-                        leadingIcon = { Icon(TrailIcons.Camera, contentDescription = null) },
-                        onClick = {
-                            isCreateMenuOpen = false
-                            onCameraClick()
-                        }
+            // On an empty log the page's own button is the one way in, so the floating one waits for the first cloud.
+            if (!(loaded && clouds.isEmpty())) {
+                Box {
+                    ExtendedFloatingActionButton(
+                        onClick = { isCreateMenuOpen = true },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.testTag("add_btn"),
+                        icon = {
+                            Icon(
+                                imageVector = TrailIcons.Add,
+                                contentDescription = null
+                            )
+                        },
+                        text = { Text(stringResource(R.string.add)) }
                     )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.file)) },
-                        leadingIcon = { Icon(TrailIcons.File, contentDescription = null) },
-                        onClick = {
-                            isCreateMenuOpen = false
-                            onFileClick()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.manual)) },
-                        leadingIcon = { Icon(TrailIcons.Edit, contentDescription = null) },
-                        onClick = {
-                            isCreateMenuOpen = false
-                            onManualClick()
-                        }
+                    CloudCreateMenu(
+                        expanded = isCreateMenuOpen,
+                        onDismiss = { isCreateMenuOpen = false },
+                        onCameraClick = onCameraClick,
+                        onFileClick = onFileClick,
+                        onManualClick = onManualClick
                     )
                 }
             }
@@ -354,24 +333,34 @@ private fun CloudScreen(
     ) {
         if (loaded && clouds.isEmpty()) {
             item(key = "empty") {
-                SkyEmptyState(
+                TrailSenseEmptyState(
                     icon = TrailIcons.Cloud,
                     title = stringResource(R.string.no_clouds),
                     description = stringResource(R.string.clouds_empty_description),
-                    shape = MaterialShapes.Puffy.toShape(),
-                    companionShape = MaterialShapes.Sunny.toShape(),
-                    companionIcon = TrailIcons.Sunny,
                     modifier = Modifier
-                        .fillParentMaxHeight(0.8f)
+                        .fillParentMaxHeight(0.86f)
                         .testTag("cloud_empty_text"),
                     action = {
-                        SkyConnectedButtons(
-                            listOf(
-                                SkyButton(stringResource(R.string.camera), TrailIcons.Camera, onCameraClick),
-                                SkyButton(stringResource(R.string.file), TrailIcons.File, onFileClick),
-                                SkyButton(stringResource(R.string.manual), TrailIcons.Edit, onManualClick)
+                        Box {
+                            androidx.compose.material3.Button(
+                                onClick = { isCreateMenuOpen = true },
+                                modifier = Modifier
+                                    .heightIn(min = 56.dp)
+                                    .testTag("add_btn"),
+                                contentPadding = PaddingValues(horizontal = TrailSenseSpacing.xl)
+                            ) {
+                                Icon(TrailIcons.Add, contentDescription = null)
+                                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                                Text(stringResource(R.string.sky_clouds_log), style = MaterialTheme.typography.titleMedium)
+                            }
+                            CloudCreateMenu(
+                                expanded = isCreateMenuOpen,
+                                onDismiss = { isCreateMenuOpen = false },
+                                onCameraClick = onCameraClick,
+                                onFileClick = onFileClick,
+                                onManualClick = onManualClick
                             )
-                        )
+                        }
                     }
                 )
             }
@@ -651,6 +640,48 @@ private fun CloudScreenPreview() {
             onDeleteCloud = {},
             selectedCloudImage = null,
             onDismissCloudImage = {}
+        )
+    }
+}
+
+/** How to log a cloud: with the camera, from a photo, or by hand. */
+@Composable
+private fun CloudCreateMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onCameraClick: () -> Unit,
+    onFileClick: () -> Unit,
+    onManualClick: () -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(TrailSenseSpacing.lg),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    ) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.camera)) },
+            leadingIcon = { Icon(TrailIcons.Camera, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                onCameraClick()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.file)) },
+            leadingIcon = { Icon(TrailIcons.File, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                onFileClick()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.manual)) },
+            leadingIcon = { Icon(TrailIcons.Edit, contentDescription = null) },
+            onClick = {
+                onDismiss()
+                onManualClick()
+            }
         )
     }
 }

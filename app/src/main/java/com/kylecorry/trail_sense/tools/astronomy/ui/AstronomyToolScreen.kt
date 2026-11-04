@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.MaterialShapes
+import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
@@ -889,7 +891,7 @@ private fun AstronomyTitle(
                     val cx = maxWidth / 2 + radius * kotlin.math.cos(angle).toFloat()
                     val cy = badgeSize / 2 + radius + radius * kotlin.math.sin(angle).toFloat()
                     SkyFocalShape(
-                        icon = if (state.sunUp) TrailIcons.Sun else TrailIcons.Moon,
+                        icon = if (state.sunUp) androidx.compose.material.icons.Icons.Rounded.WbSunny else androidx.compose.material.icons.Icons.Rounded.Bedtime,
                         shape = if (state.sunUp) MaterialShapes.Sunny.toShape() else MaterialShapes.Cookie9Sided.toShape(),
                         size = badgeSize,
                         containerColor = colors.accent,
@@ -1027,14 +1029,32 @@ private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
         verticalAlignment = Alignment.Top
     ) {
-        data.forEach {
+        // Rise, peak and set read as one strip: warm for the rise, neutral for the peak, cool for the set.
+        val tints = if (data.size == 3) {
+            listOf(
+                MaterialTheme.colorScheme.tertiaryContainer,
+                MaterialTheme.colorScheme.secondaryContainer,
+                MaterialTheme.colorScheme.primaryContainer
+            )
+        } else {
+            List(data.size) { MaterialTheme.colorScheme.surfaceContainer }
+        }
+        data.forEachIndexed { index, it ->
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(14.dp))
+                    .background(
+                        tints[index],
+                        RoundedCornerShape(
+                            topStart = if (index == 0) 18.dp else 6.dp,
+                            bottomStart = if (index == 0) 18.dp else 6.dp,
+                            topEnd = if (index == data.lastIndex) 18.dp else 6.dp,
+                            bottomEnd = if (index == data.lastIndex) 18.dp else 6.dp
+                        )
+                    )
                     .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
                     .testTag("astronomy_detail_data")
             ) {
