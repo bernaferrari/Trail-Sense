@@ -9,4 +9,13 @@
     <string name="sky_temperature_hint">Enter the temperature where you are, then a destination elevation, humidity or wind.</string>
     <string name="sky_experimentation_empty">Install a Trail Sense plugin and it will show up here, with the features it adds.</string>
     <string name="sky_experimentation_features">Features</string>
+    <string name="sky_sensors_good">%1$d of %2$d good</string>
+    <string name="sky_sensors_all_good">Every sensor is reporting well</string>
+    <string name="sky_sensors_attention">%d need attention</string>
+    <string name="sky_sensors_good_label">Good</string>
+    <string name="sky_sensors_moderate_label">Moderate</string>
+    <string name="sky_sensors_poor_label">Poor</string>
+    <string name="sky_sensors_orientation">Motion and orientation</string>
+    <string name="sky_sensors_environment">Environment</string>
+    <string name="sky_sensors_device">Device</string>
 </resources>
