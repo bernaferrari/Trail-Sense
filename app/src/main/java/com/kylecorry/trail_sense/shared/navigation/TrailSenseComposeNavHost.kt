@@ -31,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationHost
@@ -83,7 +85,13 @@ fun TrailSenseComposeNavHost(
         val activity = context.findMainActivity()
         if (activity != null) {
             val rootView = LocalView.current
-            val lifecycleOwner = LocalLifecycleOwner.current
+            // Each screen lives on its own lifecycle: it follows the activity's, and ends when the screen leaves, so
+            // observers a screen registers (LiveData, sensors) stop with it instead of firing into a dead screen.
+            val parentLifecycleOwner = LocalLifecycleOwner.current
+            val lifecycleOwner = remember(entry.id) { DestinationLifecycleOwner(parentLifecycleOwner) }
+            DisposableEffect(lifecycleOwner) {
+                onDispose { lifecycleOwner.destroy() }
+            }
             val permissionAction = remember { mutableStateOf<(() -> Unit)?>(null) }
             val permissionLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestMultiplePermissions()
@@ -130,9 +138,11 @@ fun TrailSenseComposeNavHost(
                 }
             }
 
-            host.Content(
-                modifier = Modifier.fillMaxSize()
-            )
+            CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner) {
+                host.Content(
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
     }
@@ -144,5 +154,28 @@ private tailrec fun Context.findMainActivity(): MainActivity? {
         is MainActivity -> this
         is ContextWrapper -> baseContext.findMainActivity()
         else -> null
+    }
+}
+
+/** A screen's lifecycle: the activity's state while the screen is shown, destroyed when the screen goes away. */
+private class DestinationLifecycleOwner(private val parent: LifecycleOwner) : LifecycleOwner {
+    private val registry = LifecycleRegistry(this)
+    private var destroyed = false
+    private val follower = LifecycleEventObserver { _, _ ->
+        if (!destroyed) registry.currentState = parent.lifecycle.currentState.coerceAtLeast(Lifecycle.State.CREATED)
+    }
+
+    override val lifecycle: Lifecycle
+        get() = registry
+
+    init {
+        parent.lifecycle.addObserver(follower)
+    }
+
+    fun destroy() {
+        if (destroyed) return
+        destroyed = true
+        parent.lifecycle.removeObserver(follower)
+        registry.currentState = Lifecycle.State.DESTROYED
     }
 }

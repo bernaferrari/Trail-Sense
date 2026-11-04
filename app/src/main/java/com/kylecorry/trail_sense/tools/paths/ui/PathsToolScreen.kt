@@ -661,7 +661,7 @@ private fun PathsScreen(
                 item(key = "empty") {
                     val isSearching = searchText.isNotBlank()
                     TrailSenseEmptyState(
-                        icon = if (isSearching) Icons.Rounded.Search else Icons.Rounded.Place,
+                        icon = if (isSearching) Icons.Rounded.Search else TrailIcons.ToolBacktrack,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_paths),
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
                         modifier = Modifier
@@ -833,7 +833,7 @@ private fun BacktrackRow(
 ) {
     val isOn = state == FeatureState.On
     val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
-        " ${stringResource(R.string.dash)} ${
+        " · ${
             formatService.formatDuration(
                 it,
                 short = true,

@@ -519,8 +519,8 @@ private fun PlaceBeaconScreen(
             trailSenseSection(key = "appearance", title = appearanceTitle) {
                 row { position ->
                     TrailSenseListItem(
-                        title = groupName,
-                        subtitle = stringResource(R.string.group),
+                        title = stringResource(R.string.group),
+                        subtitle = groupName,
                         icon = rememberVectorPainter(TrailIcons.BeaconGroup),
                         position = position,
                         onClick = onGroupClick,
@@ -752,10 +752,11 @@ private fun CoordinateInput(
         }
     }
 
+    // Follow the coordinate only when it changes from outside (GPS, a picked beacon, an edit loaded later): while
+    // typing, a partial entry parses to nothing, and replacing the text then would erase what was typed.
     LaunchedEffect(coordinate) {
-        val formatted = coordinate?.let { formatter.formatLocation(it) }.orEmpty()
-        if (coordinateText != formatted) {
-            coordinateText = formatted
+        if (coordinate != null && Coordinate.parse(coordinateText) != coordinate) {
+            coordinateText = formatter.formatLocation(coordinate)
         }
     }
 

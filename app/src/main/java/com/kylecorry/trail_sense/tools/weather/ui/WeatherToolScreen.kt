@@ -878,7 +878,7 @@ private fun WeatherMonitorPlayBar(
 ) {
     val isOn = state == FeatureState.On
     val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
-        " ${stringResource(R.string.dash)} ${
+        " · ${
             formatService.formatDuration(
                 it,
                 short = true,

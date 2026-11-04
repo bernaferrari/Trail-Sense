@@ -11,6 +11,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.WindowCompat
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -97,6 +98,7 @@ internal fun showComposeDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.32f))
                 .clickable(interactionSource = outside, indication = null) {
                     if (cancelable && cancelOnOutsideTouch) dialog.cancel()
                 }
@@ -133,6 +135,10 @@ internal fun showComposeDialog(
         setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         // Edge to edge like the app, so the scrim runs under the system bars instead of stopping at a black band.
         WindowCompat.setDecorFitsSystemWindows(this, false)
+        addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        // The dim is drawn by Compose (the scrim box), so it reaches under the system bars too.
+        clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         @Suppress("DEPRECATION")
         navigationBarColor = Color.TRANSPARENT
         @Suppress("DEPRECATION")
