@@ -442,6 +442,21 @@ private fun PanelSideView(
             StrokeCap.Round,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()))
         )
+        // How far the panel still has to swing: a dashed arc from the live panel to the target.
+        val arcRadius = length * 0.32f
+        drawArc(
+            color = color.copy(alpha = 0.7f),
+            startAngle = tilt - 180f,
+            sweepAngle = targetTilt - tilt,
+            useCenter = false,
+            topLeft = Offset(pivot.x - arcRadius, pivot.y - arcRadius),
+            size = androidx.compose.ui.geometry.Size(arcRadius * 2, arcRadius * 2),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 3.dp.toPx(),
+                cap = StrokeCap.Round,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 6.dp.toPx()))
+            )
+        )
         drawLine(ink, pivot, Offset(pivot.x, ground), 4.dp.toPx(), StrokeCap.Round)
         drawLine(color, start(tilt), end(tilt), 10.dp.toPx(), StrokeCap.Round)
         drawCircle(ink, 5.dp.toPx(), pivot)
