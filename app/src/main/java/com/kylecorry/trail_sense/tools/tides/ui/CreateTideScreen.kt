@@ -3,37 +3,40 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,22 +44,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
@@ -67,10 +67,20 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
@@ -89,6 +99,7 @@ import java.time.ZonedDateTime
 @Composable
 fun CreateTideToolScreen(host: TrailSenseDestinationHost) {
     val controller = remember(host) { CreateTideController(host) }
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -123,7 +134,8 @@ fun CreateTideToolScreen(host: TrailSenseDestinationHost) {
         onTideTimeClick = controller::pickTideTime,
         onTideHeightClick = controller::pickTideHeight,
         onHelp = controller::showHelp,
-        onSave = controller::saveTide
+        onSave = controller::saveTide,
+        onBack = { dispatcher?.onBackPressed() }
     )
 }
 
@@ -421,6 +433,11 @@ private enum class EstimateType {
     TideModel
 }
 
+/**
+ * A tide table: its name and frequency, then how its tides are estimated (method, location, and the lunitidal interval
+ * when that method needs one), then the reference tides as grouped rows, each a high/low toggle, its time and height,
+ * with an "add" row closing the group. Help lives in the top bar; Save is the full-width button at the bottom.
+ */
 @Composable
 private fun CreateTideScreen(
     name: String,
@@ -449,247 +466,154 @@ private fun CreateTideScreen(
     onTideHeightClick: (TideEntry) -> Unit,
     onHelp: () -> Unit,
     onSave: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .widthIn(max = TrailSenseSize.maximumContentWidth)
-        ) {
-            CreateTideHeader(
-                title = stringResource(R.string.tide_table),
-                onHelp = onHelp
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .testTag("scroll_view")
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-            ) {
-                // Details: name + frequency
-                TrailSenseCard {
-                    SectionLabel(
-                        text = stringResource(R.string.tide_table),
-                        icon = painterResource(R.drawable.ic_tide_table)
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    TideTextInput(
-                        text = name,
-                        label = stringResource(R.string.name),
-                        tag = "tide_name",
-                        onTextChange = onNameChange
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.xl))
-                    Text(
-                        text = stringResource(R.string.frequency),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
-                    Text(
-                        text = stringResource(R.string.tide_frequency_description),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-                    TideFrequencyInput(
-                        isSemidiurnal = isSemidiurnal,
-                        onFrequencyChange = onFrequencyChange
+    val estimateTitle = stringResource(R.string.estimate_method)
+    Box(modifier = modifier.testTag("create_tide_title")) {
+        TrailSensePage(
+            title = stringResource(R.string.tide_table),
+            onBack = onBack,
+            backLabel = stringResource(R.string.back),
+            modifier = Modifier.testTag("scroll_view"),
+            actions = {
+                IconButton(onClick = onHelp, modifier = Modifier.testTag("create_tide_help_btn")) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_help),
+                        contentDescription = stringResource(R.string.help)
                     )
                 }
+            }
+        ) {
+            trailSenseSection(key = "details") {
+                row { position ->
+                    TrailSenseGroupCard(position = position) {
+                        TideTextInput(
+                            text = name,
+                            label = stringResource(R.string.name),
+                            tag = "tide_name",
+                            onTextChange = onNameChange
+                        )
+                    }
+                }
+                row { position ->
+                    TrailSenseGroupCard(position = position) {
+                        Text(
+                            text = stringResource(R.string.frequency),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = stringResource(R.string.tide_frequency_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                        TidesConnectedChoice(
+                            options = listOf(
+                                TidesChoice(false, stringResource(R.string.tide_diurnal), "tide_frequency_diurnal"),
+                                TidesChoice(
+                                    true,
+                                    stringResource(R.string.tide_semidiurnal),
+                                    "tide_frequency_semidiurnal"
+                                )
+                            ),
+                            selected = isSemidiurnal,
+                            onSelect = onFrequencyChange,
+                            modifier = Modifier.testTag("tide_frequency")
+                        )
+                    }
+                }
+            }
 
-                // Estimation method + location + interval
-                TrailSenseCard {
-                    SectionLabel(
-                        text = stringResource(R.string.estimate_method),
-                        icon = painterResource(R.drawable.ic_tide_table)
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
+            trailSenseSection(key = "estimate", title = estimateTitle) {
+                row { position ->
                     EstimateTypeInput(
                         estimateType = estimateType,
                         estimateTypes = estimateTypes,
                         estimateTypeNames = estimateTypeNames,
                         estimateTypeDescriptions = estimateTypeDescriptions,
+                        position = position,
                         onEstimateTypeChange = onEstimateTypeChange
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    TideLocationInput(
-                        location = location,
-                        isRequired = isLocationRequired,
-                        onLocationChange = onLocationChange
-                    )
-                    if (isDurationVisible) {
-                        Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                        LunitidalIntervalInput(
-                            duration = lunitidalInterval,
-                            onDurationChange = onLunitidalIntervalChange
+                }
+                row { position ->
+                    TrailSenseGroupCard(position = position) {
+                        TideLocationInput(
+                            location = location,
+                            isRequired = isLocationRequired,
+                            onLocationChange = onLocationChange
                         )
                     }
                 }
-
-                // Reference tides
-                TrailSenseCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SectionLabel(
-                            text = stringResource(R.string.tides),
-                            icon = painterResource(R.drawable.ic_tide_table),
-                            modifier = Modifier.weight(1f)
-                        )
-                        TonalIconButton(
-                            icon = painterResource(R.drawable.ic_add),
-                            contentDescription = stringResource(R.string.add),
-                            onClick = onAddTideEntry,
-                            modifier = Modifier.testTag("add_tide_entry")
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    if (tideEntries.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.time_not_set),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("tide_times"),
-                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                        ) {
-                            tideEntries.forEach { entry ->
-                                TideEntryCard(
-                                    entry = entry,
-                                    isTideTableRequired = isTideTableRequired,
-                                    formatService = formatService,
-                                    onEntryChange = onTideEntryChange,
-                                    onEntryDelete = onTideEntryDelete,
-                                    onTimeClick = onTideTimeClick,
-                                    onHeightClick = onTideHeightClick
-                                )
-                            }
+                if (isDurationVisible) {
+                    row { position ->
+                        TrailSenseGroupCard(position = position) {
+                            Text(
+                                text = stringResource(R.string.lunitidal_interval),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
+                            LunitidalIntervalInput(
+                                duration = lunitidalInterval,
+                                onDurationChange = onLunitidalIntervalChange
+                            )
                         }
                     }
                 }
+            }
 
-                TrailSenseButton(
-                    text = stringResource(R.string.save),
+            item(key = "tides") {
+                TrailSenseRowGroup(
+                    modifier = Modifier
+                        .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
+                        .testTag("tide_times"),
+                    title = stringResource(R.string.tides)
+                ) {
+                    tideEntries.forEach { entry ->
+                        row { position ->
+                            TideEntryCard(
+                                entry = entry,
+                                position = position,
+                                isTideTableRequired = isTideTableRequired,
+                                formatService = formatService,
+                                onEntryChange = onTideEntryChange,
+                                onEntryDelete = onTideEntryDelete,
+                                onTimeClick = onTideTimeClick,
+                                onHeightClick = onTideHeightClick
+                            )
+                        }
+                    }
+                    row { position ->
+                        TidesGroupRow(
+                            position = position,
+                            modifier = Modifier.testTag("add_tide_entry"),
+                            onClick = onAddTideEntry,
+                            leading = { TidesIconWell(painterResource(R.drawable.ic_add)) }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.add),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+
+            item(key = "save") {
+                Button(
                     onClick = onSave,
                     enabled = canSave,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = 56.dp)
                         .testTag("create_tide_save_btn")
-                )
+                ) {
+                    Text(stringResource(R.string.save))
+                }
             }
-        }
-        }
-    }
-}
-
-@Composable
-private fun CreateTideHeader(
-    title: String,
-    onHelp: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 18.dp)
-                    .testTag("create_tide_title"),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            IconButton(
-                onClick = onHelp,
-                modifier = Modifier
-                    .size(TrailSenseSize.minimumTouchTarget)
-                    .testTag("create_tide_help_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_help),
-                    contentDescription = stringResource(R.string.help)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SectionLabel(
-    text: String,
-    icon: Painter,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(TrailSenseSize.leadingIcon)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}
-
-@Composable
-private fun TonalIconButton(
-    icon: Painter,
-    contentDescription: String?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = modifier
-            .size(TrailSenseSize.minimumTouchTarget)
-            .clickable(onClick = onClick)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = icon,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(TrailSenseSize.leadingIcon)
-            )
         }
     }
 }
@@ -711,62 +635,6 @@ private fun TideTextInput(
         label = { Text(label) },
         singleLine = true
     )
-}
-
-@Composable
-private fun TideFrequencyInput(
-    isSemidiurnal: Boolean,
-    onFrequencyChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val diurnal = stringResource(R.string.tide_diurnal)
-    val semidiurnal = stringResource(R.string.tide_semidiurnal)
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("tide_frequency")
-    ) {
-        TideFrequencyButton(
-            text = "1    $diurnal",
-            selected = !isSemidiurnal,
-            onClick = { onFrequencyChange(false) },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("tide_frequency_diurnal")
-        )
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-        TideFrequencyButton(
-            text = "2    $semidiurnal",
-            selected = isSemidiurnal,
-            onClick = { onFrequencyChange(true) },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("tide_frequency_semidiurnal")
-        )
-    }
-}
-
-@Composable
-private fun TideFrequencyButton(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier
-    ) {
-        Text(
-            text = text,
-            color = if (selected) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
-        )
-    }
 }
 
 @Composable
@@ -913,30 +781,52 @@ private fun EstimateTypeInput(
     estimateTypes: List<EstimateType>,
     estimateTypeNames: Map<EstimateType, String>,
     estimateTypeDescriptions: Map<EstimateType, String>,
+    position: TrailSenseGroupPosition,
     onEstimateTypeChange: (EstimateType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val method = stringResource(R.string.estimate_method)
     var isOpen by remember { mutableStateOf(false) }
     val selected = estimateTypeNames[estimateType].orEmpty()
+    val description = estimateTypeDescriptions[estimateType]
 
     Box(modifier = modifier.fillMaxWidth()) {
-        OutlinedButton(
+        TidesGroupRow(
+            position = position,
+            modifier = Modifier.testTag("estimate_algorithm_spinner"),
             onClick = { isOpen = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("estimate_algorithm_spinner")
+            trailing = {
+                Icon(
+                    imageVector = Icons.Rounded.ArrowDropDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = TrailSenseSpacing.md)
+                )
+            }
         ) {
-            Text(selected.ifBlank { method })
+            Text(
+                text = selected.ifBlank { method },
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (!description.isNullOrBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         DropdownMenu(
             expanded = isOpen,
-            onDismissRequest = { isOpen = false }
+            onDismissRequest = { isOpen = false },
+            shape = RoundedCornerShape(TrailSenseShape.iconContainer),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             estimateTypes.forEach { type ->
                 DropdownMenuItem(
                     text = {
-                        Column {
+                        Column(modifier = Modifier.padding(vertical = TrailSenseSpacing.xs)) {
                             Text(estimateTypeNames[type].orEmpty())
                             Text(
                                 text = estimateTypeDescriptions[type].orEmpty(),
@@ -1078,6 +968,7 @@ private fun formatDurationMinutes(duration: Duration?): String {
 @Composable
 private fun TideEntryCard(
     entry: TideEntry,
+    position: TrailSenseGroupPosition,
     isTideTableRequired: Boolean,
     formatService: FormatService,
     onEntryChange: (TideEntry) -> Unit,
@@ -1086,12 +977,8 @@ private fun TideEntryCard(
     onHeightClick: (TideEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tideType =
-        if (entry.isHigh) {
-            stringResource(R.string.high_tide_letter)
-        } else {
-            stringResource(R.string.low_tide_letter)
-        }
+    val tideType = stringResource(if (entry.isHigh) R.string.high_tide_letter else R.string.low_tide_letter)
+    val tideTypeName = stringResource(if (entry.isHigh) R.string.high_tide else R.string.low_tide)
 
     val defaultTimeText = if (isTideTableRequired) {
         stringResource(R.string.field_required, stringResource(R.string.time_not_set))
@@ -1100,74 +987,55 @@ private fun TideEntryCard(
     }
 
     val timeText = entry.time?.let {
-        formatService.formatDateTime(
-            it,
-            false,
-            abbreviateMonth = true
-        )
+        formatService.formatDateTime(it, false, abbreviateMonth = true)
     } ?: defaultTimeText
 
     val heightText = entry.height?.let {
         formatService.formatDistance(it, 2)
     } ?: stringResource(R.string.dash)
 
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("tide_entry_${entry.id}"),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TrailSenseSpacing.md,
-                    vertical = TrailSenseSpacing.sm
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    val badgeColor by animateColorAsState(
+        targetValue = if (entry.isHigh) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.tertiaryContainer
+        },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "tideTypeBadge"
+    )
+    val badgeContent = if (entry.isHigh) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onTertiaryContainer
+    }
+    val valueShape = RoundedCornerShape(TrailSenseShape.groupInner * 2)
+
+    TidesGroupRow(
+        position = position,
+        modifier = modifier.testTag("tide_entry_${entry.id}"),
+        leading = {
             Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
+                onClick = { onEntryChange(entry.copy(isHigh = !entry.isHigh)) },
+                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
+                color = badgeColor,
+                contentColor = badgeContent,
                 modifier = Modifier
                     .size(TrailSenseSize.minimumTouchTarget)
-                    .clickable { onEntryChange(entry.copy(isHigh = !entry.isHigh)) }
+                    .semantics { contentDescription = tideTypeName }
                     .testTag("tide_type")
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = tideType,
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
-            Text(
-                text = timeText,
-                modifier = Modifier
-                    .weight(2f)
-                    .clickable { onTimeClick(entry) }
-                    .padding(vertical = TrailSenseSpacing.sm)
-                    .testTag("tide_time"),
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
-            Text(
-                text = heightText,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onHeightClick(entry) }
-                    .padding(vertical = TrailSenseSpacing.sm)
-                    .testTag("tide_height"),
-                style = MaterialTheme.typography.bodyMedium
-            )
+        },
+        trailing = {
             IconButton(
-                modifier = Modifier
-                    .size(TrailSenseSize.minimumTouchTarget)
-                    .testTag("delete"),
+                modifier = Modifier.testTag("delete"),
                 onClick = { onEntryDelete(entry) }
             ) {
                 Icon(
@@ -1176,6 +1044,43 @@ private fun TideEntryCard(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = timeText,
+                modifier = Modifier
+                    .weight(2f)
+                    .clip(valueShape)
+                    .clickable(role = Role.Button) { onTimeClick(entry) }
+                    .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .padding(horizontal = TrailSenseSpacing.xs)
+                    .testTag("tide_time"),
+                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                color = if (entry.time == null) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+            Text(
+                text = heightText,
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(valueShape)
+                    .clickable(role = Role.Button) { onHeightClick(entry) }
+                    .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                    .wrapContentHeight(Alignment.CenterVertically)
+                    .padding(horizontal = TrailSenseSpacing.xs)
+                    .testTag("tide_height"),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.End
+            )
         }
     }
 }

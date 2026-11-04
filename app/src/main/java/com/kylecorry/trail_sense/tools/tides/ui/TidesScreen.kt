@@ -3,9 +3,11 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,28 +18,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -47,15 +51,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
+import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -63,8 +62,20 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseHeroCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
@@ -77,10 +88,13 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZonedDateTime
 
 @Composable
 fun TidesToolScreen(host: TrailSenseDestinationHost) {
     val controller = remember(host) { TidesController(host) }
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -102,13 +116,16 @@ fun TidesToolScreen(host: TrailSenseDestinationHost) {
     TidesScreen(
         title = controller.getCurrentTideTitle(),
         subtitle = controller.getTableSubtitle(),
-        isRising = controller.current?.rising ?: true,
+        isRising = controller.current?.rising,
+        nextTide = controller.getNextTideText(),
+        icon = controller.getCurrentTideIcon(),
         isLoading = controller.isLoading,
         displayDate = controller.displayDate,
         daily = controller.daily,
         tides = controller.getDisplayTides(),
         onDateChange = controller::onDisplayDateSelected,
-        onOpenTideList = controller::openTideList
+        onOpenTideList = controller::openTideList,
+        onBack = { dispatcher?.onBackPressed() }
     )
 }
 
@@ -130,6 +147,8 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
     var displayDate by mutableStateOf(LocalDate.now())
         private set
     var isLoading by mutableStateOf(true)
+        private set
+    var nextTide by mutableStateOf<Tide?>(null)
         private set
 
     private var currentTideJob: Job? = null
@@ -167,6 +186,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         isLoading = true
         daily = null
         current = null
+        nextTide = null
 
         host.lifecycleScope.launch {
             val updatedTable = newTable ?: loadTideCommand.execute()
@@ -212,6 +232,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         currentTideJob?.cancel()
         currentTideJob = host.lifecycleScope.launch {
             current = currentTideCommand.execute(currentTable)
+            nextTide = getNextTide(currentTable)
         }
     }
 
@@ -237,9 +258,34 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         }
     }
 
+    /** The first high or low after now, looking into tomorrow when today's are past. */
+    private suspend fun getNextTide(table: TideTable): Tide? = onDefault {
+        val now = ZonedDateTime.now()
+        val today = now.toLocalDate()
+        listOf(today, today.plusDays(1)).firstNotNullOfOrNull { date ->
+            tideService.getTides(table, date).firstOrNull { it.time.isAfter(now) }
+        }
+    }
+
+    fun getNextTideText(): String? {
+        val tide = nextTide ?: return null
+        val name = host.getString(if (tide.isHigh) R.string.high_tide else R.string.low_tide)
+        return host.getString(
+            R.string.tides_next_tide,
+            name,
+            formatService.formatTime(tide.time.toLocalTime(), includeSeconds = false)
+        )
+    }
+
+    @DrawableRes
+    fun getCurrentTideIcon(): Int {
+        val current = current ?: return R.drawable.ic_tide_half
+        return TideFormatter(host.requireContext()).getTideTypeImage(current.type)
+    }
+
     @SuppressLint("SetTextI18n")
     fun getCurrentTideTitle(): String {
-        val current = current ?: return host.getString(R.string.tides)
+        val current = current ?: return "--"
         val name = TideFormatter(host.requireContext()).getTideTypeName(current.type)
         val waterLevel = if (current.waterLevel != null) {
             val height = Distance.meters(current.waterLevel).convertTo(units)
@@ -258,177 +304,124 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
     }
 }
 
+/**
+ * Tides: the hero says the tide now (high, low or half, with the water level), whether it is rising, and when the
+ * next tide turns; the table's name sits above it and the tide tables button in the top bar. Below, the day: a date
+ * row (previous, pick or long-press for today, next) and the water level chart with a time axis, then that day's
+ * highs and lows as grouped rows, and the estimate disclaimer as a quiet footer.
+ */
 @Composable
 private fun TidesScreen(
     title: String,
     subtitle: String,
-    isRising: Boolean,
+    isRising: Boolean?,
+    nextTide: String?,
+    @DrawableRes icon: Int,
     isLoading: Boolean,
     displayDate: LocalDate,
     daily: DailyTideData?,
     tides: List<Tide>,
     onDateChange: (LocalDate) -> Unit,
     onOpenTideList: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.screen),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
-            TidesHero(
-                title = title,
-                subtitle = subtitle,
-                isRising = isRising,
-                isLoading = isLoading,
-                onOpenTideList = onOpenTideList
-            )
+    val supporting = listOfNotNull(
+        isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) },
+        nextTide
+    ).joinToString(" · ").ifBlank { null }
 
-            TrailSenseCard {
-                DatePickerInput(
-                    date = displayDate,
-                    onDateChange = onDateChange
-                )
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-                TideChartView(
-                    daily = daily,
-                    displayDate = displayDate
+    TrailSensePage(
+        title = stringResource(R.string.tides),
+        onBack = onBack,
+        backLabel = stringResource(R.string.back),
+        modifier = modifier,
+        actions = {
+            IconButton(onClick = onOpenTideList, modifier = Modifier.testTag("tide_table_btn")) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_tide_table),
+                    contentDescription = stringResource(R.string.tide_table)
                 )
             }
+        }
+    ) {
+        item(key = "hero") {
+            TrailSenseHeroCard(
+                modifier = Modifier
+                    .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
+                    .testTag("tide_title"),
+                eyebrow = subtitle.ifBlank { null },
+                title = title,
+                supportingText = supporting,
+                icon = painterResource(icon),
+                action = if (isLoading) {
+                    {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .testTag("loading"),
+                            strokeWidth = 3.dp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                } else {
+                    null
+                }
+            )
+        }
 
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-                SectionLabel(text = stringResource(R.string.tides))
-                TrailSenseCard {
-                    TideList(tides = tides)
+        trailSenseSection(key = "day") {
+            row { position ->
+                TrailSenseGroupCard(
+                    position = position,
+                    contentPadding = PaddingValues(
+                        horizontal = TrailSenseSpacing.xs,
+                        vertical = TrailSenseSpacing.xs
+                    )
+                ) {
+                    DatePickerInput(date = displayDate, onDateChange = onDateChange)
                 }
             }
+            row { position ->
+                TrailSenseGroupCard(position = position) {
+                    TideChartView(daily = daily, displayDate = displayDate)
+                }
+            }
+        }
 
+        item(key = "tides") {
+            TrailSenseRowGroup(
+                modifier = Modifier.testTag("tide_list"),
+                title = stringResource(R.string.tides)
+            ) {
+                if (tides.isEmpty() && daily != null) {
+                    row { position ->
+                        TidesGroupRow(position = position) {
+                            Text(
+                                text = stringResource(R.string.no_tides),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                tides.forEach { tide ->
+                    row { position -> TideRow(tide = tide, position = position) }
+                }
+            }
+        }
+
+        item(key = "disclaimer") {
             Text(
                 text = stringResource(R.string.disclaimer_estimated_tide),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = dimensionResource(R.dimen.default_bottom_margin))
+                    .padding(horizontal = TrailSenseSpacing.lg)
                     .testTag("tide_disclaimer"),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-    }
-}
-
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary
-    )
-}
-
-@Composable
-private fun TonalIconChip(
-    painter: androidx.compose.ui.graphics.painter.Painter,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.size(40.dp),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painter,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun TidesHero(
-    title: String,
-    subtitle: String,
-    isRising: Boolean,
-    isLoading: Boolean,
-    onOpenTideList: () -> Unit
-) {
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.sm,
-                        top = TrailSenseSpacing.xl,
-                        bottom = TrailSenseSpacing.xl
-                    ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (isRising) R.drawable.ic_arrow_up else R.drawable.ic_arrow_down
-                    ),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = TrailSenseSpacing.md)
-                ) {
-                    Text(
-                        text = title,
-                        modifier = Modifier.testTag("tide_title"),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    if (subtitle.isNotBlank()) {
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-                IconButton(
-                    onClick = onOpenTideList,
-                    modifier = Modifier
-                        .size(TrailSenseSize.minimumTouchTarget)
-                        .testTag("tide_table_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_tide_table),
-                        contentDescription = stringResource(R.string.tide_table),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .testTag("loading"),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
         }
     }
 }
@@ -460,19 +453,11 @@ private fun DatePickerInput(
                 modifier = Modifier.rotate(180f)
             )
         }
-        Spacer(Modifier.weight(1f))
-        Text(
-            text = formatter.formatRelativeDate(date),
-            modifier = Modifier.testTag("tide_list_date"),
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontFeatureSettings = "tnum"
-            ),
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Box(
+        Row(
             modifier = Modifier
-                .padding(start = TrailSenseSpacing.lg)
-                .size(48.dp)
+                .weight(1f)
+                .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                .clip(RoundedCornerShape(TrailSenseShape.iconContainer))
                 .combinedClickable(
                     onClickLabel = dateLabel,
                     onLongClickLabel = todayLabel,
@@ -487,15 +472,23 @@ private fun DatePickerInput(
                     onLongClick = { onDateChange(LocalDate.now()) }
                 )
                 .testTag("date_btn"),
-            contentAlignment = Alignment.Center
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_date),
-                contentDescription = dateLabel,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.sm))
+            Text(
+                text = formatter.formatRelativeDate(date),
+                modifier = Modifier.testTag("tide_list_date"),
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
-        Spacer(Modifier.weight(1f))
         IconButton(
             onClick = { onDateChange(date.plusDays(1)) },
             modifier = Modifier.testTag("next_date")
@@ -509,104 +502,138 @@ private fun DatePickerInput(
     }
 }
 
+/** Hours marked on the chart's time axis; the grid lines sit on the same hours. */
+private val chartAxisHours = listOf(0, 6, 12, 18, 24)
+
 @Composable
 private fun TideChartView(
     daily: DailyTideData?,
     displayDate: LocalDate,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val formatter = remember(context) { FormatService.getInstance(context) }
     val dailyData = daily
-    val levelColor = if (UserPreferences(LocalContext.current).useDynamicColors) {
+    val levelColor = if (UserPreferences(context).useDynamicColors) {
         MaterialTheme.colorScheme.primary
     } else {
         Color(AppColor.Blue.color)
     }
-    val grid = MaterialTheme.colorScheme.outlineVariant
+    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
     val highlightColor = MaterialTheme.colorScheme.onSurface
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(dimensionResource(R.dimen.chart_height))
-            .testTag("chart"),
-        contentAlignment = Alignment.Center
-    ) {
-        if (dailyData == null || dailyData.waterLevels.isEmpty()) {
-            Text(
-                text = stringResource(R.string.no_data),
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            return@Box
+    val axisLabels = remember(formatter) {
+        chartAxisHours.map { hour ->
+            formatter.formatTime(LocalTime.of(hour % 24, 0), includeSeconds = false, includeMinutes = false)
         }
+    }
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val startTime = dailyData.waterLevels.firstOrNull()?.time ?: Instant.now()
-            val totalRange = dailyData.waterLevelRange.end - dailyData.waterLevelRange.start
-            val rangeDelta = (totalRange * 0.25f).coerceAtLeast(0.2f)
-            val minimum = dailyData.waterLevelRange.start - rangeDelta
-            val maximum = dailyData.waterLevelRange.end + rangeDelta
-            val valueRange = (maximum - minimum).takeIf { it > 0f } ?: 1f
-
-            fun x(time: Instant): Float {
-                val hours = Duration.between(startTime, time).toMillis() / 3_600_000f
-                val totalHours = 24f
-                return (hours / totalHours).coerceIn(0f, 1f) * size.width
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.chart_height))
+                .testTag("chart"),
+            contentAlignment = Alignment.Center
+        ) {
+            if (dailyData == null || dailyData.waterLevels.isEmpty()) {
+                if (dailyData != null) {
+                    Text(
+                        text = stringResource(R.string.no_data),
+                        color = textColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                return@Box
             }
 
-            fun y(value: Float): Float {
-                val normalized = ((value - minimum) / valueRange).coerceIn(0f, 1f)
-                return size.height - normalized * size.height
-            }
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val startTime = dailyData.waterLevels.firstOrNull()?.time ?: Instant.now()
+                val totalRange = dailyData.waterLevelRange.end - dailyData.waterLevelRange.start
+                val rangeDelta = (totalRange * 0.25f).coerceAtLeast(0.2f)
+                val minimum = dailyData.waterLevelRange.start - rangeDelta
+                val maximum = dailyData.waterLevelRange.end + rangeDelta
+                val valueRange = (maximum - minimum).takeIf { it > 0f } ?: 1f
 
-            repeat(7) { index ->
-                val x = index / 6f * size.width
+                fun x(time: Instant): Float {
+                    val hours = Duration.between(startTime, time).toMillis() / 3_600_000f
+                    return (hours / 24f).coerceIn(0f, 1f) * size.width
+                }
+
+                fun y(value: Float): Float {
+                    val normalized = ((value - minimum) / valueRange).coerceIn(0f, 1f)
+                    return size.height - normalized * size.height
+                }
+
+                chartAxisHours.forEach { hour ->
+                    val x = hour / 24f * size.width
+                    drawLine(
+                        color = grid,
+                        start = Offset(x, 0f),
+                        end = Offset(x, size.height),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
                 drawLine(
                     color = grid,
-                    start = androidx.compose.ui.geometry.Offset(x, 0f),
-                    end = androidx.compose.ui.geometry.Offset(x, size.height),
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
                     strokeWidth = 1.dp.toPx()
                 )
-            }
 
-            val path = Path()
-            dailyData.waterLevels.forEachIndexed { index, reading ->
-                val pointX = x(reading.time)
-                val pointY = y(reading.value)
-                if (index == 0) {
-                    path.moveTo(pointX, size.height)
-                    path.lineTo(pointX, pointY)
-                } else {
-                    path.lineTo(pointX, pointY)
+                val path = Path()
+                dailyData.waterLevels.forEachIndexed { index, reading ->
+                    val pointX = x(reading.time)
+                    val pointY = y(reading.value)
+                    if (index == 0) {
+                        path.moveTo(pointX, size.height)
+                        path.lineTo(pointX, pointY)
+                    } else {
+                        path.lineTo(pointX, pointY)
+                    }
+                }
+                val last = dailyData.waterLevels.last()
+                path.lineTo(x(last.time), size.height)
+                path.close()
+
+                drawPath(path, levelColor.copy(alpha = 0.2f))
+
+                dailyData.waterLevels.zipWithNext().forEach { (start, end) ->
+                    drawLine(
+                        color = levelColor,
+                        start = Offset(x(start.time), y(start.value)),
+                        end = Offset(x(end.time), y(end.value)),
+                        strokeWidth = 2.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                }
+
+                val currentLevel = dailyData.waterLevels.minByOrNull {
+                    Duration.between(Instant.now(), it.time).abs()
+                }
+                if (currentLevel != null && displayDate == LocalDate.now()) {
+                    val center = Offset(x(currentLevel.time), y(currentLevel.value))
+                    drawCircle(color = levelColor.copy(alpha = 0.24f), radius = 8.dp.toPx(), center = center)
+                    drawCircle(color = highlightColor, radius = 4.dp.toPx(), center = center)
                 }
             }
-            val last = dailyData.waterLevels.last()
-            path.lineTo(x(last.time), size.height)
-            path.close()
-
-            drawPath(path, levelColor.copy(alpha = 0.2f))
-
-            dailyData.waterLevels.zipWithNext().forEach { (start, end) ->
-                drawLine(
-                    color = levelColor,
-                    start = androidx.compose.ui.geometry.Offset(x(start.time), y(start.value)),
-                    end = androidx.compose.ui.geometry.Offset(x(end.time), y(end.value)),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
-
-            val currentLevel = dailyData.waterLevels.minByOrNull {
-                Duration.between(Instant.now(), it.time).abs()
-            }
-            if (currentLevel != null && displayDate == LocalDate.now()) {
-                drawCircle(
-                    color = highlightColor,
-                    radius = 4.dp.toPx(),
-                    center = androidx.compose.ui.geometry.Offset(
-                        x(currentLevel.time),
-                        y(currentLevel.value)
-                    )
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            axisLabels.forEachIndexed { index, label ->
+                Text(
+                    text = label,
+                    modifier = Modifier.weight(1f),
+                    textAlign = when (index) {
+                        0 -> TextAlign.Start
+                        axisLabels.lastIndex -> TextAlign.End
+                        else -> TextAlign.Center
+                    },
+                    style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                    color = textColor,
+                    maxLines = 1
                 )
             }
         }
@@ -614,90 +641,53 @@ private fun TideChartView(
 }
 
 @Composable
-private fun TideList(
-    tides: List<Tide>,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("tide_list"),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-    ) {
-        if (tides.isEmpty()) {
-            Text(
-                text = stringResource(R.string.no_data),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = TrailSenseSpacing.md),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        tides.forEach { tide ->
-            TideRow(tide)
-        }
-    }
-}
-
-@Composable
-private fun TideRow(tide: Tide) {
+private fun TideRow(tide: Tide, position: TrailSenseGroupPosition) {
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
     val units = remember(context) { UserPreferences(context).baseDistanceUnits }
+    val height = tide.height
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                if (tide.height == null) {
-                    Alerts.dialog(
-                        context,
-                        context.getString(R.string.disclaimer_estimated_tide_title),
-                        context.getString(R.string.disclaimer_estimated_tide),
-                        cancelText = null
-                    )
-                }
+    TidesGroupRow(
+        position = position,
+        onClick = if (height == null) {
+            {
+                Alerts.dialog(
+                    context,
+                    context.getString(R.string.disclaimer_estimated_tide_title),
+                    context.getString(R.string.disclaimer_estimated_tide),
+                    cancelText = null
+                )
             }
-            .padding(vertical = TrailSenseSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TonalIconChip(
-            painter = painterResource(
-                if (tide.isHigh) R.drawable.ic_tide_high else R.drawable.ic_tide_low
+        } else {
+            null
+        },
+        leading = {
+            TidesIconWell(
+                painterResource(if (tide.isHigh) R.drawable.ic_tide_high else R.drawable.ic_tide_low)
             )
-        )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = TrailSenseSpacing.md)
-        ) {
+        },
+        trailing = {
             Text(
-                text = stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
-                modifier = Modifier.testTag("tide_event_title"),
-                style = MaterialTheme.typography.bodyLarge,
+                text = formatter.formatTime(tide.time.toLocalTime(), includeSeconds = false),
+                modifier = Modifier.padding(end = TrailSenseSpacing.md),
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
-                text = if (tide.height == null) {
-                    stringResource(R.string.estimated)
-                } else {
-                    formatter.formatDistance(
-                        Distance.meters(tide.height!!).convertTo(units),
-                        2,
-                        true
-                    )
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
+    ) {
         Text(
-            text = formatter.formatTime(tide.time.toLocalTime(), includeSeconds = false),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontFeatureSettings = "tnum"
-            ),
+            text = stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
+            modifier = Modifier.testTag("tide_event_title"),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = if (height == null) {
+                stringResource(R.string.estimated)
+            } else {
+                formatter.formatDistance(Distance.meters(height).convertTo(units), 2, true)
+            },
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -708,9 +698,11 @@ private fun TideRow(tide: Tide) {
 private fun TidesScreenPreview() {
     TrailSenseTheme {
         TidesScreen(
-            title = "High tide",
+            title = "High (1.20 ft)",
             subtitle = "Harbor",
             isRising = true,
+            nextTide = "Next: Low at 3:42 PM",
+            icon = R.drawable.ic_tide_high,
             isLoading = false,
             displayDate = LocalDate.now(),
             daily = null,
