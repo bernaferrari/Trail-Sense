@@ -41,6 +41,10 @@
     <string name="solar_turn_left">Turn left %1$s</string>
     <string name="solar_turn_right">Turn right %1$s</string>
     <string name="solar_now">Now %1$s</string>
+    <string name="solar_verdict_aligned">Aligned · the panel is catching the most sun</string>
+    <string name="solar_verdict_tilt">Facing the right way · now tilt it</string>
+    <string name="solar_verdict_turn">Tilt is right · now turn it</string>
+    <string name="solar_verdict_both">Tilt and turn the panel to collect this</string>
     <string name="solar_target">Target %1$s</string>
 
     <!-- Cliff height -->
