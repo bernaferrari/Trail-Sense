@@ -579,73 +579,18 @@ private class MorphShape(private val morph: Morph, private val progress: Float) 
     }
 }
 
-/**
- * No torch on this phone: the screen is the light. A big warm sun-shaped mark with a glow, warm copy, and one
- * full-width action down where the thumb is.
- */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+/** No torch on this phone: the screen is the light. The kit's big layered mark, warm copy, one clear action. */
 @Composable
 private fun NoFlashlight(onOpenScreenFlashlight: () -> Unit) {
-    val scheme = MaterialTheme.colorScheme
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = TrailSenseSpacing.xl)
-            .padding(bottom = TrailSenseSpacing.xl),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.weight(0.6f))
-        Box(Modifier.size(260.dp), contentAlignment = Alignment.Center) {
-            val glow = scheme.tertiary
-            Canvas(Modifier.fillMaxSize()) {
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        listOf(glow.copy(alpha = 0.3f), glow.copy(alpha = 0f)),
-                        center = center,
-                        radius = size.minDimension / 2f
-                    )
-                )
-            }
-            TrailSenseShapeBadge(
-                icon = TrailIcons.ScreenFlashlight,
-                shape = MaterialShapes.VerySunny.toShape(),
-                size = 176.dp,
-                containerColor = scheme.tertiaryContainer,
-                contentColor = scheme.onTertiaryContainer
-            )
-        }
-        Spacer(Modifier.height(TrailSenseSpacing.xl))
-        Text(
-            text = stringResource(R.string.flashlight_unavailable_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(TrailSenseSpacing.sm))
-        Text(
-            text = stringResource(R.string.flashlight_unavailable_description),
-            style = MaterialTheme.typography.bodyLarge,
-            color = scheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.weight(1f))
-        Button(
-            onClick = onOpenScreenFlashlight,
-            shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .testTag("screen_flashlight_btn")
-        ) {
-            Icon(TrailIcons.ScreenFlashlight, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
-            Text(
-                stringResource(R.string.flashlight_use_screen),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
+    TrailSenseEmptyState(
+        icon = TrailIcons.ScreenFlashlight,
+        title = stringResource(R.string.flashlight_unavailable_title),
+        description = stringResource(R.string.flashlight_unavailable_description),
+        actionLabel = stringResource(R.string.flashlight_use_screen),
+        actionIcon = TrailIcons.Power,
+        onAction = onOpenScreenFlashlight,
+        actionModifier = Modifier.testTag("screen_flashlight_btn")
+    )
 }
 
 @Composable
