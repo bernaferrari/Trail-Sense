@@ -33,4 +33,7 @@
     <!-- Turn back -->
     <string name="places_turn_back_in">Turn back in</string>
     <string name="places_turn_back_back_by">Back by</string>
+    <!-- Declination -->
+    <string name="places_declination_aligned">Aligned</string>
+    <string name="places_declination_of_true_north">of true north</string>
 </resources>
