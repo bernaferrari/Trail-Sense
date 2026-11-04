@@ -293,7 +293,7 @@ private fun ClockScreen(
 private fun AnalogClock(time: LocalTime) {
     val face = MaterialTheme.colorScheme.onPrimaryContainer
     val primary = MaterialTheme.colorScheme.primary
-    val second = MaterialTheme.colorScheme.tertiary
+    val second = MaterialTheme.colorScheme.primary
     val container = MaterialTheme.colorScheme.primaryContainer
 
     Canvas(modifier = Modifier.size(232.dp)) {

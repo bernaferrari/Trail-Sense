@@ -265,8 +265,8 @@ private fun LightHero(
         supportingText = listOfNotNull(description, peakText).joinToString(" · "),
         badge = {
             TrailSenseShapeBadge(
-                icon = TrailIcons.Sun,
-                shape = MaterialShapes.Sunny.toShape(),
+                icon = TrailIcons.SunRays,
+                shape = MaterialShapes.Cookie9Sided.toShape(),
                 size = 64.dp
             )
         },
@@ -293,7 +293,7 @@ private fun LightBeamChart(
 ) {
     // A night scene: the flashlight shines from the left edge across a row of trees, each lit by the light that
     // actually reaches it.
-    val labelColor = Color.White.copy(alpha = 0.72f)
+    val labelColor = Color.White.copy(alpha = 0.9f)
     val glow = MaterialTheme.colorScheme.primaryFixedDim
     Box(
         modifier = modifier
@@ -344,13 +344,14 @@ private fun LightBeamChart(
             val paint = Paint().apply {
                 color = android.graphics.Color.argb((labelColor.alpha * 255).toInt(), 255, 255, 255)
                 textAlign = Paint.Align.CENTER
-                textSize = 11.dp.toPx()
+                textSize = 13.dp.toPx()
+                isFakeBoldText = true
                 isAntiAlias = true
             }
             listOf(9, 24, 49, 74).forEach { index ->
                 val center = (index + 0.5f) * colWidth
                 val b = brightness(index)
-                val tree = lerp(Color.White.copy(alpha = 0.12f), Color.White, b)
+                val tree = lerp(Color.White.copy(alpha = 0.32f), Color.White, b)
                 drawTree(this, center, groundTop, 34.dp.toPx(), tree)
                 drawIntoCanvas {
                     it.nativeCanvas.drawText(((index + 1) * step).toString(), center, size.height - 6.dp.toPx(), paint)

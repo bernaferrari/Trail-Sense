@@ -181,10 +181,14 @@ fun RulerScreen(
             ) {
                 TrailSenseSpotlight(
                     eyebrow = stringResource(R.string.ruler_length),
-                    title = measurement.ifEmpty { "--" },
-                    titleStyle = MaterialTheme.typography.displaySmall,
-                    supportingText = mapDistance.takeIf { it.isNotEmpty() }
-                        ?: if (measurement.isEmpty()) tapHint else null,
+                    title = measurement.ifEmpty { tapHint },
+                    titleStyle = if (measurement.isEmpty()) {
+                        MaterialTheme.typography.titleMedium
+                    } else {
+                        MaterialTheme.typography.displaySmall
+                    },
+                    supportingText = mapDistance.takeIf { it.isNotEmpty() },
+
                     modifier = Modifier.testTag("measurement")
                 )
 
