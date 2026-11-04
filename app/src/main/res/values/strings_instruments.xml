@@ -61,6 +61,8 @@
     <!-- White noise -->
     <string name="white_noise_tap_to_play">Tap to play</string>
     <string name="white_noise_tap_to_stop">Tap to stop</string>
+    <string name="white_noise_minutes_short">%1$d min</string>
+    <string name="white_noise_hours_short">%1$d h</string>
 
     <!-- Battery -->
     <string name="battery_charging">Charging</string>
