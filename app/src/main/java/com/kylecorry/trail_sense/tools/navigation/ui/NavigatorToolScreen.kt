@@ -1048,29 +1048,30 @@ private class NavigatorDataPointState(
     var onClick by mutableStateOf<(() -> Unit)?>(null)
 
     @Composable
-    fun Content(modifier: Modifier = Modifier, shape: Shape = MaterialTheme.shapes.large) {
+    fun Content(modifier: Modifier = Modifier, shape: Shape = androidx.compose.foundation.shape.CircleShape) {
+        // A quiet secondary chip: altitude and speed support the heading, they don't compete with it.
         Surface(
             modifier = modifier,
             shape = shape,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
             onClick = { onClick?.invoke() },
             enabled = onClick != null
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1
                 )
             }
@@ -1104,7 +1105,7 @@ private fun NavigationTitle(
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = state.title,
-                        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                        style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -1126,7 +1127,7 @@ private fun NavigationTitle(
                     onLongClick = { state.onSubtitleLongClick?.invoke() }
                 )
                     .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
@@ -1150,19 +1151,14 @@ private fun NavigatorHost(
                 .padding(horizontal = TrailSenseSpacing.lg)
         ) {
             NavigationTitle(views.navigationTitle)
-            // Altitude and speed as one connected pair, like the family's grids.
+            // Altitude and speed as two small chips under the heading, so the heading stays the one star number.
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.xs),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                views.altitude.Content(
-                    Modifier.weight(1f),
-                    shape = trailSenseGridCellShape(0, 2, 0, 1)
-                )
-                views.speed.Content(Modifier.weight(1f), shape = trailSenseGridCellShape(1, 2, 0, 1))
+                views.altitude.Content()
+                views.speed.Content()
             }
             BoxWithConstraints(
                 modifier = Modifier
@@ -1282,8 +1278,9 @@ private fun NavigatorIconButton(
                 onLongClick = onLongClick
             ),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        // Picking a place to go is the screen's one main action: the warm tertiary role.
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
         shadowElevation = 2.dp
     ) {
         Box(contentAlignment = Alignment.Center) {

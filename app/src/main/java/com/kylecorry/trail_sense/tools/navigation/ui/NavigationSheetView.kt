@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Box
@@ -158,16 +159,37 @@ class NavigationSheetView(private val context: Context) {
         // Turn the short way round, so the arrow never spins a full circle when the bearing wraps past 180°.
         var target by remember { mutableFloatStateOf(state.arrowRotation) }
         target += ((state.arrowRotation - target + 540f) % 360f) - 180f
-        val rotation by animateFloatAsState(target, MaterialTheme.motionScheme.fastSpatialSpec(), label = "arrow")
+        // A needle that settles: a soft spring with a touch of overshoot as you turn.
+        val rotation by animateFloatAsState(
+            target,
+            androidx.compose.animation.core.spring(
+                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
+            ),
+            label = "arrow"
+        )
+        // A soft haptic tick the moment you face the destination.
+        val facing = off != null && off < 0.08f
+        val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+        androidx.compose.runtime.LaunchedEffect(facing) {
+            if (facing) {
+                haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.SegmentTick)
+            }
+        }
+        val badgeScale by animateFloatAsState(
+            if (facing) 1.08f else 1f,
+            MaterialTheme.motionScheme.fastSpatialSpec(),
+            label = "facing"
+        )
 
         Surface(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp, bottom = 8.dp),
+            // A calm surface: the compass above is the focal point, this card is what you are walking to.
             shape = RoundedCornerShape(28.dp),
-            color = scheme.primaryContainer,
-            contentColor = scheme.onPrimaryContainer,
-            shadowElevation = 6.dp
+            color = scheme.surfaceContainerHigh,
+            contentColor = scheme.onSurface
         ) {
             Column(
                 modifier = Modifier
@@ -178,10 +200,15 @@ class NavigationSheetView(private val context: Context) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (state.showDirection) {
                         Surface(
-                            shape = MaterialShapes.Cookie9Sided.toShape(),
+                            shape = (if (facing) MaterialShapes.Cookie12Sided else MaterialShapes.Cookie9Sided).toShape(),
                             color = badgeContainer,
                             contentColor = badgeContent,
-                            modifier = Modifier.size(56.dp)
+                            modifier = Modifier
+                                .size(56.dp)
+                                .graphicsLayer {
+                                    scaleX = badgeScale
+                                    scaleY = badgeScale
+                                }
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
@@ -231,7 +258,7 @@ class NavigationSheetView(private val context: Context) {
                             Text(
                                 text = state.subtitle,
                                 style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
-                                color = scheme.onPrimaryContainer.copy(alpha = 0.78f),
+                                color = scheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -241,8 +268,8 @@ class NavigationSheetView(private val context: Context) {
                         FilledTonalIconButton(
                             onClick = ::requestCancelNavigation,
                             colors = androidx.compose.material3.IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = scheme.surfaceContainerLowest.copy(alpha = 0.72f),
-                                contentColor = scheme.onPrimaryContainer
+                                containerColor = scheme.surfaceContainerHighest,
+                                contentColor = scheme.onSurface
                             )
                         ) {
                             Icon(
@@ -263,7 +290,7 @@ class NavigationSheetView(private val context: Context) {
                         state.stats.forEachIndexed { index, stat ->
                             Surface(
                                 shape = trailSenseGridCellShape(index, state.stats.size, 0, 1),
-                                color = scheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                                color = scheme.surfaceContainerLowest,
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -280,8 +307,13 @@ class NavigationSheetView(private val context: Context) {
                                         }
                                         Text(
                                             text = stat.value,
-                                            style = MaterialTheme.typography.headlineSmall
-                                                .copy(fontFeatureSettings = "tnum"),
+                                            style = (
+                                                if (state.stats.size <= 2) {
+                                                    MaterialTheme.typography.displaySmall
+                                                } else {
+                                                    MaterialTheme.typography.headlineSmall
+                                                }
+                                                ).copy(fontFeatureSettings = "tnum"),
                                             fontWeight = FontWeight.SemiBold,
                                             color = scheme.onSurface,
                                             maxLines = 1
@@ -292,7 +324,7 @@ class NavigationSheetView(private val context: Context) {
                                             Icon(
                                                 imageVector = stat.labelIcon,
                                                 contentDescription = null,
-                                                tint = scheme.onPrimaryContainer.copy(alpha = 0.78f),
+                                                tint = scheme.onSurfaceVariant,
                                                 modifier = Modifier
                                                     .padding(end = 4.dp)
                                                     .size(14.dp)
@@ -300,8 +332,8 @@ class NavigationSheetView(private val context: Context) {
                                         }
                                         Text(
                                             text = stat.label,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = scheme.onPrimaryContainer.copy(alpha = 0.78f),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = scheme.onSurfaceVariant,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )

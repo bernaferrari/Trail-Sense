@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.drawBehind
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.PathEffect
@@ -1073,7 +1072,7 @@ internal fun Modifier.placesDashedOutline(color: Color, radius: Dp): Modifier = 
     drawRoundRect(
         color = color,
         topLeft = Offset(stroke / 2, stroke / 2),
-        size = Size(size.width - stroke, size.height - stroke),
+        size = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke),
         cornerRadius = CornerRadius(radius.toPx()),
         style = Stroke(
             width = stroke,

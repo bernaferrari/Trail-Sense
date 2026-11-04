@@ -48,6 +48,10 @@ class RadarCompassView(
     @ColorInt
     private var textColor: Int = Color.WHITE
 
+    /** The turn still to make is drawn in the theme's warm tertiary, so it belongs to the app's palette. */
+    @ColorInt
+    private var turnColor: Int = Color.WHITE
+
     private val formatService by lazy { FormatService.getInstance(context) }
     private val drawDialBezel = prefs.navigation.drawDialBezel
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
@@ -88,6 +92,7 @@ class RadarCompassView(
         primaryColor = MaterialTheme.colorScheme.primary.toArgb()
         secondaryColor = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
         textColor = MaterialTheme.colorScheme.onSurface.toArgb()
+        turnColor = MaterialTheme.colorScheme.tertiary.toArgb()
         Canvas(
             modifier = modifier
                 .fillMaxSize()
@@ -368,9 +373,9 @@ class RadarCompassView(
         val nativeCanvas = canvas ?: return
         paint.reset()
         paint.isAntiAlias = true
-        paint.color = bearing.color
+        paint.color = turnColor
         paint.style = Paint.Style.FILL
-        paint.alpha = if (stopAt != null) 18 else 46
+        paint.alpha = if (stopAt != null) 18 else 40
 
         val inset = iconSize.toFloat() + dp(2f)
         arcRect.set(inset, inset, inset + compassSize, inset + compassSize)
