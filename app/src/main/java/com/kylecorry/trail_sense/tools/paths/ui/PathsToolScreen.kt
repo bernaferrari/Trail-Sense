@@ -812,7 +812,13 @@ private fun PathsCreateMenu(
                     imageVector = icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.animateIcon({ checkedProgress })
+                    modifier = Modifier.animateIcon(
+                        { checkedProgress },
+                        color = ToggleFloatingActionButtonDefaults.iconColor(
+                            initialColor = MaterialTheme.colorScheme.onPrimary,
+                            finalColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
                 )
             }
         }

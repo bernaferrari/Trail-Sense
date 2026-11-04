@@ -356,7 +356,7 @@ private fun TidesScreen(
     val heroTone = when (currentType) {
         TideType.High -> TrailSenseTone.Primary
         TideType.Low -> TrailSenseTone.Tertiary
-        else -> TrailSenseTone.Secondary
+        else -> TrailSenseTone.Primary
     }
     val heroColors = trailSenseToneColors(heroTone)
 

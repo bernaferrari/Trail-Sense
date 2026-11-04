@@ -1038,7 +1038,13 @@ private fun BeaconCreateMenu(
                     imageVector = if (progress > 0.5f) Icons.Default.Close else Icons.Default.Add,
                     contentDescription = stringResource(if (isOpen) R.string.beacon_create_menu_close else R.string.add),
                     modifier = with(ToggleFloatingActionButtonDefaults) {
-                        Modifier.animateIcon({ progress })
+                        Modifier.animateIcon(
+                            { progress },
+                            color = ToggleFloatingActionButtonDefaults.iconColor(
+                                initialColor = MaterialTheme.colorScheme.onPrimary,
+                                finalColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
                     }
                 )
             }
