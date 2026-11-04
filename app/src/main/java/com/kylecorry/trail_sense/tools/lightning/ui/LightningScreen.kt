@@ -95,9 +95,9 @@ private enum class StrikeStage { Ready, Counting, Result }
 
 /**
  * Lightning distance, like the boil timer: the object is the storm seen from above. The flash lights it, then the
- * sound spreads out of the middle as rings at the speed of sound until you tap at the thunder, and the front stops
- * where the strike is. A dashed circle marks the danger zone; the previous strike of the same storm is a ghost
- * ring. One instruction (or verdict) line and one button that names what to tap for next: Lightning, Thunder, Again.
+ * sound spreads out of the middle as rings at the speed of sound, its distance riding on the front, until you tap at
+ * the thunder and the front stops where the strike is. The danger zone fades in as the sound nears it; the previous
+ * strike of the same storm is a ghost ring. One instruction (or verdict) line and one button that names what to tap for next: Lightning, Thunder, Again.
  */
 @Composable
 fun LightningScreen(
@@ -155,7 +155,10 @@ fun LightningScreen(
     val relative = meters?.let { Distance.meters(it).convertTo(units).toRelativeDistance() }
     val distanceValue = relative?.let { DecimalFormatter.format(it.value, Units.getDecimalPlaces(it.units), false) }
     val distanceUnit = formatService.getDistanceUnitName(relative?.units ?: units, true)
-    val elapsed = lightningTime?.let { Duration.between(it, now).toMillis() / 1000f }
+    // While the sound travels, its distance rides on the front, ticking up in the user's units.
+    val liveLabel = relative?.takeIf { stage == StrikeStage.Counting }?.let {
+        formatService.formatDistance(it, Units.getDecimalPlaces(it.units), false)
+    }
     val ghostMeters = lastStrike
         ?.takeIf { Duration.between(it.time, Instant.now()) <= GHOST_MAX_AGE }
         ?.value?.distance?.meters()?.value
@@ -179,7 +182,7 @@ fun LightningScreen(
                     meters = meters,
                     value = distanceValue,
                     unit = distanceUnit,
-                    elapsedSeconds = elapsed,
+                    liveLabel = liveLabel,
                     danger = isDangerous,
                     ghostMeters = ghostMeters,
                     dangerLabel = dangerLabel,
@@ -283,7 +286,7 @@ private fun StormSky(
     meters: Float?,
     value: String?,
     unit: String,
-    elapsedSeconds: Float?,
+    liveLabel: String?,
     danger: Boolean,
     ghostMeters: Float?,
     dangerLabel: String,
@@ -320,6 +323,22 @@ private fun StormSky(
         },
         label = "front"
     )
+    val zoneTarget = when (stage) {
+        StrikeStage.Ready -> 0f
+        StrikeStage.Counting -> ((front - DANGER_METERS * 0.6f) / (DANGER_METERS * 0.4f)).coerceIn(0f, 1f)
+        StrikeStage.Result -> 1f
+    }
+    val zoneAlpha by animateFloatAsState(
+        targetValue = zoneTarget,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "zoneAlpha"
+    )
+    val pill = scheme.surfaceContainerHighest
+    val liveStyle = MaterialTheme.typography.labelLarge.copy(
+        color = scheme.onSurface,
+        fontFeatureSettings = "tnum",
+        fontWeight = FontWeight.SemiBold
+    )
     val rolling by rememberInfiniteTransition(label = "sound").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -344,22 +363,26 @@ private fun StormSky(
             // The face, lit by the flash.
             drawCircle(lerp(face, scheme.primaryContainer, flash), radius)
 
-            // The danger zone: a dashed circle; filled red once a strike lands inside it.
+            // The danger zone appears only as the sound nears it, and stays for the verdict; red when the strike
+            // landed inside it.
             val zone = DANGER_METERS * perMeter
-            drawCircle(zoneFill.copy(alpha = if (danger) 0.7f else 0.6f), zone)
-            drawCircle(
-                zoneLine.copy(alpha = 0.7f),
-                zone,
-                style = Stroke(
-                    width = 1.5.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
+            if (zoneAlpha > 0f) {
+                drawCircle(zoneFill.copy(alpha = (if (danger) 0.7f else 0.6f) * zoneAlpha), zone)
+                drawCircle(
+                    zoneLine.copy(alpha = 0.7f * zoneAlpha),
+                    zone,
+                    style = Stroke(
+                        width = 1.5.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
+                    )
                 )
-            )
-            val label = measurer.measure(dangerLabel, labelStyle)
-            drawText(
-                label,
-                topLeft = Offset(center.x - label.size.width / 2f, center.y - zone + 6.dp.toPx())
-            )
+                val label = measurer.measure(dangerLabel, labelStyle)
+                drawText(
+                    label,
+                    topLeft = Offset(center.x - label.size.width / 2f, center.y - zone + 6.dp.toPx()),
+                    alpha = zoneAlpha
+                )
+            }
 
             // The last strike of this storm, as a ghost to compare with.
             ghostMeters?.let { ghost ->
@@ -391,6 +414,31 @@ private fun StormSky(
                     }
                 }
                 drawCircle(accent, r, style = Stroke(width = 4.dp.toPx()))
+
+                // The live distance rides on the top of the front, kept clear of the strike in the middle.
+                if (liveLabel != null) {
+                    val text = measurer.measure(liveLabel, liveStyle)
+                    val padX = 10.dp.toPx()
+                    val padY = 4.dp.toPx()
+                    val w = text.size.width + padX * 2
+                    val h = text.size.height + padY * 2
+                    val y = (center.y - r).coerceAtMost(center.y - 36.dp.toPx())
+                    val topLeft = Offset(center.x - w / 2f, y - h / 2f)
+                    drawRoundRect(
+                        pill,
+                        topLeft = topLeft,
+                        size = androidx.compose.ui.geometry.Size(w, h),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(h / 2f)
+                    )
+                    drawRoundRect(
+                        accent,
+                        topLeft = topLeft,
+                        size = androidx.compose.ui.geometry.Size(w, h),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(h / 2f),
+                        style = Stroke(width = 2.dp.toPx())
+                    )
+                    drawText(text, topLeft = Offset(topLeft.x + padX, topLeft.y + padY))
+                }
             }
 
             // The flash itself: a burst of light that fades from the middle.
@@ -399,22 +447,32 @@ private fun StormSky(
             }
         }
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        val showDistance = stage == StrikeStage.Result && value != null
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.testTag("lightning_title_container")
+        ) {
             Icon(
                 Icons.Rounded.Bolt,
                 contentDescription = null,
                 tint = lerp(if (stage == StrikeStage.Ready) scheme.onSurfaceVariant else accent, scheme.primary, flash),
                 modifier = Modifier
-                    .size(if (value == null) 56.dp else 28.dp)
+                    .size(
+                        when (stage) {
+                            StrikeStage.Ready -> 56.dp
+                            StrikeStage.Counting -> 36.dp
+                            StrikeStage.Result -> 28.dp
+                        }
+                    )
                     .graphicsLayer {
                         scaleX = 1f + 0.4f * flash
                         scaleY = 1f + 0.4f * flash
                     }
             )
-            if (value != null) {
+            if (showDistance) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        value,
+                        value!!,
                         style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
                         fontWeight = FontWeight.SemiBold,
                         color = ink,
@@ -429,13 +487,6 @@ private fun StormSky(
                         modifier = Modifier
                             .padding(start = TrailSenseSpacing.xs)
                             .alignByBaseline()
-                    )
-                }
-                if (elapsedSeconds != null) {
-                    Text(
-                        stringResource(R.string.sky_seconds_short, DecimalFormatter.format(elapsedSeconds, 1, true)),
-                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                        color = scheme.onSurfaceVariant
                     )
                 }
             }
