@@ -2206,4 +2206,14 @@
     <string name="field_guide_name_both">Both</string>
     <string name="thermometer_source_explanation">Historic estimates the air temperature from past weather where you are. Sensor reads your phone\'s own thermometer, which runs warm while the phone is in use or in a pocket.</string>
     <string name="thermometer_calibration_explanation">To calibrate the sensor, note what your phone reads and what a real thermometer reads at the same time, once when it\'s cold and once when it\'s warm.</string>
+    <!-- Family redesign: field guide -->
+    <string name="field_guide_clear_search">Clear search</string>
+    <string name="field_guide_more_options">More options</string>
+    <string name="field_guide_no_pages_description">Try another search or category, or add a page of your own.</string>
+    <string name="field_guide_no_sightings_description">Record when and where you see it to build a history of this page.</string>
+    <string name="field_guide_last_seen">Last seen %s</string>
+    <plurals name="field_guide_sighting_count">
+        <item quantity="one">%d sighting</item>
+        <item quantity="other">%d sightings</item>
+    </plurals>
 </resources>
