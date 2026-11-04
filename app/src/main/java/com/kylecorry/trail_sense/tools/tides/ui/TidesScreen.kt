@@ -381,8 +381,9 @@ private fun TidesScreen(
                     .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
                     .testTag("tide_title"),
                 eyebrow = subtitle.ifBlank { null },
-                title = title,
-                titleStyle = MaterialTheme.typography.displaySmall,
+                // Before the first estimate the hero says what it is doing rather than showing a dash.
+                title = if (title == "--") stringResource(R.string.sky_tides_loading) else title,
+                titleStyle = if (title == "--") MaterialTheme.typography.headlineMedium else MaterialTheme.typography.displaySmall,
                 supportingText = isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) },
                 tone = heroTone,
                 badge = {
@@ -409,12 +410,11 @@ private fun TidesScreen(
                 },
                 trailing = if (isLoading) {
                     {
-                        CircularProgressIndicator(
+                        androidx.compose.material3.CircularWavyProgressIndicator(
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(32.dp)
                                 .testTag("loading"),
-                            strokeWidth = 3.dp,
-                            color = colors.content
+                            color = colors.accent
                         )
                     }
                 } else {
@@ -451,20 +451,15 @@ private fun TidesScreen(
             }
         }
 
+        // The day and its water as one surface: the date heads the chart.
         trailSenseSection(key = "day") {
             row { position ->
-                TrailSenseGroupCard(
-                    position = position,
-                    contentPadding = PaddingValues(
-                        horizontal = TrailSenseSpacing.xs,
-                        vertical = TrailSenseSpacing.xs
-                    )
-                ) {
-                    DatePickerInput(date = displayDate, onDateChange = onDateChange)
-                }
-            }
-            row { position ->
                 TrailSenseGroupCard(position = position) {
+                    DatePickerInput(
+                        date = displayDate,
+                        onDateChange = onDateChange,
+                        modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
+                    )
                     TideChartView(daily = daily, displayDate = displayDate, accent = heroColors.accent)
                 }
             }
@@ -636,6 +631,8 @@ private fun TideChartView(
                         color = textColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
+                } else {
+                    TideGhostWave(accent = levelColor, modifier = Modifier.fillMaxSize())
                 }
                 return@Box
             }
@@ -846,6 +843,53 @@ private fun TidesScreenPreview() {
             tides = emptyList(),
             onDateChange = {},
             onOpenTideList = {}
+        )
+    }
+}
+
+/**
+ * The chart while the estimate loads: a dashed ghost of a tide curve whose phase drifts slowly, over a calm wash,
+ * so the card reads as "water is coming" rather than an empty frame.
+ */
+@Composable
+private fun TideGhostWave(accent: Color, modifier: Modifier = Modifier) {
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "ghostTide")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2 * Math.PI).toFloat(),
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(4_000, easing = androidx.compose.animation.core.LinearEasing)
+        ),
+        label = "ghostTidePhase"
+    )
+    Canvas(modifier) {
+        val mid = size.height * 0.5f
+        val amp = size.height * 0.22f
+        val wave = androidx.compose.ui.graphics.Path()
+        val steps = 64
+        for (i in 0..steps) {
+            val x = size.width * i / steps
+            val y = mid + amp * kotlin.math.sin(i / steps.toFloat() * 4 * Math.PI.toFloat() + phase)
+            if (i == 0) wave.moveTo(x, y) else wave.lineTo(x, y)
+        }
+        val area = androidx.compose.ui.graphics.Path().apply {
+            addPath(wave)
+            lineTo(size.width, size.height)
+            lineTo(0f, size.height)
+            close()
+        }
+        drawPath(
+            area,
+            androidx.compose.ui.graphics.Brush.verticalGradient(listOf(accent.copy(alpha = 0.14f), accent.copy(alpha = 0f)))
+        )
+        drawPath(
+            wave,
+            accent.copy(alpha = 0.45f),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 3.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 8.dp.toPx()))
+            )
         )
     }
 }

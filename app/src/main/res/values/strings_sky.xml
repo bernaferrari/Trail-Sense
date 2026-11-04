@@ -44,6 +44,8 @@
     <string name="sky_axis_high">High</string>
     <string name="sky_axis_normal">Normal</string>
     <string name="sky_axis_low">Low</string>
+    <string name="sky_tides_loading">Reading the tides</string>
 </resources>
+
 
 

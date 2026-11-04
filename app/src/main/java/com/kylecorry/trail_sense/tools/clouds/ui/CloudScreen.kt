@@ -76,6 +76,7 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
@@ -286,7 +287,8 @@ private fun CloudScreen(
 
     TrailSensePage(
         title = stringResource(R.string.clouds),
-        subtitle = subtitle.takeIf { it.isNotBlank() },
+        // "Last 48h" only means something once there is a log to scope.
+        subtitle = subtitle.takeIf { it.isNotBlank() && !(loaded && clouds.isEmpty()) },
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("cloud_list_title"),
         actions = {
@@ -303,8 +305,9 @@ private fun CloudScreen(
                 Box {
                     ExtendedFloatingActionButton(
                         onClick = { isCreateMenuOpen = true },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+
                         modifier = Modifier.testTag("add_btn"),
                         icon = {
                             Icon(
@@ -337,6 +340,9 @@ private fun CloudScreen(
                     icon = TrailIcons.Cloud,
                     title = stringResource(R.string.no_clouds),
                     description = stringResource(R.string.clouds_empty_description),
+                    // A sky diary's three ways in ride the satellites: the camera, a photo, by hand.
+                    tone = TrailSenseTone.Tertiary,
+                    accents = listOf(TrailIcons.Camera, TrailIcons.File, TrailIcons.Edit),
                     modifier = Modifier
                         .fillParentMaxHeight(0.86f)
                         .testTag("cloud_empty_text"),
@@ -344,6 +350,10 @@ private fun CloudScreen(
                         Box {
                             androidx.compose.material3.Button(
                                 onClick = { isCreateMenuOpen = true },
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary,
+                                    contentColor = MaterialTheme.colorScheme.onTertiary
+                                ),
                                 modifier = Modifier
                                     .heightIn(min = 56.dp)
                                     .testTag("add_btn"),
