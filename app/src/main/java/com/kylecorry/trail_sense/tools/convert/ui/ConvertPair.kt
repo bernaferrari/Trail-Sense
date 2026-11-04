@@ -76,12 +76,23 @@ internal fun ConvertPair(
     var turns by remember { mutableFloatStateOf(0f) }
     val rotation by animateFloatAsState(turns * 180f, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "swap")
 
-    Box(modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+    // One hero: the amount you type on a light inset at the top, the answer large on the primary card under it.
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        color = scheme.primaryContainer,
+        contentColor = scheme.onPrimaryContainer
+    ) {
+    Box(Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(TrailSenseSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
             // From
             Surface(
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
-                color = scheme.surfaceContainerLow
+                shape = RoundedCornerShape(22.dp),
+                color = scheme.surfaceContainerLowest,
+                contentColor = scheme.onSurface
             ) {
                 Column(
                     Modifier
@@ -103,7 +114,7 @@ internal fun ConvertPair(
                         ),
                         placeholder = {
                             Text(
-                                if (keyboardType == KeyboardType.Text) fromLabel else "0",
+                                if (keyboardType == KeyboardType.Text) "47.6062, -122.3321" else "0",
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = scheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
@@ -127,8 +138,8 @@ internal fun ConvertPair(
             }
             // To
             Surface(
-                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 28.dp, bottomEnd = 28.dp),
-                color = scheme.primaryContainer,
+                shape = RoundedCornerShape(22.dp),
+                color = Color.Transparent,
                 contentColor = scheme.onPrimaryContainer
             ) {
                 Column(
@@ -201,6 +212,7 @@ internal fun ConvertPair(
                 }
             }
         }
+    }
     }
 }
 
