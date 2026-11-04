@@ -48,4 +48,7 @@
     <string name="battery_charging">Charging</string>
     <string name="battery_low">Battery low</string>
     <string name="battery_on_battery">On battery</string>
+
+    <!-- Signal finder -->
+    <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
 </resources>

@@ -2,6 +2,25 @@
 
 package com.kylecorry.trail_sense.tools.signal_finder.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.sp
+import com.kylecorry.trail_sense.shared.icons.trail.NavigationArrow
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular1
@@ -315,8 +334,9 @@ private fun SignalFinderScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.weight(1f)) {
                     TrailSenseEmptyState(
-                        icon = Icons.Default.Sensors,
-                        title = stringResource(R.string.no_cell_towers_found)
+                        icon = TrailIcons.CellTower,
+                        title = stringResource(R.string.no_cell_towers_found),
+                        description = stringResource(R.string.signal_finder_empty_hint)
                     )
                 }
                 SignalDisclaimer(disclaimer)
@@ -356,9 +376,13 @@ private fun SignalFinderScreen(
 
                 if (towers.isNotEmpty()) {
                     trailSenseSection(key = "towers", title = towersTitle) {
-                        towers.forEach { tower ->
+                        row { position ->
+                            TowerRadar(towers = towers, location = location, position = position)
+                        }
+                        towers.forEachIndexed { index, tower ->
                             row { position ->
                                 CellTowerRow(
+                                    index = index,
                                     tower = tower,
                                     location = location,
                                     formatter = formatter,
@@ -380,51 +404,67 @@ private fun SignalFinderScreen(
     }
 }
 
+/**
+ * The hero: the strongest signal as a Spotlight toned by its quality (good, caution, error), its network and
+ * service under it, and four rounded bars that fill with the strength.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SignalHero(
     signal: CellSignal,
     formatter: FormatService,
     modifier: Modifier = Modifier
 ) {
-    val strengthColor by animateColorAsState(
-        targetValue = Color(CustomUiUtils.getQualityColor(signal.quality)),
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "heroStrength"
+    val tone = qualityTone(signal.quality)
+    val colors = trailSenseToneColors(tone)
+    TrailSenseSpotlight(
+        title = formatter.formatPercentage(signal.strength),
+        titleStyle = MaterialTheme.typography.displayMedium,
+        eyebrow = formatter.formatCellNetwork(signal.network),
+        supportingText = if (signal.isRegistered) {
+            stringResource(R.string.full_service)
+        } else {
+            stringResource(R.string.emergency_calls_only)
+        },
+        tone = tone,
+        modifier = modifier,
+        badge = {
+            TrailSenseShapeBadge(
+                icon = cellQualityIcon(signal.quality),
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                size = 64.dp,
+                containerColor = colors.accent,
+                contentColor = colors.onAccent
+            )
+        },
+        trailing = {
+            SignalBars(strength = signal.strength, color = colors.accent, track = colors.content.copy(alpha = 0.14f))
+        }
     )
+}
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = TrailSenseSpacing.xl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-    ) {
-        Icon(
-            painter = rememberVectorPainter(cellQualityIcon(signal.quality)),
-            contentDescription = null,
-            modifier = Modifier.size(40.dp),
-            tint = strengthColor
-        )
-        TrailSenseReading(
-            value = formatter.formatPercentage(signal.strength)
-        )
-        Text(
-            text = formatter.join(
-                formatter.formatCellNetwork(signal.network),
-                if (signal.isRegistered) {
-                    stringResource(R.string.full_service)
-                } else {
-                    stringResource(R.string.emergency_calls_only)
-                },
-                separator = FormatService.Separator.Dot
-            ),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
+@Composable
+private fun SignalBars(strength: Float, color: Color, track: Color) {
+    val level by animateFloatAsState((strength / 100f).coerceIn(0f, 1f), MaterialTheme.motionScheme.slowSpatialSpec(), label = "bars")
+    Canvas(Modifier.size(width = 56.dp, height = 48.dp)) {
+        val count = 4
+        val gap = 4.dp.toPx()
+        val w = (size.width - gap * (count - 1)) / count
+        repeat(count) { i ->
+            val h = size.height * (i + 1) / count
+            val x = i * (w + gap)
+            val filled = level >= (i + 0.5f) / count
+            drawRoundRect(
+                if (filled) color else track,
+                Offset(x, size.height - h),
+                Size(w, h),
+                CornerRadius(w / 2f)
+            )
+        }
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CellSignalRow(
     signal: CellSignal,
@@ -442,7 +482,6 @@ private fun CellSignalRow(
         }
     }
     val description = formatter.join(
-        formatter.formatPercentage(signal.strength),
         distance?.let {
             formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)) +
                     if (maxDistance != null) {
@@ -464,18 +503,101 @@ private fun CellSignalRow(
         },
         separator = FormatService.Separator.Dot
     )
+    val colors = trailSenseToneColors(qualityTone(signal.quality))
 
-    TrailSenseListItem(
-        title = formatter.formatCellNetwork(signal.network),
-        subtitle = description,
-        icon = rememberVectorPainter(cellQualityIcon(signal.quality)),
-        iconTint = Color(CustomUiUtils.getQualityColor(signal.quality)),
-        position = position
-    )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = trailSenseGroupShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TrailSenseShapeBadge(
+                icon = cellQualityIcon(signal.quality),
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 44.dp,
+                containerColor = colors.container,
+                contentColor = colors.content
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    formatter.formatCellNetwork(signal.network),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.width(TrailSenseSpacing.sm))
+            Text(
+                formatter.formatPercentage(signal.strength),
+                style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                color = colors.accent
+            )
+        }
+    }
 }
 
+/**
+ * The nearby towers on a little radar, north up: you in the middle, each tower a numbered dot at its bearing,
+ * pushed out by distance (20 km at the rim). The numbers match the rows under it.
+ */
+@Composable
+private fun TowerRadar(
+    towers: List<ApproximateCoordinate>,
+    location: Coordinate,
+    position: TrailSenseGroupPosition
+) {
+    val scheme = MaterialTheme.colorScheme
+    val ring = scheme.primary.copy(alpha = 0.16f)
+    val dot = scheme.primary
+    val onDot = scheme.onPrimary
+    val you = scheme.tertiary
+    val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 12.sp.toPx() }
+    val north = scheme.onSurfaceVariant
+    TrailSenseGroupCard(position = position) {
+        Canvas(
+            Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+        ) {
+            val radius = size.minDimension / 2f - 14.dp.toPx()
+            listOf(1f, 0.66f, 0.33f).forEach {
+                drawCircle(ring, radius * it, center, style = Stroke(width = if (it == 1f) 10.dp.toPx() else 1.5.dp.toPx()))
+            }
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                textAlign = android.graphics.Paint.Align.CENTER
+                textSize = labelSize
+                isFakeBoldText = true
+            }
+            paint.color = north.toArgb()
+            drawContext.canvas.nativeCanvas.drawText("N", center.x, center.y - radius - 4.dp.toPx() + labelSize / 3f, paint)
+            drawCircle(you, 7.dp.toPx(), center)
+            towers.forEachIndexed { index, tower ->
+                val bearing = Math.toRadians(location.bearingTo(tower.coordinate).value.toDouble() - 90)
+                val fraction = (location.distanceTo(tower.coordinate) / 20_000f).coerceIn(0.12f, 1f)
+                val p = Offset(
+                    center.x + kotlin.math.cos(bearing).toFloat() * radius * fraction,
+                    center.y + kotlin.math.sin(bearing).toFloat() * radius * fraction
+                )
+                drawCircle(dot, 12.dp.toPx(), p)
+                paint.color = onDot.toArgb()
+                drawContext.canvas.nativeCanvas.drawText((index + 1).toString(), p.x, p.y + labelSize / 3f, paint)
+            }
+        }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CellTowerRow(
+    index: Int,
     tower: ApproximateCoordinate,
     location: Coordinate,
     formatter: FormatService,
@@ -488,64 +610,76 @@ private fun CellTowerRow(
         .convertTo(prefs.baseDistanceUnits)
         .toRelativeDistance()
     val direction = location.bearingTo(tower.coordinate)
-    val description = formatter.join(
-        formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)),
-        "${formatter.formatDegrees(direction.value, replace360 = true)} ${
-            formatter.formatDirection(direction.direction)
-        }",
-        separator = FormatService.Separator.Dot
-    )
+    val scheme = MaterialTheme.colorScheme
 
     TrailSenseGroupCard(
         position = position,
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.sm,
-            top = TrailSenseSpacing.md,
-            bottom = TrailSenseSpacing.xs
-        )
+        contentPadding = PaddingValues(TrailSenseSpacing.lg)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = rememberVectorPainter(TrailIcons.CellTower),
-                        contentDescription = null,
-                        modifier = Modifier.size(TrailSenseSize.leadingIcon)
+            TrailSenseShapeBadge(
+                text = (index + 1).toString(),
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                size = 44.dp
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                Text(
+                    text = stringResource(R.string.cell_tower),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = scheme.onSurface
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                    TowerChip(formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)), primary = true)
+                    TowerChip(
+                        "${formatter.formatDegrees(direction.value, replace360 = true)} ${
+                            formatter.formatDirection(direction.direction)
+                        }",
+                        primary = false
                     )
                 }
             }
-            Spacer(Modifier.width(TrailSenseSpacing.md))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.cell_tower),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
+        Spacer(Modifier.height(TrailSenseSpacing.md))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(onClick = onCreateBeacon) {
                 Text(stringResource(R.string.create_beacon))
             }
-            TextButton(onClick = onNavigate) {
+            FilledTonalButton(onClick = onNavigate) {
+                Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(TrailSenseSpacing.sm))
                 Text(stringResource(R.string.navigate))
             }
         }
     }
+}
+
+@Composable
+private fun TowerChip(text: String, primary: Boolean) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        shape = CircleShape,
+        color = if (primary) scheme.primaryContainer else scheme.secondaryContainer,
+        contentColor = if (primary) scheme.onPrimaryContainer else scheme.onSecondaryContainer
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
+        )
+    }
+}
+
+private fun qualityTone(quality: com.kylecorry.andromeda.core.sensors.Quality?): TrailSenseTone = when (quality) {
+    com.kylecorry.andromeda.core.sensors.Quality.Poor -> TrailSenseTone.Error
+    com.kylecorry.andromeda.core.sensors.Quality.Moderate -> TrailSenseTone.Caution
+    com.kylecorry.andromeda.core.sensors.Quality.Good -> TrailSenseTone.Good
+    else -> TrailSenseTone.Secondary
 }
 
 @Composable
