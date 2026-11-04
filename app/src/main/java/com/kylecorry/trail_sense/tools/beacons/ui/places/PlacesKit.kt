@@ -202,7 +202,7 @@ fun PlacesRow(
     barFraction: Float? = null,
     barColor: Color = MaterialTheme.colorScheme.primary,
     dimmed: Boolean = false,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     belowContent: (@Composable ColumnScope.() -> Unit)? = null,
@@ -228,7 +228,7 @@ fun PlacesRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 76.dp)
+                .heightIn(min = 72.dp)
                 .then(
                     if (onClick != null) {
                         Modifier.combinedClickable(
@@ -252,7 +252,7 @@ fun PlacesRow(
         ) {
             if (leading != null) {
                 Box(Modifier.graphicsLayer { alpha = if (dimmed) 0.55f else 1f }) { leading() }
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                Spacer(Modifier.width(TrailSenseSpacing.md))
             }
             Column(
                 Modifier
@@ -321,9 +321,9 @@ fun PlacesBadge(
     icon: ImageVector? = null,
     text: String? = null,
     shape: Shape = MaterialShapes.Cookie9Sided.toShape(),
-    size: Dp = 48.dp,
+    size: Dp = 40.dp,
     iconRotation: Float = 0f,
-    iconScale: Float = 0.5f
+    iconScale: Float = 0.55f
 ) {
     Surface(modifier = modifier.size(size), shape = shape, color = containerColor, contentColor = contentColor) {
         Box(contentAlignment = Alignment.Center) {
