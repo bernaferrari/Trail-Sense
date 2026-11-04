@@ -384,7 +384,7 @@ private fun BeaconDetailsScreen(
                     TrailSenseSpotlightAction(
                         stringResource(R.string.navigate),
                         TrailIcons.NavigationArrow,
-                        onNavigate
+                        onClick = onNavigate
                     )
                 )
             ) {

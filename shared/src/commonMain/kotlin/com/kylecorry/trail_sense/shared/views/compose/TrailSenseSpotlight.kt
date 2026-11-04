@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -115,6 +116,7 @@ fun TrailSenseShapeBadge(
 data class TrailSenseSpotlightAction(
     val label: String,
     val icon: ImageVector? = null,
+    val testTag: String? = null,
     val onClick: () -> Unit
 )
 
@@ -134,6 +136,7 @@ fun TrailSenseSpotlight(
     trailing: (@Composable () -> Unit)? = null,
     actions: List<TrailSenseSpotlightAction> = emptyList(),
     titleStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.headlineLarge,
+    titleModifier: Modifier = Modifier,
     content: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     val colors = trailSenseToneColors(tone)
@@ -168,7 +171,8 @@ fun TrailSenseSpotlight(
                     Text(
                         title,
                         style = titleStyle.copy(fontFeatureSettings = "tnum"),
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = titleModifier
                     )
                     if (supportingText != null) {
                         Text(
@@ -195,7 +199,8 @@ fun TrailSenseSpotlight(
                             onClick = action.onClick,
                             modifier = Modifier
                                 .weight(1f)
-                                .heightIn(min = 52.dp),
+                                .heightIn(min = 52.dp)
+                                .then(if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier),
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(
                                 topStart = if (first) outer else inner,
                                 bottomStart = if (first) outer else inner,
@@ -228,7 +233,8 @@ data class TrailSenseStat(
     val supportingText: String? = null,
     val tone: TrailSenseTone = TrailSenseTone.Neutral,
     val icon: ImageVector? = null,
-    val onClick: (() -> Unit)? = null
+    val onClick: (() -> Unit)? = null,
+    val testTag: String? = null
 )
 
 /**
@@ -253,6 +259,7 @@ fun TrailSenseStatGrid(
             Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 row.forEachIndexed { columnIndex, stat ->
                     val colors = trailSenseToneColors(stat.tone)
+                    val tag = if (stat.testTag != null) Modifier.testTag(stat.testTag) else Modifier
                     val shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size)
                     val body: @Composable () -> Unit = {
                         Column(
@@ -308,14 +315,14 @@ fun TrailSenseStatGrid(
                     if (stat.onClick != null) {
                         Surface(
                             onClick = stat.onClick,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).then(tag),
                             shape = shape,
                             color = colors.container,
                             contentColor = colors.content
                         ) { body() }
                     } else {
                         Surface(
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).then(tag),
                             shape = shape,
                             color = colors.container,
                             contentColor = colors.content
@@ -323,6 +330,43 @@ fun TrailSenseStatGrid(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * A small pill holding one value or state ("Tilt up 12°", "On map", "± 2 °C"), toned like the rest of the kit. The
+ * family's chip for a value that sits beside a headline or at the end of a row.
+ */
+@Composable
+fun TrailSenseValueChip(
+    text: String,
+    modifier: Modifier = Modifier,
+    tone: TrailSenseTone = TrailSenseTone.Secondary,
+    icon: ImageVector? = null,
+    strong: Boolean = false
+) {
+    val colors = trailSenseToneColors(tone)
+    Surface(
+        modifier = modifier,
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = if (strong) colors.accent else colors.container,
+        contentColor = if (strong) colors.onAccent else colors.content
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(TrailSenseSpacing.xs))
+            }
+            Text(
+                text,
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
         }
     }
 }

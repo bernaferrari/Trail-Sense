@@ -896,13 +896,13 @@ private fun TriangulateResultCard(
         },
         actions = if (actionsVisible) {
             listOfNotNull(
-                TrailSenseSpotlightAction(stringResource(R.string.beacon), TrailIcons.Location, onCreateBeacon),
+                TrailSenseSpotlightAction(stringResource(R.string.beacon), TrailIcons.Location, onClick = onCreateBeacon),
                 if (navigateVisible) {
-                    TrailSenseSpotlightAction(stringResource(R.string.navigate), TrailIcons.NavigationArrow, onNavigate)
+                    TrailSenseSpotlightAction(stringResource(R.string.navigate), TrailIcons.NavigationArrow, onClick = onNavigate)
                 } else {
                     null
                 },
-                TrailSenseSpotlightAction(stringResource(R.string.share_ellipsis), TrailIcons.Share, onShareLocation)
+                TrailSenseSpotlightAction(stringResource(R.string.share_ellipsis), TrailIcons.Share, onClick = onShareLocation)
             )
         } else {
             emptyList()

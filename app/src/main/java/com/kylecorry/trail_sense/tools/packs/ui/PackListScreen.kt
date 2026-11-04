@@ -412,7 +412,7 @@ private fun PackSpotlight(pack: Pack, summary: PackSummary?, onOpen: () -> Unit)
             )
         },
         actions = listOf(
-            TrailSenseSpotlightAction(stringResource(R.string.open), TrailIcons.ToolPack, onOpen)
+            TrailSenseSpotlightAction(stringResource(R.string.open), TrailIcons.ToolPack, onClick = onOpen)
         )
     ) {
         if (summary != null && summary.itemCount > 0) {
