@@ -294,6 +294,7 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
  * is a row in one group, nearby towers another group with their two actions, and the source note sits at the foot.
  * Loading shows as a small spinner in the top bar so the list never jumps.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SignalFinderScreen(
     signals: List<CellSignal>,
@@ -322,10 +323,7 @@ private fun SignalFinderScreen(
                     modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
+                    androidx.compose.material3.LoadingIndicator(modifier = Modifier.size(28.dp))
                 }
             }
         }

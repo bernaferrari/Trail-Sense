@@ -157,6 +157,7 @@ fun BallisticsCalculatorPage(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun TrajectoryCard(
     position: TrailSenseGroupPosition,
@@ -180,7 +181,7 @@ private fun TrajectoryCard(
         ) {
             when {
                 // Keep the last table on screen while a new one is worked out.
-                loading && trajectory.isEmpty() -> CircularProgressIndicator(
+                loading && trajectory.isEmpty() -> androidx.compose.material3.LoadingIndicator(
                     modifier = Modifier
                         .padding(vertical = TrailSenseSpacing.xl)
                         .testTag("loading")
