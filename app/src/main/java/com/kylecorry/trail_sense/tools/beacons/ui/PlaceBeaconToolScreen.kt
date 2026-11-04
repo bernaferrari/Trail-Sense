@@ -457,39 +457,6 @@ private fun PlaceBeaconScreen(
                 }
             }
         ) {
-            item(key = "preview") {
-                // What you're making, as you make it: the beacon's colour and icon on a cookie, its name and place.
-                val color = Color(data.color.color)
-                val context = androidx.compose.ui.platform.LocalContext.current
-                val coordinateText = data.coordinate?.let {
-                    com.kylecorry.trail_sense.shared.FormatService.getInstance(context).formatLocation(it)
-                }
-                TrailSenseSpotlight(
-                    eyebrow = groupName,
-                    title = data.name.ifBlank { stringResource(R.string.beacon) },
-                    titleStyle = MaterialTheme.typography.headlineMedium,
-                    supportingText = coordinateText ?: stringResource(R.string.places_beacon_form_hint),
-                    tone = TrailSenseTone.Primary,
-                    badge = {
-                        Surface(
-                            onClick = onColorClick,
-                            shape = MaterialShapes.Cookie9Sided.toShape(),
-                            color = color,
-                            contentColor = if (color.luminance() > 0.5f) Color.Black else Color.White,
-                            modifier = Modifier.size(72.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    data.icon?.icon ?: TrailIcons.Location,
-                                    contentDescription = stringResource(R.string.color),
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                        }
-                    }
-                )
-            }
-
             item(key = "name") {
                 TrailSenseRowGroup {
                     row { position ->

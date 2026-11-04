@@ -1049,29 +1049,29 @@ private class NavigatorDataPointState(
 
     @Composable
     fun Content(modifier: Modifier = Modifier, shape: Shape = androidx.compose.foundation.shape.CircleShape) {
-        // A quiet secondary chip: altitude and speed support the heading, they don't compete with it.
+        // A quiet chip: altitude and speed support the heading, they don't compete with it (no tint, no bold).
         Surface(
             modifier = modifier,
             shape = shape,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             onClick = { onClick?.invoke() },
             enabled = onClick != null
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1
                 )
             }
@@ -1100,24 +1100,28 @@ private fun NavigationTitle(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
         ) {
             if (state.isTitleVisible) {
-                // The heading in tabular figures (so it doesn't jitter as it changes), its direction beside it in
-                // the accent color.
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = state.title,
-                        style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (state.direction.isNotEmpty()) {
-                        Text(
-                            text = state.direction,
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = TrailSenseSpacing.md, bottom = TrailSenseSpacing.xs)
-                        )
-                    }
-                }
+                // The one heading readout: degrees and direction as a single line in tabular figures (so it doesn't
+                // jitter as it changes). The direction is the same reading in words, so it stays quiet beside it.
+                Text(
+                    text = androidx.compose.ui.text.buildAnnotatedString {
+                        append(state.title)
+                        if (state.direction.isNotEmpty()) {
+                            pushStyle(
+                                androidx.compose.ui.text.SpanStyle(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            )
+                            append(" ")
+                            append(state.direction)
+                            pop()
+                        }
+                    },
+                    style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
             }
             Text(
                 text = state.subtitle,
@@ -1127,7 +1131,7 @@ private fun NavigationTitle(
                     onLongClick = { state.onSubtitleLongClick?.invoke() }
                 )
                     .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs),
-                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
@@ -1141,6 +1145,8 @@ private fun NavigatorHost(
     views: NavigatorViews,
     modifier: Modifier = Modifier
 ) {
+    // Which way is my destination? The compass answers it (its turn arc closes as you face it); one heading readout,
+    // two quiet chips and the destination card support it.
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.background

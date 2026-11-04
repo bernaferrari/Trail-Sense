@@ -108,6 +108,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
@@ -635,6 +637,7 @@ private fun PathsScreen(
     onBacktrackToggleClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // What trails have I walked, and is Backtrack saving this one? A quiet Backtrack group, then one grouped list.
     val listState = rememberLazyListState()
     LaunchedEffect(resetKey) {
         listState.scrollToItem(0)
@@ -692,9 +695,8 @@ private fun PathsScreen(
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_paths),
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
-                        // A trail being walked: dotted steps, a pin where it started and a flag where it ends.
-                        tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Tertiary,
-                        accents = if (isSearching) emptyList() else listOf(TrailIcons.PathDotted, TrailIcons.Location, TrailIcons.Flag),
+                        // No button here: Backtrack's switch above and the add FAB are the actions.
+                        tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
                         modifier = Modifier.testTag("waypoints_empty_text")
                     )
                 }
@@ -711,7 +713,6 @@ private fun PathsScreen(
                 )
             }
 
-            val longest = paths.maxOfOrNull { it.metadata.distance.meters().value } ?: 0f
             groupedRows(
                 rows = paths,
                 key = { "path_${it.id}" }
@@ -721,7 +722,6 @@ private fun PathsScreen(
                     position = position,
                     formatService = formatService,
                     baseDistanceUnits = baseDistanceUnits,
-                    share = if (longest > 0f) path.metadata.distance.meters().value / longest else 0f,
                     onAction = { onPathAction(path, it) }
                 )
             }
@@ -861,11 +861,7 @@ private fun PathsCreateMenu(
     }
 }
 
-/**
- * Backtrack, the recorder that fills this list, as the screen's focal point: a saturated card that turns green while
- * recording, the trail mark on a cookie that turns slowly while it works, a big start/stop button at its side and the
- * recording interval as its one action.
- */
+/** Backtrack, the recorder that fills this list, as a quiet group: an on/off switch and its recording interval. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BacktrackRow(
@@ -876,107 +872,42 @@ private fun BacktrackRow(
     onToggleClick: () -> Unit
 ) {
     val isOn = state == FeatureState.On
-    // Off is calm and secondary; recording is the one loud, green state with a pulse round its mark.
-    val tone = if (isOn) TrailSenseTone.Good else TrailSenseTone.Secondary
-    val colors = trailSenseToneColors(tone)
     val frequencyText = frequency?.let { formatService.formatDuration(it, short = true, includeSeconds = true) }
-    val transition = rememberInfiniteTransition(label = "backtrack")
-    val turn by transition.animateFloat(
-        0f,
-        360f,
-        infiniteRepeatable(tween(12_000, easing = LinearEasing)),
-        label = "turn"
-    )
-    val pulse by transition.animateFloat(
-        0f,
-        1f,
-        infiniteRepeatable(tween(2_200, easing = LinearEasing)),
-        label = "pulse"
-    )
 
-    Box(modifier = Modifier.testTag("backtrack_play_bar")) {
-        TrailSenseSpotlight(
-            modifier = Modifier.testTag("play_bar_title"),
-            eyebrow = stringResource(R.string.backtrack),
-            title = stringResource(if (isOn) R.string.places_backtrack_recording else R.string.off),
-            supportingText = stringResource(
-                if (isOn) R.string.places_backtrack_on_description else R.string.places_backtrack_off_description
-            ),
-            tone = tone,
-            badge = {
-                Box(contentAlignment = Alignment.Center) {
-                    if (isOn) {
-                        // A soft ring breathes out from the mark while the trail is being saved.
-                        Box(
-                            Modifier
-                                .size(64.dp)
-                                .graphicsLayer {
-                                    val scale = 1f + 0.35f * pulse
-                                    scaleX = scale
-                                    scaleY = scale
-                                    alpha = (1f - pulse) * 0.6f
-                                }
-                                .background(colors.accent, CircleShape)
-                        )
-                    }
-                    Box(Modifier.rotate(if (isOn) turn else 0f)) {
-                        TrailSenseShapeBadge(
-                            icon = TrailIcons.ToolBacktrack,
-                            shape = (if (isOn) MaterialShapes.Cookie9Sided else MaterialShapes.Cookie6Sided).toShape(),
-                            size = 64.dp,
-                            containerColor = colors.accent,
-                            contentColor = colors.onAccent,
-                            iconRotation = if (isOn) -turn else 0f
-                        )
-                    }
-                }
-            },
-            trailing = {
-                FilledIconButton(
-                    onClick = onToggleClick,
-                    shapes = IconButtonDefaults.shapes(),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (isOn) colors.accent else MaterialTheme.colorScheme.tertiary,
-                        contentColor = if (isOn) colors.onAccent else MaterialTheme.colorScheme.onTertiary
+    // A switch says on or off by itself; no card, no pulse, no spinning badge.
+    TrailSenseRowGroup(
+        modifier = Modifier.testTag("backtrack_play_bar"),
+        title = stringResource(R.string.backtrack)
+    ) {
+        row { position ->
+            Box(Modifier.testTag("play_bar_title")) {
+                TrailSenseSwitchRow(
+                    label = stringResource(if (isOn) R.string.places_backtrack_recording else R.string.off),
+                    summary = stringResource(
+                        if (isOn) R.string.places_backtrack_on_description else R.string.places_backtrack_off_description
                     ),
-                    modifier = Modifier
-                        .size(64.dp)
-                        .testTag("play_btn")
-                ) {
-                    Icon(
-                        painter = rememberVectorPainter(
-                            if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
-                        ),
-                        contentDescription = stringResource(if (isOn) R.string.stop else R.string.start),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            },
-            content = {
-                // The interval reads as a picker: clock, value, and a drop-down arrow at the end.
-                FilledTonalButton(
-                    onClick = onFrequencyClick,
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 52.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-                        contentColor = colors.content
-                    )
-                ) {
-                    Icon(TrailIcons.ToolClock, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(TrailSenseSpacing.sm))
+                    checked = isOn,
+                    onCheckedChange = { onToggleClick() },
+                    position = position,
+                    modifier = Modifier.testTag("play_btn")
+                )
+            }
+        }
+        row { position ->
+            TrailSenseListItem(
+                title = stringResource(R.string.frequency),
+                position = position,
+                onClick = onFrequencyClick,
+                trailing = {
                     Text(
-                        frequencyText?.let { stringResource(R.string.places_backtrack_every, it) }
-                            ?: stringResource(R.string.frequency),
-                        modifier = Modifier.weight(1f),
+                        frequencyText?.let { stringResource(R.string.places_backtrack_every, it) } ?: "",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
-                    Icon(TrailIcons.DropDown, contentDescription = null, modifier = Modifier.size(20.dp))
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -986,7 +917,6 @@ private fun PathRow(
     position: TrailSenseGroupPosition,
     formatService: FormatService,
     baseDistanceUnits: DistanceUnits,
-    share: Float,
     onAction: (PathAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -1029,8 +959,6 @@ private fun PathRow(
             )
         },
         value = distanceString,
-        valueColor = MaterialTheme.colorScheme.primary,
-        barFraction = share,
         onClick = { onAction(PathAction.Show) },
         onLongClick = { menuOpen = true },
         actions = {
@@ -1126,11 +1054,12 @@ private fun PathGroupRow(
         subtitle = pluralStringResource(R.plurals.path_group_summary, count, count),
         position = position,
         leading = {
+            // The count is already in the subtitle, so the mark is the group's icon, not the number again.
             PlacesBadge(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                text = count.toString(),
-                shape = MaterialShapes.Clover4Leaf.toShape()
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                icon = TrailIcons.PathGroup,
+                shape = MaterialShapes.Cookie6Sided.toShape()
             )
         },
         onClick = { onAction(PathGroupAction.Open) },

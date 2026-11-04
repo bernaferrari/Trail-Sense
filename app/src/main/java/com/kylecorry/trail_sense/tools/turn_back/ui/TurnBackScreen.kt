@@ -6,6 +6,7 @@ package com.kylecorry.trail_sense.tools.turn_back.ui
 
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.PaddingValues
@@ -255,9 +256,9 @@ private class TurnBackController(private val host: TrailSenseDestinationHost) {
 }
 
 /**
- * Turn back: a scrolling page. While an alert is set the countdown to the turn-around point is the hero, with the
- * journey's progress and the two times as a metric strip; otherwise a calm empty state. The return time choices are
- * one group, and cancelling is a quiet button that names what it cancels.
+ * Turn back: a calm page. The countdown to the turn-around point is the one emphasised value, with the plan as one
+ * sentence under it; the return time choices are one group, and cancelling is a quiet button that names what it
+ * cancels.
  */
 @Composable
 private fun TurnBackScreen(
@@ -269,6 +270,7 @@ private fun TurnBackScreen(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // When do I need to turn around? The countdown answers it.
     var turnBackTime by remember { mutableStateOf(loadTurnBackTime()) }
     var returnTime by remember { mutableStateOf(loadReturnTime()) }
     var now by remember { mutableStateOf(Instant.now()) }
@@ -294,132 +296,30 @@ private fun TurnBackScreen(
             includeSeconds = it < Duration.ofMinutes(1)
         )
     }
-    val isActive = returnTime != null
-    val instructionText = if (
-        formattedRemainingTime != null &&
-        formattedTurnBackTime != null &&
-        formattedReturnTime != null
-    ) {
-        stringResource(
-            R.string.turn_back_instructions,
-            formattedTurnBackTime,
-            formattedRemainingTime,
-            formattedReturnTime
-        )
-    } else {
-        stringResource(R.string.time_not_set)
-    }
-
-    // Fraction of the run still remaining before the turn-back alert (0f..1f).
-    val progressTarget = run {
-        val turnBack = turnBackTime
-        val ret = returnTime
-        if (turnBack == null || ret == null) {
-            0f
-        } else {
-            val total = Duration.between(now, ret).toMillis()
-                .coerceAtLeast(Duration.between(turnBack, ret).toMillis())
-            val left = remaining?.toMillis() ?: 0L
-            if (total <= 0L) 0f else (left.toFloat() / total.toFloat()).coerceIn(0f, 1f)
-        }
-    }
-    val animatedProgress by animateFloatAsState(
-        targetValue = progressTarget,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "turnBackProgress"
-    )
-
-    val turnFraction = run {
-        val turnBack = turnBackTime
-        val ret = returnTime
-        if (turnBack == null || ret == null) {
-            0.4f
-        } else {
-            val total = Duration.between(now, ret).toMillis()
-            val out = Duration.between(now, turnBack).toMillis().coerceAtLeast(0)
-            if (total <= 0L) 1f else (out.toFloat() / total.toFloat()).coerceIn(0f, 1f)
-        }
-    }
-    val animatedTurn by animateFloatAsState(
-        targetValue = turnFraction,
-        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
-        label = "turnFraction"
-    )
-    val isLate = isActive && remaining != null && remaining < Duration.ofMinutes(10)
-    val isDue = isActive && remaining != null && remaining.isZero
-    // Idle is calm; a set time is warm; the last ten minutes are caution and a passed turn-around is an alert.
-    val tone = when {
-        !isActive -> TrailSenseTone.Secondary
-        isDue -> TrailSenseTone.Error
-        isLate -> TrailSenseTone.Caution
-        else -> TrailSenseTone.Tertiary
-    }
-    val colors = trailSenseToneColors(tone)
-
+    val isActive = returnTime != null && formattedRemainingTime != null
+    // A passed turn-around is the one real danger here, so only then does the countdown take the error colour.
+    val isDue = isActive && remaining?.isZero == true
     val returnTitle = stringResource(R.string.return_time)
+
     TrailSensePage(
         title = stringResource(R.string.tool_turn_back),
         onBack = rememberTrailSenseBack(),
         modifier = modifier
     ) {
-        item("hero") {
-            TrailSenseSpotlight(
+        item("answer") {
+            PlacesKeyValue(
                 modifier = Modifier
                     .testTag("instructions")
                     .semantics(mergeDescendants = true) {},
-                // Idle: the state word above a question. Set: one star countdown, then the plan as a sentence.
-                eyebrow = if (isActive) stringResource(R.string.places_turn_back_in) else instructionText,
-                title = if (isActive) {
-                    formattedRemainingTime.orEmpty()
+                value = if (isActive) formattedRemainingTime.orEmpty() else stringResource(R.string.time_not_set),
+                // Each time appears once: the countdown above, the two clock times in the sentence.
+                verdict = if (isActive && formattedTurnBackTime != null && formattedReturnTime != null) {
+                    stringResource(R.string.places_turn_back_verdict, formattedTurnBackTime, formattedReturnTime)
                 } else {
-                    stringResource(R.string.places_turn_back_idle_title)
+                    stringResource(R.string.turn_back_empty_description)
                 },
-                titleStyle = if (isActive) MaterialTheme.typography.displayMedium else MaterialTheme.typography.headlineSmall,
-                supportingText = if (isActive) instructionText else stringResource(R.string.turn_back_empty_description),
-                tone = tone,
-                badge = {
-                    TrailSenseShapeBadge(
-                        icon = if (isActive) TrailIcons.Flag else TrailIcons.ToolClock,
-                        shape = if (isActive) MaterialShapes.Sunny.toShape() else MaterialShapes.Cookie9Sided.toShape(),
-                        size = 64.dp,
-                        containerColor = colors.accent,
-                        contentColor = colors.onAccent
-                    )
-                }
-            ) {
-                // A ghost of the plan until a time is set (dashed, no marker), the live journey after, with the sun
-                // sinking at the far end as the turn-around gets closer.
-                JourneyTrack(
-                    active = isActive,
-                    turnFraction = if (isActive) animatedTurn else 0.4f,
-                    sunset = if (isActive) 1f - animatedProgress else 0f,
-                    color = colors.accent,
-                    trackColor = colors.content.copy(alpha = 0.16f),
-                    markerRing = colors.container
-                )
-                Row(Modifier.fillMaxWidth()) {
-                    val stop = MaterialTheme.typography.labelMedium
-                    val stopColor = colors.content.copy(alpha = 0.78f)
-                    Text(
-                        stringResource(R.string.places_turn_back_now),
-                        style = stop,
-                        color = stopColor,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        if (isActive) formattedTurnBackTime.orEmpty() else stringResource(R.string.places_turn_back_turn_around),
-                        style = stop,
-                        color = stopColor
-                    )
-                    Text(
-                        if (isActive) formattedReturnTime.orEmpty() else stringResource(R.string.places_turn_back_be_back),
-                        style = stop,
-                        color = stopColor,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
+                valueColor = if (isDue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+            )
         }
 
         trailSenseSection(key = "return", title = returnTitle) {
@@ -431,34 +331,29 @@ private fun TurnBackScreen(
                     modifier = Modifier.testTag("edittext"),
                     leading = {
                         PlacesBadge(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             icon = TrailIcons.ToolClock,
                             shape = MaterialShapes.Cookie9Sided.toShape()
                         )
                     },
                     onClick = { onPickReturnTime(returnTime) },
                     actions = {
-                        // The screen's one warm action: "Set" until there is a time, then the time itself.
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = if (isActive) {
-                                MaterialTheme.colorScheme.surfaceContainerHighest
-                            } else {
-                                MaterialTheme.colorScheme.tertiary
-                            },
-                            contentColor = if (isActive) {
-                                MaterialTheme.colorScheme.onSurface
-                            } else {
-                                MaterialTheme.colorScheme.onTertiary
-                            },
-                            modifier = Modifier.padding(end = TrailSenseSpacing.sm)
-                        ) {
+                        if (formattedReturnTime == null) {
+                            // The screen's one main action until there is a time.
+                            Button(
+                                onClick = { onPickReturnTime(returnTime) },
+                                shapes = ButtonDefaults.shapes(),
+                                modifier = Modifier.padding(end = TrailSenseSpacing.sm)
+                            ) {
+                                Text(stringResource(R.string.places_turn_back_set))
+                            }
+                        } else {
                             Text(
-                                formattedReturnTime ?: stringResource(R.string.places_turn_back_set),
-                                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+                                formattedReturnTime,
+                                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(end = TrailSenseSpacing.md)
                             )
                         }
                     }
@@ -472,10 +367,10 @@ private fun TurnBackScreen(
                     modifier = Modifier.testTag("sunset_button"),
                     leading = {
                         PlacesBadge(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             icon = TrailIcons.SunsetNotification,
-                            shape = MaterialShapes.Sunny.toShape()
+                            shape = MaterialShapes.Cookie9Sided.toShape()
                         )
                     },
                     onClick = onUseSunset,
@@ -503,11 +398,7 @@ private fun TurnBackScreen(
                         .fillMaxWidth()
                         .heightIn(min = 52.dp)
                         .testTag("cancel_button"),
-                    shapes = ButtonDefaults.shapes(),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                    shapes = ButtonDefaults.shapes()
                 ) {
                     Icon(TrailIcons.Cancel, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(TrailSenseSpacing.sm))
@@ -517,70 +408,3 @@ private fun TurnBackScreen(
         }
     }
 }
-
-/**
- * The walk as a track: out to the turn-around point in full colour, the way back faded, a flag where you turn and
- * a home dot at the end. It shortens as the turn-around time gets closer.
- */
-@Composable
-private fun JourneyTrack(
-    active: Boolean,
-    turnFraction: Float,
-    sunset: Float,
-    color: Color,
-    trackColor: Color,
-    markerRing: Color
-) {
-    val sun = MaterialTheme.colorScheme.tertiary
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(36.dp)
-    ) {
-        val stroke = 12.dp.toPx()
-        val y = size.height - 14.dp.toPx()
-        val start = stroke / 2
-        val end = size.width - stroke / 2 - 12.dp.toPx()
-        val turnX = start + (end - start) * turnFraction
-        if (!active) {
-            // The plan as a ghost: a dashed line with soft stops and no thumb until there is a time.
-            drawLine(
-                color.copy(alpha = 0.45f),
-                Offset(start, y),
-                Offset(end, y),
-                strokeWidth = 4.dp.toPx(),
-                cap = StrokeCap.Round,
-                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
-                    floatArrayOf(10.dp.toPx(), 8.dp.toPx())
-                )
-            )
-            listOf(start, turnX, end).forEach { x ->
-                drawCircle(markerRing, radius = 7.dp.toPx(), center = Offset(x, y))
-                drawCircle(color.copy(alpha = 0.45f), radius = 4.dp.toPx(), center = Offset(x, y))
-            }
-            return@Canvas
-        }
-        drawLine(trackColor, Offset(start, y), Offset(end, y), strokeWidth = stroke, cap = StrokeCap.Round)
-        // Quarter ticks so the track reads as time, not a slider.
-        for (i in 1..3) {
-            val x = start + (end - start) * i / 4f
-            drawCircle(color.copy(alpha = 0.5f), radius = 2.dp.toPx(), center = Offset(x, y))
-        }
-        drawLine(color, Offset(start, y), Offset(turnX, y), strokeWidth = stroke, cap = StrokeCap.Round)
-        drawCircle(markerRing, radius = 12.dp.toPx(), center = Offset(turnX, y))
-        drawCircle(color, radius = 8.dp.toPx(), center = Offset(turnX, y))
-        // The sun at the end of the walk sinks toward the horizon as the turn-around comes closer.
-        val sunRadius = 8.dp.toPx()
-        val sunX = size.width - sunRadius - 2.dp.toPx()
-        val sunY = sunRadius + (y - sunRadius) * sunset.coerceIn(0f, 1f)
-        drawCircle(sun, radius = sunRadius, center = Offset(sunX, sunY))
-        drawLine(
-            color.copy(alpha = 0.55f),
-            Offset(sunX - sunRadius - 4.dp.toPx(), y),
-            Offset(sunX + sunRadius, y),
-            strokeWidth = 2.dp.toPx(),
-            cap = StrokeCap.Round
-        )
-    }
-}
-

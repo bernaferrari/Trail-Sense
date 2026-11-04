@@ -17,6 +17,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -1248,86 +1249,50 @@ private fun PathMapPreview(views: PathOverviewViews) {
 }
 
 /**
- * The one fact you open a path for, as the Spotlight: how far it goes, on the path's own colour as a cookie badge,
- * with how long it took, its points and its difficulty as connected tiles inside.
+ * The one fact you open a path for, as plain emphasised type: how far it goes, with how long it took, its points
+ * and its difficulty as three quiet readings under it (no card, no badge).
  */
 @Composable
 private fun PathSummaryHero(views: PathOverviewViews) {
     val distance = views.pathDistance
-    val pathColor = ComposeColor(views.pathStyleControls.pathColor)
-    val onPathColor = if (pathColor.luminance() > 0.5f) ComposeColor.Black else ComposeColor.White
-    TrailSenseSpotlight(
-        eyebrow = distance.description,
-        title = distance.title.ifBlank { stringResource(R.string.dash) },
-        titleStyle = MaterialTheme.typography.displaySmall,
-        tone = TrailSenseTone.Primary,
-        badge = {
-            TrailSenseShapeBadge(
-                icon = distance.icon,
-                shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 64.dp,
-                containerColor = pathColor,
-                contentColor = onPathColor
-            )
-        },
-        modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
-    ) {
-        val stats = listOf(views.pathDuration, views.pathWaypoints, views.pathDifficulty)
-        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-            stats.forEachIndexed { index, state ->
-                PathHeroStat(
-                    state,
-                    shape = RoundedCornerShape(
-                        topStart = if (index == 0) 20.dp else 6.dp,
-                        bottomStart = if (index == 0) 20.dp else 6.dp,
-                        topEnd = if (index == stats.lastIndex) 20.dp else 6.dp,
-                        bottomEnd = if (index == stats.lastIndex) 20.dp else 6.dp
-                    ),
-                    modifier = Modifier.weight(1f)
-                )
+    PlacesKeyValue(
+        value = distance.title.ifBlank { stringResource(R.string.dash) },
+        verdict = distance.description.ifBlank { null },
+        modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
+        below = {
+            val stats = listOf(views.pathDuration, views.pathWaypoints, views.pathDifficulty)
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+                stats.forEach { state ->
+                    PathHeroStat(state, modifier = Modifier.weight(1f))
+                }
             }
         }
-    }
+    )
 }
 
 @Composable
 private fun PathHeroStat(
     state: PathDataPointState,
-    shape: androidx.compose.ui.graphics.Shape,
     modifier: Modifier = Modifier
 ) {
-    val contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-    Surface(
+    Column(
         modifier = modifier,
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-        contentColor = contentColor
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-        ) {
-            Icon(
-                painter = rememberVectorPainter(state.icon),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
-            )
-            Text(
-                text = state.title.ifBlank { stringResource(R.string.dash) },
-                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = state.description,
-                style = MaterialTheme.typography.labelMedium,
-                color = contentColor.copy(alpha = 0.8f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+        Text(
+            text = state.title.ifBlank { stringResource(R.string.dash) },
+            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = state.description,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

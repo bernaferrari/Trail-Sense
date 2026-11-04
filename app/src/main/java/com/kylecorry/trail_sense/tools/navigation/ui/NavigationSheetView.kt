@@ -122,9 +122,9 @@ class NavigationSheetView(private val context: Context) {
         }
 
     /**
-     * The destination card: a direction badge whose arrow turns toward the destination and warms from the theme's
-     * on-course color to its error color as you drift off course, the name with the bearing, a tonal close button,
-     * and the remaining distance and arrival as a connected pair of large readings.
+     * The destination card: a direction badge whose arrow turns toward the destination (it morphs from Cookie9 to
+     * Cookie12 with one haptic tick the moment you face it), the name with its bearing, the distance as the card's
+     * one number, and arrival and climb as one quiet line. Each value appears once.
      */
     @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
     @Composable
@@ -242,21 +242,34 @@ class NavigationSheetView(private val context: Context) {
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
-                        if (state.showDirection && state.bearingText.isNotEmpty()) {
+                        // The bearing, unless the destination's name already is the bearing.
+                        if (state.showDirection && state.showBearing && state.bearingText.isNotEmpty()) {
                             Text(
                                 text = state.bearingText,
-                                style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                                color = if (off != null && off > 0.5f) scheme.tertiary else scheme.primary,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                                color = scheme.onSurfaceVariant,
                                 maxLines = 1
                             )
                         }
-                        if (!state.subtitle.isNullOrEmpty()) {
+                    }
+                    // The distance: the one number on the card.
+                    state.distance?.let { distance ->
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.padding(end = if (state.showCancel) 4.dp else 0.dp)
+                        ) {
                             Text(
-                                text = state.subtitle,
-                                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
+                                text = distance.value,
+                                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = FontWeight.SemiBold,
+                                color = scheme.onSurface,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = distance.label,
+                                style = MaterialTheme.typography.labelMedium,
                                 color = scheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                maxLines = 1
                             )
                         }
                     }
@@ -283,61 +296,37 @@ class NavigationSheetView(private val context: Context) {
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                if (state.stats.isNotEmpty()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        state.stats.forEachIndexed { index, stat ->
-                            Surface(
-                                shape = trailSenseGridCellShape(index, state.stats.size, 0, 1),
-                                color = scheme.surfaceContainerLowest,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        if (stat.valueIcon != null) {
-                                            Icon(
-                                                imageVector = stat.valueIcon,
-                                                contentDescription = null,
-                                                tint = scheme.primary,
-                                                modifier = Modifier
-                                                    .padding(end = 6.dp)
-                                                    .size(18.dp)
-                                            )
-                                        }
-                                        Text(
-                                            text = stat.value,
-                                            style = (
-                                                if (state.stats.size <= 2) {
-                                                    MaterialTheme.typography.displaySmall
-                                                } else {
-                                                    MaterialTheme.typography.headlineSmall
-                                                }
-                                                ).copy(fontFeatureSettings = "tnum"),
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = scheme.onSurface,
-                                            maxLines = 1
-                                        )
-                                    }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        if (stat.labelIcon != null) {
-                                            Icon(
-                                                imageVector = stat.labelIcon,
-                                                contentDescription = null,
-                                                tint = scheme.onSurfaceVariant,
-                                                modifier = Modifier
-                                                    .padding(end = 4.dp)
-                                                    .size(14.dp)
-                                            )
-                                        }
-                                        Text(
-                                            text = stat.label,
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = scheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
+                // Everything else (arrival, climb) is one quiet line, not a second set of big readings.
+                if (state.details.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.padding(start = if (state.showDirection) 68.dp else 0.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        state.details.forEachIndexed { index, detail ->
+                            if (index > 0) {
+                                Text(
+                                    text = "  ·  ",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = scheme.onSurfaceVariant
+                                )
                             }
+                            if (detail.icon != null) {
+                                Icon(
+                                    imageVector = detail.icon,
+                                    contentDescription = detail.iconDescription,
+                                    tint = scheme.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .padding(end = 4.dp)
+                                        .size(12.dp)
+                                )
+                            }
+                            Text(
+                                text = detail.text,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                                color = scheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
@@ -428,7 +417,7 @@ class NavigationSheetView(private val context: Context) {
         val direction = directionState(guidance, values)
         when (destination) {
             is Destination.Beacon -> updateBeaconNavigation(destination, guidance, values, direction)
-            is Destination.Bearing -> updateBearingNavigation(guidance, values, direction)
+            is Destination.Bearing -> updateBearingNavigation(guidance, direction)
             is Destination.Path -> updatePathNavigation(destination, guidance, values, direction)
         }
     }
@@ -447,68 +436,53 @@ class NavigationSheetView(private val context: Context) {
     ) {
         val beacon = destination.beacon
         titleAction = { onOpenBeacon?.invoke(beacon.id) }
-        val stats = mutableListOf<SheetStat>()
-        guidance.remainingDistance?.let {
-            stats += SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
-        }
-        etaStat(guidance, values)?.let { stats += it }
+        val details = mutableListOf<SheetDetail>()
+        etaDetail(guidance, values)?.let { details += it }
         val gain = guidance.remainingElevationGain
         val loss = guidance.remainingElevationLoss
         when {
-            gain != null -> stats += SheetStat(
+            gain != null -> details += SheetDetail(
                 formatElevationChange(gain),
-                context.getString(R.string.navigation_remaining_gain),
-                valueIcon = TrailIcons.TriangleUp
+                TrailIcons.TriangleUp,
+                context.getString(R.string.navigation_remaining_gain)
             )
 
-            loss != null -> stats += SheetStat(
+            loss != null -> details += SheetDetail(
                 formatElevationChange(loss),
-                context.getString(R.string.navigation_remaining_loss),
-                valueIcon = TrailIcons.TriangleDown
+                TrailIcons.TriangleDown,
+                context.getString(R.string.navigation_remaining_loss)
             )
         }
+        // The beacon's coordinates and elevation live on its details page (tap the name); the card keeps only
+        // what you need while walking.
         model = direction.asModel(
             title = beacon.name,
-            titleIcon = TrailIcons.Location,
             titleDescription = titled(R.string.beacon, beacon.name),
-            subtitle = formatter.join(
-                formatter.formatLocation(beacon.coordinate),
-                beacon.elevation?.let {
-                    context.getString(
-                        R.string.navigation_elevation_format,
-                        formatter.formatElevation(Distance.meters(it))
-                    ).replace(' ', NON_BREAKING_SPACE)
-                },
-                separator = FormatService.Separator.Space
-            ),
             showCancel = isNavigating,
-            stats = stats
+            distance = guidance.remainingDistance?.let {
+                SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
+            },
+            details = details
         )
     }
 
     private fun updateBearingNavigation(
         guidance: Guidance,
-        values: NavigationSensorValues,
         direction: DirectionState
     ) {
         titleAction = null
-        val stats = mutableListOf<SheetStat>()
-        guidance.traveledDistance?.let {
-            stats += SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_traveled))
-        }
-        if (hasCompass) {
-            stats += SheetStat(
-                formatBearing(values.bearing.value),
-                context.getString(R.string.navigation_facing)
-            )
-        }
         val title = formatBearing(guidance.targetBearing.value)
+        // The name is the bearing, so the bearing line is not repeated; "facing" is the heading at the top of the
+        // screen, so it is not repeated either.
         model = direction.asModel(
             title = title,
-            titleIcon = TrailIcons.CompassIcon,
             titleDescription = titled(R.string.bearing, title),
+            showBearing = false,
             showCancel = isNavigating,
-            stats = stats
+            distance = guidance.traveledDistance?.let {
+                SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_traveled))
+            },
+            details = emptyList()
         )
     }
 
@@ -520,43 +494,47 @@ class NavigationSheetView(private val context: Context) {
     ) {
         val name = destination.path.name ?: context.getString(R.string.path)
         titleAction = { onOpenPath?.invoke(destination.path.id) }
-        val stats = mutableListOf<SheetStat>()
-        guidance.remainingDistance?.let {
-            stats += SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
-        }
-        etaStat(guidance, values)?.let { stats += it }
+        val details = mutableListOf<SheetDetail>()
+        etaDetail(guidance, values)?.let { details += it }
         val gain = guidance.remainingElevationGain ?: Distance.meters(0f)
         val loss = guidance.remainingElevationLoss ?: Distance.meters(0f)
-        val gainText = formatElevationChange(gain)
-        val lossText = formatElevationChange(loss)
         if (gain.value > 0 || loss.value > 0) {
-            stats += SheetStat(
-                gainText,
-                lossText,
-                valueIcon = TrailIcons.TriangleUp,
-                labelIcon = TrailIcons.TriangleDown
+            details += SheetDetail(
+                formatElevationChange(gain),
+                TrailIcons.TriangleUp,
+                context.getString(R.string.navigation_remaining_gain)
+            )
+            details += SheetDetail(
+                formatElevationChange(loss),
+                TrailIcons.TriangleDown,
+                context.getString(R.string.navigation_remaining_loss)
             )
         }
         model = direction.asModel(
             title = name,
-            titleIcon = TrailIcons.ToolBacktrack,
             titleDescription = titled(R.string.path, name),
             showCancel = isNavigating,
             showProgress = true,
             progress = (guidance.progress ?: 0f).coerceIn(0f, 1f),
-            stats = stats
+            distance = guidance.remainingDistance?.let {
+                SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
+            },
+            details = details
         )
     }
 
-    private fun etaStat(guidance: Guidance, values: NavigationSensorValues): SheetStat? {
+    private fun etaDetail(guidance: Guidance, values: NavigationSensorValues): SheetDetail? {
         val duration = navigationService.eta(guidance, values.speed) ?: return null
         val arrival = formatter.formatTime(
             ZonedDateTime.now().plus(duration).toLocalTime(),
             includeSeconds = false
         )
-        return SheetStat(
-            formatter.formatDuration(duration, duration.toHours() >= LONG_DURATION_HOURS),
-            context.getString(R.string.navigation_arrive_format, arrival)
+        return SheetDetail(
+            formatter.join(
+                context.getString(R.string.navigation_arrive_format, arrival),
+                formatter.formatDuration(duration, duration.toHours() >= LONG_DURATION_HOURS),
+                separator = FormatService.Separator.Dot
+            )
         )
     }
 
@@ -628,9 +606,14 @@ class NavigationSheetView(private val context: Context) {
 
     private data class SheetStat(
         val value: String,
-        val label: String,
-        val valueIcon: ImageVector? = null,
-        val labelIcon: ImageVector? = null
+        val label: String
+    )
+
+    /** One item of the card's quiet details line; [icon] stands for its label, read out as [iconDescription]. */
+    private data class SheetDetail(
+        val text: String,
+        val icon: ImageVector? = null,
+        val iconDescription: String? = null
     )
 
     private data class DirectionState(
@@ -642,21 +625,20 @@ class NavigationSheetView(private val context: Context) {
     ) {
         fun asModel(
             title: String,
-            titleIcon: ImageVector,
             titleDescription: String,
-            subtitle: String? = null,
+            showBearing: Boolean = true,
             showCancel: Boolean,
             showProgress: Boolean = false,
             progress: Float = 0f,
-            stats: List<SheetStat>
+            distance: SheetStat?,
+            details: List<SheetDetail>
         ): SheetModel {
             return SheetModel(
                 title = title,
-                titleIcon = titleIcon,
                 titleDescription = titleDescription,
-                subtitle = subtitle,
                 showCancel = showCancel,
                 showDirection = true,
+                showBearing = showBearing,
                 arrowIcon = arrowIcon,
                 arrowRotation = arrowRotation,
                 arrowColor = arrowColor,
@@ -664,17 +646,17 @@ class NavigationSheetView(private val context: Context) {
                 offCourse = offCourse,
                 showProgress = showProgress,
                 progress = progress,
-                stats = stats
+                distance = distance,
+                details = details
             )
         }
     }
 
     private data class SheetModel(
         val title: String = "",
-        val titleIcon: ImageVector? = null,
         val titleDescription: String? = null,
-        val subtitle: String? = null,
         val showCancel: Boolean = false,
+        val showBearing: Boolean = true,
         val showDirection: Boolean = false,
         val arrowIcon: ImageVector = TrailIcons.NavigationArrow,
         val arrowRotation: Float = 0f,
@@ -684,7 +666,8 @@ class NavigationSheetView(private val context: Context) {
         val offCourse: Float? = null,
         val showProgress: Boolean = false,
         val progress: Float = 0f,
-        val stats: List<SheetStat> = emptyList()
+        val distance: SheetStat? = null,
+        val details: List<SheetDetail> = emptyList()
     )
 
     companion object {

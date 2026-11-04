@@ -642,7 +642,6 @@ private fun OfflineMapListScreen(
     LaunchedEffect(resetKey) {
         listState.scrollToItem(0)
     }
-    val currentMap = remember(items) { items.firstOrNull { it !is MapGroup && gpsLocationOnMap(it) } }
 
     Box(modifier = modifier.testTag("map_list_title")) {
         TrailSensePage(
@@ -663,12 +662,20 @@ private fun OfflineMapListScreen(
                 )
             },
             floatingActionButton = {
-                if (!isEmpty) OfflineMapCreateButton(
-                    isOpen = isCreateMenuOpen,
-                    enabled = isCreateEnabled,
-                    onOpenChange = onCreateMenuOpenChange,
-                    onAction = onCreateAction
-                )
+                if (!isEmpty) {
+                    OfflineMapCreateButton(
+                        isOpen = isCreateMenuOpen,
+                        enabled = isCreateEnabled,
+                        onOpenChange = onCreateMenuOpenChange,
+                        onAction = onCreateAction
+                    )
+                } else if (isCreateMenuOpen) {
+                    // No FAB beside the empty state: its one button opens the same add sheet.
+                    OfflineMapCreateSheet(
+                        onDismiss = { onCreateMenuOpenChange(false) },
+                        onAction = onCreateAction
+                    )
+                }
             }
         ) {
             if (isEmpty) {
@@ -678,43 +685,20 @@ private fun OfflineMapListScreen(
                         title = stringResource(R.string.no_offline_maps),
                         description = stringResource(R.string.map_empty_description),
                         modifier = Modifier.testTag("map_empty_text"),
-                        // The three ways in ride the mark: a file, a photo of a paper map, a pencil for a blank one.
-                        tone = TrailSenseTone.Secondary,
-                        accents = listOf(TrailIcons.File, TrailIcons.Camera, TrailIcons.Edit),
-                        action = { MapSourceHints(onCreateAction) }
+                        actionLabel = stringResource(R.string.add_offline_map),
+                        actionIcon = TrailSenseIcons.Filled.Add,
+                        onAction = {
+                            if (isCreateEnabled) {
+                                onCreateMenuOpenChange(true)
+                            }
+                        },
+                        actionModifier = Modifier.testTag("add_btn")
                     )
                 }
                 return@TrailSensePage
             }
 
-            if (currentMap != null && searchText.isBlank()) {
-                item(key = "current") {
-                    TrailSenseSpotlight(
-                        eyebrow = stringResource(R.string.places_maps_you_are_on),
-                        title = currentMap.name,
-                        titleStyle = MaterialTheme.typography.headlineMedium,
-                        supportingText = stringResource(
-                            if (currentMap is PhotoMap) R.string.map_type_photo else R.string.map_type_trail
-                        ),
-                        tone = TrailSenseTone.Primary,
-                        badge = {
-                            TrailSenseShapeBadge(
-                                icon = TrailIcons.Location,
-                                shape = MaterialShapes.Sunny.toShape(),
-                                size = 64.dp
-                            )
-                        },
-                        actions = listOf(
-                            TrailSenseSpotlightAction(stringResource(R.string.open), TrailIcons.Maps) {
-                                when (currentMap) {
-                                    is PhotoMap -> onPhotoMapAction(currentMap, MapAction.View)
-                                    is VectorMap -> onVectorMapAction(currentMap, VectorMapAction.View)
-                                }
-                            }
-                        )
-                    )
-                }
-            }
+            // Which of my maps covers where I am? The row you're on says "On map"; no card repeats it above.
 
             item(key = "search") {
                 TrailSenseSearchBar(
@@ -774,69 +758,6 @@ private fun OfflineMapListScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-/** Under the empty state: the three kinds of map you can add, as a group of rows that each start one. */
-@Composable
-private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
-    val scheme = MaterialTheme.colorScheme
-    val entries = listOf(
-        Triple(R.string.places_maps_file, TrailSenseIcons.Filled.FileOpen, OfflineMapCreateAction.ImportFile),
-        Triple(R.string.camera, TrailSenseIcons.Filled.PhotoCamera, OfflineMapCreateAction.ImportCamera),
-        Triple(R.string.blank, TrailSenseIcons.Filled.Draw, OfflineMapCreateAction.CreateBlank)
-    )
-    val subtitles = listOf(
-        R.string.places_maps_file_formats,
-        R.string.places_maps_camera_hint,
-        R.string.places_maps_blank_hint
-    )
-    // Each way in has its own colour and cookie; the file import is the recommended path, so it leads in the warm action colour.
-    val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Cookie7Sided, MaterialShapes.Cookie6Sided)
-    val badgeColors = listOf(
-        scheme.tertiary to scheme.onTertiary,
-        scheme.secondaryContainer to scheme.onSecondaryContainer,
-        scheme.secondaryContainer to scheme.onSecondaryContainer
-    )
-    Spacer(Modifier.height(TrailSenseSpacing.lg))
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-    ) {
-        entries.forEachIndexed { index, (label, icon, action) ->
-            val recommended = index == 0
-            PlacesRow(
-                title = stringResource(label),
-                subtitle = stringResource(subtitles[index]),
-                position = TrailSenseGroupPosition.at(index, entries.size),
-                modifier = if (index == 0) Modifier.testTag("add_btn") else Modifier,
-                containerColor = if (recommended) scheme.tertiaryContainer else scheme.surfaceContainerHigh,
-                leading = {
-                    PlacesBadge(
-                        containerColor = badgeColors[index].first,
-                        contentColor = badgeColors[index].second,
-                        icon = icon,
-                        shape = shapes[index].toShape(),
-                        size = 48.dp
-                    )
-                },
-                onClick = { onAction(action) },
-                actions = {
-                    Surface(
-                        shape = CircleShape,
-                        color = if (recommended) scheme.tertiary else scheme.surfaceContainerHighest,
-                        contentColor = if (recommended) scheme.onTertiary else scheme.onSurface,
-                        modifier = Modifier
-                            .padding(end = TrailSenseSpacing.sm)
-                            .size(36.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(TrailIcons.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(20.dp))
-                        }
-                    }
-                }
-            )
         }
     }
 }
@@ -952,8 +873,8 @@ private fun OfflineMapCreateSheet(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     leading = {
                         PlacesBadge(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                             icon = icon,
                             shape = MaterialShapes.Cookie6Sided.toShape(),
                             size = 44.dp
@@ -1033,16 +954,9 @@ private fun MapBadge(icon: ImageVector, onMap: Boolean, photo: Boolean) {
     val scheme = MaterialTheme.colorScheme
     val status = trailSenseStatusColors()
     PlacesBadge(
-        containerColor = when {
-            onMap -> status.goodContainer
-            photo -> scheme.tertiaryContainer
-            else -> scheme.primaryContainer
-        },
-        contentColor = when {
-            onMap -> status.onGoodContainer
-            photo -> scheme.onTertiaryContainer
-            else -> scheme.onPrimaryContainer
-        },
+        // One quiet colour for every map; only "you're on it" changes the mark, so it means something.
+        containerColor = if (onMap) status.goodContainer else scheme.secondaryContainer,
+        contentColor = if (onMap) status.onGoodContainer else scheme.onSecondaryContainer,
         icon = icon,
         shape = if (photo) MaterialShapes.Cookie6Sided.toShape() else MaterialShapes.Cookie9Sided.toShape()
     )
@@ -1249,8 +1163,9 @@ private fun MapGroupRow(
             PlacesBadge(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                text = count.toString(),
-                shape = MaterialShapes.Clover4Leaf.toShape()
+                // The count is in the subtitle, so the mark is a folder rather than the number again.
+                icon = TrailSenseIcons.Filled.Folder,
+                shape = MaterialShapes.Cookie6Sided.toShape()
             )
         },
         onClick = { onAction(MapGroupAction.View) },
