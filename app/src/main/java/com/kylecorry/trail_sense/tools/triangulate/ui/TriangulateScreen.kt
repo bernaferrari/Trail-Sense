@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.res.ColorStateList
 import android.graphics.Color
 import androidx.compose.animation.AnimatedVisibility
@@ -49,7 +50,23 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.input.KeyboardType
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBearingField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -720,11 +737,19 @@ private fun TriangulateScreen(
     // The map is held here, outside the lazy list, so scrolling it off screen never trades it for a fresh, empty one.
     val mapView = rememberTriangulateMap(onMapReady)
     val modeTitle = stringResource(R.string.location_to_triangulate)
+    val hasSighting = location1 != null || location2 != null
+    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     TrailSensePage(
         title = stringResource(R.string.tool_triangulate_title),
         backLabel = stringResource(R.string.back),
         modifier = modifier,
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            top = TrailSenseSpacing.sm,
+            bottom = TrailSenseSpacing.xxxl + navBottom
+        ),
         actions = {
             IconButton(onClick = onReset, modifier = Modifier.testTag("reset_btn")) {
                 Icon(
@@ -734,46 +759,57 @@ private fun TriangulateScreen(
             }
         }
     ) {
-        trailSenseSection(key = "result") {
-            row { position ->
-                TriangulateResultCard(
-                    title = title,
-                    actionsVisible = actionsVisible,
-                    navigateVisible = navigateVisible,
-                    updateGpsOverrideVisible = updateGpsOverrideVisible,
-                    onCreateBeacon = onCreateBeacon,
-                    onNavigate = onNavigate,
-                    onShareLocation = onShareLocation,
-                    onUpdateGpsOverride = onUpdateGpsOverride,
-                    position = position
-                )
-            }
-            row { position ->
-                TrailSenseGroupCard(position = position, contentPadding = PaddingValues(0.dp)) {
+        item(key = "result") {
+            TriangulateResultCard(
+                title = title,
+                actionsVisible = actionsVisible,
+                navigateVisible = navigateVisible,
+                updateGpsOverrideVisible = updateGpsOverrideVisible,
+                shouldCalculateMyLocation = shouldCalculateMyLocation,
+                completed = listOf(location1Complete, location2Complete).count { it },
+                onCreateBeacon = onCreateBeacon,
+                onNavigate = onNavigate,
+                onShareLocation = onShareLocation,
+                onUpdateGpsOverride = onUpdateGpsOverride
+            )
+        }
+
+        // The map only appears once there's something to put on it, as a tinted card rather than a black void.
+        item(key = "map") {
+            AnimatedVisibility(
+                visible = hasSighting,
+                enter = expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                        fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
+                exit = shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                        fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                ) {
                     mapView.Content(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(220.dp)
-                            .clip(trailSenseGroupShape(position))
+                            .height(240.dp)
+                            .clip(MaterialTheme.shapes.extraLarge)
                             .testTag("map")
                     )
                 }
             }
         }
 
-        trailSenseSection(key = "mode", title = modeTitle) {
-            row { position ->
-                TrailSenseGroupCard(position = position, contentPadding = PaddingValues(TrailSenseSpacing.sm)) {
-                    TrailSenseConnectedChoice(
-                        options = listOf(
-                            TrailSenseChoice(false, stringResource(R.string.destination)),
-                            TrailSenseChoice(true, stringResource(R.string.my_location))
-                        ),
-                        selected = shouldCalculateMyLocation,
-                        onSelect = onModeChanged,
-                        label = stringResource(R.string.location_to_triangulate)
-                    )
-                }
+        item(key = "mode") {
+            Column {
+                TrailSenseGroupHeader(modeTitle)
+                TrailSenseConnectedChoice(
+                    options = listOf(
+                        TrailSenseChoice(false, stringResource(R.string.destination), TrailIcons.Flag),
+                        TrailSenseChoice(true, stringResource(R.string.my_location), TrailIcons.Location)
+                    ),
+                    selected = shouldCalculateMyLocation,
+                    onSelect = onModeChanged,
+                    label = stringResource(R.string.location_to_triangulate)
+                )
             }
         }
 
@@ -823,165 +859,102 @@ private fun TriangulateScreen(
     }
 }
 
+/**
+ * The answer as the screen's Spotlight: while sightings are missing, a secondary card counting them (two cookies
+ * that fill in); once solved, the coordinate large on primary with what you can do with it.
+ */
 @Composable
 private fun TriangulateResultCard(
     title: String,
     actionsVisible: Boolean,
     navigateVisible: Boolean,
     updateGpsOverrideVisible: Boolean,
+    shouldCalculateMyLocation: Boolean,
+    completed: Int,
     onCreateBeacon: () -> Unit,
     onNavigate: () -> Unit,
     onShareLocation: () -> Unit,
-    onUpdateGpsOverride: () -> Unit,
-    position: TrailSenseGroupPosition
+    onUpdateGpsOverride: () -> Unit
 ) {
-    val containerColor by animateColorAsState(
-        targetValue = if (actionsVisible) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        },
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "triangulateResultColor"
-    )
-    val contentColor = if (actionsVisible) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec()),
-        shape = trailSenseGroupShape(position),
-        color = containerColor,
-        contentColor = contentColor
-    ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            Text(
-                text = stringResource(R.string.location),
-                style = MaterialTheme.typography.titleSmall,
-                color = contentColor.copy(alpha = 0.8f)
+    val tone = if (actionsVisible) TrailSenseTone.Primary else TrailSenseTone.Secondary
+    val colors = trailSenseToneColors(tone)
+    TrailSenseSpotlight(
+        modifier = Modifier.testTag("triangulate_title"),
+        eyebrow = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination),
+        title = title,
+        titleStyle = if (actionsVisible) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
+        supportingText = if (actionsVisible) null else stringResource(R.string.places_triangulate_sightings, completed),
+        tone = tone,
+        badge = {
+            TrailSenseShapeBadge(
+                icon = if (actionsVisible) TrailIcons.Location else TrailIcons.ToolTriangulate,
+                shape = if (actionsVisible) MaterialShapes.Sunny.toShape() else MaterialShapes.Cookie9Sided.toShape(),
+                size = 64.dp,
+                containerColor = colors.accent,
+                contentColor = colors.onAccent
             )
-            Text(
-                text = title,
+        },
+        actions = if (actionsVisible) {
+            listOfNotNull(
+                TrailSenseSpotlightAction(stringResource(R.string.beacon), TrailIcons.Location, onCreateBeacon),
+                if (navigateVisible) {
+                    TrailSenseSpotlightAction(stringResource(R.string.navigate), TrailIcons.NavigationArrow, onNavigate)
+                } else {
+                    null
+                },
+                TrailSenseSpotlightAction(stringResource(R.string.share_ellipsis), TrailIcons.Share, onShareLocation)
+            )
+        } else {
+            emptyList()
+        }
+    ) {
+        if (!actionsVisible) {
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                repeat(2) { index ->
+                    val done = index < completed
+                    PlacesBadge(
+                        containerColor = if (done) colors.accent else colors.content.copy(alpha = 0.12f),
+                        contentColor = if (done) colors.onAccent else colors.content,
+                        icon = if (done) TrailIcons.Check else null,
+                        text = if (done) null else (index + 1).toString(),
+                        shape = MaterialShapes.Cookie4Sided.toShape(),
+                        size = 36.dp
+                    )
+                }
+            }
+        }
+        if (actionsVisible && updateGpsOverrideVisible) {
+            FilledTonalButton(
+                onClick = onUpdateGpsOverride,
+                shapes = ButtonDefaults.shapes(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("triangulate_title"),
-                style = if (actionsVisible) {
-                    MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum")
-                } else {
-                    MaterialTheme.typography.titleLarge
-                },
-                fontWeight = if (actionsVisible) FontWeight.SemiBold else FontWeight.Normal,
-                textAlign = TextAlign.Center
-            )
-
-            AnimatedVisibility(
-                visible = actionsVisible,
-                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                        fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                        fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
-            ) {
-                TriangulateActions(
-                    navigateVisible = navigateVisible,
-                    updateGpsOverrideVisible = updateGpsOverrideVisible,
-                    onCreateBeacon = onCreateBeacon,
-                    onNavigate = onNavigate,
-                    onShareLocation = onShareLocation,
-                    onUpdateGpsOverride = onUpdateGpsOverride
+                    .heightIn(min = 48.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                    contentColor = colors.content
                 )
+            ) {
+                Icon(TrailIcons.Satellite, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(TrailSenseSpacing.sm))
+                Text(stringResource(R.string.update_gps_override))
             }
         }
     }
 }
 
 @Composable
-private fun TriangulateActions(
-    navigateVisible: Boolean,
-    updateGpsOverrideVisible: Boolean,
-    onCreateBeacon: () -> Unit,
-    onNavigate: () -> Unit,
-    onShareLocation: () -> Unit,
-    onUpdateGpsOverride: () -> Unit
-) {
-    FlowRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = TrailSenseSpacing.sm),
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.CenterHorizontally),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-    ) {
-        TriangulateActionButton(
-            label = stringResource(R.string.beacon),
-            icon = TrailIcons.Location,
-            onClick = onCreateBeacon
-        )
-        if (navigateVisible) {
-            TriangulateActionButton(
-                label = stringResource(R.string.navigate),
-                icon = TrailIcons.Beacon,
-                onClick = onNavigate
-            )
-        }
-        TriangulateActionButton(
-            label = stringResource(R.string.share_ellipsis),
-            icon = TrailIcons.Share,
-            onClick = onShareLocation
-        )
-        if (updateGpsOverrideVisible) {
-            TriangulateActionButton(
-                label = stringResource(R.string.update_gps_override),
-                icon = TrailIcons.Satellite,
-                onClick = onUpdateGpsOverride
-            )
-        }
-    }
-}
-
-@Composable
-private fun TriangulateActionButton(
-    label: String,
-    icon: ImageVector,
-    onClick: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    FilledTonalButton(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        modifier = Modifier
-            .heightIn(min = TrailSenseSize.minimumTouchTarget)
-            .trailSensePressScale(interactionSource),
-        colors = ButtonDefaults.filledTonalButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(Modifier.width(TrailSenseSpacing.sm))
-        Text(label)
-    }
-}
-
-@Composable
 private fun rememberTriangulateMap(onMapReady: (MapView) -> Unit): MapView {
     val context = LocalContext.current
+    val background = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
     val mapView = remember {
         MapView(context).apply {
             id = R.id.map
-            backgroundTintList = ColorStateList.valueOf(Resources.color(context, R.color.colorSecondary))
-            backgroundColorOverride = Resources.color(context, R.color.colorSecondary)
         }
+    }
+    SideEffect {
+        mapView.backgroundTintList = ColorStateList.valueOf(background)
+        mapView.backgroundColorOverride = background
     }
     SideEffect {
         onMapReady(mapView)
@@ -1034,74 +1007,59 @@ private fun TriangulateLocationCard(
         label = "triangulateBadge"
     )
 
-    TrailSenseGroupCard(
-        position = TrailSenseGroupPosition.Single,
-        modifier = modifier,
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp)
-                .clickable(
-                    onClickLabel = headline,
-                    onClick = { onExpandedChange(!isExpanded) }
-                )
-                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
+    val scheme = MaterialTheme.colorScheme
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+        Surface(
+            shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = true, isLast = !isExpanded)),
+            color = scheme.surfaceContainerLow
         ) {
-            Surface(
-                shape = CircleShape,
-                color = badgeColor,
-                contentColor = if (isComplete) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                modifier = Modifier.size(TrailSenseSize.compactIconContainer)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 76.dp)
+                    .clickable(
+                        onClickLabel = headline,
+                        onClick = { onExpandedChange(!isExpanded) }
+                    )
+                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (isComplete) {
-                        Icon(
-                            imageVector = Icons.Rounded.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(TrailSenseSize.compactIcon)
-                        )
-                    } else {
+                PlacesBadge(
+                    containerColor = badgeColor,
+                    contentColor = if (isComplete) scheme.onPrimary else scheme.onSurfaceVariant,
+                    icon = if (isComplete) Icons.Rounded.Check else null,
+                    text = if (isComplete) null else number.toString(),
+                    shape = MaterialShapes.Cookie4Sided.toShape(),
+                    size = 44.dp
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = TrailSenseSpacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                ) {
+                    Text(
+                        text = headline,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = scheme.onSurface
+                    )
+                    if (distance != null) {
                         Text(
-                            text = number.toString(),
-                            style = MaterialTheme.typography.titleMedium
+                            text = distance,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                            color = scheme.primary
                         )
                     }
                 }
-            }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = TrailSenseSpacing.md),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                Text(
-                    text = headline,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                Icon(
+                    imageVector = Icons.Rounded.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .rotate(chevronRotation),
+                    tint = scheme.onSurfaceVariant
                 )
-                if (distance != null) {
-                    Text(
-                        text = distance,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
-            Icon(
-                imageVector = Icons.Rounded.ExpandMore,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(24.dp)
-                    .rotate(chevronRotation),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
 
         AnimatedVisibility(
@@ -1111,42 +1069,36 @@ private fun TriangulateLocationCard(
             exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
                     fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TrailSenseSpacing.lg,
-                        end = TrailSenseSpacing.lg,
-                        bottom = TrailSenseSpacing.lg
-                    ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-            ) {
-                Text(
-                    text = instructions,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                Surface(
+                    shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = false)),
+                    color = scheme.surfaceContainerLow
+                ) {
+                    Text(
+                        text = instructions,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = scheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
+                    )
+                }
                 CoordinateInput(
                     coordinate = coordinate,
                     onCoordinateChange = onCoordinateChange,
                     tag = coordinateTag,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text(
-                    text = stringResource(R.string.bearing),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                BearingInput(
+                PlacesBearingField(
                     bearing = bearing,
                     trueNorth = trueNorth,
                     compassBearingText = compassBearingText,
                     hasCompass = hasCompass,
-                    tag = bearingTag,
                     onBearingChange = onBearingChange,
-                    onCompassBearingClick = onCompassBearingClick,
-                    onCameraBearingClick = onCameraBearingClick,
-                    modifier = Modifier.fillMaxWidth()
+                    onCompassClick = onCompassBearingClick,
+                    onCameraClick = onCameraBearingClick,
+                    position = TrailSenseGroupPosition(isFirst = false, isLast = true),
+                    tag = bearingTag
                 )
             }
         }
@@ -1193,80 +1145,77 @@ private fun CoordinateInput(
         }
     }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isLoadingLocation) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag("gps_loading")
-            )
-        } else {
-            androidx.compose.material3.IconButton(
-                onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
-                        listOf(
-                            context.getString(R.string.gps),
-                            context.getString(R.string.beacon)
-                        ),
-                        0
-                    ) { selection ->
-                        when (selection) {
-                            0 -> autofillFromGps()
-                            1 -> scope.launch {
-                                val beacon = BeaconPickers.pickBeacon(
-                                    context,
-                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
-                                ) ?: return@launch
-                                coordinateText = formatter.formatLocation(beacon.coordinate)
-                                onCoordinateChange(beacon.coordinate)
+    val isInvalid = coordinateText.isNotBlank() && parsedCoordinate == null
+    TrailSenseInputField(
+        value = coordinateText,
+        onValueChange = {
+            coordinateText = it
+            onCoordinateChange(Coordinate.parse(it))
+        },
+        label = stringResource(R.string.location),
+        modifier = modifier.testTag(tag),
+        position = TrailSenseGroupPosition(isFirst = false, isLast = false),
+        keyboardType = KeyboardType.Text,
+        isError = isInvalid,
+        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        enabled = !isLoadingLocation,
+        leadingIcon = {
+            if (isLoadingLocation) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .testTag("gps_loading"),
+                    strokeWidth = 3.dp
+                )
+            } else {
+                FilledTonalIconButton(
+                    onClick = {
+                        Pickers.item(
+                            context,
+                            context.getString(R.string.autofill_source),
+                            listOf(
+                                context.getString(R.string.gps),
+                                context.getString(R.string.beacon)
+                            ),
+                            0
+                        ) { selection ->
+                            when (selection) {
+                                0 -> autofillFromGps()
+                                1 -> scope.launch {
+                                    val beacon = BeaconPickers.pickBeacon(
+                                        context,
+                                        sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                    ) ?: return@launch
+                                    coordinateText = formatter.formatLocation(beacon.coordinate)
+                                    onCoordinateChange(beacon.coordinate)
+                                }
                             }
                         }
-                    }
-                },
-                modifier = Modifier.testTag("gps_btn")
+                    },
+                    modifier = Modifier
+                        .padding(start = TrailSenseSpacing.xs)
+                        .testTag("gps_btn")
+                ) {
+                    Icon(
+                        imageVector = TrailIcons.Location,
+                        contentDescription = stringResource(R.string.gps)
+                    )
+                }
+            }
+        },
+        trailingIcon = {
+            androidx.compose.material3.IconButton(
+                onClick = { showHelp = true },
+                modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
-                    imageVector = TrailIcons.Location,
-                    contentDescription = stringResource(R.string.gps)
+                    imageVector = TrailIcons.Help,
+                    contentDescription = stringResource(R.string.location_input_help_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-        Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = coordinateText,
-            onValueChange = {
-                coordinateText = it
-                onCoordinateChange(Coordinate.parse(it))
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag(tag),
-            label = { Text(stringResource(R.string.location)) },
-            isError = coordinateText.isNotBlank() && parsedCoordinate == null,
-            supportingText = {
-                if (coordinateText.isNotBlank() && parsedCoordinate == null) {
-                    Text(stringResource(R.string.coordinate_input_invalid_location))
-                }
-            },
-            singleLine = true,
-            enabled = !isLoadingLocation
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        androidx.compose.material3.IconButton(
-            onClick = { showHelp = true },
-            modifier = Modifier.testTag("coordinate_input_help_btn")
-        ) {
-            Icon(
-                imageVector = TrailIcons.Help,
-                contentDescription = stringResource(R.string.location_input_help_title)
-            )
-        }
-    }
+    )
 
     if (showHelp) {
         AlertDialog(

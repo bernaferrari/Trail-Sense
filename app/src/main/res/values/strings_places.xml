@@ -11,4 +11,6 @@
     <string name="places_backtrack_on_description">Your trail is being saved as you walk.</string>
     <string name="places_backtrack_off_description">Start it to save your trail as you walk.</string>
     <string name="places_backtrack_every">Every %1$s</string>
+    <!-- Triangulate -->
+    <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
 </resources>
