@@ -30,4 +30,9 @@
     <string name="solar_turn_left">Turn left %1$s</string>
     <string name="solar_turn_right">Turn right %1$s</string>
     <string name="solar_now">Now %1$s</string>
+
+    <!-- Cliff height -->
+    <string name="cliff_ready">Drop a stone, tap Start</string>
+    <string name="cliff_falling">Falling · %1$s</string>
+    <string name="cliff_fell_for">Fell for %1$s</string>
 </resources>
