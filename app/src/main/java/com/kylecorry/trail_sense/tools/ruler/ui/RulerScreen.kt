@@ -41,6 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -113,7 +116,7 @@ fun RulerScreen(
     val measurement = currentDistance?.convertTo(rulerUnits)?.let {
         formatService.formatDistance(it, PRECISION, false)
     }.orEmpty()
-    val mapDistance = remember(
+    val mapDistanceValue = remember(
         currentDistance,
         rulerUnits,
         scaleMode,
@@ -131,12 +134,12 @@ fun RulerScreen(
             verbalFrom,
             verbalTo,
             formatService
-        )?.let {
-            context.getString(R.string.map_distance, it)
-        }.orEmpty()
+        )
     }
+    val mapDistance = mapDistanceValue?.let { context.getString(R.string.map_distance, it) }.orEmpty()
 
     val tapHint = stringResource(R.string.ruler_tap_hint)
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     val cmLabel = getUnitText(DistanceUnits.Centimeters)
     val inLabel = getUnitText(DistanceUnits.Inches)
     val ratioLabel = stringResource(R.string.map_scale_ratio)
@@ -156,10 +159,19 @@ fun RulerScreen(
                 scale = rulerScale,
                 flipped = isRulerFlipped,
                 onDistanceSelected = {
-                    selectedDistance = it.convertTo(DistanceUnits.Centimeters)
+                    // Snap to the finest tick (a millimetre, or a sixteenth of an inch) with a light tick each step.
+                    val step = if (rulerUnits.isMetric) 0.1f else 0.0625f
+                    val inUnits = it.convertTo(if (rulerUnits.isMetric) DistanceUnits.Centimeters else DistanceUnits.Inches)
+                    val snapped = Distance.from((inUnits.value / step).safeRoundToInt() * step, inUnits.units)
+                    val next = snapped.convertTo(DistanceUnits.Centimeters)
+                    val previous = selectedDistance
+                    if (previous == null || !Arithmetic.isCloseTo(previous.value, next.value, 0.001f)) {
+                        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.SegmentFrequentTick)
+                    }
+                    selectedDistance = next
                 },
                 modifier = Modifier
-                    .width(80.dp)
+                    .width(88.dp)
                     .fillMaxHeight()
                     .testTag("ruler")
                     .semantics { contentDescription = measurement }
@@ -179,16 +191,9 @@ fun RulerScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                TrailSenseSpotlight(
-                    eyebrow = stringResource(R.string.ruler_length),
-                    title = measurement.ifEmpty { tapHint },
-                    titleStyle = if (measurement.isEmpty()) {
-                        MaterialTheme.typography.titleMedium
-                    } else {
-                        MaterialTheme.typography.displaySmall
-                    },
-                    supportingText = mapDistance.takeIf { it.isNotEmpty() },
-
+                RulerLength(
+                    measurement = measurement,
+                    hint = tapHint,
                     modifier = Modifier.testTag("measurement")
                 )
 
@@ -202,7 +207,13 @@ fun RulerScreen(
                     modifier = Modifier.testTag("ruler_unit_btn")
                 )
 
-                Column(modifier = Modifier.fillMaxWidth()) {
+                // The map scale as one tonal card that ends in its answer: the distance on the ground.
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainer
+                ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(TrailSenseSpacing.md)) {
                     TrailSenseGroupHeader(
                         stringResource(R.string.map_scale_title),
                         modifier = Modifier.testTag("map_scale_title")
@@ -244,6 +255,36 @@ fun RulerScreen(
                             )
                         }
                     }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.sm, top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ruler_on_the_ground),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = mapDistanceValue ?: stringResource(
+                                if (currentDistance == null) R.string.ruler_measure_first else R.string.ruler_enter_scale
+                            ),
+                            style = if (mapDistanceValue != null) {
+                                MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum")
+                            } else {
+                                MaterialTheme.typography.bodyMedium
+                            },
+                            fontWeight = if (mapDistanceValue != null) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (mapDistanceValue != null) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.semantics { contentDescription = mapDistance }
+                        )
+                    }
+                }
                 }
             }
         }
@@ -265,6 +306,7 @@ internal fun RulerCanvas(
     val surfaceColor = MaterialTheme.colorScheme.primaryContainer
     Canvas(
         modifier = modifier
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp))
             .background(surfaceColor)
             .pointerInput(rulerUnits, yDpi, scale, flipped) {
                 awaitEachGesture {
@@ -307,7 +349,8 @@ internal fun RulerCanvas(
         val offset = 8.dp.toPx()
         val rulerHeight = getRulerHeight(size.height, rulerUnits, yDpi, scale, offset)
         val lineThickness = 1.dp.toPx()
-        val highlightLineThickness = 2.dp.toPx()
+        val majorThickness = 2.5.dp.toPx()
+        val highlightLineThickness = 3.dp.toPx()
         val wholeSize = 40.dp.toPx()
         val halfSize = 24.dp.toPx()
         val quarterSize = 12.dp.toPx()
@@ -388,6 +431,10 @@ internal fun RulerCanvas(
                 strokeWidth = highlightLineThickness,
                 cap = StrokeCap.Round
             )
+            // A handle on the marker so it reads as something to drag.
+            val handle = Offset(size.width - 14.dp.toPx(), y)
+            drawCircle(highlightColor, 11.dp.toPx(), handle)
+            drawCircle(surfaceColor, 4.dp.toPx(), handle)
         }
     }
 }
@@ -401,15 +448,17 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLines(
     offset: Float,
     widthFn: (Distance) -> Float
 ) {
+    val wholeWidth = widthFn(Distance.from(0f, rulerHeight.units))
     val convertedSpacing = spacing.convertTo(rulerHeight.units)
     var position = Distance.from(0f, rulerHeight.units)
     while (position < rulerHeight) {
         val y = getRulerPosition(position, size.height, rulerHeight, flipped, offset)
+        val width = widthFn(position)
         drawLine(
             color = lineColor,
             start = Offset(0f, y),
-            end = Offset(widthFn(position), y),
-            strokeWidth = lineThickness
+            end = Offset(width, y),
+            strokeWidth = if (width >= wholeWidth) lineThickness * 2.5f else lineThickness
         )
         position = Distance.from(position.value + convertedSpacing.value, position.units)
     }
@@ -431,16 +480,75 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLabels(
             (lineColor.green * 255).toInt(),
             (lineColor.blue * 255).toInt()
         )
-        textSize = 12.dp.toPx()
+        textSize = 15.dp.toPx()
+        isAntiAlias = true
+        typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+        fontFeatureSettings = "tnum"
     }
     var position = Distance.from(0f, rulerHeight.units)
     while (position < rulerHeight) {
         val label = position.value.toInt().toString()
         val y = getRulerPosition(position, size.height, rulerHeight, flipped, offset)
         drawIntoCanvas {
-            it.nativeCanvas.drawText(label, lineWidth + 8.dp.toPx(), y + paint.textSize / 2f, paint)
+            it.nativeCanvas.drawText(label, lineWidth + 6.dp.toPx(), y + paint.textSize / 2.8f, paint)
         }
         position = Distance.from(position.value + convertedSpacing.value, position.units)
+    }
+}
+
+/**
+ * The length: once measured, the star number in large tabular figures; before that, a calm instruction with an
+ * arrow pointing at the ruler instead of a dash.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun RulerLength(measurement: String, hint: String, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = scheme.primaryContainer,
+        contentColor = scheme.onPrimaryContainer
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.lg)
+                .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+        ) {
+            Text(
+                stringResource(R.string.ruler_length),
+                style = MaterialTheme.typography.labelLarge,
+                color = scheme.onPrimaryContainer.copy(alpha = 0.78f)
+            )
+            if (measurement.isNotEmpty()) {
+                Text(
+                    text = measurement,
+                    style = (if (measurement.length > 8) {
+                        MaterialTheme.typography.displaySmall
+                    } else {
+                        MaterialTheme.typography.displayMedium
+                    }).copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge(
+                        icon = com.kylecorry.trail_sense.shared.icons.trail.TrailIcons.KeyboardArrowRight,
+                        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
+                        size = 44.dp,
+                        iconRotation = 180f
+                    )
+                    Spacer(Modifier.width(TrailSenseSpacing.md))
+                    Text(
+                        text = hint,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }
 

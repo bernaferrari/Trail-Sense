@@ -68,6 +68,11 @@
     <string name="battery_full_in">Full in %1$s</string>
     <string name="battery_lasts_about">Lasts about %1$s</string>
 
+    <!-- Ruler -->
+    <string name="ruler_on_the_ground">On the ground</string>
+    <string name="ruler_measure_first">Measure on the ruler first</string>
+    <string name="ruler_enter_scale">Enter the map\'s scale above</string>
+
     <!-- Light meter -->
     <string name="light_meter_peak_label">Peak</string>
     <string name="light_meter_tap_to_reset">Tap to reset</string>
