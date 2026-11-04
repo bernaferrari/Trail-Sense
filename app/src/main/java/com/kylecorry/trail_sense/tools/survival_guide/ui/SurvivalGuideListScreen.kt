@@ -209,9 +209,51 @@ private fun SurvivalGuideHero(item: SurvivalGuideListItem, chapters: Int) {
 
 /** Chapters as connected tiles, two to a row: a shaped icon badge in the chapter's hue, its name and one line. */
 @Composable
-private fun SurvivalGuideTileGrid(items: List<SurvivalGuideListItem>) {
-    if (items.isEmpty()) return
+private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
+    if (allItems.isEmpty()) return
+    // First aid is the chapter you may need in a hurry: it gets a full-width tile in the error container.
+    val medical = allItems.firstOrNull { it.icon == TrailIcons.CategoryMedical }
+    val items = allItems - listOfNotNull(medical).toSet()
     val rows = items.chunked(2)
+    // The caller's column spaces the feature tile and the grid apart.
+    if (medical != null) {
+        SurvivalGuidePressableSurface(
+            onClick = medical.onClick,
+            shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+            color = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.testTag("guide_item")
+        ) {
+            Row(Modifier.padding(TrailSenseSpacing.lg), verticalAlignment = Alignment.CenterVertically) {
+                TrailSenseShapeBadge(
+                    icon = medical.icon,
+                    shape = MaterialShapes.SoftBurst.toShape(),
+                    size = 60.dp,
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                )
+                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        medical.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.testTag("guide_item_title")
+                    )
+                    medical.subtitle?.takeIf { it.isNotBlank() }?.let {
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                SurvivalChevron(MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.onError)
+            }
+        }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
         rows.forEachIndexed { rowIndex, row ->
             Row(
@@ -224,7 +266,11 @@ private fun SurvivalGuideTileGrid(items: List<SurvivalGuideListItem>) {
                     SurvivalGuidePressableSurface(
                         onClick = item.onClick,
                         shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        color = androidx.compose.ui.graphics.lerp(
+                            MaterialTheme.colorScheme.surfaceContainerLow,
+                            wells.container,
+                            0.4f
+                        ),
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
@@ -237,13 +283,20 @@ private fun SurvivalGuideTileGrid(items: List<SurvivalGuideListItem>) {
                                 .padding(TrailSenseSpacing.lg),
                             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
                         ) {
-                            TrailSenseShapeBadge(
-                                icon = item.icon,
-                                shape = chapterShape(index),
-                                size = 52.dp,
-                                containerColor = wells.container,
-                                contentColor = wells.content
-                            )
+                            Row(verticalAlignment = Alignment.Top) {
+                                TrailSenseShapeBadge(
+                                    icon = item.icon,
+                                    shape = chapterShape(index),
+                                    size = 52.dp,
+                                    containerColor = wells.content,
+                                    contentColor = wells.container
+                                )
+                                Spacer(Modifier.weight(1f))
+                                SurvivalChevron(
+                                    MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.7f),
+                                    wells.content
+                                )
+                            }
                             Spacer(Modifier.height(TrailSenseSpacing.sm))
                             Text(
                                 item.title,
@@ -258,7 +311,7 @@ private fun SurvivalGuideTileGrid(items: List<SurvivalGuideListItem>) {
                                     it,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 2,
+                                    maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
@@ -386,4 +439,19 @@ private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
             null
         }
     ).joinToString(" › ")
+}
+
+/** A small circular arrow: the tile opens a chapter. */
+@Composable
+private fun SurvivalChevron(container: androidx.compose.ui.graphics.Color, content: androidx.compose.ui.graphics.Color) {
+    androidx.compose.material3.Surface(
+        shape = androidx.compose.foundation.shape.CircleShape,
+        color = container,
+        contentColor = content,
+        modifier = Modifier.size(32.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(TrailIcons.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(20.dp))
+        }
+    }
 }

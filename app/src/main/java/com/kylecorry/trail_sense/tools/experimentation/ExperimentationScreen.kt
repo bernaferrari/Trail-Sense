@@ -92,22 +92,13 @@ internal fun ExperimentationContent() {
 
             loaded.isEmpty() -> {
                 item(key = "empty") {
-                    SkyEmptyState(
+                    // The kit's layered mark: one clear message, no placeholder rows pretending to be plugins.
+                    TrailSenseEmptyState(
                         icon = Icons.Rounded.Extension,
                         title = stringResource(R.string.experimentation_no_plugins),
                         description = stringResource(R.string.sky_experimentation_empty),
-                        shape = MaterialShapes.Clover4Leaf.toShape(),
-                        companionShape = MaterialShapes.Gem.toShape(),
-                        companionIcon = TrailIcons.Experimental
+                        modifier = Modifier.heightIn(min = 480.dp)
                     )
-                }
-                // Empty slots where plugins will appear, so the page shows what it is for.
-                item(key = "slots") {
-                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                        repeat(3) { index ->
-                            ExperimentationEmptySlot(TrailSenseGroupPosition.at(index, 3), alpha = 1f - index * 0.3f)
-                        }
-                    }
                 }
             }
 
