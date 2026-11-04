@@ -414,7 +414,7 @@ private fun SignalHero(
     formatter: FormatService,
     modifier: Modifier = Modifier
 ) {
-    val tone = qualityTone(signal.quality)
+    val tone = strengthTone(signal.strength)
     val colors = trailSenseToneColors(tone)
     TrailSenseSpotlight(
         title = formatter.formatPercentage(signal.strength),
@@ -502,7 +502,7 @@ private fun CellSignalRow(
         },
         separator = FormatService.Separator.Dot
     )
-    val colors = trailSenseToneColors(qualityTone(signal.quality))
+    val colors = trailSenseToneColors(strengthTone(signal.strength))
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -688,6 +688,13 @@ private fun TowerChip(text: String, primary: Boolean) {
             modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
         )
     }
+}
+
+/** Colour follows how usable the signal is: green from half strength up, amber below, red only when it is weak. */
+private fun strengthTone(strength: Float): TrailSenseTone = when {
+    strength >= 50f -> TrailSenseTone.Good
+    strength >= 25f -> TrailSenseTone.Caution
+    else -> TrailSenseTone.Error
 }
 
 private fun qualityTone(quality: com.kylecorry.andromeda.core.sensors.Quality?): TrailSenseTone = when (quality) {
