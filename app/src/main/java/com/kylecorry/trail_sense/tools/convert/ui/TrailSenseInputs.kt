@@ -61,7 +61,8 @@ fun TrailSenseInputField(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null
 ) {
-    val container = MaterialTheme.colorScheme.surfaceContainerLow
+    // The same tone as the list rows, so a field and a row in one group read as one object.
+    val container = MaterialTheme.colorScheme.surfaceContainer
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -119,7 +120,10 @@ fun TrailSenseInputField(
     )
 }
 
-/** The unit chip at the end of a [TrailSenseInputField]: the unit's short name and a drop-down mark. */
+/**
+ * The unit pill at the end of a [TrailSenseInputField]: the unit's short name and a drop-down mark, on a raised
+ * surface like Convert's unit pills.
+ */
 @Composable
 fun TrailSenseUnitButton(
     unit: String,
@@ -131,6 +135,10 @@ fun TrailSenseUnitButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.heightIn(min = 40.dp),
+        colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
             start = TrailSenseSpacing.md,
             end = TrailSenseSpacing.sm
