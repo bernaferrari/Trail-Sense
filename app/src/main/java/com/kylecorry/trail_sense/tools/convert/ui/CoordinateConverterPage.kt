@@ -47,6 +47,7 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
             toUnit = formatService.formatCoordinateType(format),
             onToUnitClick = { showPicker = true },
             placeholder = stringResource(R.string.places_convert_coordinate_hint),
+            emptyValue = "--°, --°",
             keyboardType = KeyboardType.Text,
             isError = isInvalid,
             errorText = stringResource(R.string.coordinate_input_invalid_location)
