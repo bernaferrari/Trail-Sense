@@ -271,12 +271,13 @@ fun SettingsSliderRow(
     formatValue: (Float) -> String,
     modifier: Modifier = Modifier,
     steps: Int = 0,
-    position: TrailSenseGroupPosition = SettingsInnerPosition
+    position: TrailSenseGroupPosition = SettingsInnerPosition,
+    enabled: Boolean = true
 ) {
     var current by remember(value) { mutableFloatStateOf(value) }
     TrailSenseGroupCard(
         position = position,
-        modifier = modifier,
+        modifier = modifier.alpha(if (enabled) 1f else 0.55f),
         contentPadding = PaddingValues(
             start = TrailSenseSpacing.lg,
             end = TrailSenseSpacing.lg,
@@ -307,6 +308,7 @@ fun SettingsSliderRow(
             onValueChangeFinished = { onValueChange(current) },
             valueRange = valueRange,
             steps = steps,
+            enabled = enabled,
             modifier = Modifier.fillMaxWidth()
         )
     }

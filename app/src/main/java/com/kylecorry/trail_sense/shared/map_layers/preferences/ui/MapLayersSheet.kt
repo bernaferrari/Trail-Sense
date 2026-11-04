@@ -71,6 +71,7 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.getFullPrefe
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.settings.ui.SettingsSliderRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLoadingIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -718,34 +719,20 @@ private fun MapLayerSliderPreferenceRow(
         )
     }
 
-    Column(
+    // The settings kit's slider row: the value beside the title, stored once the finger lifts.
+    SettingsSliderRow(
+        label = preference.title?.toString().orEmpty(),
+        value = value.toFloat(),
+        valueRange = min.toFloat()..max.toFloat(),
+        onValueChange = {
+            value = it.roundToInt().coerceIn(min, max)
+            prefs.putInt(key, value)
+            onPreferenceChanged()
+        },
+        formatValue = { it.roundToInt().coerceIn(min, max).toString() },
+        enabled = enabled,
         modifier = modifier
-            .fillMaxWidth()
-            .alpha(if (enabled) 1f else 0.5f)
-            .padding(vertical = TrailSenseSpacing.md)
-    ) {
-        Text(
-            text = preference.title?.toString().orEmpty(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = preference.summary?.toString() ?: value.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Slider(
-            value = value.toFloat(),
-            onValueChange = {
-                value = it.roundToInt().coerceIn(min, max)
-                prefs.putInt(key, value)
-                onPreferenceChanged()
-            },
-            valueRange = min.toFloat()..max.toFloat(),
-            steps = (max - min - 1).coerceAtLeast(0),
-            enabled = enabled
-        )
-    }
+    )
     TrailSenseDivider()
 }
 
@@ -803,7 +790,7 @@ private fun MapLayerAttributionRow(
     ) {
         Text(
             text = stringResource(R.string.attribution),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
         MapLayerMarkdownText(text)
