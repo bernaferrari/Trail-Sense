@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.kylecorry.trail_sense.R
@@ -50,11 +51,15 @@ import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
  * shared/views/compose once that module is free to edit.
  */
 
-/** Goes back the same way the system back gesture does; for screens the host doesn't hand a back callback. */
+/**
+ * The screen's way back: the nav host's [LocalTrailSenseBack] (null on a tab's first screen, so no arrow shows),
+ * else the system back dispatcher.
+ */
 @Composable
-fun rememberTrailSenseBack(): () -> Unit {
+fun rememberTrailSenseBack(): (() -> Unit)? {
+    val hostBack = LocalTrailSenseBack.current
     val owner = LocalOnBackPressedDispatcherOwner.current
-    return remember(owner) { { owner?.onBackPressedDispatcher?.onBackPressed() } }
+    return hostBack ?: remember(owner) { owner?.let { { it.onBackPressedDispatcher.onBackPressed() } } }
 }
 
 /** The small top bar of an instrument: back arrow, one-line title, actions. Sits on [containerColor]. */
@@ -69,7 +74,7 @@ fun TrailSenseInstrumentTopBar(
 ) {
     TopAppBar(
         modifier = modifier,
-        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold) },
         navigationIcon = {
             if (onBack != null) {
                 IconButton(onClick = onBack) {
