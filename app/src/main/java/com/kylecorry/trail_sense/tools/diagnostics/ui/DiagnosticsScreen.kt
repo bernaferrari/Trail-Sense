@@ -28,6 +28,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -161,36 +164,7 @@ internal fun DiagnosticsScreen(
             )
         }
 
-        item(key = "counts") {
-            TrailSenseStatGrid(
-                stats = listOf(
-                    TrailSenseStat(
-                        label = stringResource(R.string.errors),
-                        value = errors.size.toString(),
-                        tone = if (errors.isNotEmpty()) TrailSenseTone.Error else TrailSenseTone.Neutral,
-                        icon = Icons.Default.ErrorOutline
-                    ),
-                    TrailSenseStat(
-                        label = stringResource(R.string.diagnostics_warnings),
-                        value = warnings.size.toString(),
-                        tone = if (warnings.isNotEmpty()) TrailSenseTone.Caution else TrailSenseTone.Neutral,
-                        icon = Icons.Default.WarningAmber
-                    ),
-                    TrailSenseStat(
-                        label = stringResource(R.string.sky_diagnostics_checks),
-                        value = "${results.size.coerceAtMost(toolDiagnostics.size)}/${toolDiagnostics.size}",
-                        tone = when {
-                            !loaded -> TrailSenseTone.Secondary
-                            errors.isEmpty() -> TrailSenseTone.Good
-                            else -> TrailSenseTone.Primary
-                        },
-                        icon = Icons.Default.CheckCircle
-                    )
-                ),
-                columns = 3,
-                valueStyle = MaterialTheme.typography.headlineMedium
-            )
-        }
+        // The counts live in the hero's severity bar rather than a second row of tiles.
 
         diagnosticsSection("errors", R.string.errors, errors, onShowDiagnostic)
         diagnosticsSection("warnings", R.string.diagnostics_warnings, warnings, onShowDiagnostic)
@@ -234,7 +208,7 @@ private fun LazyListScope.diagnosticsSection(
     if (items.isEmpty()) return
     item(key = key) {
         TrailSenseRowGroup(
-            title = stringResource(title),
+            title = "${stringResource(title)} · ${items.size}",
             modifier = Modifier.animateItem()
         ) {
             items.forEach { item ->
@@ -281,9 +255,18 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "diagnosticsProgress"
     )
+    // While the checks run the badge turns slowly; once they are in it settles.
+    val spin = androidx.compose.animation.core.rememberInfiniteTransition(label = "diagnosticsSpin")
+    val turning by spin.animateFloat(
+        0f, 360f,
+        androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(8_000, easing = androidx.compose.animation.core.LinearEasing)
+        ),
+        label = "diagnosticsTurn"
+    )
+    val status = trailSenseStatusColors()
     TrailSenseSpotlight(
         title = title,
-        eyebrow = stringResource(R.string.diagnostics),
         supportingText = supporting,
         tone = tone,
         titleStyle = MaterialTheme.typography.headlineMedium,
@@ -319,11 +302,46 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
                     },
                     size = 64.dp,
                     containerColor = colors.accent,
-                    contentColor = colors.onAccent
+                    contentColor = colors.onAccent,
+                    modifier = Modifier.graphicsLayer { rotationZ = if (loaded) 0f else turning }
                 )
             }
         }
-    )
+    ) {
+        // Severity in one place: a proportional bar of errors, warnings and passing checks, with its legend.
+        val passing = (checks - issueCount).coerceAtLeast(0)
+        val segments = listOf(
+            errorCount to MaterialTheme.colorScheme.error,
+            warningCount to status.caution,
+            passing to status.good
+        ).filter { it.first > 0 }
+        if (loaded && segments.isNotEmpty()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                segments.forEach { (count, color) ->
+                    Box(
+                        Modifier
+                            .weight(count.toFloat())
+                            .fillMaxHeight()
+                            .background(color, androidx.compose.foundation.shape.CircleShape)
+                    )
+                }
+            }
+            Text(
+                listOfNotNull(
+                    errorCount.takeIf { it > 0 }?.let { "$it ${stringResource(R.string.errors)}" },
+                    warningCount.takeIf { it > 0 }?.let { "$it ${stringResource(R.string.diagnostics_warnings)}" },
+                    stringResource(R.string.sky_diagnostics_checks_count, reported.coerceAtMost(checks), checks)
+                ).joinToString(" · "),
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                color = colors.content.copy(alpha = 0.82f)
+            )
+        }
+    }
 }
 
 @Composable
@@ -341,9 +359,15 @@ private fun DiagnosticListItem(
         label = "diagnosticPress"
     )
 
+    // The row itself carries a breath of its severity, so red and amber read beyond the small icon.
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = androidx.compose.ui.graphics.lerp(
+            MaterialTheme.colorScheme.surfaceContainerLow,
+            statusContainerColor(severity),
+            0.32f
+        ),
         shape = trailSenseGroupShape(position),
+
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer {

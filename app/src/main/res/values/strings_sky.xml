@@ -57,7 +57,9 @@
     <string name="sky_axis_hot">Hot</string>
     <string name="sky_sensors_and_more">%1$s and %2$d more</string>
     <string name="sky_sensors_of_total">of %d</string>
+    <string name="sky_diagnostics_checks_count">%1$d of %2$d checks</string>
 </resources>
+
 
 
 
