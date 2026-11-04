@@ -82,6 +82,7 @@ internal fun ExperimentationContent() {
     val loaded = plugins
     val pluginsTitle = stringResource(R.string.plugins)
 
+    // One question: which plugins are connected? The count answers it; each plugin is one row.
     TrailSensePage(
         title = "Experimentation",
         onBack = { dispatcher?.onBackPressed() },
@@ -94,46 +95,43 @@ internal fun ExperimentationContent() {
 
             loaded.isEmpty() -> {
                 item(key = "empty") {
-                    // The kit's layered mark: one clear message, no placeholder rows pretending to be plugins.
-                    // The satellites name what a plugin brings: weather sources and map layers.
+                    // One clear message; there is nothing to do here until a plugin is installed.
                     TrailSenseEmptyState(
                         icon = Icons.Rounded.Extension,
                         title = stringResource(R.string.experimentation_no_plugins),
                         description = stringResource(R.string.sky_experimentation_empty),
-                        tone = TrailSenseTone.Tertiary,
-                        accents = listOf(TrailIcons.Weather, TrailIcons.Layers, TrailIcons.Experimental),
                         modifier = Modifier.heightIn(min = 340.dp)
                     )
                 }
-                // Dashed outlines where installed plugins will sit, so the page previews what it is for.
-                item(key = "slots") {
-                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-                        ExperimentationDashedSlot()
-                        ExperimentationDashedSlot()
-                    }
-                }
-
             }
 
             else -> {
                 item(key = "summary") {
-                    TrailSenseStatGrid(
-                        stats = listOf(
-                            TrailSenseStat(
-                                label = pluginsTitle,
-                                value = loaded.size.toString(),
-                                tone = TrailSenseTone.Primary,
-                                icon = Icons.Rounded.Extension
-                            ),
-                            TrailSenseStat(
-                                label = stringResource(R.string.sky_experimentation_features),
-                                value = loaded.sumOf { it.features.weather.size + it.features.mapLayers.size }.toString(),
-                                tone = TrailSenseTone.Tertiary,
-                                icon = TrailIcons.Experimental
+                    val features = loaded.sumOf { it.features.weather.size + it.features.mapLayers.size }
+                    Column(Modifier.padding(horizontal = TrailSenseSpacing.lg)) {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                            Text(
+                                loaded.size.toString(),
+                                style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.alignByBaseline()
                             )
-                        ),
-                        columns = 2
-                    )
+                            Text(
+                                pluginsTitle,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .padding(start = TrailSenseSpacing.sm)
+                                    .alignByBaseline()
+                            )
+                        }
+                        Text(
+                            "$features ${stringResource(R.string.sky_experimentation_features)}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
                 trailSenseSection(key = "plugins", title = pluginsTitle) {
                     loaded.forEach { plugin ->
@@ -156,8 +154,6 @@ private fun ExperimentationPluginRow(
             title = plugin.name,
             subtitle = listOfNotNull(plugin.packageId, plugin.version).joinToString(" · "),
             icon = Icons.Rounded.Extension,
-            accent = TrailSenseAccents.Lavender,
-            badgeShape = MaterialShapes.Clover4Leaf.toShape(),
             position = if (expanded) position.copy(isLast = false) else position,
             onClick = { expanded = !expanded }
         )
@@ -181,76 +177,5 @@ private fun ExperimentationPluginRow(
                 )
             }
         }
-    }
-}
-
-/** A ghost row: where a plugin will sit once one is installed. */
-@Composable
-private fun ExperimentationEmptySlot(position: TrailSenseGroupPosition, alpha: Float) {
-    Surface(
-        shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = alpha),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        androidx.compose.foundation.layout.Row(
-            Modifier.padding(TrailSenseSpacing.lg),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = MaterialShapes.Clover4Leaf.toShape(),
-                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha),
-                modifier = Modifier.size(44.dp)
-            ) {}
-            androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.lg))
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = alpha),
-                    modifier = Modifier.size(width = 140.dp, height = 12.dp)
-                ) {}
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = alpha),
-                    modifier = Modifier.size(width = 200.dp, height = 10.dp)
-                ) {}
-            }
-        }
-    }
-}
-
-/** An empty plugin slot: a dashed outline in the tertiary with a puzzle-piece badge. */
-@Composable
-private fun ExperimentationDashedSlot() {
-    val outline = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .drawBehind {
-                drawRoundRect(
-                    color = outline,
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx()),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(
-                        width = 2.dp.toPx(),
-                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))
-                    )
-                )
-            }
-            .padding(TrailSenseSpacing.lg),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-    ) {
-        com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge(
-            icon = Icons.Rounded.Extension,
-            shape = MaterialShapes.Clover4Leaf.toShape(),
-            size = 40.dp,
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-        )
-        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.lg))
-        Text(
-            stringResource(R.string.sky_experimentation_slot),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

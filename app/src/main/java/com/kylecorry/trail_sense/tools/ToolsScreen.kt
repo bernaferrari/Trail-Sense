@@ -94,9 +94,9 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
 
 /**
- * The Tools tab, laid out like Keepout's settings: pinned tools, then every tool by category, each category one
- * connected grid of tiles whose icon wells carry the category's accent. Searching swaps the grid for rows with each tool's
- * description, which is what you scan when you don't know a tool's name. Long press any tool for its actions.
+ * The Tools tab: pinned tools, then every tool by category, each category one connected grid of quiet tiles in the
+ * scheme's colours. Searching swaps the grid for rows with each tool's description, which is what you scan when you
+ * don't know a tool's name. Long press any tool for its actions.
  */
 @Composable
 fun ToolsScreen(
@@ -135,6 +135,7 @@ fun ToolsScreen(
         }
     }
 
+    // One question: which tool do I need? Search and the grid answer it; nothing on the hub is louder than a tile.
     val isSearching = filter.isNotBlank()
     val results = remember(allTools, filter, toolSearch) {
         if (filter.isBlank()) emptyList() else toolSearch.search(filter)
@@ -176,7 +177,7 @@ fun ToolsScreen(
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
-                        FilledTonalIconButton(
+                        IconButton(
                             onClick = onSettingsClick,
                             modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
                         ) {
@@ -222,10 +223,9 @@ fun ToolsScreen(
                         item("pinned") {
                             Column {
                                 TrailSenseGroupHeader(stringResource(R.string.pinned))
-                                PinnedToolGrid(
-                                    tools = pinned,
-                                    onClick = onToolClick,
-                                    onLongClick = onToolLongClick
+                                TrailSenseTileGrid(
+                                    pinned.map { it.tile(onToolClick, onToolLongClick) },
+                                    titleSize = titleSize
                                 )
                             }
                         }
@@ -233,11 +233,7 @@ fun ToolsScreen(
                     items(categories, key = { "category_${it.categoryName}" }) { group ->
                         Column {
                             if (group.categoryName != null) {
-                                ToolCategoryHeader(
-                                    group.categoryName,
-                                    group.tools.size,
-                                    group.tools.firstOrNull()?.category?.accent() ?: TrailSenseAccents.Lavender
-                                )
+                                TrailSenseGroupHeader(group.categoryName)
                             }
                             TrailSenseTileGrid(
                                 group.tools.map { it.tile(onToolClick, onToolLongClick) },
@@ -251,58 +247,11 @@ fun ToolsScreen(
     }
 }
 
-/**
- * Five colour families instead of a rainbow, so a hue means a kind of tool: teal for finding your way (location,
- * distance, angles), amber for the sky and time, blue for weather, coral for signalling and talking, lavender for
- * the kit (power, books, everything else). Used in the icon wells and the section titles.
- */
-internal fun ToolCategory.accent(): Color = when (this) {
-    ToolCategory.Location, ToolCategory.Distance, ToolCategory.Angles -> TrailSenseAccents.Seafoam
-    ToolCategory.Time -> TrailSenseAccents.Sun
-    ToolCategory.Weather -> TrailSenseAccents.Sky
-    ToolCategory.Signaling, ToolCategory.Communication -> TrailSenseAccents.Coral
-    ToolCategory.Power, ToolCategory.Books, ToolCategory.Other -> TrailSenseAccents.Lavender
-}
-
-/** A section title in its family's colour, with how many tools it holds. */
-@Composable
-private fun ToolCategoryHeader(title: String, count: Int, accent: Color) {
-    val tones = trailSenseAccentScheme(accent)
-    Row(
-        Modifier.padding(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
-            top = TrailSenseSpacing.md,
-            bottom = TrailSenseSpacing.sm
-        ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(tones.primary)
-        )
-        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.sm))
-        Text(
-            title,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-            color = tones.primary
-        )
-        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.sm))
-        Text(
-            count.toString(),
-            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
 private fun Tool.tile(onClick: (Tool) -> Unit, onLongClick: (Tool) -> Unit) = TrailSenseTile(
     key = id,
     title = name,
-    accent = category.accent(),
+    // No category hues: every well takes the scheme's own colour, so the hub stays calm.
+    accent = Color.Unspecified,
     icon = { Icon(rememberVectorPainter(icon), contentDescription = null, modifier = Modifier.size(22.dp)) },
     onClick = { onClick(this) },
     onLongClick = { onLongClick(this) }
@@ -337,7 +286,7 @@ private fun ToolSearchField(
         value = value,
         onValueChange = onValueChange,
         leadingIcon = {
-            Icon(Icons.Rounded.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Rounded.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         },
         trailingIcon = {
             AnimatedContent(
@@ -360,151 +309,13 @@ private fun ToolSearchField(
         singleLine = true,
         shape = CircleShape,
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.primaryContainer, 0.45f),
-            unfocusedContainerColor = androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.primaryContainer, 0.45f),
-            disabledContainerColor = androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.primaryContainer, 0.45f),
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent
         ),
         modifier = modifier.focusRequester(focusRequester)
     )
-}
-
-/**
- * The tools someone reaches for most, as the hub's hero: big tiles washed in each tool's category colour, the icon in
- * an expressive shape, the name below. Two to a row; a lone last tile spans the row.
- */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-@Composable
-private fun PinnedToolGrid(
-    tools: List<Tool>,
-    onClick: (Tool) -> Unit,
-    onLongClick: (Tool) -> Unit
-) {
-    // The first pinned tool is the door: one wide tile with a bigger badge and what it is for. The rest follow
-    // three to a row as compact tiles.
-    val lead = tools.firstOrNull() ?: return
-    val rest = tools.drop(1)
-    val rows = rest.chunked(3)
-    val shapes = listOf(
-        androidx.compose.material3.MaterialShapes.Cookie9Sided,
-        androidx.compose.material3.MaterialShapes.Sunny,
-        androidx.compose.material3.MaterialShapes.Cookie6Sided,
-        androidx.compose.material3.MaterialShapes.Clover4Leaf
-    )
-    val leadTones = trailSenseAccentScheme(lead.category.accent())
-    val leadShape = androidx.compose.foundation.shape.RoundedCornerShape(
-        topStart = TrailSenseShape.groupOuter,
-        topEnd = TrailSenseShape.groupOuter,
-        bottomStart = if (rows.isEmpty()) TrailSenseShape.groupOuter else TrailSenseShape.groupInner,
-        bottomEnd = if (rows.isEmpty()) TrailSenseShape.groupOuter else TrailSenseShape.groupInner
-    )
-    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val turn by androidx.compose.animation.core.animateFloatAsState(
-        if (pressed) 20f else 0f,
-        MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "pinnedTurn"
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-        Surface(
-            shape = leadShape,
-            color = leadTones.primaryContainer,
-            contentColor = leadTones.onPrimaryContainer,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(leadShape)
-                .combinedClickable(
-                    interactionSource = interaction,
-                    indication = androidx.compose.material3.ripple(),
-                    role = androidx.compose.ui.semantics.Role.Button,
-                    onClick = { onClick(lead) },
-                    onLongClick = { onLongClick(lead) },
-                    onLongClickLabel = lead.name
-                )
-        ) {
-            Row(
-                Modifier.padding(TrailSenseSpacing.xl),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TrailSenseShapeBadge(
-                    icon = lead.icon,
-                    shape = androidx.compose.material3.MaterialShapes.Cookie12Sided.toShape(),
-                    size = 72.dp,
-                    containerColor = leadTones.primary,
-                    contentColor = leadTones.onPrimary,
-                    modifier = Modifier.graphicsLayer { rotationZ = turn }
-                )
-                androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.lg))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        lead.name,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                    lead.description?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = leadTones.onPrimaryContainer.copy(alpha = 0.8f),
-                            maxLines = 2,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-        }
-        rows.forEachIndexed { rowIndex, row ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(androidx.compose.foundation.layout.IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                row.forEachIndexed { column, tool ->
-                    val tones = trailSenseAccentScheme(tool.category.accent())
-                    val shape = trailSenseGridCellShape(column, row.size, rowIndex + 1, rows.size + 1)
-                    Surface(
-                        shape = shape,
-                        color = tones.primaryContainer,
-                        contentColor = tones.onPrimaryContainer,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clip(shape)
-                            .combinedClickable(
-                                role = androidx.compose.ui.semantics.Role.Button,
-                                onClick = { onClick(tool) },
-                                onLongClick = { onLongClick(tool) },
-                                onLongClickLabel = tool.name
-                            )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(TrailSenseSpacing.md),
-                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-                        ) {
-                            TrailSenseShapeBadge(
-                                icon = tool.icon,
-                                shape = shapes[(rowIndex * 3 + column) % shapes.size].toShape(),
-                                size = 44.dp,
-                                containerColor = tones.primary,
-                                contentColor = tones.onPrimary
-                            )
-                            Text(
-                                tool.name,
-                                style = MaterialTheme.typography.titleSmall,
-
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

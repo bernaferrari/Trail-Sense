@@ -40,36 +40,10 @@ import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 
-/** One hue and one shape per category, so each family of guides reads as its own shelf. */
-private val categoryAccents = listOf(
-    TrailSenseAccents.Stone,
-    TrailSenseAccents.Sky,
-    TrailSenseAccents.Leaf,
-    TrailSenseAccents.Coral,
-    TrailSenseAccents.Lavender,
-    TrailSenseAccents.Sun,
-    TrailSenseAccents.Seafoam,
-    TrailSenseAccents.Rose,
-    TrailSenseAccents.Apricot,
-    TrailSenseAccents.Periwinkle
-)
-
-@Composable
-private fun categoryShape(index: Int): Shape = when (index % 8) {
-    0 -> MaterialShapes.Cookie6Sided
-    1 -> MaterialShapes.Cookie9Sided
-    2 -> MaterialShapes.Clover4Leaf
-    3 -> MaterialShapes.Sunny
-    4 -> MaterialShapes.Pentagon
-    5 -> MaterialShapes.Flower
-    6 -> MaterialShapes.Gem
-    else -> MaterialShapes.Puffy
-}.toShape()
 
 /**
- * User guide: a hero with the number of guides and the search inside it, then every guide grouped under its tool
- * category, each category with its own hue and badge shape and each guide wearing its tool's icon. A search with no
- * match says so warmly and offers to clear itself.
+ * User guide: the search, then every guide grouped under its tool category, each wearing its tool's icon in one quiet
+ * shape. A search with no match says so and offers to clear itself.
  */
 @Composable
 internal fun GuideListScreen(
@@ -88,29 +62,14 @@ internal fun GuideListScreen(
         onBack = { dispatcher?.onBackPressed() },
         backLabel = stringResource(R.string.back)
     ) {
-        item(key = "hero") {
-            TrailSenseSpotlight(
-                title = stringResource(R.string.sky_guides_count, total),
-                supportingText = stringResource(R.string.sky_guides_supporting, guides.size),
-                tone = TrailSenseTone.Primary,
-                titleStyle = MaterialTheme.typography.displaySmall,
-                badge = {
-                    SkyFocalShape(
-                        icon = TrailIcons.OpenBook,
-                        shape = MaterialShapes.Cookie12Sided.toShape(),
-                        size = 72.dp,
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-            ) {
-                TrailSenseSearchBar(
-                    value = query,
-                    onValueChange = { query = it },
-                    placeholder = stringResource(R.string.search),
-                    clearContentDescription = stringResource(android.R.string.cancel)
-                )
-            }
+        // One question: how does this tool work? Search answers it; the guides follow, shelved by category.
+        item(key = "search") {
+            TrailSenseSearchBar(
+                value = query,
+                onValueChange = { query = it },
+                placeholder = stringResource(R.string.search),
+                clearContentDescription = stringResource(android.R.string.cancel)
+            )
         }
 
         if (filtered.isEmpty()) {
@@ -119,9 +78,6 @@ internal fun GuideListScreen(
                     icon = Icons.Default.SearchOff,
                     title = stringResource(R.string.no_results),
                     description = stringResource(R.string.sky_guides_no_results, query),
-                    shape = MaterialShapes.Cookie9Sided.toShape(),
-                    companionShape = MaterialShapes.Sunny.toShape(),
-                    companionIcon = TrailIcons.UserGuideIcon,
                     action = {
                         FilledTonalButton(onClick = { query = "" }) {
                             Text(stringResource(R.string.guide_clear_search))
@@ -133,12 +89,11 @@ internal fun GuideListScreen(
         }
 
         filtered.forEach { category ->
-            val index = guides.indexOfFirst { it.name == category.name }.coerceAtLeast(0)
             // The shelf's name carries its size, so a long list still has a sense of proportion.
-            trailSenseSection(key = "category-${category.name}", title = "${category.name} · ${category.guides.size}") {
+            trailSenseSection(key = "category-${category.name}", title = category.name) {
                 category.guides.forEach { guide ->
                     row { position ->
-                        GuideRow(guide, index, position) { onOpenGuide(guide) }
+                        GuideRow(guide, position) { onOpenGuide(guide) }
                     }
                 }
             }
@@ -149,7 +104,6 @@ internal fun GuideListScreen(
 @Composable
 private fun GuideRow(
     guide: UserGuide,
-    categoryIndex: Int,
     position: com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition,
     onClick: () -> Unit
 ) {
@@ -159,17 +113,7 @@ private fun GuideRow(
         subtitle = null,
 
         icon = guide.icon ?: TrailIcons.OpenBook,
-        accent = categoryAccents[categoryIndex % categoryAccents.size],
-        badgeShape = categoryShape(categoryIndex),
         position = position,
-        // Each shelf carries a breath of its hue, so sections read as families rather than one grey list.
-        containerColor = androidx.compose.ui.graphics.lerp(
-            MaterialTheme.colorScheme.surfaceContainerLow,
-            com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors(
-                categoryAccents[categoryIndex % categoryAccents.size]
-            ).container,
-            0.3f
-        ),
         onClick = onClick,
         trailing = {
             Icon(

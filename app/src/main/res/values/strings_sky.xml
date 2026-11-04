@@ -64,6 +64,10 @@
     <string name="sky_settings_errors_summary">Crash reports and alerts</string>
     <string name="sky_settings_backup_summary">Save or restore your data</string>
     <string name="sky_settings_tools_summary">Quick actions and widgets</string>
+    <string name="sky_axis_above">Above</string>
+    <string name="sky_axis_below">Below</string>
+    <string name="sky_axis_wet">Wet</string>
+    <string name="sky_axis_dry">Dry</string>
 </resources>
 
 

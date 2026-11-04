@@ -15,8 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.tools.guide.ui.ArticleBody
-import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
-import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -125,6 +123,7 @@ fun SurvivalGuideReaderScreen(
         }
     }
 
+    // One question: what do I do? The chapter's text answers it, as an article straight on the page.
     TrailSensePage(
         title = chapter.title,
         onBack = { dispatcher?.onBackPressed() },
@@ -336,43 +335,16 @@ private fun buildSectionMarkdown(sections: List<TextSection>): String {
         }
 }
 
-/** The chapter's hero: its icon in a big turning cookie, the chapter name and how many sections it holds. */
+/**
+ * The top of a chapter: the top bar already names it, so only how many sections it holds, as one quiet line.
+ */
 @Composable
-private fun ReaderHero(chapter: Chapter, sections: Int) {
-    Surface(
-        shape = RoundedCornerShape(TrailSenseShape.hero),
-        color = MaterialTheme.colorScheme.tertiaryContainer,
-        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(Modifier.padding(TrailSenseSpacing.xl), verticalAlignment = Alignment.CenterVertically) {
-            SkyFocalShape(
-                icon = chapter.icon,
-                shape = MaterialShapes.Cookie12Sided.toShape(),
-                size = 84.dp,
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-                Text(
-                    stringResource(R.string.survival_guide),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.78f)
-                )
-                Text(
-                    chapter.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                if (sections > 0) {
-                    SkyPill(
-                        androidx.compose.ui.res.pluralStringResource(R.plurals.sky_sections, sections, sections),
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    )
-                }
-            }
-        }
-    }
+private fun ReaderHero(@Suppress("UNUSED_PARAMETER") chapter: Chapter, sections: Int) {
+    if (sections <= 0) return
+    Text(
+        androidx.compose.ui.res.pluralStringResource(R.plurals.sky_sections, sections, sections),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
 }

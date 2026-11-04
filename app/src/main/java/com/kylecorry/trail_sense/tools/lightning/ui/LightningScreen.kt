@@ -23,6 +23,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,8 +91,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
-import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
-import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
+import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -100,9 +100,9 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Lightning distance: a saturated card holds the distance, with sound waves rolling out of it while you wait for
- * the thunder. Under it, one big shaped button names the event to tap for next (the flash, then the thunder); the
- * screen flashes with the tap. The previous strike sits below as two tiles.
+ * Lightning distance, an instrument: one ring holds the distance, with sound waves rolling out of it while you wait
+ * for the thunder. Under it, one filled button names the event to tap for next (the flash, then the thunder). The
+ * previous strike sits below as a quiet list.
  */
 @Composable
 fun LightningScreen(
@@ -168,6 +168,7 @@ fun LightningScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
+            // One question: how far away was that strike? The ring answers it; the verdict says if it is too close.
             StrikeHero(
                 value = distanceValue,
                 unit = distanceUnit,
@@ -176,41 +177,37 @@ fun LightningScreen(
                     waitingForThunder -> stringResource(R.string.lightning_hint_thunder)
                     else -> stringResource(R.string.lightning_hint_flash)
                 },
-                tone = when {
-                    isDangerous -> TrailSenseTone.Error
-                    waitingForThunder -> TrailSenseTone.Tertiary
-                    else -> TrailSenseTone.Primary
-                },
+                danger = isDangerous,
                 elapsedSeconds = elapsed,
                 flash = flash.value,
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .weight(1f)
-            ) {
-            StrikeButton(
-                waitingForThunder = waitingForThunder,
-                onClick = {
-                    val startedAt = lightningTime
-                    if (startedAt == null) {
-                        lightningTime = Instant.now()
-                        scope.launch {
-                            flash.snapTo(0.9f)
-                            flash.animateTo(0f, tween(550))
-                        }
-                    } else {
-                        val distance = getDistance(startedAt, Instant.now())
-                        val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
-                        strike?.let { lastStrike = it }
-                        strike = currentStrike
-                        lightningTime = null
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                repo.add(currentStrike)
+                modifier = Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)
+            )
+            Spacer(Modifier.weight(1f))
+            Box(Modifier.widthIn(max = TrailSenseSize.maximumContentWidth)) {
+                StrikeButton(
+                    waitingForThunder = waitingForThunder,
+                    onClick = {
+                        val startedAt = lightningTime
+                        if (startedAt == null) {
+                            lightningTime = Instant.now()
+                            scope.launch {
+                                flash.snapTo(0.9f)
+                                flash.animateTo(0f, tween(550))
+                            }
+                        } else {
+                            val distance = getDistance(startedAt, Instant.now())
+                            val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
+                            strike?.let { lastStrike = it }
+                            strike = currentStrike
+                            lightningTime = null
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    repo.add(currentStrike)
+                                }
                             }
                         }
                     }
-                }
-            )
+                )
             }
 
             AnimatedVisibility(
@@ -222,31 +219,30 @@ fun LightningScreen(
                 val last = lastStrike
                 if (last != null) {
                     val distance = last.value.distance.convertTo(units).toRelativeDistance()
-                    Column(Modifier.fillMaxWidth()) {
-                        TrailSenseGroupHeader(stringResource(R.string.previous))
-                        TrailSenseStatGrid(
-                            stats = listOf(
-                                TrailSenseStat(
-                                    label = stringResource(R.string.sky_strike_time),
-                                    value = formatService.formatTime(last.time, includeSeconds = false),
-                                    icon = TrailIcons.Thunder
-                                ),
-                                TrailSenseStat(
-                                    label = stringResource(R.string.sky_strike_last_distance),
-                                    value = formatService.formatDistance(
-                                        distance,
-                                        Units.getDecimalPlaces(distance.units),
-                                        false
-                                    ),
-                                    tone = if (Meteorology.isLightningStrikeDangerous(distance)) {
-                                        TrailSenseTone.Error
-                                    } else {
-                                        TrailSenseTone.Neutral
-                                    }
-                                )
-                            ),
-                            columns = 2
-                        )
+                    val distanceText = formatService.formatDistance(
+                        distance,
+                        Units.getDecimalPlaces(distance.units),
+                        false
+                    )
+                    val dangerous = Meteorology.isLightningStrikeDangerous(distance)
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup(
+                        title = stringResource(R.string.previous)
+                    ) {
+                        row { position ->
+                            SkyValueRow(
+                                title = stringResource(R.string.sky_strike_last_distance),
+                                value = distanceText,
+                                valueColor = if (dangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                position = position
+                            )
+                        }
+                        row { position ->
+                            SkyValueRow(
+                                title = stringResource(R.string.sky_strike_time),
+                                value = formatService.formatTime(last.time, includeSeconds = false),
+                                position = position
+                            )
+                        }
                     }
                 }
             }
@@ -256,32 +252,36 @@ fun LightningScreen(
 }
 
 /**
- * The instrument: one tall saturated card. A small shaped bolt badge and the label at the top, the distance at
- * display size in the middle (sound waves roll out behind it while counting), and the action as a large button at
- * its foot. The card lights up for a moment when you tap for the flash.
+ * The instrument: one ring on the plain page. Idle it is a still track with the bolt inside; while you count, sound
+ * waves roll out of it (their motion is the count) and the distance grows inside. Its colour is primary, or error
+ * when the strike is dangerously close. The verdict sits right under it as headlineMedium.
  */
 @Composable
 private fun StrikeHero(
     value: String,
     unit: String,
     hint: String,
-    tone: TrailSenseTone,
+    danger: Boolean,
     elapsedSeconds: Float?,
     flash: Float,
-    modifier: Modifier = Modifier,
-    action: @Composable () -> Unit
+    modifier: Modifier = Modifier
 ) {
-    val colors = trailSenseToneColors(tone)
-    val container by animateColorAsState(colors.container, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "strikeHero")
-    val accent by animateColorAsState(colors.accent, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "strikeAccent")
-    val lit = androidx.compose.ui.graphics.lerp(container, MaterialTheme.colorScheme.surfaceContainerLowest, flash)
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(TrailSenseShape.hero),
-        color = lit,
-        contentColor = colors.content
-    ) {
-        Box(Modifier.fillMaxSize()) {
+    val scheme = MaterialTheme.colorScheme
+    val accent by animateColorAsState(
+        if (danger) scheme.error else scheme.primary,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "strikeAccent"
+    )
+    val track = scheme.surfaceContainerHigh
+    val counting = elapsedSeconds != null
+    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            Modifier
+                .widthIn(max = 320.dp)
+                .fillMaxWidth()
+                .aspectRatio(1f),
+            contentAlignment = Alignment.Center
+        ) {
             val waves = rememberInfiniteTransition(label = "waves")
             val phase by waves.animateFloat(
                 initialValue = 0f,
@@ -289,153 +289,82 @@ private fun StrikeHero(
                 animationSpec = infiniteRepeatable(tween(1800, easing = LinearEasing), RepeatMode.Restart),
                 label = "wavePhase"
             )
-            val counting = elapsedSeconds != null
-            val waveAlpha by animateFloatAsState(if (counting) 1f else 0.55f, label = "waveAlpha")
-            Canvas(
-                Modifier
-                    .matchParentSize()
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(TrailSenseShape.hero))
-            ) {
-                val center = Offset(size.width / 2f, size.height * 0.45f)
-                val maxRadius = size.maxDimension * 0.75f
-                // A deep well under the reading, so the rings feel like a target rather than lines on a card.
-                drawCircle(
-                    androidx.compose.ui.graphics.Brush.radialGradient(
-                        listOf(accent.copy(alpha = 0.22f), accent.copy(alpha = 0f)),
-                        center = center,
-                        radius = maxRadius * 0.7f
-                    ),
-                    radius = maxRadius * 0.7f,
-                    center = center
-                )
-                repeat(4) { index ->
-                    val t = ((if (counting) phase else 0.55f) + index / 4f) % 1f
-                    drawCircle(
-                        color = accent.copy(alpha = (1f - t) * 0.5f * waveAlpha),
-                        radius = 124.dp.toPx() + t * maxRadius,
-                        center = center,
-                        style = Stroke(width = (12.dp.toPx() * (1f - t)).coerceAtLeast(1f))
-                    )
-                }
-            }
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(TrailSenseSpacing.lg),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(TrailSenseSpacing.xs),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SkyFocalShape(
-                        icon = androidx.compose.material.icons.Icons.Rounded.Bolt,
-                        shape = MaterialShapes.Cookie12Sided.toShape(),
-                        size = 44.dp,
-                        containerColor = colors.accent,
-                        contentColor = colors.onAccent,
-                        spin = counting
-                    )
-                    Spacer(Modifier.width(TrailSenseSpacing.md))
-                    Text(
-                        stringResource(R.string.sky_strike_distance),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    AnimatedVisibility(visible = counting) {
-                        SkyPill(
-                            text = stringResource(
-                                R.string.sky_seconds_short,
-                                DecimalFormatter.format(elapsedSeconds ?: 0f, 1, true)
-                            ),
-                            containerColor = colors.accent,
-                            contentColor = colors.onAccent
+            Canvas(Modifier.matchParentSize()) {
+                val center = Offset(size.width / 2f, size.height / 2f)
+                val core = size.minDimension * 0.34f
+                val maxRadius = size.minDimension / 2f
+                // The flash lights the ring's face for a moment.
+                drawCircle(androidx.compose.ui.graphics.lerp(track, accent.copy(alpha = 0.35f), flash), radius = core, center = center)
+                drawCircle(accent, radius = core, center = center, style = Stroke(width = 6.dp.toPx()))
+                if (counting) {
+                    repeat(3) { index ->
+                        val t = (phase + index / 3f) % 1f
+                        drawCircle(
+                            color = accent.copy(alpha = (1f - t) * 0.5f),
+                            radius = core + t * (maxRadius - core),
+                            center = center,
+                            style = Stroke(width = (6.dp.toPx() * (1f - t)).coerceAtLeast(1f))
                         )
                     }
                 }
-                Spacer(Modifier.weight(1f))
-                val placeholder = value == "—"
-                // Idle: no dash. A big turning bolt and the instruction as the headline.
-                if (placeholder) {
-                    SkyFocalShape(
-                        icon = androidx.compose.material.icons.Icons.Rounded.Bolt,
-                        shape = MaterialShapes.Burst.toShape(),
-                        size = 128.dp,
-                        containerColor = accent,
-                        contentColor = colors.onAccent,
-                        spin = true
-                    )
-                    Spacer(Modifier.height(TrailSenseSpacing.xl))
-                    Text(
-                        hint,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                } else Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        value,
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 104.sp,
-                            lineHeight = 108.sp,
-                            fontFeatureSettings = "tnum"
-                        ),
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = if (placeholder) Modifier else Modifier.alignByBaseline()
-                    )
-                    Text(
-                        unit,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = colors.content.copy(alpha = 0.78f),
-                        modifier = Modifier
-                            .padding(start = TrailSenseSpacing.sm)
-                            .then(if (placeholder) Modifier else Modifier.alignByBaseline())
-                    )
+            }
+            if (value == "—") {
+                Icon(
+                    androidx.compose.material.icons.Icons.Rounded.Bolt,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(72.dp)
+                )
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            value,
+                            style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold,
+                            color = scheme.onSurface,
+                            modifier = Modifier.alignByBaseline()
+                        )
+                        Text(
+                            unit,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = scheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(start = TrailSenseSpacing.xs)
+                                .alignByBaseline()
+                        )
+                    }
+                    if (elapsedSeconds != null) {
+                        Text(
+                            stringResource(
+                                R.string.sky_seconds_short,
+                                DecimalFormatter.format(elapsedSeconds, 1, true)
+                            ),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                            color = scheme.onSurfaceVariant
+                        )
+                    }
                 }
-                if (!placeholder) {
-                    Text(
-                        hint,
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center,
-                        color = colors.content.copy(alpha = 0.86f),
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                action()
             }
         }
+        Text(
+            hint,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = if (danger) scheme.error else scheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+        )
     }
 }
 
-/** The one action: a tall button at the foot of the card that names the event to tap for next. */
+/** The one action: a tall filled primary button that names the event to tap for next. */
 @Composable
 private fun StrikeButton(
     waitingForThunder: Boolean,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val container by animateColorAsState(
-        // The flash is the screen's main action, in the warm action role; the thunder tap that follows is primary.
-        targetValue = if (waitingForThunder) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.tertiary
-        },
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "strikeButtonColor"
-    )
-    val content = if (waitingForThunder) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onTertiary
-    }
-
     val height = androidx.compose.material3.ButtonDefaults.LargeContainerHeight
     androidx.compose.material3.Button(
         onClick = onClick,
@@ -445,7 +374,6 @@ private fun StrikeButton(
             .height(height)
             .trailSensePressScale(interactionSource, 0.97f),
         shapes = androidx.compose.material3.ButtonDefaults.shapesFor(height),
-        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = container, contentColor = content),
         contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(height)
     ) {
         Icon(

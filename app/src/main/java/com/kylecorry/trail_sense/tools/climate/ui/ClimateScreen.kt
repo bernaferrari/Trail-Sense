@@ -6,13 +6,12 @@ package com.kylecorry.trail_sense.tools.climate.ui
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.shared.icons.trail.Grass
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
-import com.kylecorry.trail_sense.tools.weather.ui.SkyChartCallout
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset
+import com.kylecorry.trail_sense.shared.views.compose.drawTrailSenseNowDot
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath
 import androidx.compose.ui.text.input.KeyboardType
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
@@ -588,69 +587,48 @@ private fun ClimateScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("climate_scroll")
     ) {
-        // The one thing the screen is for: what the chosen day is typically like here.
-        // The one thing the screen is for: what the chosen day is typically like here, as three coloured tiles.
+        // One question: what is this day usually like here? The typical high and low answer it, with the month's
+        // precipitation as the one verdict line; the date that drives it sits right under it.
         item(key = "hero") {
             Column(
-                modifier = Modifier.testTag("climate_title"),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .testTag("climate_title")
             ) {
-            TrailSenseStatGrid(
-                columns = 1,
-                valueStyle = MaterialTheme.typography.displayMedium,
-                stats = listOf(
-                    TrailSenseStat(
-                        label = stringResource(R.string.high),
-                        value = highLow?.first ?: "--",
-                        tone = TrailSenseTone.Caution,
-                        icon = TrailIcons.TemperatureRange
-                    )
+                Text(
+                    text = if (highLow != null) {
+                        stringResource(R.string.slash_separated_pair, highLow.first, highLow.second)
+                    } else {
+                        "--"
+                    },
+                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-            )
-            TrailSenseStatGrid(
-                columns = 2,
-                valueStyle = MaterialTheme.typography.displaySmall,
-                stats = listOf(
-                    TrailSenseStat(
-                        label = stringResource(R.string.low),
-                        value = highLow?.second ?: "--",
-                        tone = TrailSenseTone.Primary,
-                        icon = TrailIcons.TemperatureRange
-                    ),
-                    TrailSenseStat(
-                        label = precipitationLabel,
-                        value = precipitationValue ?: "--",
-                        tone = TrailSenseTone.Tertiary,
-                        icon = TrailIcons.LightRain
+                if (precipitationValue != null) {
+                    Text(
+                        text = precipitationTitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
                     )
-                )
-            )
+                }
             }
         }
 
-        // The year comes right after the day: the chosen date heads the temperature chart on its own surface, so
-        // stepping the date and scrubbing the year are one gesture family.
+        item(key = "date") {
+            DatePickerInput(date = date, onDateChange = onDateChange)
+        }
+
+        // The year around the day, in the chart frame, with its source under it.
         trailSenseSection(
             key = "temperature",
             title = temperatureLabel,
             footer = temperatureSource
         ) {
-            row { position ->
-                TrailSenseGroupCard(position = position) {
-                    DatePickerInput(
-                        date = date,
-                        onDateChange = onDateChange,
-                        modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
-                    )
-                    if (highLow != null && temperatures?.isNotEmpty() == true) {
-                        val maxDay = if (date.isLeapYear) 366f else 365f
-                        SkyChartCallout(
-                            fraction = (date.dayOfYear - 1f) / (maxDay - 1f),
-                            text = stringResource(R.string.slash_separated_pair, highLow.first, highLow.second),
-                            icon = TrailIcons.TemperatureRange,
-                            modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
-                        )
-                    }
+            row { _ ->
+                Column {
                     TemperatureChart(
                         temperatures = temperatures,
                         selectedDate = date,
@@ -667,16 +645,8 @@ private fun ClimateScreen(
             title = precipitationLabel,
             footer = precipitationSource
         ) {
-            row { position ->
-                TrailSenseGroupCard(position = position) {
-                    if (precipitationValue != null && precipitation?.isNotEmpty() == true) {
-                        SkyChartCallout(
-                            fraction = (date.monthValue - 0.5f) / 12f,
-                            text = precipitationValue,
-                            icon = TrailIcons.LightRain,
-                            modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
-                        )
-                    }
+            row { _ ->
+                Column {
                     PrecipitationChart(
                         precipitation = precipitation,
                         selectedMonth = date.month,
@@ -715,34 +685,18 @@ private fun ClimateScreen(
             item(key = "zone") {
                 TrailSenseRowGroup(modifier = Modifier.animateItem()) {
                     row { position ->
-                        TrailSenseGroupCard(
-                            position = position,
-                            color = MaterialTheme.colorScheme.secondaryContainer
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                TrailSenseShapeBadge(
-                                    icon = TrailIcons.Grass,
-                                    shape = MaterialShapes.Clover4Leaf.toShape(),
-                                    size = 52.dp,
-                                    containerColor = MaterialTheme.colorScheme.secondary,
-                                    contentColor = MaterialTheme.colorScheme.onSecondary
-                                )
-                                Spacer(Modifier.width(TrailSenseSpacing.lg))
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        text = climateZoneTitle,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                    Spacer(Modifier.height(TrailSenseSpacing.xs))
-                                    Text(
-                                        text = climateZoneDescription,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
-                                    )
-                                }
-                            }
+                        TrailSenseGroupCard(position = position) {
+                            Text(
+                                text = climateZoneTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(Modifier.height(TrailSenseSpacing.xs))
+                            Text(
+                                text = climateZoneDescription,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
@@ -788,13 +742,12 @@ private fun ClimateEcologyRow(
                 .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val wells = trailSenseWellColors(TrailSenseAccents.Leaf)
             TrailSenseShapeBadge(
                 icon = TrailIcons.Ant,
                 shape = MaterialShapes.Cookie6Sided.toShape(),
                 size = 40.dp,
-                containerColor = wells.container,
-                contentColor = wells.content
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(
@@ -814,7 +767,7 @@ private fun ClimateMonthAxis(selectedMonth: Month) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = TrailSenseSpacing.sm)
+            .padding(start = TrailSenseChartGutter + TrailSenseChartInset, end = TrailSenseChartInset, top = TrailSenseSpacing.sm)
             .clearAndSetSemantics { }
     ) {
         Month.entries.forEach { month ->
@@ -867,7 +820,6 @@ private fun DatePickerInput(
                 .weight(1f)
                 .height(40.dp)
                 .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(MaterialTheme.colorScheme.secondaryContainer)
                 .combinedClickable(
                     onClickLabel = dateLabel,
                     onLongClickLabel = todayLabel,
@@ -884,22 +836,12 @@ private fun DatePickerInput(
                 .testTag("date_btn"),
             contentAlignment = Alignment.Center
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = TrailIcons.Date,
-                    contentDescription = dateLabel,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(TrailSenseSpacing.sm))
-                Text(
-                    text = formatter.formatRelativeDate(date),
-                    modifier = Modifier.testTag("display_date"),
-                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
+            Text(
+                text = formatter.formatRelativeDate(date),
+                modifier = Modifier.testTag("display_date"),
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
         IconButton(
 
@@ -1205,15 +1147,12 @@ private fun TemperatureChart(
     modifier: Modifier = Modifier
 ) {
     val data = temperatures.orEmpty()
-    // Theme colours, not fixed red and blue: the warm tertiary for highs, the primary for lows, and the band between
-    // them filled so the year reads as one shape.
-    val lowColor = MaterialTheme.colorScheme.primary
-    // Warm amber for highs, matching the High tile; primary for lows, matching the Low tile.
-    val highColor = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors().caution
-    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-    val highlightColor = MaterialTheme.colorScheme.surfaceContainerLow
-    val guideColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)
-    val freezingColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+    // The frame style: High / Low in the gutter, the daily high as the one primary line, the low a fainter line of
+    // the same role, freezing as a dashed limit and the chosen day as the "now" dot. No band between the lines.
+    val highColor = MaterialTheme.colorScheme.primary
+    val lowColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+    val freezingColor = MaterialTheme.colorScheme.outline
+    val ringColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     val year = data.firstOrNull()?.first?.year ?: selectedDate.year
 
@@ -1221,18 +1160,7 @@ private fun TemperatureChart(
         modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
-            .testTag("temperature_chart")
-            .pointerInput(data, year) {
-                detectTapGestures { offset ->
-                    if (data.isEmpty() || size.width == 0) {
-                        return@detectTapGestures
-                    }
-                    val day = ((offset.x / size.width) * 365f)
-                        .roundToInt()
-                        .coerceIn(1, if (LocalDate.of(year, 12, 31).isLeapYear) 366 else 365)
-                    onDateSelected(LocalDate.ofYearDay(year, day))
-                }
-            },
+            .testTag("temperature_chart"),
         contentAlignment = Alignment.Center
     ) {
         if (data.isEmpty()) {
@@ -1246,94 +1174,86 @@ private fun TemperatureChart(
             return@Box
         }
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val lows = data.map {
-                it.first.dayOfYear.toFloat() to it.second.start.convertTo(units).value
-            }
-            val highs = data.map {
-                it.first.dayOfYear.toFloat() to it.second.end.convertTo(units).value
-            }
-            val values = lows + highs
-            val freezing = Temperature.celsius(0f).convertTo(units).value
-            val minYValue = values.minOfOrNull { it.second } ?: freezing
-            val maxYValue = values.maxOfOrNull { it.second } ?: freezing
-            val yMinimum = min(minYValue - 5f, freezing)
-            val yMaximum = max(maxYValue + 5f, yMinimum + 10f)
-            val yRange = (yMaximum - yMinimum).takeIf { it > 0f } ?: 1f
-            val maxDay = if (LocalDate.of(year, 12, 31).isLeapYear) 366f else 365f
-
-            fun x(day: Float): Float = ((day - 1f) / (maxDay - 1f)).coerceIn(0f, 1f) * size.width
-            fun y(value: Float): Float {
-                return size.height - ((value - yMinimum) / yRange).coerceIn(0f, 1f) * size.height
-            }
-
-            val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 6.dp.toPx()))
-            repeat(3) { index ->
-                val y = (index + 1) / 4f * size.height
-                drawLine(
-                    color = grid,
-                    start = androidx.compose.ui.geometry.Offset(0f, y),
-                    end = androidx.compose.ui.geometry.Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx(),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                    pathEffect = dash
-                )
-            }
-
-            fun path(points: List<Pair<Float, Float>>) = androidx.compose.ui.graphics.Path().apply {
-                points.forEachIndexed { index, (day, value) ->
-                    if (index == 0) moveTo(x(day), y(value)) else lineTo(x(day), y(value))
+        TrailSenseChartFrame(
+            yLabels = listOf(stringResource(R.string.high), stringResource(R.string.low)),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(data, year) {
+                        detectTapGestures { offset ->
+                            if (size.width == 0) return@detectTapGestures
+                            val inset = TrailSenseChartInset.toPx()
+                            val fraction = ((offset.x - inset) / (size.width - 2 * inset)).coerceIn(0f, 1f)
+                            val day = (fraction * 365f)
+                                .roundToInt()
+                                .coerceIn(1, if (LocalDate.of(year, 12, 31).isLeapYear) 366 else 365)
+                            onDateSelected(LocalDate.ofYearDay(year, day))
+                        }
+                    }
+            ) {
+                val lows = data.map {
+                    it.first.dayOfYear.toFloat() to it.second.start.convertTo(units).value
                 }
-            }
-            val highPath = path(highs)
-            val lowPath = path(lows)
-            val band = androidx.compose.ui.graphics.Path().apply {
-                addPath(highPath)
-                lows.asReversed().forEach { (day, value) -> lineTo(x(day), y(value)) }
-                close()
-            }
-            drawPath(
-                band,
-                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                    listOf(highColor.copy(alpha = 0.28f), lowColor.copy(alpha = 0.18f))
+                val highs = data.map {
+                    it.first.dayOfYear.toFloat() to it.second.end.convertTo(units).value
+                }
+                val values = lows + highs
+                val freezing = Temperature.celsius(0f).convertTo(units).value
+                val minYValue = values.minOfOrNull { it.second } ?: freezing
+                val maxYValue = values.maxOfOrNull { it.second } ?: freezing
+                val yMinimum = min(minYValue - 5f, freezing)
+                val yMaximum = max(maxYValue + 5f, yMinimum + 10f)
+                val yRange = (yMaximum - yMinimum).takeIf { it > 0f } ?: 1f
+                val maxDay = if (LocalDate.of(year, 12, 31).isLeapYear) 366f else 365f
+                val inset = TrailSenseChartInset.toPx()
+                val plotWidth = size.width - 2 * inset
+                val plotHeight = size.height - 2 * inset
+
+                fun x(day: Float): Float = inset + ((day - 1f) / (maxDay - 1f)).coerceIn(0f, 1f) * plotWidth
+                fun y(value: Float): Float = inset + plotHeight - ((value - yMinimum) / yRange).coerceIn(0f, 1f) * plotHeight
+
+                if (freezing in yMinimum..yMaximum) {
+                    drawLine(
+                        color = freezingColor,
+                        start = androidx.compose.ui.geometry.Offset(inset, y(freezing)),
+                        end = androidx.compose.ui.geometry.Offset(size.width - inset, y(freezing)),
+                        strokeWidth = 1.5.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
+                    )
+                }
+
+                fun offsets(points: List<Pair<Float, Float>>) =
+                    points.map { (day, value) -> androidx.compose.ui.geometry.Offset(x(day), y(value)) }
+
+                drawPath(
+                    trailSenseSmoothPath(offsets(lows)),
+                    lowColor,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 2.5.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        join = androidx.compose.ui.graphics.StrokeJoin.Round
+                    )
                 )
-            )
-
-            // Freezing: a quiet dashed rule rather than a grey block.
-            if (freezing in yMinimum..yMaximum) {
-                drawLine(
-                    color = freezingColor,
-                    start = androidx.compose.ui.geometry.Offset(0f, y(freezing)),
-                    end = androidx.compose.ui.geometry.Offset(size.width, y(freezing)),
-                    strokeWidth = 1.5.dp.toPx(),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
+                drawPath(
+                    trailSenseSmoothPath(offsets(highs)),
+                    highColor,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 3.5.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        join = androidx.compose.ui.graphics.StrokeJoin.Round
+                    )
                 )
-            }
 
-            val selectedX = x(selectedDate.dayOfYear.toFloat())
-            drawLine(
-                color = guideColor,
-                start = androidx.compose.ui.geometry.Offset(selectedX, 0f),
-                end = androidx.compose.ui.geometry.Offset(selectedX, size.height),
-                strokeWidth = 2.dp.toPx(),
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
-
-            val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
-                width = 3.dp.toPx(),
-                cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                join = androidx.compose.ui.graphics.StrokeJoin.Round
-            )
-            drawPath(lowPath, lowColor, style = stroke)
-            drawPath(highPath, highColor, style = stroke)
-
-            listOf(lows to lowColor, highs to highColor).forEach { (points, color) ->
-                val selected = points.firstOrNull { it.first.toInt() == selectedDate.dayOfYear }
-                if (selected != null) {
-                    val center = androidx.compose.ui.geometry.Offset(x(selected.first), y(selected.second))
-                    drawCircle(color = highlightColor, radius = 7.dp.toPx(), center = center)
-                    drawCircle(color = color, radius = 5.dp.toPx(), center = center)
+                lows.firstOrNull { it.first.toInt() == selectedDate.dayOfYear }?.let {
+                    val center = androidx.compose.ui.geometry.Offset(x(it.first), y(it.second))
+                    drawCircle(color = ringColor, radius = 7.dp.toPx(), center = center)
+                    drawCircle(color = highColor, radius = 5.dp.toPx(), center = center)
+                }
+                highs.firstOrNull { it.first.toInt() == selectedDate.dayOfYear }?.let {
+                    drawTrailSenseNowDot(androidx.compose.ui.geometry.Offset(x(it.first), y(it.second)), highColor, ringColor)
                 }
             }
         }
@@ -1349,26 +1269,15 @@ private fun PrecipitationChart(
     modifier: Modifier = Modifier
 ) {
     val data = precipitation.orEmpty()
-    // Rain in the tertiary, matching the Precipitation tile.
-    val barColor = MaterialTheme.colorScheme.tertiary
-    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
-    val highlightColor = MaterialTheme.colorScheme.onSurface
+    // The frame style with rounded bars: the chosen month in primary, the rest quiet; Wet / Dry in the gutter.
+    val barColor = MaterialTheme.colorScheme.primary
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.chart_height))
-            .testTag("precipitation_chart")
-            .pointerInput(data) {
-                detectTapGestures { offset ->
-                    if (data.isEmpty() || size.width == 0) {
-                        return@detectTapGestures
-                    }
-                    val month = ((offset.x / size.width) * 12f).toInt().coerceIn(0, 11) + 1
-                    onMonthSelected(Month.of(month))
-                }
-            },
+            .testTag("precipitation_chart"),
         contentAlignment = Alignment.Center
     ) {
         if (data.isEmpty()) {
@@ -1382,58 +1291,51 @@ private fun PrecipitationChart(
             return@Box
         }
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val values = data.map {
-                it.key.value.toFloat() to it.value.convertTo(units).value
-            }.sortedBy { it.first }
-            val margin = Distance.from(0.5f, DistanceUnits.Inches).convertTo(units).value
-            val minRange = Distance.from(1f, DistanceUnits.Inches).convertTo(units).value
-            val maxValue = values.maxOfOrNull { it.second } ?: 0f
-            val yMaximum = max(maxValue + margin, minRange)
+        TrailSenseChartFrame(
+            yLabels = listOf(stringResource(R.string.sky_axis_wet), stringResource(R.string.sky_axis_dry)),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(data) {
+                        detectTapGestures { offset ->
+                            if (size.width == 0) return@detectTapGestures
+                            val inset = TrailSenseChartInset.toPx()
+                            val fraction = ((offset.x - inset) / (size.width - 2 * inset)).coerceIn(0f, 0.999f)
+                            onMonthSelected(Month.of((fraction * 12f).toInt() + 1))
+                        }
+                    }
+            ) {
+                val values = data.map {
+                    it.key.value.toFloat() to it.value.convertTo(units).value
+                }.sortedBy { it.first }
+                val margin = Distance.from(0.5f, DistanceUnits.Inches).convertTo(units).value
+                val minRange = Distance.from(1f, DistanceUnits.Inches).convertTo(units).value
+                val maxValue = values.maxOfOrNull { it.second } ?: 0f
+                val yMaximum = max(maxValue + margin, minRange)
+                val inset = TrailSenseChartInset.toPx()
+                val plotWidth = size.width - 2 * inset
+                val plotBottom = size.height - inset
+                val plotHeight = plotBottom - inset
 
-            fun x(month: Float): Float = ((month - 0.5f) / 12f).coerceIn(0f, 1f) * size.width
-            fun y(value: Float): Float {
-                return size.height - (value / yMaximum).coerceIn(0f, 1f) * size.height
+                fun x(month: Float): Float = inset + ((month - 0.5f) / 12f).coerceIn(0f, 1f) * plotWidth
+                fun y(value: Float): Float = plotBottom - (value / yMaximum).coerceIn(0f, 1f) * plotHeight
+
+                val barWidth = plotWidth / 12f * 0.62f
+                val corner = androidx.compose.ui.geometry.CornerRadius(barWidth / 2f, barWidth / 2f)
+                values.forEach { (month, value) ->
+                    val centerX = x(month)
+                    val top = min(y(value), plotBottom - barWidth)
+                    val isSelected = month.toInt() == selectedMonth.value
+                    drawRoundRect(
+                        color = if (isSelected) barColor else barColor.copy(alpha = 0.22f),
+                        topLeft = androidx.compose.ui.geometry.Offset(centerX - barWidth / 2f, top),
+                        size = androidx.compose.ui.geometry.Size(barWidth, plotBottom - top),
+                        cornerRadius = corner
+                    )
+                }
             }
-
-            val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 6.dp.toPx()))
-            repeat(3) { index ->
-                val y = (index + 1) / 4f * size.height
-                drawLine(
-                    color = grid,
-                    start = androidx.compose.ui.geometry.Offset(0f, y),
-                    end = androidx.compose.ui.geometry.Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx(),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                    pathEffect = dash
-                )
-            }
-
-            val barWidth = size.width / 12f * 0.62f
-            val corner = androidx.compose.ui.geometry.CornerRadius(barWidth / 2f, barWidth / 2f)
-            values.forEach { (month, value) ->
-                val centerX = x(month)
-                val top = y(value)
-                val isSelected = month.toInt() == selectedMonth.value
-                drawPath(
-                    path = androidx.compose.ui.graphics.Path().apply {
-                        addRoundRect(
-                            androidx.compose.ui.geometry.RoundRect(
-                                left = centerX - barWidth / 2f,
-                                top = top,
-                                right = centerX + barWidth / 2f,
-                                bottom = size.height,
-                                topLeftCornerRadius = corner,
-                                topRightCornerRadius = corner,
-                                bottomLeftCornerRadius = corner,
-                                bottomRightCornerRadius = corner
-                            )
-                        )
-                    },
-                    color = if (isSelected) barColor else barColor.copy(alpha = 0.28f)
-                )
-            }
-
         }
     }
 }

@@ -47,8 +47,6 @@ import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
-import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,6 +70,7 @@ internal fun GuideScreen(name: String, resource: Int) {
         }
     }
 
+    // One question: how does this tool work? The guide's text answers it, as an article with its contents up front.
     TrailSensePage(
         title = name,
         onBack = { dispatcher?.onBackPressed() },
@@ -126,55 +125,18 @@ internal fun GuideScreen(name: String, resource: Int) {
     }
 }
 
+/** The top bar already names the guide, so its top is one quiet line: how long it takes and how many sections. */
 @Composable
-private fun GuideHero(title: String, minutes: Int, sections: Int) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.hero),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-    ) {
-        Row(
-            Modifier.padding(TrailSenseSpacing.xl),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SkyFocalShape(
-                icon = TrailIcons.OpenBook,
-                shape = MaterialShapes.Cookie12Sided.toShape(),
-                size = 84.dp,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-                Text(
-                    stringResource(R.string.tool_user_guide_title),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
-                )
-                Text(
-                    title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.semantics { heading() }
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-                    SkyPill(
-                        stringResource(R.string.sky_minutes_read, minutes),
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                    if (sections > 0) {
-                        SkyPill(
-                            pluralSections(sections),
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.7f),
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-            }
-        }
-    }
+private fun GuideHero(@Suppress("UNUSED_PARAMETER") title: String, minutes: Int, sections: Int) {
+    Text(
+        listOfNotNull(
+            stringResource(R.string.sky_minutes_read, minutes),
+            if (sections > 0) pluralSections(sections) else null
+        ).joinToString(" · "),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+    )
 }
 
 @Composable
@@ -199,26 +161,20 @@ private fun GuideContents(titles: List<String>, onSelect: (Int) -> Unit) {
                 Surface(
                     onClick = { onSelect(index) },
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
                     Row(
-                        Modifier.padding(start = 6.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
+                        Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            shape = MaterialShapes.Cookie6Sided.toShape(),
+                        Text(
+                            (index + 1).toString(),
+                            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(end = TrailSenseSpacing.sm)
-                        ) {
-                            Text(
-                                (index + 1).toString(),
-                                style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
+                        )
                         Text(
                             title,
                             style = MaterialTheme.typography.labelLarge,

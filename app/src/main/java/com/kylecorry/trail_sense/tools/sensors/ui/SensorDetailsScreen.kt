@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.sensors.ui
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.foundation.layout.Arrangement
@@ -622,9 +624,8 @@ private fun sensorTone(@ColorInt color: Int): TrailSenseTone = when (color) {
 }
 
 /**
- * Sensor details: a health hero (a ring split by status around the count of good sensors), the counts per status as
- * toned tiles, then the sensors grouped by what they measure, each with its status as a toned badge and chip. The raw
- * Android sensor list sits behind the top bar action.
+ * Sensor details: how many sensors are good and which need a look, then the sensors grouped by what they measure,
+ * each with its status in words. The raw Android sensor list sits behind the top bar action.
  */
 @Composable
 private fun SensorDetailsScreen(
@@ -632,6 +633,7 @@ private fun SensorDetailsScreen(
     onShowSensorList: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // One question: are my sensors working? The count of good sensors and the verdict answer it.
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val tones = sensors.map { sensorTone(it.statusColor) }
     val good = tones.count { it == TrailSenseTone.Good }
@@ -690,134 +692,70 @@ private fun SensorDetailsScreen(
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+/** The answer on the plain page: how many sensors are good, the verdict, and which ones need a look. */
 @Composable
 private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int, attention: List<String>) {
-    // Green when every sensor is fine, amber when some need a look.
-    val tone = if (poor == 0 && moderate == 0) TrailSenseTone.Good else TrailSenseTone.Caution
-    // The ring draws itself in once, segment by segment.
-    val drawIn = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
-    val drawSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
-    androidx.compose.runtime.LaunchedEffect(Unit) { drawIn.animateTo(1f, drawSpec) }
-    val colors = trailSenseToneColors(tone)
-    val status = trailSenseStatusColors()
-    val goodColor = trailSenseToneColors(TrailSenseTone.Good).container
-    val moderateColor = trailSenseToneColors(TrailSenseTone.Caution).container
-    val poorColor = trailSenseToneColors(TrailSenseTone.Error).container
-    val track = colors.content.copy(alpha = 0.12f)
-    TrailSenseSpotlight(
-        title = when {
-            poor + moderate == 0 -> stringResource(R.string.sky_sensors_all_good)
-            else -> stringResource(R.string.sky_sensors_attention, poor + moderate)
-        },
-        // Which ones, by name, so the verdict is actionable without scrolling.
-        supportingText = attention.takeIf { it.isNotEmpty() }?.let {
-            if (it.size <= 3) it.joinToString(" · ") else stringResource(R.string.sky_sensors_and_more, it.take(2).joinToString(" · "), it.size - 2)
-        },
-        tone = tone,
-        titleStyle = MaterialTheme.typography.headlineSmall,
-        badge = {
-            Box(Modifier.size(120.dp), contentAlignment = Alignment.Center) {
-                androidx.compose.foundation.Canvas(Modifier.size(120.dp)) {
-                    val stroke = 8.dp.toPx()
-                    val inset = stroke / 2
-                    val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
-                    val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
-                    drawArc(track, 0f, 360f, false, topLeft, arcSize, style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
-                    val gap = if (total > 1) 6f else 0f
-                    var start = -90f
-                    listOf(good to goodColor, moderate to moderateColor, poor to poorColor).forEach { (count, color) ->
-                        if (count > 0 && total > 0) {
-                            val sweep = 360f * count / total * drawIn.value
-                            drawArc(
-                                color,
-                                start + gap / 2,
-                                (sweep - gap).coerceAtLeast(1f),
-                                false,
-                                topLeft,
-                                arcSize,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-                            )
-                            start += sweep
-                        }
-                    }
-                }
-                // The star number: how many are good, out of how many.
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        (good * drawIn.value).toInt().toString(),
-                        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                    )
-                    Text(
-                        stringResource(R.string.sky_sensors_of_total, total),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = colors.content.copy(alpha = 0.78f)
-                    )
-                }
-            }
-        }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.lg)
     ) {
-        // The legend for the ring, as three quiet chips instead of three loud tiles.
-        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-            com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip(
-                text = "$good ${stringResource(R.string.sky_sensors_good_label)}",
-                tone = TrailSenseTone.Good
+        Text(
+            stringResource(R.string.sky_sensors_good, good, total),
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            if (poor + moderate == 0) {
+                stringResource(R.string.sky_sensors_all_good)
+            } else {
+                stringResource(R.string.sky_sensors_attention, poor + moderate)
+            },
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+        )
+        // Which ones, by name, so the verdict is actionable without scrolling.
+        attention.takeIf { it.isNotEmpty() }?.let {
+            Text(
+                if (it.size <= 3) {
+                    it.joinToString(" · ")
+                } else {
+                    stringResource(R.string.sky_sensors_and_more, it.take(2).joinToString(" · "), it.size - 2)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            if (moderate > 0) {
-                com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip(
-                    text = "$moderate ${stringResource(R.string.sky_sensors_moderate_label)}",
-                    tone = TrailSenseTone.Caution
-                )
-            }
-            if (poor > 0) {
-                com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip(
-                    text = "$poor ${stringResource(R.string.sky_sensors_poor_label)}",
-                    tone = TrailSenseTone.Error
-                )
-            }
         }
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SensorDetailsRow(
     sensor: SensorDetails,
     position: TrailSenseGroupPosition
 ) {
-    val colors = trailSenseToneColors(sensorTone(sensor.statusColor))
     SkyValueRow(
         title = sensor.name,
         subtitle = sensor.description.takeIf { it.isNotBlank() },
         icon = sensor.statusIcon,
-        accent = colors.accent,
-        badgeShape = when (sensorTone(sensor.statusColor)) {
-            TrailSenseTone.Good -> MaterialShapes.Cookie9Sided.toShape()
-            TrailSenseTone.Caution -> MaterialShapes.Pentagon.toShape()
-            else -> MaterialShapes.Diamond.toShape()
-        },
         position = position,
         trailing = { SensorStatus(sensor) }
     )
 }
 
+/** The status in words; only a poor sensor turns the word to error. */
 @Composable
 private fun SensorStatus(sensor: SensorDetails) {
-    // "Unknown" is not an error: it gets a neutral pill so only real problems are red.
-    val unknown = sensor.statusMessage == stringResource(R.string.unknown)
-    val colors = trailSenseToneColors(if (unknown) TrailSenseTone.Neutral else sensorTone(sensor.statusColor))
-    val container by animateColorAsState(
-        if (unknown) MaterialTheme.colorScheme.surfaceContainerHighest else colors.container,
-
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "sensorStatus"
-    )
+    val poor = sensorTone(sensor.statusColor) == TrailSenseTone.Error &&
+        sensor.statusMessage != stringResource(R.string.unknown)
     Spacer(Modifier.width(TrailSenseSpacing.sm))
-    SkyPill(
+    Text(
         text = sensor.statusMessage,
-        containerColor = container,
-        contentColor = colors.content,
-        modifier = Modifier.widthIn(max = 140.dp)
+        style = MaterialTheme.typography.labelLarge,
+        color = if (poor) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 2,
+        modifier = Modifier.widthIn(max = 120.dp)
     )
 }

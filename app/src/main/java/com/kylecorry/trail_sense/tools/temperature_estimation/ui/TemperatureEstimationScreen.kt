@@ -14,9 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.withStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import androidx.compose.animation.animateContentSize
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
-import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
-import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.Thermometer
@@ -209,6 +208,7 @@ private fun TemperatureEstimationScreen(
         onBack = rememberTrailSenseBack(),
         backLabel = stringResource(R.string.back)
     ) {
+        // One question: how warm will it be there? The estimate answers it; the inputs that drive it sit below.
         item("estimate") {
             val estimateCelsius = estimated?.takeIf { !it.value.isNaN() }?.celsius()?.value
             val baseInOutput = baseTemperatureText.toFloatOrNull()?.let {
@@ -272,14 +272,7 @@ private fun TemperatureEstimationScreen(
                     position = position,
                     isError = humidityError,
                     errorText = humidityErrorText,
-                    unit = "%",
-                    trailingIcon = {
-                        Icon(
-                            painter = rememberVectorPainter(TrailIcons.CategoryWater),
-                            contentDescription = null,
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md)
-                        )
-                    }
+                    unit = "%"
                 )
             }
             row { position ->
@@ -375,11 +368,9 @@ private fun TemperatureEstimationScreen(
 }
 
 /**
- * The estimate as the screen's hero: a thermometer in a sun shape that warms from primary (cold) to tertiary (hot),
- * the value at display size, how far it is from the temperature where you are, and a thermometer bar from -30 to
- * 45 °C with the estimate marked on it.
+ * The estimate on the plain page: the value in emphasised type, one verdict in words, and how far it is from the
+ * temperature where you are. Before there is an estimate, the question and how to answer it.
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun TemperatureEstimateHero(
     title: String,
@@ -387,170 +378,57 @@ private fun TemperatureEstimateHero(
     delta: Float?,
     unitSymbol: String
 ) {
-    val tone = when {
-        celsius == null -> TrailSenseTone.Secondary
-        celsius <= 0f -> TrailSenseTone.Primary
-        celsius >= 30f -> TrailSenseTone.Error
-        celsius >= 18f -> TrailSenseTone.Tertiary
-        else -> TrailSenseTone.Secondary
-    }
-    val colors = trailSenseToneColors(tone)
-    val container by animateColorAsState(colors.container, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "estimateHero")
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.hero),
-        color = container,
-        contentColor = colors.content
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.lg)
+            .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SkyFocalShape(
-                    icon = TrailIcons.Thermometer,
-                    shape = if (celsius != null && celsius <= 0f) {
-                        MaterialShapes.Cookie12Sided.toShape()
-                    } else {
-                        MaterialShapes.Sunny.toShape()
-                    },
-                    size = 52.dp,
-                    containerColor = colors.accent,
-                    contentColor = colors.onAccent
-                )
-                Spacer(Modifier.width(TrailSenseSpacing.md))
-                Text(
-                    text = stringResource(R.string.estimated),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f)
-                )
-                if (delta != null) {
-                    SkyPill(
-                        text = stringResource(
-                            R.string.sky_temperature_change,
-                            String.format(java.util.Locale.getDefault(), "%+.1f", delta) + " " + unitSymbol
-                        ),
-                        containerColor = colors.accent,
-                        contentColor = colors.onAccent
-                    )
-                }
-            }
-            // The estimate at display size with a verdict in words; before there is one, the instruction is the
-            // headline (no dash), and the thermometer waits without a marker.
-            if (celsius == null) {
-                Text(
-                    text = stringResource(R.string.sky_temperature_idle),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.content,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-                Text(
-                    text = stringResource(R.string.sky_temperature_hint),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.content.copy(alpha = 0.86f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            } else {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 88.sp,
-                        lineHeight = 92.sp,
-                        fontFeatureSettings = "tnum"
-                    ),
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.content,
-                    maxLines = 1,
-                    autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 40.sp, maxFontSize = 88.sp),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
+        if (celsius == null) {
+            Text(
+                text = stringResource(R.string.sky_temperature_idle),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(R.string.sky_temperature_hint),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = TrailSenseSpacing.xs)
+            )
+        } else {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+            Text(
+                text = stringResource(
+                    when {
+                        celsius < 0f -> R.string.sky_temperature_verdict_freezing
+                        celsius < 10f -> R.string.sky_temperature_verdict_cold
+                        celsius < 18f -> R.string.sky_temperature_verdict_cool
+                        celsius < 30f -> R.string.sky_temperature_verdict_warm
+                        else -> R.string.sky_temperature_verdict_hot
+                    }
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+            )
+            if (delta != null) {
                 Text(
                     text = stringResource(
-                        when {
-                            celsius < 0f -> R.string.sky_temperature_verdict_freezing
-                            celsius < 10f -> R.string.sky_temperature_verdict_cold
-                            celsius < 18f -> R.string.sky_temperature_verdict_cool
-                            celsius < 30f -> R.string.sky_temperature_verdict_warm
-                            else -> R.string.sky_temperature_verdict_hot
-                        }
+                        R.string.sky_temperature_change,
+                        String.format(java.util.Locale.getDefault(), "%+.1f", delta) + " " + unitSymbol
                     ),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.content.copy(alpha = 0.86f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            ThermometerBar(celsius = celsius, markerColor = MaterialTheme.colorScheme.primary)
-            // Word ticks under the bar, at freezing, mild, warm and hot.
-            Box(Modifier.fillMaxWidth()) {
-                listOf(
-                    0.4f to R.string.sky_axis_freezing,
-                    0.6f to R.string.sky_axis_mild,
-                    0.8f to R.string.sky_axis_warm,
-                    1f to R.string.sky_axis_hot
-                ).forEach { (fraction, label) ->
-                    Text(
-                        stringResource(label),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colors.content.copy(alpha = 0.72f),
-                        modifier = Modifier.align(androidx.compose.ui.BiasAlignment(fraction * 2f - 1f, 0f))
-                    )
-                }
-            }
-
-        }
-    }
-}
-
-/** A thermometer from -30 °C to 45 °C, cool to warm in the theme's colours, with the estimate as a ringed marker. */
-@Composable
-private fun ThermometerBar(celsius: Float?, markerColor: androidx.compose.ui.graphics.Color) {
-    val cold = MaterialTheme.colorScheme.primary
-    val mild = MaterialTheme.colorScheme.secondary
-    val warm = MaterialTheme.colorScheme.tertiary
-    val hot = MaterialTheme.colorScheme.error
-    val ring = MaterialTheme.colorScheme.surfaceContainerLowest
-    val fraction by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = ((celsius ?: 7.5f) + 30f) / 75f,
-        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-        label = "thermometer"
-    )
-    androidx.compose.foundation.Canvas(
-        Modifier
-            .fillMaxWidth()
-            .height(28.dp)
-    ) {
-        val barHeight = 18.dp.toPx()
-        val top = (size.height - barHeight) / 2f
-        drawRoundRect(
-            brush = androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(cold, mild, warm, hot)),
-            topLeft = androidx.compose.ui.geometry.Offset(0f, top),
-            size = androidx.compose.ui.geometry.Size(size.width, barHeight),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(barHeight / 2f),
-            alpha = if (celsius == null) 0.35f else 1f
-        )
-        // Freezing, as a small notch.
-        val freezing = 30f / 75f * size.width
-        drawLine(
-            ring.copy(alpha = 0.9f),
-            androidx.compose.ui.geometry.Offset(freezing, top + 2.dp.toPx()),
-            androidx.compose.ui.geometry.Offset(freezing, top + barHeight - 2.dp.toPx()),
-            strokeWidth = 2.dp.toPx(),
-            cap = androidx.compose.ui.graphics.StrokeCap.Round
-        )
-        if (celsius != null) {
-            val x = fraction.coerceIn(0f, 1f) * size.width
-            val c = androidx.compose.ui.geometry.Offset(x.coerceIn(size.height / 2, size.width - size.height / 2), size.height / 2)
-            drawCircle(ring, radius = size.height / 2f, center = c)
-            drawCircle(markerColor, radius = size.height / 2f - 4.dp.toPx(), center = c)
         }
     }
 }

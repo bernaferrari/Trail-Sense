@@ -2,12 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,11 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -52,38 +43,14 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 
 /*
  * Small pieces shared by the sky tools (weather, astronomy, climate, clouds, lightning and their neighbours), so the
  * charts, rows and focal shapes read as one family across them.
  */
 
-/** Light dashed horizontal grid lines for a chart: quiet enough to read through, never a hard rule. */
-internal fun DrawScope.drawSkyGrid(
-    color: Color,
-    lines: Int = 4,
-    top: Float = 0f,
-    bottom: Float = size.height
-) {
-    if (lines < 2) return
-    val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 6.dp.toPx()))
-    repeat(lines) { index ->
-        val y = top + index / (lines - 1f) * (bottom - top)
-        drawLine(
-            color = color,
-            start = Offset(0f, y),
-            end = Offset(size.width, y),
-            strokeWidth = 1.dp.toPx(),
-            pathEffect = dash
-        )
-    }
-}
-
-/**
- * A focal shape that turns very slowly behind its icon (or text), like a sun badge: the screen's one expressive mark.
- * The icon itself stays upright.
- */
+/** A still expressive shape behind an icon (or a short text): only ever the screen's live object or empty state. */
 @Composable
 internal fun SkyFocalShape(
     modifier: Modifier = Modifier,
@@ -93,26 +60,12 @@ internal fun SkyFocalShape(
     size: Dp = 96.dp,
     containerColor: Color = MaterialTheme.colorScheme.primary,
     contentColor: Color = MaterialTheme.colorScheme.onPrimary,
-    iconRotation: Float = 0f,
-    spin: Boolean = true
+    iconRotation: Float = 0f
 ) {
-    val rotation = if (spin) {
-        val transition = rememberInfiniteTransition(label = "skyShape")
-        val angle by transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(tween(60_000, easing = LinearEasing), RepeatMode.Restart),
-            label = "skyShapeAngle"
-        )
-        angle
-    } else {
-        0f
-    }
     Box(modifier.size(size), contentAlignment = Alignment.Center) {
         Box(
             Modifier
                 .size(size)
-                .graphicsLayer { rotationZ = rotation }
                 .background(containerColor, shape)
         )
         if (icon != null) {
@@ -139,8 +92,8 @@ internal fun SkyFocalShape(
 }
 
 /**
- * A row in a group with an expressive badge in its own accent, a title, and a SemiBold trailing value: the family's
- * list row for readings (Keepout's "259 blocked", WiFi Weakspot's network rows).
+ * A row in a group: a leading icon in the sky tools' one shape (a quiet secondary cookie), a title, and a SemiBold
+ * trailing value. [iconContainerColor] changes only for meaning (an error row), never for decoration.
  */
 @Composable
 internal fun SkyValueRow(
@@ -150,15 +103,14 @@ internal fun SkyValueRow(
     subtitle: String? = null,
     value: String? = null,
     icon: ImageVector? = null,
-    accent: Color = Color.Unspecified,
-    badgeShape: Shape = MaterialShapes.Cookie6Sided.toShape(),
+    iconContainerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    iconContentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
     iconRotation: Float = 0f,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null
 ) {
-    val wells = trailSenseWellColors(accent)
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = trailSenseGroupShape(position),
@@ -174,10 +126,10 @@ internal fun SkyValueRow(
             if (icon != null) {
                 TrailSenseShapeBadge(
                     icon = icon,
-                    shape = badgeShape,
-                    size = 44.dp,
-                    containerColor = wells.container,
-                    contentColor = wells.content,
+                    shape = MaterialShapes.Cookie6Sided.toShape(),
+                    size = 40.dp,
+                    containerColor = iconContainerColor,
+                    contentColor = iconContentColor,
                     iconRotation = iconRotation
                 )
                 Spacer(Modifier.width(TrailSenseSpacing.lg))
@@ -255,69 +207,22 @@ internal fun SkyPill(
     }
 }
 
-/**
- * The sky tools' empty state: a large expressive shape in the primary container with a small companion shape in the
- * tertiary one tucked against it, a warm headline, one line of help, and the actions below.
- */
+/** The sky tools' empty state: the calm kit empty state (an icon in a still cookie, one line, one action). */
 @Composable
 internal fun SkyEmptyState(
     icon: ImageVector,
     title: String,
     modifier: Modifier = Modifier,
     description: String? = null,
-    shape: Shape = MaterialShapes.Cookie12Sided.toShape(),
-    companionShape: Shape = MaterialShapes.Sunny.toShape(),
-    companionIcon: ImageVector? = null,
     action: (@Composable () -> Unit)? = null
 ) {
-    Column(
+    TrailSenseEmptyState(
+        icon = icon,
+        title = title,
+        description = description,
+        action = action?.let { content -> { content() } },
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xxl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(Modifier.size(200.dp)) {
-            SkyFocalShape(
-                icon = icon,
-                shape = shape,
-                size = 168.dp,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.align(Alignment.BottomStart)
-            )
-            SkyFocalShape(
-                icon = companionIcon,
-                shape = companionShape,
-                size = 72.dp,
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                modifier = Modifier.align(Alignment.TopEnd)
-            )
-        }
-        Spacer(Modifier.size(TrailSenseSpacing.xl))
-        Text(
-            title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        if (description != null) {
-            Spacer(Modifier.size(TrailSenseSpacing.sm))
-            Text(
-                description,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.widthIn(max = 340.dp)
-            )
-        }
-        if (action != null) {
-            Spacer(Modifier.size(TrailSenseSpacing.xl))
-            action()
-        }
-    }
+    )
 }
 
 /** One button of a [SkyConnectedButtons] row. */

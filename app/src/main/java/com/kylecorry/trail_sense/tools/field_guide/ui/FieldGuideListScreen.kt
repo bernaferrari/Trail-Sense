@@ -30,6 +30,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
 import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
+import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -389,6 +390,7 @@ private fun FieldGuideScreen(
     val sections = remember(pages) { groupPagesByLetter(pages) }
     val noPagesDescription = stringResource(R.string.field_guide_no_pages_description)
 
+    // One question: what is this plant or animal? Search and the kinds answer it; the page count is the one figure.
     TrailSensePage(
         title = stringResource(R.string.field_guide),
         subtitle = selectedTagName,
@@ -403,8 +405,8 @@ private fun FieldGuideScreen(
             bottom = 112.dp
         ),
         floatingActionButton = {
-            // While browsing, adding a page lives in the notebook hero, so nothing floats over the tiles.
-            if (!isBrowsing) ExtendedFloatingActionButton(
+            // The screen's one main action. An empty result has its own button, so nothing floats over it.
+            if (!(loaded && !isBrowsing && pages.isEmpty())) ExtendedFloatingActionButton(
                 onClick = onCreate,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -419,6 +421,15 @@ private fun FieldGuideScreen(
             )
         }
     ) {
+        if (isBrowsing && loaded) {
+            item(key = "notebook") {
+                FieldGuideNotebookHero(
+                    pages = items.totalPages,
+                    kinds = categories.count { it.count > 0 }
+                )
+            }
+        }
+
         item(key = "search") {
             TrailSenseSearchBar(
                 value = query,
@@ -447,14 +458,6 @@ private fun FieldGuideScreen(
         }
 
         if (isBrowsing) {
-            item(key = "notebook") {
-                FieldGuideNotebookHero(
-                    pages = items.totalPages,
-                    kinds = categories.count { it.count > 0 },
-                    categories = categories,
-                    onCreate = onCreate
-                )
-            }
             item(key = "categories") {
                 FieldGuideCategoryGrid(categories)
             }
@@ -464,9 +467,6 @@ private fun FieldGuideScreen(
                     icon = Icons.AutoMirrored.Rounded.MenuBook,
                     title = stringResource(R.string.no_pages),
                     description = noPagesDescription,
-                    shape = MaterialShapes.Clover4Leaf.toShape(),
-                    companionShape = MaterialShapes.Flower.toShape(),
-                    companionIcon = TrailIcons.Grass,
                     modifier = Modifier.testTag("empty_text"),
                     action = {
                         androidx.compose.material3.Button(onClick = onCreate) {
@@ -677,164 +677,45 @@ private sealed interface FieldGuideListItem {
     }
 }
 
-/** One hue and one shape per kind of life, so the grid reads like the tabs of a field notebook. */
-private val categoryAccents = listOf(
-    TrailSenseAccents.Leaf,
-    TrailSenseAccents.Apricot,
-    TrailSenseAccents.Coral,
-    TrailSenseAccents.Sky,
-    TrailSenseAccents.Sun,
-    TrailSenseAccents.Seafoam,
-    TrailSenseAccents.Mint,
-    TrailSenseAccents.Periwinkle,
-    TrailSenseAccents.Lavender,
-    TrailSenseAccents.Rose,
-    TrailSenseAccents.Stone
-)
-
-@Composable
-private fun categoryShape(index: Int): androidx.compose.ui.graphics.Shape = when (index % 8) {
-    0 -> MaterialShapes.Clover4Leaf
-    1 -> MaterialShapes.Puffy
-    2 -> MaterialShapes.Cookie9Sided
-    3 -> MaterialShapes.Sunny
-    4 -> MaterialShapes.Flower
-    5 -> MaterialShapes.Cookie6Sided
-    6 -> MaterialShapes.Pentagon
-    else -> MaterialShapes.Gem
-}.toShape()
-
-/** The notebook's cover: a leaf in a turning clover, how many pages it holds and across how many kinds. */
+/** The notebook on the plain page: how many pages it holds in emphasised type, and across how many kinds. */
 @Composable
 private fun FieldGuideNotebookHero(
     pages: Int,
-    kinds: Int,
-    categories: List<FieldGuideListItem.TagItem>,
-    onCreate: () -> Unit
+    kinds: Int
 ) {
-    TrailSenseSpotlight(
-        actions = listOf(
-            TrailSenseSpotlightAction(
-                label = stringResource(R.string.create_page),
-                icon = Icons.Rounded.Add,
-                testTag = "add_btn",
-                onClick = onCreate
-            )
-        ),
-        title = androidx.compose.ui.res.pluralStringResource(R.plurals.page_group_summary, pages, pages),
-        eyebrow = stringResource(R.string.field_guide),
-        supportingText = stringResource(R.string.sky_field_guide_kinds, kinds),
-        tone = TrailSenseTone.Good,
-        titleStyle = MaterialTheme.typography.headlineMedium,
-        badge = {
-            SkyFocalShape(
-                icon = TrailIcons.Grass,
-                shape = MaterialShapes.Clover8Leaf.toShape(),
-                size = 80.dp,
-                containerColor = trailSenseToneColors(TrailSenseTone.Good).accent,
-                contentColor = trailSenseToneColors(TrailSenseTone.Good).onAccent
-            )
-        }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.lg)
     ) {
-        // The notebook's make-up: one rounded segment per kind, as wide as its share of the pages, in its hue.
-        val filled = categories.withIndex().filter { it.value.count > 0 }
-        if (filled.isNotEmpty()) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                filled.forEach { (index, category) ->
-                    val accent = trailSenseWellColors(categoryAccents[index % categoryAccents.size]).container
-                    androidx.compose.foundation.layout.Box(
-                        Modifier
-                            .weight(category.count.toFloat())
-                            .fillMaxHeight()
-                            .background(accent, androidx.compose.foundation.shape.CircleShape)
-                    )
-                }
-            }
-        }
+        Text(
+            androidx.compose.ui.res.pluralStringResource(R.plurals.page_group_summary, pages, pages),
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            stringResource(R.string.sky_field_guide_kinds, kinds),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+        )
     }
 }
 
-/** The kinds as connected tiles, two to a row: a shaped icon in the kind's hue, its name, and its page count. */
+/** The kinds as one grouped list: the kind's icon in the screen's one shape, its name, and its page count. */
 @Composable
 private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>) {
-    val rows = categories.chunked(2)
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-        rows.forEachIndexed { rowIndex, row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                row.forEachIndexed { columnIndex, category ->
-                    val index = rowIndex * 2 + columnIndex
-                    val wells = trailSenseWellColors(categoryAccents[index % categoryAccents.size])
-                    val empty = category.count == 0
-                    // Pressing a tile wobbles its badge a petal-step before the kind opens.
-                    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                    val pressed by interaction.collectIsPressedAsState()
-                    val wobble by androidx.compose.animation.core.animateFloatAsState(
-                        if (pressed) 24f else 0f,
-                        MaterialTheme.motionScheme.fastSpatialSpec(),
-                        label = "kindWobble"
-                    )
-                    // An empty kind keeps a muted version of its own hue and offers "+" rather than a grey "0".
-                    Surface(
-                        onClick = category.onClick,
-                        interactionSource = interaction,
-                        modifier = Modifier.weight(1f),
-                        shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
-                        color = androidx.compose.ui.graphics.lerp(
-                            MaterialTheme.colorScheme.surfaceContainerLow,
-                            wells.container,
-                            if (empty) 0.14f else 0.35f
-                        )
-                    ) {
-                        Column(
-                            Modifier.padding(TrailSenseSpacing.lg),
-                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                TrailSenseShapeBadge(
-                                    icon = category.icon,
-                                    shape = categoryShape(index),
-                                    size = 48.dp,
-                                    containerColor = androidx.compose.ui.graphics.lerp(
-                                        MaterialTheme.colorScheme.surfaceContainerHighest,
-                                        wells.container,
-                                        if (empty) 0.45f else 1f
-                                    ),
-                                    contentColor = wells.content.copy(alpha = if (empty) 0.7f else 1f),
-                                    modifier = Modifier.graphicsLayer { rotationZ = wobble }
-                                )
-                                Spacer(Modifier.weight(1f))
-                                if (empty) {
-                                    Icon(
-                                        Icons.Rounded.Add,
-                                        contentDescription = null,
-                                        tint = wells.content.copy(alpha = 0.7f)
-                                    )
-                                } else {
-                                    Text(
-                                        category.count.toString(),
-                                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-
-                            }
-                            Spacer(Modifier.height(TrailSenseSpacing.xs))
-                            Text(
-                                category.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup {
+        categories.forEach { category ->
+            row { position ->
+                SkyValueRow(
+                    title = category.title,
+                    value = category.count.takeIf { it > 0 }?.toString(),
+                    icon = category.icon,
+                    position = position,
+                    onClick = category.onClick
+                )
             }
         }
     }
