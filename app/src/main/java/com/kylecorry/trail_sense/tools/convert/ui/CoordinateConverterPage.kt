@@ -83,7 +83,11 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
                     onPickUnit = null,
                     onActivate = { picking = false },
                     copyText = null,
-                    leaveRoomForSwap = false
+                    leaveRoomForSwap = false,
+                    position = com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition(
+                        isFirst = true,
+                        isLast = false
+                    )
                 ) {
                     ConvertInput(
                         value = coordinateText,
@@ -111,7 +115,11 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
                     onPickUnit = { picking = !picking },
                     onActivate = null,
                     copyText = result.ifEmpty { null },
-                    leaveRoomForSwap = false
+                    leaveRoomForSwap = false,
+                    position = com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition(
+                        isFirst = false,
+                        isLast = true
+                    )
                 ) {
                     ConvertValue(result, placeholder = stringResource(R.string.dash))
                 }
