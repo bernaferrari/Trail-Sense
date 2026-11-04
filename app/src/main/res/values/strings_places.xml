@@ -15,4 +15,14 @@
     <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
     <!-- Offline maps -->
     <string name="places_maps_you_are_on">You are on this map</string>
+    <!-- Packing lists -->
+    <string name="places_packs_all">All lists</string>
+    <string name="places_packs_latest">Latest list</string>
+    <string name="places_packs_ready">Ready to go</string>
+    <string name="places_packs_packed_of">%1$d of %2$d items packed</string>
+    <string name="places_percent">%1$d%%</string>
+    <plurals name="places_packs_items">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
 </resources>
