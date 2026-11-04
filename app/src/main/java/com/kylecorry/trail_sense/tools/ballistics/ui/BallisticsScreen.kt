@@ -26,6 +26,7 @@ import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 fun BallisticsScreen(
     modifier: Modifier = Modifier
 ) {
+    // One question: what do I dial, or what does this round do?
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()

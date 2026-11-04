@@ -136,17 +136,30 @@ internal fun WaterPurificationScreen(
         )
     )
 
+    // One question: how much longer does the water need to boil?
     TrailSensePage(
         title = stringResource(R.string.water_boil_timer),
         onBack = rememberTrailSenseBack(),
         backLabel = stringResource(R.string.back)
     ) {
         item("dial") {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 BoilPot(
                     seconds = displayed?.seconds,
                     progress = animatedProgress,
                     isRunning = isRunning
+                )
+                // The verdict, right under the pot.
+                Text(
+                    text = stringResource(
+                        if (isRunning) R.string.water_boil_verdict_running else R.string.water_boil_verdict_idle
+                    ),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
         }
@@ -171,9 +184,9 @@ internal fun WaterPurificationScreen(
         item("action") {
             // Holds its place while the duration is worked out, so nothing jumps when it appears.
             val scheme = MaterialTheme.colorScheme
-            // The one action on the screen is warm; cancelling is a quiet secondary.
+            // The one action on the screen is primary; cancelling is a quiet secondary.
             val container by animateColorAsState(
-                if (isRunning) scheme.secondaryContainer else scheme.tertiary,
+                if (isRunning) scheme.secondaryContainer else scheme.primary,
                 MaterialTheme.motionScheme.defaultEffectsSpec(),
                 label = "action"
             )
@@ -197,7 +210,7 @@ internal fun WaterPurificationScreen(
                 shapes = ButtonDefaults.shapesFor(ButtonDefaults.LargeContainerHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = container,
-                    contentColor = if (isRunning) scheme.onSecondaryContainer else scheme.onTertiary
+                    contentColor = if (isRunning) scheme.onSecondaryContainer else scheme.onPrimary
                 ),
                 contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
                 modifier = Modifier
@@ -261,21 +274,23 @@ private fun BoilPot(
     isRunning: Boolean
 ) {
     val scheme = MaterialTheme.colorScheme
+    // The water only moves while it boils; idle, it lies still.
     val transition = rememberInfiniteTransition(label = "boil")
-    val phase by transition.animateFloat(
+    val rolling by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(if (isRunning) 1400 else 4200, easing = LinearEasing), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Restart),
         label = "wave"
     )
+    val phase = if (isRunning) rolling else 0f
     // Light water under dark digits: the number always reads, whatever the level.
     val ring = scheme.primary
     val ringColor by animateColorAsState(ring, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "ring")
-    val water = if (isRunning) scheme.tertiaryContainer else scheme.primaryContainer
+    val water = scheme.primaryContainer
     val waterColor by animateColorAsState(water, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "water")
     val face = scheme.surfaceContainerLow
     val faceColor by animateColorAsState(face, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "face")
-    val ink = if (isRunning) scheme.onTertiaryContainer else scheme.onPrimaryContainer
+    val ink = scheme.onPrimaryContainer
     val inkColor by animateColorAsState(ink, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "ink")
 
     Box(
@@ -302,10 +317,10 @@ private fun BoilPot(
             contentAlignment = Alignment.Center
         ) {
             Surface(color = faceColor, modifier = Modifier.fillMaxSize()) {}
-            // The water: its surface rolls gently when idle and churns while it boils, and it drains with the timer.
+            // The water: still when idle, churning while it boils, and it drains with the timer.
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val level = size.height * (1f - (0.18f + 0.6f * progress))
-                val amplitude = if (isRunning) 7.dp.toPx() else 4.dp.toPx()
+                val amplitude = if (isRunning) 7.dp.toPx() else 3.dp.toPx()
                 val wavelength = size.width / 1.5f
                 val path = Path().apply {
                     moveTo(0f, size.height)
@@ -379,7 +394,7 @@ private fun WaterStep(
     val status = trailSenseStatusColors()
     val rowColor by animateColorAsState(
         when (state) {
-            StepState.Next -> scheme.primaryContainer
+            StepState.Next -> scheme.surfaceContainerLow
             StepState.Done -> scheme.surfaceContainerLow
             StepState.Todo -> scheme.surfaceContainerLow
         },
@@ -418,7 +433,9 @@ private fun WaterStep(
                 StepState.Next -> TrailSenseShapeBadge(
                     text = number,
                     shape = MaterialShapes.Cookie9Sided.toShape(),
-                    size = 44.dp
+                    size = 44.dp,
+                    containerColor = scheme.primaryContainer,
+                    contentColor = scheme.onPrimaryContainer
                 )
 
                 StepState.Todo -> TrailSenseShapeBadge(
@@ -435,7 +452,7 @@ private fun WaterStep(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = if (state == StepState.Next) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (state == StepState.Next) scheme.onPrimaryContainer else scheme.onSurface
+                color = scheme.onSurface
             )
         }
     }
