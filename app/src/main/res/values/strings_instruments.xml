@@ -87,12 +87,14 @@
     <string name="declination_east_of_true">East of true north</string>
     <string name="declination_west_of_true">West of true north</string>
     <string name="declination_verdict_aligned">Magnetic north lines up with true north here</string>
-    <string name="declination_magnetic_to_true">Magnetic to true</string>
-    <string name="declination_true_to_magnetic">True to magnetic</string>
-    <string name="declination_add_to_compass_bearing">Add it to a compass bearing</string>
-    <string name="declination_subtract_from_compass_bearing">Subtract it from a compass bearing</string>
-    <string name="declination_add_to_map_bearing">Add it to a map bearing</string>
-    <string name="declination_subtract_from_map_bearing">Subtract it from a map bearing</string>
+    <string name="declination_bearing_from">My bearing is from</string>
+    <string name="declination_from_compass">Compass</string>
+    <string name="declination_from_map">Map</string>
+    <string name="declination_compass_add">Add %1$s to get the map bearing</string>
+    <string name="declination_compass_subtract">Subtract %1$s to get the map bearing</string>
+    <string name="declination_map_add">Add %1$s to get the compass bearing</string>
+    <string name="declination_map_subtract">Subtract %1$s to get the compass bearing</string>
+    <string name="declination_no_correction">Compass and map bearings are the same here</string>
 
     <!-- Convert -->
     <string name="convert_copy">Copy</string>
@@ -121,6 +123,10 @@
     <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
 
     <!-- Ballistics -->
+    <plurals name="sensor_gps_satellites">
+        <item quantity="one">%d satellite</item>
+        <item quantity="other">%d satellites</item>
+    </plurals>
     <plurals name="ballistics_clicks">
         <item quantity="one">%d click</item>
         <item quantity="other">%d clicks</item>
