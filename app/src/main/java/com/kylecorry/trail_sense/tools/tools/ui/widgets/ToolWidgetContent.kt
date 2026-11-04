@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Intent
 import android.graphics.Bitmap
 
@@ -9,7 +10,7 @@ sealed interface ToolWidgetContent {
     data class Simple(
         val title: CharSequence?,
         val subtitle: CharSequence?,
-        val icon: Int? = null,
+        val icon: ImageVector? = null,
         val iconBitmap: Bitmap? = null,
         val showTitle: Boolean = true,
         override val clickAction: WidgetClickAction? = null
@@ -39,7 +40,7 @@ sealed interface ToolWidgetContent {
 data class ListItem(
     val title: CharSequence,
     val description: CharSequence? = null,
-    val icon: Int? = null,
+    val icon: ImageVector? = null,
     val iconTint: Int? = null,
     val iconBackground: Int? = null,
     val clickAction: WidgetClickAction? = null

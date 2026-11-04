@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons.widgets
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -44,7 +45,7 @@ class NearbyBeaconsToolWidgetView : ToolWidgetView {
             ListItem(
                 title = beacon.name,
                 description = formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)),
-                icon = beacon.icon?.icon ?: R.drawable.ic_location,
+                icon = beacon.icon?.icon ?: TrailIcons.Location,
                 iconTint = Colors.mostContrastingColor(
                     Color.WHITE,
                     Color.BLACK,

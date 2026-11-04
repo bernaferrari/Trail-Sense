@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -45,7 +47,7 @@ class DistanceAlerter(private val context: Context) : IAlerter {
                     )
                 )
             },
-            R.drawable.steps,
+            TrailIcons.Steps,
             intent = openIntent,
             autoCancel = true,
             isAlarm = useAlarm,

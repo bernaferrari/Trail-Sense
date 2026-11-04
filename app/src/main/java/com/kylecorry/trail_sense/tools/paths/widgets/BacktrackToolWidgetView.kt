@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.widgets
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -44,7 +45,7 @@ class BacktrackToolWidgetView : SimpleToolWidgetView() {
             } else {
                 context.getString(R.string.off)
             },
-            icon = R.drawable.ic_tool_backtrack,
+            icon = TrailIcons.ToolBacktrack,
             clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.PATHS))
         )
     }

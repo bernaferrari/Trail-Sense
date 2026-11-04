@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.waterpurification.infrastructure
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
@@ -29,9 +31,10 @@ class WaterPurificationTimerService : AndromedaService() {
 
     private val cancelAction by lazy {
         Notify.action(
+            applicationContext,
             getString(android.R.string.cancel),
             WaterPurificationCancelReceiver.pendingIntent(applicationContext),
-            R.drawable.ic_cancel
+            TrailIcons.Cancel
         )
     }
 
@@ -70,7 +73,7 @@ class WaterPurificationTimerService : AndromedaService() {
                 notificationChannel,
                 getString(R.string.water_boil_timer_done_title),
                 getString(R.string.water_boil_timer_done_content),
-                R.drawable.ic_tool_boil_done,
+                TrailIcons.ToolBoilDone,
                 group = NOTIFICATION_GROUP_WATER,
                 intent = openIntent,
                 isAlarm = useAlarm,
@@ -116,7 +119,7 @@ class WaterPurificationTimerService : AndromedaService() {
                 secondsLeft,
                 secondsLeft
             ),
-            R.drawable.ic_tool_boil,
+            TrailIcons.ToolBoil,
             group = NOTIFICATION_GROUP_WATER,
             actions = listOf(cancelAction),
             intent = openIntent,

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -124,7 +126,7 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
                 R.string.sunset_alert_notification_text,
                 formattedTime
             ),
-            R.drawable.ic_sunset_notification,
+            TrailIcons.SunsetNotification,
             intent = openIntent,
             autoCancel = true,
             isAlarm = useAlarm,

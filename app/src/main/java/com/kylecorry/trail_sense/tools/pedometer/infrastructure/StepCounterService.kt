@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
@@ -157,9 +159,10 @@ class StepCounterService : AndromedaService() {
         val stopPendingIntent =
             PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
         val stopAction = Notify.action(
+            this,
             getString(R.string.stop),
             stopPendingIntent,
-            R.drawable.ic_cancel
+            TrailIcons.Cancel
         )
 
         return Notify.persistent(
@@ -167,7 +170,7 @@ class StepCounterService : AndromedaService() {
             CHANNEL_ID,
             getString(R.string.pedometer),
             text,
-            R.drawable.steps,
+            TrailIcons.Steps,
             intent = openIntent,
             group = NOTIFICATION_GROUP_PEDOMETER,
             showForegroundImmediate = true,

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.alerts
 
+import com.kylecorry.trail_sense.shared.notifications.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify

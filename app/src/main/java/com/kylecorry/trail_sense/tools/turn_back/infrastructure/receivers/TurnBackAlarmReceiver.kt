@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -46,7 +48,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
             notificationChannel,
             context.getString(R.string.turn_back_notification_title),
             context.getString(R.string.turn_back_notification_description, formattedReturnTime),
-            R.drawable.ic_undo,
+            TrailIcons.Undo,
             group = NOTIFIATION_GROUP,
             autoCancel = true,
             isAlarm = useAlarm,

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.whitenoise.infrastructure
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
@@ -56,7 +58,7 @@ class WhiteNoiseService : AndromedaService() {
             NOTIFICATION_CHANNEL_ID,
             getString(R.string.tool_white_noise_title),
             getString(R.string.tap_to_turn_off),
-            R.drawable.ic_tool_white_noise,
+            TrailIcons.ToolWhiteNoise,
             intent = WhiteNoiseOffReceiver.pendingIntent(this),
             showForegroundImmediate = true
         )

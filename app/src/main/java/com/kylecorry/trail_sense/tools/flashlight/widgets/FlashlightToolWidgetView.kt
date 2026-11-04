@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.flashlight.widgets
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -31,7 +32,7 @@ class FlashlightToolWidgetView : SimpleToolWidgetView() {
         return ToolWidgetContent.Simple(
             title = null,
             subtitle = context.getString(if (isOn) R.string.on else R.string.off),
-            icon = R.drawable.flashlight,
+            icon = TrailIcons.Flashlight,
             showTitle = false,
             clickAction = if (isForegroundServiceWorkaroundNeeded(context)) {
                 WidgetClickAction.StartActivity(intent)

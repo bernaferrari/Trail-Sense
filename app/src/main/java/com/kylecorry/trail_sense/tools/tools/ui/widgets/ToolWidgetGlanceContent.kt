@@ -2,9 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Bitmap
 import android.os.Build
-import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceModifier
@@ -33,6 +33,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
 
@@ -65,7 +66,7 @@ fun ToolWidgetGlanceContent(
                 ToolWidgetContent.Simple(
                     title = context.getString(R.string.app_name),
                     subtitle = "",
-                    icon = R.drawable.ic_launcher_foreground
+                    icon = WidgetIcons.launcher(context)
                 ),
                 colors
             )
@@ -205,7 +206,7 @@ private fun ListContent(content: ToolWidgetContent.List, colors: WidgetColors) {
 
 @Composable
 private fun WidgetIcon(
-    @DrawableRes icon: Int?,
+    icon: ImageVector?,
     bitmap: Bitmap?,
     colors: WidgetColors,
     tint: Int? = null,
@@ -213,7 +214,7 @@ private fun WidgetIcon(
 ) {
     val imageProvider = when {
         bitmap != null -> ImageProvider(bitmap)
-        icon != null -> ImageProvider(icon)
+        icon != null -> ImageProvider(icon.toBitmap(LocalContext.current, 22f))
         else -> null
     }
 

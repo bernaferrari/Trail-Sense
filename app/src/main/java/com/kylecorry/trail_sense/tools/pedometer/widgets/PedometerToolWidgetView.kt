@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer.widgets
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -38,7 +39,7 @@ class PedometerToolWidgetView : SimpleToolWidgetView() {
                 steps.toInt(),
                 steps.toInt()
             ),
-            icon = R.drawable.steps,
+            icon = TrailIcons.Steps,
             clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.PEDOMETER))
         )
     }

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.alerts
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.content.Context
 import android.os.Bundle
@@ -43,9 +45,10 @@ class BacktrackAlerter(private val context: Context) : IValueAlerter<Path> {
             }
 
             val stopAction = Notify.action(
+                context,
                 context.getString(R.string.stop),
                 StopBacktrackReceiver.pendingIntent(context),
-                R.drawable.ic_cancel
+                TrailIcons.Cancel
             )
 
             return Notify.persistent(
@@ -53,7 +56,7 @@ class BacktrackAlerter(private val context: Context) : IValueAlerter<Path> {
                 BacktrackService.FOREGROUND_CHANNEL_ID,
                 context.getString(R.string.backtrack),
                 formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units), false),
-                R.drawable.ic_tool_backtrack,
+                TrailIcons.ToolBacktrack,
                 group = NOTIFICATION_GROUP,
                 intent = openAction,
                 actions = listOf(stopAction),

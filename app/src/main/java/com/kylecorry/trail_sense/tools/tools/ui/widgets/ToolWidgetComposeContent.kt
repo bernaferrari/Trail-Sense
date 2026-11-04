@@ -2,8 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Bitmap
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -196,7 +196,7 @@ private fun ListContent(content: ToolWidgetContent.List) {
 
 @Composable
 private fun WidgetIcon(
-    @DrawableRes icon: Int?,
+    icon: ImageVector?,
     bitmap: Bitmap?,
     tint: Color? = MaterialTheme.colorScheme.onSurfaceVariant,
     background: Color? = Color.Transparent
@@ -215,7 +215,7 @@ private fun WidgetIcon(
                 modifier = Modifier.size(24.dp)
             )
             icon != null -> Icon(
-                painter = painterResource(icon),
+                painter = rememberVectorPainter(icon),
                 contentDescription = null,
                 tint = tint ?: MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)

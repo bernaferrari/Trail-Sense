@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.backup
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
@@ -17,7 +19,7 @@ class BackupFailedAlerter(private val context: Context) : IDismissibleAlerter {
             CHANNEL_BACKUP_FAILED,
             context.getString(R.string.backup_failed),
             context.getString(R.string.unable_to_create_an_automatic_backup),
-            R.drawable.ic_alert,
+            TrailIcons.Alert,
             group = NOTIFICATION_GROUP_BACKUP_FAILED,
             intent = intent,
             autoCancel = true,

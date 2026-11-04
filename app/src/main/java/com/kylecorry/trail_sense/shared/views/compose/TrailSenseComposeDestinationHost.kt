@@ -72,7 +72,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
-import androidx.core.graphics.drawable.IconCompat
+import com.kylecorry.trail_sense.shared.icons.toIconCompat
 import androidx.core.net.toUri
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
@@ -3216,12 +3216,7 @@ class TrailSenseComposeDestinationHost(
         }
 
         val shortcutInfo = ShortcutInfoCompat.Builder(requireContext(), "tool-${tool.id}")
-            .setIcon(
-                IconCompat.createFromIcon(
-                    requireContext(),
-                    android.graphics.drawable.Icon.createWithResource(requireContext(), tool.icon)
-                )
-            )
+            .setIcon(tool.icon.toIconCompat(requireContext(), 48f))
             .setIntent(MainActivity.openToolIntent(requireContext(), tool.id))
             .setShortLabel(tool.name)
             .setLongLabel(tool.name)

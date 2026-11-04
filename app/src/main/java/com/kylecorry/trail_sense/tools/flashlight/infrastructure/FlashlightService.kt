@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
@@ -42,7 +44,7 @@ class FlashlightService : AndromedaService() {
             CHANNEL_ID,
             getString(R.string.flashlight_title),
             getString(R.string.tap_to_turn_off),
-            R.drawable.flashlight,
+            TrailIcons.Flashlight,
             intent = FlashlightOffReceiver.pendingIntent(this),
             group = NOTIFICATION_GROUP_FLASHLIGHT,
             showForegroundImmediate = true

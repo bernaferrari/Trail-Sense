@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.widgets
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -37,9 +38,9 @@ class PressureWidgetView : SimpleToolWidgetView() {
 
         val tendency = current.pressureTendency
         val iconRes = when {
-            tendency.amount > 0 -> R.drawable.ic_arrow_up
-            tendency.amount < 0 -> R.drawable.ic_arrow_down
-            else -> R.drawable.ic_steady_arrow
+            tendency.amount > 0 -> TrailIcons.ArrowUp
+            tendency.amount < 0 -> TrailIcons.ArrowDown
+            else -> TrailIcons.SteadyArrow
         }
 
         return ToolWidgetContent.Simple(

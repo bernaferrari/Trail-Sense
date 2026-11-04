@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.sensors.widgets
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -33,7 +34,7 @@ class ElevationWidgetView : SimpleToolWidgetView() {
                 convertedElevation,
                 Units.getDecimalPlaces(convertedElevation.units)
             ),
-            icon = R.drawable.ic_altitude,
+            icon = TrailIcons.Altitude,
             clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.NAVIGATION))
         )
     }

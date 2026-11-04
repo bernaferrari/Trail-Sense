@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.alerts
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
@@ -63,7 +66,7 @@ class CurrentWeatherAlerter(
         updateNotificationText(newNotification)
     }
 
-    private fun getNotification(text: String, icon: Int): Notification {
+    private fun getNotification(text: String, icon: ImageVector): Notification {
         val stopIntent = Intent(context, WeatherStopMonitoringReceiver::class.java)
         val openIntent = NavigationUtils.pendingIntent(context, R.id.action_weather)
 
@@ -71,9 +74,10 @@ class CurrentWeatherAlerter(
             PendingIntent.getBroadcast(context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val stopAction = Notify.action(
+            context,
             context.getString(R.string.stop),
             stopPendingIntent,
-            R.drawable.ic_cancel
+            TrailIcons.Cancel
         )
 
         val title = context.getString(R.string.weather)
@@ -119,9 +123,10 @@ class CurrentWeatherAlerter(
                 PendingIntent.getBroadcast(context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
             val stopAction = Notify.action(
+                context,
                 context.getString(R.string.stop),
                 stopPendingIntent,
-                R.drawable.ic_cancel
+                TrailIcons.Cancel
             )
 
             val title = context.getString(R.string.weather)
@@ -132,7 +137,7 @@ class CurrentWeatherAlerter(
                 WEATHER_CHANNEL_ID,
                 title,
                 subtitle,
-                R.drawable.cloud,
+                TrailIcons.Cloud,
                 group = NOTIFICATION_GROUP_WEATHER,
                 intent = openIntent,
                 actions = listOf(stopAction),

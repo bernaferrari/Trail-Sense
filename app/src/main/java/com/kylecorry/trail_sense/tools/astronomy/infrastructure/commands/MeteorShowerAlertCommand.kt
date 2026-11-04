@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
@@ -44,7 +46,7 @@ class MeteorShowerAlertCommand(private val context: Context) : Command<Coordinat
             AstronomyAlertCommand.NOTIFICATION_CHANNEL,
             context.getString(R.string.meteor_shower),
             getShowerDescription(context, shower),
-            R.drawable.ic_astronomy,
+            TrailIcons.Astronomy,
             group = AstronomyAlertCommand.NOTIFICATION_GROUP_ASTRONOMY_ALERTS,
             intent = NavigationUtils.pendingIntent(context, R.id.action_astronomy),
             autoCancel = true

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.receivers
 
+import com.kylecorry.trail_sense.shared.notifications.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
@@ -18,7 +20,7 @@ class ServiceRestartAlerter(private val context: Context) : IDismissibleAlerter 
             CHANNEL_SERVICE_RESTART,
             context.getString(R.string.restart_services_title),
             context.getString(R.string.restart_services_message),
-            R.drawable.ic_alert,
+            TrailIcons.Alert,
             group = NOTIFICATION_GROUP_SERVICE_RESTART,
             intent = intent,
             autoCancel = true,

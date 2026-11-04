@@ -18,7 +18,7 @@ interface ToolWidgetView {
         return ToolWidgetContent.Simple(
             title = context.getString(R.string.app_name),
             subtitle = "",
-            icon = R.drawable.ic_launcher_foreground
+            icon = WidgetIcons.launcher(context)
         )
     }
 
