@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -43,6 +44,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import kotlin.math.abs
@@ -51,6 +54,7 @@ import kotlin.math.hypot
 /**
  * Pure Compose Level / Bubble Level screen.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LevelScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -87,23 +91,25 @@ fun LevelScreen(modifier: Modifier = Modifier) {
         formattedY
     )
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+    // The bubble is the instrument; the two angles under it are the hero reading, in the accent tone once level.
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.tool_bubble_level_title),
+        modifier = modifier
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .widthIn(max = TrailSenseSize.maximumContentWidth)
-                .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
+                .align(Alignment.TopCenter)
+                .padding(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.sm,
+                    bottom = TrailSenseSpacing.xl
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
-            // Hero stage hosting the bubble visualization.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -120,25 +126,13 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                 )
             }
 
-            // Emphasized numeric readouts.
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                AngleReadout(
-                    label = "X",
-                    value = formattedX,
-                    isLevel = isLevel,
-                    modifier = Modifier.weight(1f)
-                )
-                AngleReadout(
-                    label = "Y",
-                    value = formattedY,
-                    isLevel = isLevel,
-                    modifier = Modifier.weight(1f)
-                )
+                AngleReadout(label = "X", value = formattedX, isLevel = isLevel)
+                AngleReadout(label = "Y", value = formattedY, isLevel = isLevel)
             }
-        }
         }
     }
 }
@@ -149,39 +143,36 @@ private const val LEVEL_TOLERANCE_DEGREES = 1.0
  * Large tonal stage that frames the animated bubble level. Gives a subtle
  * scale + color lift when the device is in tolerance.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LevelStage(
     xAngle: Float,
     yAngle: Float,
     isLevel: Boolean
 ) {
+    // A calm circular well; it takes the tertiary tone only while the phone is level.
     val stageColor by animateColorAsState(
         targetValue = if (isLevel) {
             MaterialTheme.colorScheme.tertiaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            MaterialTheme.colorScheme.surfaceContainerLow
         },
-        animationSpec = tween(durationMillis = 250),
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "stageColor"
-    )
-    val stageScale by animateFloatAsState(
-        targetValue = if (isLevel) 1.03f else 1f,
-        animationSpec = TrailSenseAnimation.standardSpring,
-        label = "stageScale"
     )
 
     Surface(
         modifier = Modifier
+            .widthIn(max = 420.dp)
             .fillMaxWidth()
-            .aspectRatio(1f)
-            .scale(stageScale),
-        shape = MaterialTheme.shapes.extraLarge,
+            .aspectRatio(1f),
+        shape = CircleShape,
         color = stageColor
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(TrailSenseSpacing.xl),
+                .padding(TrailSenseSpacing.lg),
             contentAlignment = Alignment.Center
         ) {
             BubbleLevelCanvas(
@@ -194,6 +185,7 @@ private fun LevelStage(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BubbleLevelCanvas(
     xAngle: Float,
@@ -201,8 +193,7 @@ private fun BubbleLevelCanvas(
     isLevel: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val ring = MaterialTheme.colorScheme.outlineVariant
-    val crosshair = MaterialTheme.colorScheme.outline
+    val crosshair = MaterialTheme.colorScheme.outlineVariant
     val target = MaterialTheme.colorScheme.primary
     val well = MaterialTheme.colorScheme.surfaceContainerLowest
 
@@ -213,7 +204,7 @@ private fun BubbleLevelCanvas(
     }
     val bubbleColor by animateColorAsState(
         targetValue = activeBubble,
-        animationSpec = tween(durationMillis = 250),
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "bubbleColor"
     )
 
@@ -241,7 +232,6 @@ private fun BubbleLevelCanvas(
 
         // Outer well.
         drawCircle(well, radius, centerPoint)
-        drawCircle(ring, radius, centerPoint, style = Stroke(width = 3.dp.toPx()))
 
         // Inner target ring marking the "level" zone.
         val targetRadius = radius * 0.18f
@@ -284,6 +274,7 @@ private fun BubbleLevelCanvas(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AngleReadout(
     label: String,
@@ -291,48 +282,16 @@ private fun AngleReadout(
     isLevel: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val containerColor by animateColorAsState(
-        targetValue = if (isLevel) {
-            MaterialTheme.colorScheme.tertiaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        },
-        animationSpec = tween(durationMillis = 250),
-        label = "readoutContainer"
+    val valueColor by animateColorAsState(
+        targetValue = if (isLevel) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "readoutColor"
     )
-    val contentColor = if (isLevel) {
-        MaterialTheme.colorScheme.onTertiaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        color = containerColor
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TrailSenseSpacing.lg,
-                    vertical = TrailSenseSpacing.lg
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = contentColor,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+    TrailSenseReading(
+        value = value,
+        label = label,
+        color = valueColor,
+        style = MaterialTheme.typography.displayMedium,
+        modifier = modifier
+    )
 }
