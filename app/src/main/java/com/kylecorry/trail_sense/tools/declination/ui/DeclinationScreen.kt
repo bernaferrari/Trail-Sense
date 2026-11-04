@@ -62,6 +62,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.arithmetic.Arithmetic
+import kotlin.math.abs
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.units.CompassDirection
 import com.kylecorry.sol.units.Coordinate
@@ -98,7 +99,7 @@ fun DeclinationScreen(
     var location by remember { mutableStateOf(sensors.lastKnownLocation) }
     var isLocationUpToDate by remember { mutableStateOf(false) }
     var declination by remember { mutableStateOf(0f) }
-    var magneticToTrue by remember { mutableStateOf(true) }
+    var fromCompass by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         location = withContext(Dispatchers.IO) {
@@ -154,35 +155,43 @@ fun DeclinationScreen(
             )
         }
 
-        // What the number is for: which way to apply it to a bearing, as one choice and the one sentence it gives.
-        // The amount is the headline above, so the sentence never repeats it.
+        // What the number is for, in plain words: where the user's bearing came from (compass or map), then one
+        // sentence with the exact amount to add or subtract to get the other one.
         item("correction") {
             val east = declination >= 0
+            val aligned = Arithmetic.isZero(declination, 0.05f)
+            val amount = formatter.formatDegrees(abs(declination), 1)
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
+                Text(
+                    text = stringResource(R.string.declination_bearing_from),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 TrailSenseConnectedChoice(
                     options = listOf(
-                        TrailSenseChoice(true, stringResource(R.string.declination_magnetic_to_true)),
-                        TrailSenseChoice(false, stringResource(R.string.declination_true_to_magnetic))
+                        TrailSenseChoice(true, stringResource(R.string.declination_from_compass)),
+                        TrailSenseChoice(false, stringResource(R.string.declination_from_map))
                     ),
-                    selected = magneticToTrue,
-                    onSelect = { magneticToTrue = it }
+                    selected = fromCompass,
+                    onSelect = { fromCompass = it }
                 )
                 Text(
-                    text = stringResource(
-                        when {
-                            magneticToTrue && east -> R.string.declination_add_to_compass_bearing
-                            magneticToTrue -> R.string.declination_subtract_from_compass_bearing
-                            east -> R.string.declination_subtract_from_map_bearing
-                            else -> R.string.declination_add_to_map_bearing
-                        }
-                    ),
+                    text = when {
+                        aligned -> stringResource(R.string.declination_no_correction)
+                        // A compass bearing is magnetic: true = magnetic + declination (east is positive).
+                        fromCompass && east -> stringResource(R.string.declination_compass_add, amount)
+                        fromCompass -> stringResource(R.string.declination_compass_subtract, amount)
+                        east -> stringResource(R.string.declination_map_subtract, amount)
+                        else -> stringResource(R.string.declination_map_add, amount)
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.xs)
                 )
             }
         }
