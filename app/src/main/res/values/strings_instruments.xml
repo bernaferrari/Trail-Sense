@@ -6,6 +6,7 @@
 
     <!-- Clinometer -->
     <string name="clinometer_vertical">Vertical</string>
+    <string name="clinometer_incline">Incline</string>
 
     <!-- Water boil timer -->
     <string name="water_boil_seconds_left">Seconds left</string>
