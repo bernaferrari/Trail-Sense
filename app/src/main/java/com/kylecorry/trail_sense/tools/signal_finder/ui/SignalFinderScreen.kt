@@ -362,7 +362,8 @@ private fun SignalFinderScreen(
                     }
                 }
 
-                if (signals.isNotEmpty()) {
+                // A single signal is already the hero; the list only earns its place with two or more.
+                if (signals.size > 1) {
                     trailSenseSection(key = "signals", title = signalsTitle) {
                         signals.forEach { signal ->
                             row { position ->
@@ -436,7 +437,7 @@ private fun SignalHero(
             )
         },
         trailing = {
-            SignalBars(strength = signal.strength, color = colors.accent, track = colors.content.copy(alpha = 0.14f))
+            SignalBars(strength = signal.strength, color = colors.content, track = colors.content.copy(alpha = 0.22f))
         }
     )
 }
@@ -577,13 +578,29 @@ private fun TowerRadar(
             paint.color = north.toArgb()
             drawContext.canvas.nativeCanvas.drawText("N", center.x, center.y - radius - 4.dp.toPx() + labelSize / 3f, paint)
             drawCircle(you, 7.dp.toPx(), center)
+            // Towers close together are nudged apart (outward, then sideways) so no two markers overlap.
+            val placed = mutableListOf<Offset>()
+            val markerGap = 28.dp.toPx()
             towers.forEachIndexed { index, tower ->
                 val bearing = Math.toRadians(location.bearingTo(tower.coordinate).value.toDouble() - 90)
-                val fraction = (location.distanceTo(tower.coordinate) / 20_000f).coerceIn(0.12f, 1f)
-                val p = Offset(
-                    center.x + kotlin.math.cos(bearing).toFloat() * radius * fraction,
-                    center.y + kotlin.math.sin(bearing).toFloat() * radius * fraction
+                var fraction = (location.distanceTo(tower.coordinate) / 20_000f).coerceIn(0.12f, 1f)
+                var angle = bearing
+                fun at() = Offset(
+                    center.x + kotlin.math.cos(angle).toFloat() * radius * fraction,
+                    center.y + kotlin.math.sin(angle).toFloat() * radius * fraction
                 )
+                var p = at()
+                var tries = 0
+                while (placed.any { (it - p).getDistance() < markerGap } && tries < 24) {
+                    if (fraction < 1f) {
+                        fraction = (fraction + 0.08f).coerceAtMost(1f)
+                    } else {
+                        angle += 0.18
+                    }
+                    p = at()
+                    tries++
+                }
+                placed += p
                 drawCircle(dot, 12.dp.toPx(), p)
                 paint.color = onDot.toArgb()
                 drawContext.canvas.nativeCanvas.drawText((index + 1).toString(), p.x, p.y + labelSize / 3f, paint)
