@@ -952,13 +952,16 @@ private fun PathRow(
         title = title,
         subtitle = subtitle,
         position = position,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         dimmed = !path.style.visible,
         leading = {
             PlacesBadge(
                 containerColor = pathColor,
                 contentColor = onPathColor,
                 icon = getPathIcon(path),
-                shape = if (path.temporary) MaterialShapes.Pill.toShape() else MaterialShapes.Cookie6Sided.toShape()
+                shape = if (path.temporary) MaterialShapes.Pill.toShape() else MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                iconScale = 0.55f
             )
         },
         value = distanceString,
@@ -1056,13 +1059,16 @@ private fun PathGroupRow(
         title = group.name,
         subtitle = pluralStringResource(R.plurals.path_group_summary, count, count),
         position = position,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         leading = {
             // The count is already in the subtitle, so the mark is the group's icon, not the number again.
             PlacesBadge(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                contentColor = MaterialTheme.colorScheme.primary,
                 icon = TrailIcons.PathGroup,
-                shape = MaterialShapes.Cookie6Sided.toShape()
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                iconScale = 0.55f
             )
         },
         onClick = { onAction(PathGroupAction.Open) },
