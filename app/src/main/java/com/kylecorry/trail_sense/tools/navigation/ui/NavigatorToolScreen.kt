@@ -499,8 +499,8 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
 
         views.radarCompassMap.isPanEnabled = false
         views.radarCompassMap.isFlingEnabled = false
-        views.radarCompassMap.backgroundColorOverride =
-            Resources.color(host.requireContext(), R.color.colorSecondary)
+        // No disc of its own: the radar's paths and places draw straight onto the dial.
+        views.radarCompassMap.backgroundColorOverride = null
         views.radarCompassMap.minScale = 0.001f
         views.radarCompassMap.mapCenter = gps.location
         views.radarCompassMap.metersPerProjectedUnit = 1.0
@@ -1089,13 +1089,16 @@ private fun NavigationTitle(
     if (!state.isTitleVisible) return
     // The heading sits inside the dial, like a watch face: the number on the lubber line, the direction under it.
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = state.title,
-            style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
-            fontWeight = FontWeight.Medium,
-            color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-            maxLines = 1
-        )
+        // The number is centred on its own; the degree sign hangs to its right (an invisible twin on the left
+        // balances it), so "40°" never sits left of centre.
+        val digits = state.title.removeSuffix("°")
+        val headingStyle = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum")
+        val headingColor = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+        Row {
+            Text("°", style = headingStyle, fontWeight = FontWeight.Medium, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1)
+            Text(digits, style = headingStyle, fontWeight = FontWeight.Medium, color = headingColor, maxLines = 1)
+            Text("°", style = headingStyle, fontWeight = FontWeight.Medium, color = headingColor, maxLines = 1)
+        }
         Text(
             text = state.direction,
             style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
@@ -1216,8 +1219,8 @@ private fun NavigatorHost(
                 ) {
                     Box(Modifier.requiredSize(compassSize)) {
                         val radarModifier = Modifier.fillMaxSize()
-                        views.radarCompassMap.Content(radarModifier)
                         views.radarCompass.Content(radarModifier)
+                        views.radarCompassMap.Content(radarModifier)
                         if (DialVariant.bezel != 5 || DialVariant.hub != 0) {
                             NavigationTitle(views.navigationTitle, Modifier.align(Alignment.Center))
                         }

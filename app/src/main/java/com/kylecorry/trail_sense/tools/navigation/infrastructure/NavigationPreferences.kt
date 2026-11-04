@@ -45,8 +45,12 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
     val keepScreenUnlockedWhileOpen: Boolean
         get() = screenLockMode == ScreenLockMode.WhileOpen
 
+    /** The dial's waves: 12 (one per 30°) or 8 (one per 45°). */
+    val dialLobes: Int
+        get() = cache.getString(context.getString(R.string.pref_navigation_dial_lobes))?.toIntOrNull()?.takeIf { it == 8 || it == 12 } ?: 12
+
     override val useLinearCompass: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_show_linear_compass)) ?: true
+        get() = cache.getBoolean(context.getString(R.string.pref_show_linear_compass)) ?: false
 
     val showMultipleBeacons: Boolean
         get() = !sensors.hasCompass() || cache.getBoolean(context.getString(R.string.pref_display_multi_beacons)) ?: true

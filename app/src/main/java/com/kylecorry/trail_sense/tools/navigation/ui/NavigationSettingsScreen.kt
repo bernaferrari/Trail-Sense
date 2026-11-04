@@ -233,7 +233,7 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
         mutableStateOf(controller.getStringPreference(R.string.pref_navigation_speedometer_type, "instant"))
     }
     var showLinearCompass by remember {
-        mutableStateOf(controller.getBoolean(R.string.pref_show_linear_compass, true))
+        mutableStateOf(controller.getBoolean(R.string.pref_show_linear_compass, false))
     }
     var showDialTicksWhenNoCompass by remember { mutableStateOf(prefs.showDialTicksWhenNoCompass) }
     var showSunMoonCompass by remember {
@@ -271,6 +271,12 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
     val bearingFooter = stringResource(R.string.bearing_length_description) + " " +
             stringResource(R.string.bearing_length_max, maxBearingLength)
     val sunMoonChoices = sunMoonOptions.map { TrailSenseChoice(it.value, it.label) }
+    val dialShapeTitle = stringResource(R.string.navigation_dial_shape)
+    val dialShapeChoices = listOf(
+        TrailSenseChoice("12", stringResource(R.string.navigation_dial_shape_12)),
+        TrailSenseChoice("8", stringResource(R.string.navigation_dial_shape_8))
+    )
+    var dialLobes by remember { mutableStateOf(prefs.dialLobes.toString()) }
 
     TrailSensePage(
         title = navigationTitle,
@@ -439,16 +445,22 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                 }
             }
             row { position ->
-                SettingsSwitchRow(
-                    label = stringResource(R.string.pref_navigation_draw_compass_dial_bezel_title),
-                    summary = stringResource(R.string.pref_navigation_draw_compass_dial_bezel_summary),
-                    checked = drawCompassDialBezel,
-                    onCheckedChange = {
-                        drawCompassDialBezel = it
-                        controller.putBoolean(R.string.pref_navigation_draw_compass_dial_bezel, it)
-                    },
-                    position = position
-                )
+                TrailSenseGroupCard(position = position) {
+                    Text(
+                        text = dialShapeTitle,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = TrailSenseSpacing.md)
+                    )
+                    TrailSenseConnectedChoice(
+                        options = dialShapeChoices,
+                        selected = dialLobes,
+                        label = dialShapeTitle,
+                        onSelect = {
+                            dialLobes = it
+                            controller.putString(R.string.pref_navigation_dial_lobes, it)
+                        }
+                    )
+                }
             }
             if (hasCompass) {
                 row { position ->
