@@ -5,6 +5,10 @@
 
 package com.kylecorry.trail_sense.shared.views.compose
 
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -180,7 +184,20 @@ fun TrailSensePage(
                 modifier = Modifier
                     .fillMaxSize()
                     .widthIn(max = TrailSenseSize.maximumContentWidth),
-                contentPadding = contentPadding,
+                // Screens opened from another one have no bottom bar, so the last row clears the gesture bar here.
+                contentPadding = if (onBack != null) {
+                    val navigationBar = androidx.compose.foundation.layout.WindowInsets.navigationBars
+                        .asPaddingValues().calculateBottomPadding()
+                    val direction = androidx.compose.ui.platform.LocalLayoutDirection.current
+                    PaddingValues(
+                        start = contentPadding.calculateStartPadding(direction),
+                        top = contentPadding.calculateTopPadding(),
+                        end = contentPadding.calculateEndPadding(direction),
+                        bottom = contentPadding.calculateBottomPadding() + navigationBar
+                    )
+                } else {
+                    contentPadding
+                },
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg),
                 content = content
             )
