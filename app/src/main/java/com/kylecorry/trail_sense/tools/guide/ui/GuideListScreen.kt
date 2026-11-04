@@ -7,7 +7,6 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SearchOff
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +35,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuideCategory
-import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 
@@ -68,30 +67,30 @@ internal fun GuideListScreen(
                 value = query,
                 onValueChange = { query = it },
                 placeholder = stringResource(R.string.search),
-                clearContentDescription = stringResource(android.R.string.cancel)
+                clearContentDescription = stringResource(android.R.string.cancel),
+                // The same quiet field as the Survival Guide's, so the guides lead.
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
             )
         }
 
         if (filtered.isEmpty()) {
             item(key = "empty") {
-                SkyEmptyState(
+                TrailSenseEmptyState(
                     icon = Icons.Default.SearchOff,
                     title = stringResource(R.string.no_results),
                     description = stringResource(R.string.sky_guides_no_results, query),
-                    action = {
-                        FilledTonalButton(onClick = { query = "" }) {
-                            Text(stringResource(R.string.guide_clear_search))
-                        }
-                    },
+                    actionLabel = stringResource(R.string.guide_clear_search),
+                    onAction = { query = "" },
                     modifier = Modifier.animateItem()
                 )
             }
         }
 
-        filtered.forEach { category ->
-            // The shelf's name carries its size, so a long list still has a sense of proportion.
-            trailSenseSection(key = "category-${category.name}", title = category.name) {
-                category.guides.forEach { guide ->
+        // A category with a single guide doesn't get a header and group of its own: it joins its neighbour, and the
+        // header names both, so the page is a few long shelves rather than many one-row ones.
+        mergeSparseCategories(filtered).forEach { shelf ->
+            trailSenseSection(key = "category-${shelf.name}", title = shelf.name) {
+                shelf.guides.forEach { guide ->
                     row { position ->
                         GuideRow(guide, position) { onOpenGuide(guide) }
                     }
@@ -123,6 +122,28 @@ private fun GuideRow(
             )
         }
     )
+}
+
+private fun mergeSparseCategories(categories: List<UserGuideCategory>): List<UserGuideCategory> {
+    val shelves = mutableListOf<UserGuideCategory>()
+    var pending: UserGuideCategory? = null
+    for (category in categories) {
+        val joined = pending?.let { UserGuideCategory("${it.name} · ${category.name}", it.guides + category.guides) }
+            ?: category
+        if (joined.guides.size < 2) {
+            pending = joined
+        } else {
+            shelves += joined
+            pending = null
+        }
+    }
+    pending?.let { last ->
+        val previous = shelves.removeLastOrNull()
+        shelves += if (previous == null) last else {
+            UserGuideCategory("${previous.name} · ${last.name}", previous.guides + last.guides)
+        }
+    }
+    return shelves
 }
 
 private fun filterGuides(

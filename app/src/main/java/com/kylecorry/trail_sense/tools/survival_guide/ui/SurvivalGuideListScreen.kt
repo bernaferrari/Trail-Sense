@@ -93,6 +93,8 @@ fun SurvivalGuideListScreen(
                 onValueChange = onQueryChange,
                 placeholder = stringResource(R.string.search),
                 clearContentDescription = stringResource(R.string.survival_guide_clear_search),
+                // A quiet field, so the chapters below are the first read.
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier.testTag("search")
             )
         }
@@ -112,21 +114,27 @@ fun SurvivalGuideListScreen(
         // The chapters load in the background; until then nothing is shown rather than an empty list.
         if (listItems.isNotEmpty()) {
             if (query.isBlank()) {
-                // Browsing: every chapter in one quiet list, the overview first with how many chapters there are.
+                // Browsing: the overview stands apart as the way in, then the chapters as one even list (one line
+                // each, so every row has the same rhythm).
+                val overview = listItems.first()
+                item(key = "overview") {
+                    TrailSenseRowGroup(modifier = Modifier.testTag("overview")) {
+                        row { position ->
+                            SurvivalGuideRow(
+                                item = overview.copy(
+                                    subtitle = stringResource(R.string.sky_survival_chapters, listItems.size - 1)
+                                ),
+                                position = position,
+                                index = 0,
+                                subtitleMaxLines = 1
+                            )
+                        }
+                    }
+                }
                 item(key = "list") {
                     TrailSenseRowGroup(modifier = Modifier.testTag("list")) {
-                        listItems.forEachIndexed { index, item ->
-                            row { position ->
-                                SurvivalGuideRow(
-                                    item = if (index == 0) {
-                                        item.copy(subtitle = stringResource(R.string.sky_survival_chapters, listItems.size))
-                                    } else {
-                                        item
-                                    },
-                                    position = position,
-                                    index = index
-                                )
-                            }
+                        listItems.drop(1).forEachIndexed { index, item ->
+                            row { position -> SurvivalGuideRow(item, position, index + 1, subtitleMaxLines = 1) }
                         }
                     }
                 }
@@ -217,7 +225,12 @@ private fun SurvivalGuideSummary(
 }
 
 @Composable
-private fun SurvivalGuideRow(item: SurvivalGuideListItem, position: TrailSenseGroupPosition, index: Int) {
+private fun SurvivalGuideRow(
+    item: SurvivalGuideListItem,
+    position: TrailSenseGroupPosition,
+    index: Int,
+    subtitleMaxLines: Int = 2
+) {
     // In search results the chapter leads the line so a heading like "Overview" still says where it lives.
     val subtitle = listOfNotNull(item.tag, item.subtitle?.takeIf { it.isNotBlank() })
         .joinToString(" · ")
@@ -230,6 +243,7 @@ private fun SurvivalGuideRow(item: SurvivalGuideListItem, position: TrailSenseGr
         onClick = item.onClick,
         modifier = Modifier.testTag("guide_item"),
         titleModifier = Modifier.testTag("guide_item_title"),
+        subtitleMaxLines = subtitleMaxLines,
         trailing = {
             Icon(
                 painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
