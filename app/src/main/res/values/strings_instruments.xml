@@ -85,6 +85,7 @@
     <string name="light_verdict_sun">Direct sun · find some shade</string>
 
     <!-- Signal finder -->
+    <string name="signal_finder_nearest_bearing">Nearest · %1$s</string>
     <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
 
     <!-- Ballistics -->

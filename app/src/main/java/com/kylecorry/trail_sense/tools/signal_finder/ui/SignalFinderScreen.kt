@@ -12,6 +12,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.sp
@@ -334,7 +337,10 @@ private fun SignalFinderScreen(
                     TrailSenseEmptyState(
                         icon = TrailIcons.CellTower,
                         title = stringResource(R.string.no_cell_towers_found),
-                        description = stringResource(R.string.signal_finder_empty_hint)
+                        description = stringResource(R.string.signal_finder_empty_hint),
+                        // A quiet sky: an empty signal, a pin for where you stand, a mountain to climb for line of sight.
+                        tone = TrailSenseTone.Secondary,
+                        accents = listOf(TrailIcons.SignalCellularOutline, TrailIcons.Location, TrailIcons.Altitude)
                     )
                 }
                 SignalDisclaimer(disclaimer)
@@ -374,11 +380,19 @@ private fun SignalFinderScreen(
                 }
 
                 if (towers.isNotEmpty()) {
+                    // Nearest first, so the numbers read as a ranking and the first row is the one to head for.
+                    val sortedTowers = towers.sortedBy { location.distanceTo(it.coordinate) }
                     trailSenseSection(key = "towers", title = towersTitle) {
                         row { position ->
-                            TowerRadar(towers = towers, location = location, position = position)
+                            TowerRadar(
+                                towers = sortedTowers,
+                                location = location,
+                                formatter = formatter,
+                                prefs = prefs,
+                                position = position
+                            )
                         }
-                        towers.forEachIndexed { index, tower ->
+                        sortedTowers.forEachIndexed { index, tower ->
                             row { position ->
                                 CellTowerRow(
                                     index = index,
@@ -418,13 +432,16 @@ private fun SignalHero(
     val colors = trailSenseToneColors(tone)
     TrailSenseSpotlight(
         title = formatter.formatPercentage(signal.strength),
-        titleStyle = MaterialTheme.typography.displayMedium,
-        eyebrow = formatter.formatCellNetwork(signal.network),
-        supportingText = if (signal.isRegistered) {
-            stringResource(R.string.full_service)
-        } else {
-            stringResource(R.string.emergency_calls_only)
-        },
+        titleStyle = MaterialTheme.typography.displayLarge,
+        supportingText = formatter.join(
+            if (signal.isRegistered) {
+                stringResource(R.string.full_service)
+            } else {
+                stringResource(R.string.emergency_calls_only)
+            },
+            formatter.formatCellNetwork(signal.network),
+            separator = FormatService.Separator.Dot
+        ),
         tone = tone,
         modifier = modifier,
         badge = {
@@ -544,45 +561,108 @@ private fun CellSignalRow(
 }
 
 /**
- * The nearby towers on a little radar, north up: you in the middle, each tower a numbered dot at its bearing,
- * pushed out by distance (20 km at the rim). The numbers match the rows under it.
+ * The nearby towers on a live radar, north up: you in the middle, filled distance bands with their ranges named,
+ * and a soft sweep turning over them. Each tower is a numbered dot at its bearing, pushed out by distance (20 km at
+ * the rim); a dot flares as the sweep passes it. The nearest tower is warm, matching its highlighted row.
  */
 @Composable
 private fun TowerRadar(
     towers: List<ApproximateCoordinate>,
     location: Coordinate,
+    formatter: FormatService,
+    prefs: UserPreferences,
     position: TrailSenseGroupPosition
 ) {
     val scheme = MaterialTheme.colorScheme
-    val ring = scheme.primary.copy(alpha = 0.16f)
+    val bandOuter = scheme.primaryContainer.copy(alpha = 0.55f)
+    val bandMiddle = scheme.surfaceContainerHighest
+    val bandInner = scheme.primaryContainer
+    val ringLine = scheme.primary.copy(alpha = 0.35f)
     val dot = scheme.primary
     val onDot = scheme.onPrimary
-    val you = scheme.tertiary
+    val nearest = scheme.tertiary
+    val onNearest = scheme.onTertiary
+    val you = scheme.onSurface
+    val sweepColor = scheme.primary
     val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 12.sp.toPx() }
-    val north = scheme.onSurfaceVariant
-    TrailSenseGroupCard(position = position) {
+    val ink = scheme.onSurface
+    val rangeLabels = listOf(20_000f, 13_200f, 6_600f).map {
+        formatter.formatDistance(
+            Distance.meters(it).convertTo(prefs.baseDistanceUnits).toRelativeDistance(),
+            0
+        )
+    }
+    val sweep by androidx.compose.animation.core.rememberInfiniteTransition(label = "radar").animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            tween(4200, easing = androidx.compose.animation.core.LinearEasing)
+        ),
+        label = "sweep"
+    )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = trailSenseGroupShape(position),
+        color = scheme.surfaceContainerLow
+    ) {
         Canvas(
             Modifier
                 .fillMaxWidth()
-                .height(220.dp)
+                .height(300.dp)
+                .padding(vertical = TrailSenseSpacing.md)
         ) {
-            val radius = size.minDimension / 2f - 14.dp.toPx()
+            val radius = size.minDimension / 2f - 10.dp.toPx()
+            drawCircle(bandOuter, radius, center)
+            drawCircle(bandMiddle, radius * 0.66f, center)
+            drawCircle(bandInner, radius * 0.33f, center)
             listOf(1f, 0.66f, 0.33f).forEach {
-                drawCircle(ring, radius * it, center, style = Stroke(width = if (it == 1f) 10.dp.toPx() else 1.5.dp.toPx()))
+                drawCircle(ringLine, radius * it, center, style = Stroke(width = 1.5.dp.toPx()))
+            }
+            // The sweep: a fading wedge trailing a bright edge.
+            val sweepAngle = sweep - 90f
+            rotate(sweepAngle, center) {
+            drawArc(
+                brush = androidx.compose.ui.graphics.Brush.sweepGradient(
+                    0f to Color.Transparent,
+                    0.85f to Color.Transparent,
+                    1f to sweepColor.copy(alpha = 0.28f),
+                    center = center
+                ),
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = true,
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = Size(radius * 2, radius * 2),
+                alpha = 1f
+            )
             }
             val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 textAlign = android.graphics.Paint.Align.CENTER
                 textSize = labelSize
                 isFakeBoldText = true
             }
-            paint.color = north.toArgb()
-            drawContext.canvas.nativeCanvas.drawText("N", center.x, center.y - radius - 4.dp.toPx() + labelSize / 3f, paint)
+            paint.color = ink.toArgb()
+            drawContext.canvas.nativeCanvas.drawText("N", center.x, center.y - radius + labelSize + 4.dp.toPx(), paint)
+            // Range labels down the east side of each ring.
+            paint.textAlign = android.graphics.Paint.Align.LEFT
+            paint.color = ink.copy(alpha = 0.7f).toArgb()
+            listOf(1f, 0.66f, 0.33f).forEachIndexed { i, f ->
+                drawContext.canvas.nativeCanvas.drawText(
+                    rangeLabels[i],
+                    center.x + 4.dp.toPx(),
+                    center.y + radius * f - 4.dp.toPx(),
+                    paint
+                )
+            }
+            paint.textAlign = android.graphics.Paint.Align.CENTER
             drawCircle(you, 7.dp.toPx(), center)
+            drawCircle(scheme.surfaceContainerLowest, 3.dp.toPx(), center)
             // Towers close together are nudged apart (outward, then sideways) so no two markers overlap.
             val placed = mutableListOf<Offset>()
             val markerGap = 28.dp.toPx()
             towers.forEachIndexed { index, tower ->
-                val bearing = Math.toRadians(location.bearingTo(tower.coordinate).value.toDouble() - 90)
+                val bearingDegrees = location.bearingTo(tower.coordinate).value
+                val bearing = Math.toRadians(bearingDegrees.toDouble() - 90)
                 var fraction = (location.distanceTo(tower.coordinate) / 20_000f).coerceIn(0.12f, 1f)
                 var angle = bearing
                 fun at() = Offset(
@@ -601,14 +681,26 @@ private fun TowerRadar(
                     tries++
                 }
                 placed += p
-                drawCircle(dot, 12.dp.toPx(), p)
-                paint.color = onDot.toArgb()
+                // How recently the sweep crossed this tower: 1 right at the edge, fading over 60 degrees.
+                val behind = ((sweep - bearingDegrees) % 360f + 360f) % 360f
+                val flare = (1f - behind / 60f).coerceIn(0f, 1f)
+                val isNearest = index == 0
+                val fill = if (isNearest) nearest else dot
+                if (flare > 0f) {
+                    drawCircle(fill.copy(alpha = 0.35f * flare), 12.dp.toPx() + 10.dp.toPx() * flare, p)
+                }
+                drawCircle(fill, 13.dp.toPx(), p)
+                paint.color = (if (isNearest) onNearest else onDot).toArgb()
                 drawContext.canvas.nativeCanvas.drawText((index + 1).toString(), p.x, p.y + labelSize / 3f, paint)
             }
         }
     }
 }
 
+/**
+ * A tower as one compact 72 dp row: its number in a scallop, the distance large, the bearing as a chip, and two
+ * labelled circular actions. The nearest tower's row is tinted like its warm dot on the radar.
+ */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CellTowerRow(
@@ -626,48 +718,70 @@ private fun CellTowerRow(
         .toRelativeDistance()
     val direction = location.bearingTo(tower.coordinate)
     val scheme = MaterialTheme.colorScheme
+    val isNearest = index == 0
+    val container = if (isNearest) scheme.tertiaryContainer else scheme.surfaceContainerLow
+    val content = if (isNearest) scheme.onTertiaryContainer else scheme.onSurface
 
-    TrailSenseGroupCard(
-        position = position,
-        contentPadding = PaddingValues(TrailSenseSpacing.lg)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = trailSenseGroupShape(position),
+        color = container,
+        contentColor = content
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .heightIn(min = 72.dp)
+                .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.sm, top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             TrailSenseShapeBadge(
                 text = (index + 1).toString(),
                 shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 44.dp
+                size = 44.dp,
+                containerColor = if (isNearest) scheme.tertiary else scheme.primary,
+                contentColor = if (isNearest) scheme.onTertiary else scheme.onPrimary
             )
             Spacer(Modifier.width(TrailSenseSpacing.lg))
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = stringResource(R.string.cell_tower),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = scheme.onSurface
+                    text = formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)),
+                    style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-                    TowerChip(formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)), primary = true)
-                    TowerChip(
-                        "${formatter.formatDegrees(direction.value, replace360 = true)} ${
-                            formatter.formatDirection(direction.direction)
-                        }",
-                        primary = false
-                    )
-                }
+                Text(
+                    text = if (isNearest) {
+                        stringResource(
+                            R.string.signal_finder_nearest_bearing,
+                            "${formatter.formatDegrees(direction.value, replace360 = true)} ${formatter.formatDirection(direction.direction)}"
+                        )
+                    } else {
+                        "${formatter.formatDegrees(direction.value, replace360 = true)} ${formatter.formatDirection(direction.direction)}"
+                    },
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                    color = content.copy(alpha = 0.78f),
+                    maxLines = 1
+                )
             }
-        }
-        Spacer(Modifier.height(TrailSenseSpacing.md))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.End),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = onCreateBeacon) {
-                Text(stringResource(R.string.create_beacon))
+            androidx.compose.material3.IconButton(onClick = onCreateBeacon) {
+                Icon(
+                    TrailIcons.Beacon,
+                    contentDescription = stringResource(R.string.create_beacon),
+                    tint = content.copy(alpha = 0.8f)
+                )
             }
-            FilledTonalButton(onClick = onNavigate) {
-                Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(TrailSenseSpacing.sm))
-                Text(stringResource(R.string.navigate))
+            androidx.compose.material3.FilledIconButton(
+                onClick = onNavigate,
+                colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
+                    containerColor = if (isNearest) scheme.tertiary else scheme.secondaryContainer,
+                    contentColor = if (isNearest) scheme.onTertiary else scheme.onSecondaryContainer
+                )
+            ) {
+                Icon(
+                    TrailIcons.NavigationArrow,
+                    contentDescription = stringResource(R.string.navigate),
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
