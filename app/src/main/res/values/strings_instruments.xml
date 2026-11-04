@@ -76,6 +76,10 @@
     <string name="battery_full_in">Full in %1$s</string>
     <string name="battery_lasts_about">Lasts about %1$s</string>
 
+    <!-- Convert -->
+    <string name="convert_copy">Copy</string>
+    <string name="convert_paste">Paste</string>
+
     <!-- Ruler -->
     <string name="ruler_on_the_ground">On the ground</string>
     <string name="ruler_measure_first">Measure on the ruler first</string>
