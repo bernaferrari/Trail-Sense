@@ -346,8 +346,11 @@ private fun TurnBackScreen(
         label = "turnFraction"
     )
     val isLate = isActive && remaining != null && remaining < Duration.ofMinutes(10)
+    val isDue = isActive && remaining != null && remaining.isZero
+    // Idle is calm; a set time is warm; the last ten minutes are caution and a passed turn-around is an alert.
     val tone = when {
-        !isActive -> TrailSenseTone.Primary
+        !isActive -> TrailSenseTone.Secondary
+        isDue -> TrailSenseTone.Error
         isLate -> TrailSenseTone.Caution
         else -> TrailSenseTone.Tertiary
     }
@@ -364,9 +367,14 @@ private fun TurnBackScreen(
                 modifier = Modifier
                     .testTag("instructions")
                     .semantics(mergeDescendants = true) {},
-                eyebrow = stringResource(if (isActive) R.string.places_turn_back_in else R.string.tool_turn_back),
-                title = if (isActive) formattedRemainingTime ?: "--" else instructionText,
-                titleStyle = if (isActive) MaterialTheme.typography.displayMedium else MaterialTheme.typography.headlineMedium,
+                // Idle: the state word above a question. Set: one star countdown, then the plan as a sentence.
+                eyebrow = if (isActive) stringResource(R.string.places_turn_back_in) else instructionText,
+                title = if (isActive) {
+                    formattedRemainingTime.orEmpty()
+                } else {
+                    stringResource(R.string.places_turn_back_idle_title)
+                },
+                titleStyle = if (isActive) MaterialTheme.typography.displayMedium else MaterialTheme.typography.headlineSmall,
                 supportingText = if (isActive) instructionText else stringResource(R.string.turn_back_empty_description),
                 tone = tone,
                 badge = {
@@ -379,37 +387,35 @@ private fun TurnBackScreen(
                     )
                 }
             ) {
-                // The track is always there: a preview of the plan until a time is set, the live journey after.
+                // A ghost of the plan until a time is set (dashed, no marker), the live journey after, with the sun
+                // sinking at the far end as the turn-around gets closer.
                 JourneyTrack(
+                    active = isActive,
                     turnFraction = if (isActive) animatedTurn else 0.4f,
+                    sunset = if (isActive) 1f - animatedProgress else 0f,
                     color = colors.accent,
                     trackColor = colors.content.copy(alpha = 0.16f),
                     markerRing = colors.container
                 )
                 Row(Modifier.fillMaxWidth()) {
                     val stop = MaterialTheme.typography.labelMedium
-                    Text(stringResource(R.string.places_turn_back_now), style = stop, modifier = Modifier.weight(1f))
-                    Text(stringResource(R.string.tool_turn_back), style = stop)
+                    val stopColor = colors.content.copy(alpha = 0.78f)
                     Text(
-                        stringResource(R.string.places_turn_back_home),
+                        stringResource(R.string.places_turn_back_now),
                         style = stop,
+                        color = stopColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        if (isActive) formattedTurnBackTime.orEmpty() else stringResource(R.string.places_turn_back_turn_around),
+                        style = stop,
+                        color = stopColor
+                    )
+                    Text(
+                        if (isActive) formattedReturnTime.orEmpty() else stringResource(R.string.places_turn_back_be_back),
+                        style = stop,
+                        color = stopColor,
                         textAlign = TextAlign.End,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                    JourneyTile(
-                        label = stringResource(R.string.tool_turn_back),
-                        value = formattedTurnBackTime ?: "--:--",
-                        shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp, topEnd = 6.dp, bottomEnd = 6.dp),
-                        contentColor = colors.content,
-                        modifier = Modifier.weight(1f)
-                    )
-                    JourneyTile(
-                        label = stringResource(R.string.places_turn_back_back_by),
-                        value = formattedReturnTime ?: "--:--",
-                        shape = RoundedCornerShape(topStart = 6.dp, bottomStart = 6.dp, topEnd = 20.dp, bottomEnd = 20.dp),
-                        contentColor = colors.content,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -431,9 +437,31 @@ private fun TurnBackScreen(
                             shape = MaterialShapes.Cookie9Sided.toShape()
                         )
                     },
-                    value = formattedReturnTime ?: stringResource(R.string.places_turn_back_set),
-                    valueColor = MaterialTheme.colorScheme.primary,
-                    onClick = { onPickReturnTime(returnTime) }
+                    onClick = { onPickReturnTime(returnTime) },
+                    actions = {
+                        // The screen's one warm action: "Set" until there is a time, then the time itself.
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = if (isActive) {
+                                MaterialTheme.colorScheme.surfaceContainerHighest
+                            } else {
+                                MaterialTheme.colorScheme.tertiary
+                            },
+                            contentColor = if (isActive) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                MaterialTheme.colorScheme.onTertiary
+                            },
+                            modifier = Modifier.padding(end = TrailSenseSpacing.sm)
+                        ) {
+                            Text(
+                                formattedReturnTime ?: stringResource(R.string.places_turn_back_set),
+                                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+                            )
+                        }
+                    }
                 )
             }
             row { position ->
@@ -495,17 +523,43 @@ private fun TurnBackScreen(
  * a home dot at the end. It shortens as the turn-around time gets closer.
  */
 @Composable
-private fun JourneyTrack(turnFraction: Float, color: Color, trackColor: Color, markerRing: Color) {
+private fun JourneyTrack(
+    active: Boolean,
+    turnFraction: Float,
+    sunset: Float,
+    color: Color,
+    trackColor: Color,
+    markerRing: Color
+) {
+    val sun = MaterialTheme.colorScheme.tertiary
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
-            .height(28.dp)
+            .height(36.dp)
     ) {
         val stroke = 12.dp.toPx()
-        val y = size.height / 2
+        val y = size.height - 14.dp.toPx()
         val start = stroke / 2
-        val end = size.width - stroke / 2
+        val end = size.width - stroke / 2 - 12.dp.toPx()
         val turnX = start + (end - start) * turnFraction
+        if (!active) {
+            // The plan as a ghost: a dashed line with soft stops and no thumb until there is a time.
+            drawLine(
+                color.copy(alpha = 0.45f),
+                Offset(start, y),
+                Offset(end, y),
+                strokeWidth = 4.dp.toPx(),
+                cap = StrokeCap.Round,
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(10.dp.toPx(), 8.dp.toPx())
+                )
+            )
+            listOf(start, turnX, end).forEach { x ->
+                drawCircle(markerRing, radius = 7.dp.toPx(), center = Offset(x, y))
+                drawCircle(color.copy(alpha = 0.45f), radius = 4.dp.toPx(), center = Offset(x, y))
+            }
+            return@Canvas
+        }
         drawLine(trackColor, Offset(start, y), Offset(end, y), strokeWidth = stroke, cap = StrokeCap.Round)
         // Quarter ticks so the track reads as time, not a slider.
         for (i in 1..3) {
@@ -515,33 +569,18 @@ private fun JourneyTrack(turnFraction: Float, color: Color, trackColor: Color, m
         drawLine(color, Offset(start, y), Offset(turnX, y), strokeWidth = stroke, cap = StrokeCap.Round)
         drawCircle(markerRing, radius = 12.dp.toPx(), center = Offset(turnX, y))
         drawCircle(color, radius = 8.dp.toPx(), center = Offset(turnX, y))
-        drawCircle(color.copy(alpha = 0.55f), radius = 5.dp.toPx(), center = Offset(end, y))
-    }
-}
-
-@Composable
-private fun JourneyTile(
-    label: String,
-    value: String,
-    shape: androidx.compose.ui.graphics.Shape,
-    contentColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-        contentColor = contentColor
-    ) {
-        Column(Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = contentColor.copy(alpha = 0.8f))
-            Text(
-                value,
-                style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-                color = contentColor
-            )
-        }
+        // The sun at the end of the walk sinks toward the horizon as the turn-around comes closer.
+        val sunRadius = 8.dp.toPx()
+        val sunX = size.width - sunRadius - 2.dp.toPx()
+        val sunY = sunRadius + (y - sunRadius) * sunset.coerceIn(0f, 1f)
+        drawCircle(sun, radius = sunRadius, center = Offset(sunX, sunY))
+        drawLine(
+            color.copy(alpha = 0.55f),
+            Offset(sunX - sunRadius - 4.dp.toPx(), y),
+            Offset(sunX + sunRadius, y),
+            strokeWidth = 2.dp.toPx(),
+            cap = StrokeCap.Round
+        )
     }
 }
 

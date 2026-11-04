@@ -53,6 +53,9 @@
     <string name="places_turn_back_home">Back</string>
     <string name="places_turn_back_in">Turn back in</string>
     <string name="places_turn_back_back_by">Back by</string>
+    <string name="places_turn_back_idle_title">When do you need to be back?</string>
+    <string name="places_turn_back_turn_around">Turn around</string>
+    <string name="places_turn_back_be_back">Be back</string>
     <!-- Declination -->
     <string name="places_declination_here">At your location</string>
     <string name="places_declination_with_true_north">with true north</string>
