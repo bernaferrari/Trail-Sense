@@ -17,7 +17,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.TextButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.material3.MaterialShapes
@@ -43,7 +44,15 @@ import com.kylecorry.trail_sense.shared.icons.trail.Chart
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import com.kylecorry.trail_sense.shared.icons.trail.Power
 import com.kylecorry.trail_sense.shared.icons.trail.Settings
-import com.kylecorry.trail_sense.shared.icons.trail.Moon
+import com.kylecorry.trail_sense.shared.icons.trail.MoonWaningCrescent
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.math.PI
+import kotlin.math.sin
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
@@ -57,6 +66,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -428,45 +438,42 @@ private fun BatteryScreen(
                 label = "batteryProgress"
             )
             val danger = isLow && !isCharging
+            // One verdict: how long it lasts (or until full). Without enough readings yet, the current says how
+            // it is going ("Discharging slowly"), and the bare status only when there is nothing else to say.
+            val verdict = timeText ?: currentText.ifEmpty { status }
+            val detail = currentText.takeIf { it.isNotEmpty() && it != verdict }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                    .padding(vertical = TrailSenseSpacing.sm),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = formatter.formatPercentage(percent),
-                    modifier = Modifier.testTag("battery_percentage"),
-                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                BatteryCell(
+                    percentText = formatter.formatPercentage(percent),
+                    level = progress,
+                    isCharging = isCharging,
+                    danger = danger,
+                    fastDrain = current < -500f
                 )
-                // The verdict is how long it lasts (or until full); without enough readings yet, the plain status.
                 Text(
-                    text = timeText ?: status,
+                    text = verdict,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = TrailSenseSpacing.lg)
                 )
-                if (currentText.isNotEmpty()) {
+                if (detail != null) {
                     Text(
-                        text = currentText,
-                        modifier = Modifier.testTag("battery_current"),
+                        text = detail,
+                        modifier = Modifier
+                            .padding(top = TrailSenseSpacing.xs)
+                            .testTag("battery_current"),
                         style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                        textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                // The charge as the screen's one primary fill: it waves only while charging, so its shape says
-                // "filling", and lies flat on battery.
-                LinearWavyProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.md)
-                        .testTag("battery_level_progress"),
-                    color = if (danger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    amplitude = { if (isCharging) 1f else 0f }
-                )
             }
         }
 
@@ -500,7 +507,7 @@ private fun BatteryScreen(
                     TrailSenseListItem(
                         title = deepSleepLabel,
                         subtitle = deepSleepWindow,
-                        icon = rememberVectorPainter(TrailIcons.Moon),
+                        icon = rememberVectorPainter(TrailIcons.MoonWaningCrescent),
                         trailingText = formatter.formatPercentage(deepSleep.percent),
                         position = position,
                         modifier = Modifier.testTag("battery_deep_sleep")
@@ -576,6 +583,128 @@ private fun BatteryScreen(
     }
 }
 
+/**
+ * The battery itself: a cell whose charge is liquid. It lies still on battery, rolls while charging (and a little
+ * faster when it drains fast), and turns to the error colour when low. The charge sits inside it in display type.
+ */
+@Composable
+private fun BatteryCell(
+    percentText: String,
+    level: Float,
+    isCharging: Boolean,
+    danger: Boolean,
+    fastDrain: Boolean
+) {
+    val scheme = MaterialTheme.colorScheme
+    val transition = rememberInfiniteTransition(label = "cell")
+    val rolling by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(if (isCharging) 1600 else 4200, easing = LinearEasing), RepeatMode.Restart),
+        label = "wave"
+    )
+    val moving = isCharging || fastDrain
+    val phase = if (moving) rolling else 0f
+    val fill by animateColorAsState(
+        if (danger) scheme.errorContainer else scheme.primaryContainer,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "fill"
+    )
+    val rim by animateColorAsState(
+        if (danger) scheme.error else scheme.primary,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "rim"
+    )
+    val ink by animateColorAsState(
+        if (danger) scheme.onErrorContainer else scheme.onPrimaryContainer,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "ink"
+    )
+    val face = scheme.surfaceContainerLow
+    Box(
+        modifier = Modifier
+            .size(width = 168.dp, height = 264.dp)
+            .testTag("battery_level_progress"),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = 8.dp.toPx()
+            val nubHeight = 14.dp.toPx()
+            val nubWidth = size.width * 0.36f
+            // The terminal on top.
+            drawRoundRect(
+                color = rim,
+                topLeft = Offset((size.width - nubWidth) / 2f, 0f),
+                size = Size(nubWidth, nubHeight + stroke),
+                cornerRadius = CornerRadius(6.dp.toPx())
+            )
+            val bodyTop = nubHeight + stroke / 2f
+            val bodySize = Size(size.width - stroke, size.height - bodyTop - stroke / 2f)
+            val bodyOffset = Offset(stroke / 2f, bodyTop)
+            val corner = CornerRadius(36.dp.toPx())
+            drawRoundRect(face, bodyOffset, bodySize, corner)
+            // The charge, clipped to the inside of the cell.
+            val inset = stroke / 2f + 6.dp.toPx()
+            val inner = Path().apply {
+                addRoundRect(
+                    androidx.compose.ui.geometry.RoundRect(
+                        left = bodyOffset.x + inset,
+                        top = bodyOffset.y + inset,
+                        right = bodyOffset.x + bodySize.width - inset,
+                        bottom = bodyOffset.y + bodySize.height - inset,
+                        cornerRadius = CornerRadius(30.dp.toPx())
+                    )
+                )
+            }
+            clipPath(inner) {
+                val top = bodyOffset.y + inset
+                val bottom = bodyOffset.y + bodySize.height - inset
+                val surfaceY = bottom - (bottom - top) * level.coerceIn(0f, 1f)
+                val amplitude = if (moving) 5.dp.toPx() else 2.dp.toPx()
+                val wavelength = size.width / 1.2f
+                val back = Path().apply {
+                    moveTo(0f, size.height)
+                    var x = 0f
+                    lineTo(0f, surfaceY)
+                    while (x <= size.width) {
+                        lineTo(x, surfaceY + amplitude * sin((x / wavelength + phase) * 2 * PI).toFloat())
+                        x += 4f
+                    }
+                    lineTo(size.width, size.height)
+                    close()
+                }
+                drawPath(back, fill.copy(alpha = 0.55f))
+                val front = Path().apply {
+                    moveTo(0f, size.height)
+                    var x = 0f
+                    lineTo(0f, surfaceY + amplitude)
+                    while (x <= size.width) {
+                        lineTo(
+                            x,
+                            surfaceY + amplitude * 1.4f +
+                                amplitude * sin((x / wavelength - phase + 0.35f) * 2 * PI).toFloat()
+                        )
+                        x += 4f
+                    }
+                    lineTo(size.width, size.height)
+                    close()
+                }
+                drawPath(front, fill)
+            }
+            drawRoundRect(rim, bodyOffset, bodySize, corner, style = Stroke(stroke))
+        }
+        Text(
+            text = percentText,
+            modifier = Modifier
+                .padding(top = 14.dp)
+                .testTag("battery_percentage"),
+            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            color = if (level > 0.45f) ink else scheme.onSurface
+        )
+    }
+}
+
 @Composable
 private fun Chevron() {
     Icon(
@@ -606,12 +735,12 @@ private fun RunningServiceRow(
         position = position,
         onClick = null
     ) {
-        TextButton(
+        TrailSenseButton(
+            text = stringResource(R.string.stop),
             onClick = onDisable,
+            style = TrailSenseButtonStyle.Tonal,
             modifier = Modifier.testTag("battery_service_stop_btn")
-        ) {
-            Text(stringResource(R.string.stop))
-        }
+        )
     }
 }
 
