@@ -103,11 +103,12 @@ internal fun SkyValueRow(
     subtitle: String? = null,
     value: String? = null,
     icon: ImageVector? = null,
-    iconContainerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    iconContentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    // The family row: a 12% primary Cookie6 well, titleMedium, surfaceContainer, a quiet value on the right.
+    iconContainerColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+    iconContentColor: Color = MaterialTheme.colorScheme.primary,
     iconRotation: Float = 0f,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    valueColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null
 ) {
@@ -132,13 +133,12 @@ internal fun SkyValueRow(
                     contentColor = iconContentColor,
                     iconRotation = iconRotation
                 )
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                Spacer(Modifier.width(TrailSenseSpacing.md))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (subtitle != null) {
@@ -153,8 +153,8 @@ internal fun SkyValueRow(
                 Spacer(Modifier.width(TrailSenseSpacing.md))
                 Text(
                     value,
-                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.Medium,
                     color = valueColor,
                     textAlign = TextAlign.End,
                     maxLines = 3,
