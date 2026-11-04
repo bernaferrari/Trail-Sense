@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -881,9 +882,19 @@ private fun TriangulateResultCard(
     TrailSenseSpotlight(
         modifier = Modifier.testTag("triangulate_title"),
         eyebrow = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination),
-        title = title,
-        titleStyle = if (actionsVisible) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.headlineMedium,
-        supportingText = if (actionsVisible) null else stringResource(R.string.places_triangulate_sightings, completed),
+        // Until there's an answer the headline says what to do next; a failure is only the subtitle.
+        title = when {
+            actionsVisible -> title
+            completed == 0 -> stringResource(R.string.places_triangulate_take_first)
+            completed == 1 -> stringResource(R.string.places_triangulate_take_second)
+            else -> stringResource(R.string.places_triangulate_check)
+        },
+        titleStyle = MaterialTheme.typography.headlineSmall,
+        supportingText = when {
+            actionsVisible -> null
+            completed == 2 -> title
+            else -> stringResource(R.string.places_triangulate_sightings, completed)
+        },
         tone = tone,
         badge = {
             TrailSenseShapeBadge(
@@ -909,17 +920,41 @@ private fun TriangulateResultCard(
         }
     ) {
         if (!actionsVisible) {
-            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+            // The two sightings as equal tiles that fill in as you take them.
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 repeat(2) { index ->
                     val done = index < completed
-                    PlacesBadge(
-                        containerColor = if (done) colors.accent else colors.content.copy(alpha = 0.12f),
-                        contentColor = if (done) colors.onAccent else colors.content,
-                        icon = if (done) TrailIcons.Check else null,
-                        text = if (done) null else (index + 1).toString(),
-                        shape = MaterialShapes.Cookie4Sided.toShape(),
-                        size = 36.dp
-                    )
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(
+                            topStart = if (index == 0) 20.dp else 6.dp,
+                            bottomStart = if (index == 0) 20.dp else 6.dp,
+                            topEnd = if (index == 1) 20.dp else 6.dp,
+                            bottomEnd = if (index == 1) 20.dp else 6.dp
+                        ),
+                        color = if (done) colors.accent else MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                        contentColor = if (done) colors.onAccent else colors.content
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            PlacesBadge(
+                                containerColor = if (done) colors.onAccent else colors.accent.copy(alpha = 0.16f),
+                                contentColor = if (done) colors.accent else colors.content,
+                                icon = if (done) TrailIcons.Check else null,
+                                text = if (done) null else (index + 1).toString(),
+                                shape = MaterialShapes.Cookie4Sided.toShape(),
+                                size = 40.dp
+                            )
+                            Spacer(Modifier.width(TrailSenseSpacing.md))
+                            Text(
+                                stringResource(R.string.location_number, index + 1),
+                                style = MaterialTheme.typography.titleSmall,
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
             }
         }

@@ -13,6 +13,9 @@
     <string name="places_backtrack_off_description">Start it to save your trail as you walk.</string>
     <string name="places_backtrack_every">Every %1$s</string>
     <!-- Triangulate -->
+    <string name="places_triangulate_take_first">Take your first sighting</string>
+    <string name="places_triangulate_take_second">Take one more sighting</string>
+    <string name="places_triangulate_check">Check your sightings</string>
     <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
     <!-- Offline maps -->
     <string name="places_maps_you_are_on">You are on this map</string>
