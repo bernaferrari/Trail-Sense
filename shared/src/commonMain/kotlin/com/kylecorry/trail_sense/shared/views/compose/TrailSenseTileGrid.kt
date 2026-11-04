@@ -237,7 +237,7 @@ private fun Tile(tile: TrailSenseTile, shape: RoundedCornerShape, titleSize: Tex
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = titleSize),
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 tile.subtitle?.let {

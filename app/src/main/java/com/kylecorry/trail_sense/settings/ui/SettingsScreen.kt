@@ -2,6 +2,13 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.ui.graphics.Color
+import com.kylecorry.trail_sense.tools.tools.ui.accent
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTile
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTileGrid
 import android.content.Intent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
@@ -145,54 +152,19 @@ private fun SettingsScreen(
         onBack = onBack,
         backLabel = stringResource(R.string.back)
     ) {
-        trailSenseSection("general", title = generalTitle) {
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.units),
-                    icon = rememberVectorPainter(TrailIcons.Ruler),
-                    position = position,
-                    onClick = { go(R.string.pref_unit_settings) }
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.pref_theme_title),
-                    icon = rememberVectorPainter(TrailIcons.Theme),
-                    position = position,
-                    onClick = { go(R.string.pref_theme_settings) }
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.sensors),
-                    subtitle = stringResource(R.string.sensor_summary),
-                    icon = rememberVectorPainter(TrailIcons.Sensors),
-                    position = position,
-                    onClick = { go(R.string.pref_sensor_settings) }
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.privacy),
-                    icon = rememberVectorPainter(TrailIcons.Visible),
-                    position = position,
-                    onClick = { go(R.string.pref_privacy_settings) }
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.errors),
-                    icon = rememberVectorPainter(TrailIcons.Alert),
-                    position = position,
-                    onClick = { go(R.string.pref_error_settings) }
-                )
-            }
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.backup_restore),
-                    icon = rememberVectorPainter(TrailIcons.BackupRestore),
-                    position = position,
-                    onClick = { go(R.string.pref_backup_settings) }
+        // Keepout's settings grid: the everyday destinations as tiles, each with its own colour in the well.
+        item("general") {
+            Column {
+                TrailSenseGroupHeader(generalTitle)
+                TrailSenseTileGrid(
+                    listOf(
+                        settingsTile(R.string.pref_unit_settings, stringResource(R.string.units), TrailIcons.Ruler, TrailSenseAccents.Sky, ::go),
+                        settingsTile(R.string.pref_theme_settings, stringResource(R.string.pref_theme_title), TrailIcons.Theme, TrailSenseAccents.Blush, ::go),
+                        settingsTile(R.string.pref_sensor_settings, stringResource(R.string.sensors), TrailIcons.Sensors, TrailSenseAccents.Seafoam, ::go),
+                        settingsTile(R.string.pref_privacy_settings, stringResource(R.string.privacy), TrailIcons.Visible, TrailSenseAccents.Lavender, ::go),
+                        settingsTile(R.string.pref_error_settings, stringResource(R.string.errors), TrailIcons.Alert, TrailSenseAccents.Coral, ::go),
+                        settingsTile(R.string.pref_backup_settings, stringResource(R.string.backup_restore), TrailIcons.BackupRestore, TrailSenseAccents.Leaf, ::go)
+                    )
                 )
             }
         }
@@ -203,20 +175,26 @@ private fun SettingsScreen(
                     title = stringResource(R.string.tools),
                     subtitle = stringResource(R.string.settings_tools_summary),
                     icon = rememberVectorPainter(TrailIcons.Apps),
+                    accent = TrailSenseAccents.Apricot,
                     position = position,
                     onClick = { go(R.string.pref_tool_settings_header_key) }
                 )
             }
-            toolItems.forEach { tool ->
-                row { position ->
-                    SettingsNavRow(
+        }
+
+        // Each tool's own settings, as a grid in its category's colour, so the long list reads at a glance.
+        item("tool_grid") {
+            TrailSenseTileGrid(
+                toolItems.map { tool ->
+                    TrailSenseTile(
+                        key = tool.id,
                         title = tool.name,
-                        icon = rememberVectorPainter(tool.icon),
-                        position = position,
+                        accent = tool.category.accent(),
+                        icon = { Icon(tool.icon, contentDescription = null, modifier = Modifier.size(22.dp)) },
                         onClick = { tool.settingsNavAction?.let(onNavigate) }
                     )
                 }
-            }
+            )
         }
 
         trailSenseSection("advanced", title = advancedTitle) {
@@ -224,6 +202,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.experimental),
                     icon = rememberVectorPainter(TrailIcons.Experimental),
+                    accent = TrailSenseAccents.Violet,
                     position = position,
                     onClick = { go(R.string.pref_experimental_settings) }
                 )
@@ -245,6 +224,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.diagnostics),
                     icon = rememberVectorPainter(Icons.Rounded.MonitorHeart),
+                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { go(R.string.pref_diagnostics) }
                 )
@@ -253,6 +233,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_app_version_title),
                     icon = rememberVectorPainter(Icons.Rounded.Info),
+                    accent = TrailSenseAccents.Stone,
                     position = position,
                     value = version,
                     onClick = null
@@ -262,6 +243,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_privacy_policy_title),
                     icon = rememberVectorPainter(Icons.Rounded.Policy),
+                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { onOpenUrl(context.getString(R.string.privacy_policy_url)) }
                 )
@@ -270,6 +252,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_email_title),
                     icon = rememberVectorPainter(Icons.Rounded.Email),
+                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = onEmailDeveloper
                 )
@@ -278,6 +261,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_github_title),
                     icon = rememberVectorPainter(Icons.Rounded.Code),
+                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { onOpenUrl(GITHUB_URL) }
                 )
@@ -286,6 +270,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.pref_open_source_licenses_title),
                     icon = rememberVectorPainter(Icons.Rounded.Description),
+                    accent = TrailSenseAccents.Stone,
                     position = position,
                     onClick = { go(R.string.pref_open_source_licenses) }
                 )
@@ -305,8 +290,10 @@ private fun SettingsNavRow(
     position: TrailSenseGroupPosition,
     onClick: (() -> Unit)?,
     subtitle: String? = null,
-    value: String? = null
+    value: String? = null,
+    accent: Color = Color.Unspecified
 ) {
+    val wells = trailSenseWellColors(accent)
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -350,8 +337,8 @@ private fun SettingsNavRow(
         ) {
             Surface(
                 shape = RoundedCornerShape(TrailSenseSpacing.md),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                color = wells.container,
+                contentColor = wells.content,
                 modifier = Modifier.size(TrailSenseSize.compactIconContainer)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -414,3 +401,17 @@ private fun SettingsNavRow(
 }
 
 private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
+
+private fun settingsTile(
+    key: Int,
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accent: Color,
+    go: (Int) -> Unit
+) = TrailSenseTile(
+    key = key,
+    title = title,
+    accent = accent,
+    icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp)) },
+    onClick = { go(key) }
+)

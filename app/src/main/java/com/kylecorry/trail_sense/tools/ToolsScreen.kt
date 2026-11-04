@@ -245,7 +245,7 @@ fun ToolsScreen(
 }
 
 /** Each category's accent, used only in its tools' icon wells (Keepout's rule: color lives in the wells). */
-private fun ToolCategory.accent(): Color = when (this) {
+internal fun ToolCategory.accent(): Color = when (this) {
     ToolCategory.Signaling -> TrailSenseAccents.Coral
     ToolCategory.Distance -> TrailSenseAccents.Sky
     ToolCategory.Location -> TrailSenseAccents.Leaf
