@@ -110,6 +110,44 @@ inline fun <T> LazyListScope.placesGroup(
     }
 }
 
+/**
+ * A calm screen's answer: its one key value in displaySmall SemiBold onSurface at the top of the content, with one
+ * verdict line under it. No card, no badge, no eyebrow. [below] holds an optional quiet extra (a progress bar).
+ */
+@Composable
+fun PlacesKeyValue(
+    value: String,
+    modifier: Modifier = Modifier,
+    verdict: String? = null,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+    below: (@Composable ColumnScope.() -> Unit)? = null
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+    ) {
+        Text(
+            value,
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            color = valueColor
+        )
+        if (verdict != null) {
+            Text(
+                verdict,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (below != null) {
+            Spacer(Modifier.height(TrailSenseSpacing.xs))
+            below()
+        }
+    }
+}
+
 /** A thin rounded bar for "how much" next to a value (proximity, progress, share of a total). */
 @Composable
 fun PlacesMiniBar(
