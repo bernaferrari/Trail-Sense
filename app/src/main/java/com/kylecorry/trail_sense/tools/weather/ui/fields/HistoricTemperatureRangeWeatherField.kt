@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.units.Temperature
@@ -44,7 +45,7 @@ class HistoricTemperatureRangeWeatherField(
             id = 9,
             title = context.getString(R.string.temperature_high_low),
             subtitle = context.getString(R.string.historic_temperature_years, 30),
-            icon = R.drawable.ic_temperature_range,
+            icon = TrailIcons.TemperatureRange,
             iconTint = color,
             trailingText = context.getString(R.string.slash_separated_pair, highValue, lowValue)
         ) {

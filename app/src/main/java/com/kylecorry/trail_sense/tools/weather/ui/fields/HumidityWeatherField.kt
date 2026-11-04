@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
@@ -23,7 +24,7 @@ class HumidityWeatherField(
         return WeatherListItem(
             id = 6,
             title = context.getString(R.string.humidity),
-            icon = R.drawable.ic_category_water,
+            icon = TrailIcons.CategoryWater,
             iconTint = AppColor.Blue.color,
             trailingText = value
         ) {

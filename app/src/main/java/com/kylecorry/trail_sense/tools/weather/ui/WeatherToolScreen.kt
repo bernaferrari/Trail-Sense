@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -20,6 +21,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseIconWell
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseWellColors
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
 import android.content.Context
@@ -897,7 +899,12 @@ private fun WeatherMonitorPlayBar(
                 .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.md, top = TrailSenseSpacing.md, bottom = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TrailSenseIconWell(trailSenseWellColors(TrailSenseAccents.Periwinkle)) {
+            TrailSenseIconWell(
+                TrailSenseWellColors(
+                    MaterialTheme.colorScheme.secondaryContainer,
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
                 Icon(
                     imageVector = TrailIcons.Weather,
                     contentDescription = null,
@@ -940,9 +947,7 @@ private fun WeatherMonitorPlayBar(
                     .testTag("play_btn")
             ) {
                 Icon(
-                    painter = painterResource(
-                        if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
-                    ),
+                    imageVector = if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
                     contentDescription = stringResource(
                         if (isOn) R.string.stop else R.string.start
                     )
@@ -958,7 +963,7 @@ private fun WeatherListItemRow(item: WeatherListItem, position: TrailSenseGroupP
         position = position,
         title = item.title,
         subtitle = item.subtitle,
-        icon = item.icon?.let { painterResource(it) },
+        icon = item.icon?.let { rememberVectorPainter(it) },
         iconTint = item.iconTint?.let { Color(it) } ?: MaterialTheme.colorScheme.primary,
         trailing = item.trailingText?.let {
             {
