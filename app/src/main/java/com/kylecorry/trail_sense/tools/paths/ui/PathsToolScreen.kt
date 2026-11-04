@@ -66,7 +66,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -681,17 +680,10 @@ private fun PathsScreen(
             if (isLoaded && items.isEmpty()) {
                 item(key = "empty") {
                     val isSearching = searchText.isNotBlank()
-                    PlacesEmptyState(
+                    TrailSenseEmptyState(
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_paths),
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
-                        actionLabel = if (isSearching || backtrackState == FeatureState.On) {
-                            null
-                        } else {
-                            stringResource(R.string.places_paths_empty_action)
-                        },
-                        actionIcon = TrailIcons.BaselinePlayArrow24,
-                        onAction = onBacktrackToggleClick,
                         modifier = Modifier.testTag("waypoints_empty_text")
                     )
                 }

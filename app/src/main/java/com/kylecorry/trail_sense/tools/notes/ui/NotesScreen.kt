@@ -11,7 +11,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -116,7 +115,7 @@ fun NotesScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier,
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (loaded && items.isNotEmpty()) ExtendedFloatingActionButton(
                 onClick = onAdd,
                 modifier = Modifier.testTag("add_btn"),
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -130,10 +129,14 @@ fun NotesScreen(
 
         if (items.isEmpty()) {
             item(key = "empty") {
-                PlacesEmptyState(
+                TrailSenseEmptyState(
                     icon = TrailIcons.ToolNotes,
                     title = stringResource(R.string.notes_empty_text),
                     description = stringResource(R.string.notes_empty_description),
+                    actionLabel = stringResource(R.string.places_notes_new),
+                    actionIcon = TrailIcons.Add,
+                    onAction = onAdd,
+                    actionModifier = Modifier.testTag("add_btn"),
                     modifier = Modifier.testTag("notes_empty_text")
                 )
             }

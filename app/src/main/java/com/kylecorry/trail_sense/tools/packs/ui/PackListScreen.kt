@@ -24,7 +24,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesEmptyState
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesMiniBar
 import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.tools.packs.domain.PackService
@@ -338,7 +337,7 @@ private fun PackListScreen(
 
         if (packs.isEmpty()) {
             item(key = "empty") {
-                PlacesEmptyState(
+                TrailSenseEmptyState(
                     icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.no_packing_lists),
                     description = stringResource(R.string.packs_empty_description),
