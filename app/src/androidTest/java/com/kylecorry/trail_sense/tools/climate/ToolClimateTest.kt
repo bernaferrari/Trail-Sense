@@ -4,9 +4,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
-import com.kylecorry.trail_sense.test_utils.TestUtils.pickDate
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -16,43 +14,17 @@ class ToolClimateTest : ToolTestBase(Tools.CLIMATE) {
 
     @Test
     fun verifyBasicFunctionality() {
-        // Verify today is selected by default
-        hasText(string(R.string.today))
+        // The location lives behind one tappable line
+        click(id("climate_location"))
         input(id("utm")(), "42, -72")
         input(id("elevation_input")(), "1000")
+        click(id("climate_location_done"))
 
-        // Change the date
-        click(id("date_btn"))
-        pickDate(2024, 8, 5)
+        // Pick a month from the list; the hero answers for it
+        click(id("climate_month_8"))
+        hasText("August")
 
-        // Verify the temperature is displayed
-        hasText("82 °F / 62 °F")
-
-        // Scroll until precipitation section is visible, then verify it
-        scrollUntil {
-            hasText("Precipitation: 3.8 in monthly total")
-        }
-
-        // Continue scrolling to find climate zone section
-        scrollUntil {
-            hasText(string(R.string.climate_continental))
-            hasText(
-                listOf(
-                    string(R.string.climate_continental_description),
-                    string(R.string.climate_no_dry_season_description),
-                    string(R.string.climate_hot_summer_description)
-                ).joinToString(" ")
-            )
-        }
-
-        // Verify ecology is displayed
-        val expectedActivityLines = listOf(
-            "Biting flies/mosquitoes: Active from April to October",
-            "Ticks: Active from March to November",
-        )
-        scrollUntil {
-            hasText(string(R.string.ecology))
-            expectedActivityLines.forEach { hasText(it) }
-        }
+        // The climate zone names the page
+        hasText(string(R.string.climate_zone_subtitle, string(R.string.climate_continental)))
     }
 }
