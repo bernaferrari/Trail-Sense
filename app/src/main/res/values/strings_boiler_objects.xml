@@ -4,4 +4,7 @@
     <string name="lightning_again">Again</string>
     <string name="lightning_verdict_danger">Too close: seek shelter now</string>
     <string name="lightning_verdict_calm">Far away for now</string>
+
+    <!-- Pedometer -->
+    <string name="pedometer_of_goal">of %1$s</string>
 </resources>

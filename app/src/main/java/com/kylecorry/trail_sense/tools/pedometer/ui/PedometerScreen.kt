@@ -3,6 +3,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -19,6 +20,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -133,9 +135,9 @@ import java.time.LocalDate
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 /**
- * Pedometer, a calm page. One question: how far have I walked? The steps answer it as the page's display number, with
- * the distance as the verdict and start/stop and reset as two standard buttons under it. Then the distance alert,
- * speed and pace as plain rows, and the hourly history of any day.
+ * Pedometer, an instrument like the boil timer. One question: how far have I walked? A ring of footprints holds the
+ * step count and fills toward the distance alert; the distance sits under it, then Start/Reset. The distance alert,
+ * speed and pace follow as quiet rows, and the hourly history of any day.
  */
 @Composable
 internal fun PedometerScreen(
@@ -259,6 +261,16 @@ internal fun PedometerScreen(
             icon = TrailIcons.ToolClock
         )
     )
+    // The distance alert is the trail's goal; once reached the alert clears itself.
+    val goal = prefs.pedometer.alertDistance
+    val goalText = goal?.let {
+        val relative = it.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
+        formatService.formatDistance(relative, Units.getDecimalPlaces(relative.units), false)
+    }
+    val goalProgress = goal?.let {
+        val total = it.meters().value
+        if (total <= 0f) null else (paceCalculator.distance(steps).meters().value / total).coerceIn(0f, 1f)
+    }
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val isOn = state == FeatureState.On
     val speedTitle = stringResource(R.string.speed)
@@ -292,6 +304,8 @@ internal fun PedometerScreen(
             PedometerHero(
                 steps = steps,
                 distance = title,
+                goal = goalText,
+                goalProgress = goalProgress,
                 since = subtitle,
                 activeTime = activeTime,
                 isOn = isOn,
@@ -305,8 +319,9 @@ internal fun PedometerScreen(
             row { position ->
                 TrailSenseSwitchRow(
                     label = stringResource(R.string.distance_alert),
-                    checked = prefs.pedometer.alertDistance != null,
+                    checked = goal != null,
                     onCheckedChange = { onToggleDistanceAlert() },
+                    summary = goalText,
                     position = position,
                     modifier = Modifier.testTag("pedometer_alert_btn")
                 )
@@ -538,15 +553,17 @@ private fun HourlyStepsHistory(
 }
 
 /**
- * The one fact of the screen, on the plain page: the steps as the display number, the distance they make as the
- * verdict, and one quiet status line (on or off, since when, how long active). Start/stop and reset sit under it as
- * two equal standard buttons.
+ * The pedometer's object, like the boil timer's pot: a ring of footprints. With a distance alert set, the prints
+ * fill toward the goal; without one, every step lights the next print, so the trail walks round with you. The step
+ * count sits inside it, the distance (and goal) under it, then one quiet status line and Start/Reset.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PedometerHero(
     steps: Long,
     distance: String,
+    goal: String?,
+    goalProgress: Float?,
     since: String?,
     activeTime: String?,
     isOn: Boolean,
@@ -561,34 +578,35 @@ private fun PedometerHero(
         label = "pedometerStatus"
     )
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.sm),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = DecimalFormatter.format(steps, 0),
-                modifier = Modifier
-                    .alignByBaseline()
-                    .testTag("pedometer_steps"),
-                style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
-            Text(
-                text = stringResource(R.string.steps),
-                modifier = Modifier.alignByBaseline(),
-                style = MaterialTheme.typography.titleLarge,
-                color = scheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = distance,
-            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
-            fontWeight = FontWeight.SemiBold
+        StepTrail(
+            steps = steps,
+            goalProgress = goalProgress,
+            isOn = isOn
         )
+        Row(
+            modifier = Modifier.padding(top = TrailSenseSpacing.lg),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = distance,
+                modifier = Modifier.alignByBaseline(),
+                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold
+            )
+            if (goal != null) {
+                Text(
+                    text = stringResource(R.string.pedometer_of_goal, goal),
+                    modifier = Modifier
+                        .alignByBaseline()
+                        .padding(start = TrailSenseSpacing.sm),
+                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                    color = scheme.onSurfaceVariant
+                )
+            }
+        }
         Row(
             modifier = Modifier.padding(top = TrailSenseSpacing.xs),
             verticalAlignment = Alignment.CenterVertically
@@ -625,6 +643,7 @@ private fun PedometerHero(
         }
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(top = TrailSenseSpacing.lg)
                 .testTag("pedometer_play_bar"),
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
@@ -633,6 +652,11 @@ private fun PedometerHero(
                 text = stringResource(if (isOn) R.string.stop else R.string.start),
                 onClick = onToggle,
                 icon = if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
+                style = if (isOn) {
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal
+                } else {
+                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Filled
+                },
                 modifier = Modifier
                     .weight(1f)
                     .testTag("play_btn")
@@ -641,13 +665,149 @@ private fun PedometerHero(
                 text = stringResource(R.string.reset),
                 onClick = onReset,
                 icon = TrailIcons.BaselineRefresh24,
-                style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
+                style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Outlined,
                 modifier = Modifier
                     .weight(1f)
                     .testTag("reset_btn")
             )
         }
     }
+}
+
+private const val TRAIL_PRINTS = 32
+private const val TRAIL_WAKE = 12
+
+/**
+ * A ring of footprints, left and right in turn, walking clockwise from the top. Goal mode: the prints fill to the
+ * goal, the next one filling partway. Walk mode: the newest step is the bright print and a fading wake follows it.
+ * The newest print pops with a spring on each step.
+ */
+@Composable
+private fun StepTrail(
+    steps: Long,
+    goalProgress: Float?,
+    isOn: Boolean
+) {
+    val scheme = MaterialTheme.colorScheme
+    val lit = scheme.primary
+    val track = scheme.surfaceContainerHighest
+    val face = scheme.surfaceContainerLow
+    val fill by animateFloatAsState(
+        targetValue = goalProgress ?: 0f,
+        animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
+        label = "trailFill"
+    )
+    val pop = remember { androidx.compose.animation.core.Animatable(1f) }
+    val bounce = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    LaunchedEffect(steps) {
+        if (isOn && steps > 0) {
+            pop.snapTo(1.35f)
+            pop.animateTo(1f, bounce)
+        }
+    }
+    val countText = DecimalFormatter.format(steps, 0)
+
+    Box(
+        modifier = Modifier
+            .padding(vertical = TrailSenseSpacing.sm)
+            .size(288.dp)
+            .testTag("pedometer_trail"),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.matchParentSize()) {
+            val radius = size.minDimension / 2f
+            drawCircle(face, radius)
+            val ring = radius - 26.dp.toPx()
+            val side = 5.dp.toPx()
+            val soleW = 9.dp.toPx()
+            val soleH = 11.dp.toPx()
+            val heelW = 7.dp.toPx()
+            val heelH = 6.dp.toPx()
+            val gap = 1.5.dp.toPx()
+            val length = soleH + gap + heelH
+            val newest = if (steps > 0) ((steps - 1) % TRAIL_PRINTS).toInt() else -1
+            val filled = fill * TRAIL_PRINTS
+            for (i in 0 until TRAIL_PRINTS) {
+                val (color, alpha) = if (goalProgress != null) {
+                    when {
+                        i < filled.toInt() -> lit to 1f
+                        i == filled.toInt() -> lit to (filled - i).coerceIn(0f, 1f)
+                        else -> track to 1f
+                    }
+                } else {
+                    val back = if (newest < 0) Int.MAX_VALUE else (newest - i + TRAIL_PRINTS) % TRAIL_PRINTS
+                    if (back < minOf(TRAIL_WAKE.toLong(), steps).toInt()) {
+                        lit to (1f - back.toFloat() / TRAIL_WAKE * 0.85f)
+                    } else {
+                        track to 1f
+                    }
+                }
+                val degrees = -90f + i * 360f / TRAIL_PRINTS
+                val theta = Math.toRadians(degrees.toDouble())
+                // Left and right feet sit either side of the path.
+                val r = ring + if (i % 2 == 0) -side else side
+                val at = Offset(
+                    center.x + r * kotlin.math.cos(theta).toFloat(),
+                    center.y + r * kotlin.math.sin(theta).toFloat()
+                )
+                val isNewest = goalProgress == null && i == newest
+                val scale = if (isNewest) pop.value else 1f
+                withTransform({
+                    // Toes point along the path, clockwise.
+                    rotate(degrees + 180f, pivot = at)
+                    scale(scale, scale, pivot = at)
+                }) {
+                    // Under a part-lit print the track still shows, so it reads as filling.
+                    if (color == lit && alpha < 1f) {
+                        drawFootprint(track, 1f, at, soleW, soleH, heelW, heelH, gap, length)
+                    }
+                    drawFootprint(color, alpha, at, soleW, soleH, heelW, heelH, gap, length)
+                }
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResource(R.string.steps),
+                style = MaterialTheme.typography.titleSmall,
+                color = scheme.onSurfaceVariant
+            )
+            Text(
+                text = countText,
+                modifier = Modifier.testTag("pedometer_steps"),
+                style = (if (countText.length > 5) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displayLarge)
+                    .copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                color = scheme.onSurface,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawFootprint(
+    color: Color,
+    alpha: Float,
+    at: Offset,
+    soleW: Float,
+    soleH: Float,
+    heelW: Float,
+    heelH: Float,
+    gap: Float,
+    length: Float
+) {
+    val top = at.y - length / 2f
+    drawOval(
+        color,
+        topLeft = Offset(at.x - soleW / 2f, top),
+        size = androidx.compose.ui.geometry.Size(soleW, soleH),
+        alpha = alpha
+    )
+    drawOval(
+        color,
+        topLeft = Offset(at.x - heelW / 2f, top + soleH + gap),
+        size = androidx.compose.ui.geometry.Size(heelW, heelH),
+        alpha = alpha
+    )
 }
 
 /** Steps by hour as rounded bars; tap one to select it (it fills primary, the rest stay soft). */
