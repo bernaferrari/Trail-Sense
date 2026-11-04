@@ -2216,4 +2216,6 @@
         <item quantity="one">%d sighting</item>
         <item quantity="other">%d sightings</item>
     </plurals>
+    <!-- Family redesign: climate, clouds -->
+    <string name="clouds_empty_description">Log a cloud with the camera, a photo or by hand to see what the sky is saying.</string>
 </resources>

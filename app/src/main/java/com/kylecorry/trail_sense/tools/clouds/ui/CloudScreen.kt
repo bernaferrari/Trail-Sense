@@ -18,24 +18,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,11 +38,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -74,11 +61,21 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.graphicsLayer
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
@@ -110,7 +107,8 @@ fun CloudToolScreen(host: TrailSenseDestinationHost) {
         onDeleteCloud = controller::delete,
         selectedCloudImage = controller.selectedCloudImage,
         onDismissCloudImage = { controller.selectedCloudImage = null },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        loaded = controller.loaded
     )
 }
 
@@ -128,6 +126,10 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
         private set
     var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
 
+    /** False until the log has been read once, so "No clouds" never flashes before it has. */
+    var loaded by mutableStateOf(false)
+        private set
+
     fun onCreate() {
         if (isInitialized) {
             return
@@ -144,6 +146,7 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
             val since = Instant.now().minus(Duration.ofHours(48))
             clouds = it.sortedByDescending { cloud -> cloud.time }
                 .filter { cloud -> cloud.time >= since }
+            loaded = true
         }
 
         val shouldOpenScanner = host.destinationArguments?.getBoolean("open_scanner", false) == true
@@ -234,7 +237,6 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CloudScreen(
     subtitle: String,
@@ -248,11 +250,13 @@ private fun CloudScreen(
     onDeleteCloud: (Reading<CloudObservation>) -> Unit,
     selectedCloudImage: CloudGenus?,
     onDismissCloudImage: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loaded: Boolean = true
 ) {
     var isCreateMenuOpen by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val details = remember(context) { CloudDetailsService(context) }
+    val formatter = remember(context) { FormatService.getInstance(context) }
 
     selectedCloudImage?.let { cloud ->
         CloudImageDialog(
@@ -262,72 +266,46 @@ private fun CloudScreen(
         )
     }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column(modifier = Modifier.testTag("cloud_list_title")) {
-                        Text(
-                            text = stringResource(R.string.clouds),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        if (subtitle.isNotBlank()) {
-                            Text(
-                                text = subtitle,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = onGuideClick,
-                        modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_help),
-                            contentDescription = stringResource(R.string.help),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
+    // The log covers two days, so "Today" and "Yesterday" are the natural groups.
+    val days = remember(clouds) {
+        clouds.groupBy { it.time.toZonedDateTime().toLocalDate() }.toList()
+    }
+
+    TrailSensePage(
+        title = stringResource(R.string.clouds),
+        subtitle = subtitle.takeIf { it.isNotBlank() },
+        backLabel = stringResource(R.string.back),
+        modifier = modifier.testTag("cloud_list_title"),
+        actions = {
+            IconButton(onClick = onGuideClick) {
+                Icon(
+                    imageVector = TrailIcons.Help,
+                    contentDescription = stringResource(R.string.help)
                 )
-            )
+            }
         },
         floatingActionButton = {
             Box {
                 ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
                     modifier = Modifier.testTag("add_btn"),
-                    shape = MaterialTheme.shapes.large,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.add)
+                            imageVector = TrailIcons.Add,
+                            contentDescription = null
                         )
                     },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.add),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    text = { Text(stringResource(R.string.add)) }
                 )
                 DropdownMenu(
                     expanded = isCreateMenuOpen,
-                    onDismissRequest = { isCreateMenuOpen = false }
+                    onDismissRequest = { isCreateMenuOpen = false },
+                    shape = RoundedCornerShape(TrailSenseSpacing.lg),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.camera)) },
+                        leadingIcon = { Icon(TrailIcons.Camera, contentDescription = null) },
                         onClick = {
                             isCreateMenuOpen = false
                             onCameraClick()
@@ -335,6 +313,7 @@ private fun CloudScreen(
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.file)) },
+                        leadingIcon = { Icon(TrailIcons.File, contentDescription = null) },
                         onClick = {
                             isCreateMenuOpen = false
                             onFileClick()
@@ -342,6 +321,7 @@ private fun CloudScreen(
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.manual)) },
+                        leadingIcon = { Icon(TrailIcons.Edit, contentDescription = null) },
                         onClick = {
                             isCreateMenuOpen = false
                             onManualClick()
@@ -349,43 +329,45 @@ private fun CloudScreen(
                     )
                 }
             }
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            if (clouds.isEmpty()) {
+        },
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            top = TrailSenseSpacing.sm,
+            bottom = 96.dp
+        )
+    ) {
+        if (loaded && clouds.isEmpty()) {
+            item(key = "empty") {
                 TrailSenseEmptyState(
-                    icon = Icons.Default.Cloud,
+                    icon = TrailIcons.Cloud,
                     title = stringResource(R.string.no_clouds),
+                    description = stringResource(R.string.clouds_empty_description),
                     modifier = Modifier
-                        .align(Alignment.Center)
+                        .fillParentMaxHeight(0.8f)
                         .testTag("cloud_empty_text")
                 )
-            } else {
-                LazyColumn(
+            }
+        }
+
+        days.forEachIndexed { index, (day, readings) ->
+            item(key = day.toString()) {
+                TrailSenseRowGroup(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .widthIn(max = TrailSenseSize.maximumContentWidth)
-                        .align(Alignment.TopCenter)
-                        .testTag("cloud_list"),
-                    contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.screen,
-                        end = TrailSenseSpacing.screen,
-                        top = TrailSenseSpacing.lg,
-                        bottom = 96.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                        .animateItem()
+                        .then(if (index == 0) Modifier.testTag("cloud_list") else Modifier),
+                    title = formatter.formatRelativeDate(day, abbreviateMonth = true)
                 ) {
-                    items(clouds) { reading ->
-                        CloudReadingListItem(
-                            reading = reading,
-                            onCloudClick = onCloudClick,
-                            onCloudImageClick = onCloudImageClick,
-                            onDeleteCloud = onDeleteCloud
-                        )
+                    readings.forEach { reading ->
+                        row { position ->
+                            CloudReadingRow(
+                                reading = reading,
+                                position = position,
+                                onCloudClick = onCloudClick,
+                                onCloudImageClick = onCloudImageClick,
+                                onDeleteCloud = onDeleteCloud
+                            )
+                        }
                     }
                 }
             }
@@ -393,9 +375,13 @@ private fun CloudScreen(
     }
 }
 
+/**
+ * One logged cloud: its photo (tap to enlarge), name, then when and what it may mean, with delete in the overflow.
+ */
 @Composable
-private fun CloudReadingListItem(
+private fun CloudReadingRow(
     reading: Reading<CloudObservation>,
+    position: TrailSenseGroupPosition,
     onCloudClick: (Reading<CloudObservation>) -> Unit,
     onCloudImageClick: (Reading<CloudObservation>) -> Unit,
     onDeleteCloud: (Reading<CloudObservation>) -> Unit
@@ -404,51 +390,65 @@ private fun CloudReadingListItem(
     val details = remember(context) { CloudDetailsService(context) }
     val formatter = remember(context) { FormatService.getInstance(context) }
     val cloud = reading.value.genus
+    val name = details.getCloudName(cloud)
     var isMenuOpen by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.985f else 1f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "cloudRowPress"
+    )
 
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { onCloudClick(reading) }
+    Surface(
+        onClick = { onCloudClick(reading) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+        shape = trailSenseGroupShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        interactionSource = interactionSource
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .padding(
+                    start = TrailSenseSpacing.md,
+                    end = TrailSenseSpacing.xs,
+                    top = TrailSenseSpacing.md,
+                    bottom = TrailSenseSpacing.md
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             CloudThumbnail(
                 drawable = details.getCloudImage(context, cloud),
-                contentDescription = details.getCloudName(cloud),
+                contentDescription = name,
                 onClick = { onCloudImageClick(reading) }
             )
 
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = TrailSenseSpacing.md)
+                    .padding(horizontal = TrailSenseSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 Text(
-                    text = details.getCloudName(cloud),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    text = name,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = details.getCloudForecast(cloud),
+                    text = formatter.formatTime(reading.time, includeSeconds = false) + " · " +
+                        details.getCloudForecast(cloud),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = formatter.formatDateTime(
-                        reading.time.toZonedDateTime(),
-                        relative = true,
-                        abbreviateMonth = true
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
@@ -456,22 +456,23 @@ private fun CloudReadingListItem(
             Box {
                 IconButton(
                     onClick = { isMenuOpen = true },
-                    modifier = Modifier
-                        .size(TrailSenseSize.minimumTouchTarget)
-                        .testTag("cloud_item_menu")
+                    modifier = Modifier.testTag("cloud_item_menu")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = details.getCloudName(cloud),
+                        imageVector = TrailIcons.MenuDots,
+                        contentDescription = name,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 DropdownMenu(
                     expanded = isMenuOpen,
-                    onDismissRequest = { isMenuOpen = false }
+                    onDismissRequest = { isMenuOpen = false },
+                    shape = RoundedCornerShape(TrailSenseSpacing.lg),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.delete)) },
+                        leadingIcon = { Icon(TrailIcons.Delete, contentDescription = null) },
                         onClick = {
                             isMenuOpen = false
                             onDeleteCloud(reading)
@@ -494,14 +495,20 @@ private fun CloudThumbnail(
     }
     val modifier = Modifier
         .size(56.dp)
-        .clip(MaterialTheme.shapes.large)
-        .background(MaterialTheme.colorScheme.primaryContainer)
+        .clip(RoundedCornerShape(TrailSenseSpacing.md))
+        .background(MaterialTheme.colorScheme.secondaryContainer)
         .clickable(onClick = onClick)
         .semantics { this.contentDescription = contentDescription }
         .testTag("cloud_image")
 
     if (bitmap == null) {
-        Box(modifier)
+        Box(modifier, contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = TrailIcons.Cloud,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
     } else {
         Image(
             bitmap = bitmap.asImageBitmap(),

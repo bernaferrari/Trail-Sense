@@ -21,15 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -78,9 +69,21 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.DebugCloudCommand
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLoadingIndicator
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.semantics.Role
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ClassificationResult
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ICloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
@@ -265,111 +268,9 @@ private fun CloudResultsScreen(
     onSave: () -> Unit,
     onSelectionChanged: (CloudGenus?, Boolean) -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .widthIn(max = TrailSenseSize.maximumContentWidth)
-        ) {
-            CloudResultsHeader(
-                title = title,
-                subtitle = subtitle,
-                canSave = canSave,
-                onDateClick = onDateClick,
-                onSave = onSave
-            )
-            Box(modifier = Modifier.fillMaxSize()) {
-                CloudSelectionList(
-                    image = image,
-                    selection = selection,
-                    onSelectionChanged = onSelectionChanged,
-                    modifier = Modifier.fillMaxSize()
-                )
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .testTag("loading_indicator")
-                    )
-                }
-            }
-        }
-        }
-    }
-}
-
-@Composable
-private fun CloudResultsHeader(
-    title: String,
-    subtitle: String,
-    canSave: Boolean,
-    onDateClick: () -> Unit,
-    onSave: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp)
-                .padding(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.sm,
-                    top = TrailSenseSpacing.md,
-                    bottom = TrailSenseSpacing.md
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    modifier = Modifier.testTag("cloud_title"),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    modifier = Modifier
-                        .padding(top = TrailSenseSpacing.xxs)
-                        .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                        .clickable(onClick = onDateClick)
-                        .testTag("cloud_subtitle"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            IconButton(
-                onClick = onSave,
-                enabled = canSave,
-                modifier = Modifier
-                    .size(TrailSenseSize.minimumTouchTarget)
-                    .alpha(if (canSave) 1f else 0.38f)
-                    .testTag("cloud_save_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = stringResource(R.string.save)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CloudSelectionList(
-    image: Bitmap?,
-    selection: List<CloudSelection>,
-    onSelectionChanged: (CloudGenus?, Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
     val context = LocalContext.current
     val details = remember(context) { CloudDetailsService(context) }
+    val detailsModal = remember(context) { CloudDetailsModal(context) }
     var selectedCloudImage by remember { mutableStateOf<CloudGenus?>(null) }
 
     selectedCloudImage?.let { cloud ->
@@ -380,249 +281,291 @@ private fun CloudSelectionList(
         )
     }
 
-    // The classifier returns candidates sorted by confidence, so the first entry is
-    // the primary identification and gets the hero treatment.
-    val primary = selection.firstOrNull()
-    val others = if (selection.isEmpty()) emptyList() else selection.drop(1)
+    // A classified photo comes back sorted by confidence: the first candidate is the identification and the rest are
+    // alternatives. A manual entry is one flat list of every cloud type.
+    val isClassified = selection.any { it.confidence != null }
+    val primary = if (isClassified) selection.take(1) else emptyList()
+    val others = if (isClassified) selection.drop(1) else selection
 
-    LazyColumn(
-        modifier = modifier.testTag("cloud_list"),
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.screen,
-            end = TrailSenseSpacing.screen,
-            top = TrailSenseSpacing.lg,
-            bottom = TrailSenseSpacing.xxl
-        ),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-    ) {
-        if (primary != null) {
-            item(key = primary.genus?.ordinal ?: -1) {
-                CloudPrimaryHero(
-                    image = image,
-                    selection = primary,
-                    onSelectionChanged = onSelectionChanged,
-                    onCloudImageClick = { selectedCloudImage = it }
+    val otherLabel = stringResource(R.string.other)
+
+    TrailSensePage(
+        title = title,
+        modifier = Modifier.testTag("cloud_title"),
+        backLabel = stringResource(R.string.back),
+        actions = {
+            IconButton(
+                onClick = onSave,
+                enabled = canSave,
+                modifier = Modifier.testTag("cloud_save_btn")
+            ) {
+                Icon(
+                    imageVector = TrailIcons.Check,
+                    contentDescription = stringResource(R.string.save)
                 )
+            }
+        }
+    ) {
+        if (image != null) {
+            item(key = "photo") {
+                Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(4f / 3f)
+                        .clip(MaterialTheme.shapes.extraLarge)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .testTag("cloud_image")
+                )
+            }
+        }
+
+        trailSenseSection(key = "time") {
+            row { position ->
+                TrailSenseListItem(
+                    title = stringResource(R.string.time),
+                    subtitle = subtitle,
+                    icon = rememberVectorPainter(TrailIcons.Date),
+                    onClick = onDateClick,
+                    position = position,
+                    modifier = Modifier.testTag("cloud_subtitle")
+                )
+            }
+        }
+
+        if (isLoading) {
+            item(key = "loading") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = TrailSenseSpacing.xxl),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TrailSenseLoadingIndicator(modifier = Modifier.testTag("loading_indicator"))
+                }
+            }
+        }
+
+        if (primary.isNotEmpty()) {
+            trailSenseSection(key = "primary") {
+                primary.forEach { cloud ->
+                    row { position ->
+                        CloudSelectionRow(
+                            selection = cloud,
+                            position = position,
+                            showDescription = true,
+                            onSelectionChanged = onSelectionChanged,
+                            onCloudImageClick = { selectedCloudImage = it },
+                            onDetailsClick = { detailsModal.show(it) }
+                        )
+                    }
+                }
             }
         }
 
         if (others.isNotEmpty()) {
-            item(key = "other_candidates_header") {
-                Text(
-                    text = stringResource(R.string.other),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = TrailSenseSpacing.xs)
-                )
+            trailSenseSection(
+                key = "others",
+                title = if (isClassified) otherLabel else null
+            ) {
+                others.forEach { cloud ->
+                    row { position ->
+                        CloudSelectionRow(
+                            selection = cloud,
+                            position = position,
+                            showDescription = false,
+                            onSelectionChanged = onSelectionChanged,
+                            onCloudImageClick = { selectedCloudImage = it },
+                            onDetailsClick = { detailsModal.show(it) }
+                        )
+                    }
+                }
             }
-        }
-
-        items(others, key = { it.genus?.ordinal ?: -1 }) { cloud ->
-            CloudSelectionCard(
-                selection = cloud,
-                onSelectionChanged = onSelectionChanged,
-                onCloudImageClick = { selectedCloudImage = it }
-            )
         }
     }
 }
 
 /**
- * Hero card for the top identified cloud — tonal primaryContainer surface with the
- * captured photo, cloud name, description and confidence, plus the selection checkbox.
+ * One candidate cloud. The whole row toggles it in or out of the observation (a chosen row takes the accent tone and a
+ * check); the photo enlarges the reference picture and the info button opens the cloud's details.
  */
 @Composable
-private fun CloudPrimaryHero(
-    image: Bitmap?,
+private fun CloudSelectionRow(
     selection: CloudSelection,
+    position: TrailSenseGroupPosition,
+    showDescription: Boolean,
     onSelectionChanged: (CloudGenus?, Boolean) -> Unit,
-    onCloudImageClick: (CloudGenus?) -> Unit
+    onCloudImageClick: (CloudGenus?) -> Unit,
+    onDetailsClick: (CloudGenus?) -> Unit
 ) {
     val context = LocalContext.current
     val details = remember(context) { CloudDetailsService(context) }
     val formatter = remember(context) { FormatService.getInstance(context) }
-    val detailsModal = remember(context) { CloudDetailsModal(context) }
-    val unreliable = remember { unreliableCloudGenera }
+    val name = details.getCloudName(selection.genus)
+    val experimental = stringResource(R.string.experimental)
+    val meta = listOfNotNull(
+        selection.confidence?.let { formatter.formatPercentage(it * 100, 0) },
+        experimental.takeIf { unreliableCloudGenera.contains(selection.genus) }
+    ).joinToString(" · ")
+
+    val container by animateColorAsState(
+        targetValue = if (selection.isSelected) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "cloudSelectionContainer"
+    )
+    val contentColor = if (selection.isSelected) {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    val supportingColor = if (selection.isSelected) {
+        MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { detailsModal.show(selection.genus) },
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+            .clip(trailSenseGroupShape(position))
+            .toggleable(
+                value = selection.isSelected,
+                role = Role.Checkbox,
+                onValueChange = { onSelectionChanged(selection.genus, it) }
+            )
+            .testTag("cloud_selection_checkbox"),
+        shape = trailSenseGroupShape(position),
+        color = container,
+        contentColor = contentColor
     ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .padding(
+                    start = TrailSenseSpacing.md,
+                    end = TrailSenseSpacing.xs,
+                    top = TrailSenseSpacing.md,
+                    bottom = TrailSenseSpacing.md
+                ),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (image != null) {
-                    Image(
-                        bitmap = image.asImageBitmap(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .testTag("cloud_image")
-                    )
-                } else {
-                    CloudIconChip(
-                        drawable = details.getCloudImage(context, selection.genus),
-                        size = 72.dp,
-                        contentDescription = details.getCloudName(selection.genus),
-                        onClick = { onCloudImageClick(selection.genus) }
-                    )
-                }
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = details.getCloudName(selection.genus),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (selection.confidence != null || unreliable.contains(selection.genus)) {
-                        Row(
-                            modifier = Modifier.padding(top = TrailSenseSpacing.xxs),
-                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-                        ) {
-                            selection.confidence?.let {
-                                Text(
-                                    text = formatter.formatPercentage(it * 100, 0),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                            if (unreliable.contains(selection.genus)) {
-                                Text(
-                                    text = stringResource(R.string.experimental),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-                    }
-                }
-                Checkbox(
-                    checked = selection.isSelected,
-                    onCheckedChange = { onSelectionChanged(selection.genus, it) },
-                    modifier = Modifier.testTag("cloud_selection_checkbox")
-                )
-            }
-            Text(
-                text = details.getCloudDescription(selection.genus),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun CloudSelectionCard(
-    selection: CloudSelection,
-    onSelectionChanged: (CloudGenus?, Boolean) -> Unit,
-    onCloudImageClick: (CloudGenus?) -> Unit
-) {
-    val context = LocalContext.current
-    val details = remember(context) { CloudDetailsService(context) }
-    val formatter = remember(context) { FormatService.getInstance(context) }
-    val detailsModal = remember(context) { CloudDetailsModal(context) }
-    val unreliable = remember { unreliableCloudGenera }
-
-    TrailSenseCard(onClick = { detailsModal.show(selection.genus) }) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = selection.isSelected,
-                onCheckedChange = { onSelectionChanged(selection.genus, it) },
-                modifier = Modifier.testTag("cloud_selection_checkbox")
-            )
             CloudIconChip(
                 drawable = details.getCloudImage(context, selection.genus),
-                size = 48.dp,
-                contentDescription = details.getCloudName(selection.genus),
+                size = if (showDescription) 64.dp else 48.dp,
+                isSelected = selection.isSelected,
+                contentDescription = name,
                 onClick = { onCloudImageClick(selection.genus) }
             )
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = TrailSenseSpacing.md)
+                    .padding(horizontal = TrailSenseSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 Text(
-                    text = details.getCloudName(selection.genus),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = name,
+                    style = if (showDescription) {
+                        MaterialTheme.typography.titleMedium
+                    } else {
+                        MaterialTheme.typography.bodyLarge
+                    },
+                    fontWeight = if (showDescription) FontWeight.SemiBold else null,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = details.getCloudDescription(selection.genus),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (selection.confidence != null || unreliable.contains(selection.genus)) {
-                    Row(
-                        modifier = Modifier.padding(top = TrailSenseSpacing.xxs),
-                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-                    ) {
-                        selection.confidence?.let {
-                            Text(
-                                text = formatter.formatPercentage(it * 100, 0),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        if (unreliable.contains(selection.genus)) {
-                            Text(
-                                text = stringResource(R.string.experimental),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                if (meta.isNotEmpty()) {
+                    Text(
+                        text = meta,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        color = supportingColor,
+                        maxLines = 1
+                    )
                 }
+                if (showDescription) {
+                    Text(
+                        text = details.getCloudDescription(selection.genus),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = supportingColor,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            IconButton(onClick = { onDetailsClick(selection.genus) }) {
+                Icon(
+                    imageVector = TrailIcons.Info,
+                    contentDescription = stringResource(R.string.details),
+                    tint = supportingColor
+                )
             }
         }
     }
 }
 
 /**
- * Circular tonal chip holding the cloud thumbnail. Falls back to an empty tonal
- * surface when no drawable is available (e.g. the "unknown" cloud).
+ * The cloud's reference picture in a soft circle; when the cloud is chosen a check takes its place on top so the
+ * choice reads at a glance. Falls back to a cloud glyph when there is no picture (the "unknown" cloud).
  */
 @Composable
 private fun CloudIconChip(
     drawable: Drawable?,
     size: Dp,
+    isSelected: Boolean,
     contentDescription: String,
     onClick: () -> Unit
 ) {
     val px = with(LocalDensity.current) { size.toPx().toInt() }
     val bitmap = remember(drawable, px) { drawable?.toBitmap(px, px) }
+    val checkAlpha by animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "cloudChipCheck"
+    )
 
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
+    Box(
         modifier = Modifier
             .size(size)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .clickable(onClick = onClick)
-            .semantics { this.contentDescription = contentDescription }
+            .semantics { this.contentDescription = contentDescription },
+        contentAlignment = Alignment.Center
     ) {
         if (bitmap != null) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+                modifier = Modifier.size(size)
+            )
+        } else {
+            Icon(
+                imageVector = TrailIcons.Cloud,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+        if (checkAlpha > 0f) {
+            Box(
                 modifier = Modifier
                     .size(size)
-                    .clip(CircleShape)
-            )
+                    .graphicsLayer { alpha = checkAlpha }
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = TrailIcons.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
     }
 }
