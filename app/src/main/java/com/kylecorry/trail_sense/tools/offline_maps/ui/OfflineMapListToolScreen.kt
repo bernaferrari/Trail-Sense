@@ -3,6 +3,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import com.kylecorry.trail_sense.shared.views.OfflineMapsEmptyIllustration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -683,6 +684,7 @@ private fun OfflineMapListScreen(
                 item(key = "empty") {
                     TrailSenseEmptyState(
                         icon = TrailIcons.Maps,
+                        illustration = { OfflineMapsEmptyIllustration() },
                         title = stringResource(R.string.no_offline_maps),
                         description = stringResource(R.string.map_empty_description),
                         modifier = Modifier
