@@ -24,6 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.remember
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -130,7 +138,10 @@ class SensorStatusBadgeView(
         }
     }
 
-    /** Sensor trouble as one line of coloured text (no pills): each sensor that needs attention, tappable for tips. */
+    /**
+     * Sensor trouble, collapsed: one small icon (the sensor in the worst state) with a status dot. Tapping it opens a
+     * popover that names each sensor needing attention, its state, and the way to fix it.
+     */
     @Composable
     private fun QuietContent(modifier: Modifier) {
         val items = listOfNotNull(
@@ -138,20 +149,55 @@ class SensorStatusBadgeView(
             compassBadge?.takeIf { showCompassBadge && !it.isGood() }?.let { Triple(it, context.getString(R.string.pref_compass_sensor_title), TrailSenseIcons.Filled.Explore) }
         )
         if (items.isEmpty()) return
-        Row(
-            modifier = modifier
-                .clip(CircleShape)
-                .clickable(enabled = clickListener != null) { clickListener?.invoke() }
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            items.forEach { (badge, label, icon) ->
-                val caution = badge.color == AppColor.Yellow.color || badge.color == AppColor.Orange.color
-                val color = if (caution) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
-                    Text("$label ${badge.name.lowercase()}", style = MaterialTheme.typography.labelLarge, color = color)
+        fun StatusBadge.caution() = color == AppColor.Yellow.color || color == AppColor.Orange.color
+        val worst = items.firstOrNull { !it.first.caution() } ?: items.first()
+        val scheme = MaterialTheme.colorScheme
+        val dot = if (worst.first.caution()) scheme.tertiary else scheme.error
+        var open by remember { mutableStateOf(false) }
+        Box(modifier) {
+            Surface(
+                onClick = { open = true },
+                shape = CircleShape,
+                color = scheme.surfaceContainerHigh,
+                contentColor = scheme.onSurface,
+                modifier = Modifier
+                    .size(48.dp)
+                    .semantics { contentDescription = items.joinToString { "${it.second} ${it.first.name}" } }
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(worst.third, contentDescription = null, modifier = Modifier.size(22.dp))
+                    Box(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 10.dp, end = 10.dp)
+                            .size(10.dp)
+                            .background(scheme.surfaceContainerHigh, CircleShape)
+                            .padding(1.5.dp)
+                            .background(dot, CircleShape)
+                    )
+                }
+            }
+            DropdownMenu(
+                expanded = open,
+                onDismissRequest = { open = false },
+                shape = RoundedCornerShape(20.dp),
+                containerColor = scheme.surfaceContainerHigh
+            ) {
+                items.forEach { (badge, label, icon) ->
+                    val color = if (badge.caution()) scheme.tertiary else scheme.error
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(label, style = MaterialTheme.typography.titleMedium)
+                                Text(badge.name, style = MaterialTheme.typography.bodyMedium, color = color)
+                            }
+                        },
+                        leadingIcon = { Icon(icon, contentDescription = null, tint = color) },
+                        onClick = {
+                            open = false
+                            clickListener?.invoke()
+                        }
+                    )
                 }
             }
         }

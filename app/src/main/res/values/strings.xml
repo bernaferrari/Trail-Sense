@@ -50,6 +50,14 @@
     <string name="duration_minute_format">%dm</string>
     <string name="duration_second_format">%ds</string>
     <string name="direction_north">N</string>
+    <string name="direction_north_full">North</string>
+    <string name="direction_north_east_full">Northeast</string>
+    <string name="direction_east_full">East</string>
+    <string name="direction_south_east_full">Southeast</string>
+    <string name="direction_south_full">South</string>
+    <string name="direction_south_west_full">Southwest</string>
+    <string name="direction_west_full">West</string>
+    <string name="direction_north_west_full">Northwest</string>
     <string name="direction_south">S</string>
     <string name="direction_east">E</string>
     <string name="direction_west">W</string>
