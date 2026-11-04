@@ -18,4 +18,13 @@
     <string name="sky_sensors_orientation">Motion and orientation</string>
     <string name="sky_sensors_environment">Environment</string>
     <string name="sky_sensors_device">Device</string>
+    <string name="sky_minutes_read">%d min read</string>
+    <string name="sky_in_this_guide">In this guide</string>
+    <plurals name="sky_sections">
+        <item quantity="one">%d section</item>
+        <item quantity="other">%d sections</item>
+    </plurals>
+    <string name="sky_guides_count">%d guides</string>
+    <string name="sky_guides_supporting">How every tool works, in %d topics</string>
+    <string name="sky_guides_no_results">Nothing matches \"%s\". Try a tool name or a shorter word.</string>
 </resources>

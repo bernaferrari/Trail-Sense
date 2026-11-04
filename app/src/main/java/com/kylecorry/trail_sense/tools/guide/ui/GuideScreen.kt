@@ -1,21 +1,34 @@
+@file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.kylecorry.trail_sense.tools.guide.ui
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,24 +36,34 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.OpenBook
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
+import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * One user guide as a calm reading page: the guide's name is the page title, then each section is a heading and its
- * text, selectable for copying.
+ * One user guide as an article: a book-shaped hero with the reading time, a contents strip that jumps to a section,
+ * the introduction, then each section under a numbered heading in reading typography. Text is selectable.
  */
 @Composable
 internal fun GuideScreen(name: String, resource: Int) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     var sections by remember { mutableStateOf<List<TextSection>?>(null) }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(resource) {
         sections = withContext(Dispatchers.IO) {
@@ -53,6 +76,7 @@ internal fun GuideScreen(name: String, resource: Int) {
         title = name,
         onBack = { dispatcher?.onBackPressed() },
         backLabel = stringResource(R.string.back),
+        state = listState,
         modifier = Modifier.testTag("guide_scroll")
     ) {
         val loadedSections = sections
@@ -64,14 +88,37 @@ internal fun GuideScreen(name: String, resource: Int) {
                         .height(160.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    LoadingIndicator()
                 }
             }
         } else {
-            loadedSections.forEachIndexed { index, section ->
+            val visible = loadedSections.filter { it.title != null || it.content.isNotBlank() }
+            val words = visible.sumOf { it.content.split(Regex("\\s+")).size }
+            val major = visible.filter { it.title != null && (it.level ?: 2) <= 2 }
+            item(key = "hero") {
+                GuideHero(
+                    title = name,
+                    minutes = (words / 200).coerceAtLeast(1),
+                    sections = major.size
+                )
+            }
+            if (major.size >= 3) {
+                item(key = "contents") {
+                    GuideContents(major.mapNotNull { it.title }) { index ->
+                        val target = visible.indexOf(major[index])
+                        // Hero and contents come first.
+                        scope.launch { listState.animateScrollToItem(target + 2) }
+                    }
+                }
+            }
+            var number = 0
+            visible.forEachIndexed { index, section ->
+                val isMajor = section.title != null && (section.level ?: 2) <= 2
+                if (isMajor) number++
+                val sectionNumber = number
                 item(key = index) {
                     SelectionContainer {
-                        GuideSection(section)
+                        GuideSection(section, if (isMajor) sectionNumber else null)
                     }
                 }
             }
@@ -80,48 +127,140 @@ internal fun GuideScreen(name: String, resource: Int) {
 }
 
 @Composable
-private fun GuideSection(section: TextSection) {
-    val body = remember(section) {
-        TextUtils.removeMarkdownComments(section.content)
-            .lineSequence()
-            .map { it.cleanMarkdownLine() }
-            .filter { it.isNotBlank() }
-            .joinToString("\n")
-    }
-    if (section.title == null && body.isBlank()) return
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.xs),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+private fun GuideHero(title: String, minutes: Int, sections: Int) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.hero),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
-        section.title?.let {
-            Text(
-                text = it,
-                style = when (section.level) {
-                    1, 2 -> MaterialTheme.typography.titleLarge
-                    else -> MaterialTheme.typography.titleMedium
-                },
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.semantics { heading() }
+        Row(
+            Modifier.padding(TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SkyFocalShape(
+                icon = TrailIcons.OpenBook,
+                shape = MaterialShapes.Cookie12Sided.toShape(),
+                size = 84.dp,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
-        }
-        if (body.isNotBlank()) {
-            Text(
-                text = body,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                Text(
+                    stringResource(R.string.tool_user_guide_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
+                )
+                Text(
+                    title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.semantics { heading() }
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                    SkyPill(
+                        stringResource(R.string.sky_minutes_read, minutes),
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                    if (sections > 0) {
+                        SkyPill(
+                            pluralSections(sections),
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.7f),
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
-private fun String.cleanMarkdownLine(): String {
-    return trim()
-        .removePrefix("### ")
-        .removePrefix("## ")
-        .removePrefix("# ")
-        .replace(Regex("""\*\*(.*?)\*\*"""), "$1")
-        .replace(Regex("""__(.*?)__"""), "$1")
-        .replace(Regex("""\[(.*?)]\((.*?)\)"""), "$1")
+@Composable
+private fun pluralSections(count: Int): String =
+    androidx.compose.ui.res.pluralStringResource(R.plurals.sky_sections, count, count)
+
+/** The guide's sections as tappable chips, numbered like their headings. */
+@Composable
+private fun GuideContents(titles: List<String>, onSelect: (Int) -> Unit) {
+    Column {
+        Text(
+            stringResource(R.string.sky_in_this_guide),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.sm)
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        ) {
+            titles.forEachIndexed { index, title ->
+                Surface(
+                    onClick = { onSelect(index) },
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ) {
+                    Row(
+                        Modifier.padding(start = 6.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = MaterialShapes.Cookie6Sided.toShape(),
+                            color = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(end = TrailSenseSpacing.sm)
+                        ) {
+                            Text(
+                                (index + 1).toString(),
+                                style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuideSection(section: TextSection, number: Int?) {
+    val body = remember(section) { TextUtils.removeMarkdownComments(section.content).trim() }
+    if (section.title == null && body.isBlank()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = TrailSenseSpacing.xs,
+                end = TrailSenseSpacing.xs,
+                top = if (number != null) TrailSenseSpacing.md else 0.dp
+            ),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    ) {
+        section.title?.let {
+            if (number != null) {
+                ArticleSectionHeading(number, it)
+            } else {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.semantics { heading() }
+                )
+            }
+        }
+        if (body.isNotBlank()) {
+            ArticleBody(body)
+        }
+    }
 }
