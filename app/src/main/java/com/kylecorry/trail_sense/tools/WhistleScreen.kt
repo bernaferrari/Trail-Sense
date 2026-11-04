@@ -90,6 +90,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.graphics.shapes.RoundedPolygon
 import com.kylecorry.trail_sense.shared.icons.trail.Alert
+import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
+import androidx.graphics.shapes.toPath
+import androidx.compose.ui.graphics.asComposePath
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
 import com.kylecorry.trail_sense.shared.icons.trail.Check
 import com.kylecorry.trail_sense.shared.icons.trail.HelpSimple
@@ -245,7 +248,7 @@ fun WhistleScreen(
                 .padding(
                     start = TrailSenseSpacing.lg,
                     end = TrailSenseSpacing.lg,
-                    top = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.xs,
                     bottom = TrailSenseSpacing.xxxl
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -373,21 +376,35 @@ private fun WhistleSignalRow(
                 )
             }
             Spacer(Modifier.width(TrailSenseSpacing.sm))
-            TrailSenseValueChip(
-                text = if (playing) {
-                    stringResource(R.string.whistle_playing)
-                } else if (signal.loop) {
-                    stringResource(R.string.whistle_repeats_short)
-                } else {
-                    stringResource(R.string.whistle_once)
-                },
-                tone = when {
-                    playing -> TrailSenseTone.Primary
-                    signal.loop -> TrailSenseTone.Error
-                    else -> TrailSenseTone.Secondary
-                },
-                strong = playing
-            )
+            // The row is the button; the pill says what a tap does, in the screen's warm action colour.
+            Surface(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = if (playing) scheme.primary else scheme.tertiaryContainer,
+                contentColor = if (playing) scheme.onPrimary else scheme.onTertiaryContainer
+            ) {
+                Row(
+                    modifier = Modifier.padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.md, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        if (playing) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(TrailSenseSpacing.xs))
+                    Text(
+                        text = stringResource(
+                            when {
+                                playing -> R.string.whistle_playing
+                                signal.loop -> R.string.whistle_repeats_short
+                                else -> R.string.whistle_once
+                            }
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
     }
 }
@@ -418,42 +435,59 @@ private fun EmergencyTile(
                 contentColor = scheme.onError
             )
             Text(signal.label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            SignalRhythm(signal = signal.signal, color = scheme.error, playing = playing)
-            Text(
-                stringResource(if (playing) R.string.whistle_playing else R.string.whistle_repeats_short),
-                style = MaterialTheme.typography.labelLarge,
-                color = content.copy(alpha = 0.8f)
-            )
+            SignalRhythm(signal = signal.signal, color = content, playing = playing, height = 16.dp)
+            Surface(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = if (playing) scheme.error else content.copy(alpha = 0.12f),
+                contentColor = if (playing) scheme.onError else content
+            ) {
+                Text(
+                    stringResource(if (playing) R.string.whistle_playing else R.string.whistle_repeats_short),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = 4.dp)
+                )
+            }
         }
     }
 }
 
-/** The pattern as blasts: each "on" is a rounded bar as long as it sounds, gaps as long as the silence (capped). */
+/**
+ * The pattern as blasts: each "on" is a rounded bar as long as it sounds, gaps as long as the silence (capped).
+ * While it plays, each bar lights up in time with its blast and the rest wait dimmed.
+ */
 @Composable
-private fun SignalRhythm(signal: List<Signal>, color: androidx.compose.ui.graphics.Color, playing: Boolean) {
-    val transition = rememberInfiniteTransition(label = "rhythm")
-    val pulse by transition.animateFloat(
-        initialValue = 0.55f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse),
-        label = "pulse"
+private fun SignalRhythm(
+    signal: List<Signal>,
+    color: androidx.compose.ui.graphics.Color,
+    playing: Boolean,
+    height: androidx.compose.ui.unit.Dp = 12.dp
+) {
+    val total = signal.sumOf { it.duration.toMillis() }.toInt().coerceAtLeast(1)
+    val clock by rememberInfiniteTransition(label = "rhythm").animateFloat(
+        initialValue = 0f,
+        targetValue = total.toFloat(),
+        animationSpec = infiniteRepeatable(tween(total, easing = LinearEasing), RepeatMode.Restart),
+        label = "playhead"
     )
-    val alpha = if (playing) pulse else 1f
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
-            .height(10.dp)
+            .height(height)
     ) {
-        val unit = 6.dp.toPx() / 400f
+        val unit = 7.dp.toPx() / 400f
         val gapCap = 18.dp.toPx()
         var x = 0f
+        var time = 0f
         for (s in signal) {
-            val length = s.duration.toMillis() * unit
+            val millis = s.duration.toMillis().toFloat()
+            val length = millis * unit
             if (s.isOn) {
                 val w = length.coerceAtLeast(size.height)
                 if (x + w > size.width) break
+                val lit = !playing || (clock >= time && clock < time + millis)
                 drawRoundRect(
-                    color = color.copy(alpha = alpha),
+                    color = color.copy(alpha = if (lit) 1f else 0.3f),
                     topLeft = Offset(x, 0f),
                     size = Size(w, size.height),
                     cornerRadius = CornerRadius(size.height / 2f)
@@ -462,6 +496,7 @@ private fun SignalRhythm(signal: List<Signal>, color: androidx.compose.ui.graphi
             } else {
                 x += length.coerceIn(4.dp.toPx(), gapCap)
             }
+            time += millis
         }
     }
 }
@@ -481,17 +516,17 @@ private fun HoldToWhistlePad(
     val currentOnRelease by rememberUpdatedState(onRelease)
     val scheme = MaterialTheme.colorScheme
     val containerColor by animateColorAsState(
-        targetValue = if (active) scheme.error else scheme.primary,
+        targetValue = if (active) scheme.error else scheme.tertiary,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "whistleContainer"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (active) scheme.onError else scheme.onPrimary,
+        targetValue = if (active) scheme.onError else scheme.onTertiary,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "whistleContent"
     )
     val scale by animateFloatAsState(
-        targetValue = if (active) 0.92f else 1f,
+        targetValue = if (active) 0.96f else 1f,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "whistleScale"
     )
@@ -509,11 +544,19 @@ private fun HoldToWhistlePad(
         label = "spin"
     )
     val label = stringResource(R.string.whistle_hold)
+    // Held, the nine soft scallops tighten into twelve: the pad visibly squeezes.
+    val squeeze by animateFloatAsState(
+        targetValue = if (active) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "whistleSqueeze"
+    )
+    val morph = remember { androidx.graphics.shapes.Morph(MaterialShapes.Cookie9Sided, MaterialShapes.Cookie12Sided) }
+    val padShape = remember(squeeze) { WhistleMorphShape(morph, squeeze) }
     val ring = scheme.error
 
     Box(
         modifier = Modifier
-            .widthIn(max = 260.dp)
+            .widthIn(max = 240.dp)
             .fillMaxWidth()
             .aspectRatio(1f),
         contentAlignment = Alignment.Center
@@ -552,7 +595,7 @@ private fun HoldToWhistlePad(
                         currentOnRelease()
                     }
                 },
-            shape = MaterialShapes.Cookie9Sided.toShape(),
+            shape = padShape,
             color = containerColor,
             contentColor = contentColor
         ) {}
@@ -576,5 +619,20 @@ private fun HoldToWhistlePad(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+private class WhistleMorphShape(
+    private val morph: androidx.graphics.shapes.Morph,
+    private val progress: Float
+) : androidx.compose.ui.graphics.Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+        density: androidx.compose.ui.unit.Density
+    ): androidx.compose.ui.graphics.Outline {
+        val path = morph.toPath(progress)
+        path.transform(android.graphics.Matrix().apply { setScale(size.width, size.height) })
+        return androidx.compose.ui.graphics.Outline.Generic(path.asComposePath())
     }
 }

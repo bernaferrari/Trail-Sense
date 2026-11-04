@@ -171,8 +171,9 @@ internal fun WaterPurificationScreen(
         item("action") {
             // Holds its place while the duration is worked out, so nothing jumps when it appears.
             val scheme = MaterialTheme.colorScheme
+            // The one action on the screen is warm; cancelling is a quiet secondary.
             val container by animateColorAsState(
-                if (isRunning) scheme.tertiary else scheme.primary,
+                if (isRunning) scheme.secondaryContainer else scheme.tertiary,
                 MaterialTheme.motionScheme.defaultEffectsSpec(),
                 label = "action"
             )
@@ -196,7 +197,7 @@ internal fun WaterPurificationScreen(
                 shapes = ButtonDefaults.shapesFor(ButtonDefaults.LargeContainerHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = container,
-                    contentColor = if (isRunning) scheme.onTertiary else scheme.onPrimary
+                    contentColor = if (isRunning) scheme.onSecondaryContainer else scheme.onTertiary
                 ),
                 contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
                 modifier = Modifier
@@ -268,7 +269,7 @@ private fun BoilPot(
         label = "wave"
     )
     // Light water under dark digits: the number always reads, whatever the level.
-    val ring = if (isRunning) scheme.tertiary else scheme.primary
+    val ring = scheme.primary
     val ringColor by animateColorAsState(ring, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "ring")
     val water = if (isRunning) scheme.tertiaryContainer else scheme.primaryContainer
     val waterColor by animateColorAsState(water, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "water")
@@ -288,15 +289,15 @@ private fun BoilPot(
             progress = { progress },
             modifier = Modifier.fillMaxSize(),
             color = ringColor,
-            trackColor = scheme.surfaceContainerHighest,
-            stroke = Stroke(width = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.toPx() }, cap = androidx.compose.ui.graphics.StrokeCap.Round),
-            trackStroke = Stroke(width = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.toPx() }, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+            trackColor = scheme.surfaceVariant,
+            stroke = Stroke(width = with(androidx.compose.ui.platform.LocalDensity.current) { 12.dp.toPx() }, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+            trackStroke = Stroke(width = with(androidx.compose.ui.platform.LocalDensity.current) { 12.dp.toPx() }, cap = androidx.compose.ui.graphics.StrokeCap.Round),
             wavelength = 36.dp
         )
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(30.dp)
+                .padding(24.dp)
                 .clip(CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -334,9 +335,9 @@ private fun BoilPot(
                     close()
                 }
                 drawPath(front, waterColor)
-                if (isRunning) {
-                    // Rising bubbles.
-                    listOf(0.22f, 0.4f, 0.58f, 0.76f).forEachIndexed { i, fx ->
+                if (isRunning && (seconds ?: Long.MAX_VALUE) <= 10L) {
+                    // The last ten seconds: bubbles rise through the water.
+                    listOf(0.16f, 0.3f, 0.44f, 0.58f, 0.72f, 0.86f).forEachIndexed { i, fx ->
                         val t = (phase + i * 0.27f) % 1f
                         val y = size.height - (size.height - level) * t
                         drawCircle(
@@ -349,15 +350,15 @@ private fun BoilPot(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = seconds?.toString() ?: stringResource(R.string.dash),
+                    text = stringResource(if (isRunning) R.string.water_boil_left else R.string.water_boil_for),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = inkColor.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = seconds?.let { "%d:%02d".format(it / 60, it % 60) } ?: stringResource(R.string.dash),
                     style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
                     color = inkColor
-                )
-                Text(
-                    text = stringResource(if (isRunning) R.string.water_boil_seconds_left else R.string.seconds),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = inkColor.copy(alpha = 0.8f)
                 )
             }
         }
@@ -379,8 +380,8 @@ private fun WaterStep(
     val rowColor by animateColorAsState(
         when (state) {
             StepState.Next -> scheme.primaryContainer
-            StepState.Done -> trailSenseStatusColors().goodContainer.copy(alpha = 0.5f)
-            StepState.Todo -> if (index == 0) scheme.secondaryContainer.copy(alpha = 0.55f) else scheme.tertiaryContainer.copy(alpha = 0.55f)
+            StepState.Done -> scheme.surfaceContainerLow
+            StepState.Todo -> scheme.surfaceContainerLow
         },
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "stepRow"
@@ -396,11 +397,13 @@ private fun WaterStep(
             val rail = scheme.outlineVariant
             Canvas(Modifier.size(width = 44.dp, height = 72.dp)) {
                 val x = size.width / 2f
+                // Only between badges, and inside the row: the 2 dp gaps break it like stitches.
+                val badgeHalf = 22.dp.toPx()
                 if (!position.isFirst) {
-                    drawLine(rail, Offset(x, -20f), Offset(x, size.height / 2f), 3.dp.toPx())
+                    drawLine(rail, Offset(x, 0f), Offset(x, size.height / 2f - badgeHalf), 3.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
                 }
                 if (!position.isLast) {
-                    drawLine(rail, Offset(x, size.height / 2f), Offset(x, size.height + 20f), 3.dp.toPx())
+                    drawLine(rail, Offset(x, size.height / 2f + badgeHalf), Offset(x, size.height), 3.dp.toPx(), androidx.compose.ui.graphics.StrokeCap.Round)
                 }
             }
             when (state) {
@@ -422,8 +425,8 @@ private fun WaterStep(
                     text = number,
                     shape = MaterialShapes.Cookie9Sided.toShape(),
                     size = 44.dp,
-                    containerColor = if (index == 0) scheme.secondary else scheme.tertiary,
-                    contentColor = if (index == 0) scheme.onSecondary else scheme.onTertiary
+                    containerColor = scheme.secondaryContainer,
+                    contentColor = scheme.onSecondaryContainer
                 )
             }
           }

@@ -61,6 +61,8 @@ import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -665,90 +667,80 @@ private class ClinometerTitleState {
 }
 
 /**
- * The reading over the dial: the incline in large SemiBold tabular figures, the slope as a pill under it, and a lock
- * badge that pops in while a reading is held.
+ * The reading over the dial: the incline as the star number and one plain verdict under it ("Slope 42% · High
+ * avalanche risk"). The card takes the risk's colour only when the slope is risky, and a lock badge pops in while a
+ * reading is held.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ClinometerReading(
     state: ClinometerTitleState,
-    instruction: ImageVector?,
+    risk: ClinometerDataPointState,
+    showVerdict: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val tone = when (risk.tone) {
+        TrailSenseTone.Caution, TrailSenseTone.Error -> risk.tone
+        else -> TrailSenseTone.Primary
+    }
+    val colors = trailSenseToneColors(tone)
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<ComposeColor>()
+    val container by animateColorAsState(colors.container, effects, label = "clinoHero")
+    val content by animateColorAsState(colors.content, effects, label = "clinoHeroContent")
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        color = container,
+        contentColor = content
     ) {
-    Column(
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.lg),
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-    ) {
-        Text(
-            stringResource(R.string.clinometer_incline),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TrailSenseReading(
-                value = state.title.ifEmpty { stringResource(R.string.dash) },
-                style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.weight(1f, fill = false)
-            )
-            AnimatedVisibility(
-                visible = state.isLocked,
-                enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                    scaleIn(MaterialTheme.motionScheme.fastSpatialSpec()),
-                exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) +
-                    scaleOut(MaterialTheme.motionScheme.fastSpatialSpec())
-            ) {
-                TrailSenseShapeBadge(
-                    icon = TrailIcons.Lock,
-                    shape = MaterialShapes.Cookie9Sided.toShape(),
-                    size = 44.dp,
-                    modifier = Modifier.padding(start = TrailSenseSpacing.md)
-                )
-            }
-        }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
         ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = state.subtitle.ifEmpty { stringResource(R.string.dash) },
-                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                    text = if (showVerdict) state.title.ifEmpty { stringResource(R.string.dash) } else stringResource(R.string.dash),
+                    style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
-            }
-            AnimatedVisibility(visible = state.isLocked) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
+                AnimatedVisibility(
+                    visible = state.isLocked,
+                    enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                        scaleIn(MaterialTheme.motionScheme.fastSpatialSpec()),
+                    exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                        scaleOut(MaterialTheme.motionScheme.fastSpatialSpec())
                 ) {
-                    Text(
-                        text = stringResource(R.string.clinometer_locked),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.width(TrailSenseSpacing.md))
+                        TrailSenseShapeBadge(
+                            icon = TrailIcons.Lock,
+                            shape = MaterialShapes.Cookie9Sided.toShape(),
+                            size = 44.dp,
+                            containerColor = colors.accent,
+                            contentColor = colors.onAccent
+                        )
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(
+                            text = stringResource(R.string.clinometer_locked),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
+            Text(
+                text = if (showVerdict && state.subtitle.isNotEmpty() && risk.title.isNotEmpty()) {
+                    stringResource(R.string.clinometer_verdict, state.subtitle, risk.title)
+                } else {
+                    stringResource(R.string.clinometer_waiting)
+                },
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                color = content.copy(alpha = 0.82f)
+            )
         }
-        if (instruction != null) {
-            ClinometerInstruction(icon = instruction)
-        }
-    }
     }
 }
 
@@ -782,13 +774,15 @@ private fun ClinometerHost(
                 ),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
+            val instruction = when {
+                views.clinometerInstructions.isVisible -> TrailIcons.RotateFlatToPortrait
+                views.cameraClinometerInstructions.isVisible -> TrailIcons.RotateLandscapeToPortrait
+                else -> null
+            }
             ClinometerReading(
                 views.clinometerTitle,
-                instruction = when {
-                    views.clinometerInstructions.isVisible -> TrailIcons.RotateFlatToPortrait
-                    views.cameraClinometerInstructions.isVisible -> TrailIcons.RotateLandscapeToPortrait
-                    else -> null
-                }
+                risk = views.avalancheRisk,
+                showVerdict = instruction == null
             )
             Box(
                 modifier = Modifier
@@ -839,7 +833,15 @@ private fun ClinometerHost(
                     }
                 }
                 if (views.clinometerInstructions.isVisible) {
-                    views.clinometer.Preview(Modifier.fillMaxSize().alpha(0.35f))
+                    views.clinometer.Preview(Modifier.fillMaxSize().alpha(0.55f))
+                }
+                if (instruction != null) {
+                    ClinometerInstruction(
+                        icon = instruction,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = TrailSenseSpacing.sm)
+                    )
                 }
             }
 
@@ -852,16 +854,10 @@ private fun ClinometerHost(
                 onSelect = { views.clinometerTitle.onLeftButtonClick?.invoke() }
             )
 
-            // Risk takes its colour from the band the needle is in; the measurement tile opens the prompt.
+            // Risk lives in the hero's verdict and the dial's lit band; the measurement tile opens the prompt.
             val measurement = views.estimatedHeight
             TrailSenseStatGrid(
                 stats = listOf(
-                    TrailSenseStat(
-                        label = views.avalancheRisk.description,
-                        value = views.avalancheRisk.title.ifEmpty { "--" },
-                        tone = views.avalancheRisk.tone,
-                        icon = TrailIcons.Avalanche
-                    ),
                     TrailSenseStat(
                         label = measurement.description,
                         value = if (measurement.isSet) measurement.title else stringResource(R.string.measure),
@@ -871,7 +867,7 @@ private fun ClinometerHost(
                         onClick = { views.clinometerTitle.onRightButtonClick?.invoke() }
                     )
                 ),
-                columns = 2
+                columns = 1
             )
         }
     }
@@ -912,15 +908,15 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     )
 }
 
-/** Shown while the phone is held the wrong way: a solid pill over the dimmed dial, the rotation hint inside it. */
+/** Shown while the phone is held the wrong way: a calm secondary hint row over the dimmed dial. */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ClinometerInstruction(icon: ImageVector) {
+private fun ClinometerInstruction(icon: ImageVector, modifier: Modifier = Modifier) {
     Surface(
+        modifier = modifier,
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
-        shadowElevation = 3.dp
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
         Row(
             modifier = Modifier.padding(start = TrailSenseSpacing.sm, end = TrailSenseSpacing.xl, top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.sm),
@@ -929,9 +925,9 @@ private fun ClinometerInstruction(icon: ImageVector) {
             TrailSenseShapeBadge(
                 icon = icon,
                 shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 52.dp,
-                containerColor = MaterialTheme.colorScheme.onPrimary,
-                contentColor = MaterialTheme.colorScheme.primary
+                size = 44.dp,
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
             )
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(

@@ -72,6 +72,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.graphics.shapes.toPath
+import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.foundation.layout.height
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -187,12 +191,12 @@ fun WhiteNoiseScreen(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             Column(
-                modifier = Modifier.padding(vertical = TrailSenseSpacing.lg),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
             ) {
                 PlayControl(
                     isRunning = isRunning,
+                    sound = selectedSound,
                     soundName = soundName,
                     contentDescription = stringResource(R.string.tool_white_noise_title),
                     stateDescription = stringResource(if (isRunning) R.string.on else R.string.off),
@@ -216,9 +220,9 @@ fun WhiteNoiseScreen(
                     } else {
                         stringResource(R.string.dot_separated_pair, stringResource(R.string.off), soundName)
                     },
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    color = if (isRunning) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
             }
@@ -230,41 +234,35 @@ fun WhiteNoiseScreen(
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 TrailSenseGroupHeader(stringResource(R.string.tool_sound))
-                // Every sound one tap away instead of behind a dialog; the chosen one is solid primary.
-                TrailSenseGroupCard(
-                    position = TrailSenseGroupPosition(isFirst = true, isLast = false),
-                    contentPadding = PaddingValues(TrailSenseSpacing.md)
+                // Every sound one tap away instead of behind a dialog: one connected grid, the chosen one solid
+                // primary, and a lone last sound stretched across the row so nothing orphans.
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
+                    modifier = Modifier.selectableGroup()
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
-                        modifier = Modifier.selectableGroup()
-                    ) {
-                        val rows = soundTypes.chunked(2)
-                        rows.forEachIndexed { rowIndex, row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                                row.forEachIndexed { columnIndex, sound ->
-                                    SoundTile(
-                                        label = sound.second,
-                                        icon = soundIcon(sound.first),
-                                        selected = sound.first == selectedSound,
-                                        shape = trailSenseGridCellShape(columnIndex, 2, rowIndex, rows.size),
-                                        modifier = Modifier.weight(1f),
-                                        onClick = {
-                                            if (sound.first != selectedSound) {
-                                                selectedSound = sound.first
-                                                cache.putLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
-                                                stopWhiteNoise()
-                                            }
+                    val rows = soundTypes.chunked(2)
+                    rows.forEachIndexed { rowIndex, row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                            row.forEachIndexed { columnIndex, sound ->
+                                SoundTile(
+                                    label = sound.second,
+                                    icon = soundIcon(sound.first),
+                                    selected = sound.first == selectedSound,
+                                    shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        if (sound.first != selectedSound) {
+                                            selectedSound = sound.first
+                                            cache.putLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
+                                            stopWhiteNoise()
                                         }
-                                    )
-                                }
-                                if (row.size == 1) {
-                                    Spacer(Modifier.weight(1f))
-                                }
+                                    }
+                                )
                             }
                         }
                     }
                 }
+                Spacer(Modifier.height(TrailSenseSpacing.lg))
                 TrailSenseSwitchRow(
                     label = stringResource(R.string.sleep_timer),
                     checked = useSleepTimer,
@@ -272,13 +270,42 @@ fun WhiteNoiseScreen(
                         useSleepTimer = it
                         stopWhiteNoise()
                     },
-                    position = TrailSenseGroupPosition(isFirst = false, isLast = !useSleepTimer)
+                    position = TrailSenseGroupPosition(isFirst = true, isLast = !useSleepTimer)
                 )
                 AnimatedVisibility(
                     visible = useSleepTimer,
                     enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
                     exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
                 ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                    // Quick durations as one tap each; the fields below stay for anything else.
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = false)),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(TrailSenseSpacing.md),
+                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                        ) {
+                            listOf(15L, 30L, 60L, 120L).forEach { mins ->
+                                val duration = Duration.ofMinutes(mins)
+                                SoundChip(
+                                    label = if (mins < 60) {
+                                        stringResource(R.string.white_noise_minutes_short, mins.toInt())
+                                    } else {
+                                        stringResource(R.string.white_noise_hours_short, (mins / 60).toInt())
+                                    },
+                                    selected = currentDuration() == duration,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        setDuration(duration)
+                                        stopWhiteNoise()
+                                    }
+                                )
+                            }
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
@@ -315,6 +342,7 @@ fun WhiteNoiseScreen(
                             }
                         )
                     }
+                    }
                 }
             }
         }
@@ -329,6 +357,7 @@ fun WhiteNoiseScreen(
 @Composable
 private fun PlayControl(
     isRunning: Boolean,
+    sound: SleepSound,
     soundName: String,
     contentDescription: String,
     stateDescription: String,
@@ -338,12 +367,12 @@ private fun PlayControl(
     val interactionSource = remember { MutableInteractionSource() }
     val scheme = MaterialTheme.colorScheme
     val containerColor by animateColorAsState(
-        targetValue = if (isRunning) scheme.primary else scheme.primaryContainer,
+        targetValue = if (isRunning) scheme.tertiary else scheme.tertiaryContainer,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "playContainerColor"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isRunning) scheme.onPrimary else scheme.onPrimaryContainer,
+        targetValue = if (isRunning) scheme.onTertiary else scheme.onTertiaryContainer,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "playContentColor"
     )
@@ -365,10 +394,25 @@ private fun PlayControl(
         MaterialTheme.motionScheme.slowEffectsSpec(),
         label = "active"
     )
-    val ring = scheme.primary
+    val ring = scheme.tertiary
+    // The blob takes the sound's character: spiky for white noise, softer down to a gentle round for brown.
+    val target = soundShape(sound)
+    var from by remember { mutableStateOf(target) }
+    var to by remember { mutableStateOf(target) }
+    val morphProgress = remember { androidx.compose.animation.core.Animatable(1f) }
+    LaunchedEffect(target) {
+        if (target != to) {
+            from = to
+            to = target
+            morphProgress.snapTo(0f)
+            morphProgress.animateTo(1f, androidx.compose.animation.core.tween(600))
+        }
+    }
+    val morph = remember(from, to) { androidx.graphics.shapes.Morph(from, to) }
+    val blobShape = remember(morph, morphProgress.value) { NoiseMorphShape(morph, morphProgress.value) }
 
     Box(
-        modifier = modifier.size(296.dp),
+        modifier = modifier.size(264.dp),
         contentAlignment = Alignment.Center
     ) {
         Canvas(Modifier.fillMaxSize()) {
@@ -385,7 +429,7 @@ private fun PlayControl(
         Surface(
             onClick = onClick,
             interactionSource = interactionSource,
-            shape = MaterialShapes.Cookie12Sided.toShape(),
+            shape = blobShape,
             color = containerColor,
             contentColor = contentColor,
             modifier = Modifier
@@ -467,6 +511,32 @@ private fun SoundTile(
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+private fun soundShape(sound: SleepSound): androidx.graphics.shapes.RoundedPolygon = when (sound) {
+    SleepSound.WhiteNoise -> MaterialShapes.VerySunny
+    SleepSound.PinkNoise -> MaterialShapes.Cookie12Sided
+    SleepSound.BrownNoise -> MaterialShapes.Cookie6Sided
+    SleepSound.Crickets, SleepSound.CricketsNoChirp -> MaterialShapes.Flower
+    SleepSound.OceanWaves -> MaterialShapes.Cookie9Sided
+    SleepSound.Fan -> MaterialShapes.Clover4Leaf
+    else -> MaterialShapes.Cookie12Sided
+}
+
+private class NoiseMorphShape(
+    private val morph: androidx.graphics.shapes.Morph,
+    private val progress: Float
+) : androidx.compose.ui.graphics.Shape {
+    override fun createOutline(
+        size: androidx.compose.ui.geometry.Size,
+        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+        density: androidx.compose.ui.unit.Density
+    ): androidx.compose.ui.graphics.Outline {
+        val path = morph.toPath(progress)
+        path.transform(android.graphics.Matrix().apply { setScale(size.width, size.height) })
+        return androidx.compose.ui.graphics.Outline.Generic(path.asComposePath())
+    }
+}
+
 private fun soundIcon(sound: SleepSound): androidx.compose.ui.graphics.vector.ImageVector = when (sound) {
     SleepSound.Crickets, SleepSound.CricketsNoChirp -> TrailIcons.Grass
     SleepSound.OceanWaves -> TrailIcons.Beach
@@ -478,6 +548,7 @@ private fun soundIcon(sound: SleepSound): androidx.compose.ui.graphics.vector.Im
 private fun SoundChip(
     label: String,
     selected: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -492,7 +563,7 @@ private fun SoundChip(
         label = "soundChipContent"
     )
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         shape = if (selected) MaterialTheme.shapes.medium else CircleShape,
@@ -500,8 +571,9 @@ private fun SoundChip(
         contentColor = content
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             if (selected) {
                 Icon(

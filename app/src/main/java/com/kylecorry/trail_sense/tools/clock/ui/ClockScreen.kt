@@ -19,6 +19,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -189,13 +199,19 @@ private fun ClockScreen(
         }
     ) {
         item("time") {
+            // The drift between the device clock and GPS, shown on the face as a ghost second hand.
+            val driftSeconds = if (isGpsTime && !isUpdatingClock) {
+                Duration.between(gpsTime, systemTime).toMillis() / 1000f
+            } else {
+                0f
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = TrailSenseSpacing.xl)
+                    .padding(top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.lg)
                     .testTag("clock_title"),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
             ) {
                 if (showAnalogClock) {
                     Surface(
@@ -203,17 +219,17 @@ private fun ClockScreen(
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier
                             .padding(bottom = TrailSenseSpacing.lg)
-                            .size(300.dp)
+                            .size(320.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            AnalogClock(time = myTime.toLocalTime())
+                            AnalogClock(time = myTime.toLocalTime(), driftSeconds = driftSeconds)
                         }
                     }
                 }
                 Text(
                     text = timeText,
                     style = (if (showAnalogClock) {
-                        MaterialTheme.typography.displayMedium
+                        MaterialTheme.typography.headlineLarge
                     } else {
                         MaterialTheme.typography.displayLarge
                     }).copy(fontFeatureSettings = "tnum"),
@@ -231,76 +247,130 @@ private fun ClockScreen(
             }
         }
 
-        trailSenseSection(key = "source") {
-            row { position ->
-                TrailSenseListItem(
-                    title = stringResource(
-                        if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
-                    ),
-                    subtitle = when {
-                        isUpdatingClock -> stringResource(R.string.clock_waiting_for_gps)
-                        isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
-                        else -> null
-                    },
-                    icon = rememberVectorPainter(
-                        if (isGpsTime) TrailIcons.Satellite else TrailIcons.ToolClock
-                    ),
-                    trailing = if (isUpdatingClock) {
-                        {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
+        item("source") {
+            val offset = getClockOffset(Duration.between(systemTime, gpsTime))
+            val tone = when {
+                isUpdatingClock || !isGpsTime -> TrailSenseTone.Secondary
+                offset.seconds <= 1L -> TrailSenseTone.Good
+                else -> TrailSenseTone.Caution
+            }
+            val colors = trailSenseToneColors(tone)
+            val container by animateColorAsState(colors.container, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "clockCard")
+            // One card: where the time comes from, how far the device clock drifts, and the one action that fixes it.
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                color = container,
+                contentColor = colors.content
+            ) {
+                Column(
+                    modifier = Modifier.padding(TrailSenseSpacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(contentAlignment = Alignment.Center) {
+                            TrailSenseShapeBadge(
+                                icon = if (isGpsTime) TrailIcons.Satellite else TrailIcons.ToolClock,
+                                shape = (if (tone == TrailSenseTone.Caution) {
+                                    androidx.compose.material3.MaterialShapes.SoftBurst
+                                } else {
+                                    androidx.compose.material3.MaterialShapes.Cookie9Sided
+                                }).toShape(),
+                                size = 52.dp,
+                                containerColor = colors.accent,
+                                contentColor = colors.onAccent
+                            )
+                            if (isUpdatingClock) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(60.dp),
+                                    strokeWidth = 3.dp,
+                                    color = colors.accent
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(TrailSenseSpacing.lg))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                stringResource(
+                                    if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
+                                ),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = colors.content.copy(alpha = 0.8f)
+                            )
+                            Text(
+                                text = when {
+                                    isUpdatingClock -> stringResource(R.string.clock_waiting_for_gps)
+                                    isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
+                                    else -> stringResource(R.string.no_gps_signal)
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                             )
                         }
-                    } else {
-                        null
-                    },
-                    position = position
-                )
-            }
-        }
-
-        item("sync") {
-            AnimatedVisibility(
-                visible = !isUpdatingClock,
-                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
-                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
-            ) {
-                androidx.compose.material3.FilledTonalButton(
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    onClick = {
-                        requestExactAlarms {
-                            onScheduleNextMinute(gpsTime, systemTime)
+                    }
+                    AnimatedVisibility(
+                        visible = !isUpdatingClock,
+                        enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
+                        exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
+                    ) {
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiary,
+                                contentColor = MaterialTheme.colorScheme.onTertiary
+                            ),
+                            onClick = {
+                                requestExactAlarms {
+                                    onScheduleNextMinute(gpsTime, systemTime)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .testTag("pip_button")
+                        ) {
+                            Text(
+                                stringResource(R.string.pip_button),
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
-                    },
-                    shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
-                    contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(ButtonDefaults.MediumContainerHeight)
-                        .testTag("pip_button")
-                ) {
-                    Text(
-                        stringResource(R.string.pip_button),
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    }
                 }
             }
         }
     }
 }
 
+/**
+ * The face: dots for the hours, a dark hour stub, a primary minute hand and a thin second hand that ticks with a
+ * small spring overshoot. When the device clock drifts from GPS, a faint ghost second hand shows where the device
+ * thinks it is.
+ */
 @Composable
-private fun AnalogClock(time: LocalTime) {
+private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
     val face = MaterialTheme.colorScheme.onPrimaryContainer
     val primary = MaterialTheme.colorScheme.primary
-    val second = MaterialTheme.colorScheme.primary
+    val second = MaterialTheme.colorScheme.tertiary
     val container = MaterialTheme.colorScheme.primaryContainer
 
-    Canvas(modifier = Modifier.size(232.dp)) {
+    // Unwrapped so 59 -> 0 keeps turning forward instead of spinning back.
+    val tickTarget = remember { mutableStateOf(-1L) }
+    val secondHand = remember { Animatable(0f) }
+    val totalSeconds = time.toSecondOfDay().toLong()
+    LaunchedEffect(totalSeconds) {
+        val previous = tickTarget.value
+        tickTarget.value = totalSeconds
+        if (previous < 0L || kotlin.math.abs(totalSeconds - previous) > 2L) {
+            secondHand.snapTo(time.second * 6f)
+        } else {
+            val step = ((totalSeconds - previous) * 6f)
+            secondHand.animateTo(
+                secondHand.targetValue + step,
+                spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMedium)
+            )
+        }
+    }
+
+    Canvas(modifier = Modifier.size(248.dp)) {
         val radius = min(size.width, size.height) / 2f
         val center = Offset(size.width / 2f, size.height / 2f)
 
@@ -309,8 +379,8 @@ private fun AnalogClock(time: LocalTime) {
             val angle = hourMark / 12f * 360f - 90f
             val quarter = hourMark % 3 == 0
             drawCircle(
-                color = face.copy(alpha = if (quarter) 0.9f else 0.45f),
-                radius = if (quarter) 5.dp.toPx() else 3.dp.toPx(),
+                color = face.copy(alpha = if (quarter) 0.9f else 0.5f),
+                radius = if (quarter) 6.dp.toPx() else 3.5.dp.toPx(),
                 center = center.pointAt(radius * 0.9f, angle)
             )
         }
@@ -318,7 +388,7 @@ private fun AnalogClock(time: LocalTime) {
         val hour = time.hour % 12
         val hourAngle = ((hour + time.minute / 60f) / 12f) * 360f - 90f
         val minuteAngle = ((time.minute + time.second / 60f) / 60f) * 360f - 90f
-        val secondAngle = (time.second / 60f) * 360f - 90f
+        val secondAngle = secondHand.value - 90f
 
         drawLine(
             color = face,
@@ -330,20 +400,32 @@ private fun AnalogClock(time: LocalTime) {
         drawLine(
             color = primary,
             start = center,
-            end = center.pointAt(radius * 0.7f, minuteAngle),
+            end = center.pointAt(radius * 0.72f, minuteAngle),
             strokeWidth = 9.dp.toPx(),
             cap = StrokeCap.Round
         )
+        if (kotlin.math.abs(driftSeconds) >= 0.5f) {
+            val ghostAngle = secondAngle + driftSeconds * 6f
+            drawLine(
+                color = second.copy(alpha = 0.32f),
+                start = center,
+                end = center.pointAt(radius * 0.8f, ghostAngle),
+                strokeWidth = 3.dp.toPx(),
+                cap = StrokeCap.Round
+            )
+            drawCircle(second.copy(alpha = 0.32f), radius = 5.dp.toPx(), center = center.pointAt(radius * 0.8f, ghostAngle))
+        }
         drawLine(
             color = second,
-            start = center.pointAt(radius * 0.14f, secondAngle + 180f),
-            end = center.pointAt(radius * 0.78f, secondAngle),
-            strokeWidth = 2.5.dp.toPx(),
+            start = center.pointAt(radius * 0.08f, secondAngle + 180f),
+            end = center.pointAt(radius * 0.8f, secondAngle),
+            strokeWidth = 3.dp.toPx(),
             cap = StrokeCap.Round
         )
-        drawCircle(second, radius = 6.dp.toPx(), center = center.pointAt(radius * 0.78f, secondAngle))
-        drawCircle(second, radius = 7.dp.toPx(), center = center)
-        drawCircle(container, radius = 3.dp.toPx(), center = center)
+        drawCircle(second, radius = 6.dp.toPx(), center = center.pointAt(radius * 0.8f, secondAngle))
+        // A clean pivot cap over every hand.
+        drawCircle(face, radius = 10.dp.toPx(), center = center)
+        drawCircle(container, radius = 4.dp.toPx(), center = center)
     }
 }
 

@@ -60,6 +60,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposePath
+import androidx.graphics.shapes.toPath
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -357,14 +360,24 @@ private fun SolarHero(
     declination: IDeclinationStrategy,
     prefs: UserPreferences
 ) {
-    val aligned = getAltitudeDiff(position, orientation).absoluteValue < ALTITUDE_THRESHOLD &&
-        getAzimuthDiff(position, compass, declination, prefs).absoluteValue < AZIMUTH_THRESHOLD
+    val altitudeDiff = getAltitudeDiff(position, orientation)
+    val azimuthDiff = getAzimuthDiff(position, compass, declination, prefs)
+    val tiltDone = altitudeDiff.absoluteValue < ALTITUDE_THRESHOLD
+    val turnDone = azimuthDiff.absoluteValue < AZIMUTH_THRESHOLD
+    val aligned = tiltDone && turnDone
     val tone = if (aligned) TrailSenseTone.Good else TrailSenseTone.Tertiary
     val colors = trailSenseToneColors(tone)
+    // The verdict says, in one line, what is left to do.
+    val remaining = when {
+        aligned -> stringResource(R.string.solar_verdict_aligned)
+        tiltDone -> stringResource(R.string.solar_verdict_turn)
+        turnDone -> stringResource(R.string.solar_verdict_tilt)
+        else -> stringResource(R.string.solar_verdict_both)
+    }
     TrailSenseSpotlight(
         title = energy,
-        titleStyle = MaterialTheme.typography.headlineMedium,
-        eyebrow = stringResource(if (aligned) R.string.solar_aligned else R.string.solar_align_to_collect),
+        titleStyle = MaterialTheme.typography.displaySmall,
+        supportingText = remaining,
         tone = tone,
         modifier = Modifier.testTag("energy"),
         badge = {
@@ -380,86 +393,91 @@ private fun SolarHero(
         PanelSideView(
             currentTilt = orientation.y,
             targetTilt = position.first,
+            aligned = aligned,
             color = colors.accent,
             ink = colors.content,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(112.dp)
+                .height(168.dp)
         )
     }
 }
 
+/**
+ * The side view: a ground line, the target as a ghost panel, the live panel as a solid rounded bar on its post,
+ * and the sun as a scalloped badge out along the target panel's face with a dashed ray down to it. The sun gives
+ * one soft pulse when the panel lines up.
+ */
 @Composable
 private fun PanelSideView(
     currentTilt: Float,
     targetTilt: Float,
+    aligned: Boolean,
     color: Color,
     ink: Color,
     modifier: Modifier = Modifier
 ) {
     val tilt by animateFloatAsState(currentTilt.coerceIn(-10f, 100f), TrailSenseAnimation.standardSpring, label = "tilt")
+    val target = targetTilt.coerceIn(0f, 90f)
+    val sunShape = remember { MaterialShapes.Sunny.toPath() }
+    val pulse = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(aligned) {
+        if (aligned) {
+            pulse.snapTo(0f)
+            pulse.animateTo(1f, androidx.compose.animation.core.tween(900))
+        }
+    }
+    val sunColor = MaterialTheme.colorScheme.tertiary
     Canvas(modifier = modifier) {
-        val ground = size.height - 6.dp.toPx()
-        val pivot = Offset(size.width * 0.36f, ground - 8.dp.toPx())
-        val length = size.height * 0.95f
-        drawLine(
-            ink.copy(alpha = 0.25f),
-            Offset(0f, ground),
-            Offset(size.width, ground),
-            3.dp.toPx(),
-            StrokeCap.Round
-        )
-        // The sun, high in the direction the panel should face.
-        val sunAngle = Math.toRadians((90f - targetTilt).toDouble())
+        val ground = size.height - 10.dp.toPx()
+        val pivot = Offset(size.width * 0.34f, ground - 22.dp.toPx())
+        val length = (size.width * 0.42f).coerceAtMost(size.height * 1.1f)
+        // Ground.
+        drawLine(ink.copy(alpha = 0.3f), Offset(0f, ground), Offset(size.width, ground), 3.dp.toPx(), StrokeCap.Round)
+
+        fun ends(angle: Float): Pair<Offset, Offset> {
+            // A panel tilted by `angle` from flat rises to the left of the pivot, facing the sun up to the right.
+            val r = Math.toRadians(angle.toDouble())
+            val dx = kotlin.math.cos(r).toFloat() * length / 2f
+            val dy = kotlin.math.sin(r).toFloat() * length / 2f
+            return Offset(pivot.x - dx, pivot.y - dy) to Offset(pivot.x + dx, pivot.y + dy)
+        }
+
+        // The sun, along the target panel's normal.
+        val normal = Math.toRadians((target - 90f).toDouble())
+        val reach = (size.height * 0.95f).coerceAtMost(size.width * 0.5f)
         val sun = Offset(
-            pivot.x + kotlin.math.cos(sunAngle).toFloat() * size.width * 0.5f,
-            (pivot.y - kotlin.math.sin(sunAngle).toFloat() * size.height * 0.9f).coerceAtLeast(14.dp.toPx())
+            (pivot.x + kotlin.math.cos(normal).toFloat() * reach).coerceIn(28.dp.toPx(), size.width - 28.dp.toPx()),
+            (pivot.y + kotlin.math.sin(normal).toFloat() * reach).coerceAtLeast(28.dp.toPx())
         )
-        drawCircle(color.copy(alpha = 0.25f), 20.dp.toPx(), sun)
-        drawCircle(color, 11.dp.toPx(), sun)
-
-        fun end(angle: Float): Offset {
-            // A panel tilted by `angle` from flat rises to the left of the pivot, facing the sun to the right.
-            val r = Math.toRadians((180f - angle).toDouble())
-            return Offset(
-                pivot.x + kotlin.math.cos(r).toFloat() * length * 0.5f,
-                pivot.y - kotlin.math.sin(r).toFloat() * length * 0.5f
-            )
-        }
-
-        fun start(angle: Float): Offset {
-            val r = Math.toRadians((180f - angle).toDouble())
-            return Offset(
-                pivot.x - kotlin.math.cos(r).toFloat() * length * 0.5f,
-                pivot.y + kotlin.math.sin(r).toFloat() * length * 0.5f
-            )
-        }
         drawLine(
-            ink.copy(alpha = 0.45f),
-            start(targetTilt),
-            end(targetTilt),
-            4.dp.toPx(),
+            sunColor.copy(alpha = 0.7f),
+            sun,
+            pivot,
+            3.dp.toPx(),
             StrokeCap.Round,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()))
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 8.dp.toPx()))
         )
-        // How far the panel still has to swing: a dashed arc from the live panel to the target.
-        val arcRadius = length * 0.32f
-        drawArc(
-            color = color.copy(alpha = 0.7f),
-            startAngle = tilt - 180f,
-            sweepAngle = targetTilt - tilt,
-            useCenter = false,
-            topLeft = Offset(pivot.x - arcRadius, pivot.y - arcRadius),
-            size = androidx.compose.ui.geometry.Size(arcRadius * 2, arcRadius * 2),
-            style = androidx.compose.ui.graphics.drawscope.Stroke(
-                width = 3.dp.toPx(),
-                cap = StrokeCap.Round,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 6.dp.toPx()))
-            )
-        )
-        drawLine(ink, pivot, Offset(pivot.x, ground), 4.dp.toPx(), StrokeCap.Round)
-        drawLine(color, start(tilt), end(tilt), 10.dp.toPx(), StrokeCap.Round)
-        drawCircle(ink, 5.dp.toPx(), pivot)
+        val p = pulse.value
+        if (p > 0f && p < 1f) {
+            drawCircle(sunColor.copy(alpha = 0.4f * (1f - p)), 26.dp.toPx() + 22.dp.toPx() * p, sun)
+        }
+        val sunSize = 44.dp.toPx()
+        val path = android.graphics.Path(sunShape).apply {
+            transform(android.graphics.Matrix().apply {
+                setScale(sunSize, sunSize)
+                postTranslate(sun.x - sunSize / 2f, sun.y - sunSize / 2f)
+            })
+        }
+        drawPath(path.asComposePath(), sunColor)
+
+        // The ghost of where the panel should be, then the post and the live panel.
+        val (gs, ge) = ends(target)
+        drawLine(ink.copy(alpha = 0.28f), gs, ge, 14.dp.toPx(), StrokeCap.Round)
+        drawLine(ink.copy(alpha = 0.7f), pivot, Offset(pivot.x, ground), 5.dp.toPx(), StrokeCap.Round)
+        val (cs, ce) = ends(tilt)
+        drawLine(color, cs, ce, 14.dp.toPx(), StrokeCap.Round)
+        drawCircle(ink, 6.dp.toPx(), pivot)
     }
 }
 
@@ -613,22 +631,25 @@ private fun SolarReadoutCard(
                     )
                     Text(
                         text = if (isComplete) stringResource(R.string.solar_aligned) else move,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
+                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
-                        Text(
+                    Row(
+                        modifier = Modifier.padding(top = TrailSenseSpacing.xs),
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                    ) {
+                        SolarChip(
                             text = stringResource(R.string.solar_target, desired),
-                            modifier = Modifier.testTag(desiredTag),
-                            style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                            color = contentColor.copy(alpha = 0.75f)
+                            tag = desiredTag,
+                            container = if (isComplete) status.good.copy(alpha = 0.18f) else scheme.primaryContainer,
+                            content = if (isComplete) contentColor else scheme.onPrimaryContainer
                         )
-                        Text(
+                        SolarChip(
                             text = stringResource(R.string.solar_now, current),
-                            modifier = Modifier.testTag(currentTag),
-                            style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                            color = contentColor.copy(alpha = 0.75f)
+                            tag = currentTag,
+                            container = contentColor.copy(alpha = 0.08f),
+                            content = contentColor
                         )
                     }
                 }
@@ -640,13 +661,34 @@ private fun SolarReadoutCard(
                     shape = shape
                 )
             }
+            // The wave calms into a straight line once this axis lines up.
+            val waviness by animateFloatAsState(
+                if (isComplete) 0f else 1f,
+                MaterialTheme.motionScheme.slowEffectsSpec(),
+                label = "waviness"
+            )
             LinearWavyProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth(),
                 color = accent,
-                trackColor = contentColor.copy(alpha = 0.12f)
+                trackColor = contentColor.copy(alpha = 0.16f),
+                amplitude = { waviness }
             )
         }
+    }
+}
+
+@Composable
+private fun SolarChip(text: String, tag: String, container: Color, content: Color) {
+    Surface(shape = androidx.compose.foundation.shape.CircleShape, color = container, contentColor = content) {
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
+                .testTag(tag),
+            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 

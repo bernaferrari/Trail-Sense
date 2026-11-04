@@ -52,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -149,7 +150,19 @@ fun ScopeAdjustmentPage(
             description = adjustmentText
         )
 
+        // The one input the answer waits on comes first; the scope's click size is a quieter setting under it.
         TrailSenseRowGroup {
+            row { position ->
+                DistanceField(
+                    label = stringResource(R.string.distance_to_target),
+                    value = distanceToTarget,
+                    units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+                    defaultUnit = DistanceUnits.Yards,
+                    onValueChange = { setDistanceToTarget(it ?: Distance.from(0f, DistanceUnits.Yards)) },
+                    position = position,
+                    modifier = Modifier.testTag("distance_to_target")
+                )
+            }
             row { position ->
                 UnitPickerField(
                     label = stringResource(R.string.adjustment_per_click),
@@ -160,17 +173,6 @@ fun ScopeAdjustmentPage(
                     onSelected = setDistancePerClick,
                     position = position,
                     modifier = Modifier.testTag("click_amount")
-                )
-            }
-            row { position ->
-                DistanceField(
-                    label = stringResource(R.string.distance_to_target),
-                    value = distanceToTarget,
-                    units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
-                    defaultUnit = DistanceUnits.Yards,
-                    onValueChange = { setDistanceToTarget(it ?: Distance.from(0f, DistanceUnits.Yards)) },
-                    position = position,
-                    modifier = Modifier.testTag("distance_to_target")
                 )
             }
         }
@@ -305,7 +307,7 @@ private fun MissCard(
                                 "0",
                                 style = MaterialTheme.typography.displaySmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = scheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                color = scheme.onSurfaceVariant
                             )
                         }
                         inner()
@@ -422,14 +424,29 @@ private fun ScopeHero(
     description: String
 ) {
     val scheme = MaterialTheme.colorScheme
+    val waitingState = adjustmentX == null && adjustmentY == null
+    val onTargetState = !waitingState && (adjustmentX?.clicks ?: 0) == 0 && (adjustmentY?.clicks ?: 0) == 0
+    // Idle is a calm secondary, a correction to dial is primary, on target is good.
+    val tone = when {
+        waitingState -> com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Secondary
+        onTargetState -> com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Good
+        else -> com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Primary
+    }
+    val colors = com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors(tone)
+    val container by androidx.compose.animation.animateColorAsState(
+        colors.container, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "scopeHero"
+    )
+    val content by androidx.compose.animation.animateColorAsState(
+        colors.content, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "scopeHeroContent"
+    )
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("adjustment_amount")
             .semantics(mergeDescendants = true) { contentDescription = description },
         shape = MaterialTheme.shapes.extraLarge,
-        color = scheme.primaryContainer,
-        contentColor = scheme.onPrimaryContainer
+        color = container,
+        contentColor = content
     ) {
         Column(
             modifier = Modifier.padding(TrailSenseSpacing.xl),
@@ -438,13 +455,14 @@ private fun ScopeHero(
             Text(
                 stringResource(R.string.scope_adjustment),
                 style = MaterialTheme.typography.labelLarge,
-                color = scheme.onPrimaryContainer.copy(alpha = 0.78f)
+                color = content.copy(alpha = 0.78f)
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Reticle(
                     missX = missX,
                     missY = missY,
-                    modifier = Modifier.size(136.dp)
+                    ink = content,
+                    modifier = Modifier.size(148.dp)
                 )
                 Spacer(Modifier.width(TrailSenseSpacing.xl))
                 Column(
@@ -463,7 +481,7 @@ private fun ScopeHero(
                             Text(
                                 stringResource(R.string.ballistics_waiting_hint),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                color = content.copy(alpha = 0.8f)
                             )
                         }
 
@@ -471,7 +489,9 @@ private fun ScopeHero(
                             TrailSenseShapeBadge(
                                 icon = TrailIcons.Check,
                                 shape = MaterialShapes.Sunny.toShape(),
-                                size = 52.dp
+                                size = 52.dp,
+                                containerColor = colors.accent,
+                                contentColor = colors.onAccent
                             )
                             Text(
                                 stringResource(R.string.ballistics_on_target),
@@ -538,9 +558,17 @@ private fun TurretMove(adjustment: ScopeAdjustment?, shape: androidx.graphics.sh
 
 /** Where the shot hit (x right, y up, any unit), scaled so the furthest miss sits near the edge. */
 @Composable
-private fun Reticle(missX: Float, missY: Float, modifier: Modifier = Modifier) {
+private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
-    val ink = scheme.onPrimaryContainer
+    // A dot travels along the correction from the impact back to the centre, over and over.
+    val travel by androidx.compose.animation.core.rememberInfiniteTransition(label = "correction").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(1400, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+        ),
+        label = "correctionTravel"
+    )
     val hit = scheme.tertiary
     val path = scheme.primary
     val face = scheme.surfaceContainerLowest.copy(alpha = 0.7f)
@@ -550,7 +578,7 @@ private fun Reticle(missX: Float, missY: Float, modifier: Modifier = Modifier) {
         val radius = size.minDimension / 2f
         drawCircle(face, radius, center)
         listOf(0.33f, 0.66f).forEach {
-            drawCircle(ink.copy(alpha = 0.18f), radius * it, center, style = Stroke(1.5.dp.toPx()))
+            drawCircle(ink.copy(alpha = 0.3f), radius * it, center, style = Stroke(1.5.dp.toPx()))
         }
         val gap = 8.dp.toPx()
         val stroke = 2.dp.toPx()
@@ -574,6 +602,8 @@ private fun Reticle(missX: Float, missY: Float, modifier: Modifier = Modifier) {
             )
             drawCircle(hit.copy(alpha = 0.3f), 13.dp.toPx(), impact)
             drawCircle(hit, 8.dp.toPx(), impact)
+            val moving = impact + (center - impact) * travel
+            drawCircle(path.copy(alpha = 1f - travel * 0.6f), 5.dp.toPx(), moving)
         }
     }
 }

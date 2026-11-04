@@ -43,6 +43,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -126,8 +132,18 @@ fun DeclinationScreen(
         modifier = modifier
     ) {
         item("declination") {
+            val aligned = Arithmetic.isZero(declination, 0.05f)
             DeclinationHeroCard(
                 title = title,
+                verdict = if (aligned) {
+                    stringResource(R.string.declination_verdict_aligned)
+                } else {
+                    stringResource(
+                        if (declination < 0) R.string.declination_verdict_west else R.string.declination_verdict_east,
+                        formatter.formatDegrees(kotlin.math.abs(declination), 1)
+                    )
+                },
+                arcLabel = formatter.formatDegrees(kotlin.math.abs(declination), 1),
                 declination = declination,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -136,28 +152,24 @@ fun DeclinationScreen(
         }
 
         item("stats") {
-            val aligned = Arithmetic.isZero(declination, 0.05f)
+            // What the number is for: the correction to apply to a bearing, each way.
+            val amount = formatter.formatDegrees(kotlin.math.abs(declination), 1)
+            val east = declination >= 0
             TrailSenseStatGrid(
                 stats = listOf(
                     TrailSenseStat(
-                        label = stringResource(R.string.declination),
-                        value = formatter.formatDegrees(kotlin.math.abs(declination), 1),
-                        supportingText = stringResource(R.string.places_declination_here),
-                        tone = TrailSenseTone.Primary,
-                        icon = TrailIcons.Declination
+                        label = stringResource(R.string.declination_magnetic_to_true),
+                        value = (if (east) "+" else "−") + amount,
+                        supportingText = stringResource(R.string.declination_to_a_compass_bearing),
+                        tone = TrailSenseTone.Neutral,
+                        icon = TrailIcons.CompassIcon
                     ),
                     TrailSenseStat(
-                        label = stringResource(R.string.magnetic_north),
-                        value = if (aligned) {
-                            stringResource(R.string.places_declination_aligned)
-                        } else {
-                            formatter.formatDirection(if (declination < 0) CompassDirection.West else CompassDirection.East)
-                        },
-                        supportingText = stringResource(
-                            if (aligned) R.string.places_declination_with_true_north else R.string.places_declination_of_true_north
-                        ),
-                        tone = TrailSenseTone.Tertiary,
-                        icon = TrailIcons.CompassIcon
+                        label = stringResource(R.string.declination_true_to_magnetic),
+                        value = (if (east) "−" else "+") + amount,
+                        supportingText = stringResource(R.string.declination_to_a_map_bearing),
+                        tone = TrailSenseTone.Neutral,
+                        icon = TrailIcons.Maps
                     )
                 )
             )
@@ -184,16 +196,27 @@ fun DeclinationScreen(
 }
 
 /**
- * The hero is a compass face: a saturated twelve-sided cookie as the bezel, a calm dial inside, true north as a
- * star-tipped needle and magnetic north as a tertiary needle, with the angle between them filled in.
+ * The hero is a compass face: a slowly turning scalloped bezel, a bright dial with N, E, S and W, true north as a
+ * star-tipped needle and magnetic north as a tertiary needle that swings in with a spring. The wedge between them is
+ * the point of the screen, so it is filled and labelled. Under it, the star number and a plain verdict.
  */
 @Composable
 private fun DeclinationHeroCard(
     title: String,
+    verdict: String,
+    arcLabel: String,
     declination: Float,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
+    val spin by androidx.compose.animation.core.rememberInfiniteTransition(label = "bezel").animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(60_000, easing = androidx.compose.animation.core.LinearEasing)
+        ),
+        label = "bezelSpin"
+    )
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
@@ -203,30 +226,41 @@ private fun DeclinationHeroCard(
         Column(
             modifier = Modifier.padding(TrailSenseSpacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(248.dp)) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(272.dp)) {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { rotationZ = spin },
                     shape = MaterialShapes.Cookie12Sided.toShape(),
                     color = scheme.primary
                 ) {}
                 Surface(
-                    modifier = Modifier.size(204.dp),
+                    modifier = Modifier.size(226.dp),
                     shape = CircleShape,
                     color = scheme.surfaceContainerLowest
                 ) {}
                 DeclinationArrow(
                     declination = declination,
+                    arcLabel = arcLabel,
                     modifier = Modifier
-                        .size(204.dp)
+                        .size(226.dp)
                         .testTag("declination")
                 )
             }
+            Spacer(Modifier.size(TrailSenseSpacing.sm))
             Text(
                 text = title,
-                style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = verdict,
+                style = MaterialTheme.typography.titleMedium,
+                color = scheme.onPrimaryContainer.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -342,26 +376,57 @@ private fun CoordinateInput(
 @Composable
 private fun DeclinationArrow(
     declination: Float,
+    arcLabel: String,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
     val trueColor = scheme.onSurface
     val magneticColor = scheme.tertiary
-    val tick = scheme.outlineVariant
+    val tick = scheme.onSurfaceVariant.copy(alpha = 0.55f)
     val wedge = scheme.tertiaryContainer
-    val animatedDeclination by animateFloatAsState(
-        targetValue = declination,
-        animationSpec = TrailSenseAnimation.standardSpring,
-        label = "declinationRotation"
+    val letterColor = scheme.onSurface
+    val labelColor = scheme.onTertiaryContainer
+    val letters = listOf(
+        stringResource(R.string.direction_north),
+        stringResource(R.string.direction_east),
+        stringResource(R.string.direction_south),
+        stringResource(R.string.direction_west)
     )
+    val letterSize = with(androidx.compose.ui.platform.LocalDensity.current) { 15.sp.toPx() }
+    // The magnetic needle swings in from true north with a springy overshoot.
+    val needleAngle = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(declination) {
+        needleAngle.animateTo(
+            declination,
+            androidx.compose.animation.core.spring(dampingRatio = 0.45f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+        )
+    }
+    val animatedDeclination = needleAngle.value
     Canvas(modifier = modifier) {
         val c = Offset(size.width / 2f, size.height / 2f)
         val radius = size.minDimension / 2f
         val needle = radius * 0.72f
 
-        // Ticks every 15 degrees, longer on the quarters.
+        // N, E, S and W just inside the rim; ticks every 15 degrees between them.
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            textAlign = android.graphics.Paint.Align.CENTER
+            textSize = letterSize
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+        }
+        letters.forEachIndexed { i, letter ->
+            val angle = Math.toRadians((i * 90 - 90).toDouble())
+            val r = radius - 22.dp.toPx()
+            paint.color = (if (i == 0) letterColor else letterColor.copy(alpha = 0.7f)).toArgb()
+            drawContext.canvas.nativeCanvas.drawText(
+                letter,
+                c.x + (kotlin.math.cos(angle) * r).toFloat(),
+                c.y + (kotlin.math.sin(angle) * r).toFloat() + letterSize / 3f,
+                paint
+            )
+        }
         for (i in 0 until 24) {
-            val long = i % 6 == 0
+            if (i % 6 == 0) continue
+            val long = false
             rotate(i * 15f, c) {
                 drawLine(
                     tick,
@@ -387,6 +452,20 @@ private fun DeclinationArrow(
             topLeft = Offset(c.x - needle, c.y - needle),
             size = androidx.compose.ui.geometry.Size(needle * 2, needle * 2)
         )
+        // The wedge's label, set inside it at mid-angle (or just beside a thin one).
+        if (kotlin.math.abs(animatedDeclination) >= 0.05f) {
+            val mid = Math.toRadians((-90f + sweep / 2f).toDouble())
+            val labelRadius = needle * 0.55f
+            val side = if (kotlin.math.abs(sweep) < 14f) (if (sweep < 0) -1f else 1f) * 30.dp.toPx() else 0f
+            paint.color = labelColor.toArgb()
+            paint.textSize = letterSize * 0.9f
+            drawContext.canvas.nativeCanvas.drawText(
+                arcLabel,
+                c.x + (kotlin.math.cos(mid) * labelRadius).toFloat() + side,
+                c.y + (kotlin.math.sin(mid) * labelRadius).toFloat(),
+                paint
+            )
+        }
 
         // True north: a needle up with a filled star at its tip.
         drawLine(trueColor, c, Offset(c.x, c.y - needle + 14.dp.toPx()), strokeWidth = 5.dp.toPx(), cap = StrokeCap.Round)

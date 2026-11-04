@@ -3,7 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.convert.ui
 
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -106,37 +107,25 @@ fun ConverterTabs(
         modifier = modifier
     ) {
         item("categories") {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-            ) {
-                names.forEachIndexed { index, name ->
-                    val selected = selectedIndex == index
-                    FilterChip(
-                        selected = selected,
-                        onClick = { selectedIndex = index },
-                        label = { Text(name, style = MaterialTheme.typography.labelLarge) },
-                        leadingIcon = (if (selected) Icons.Rounded.Check else icons.getOrNull(index))?.let { icon ->
-                            {
-                                Icon(
-                                    icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                )
-                            }
-                        },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        border = null,
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            selectedContainerColor = MaterialTheme.colorScheme.primary,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    )
+            // Six categories as a connected 3 x 2 grid of equal tiles, so rows always line up.
+            val columns = 3
+            val rows = names.indices.chunked(columns)
+            androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                rows.forEachIndexed { rowIndex, row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                        row.forEachIndexed { columnIndex, index ->
+                            CategoryTile(
+                                name = names[index],
+                                icon = icons.getOrNull(index),
+                                selected = selectedIndex == index,
+                                shape = com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape(
+                                    columnIndex, row.size, rowIndex, rows.size
+                                ),
+                                onClick = { selectedIndex = index },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -153,3 +142,64 @@ fun ConverterTabs(
         }
     }
 }
+
+@Composable
+private fun CategoryTile(
+    name: String,
+    icon: ImageVector?,
+    selected: Boolean,
+    shape: androidx.compose.ui.graphics.Shape,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val container by androidx.compose.animation.animateColorAsState(
+        if (selected) scheme.primary else scheme.surfaceContainerLow,
+        MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "categoryTile"
+    )
+    val content by androidx.compose.animation.animateColorAsState(
+        if (selected) scheme.onPrimary else scheme.onSurface,
+        MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "categoryTileContent"
+    )
+    androidx.compose.material3.Surface(
+        modifier = modifier
+            .heightIn(min = 76.dp)
+            .androidxSelectable(selected, onClick),
+        shape = shape,
+        color = container,
+        contentColor = content
+    ) {
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier.padding(vertical = TrailSenseSpacing.md, horizontal = TrailSenseSpacing.xs),
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs, androidx.compose.ui.Alignment.CenterVertically)
+        ) {
+            if (icon != null) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = if (selected) content else scheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Text(
+                name,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Medium,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+private fun Modifier.androidxSelectable(selected: Boolean, onClick: () -> Unit): Modifier =
+    this.then(
+        Modifier.selectable(
+            selected = selected,
+            role = androidx.compose.ui.semantics.Role.Tab,
+            onClick = onClick
+        )
+    )

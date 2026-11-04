@@ -16,6 +16,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -102,15 +107,28 @@ private fun ClinometerContent(
     val formatter = FormatService.getInstance(context)
     val scheme = MaterialTheme.colorScheme
     val status = trailSenseStatusColors()
-    val ink = scheme.onPrimaryContainer
+    val ink = scheme.onSurface
     val needleColor = scheme.primary
     val hub = scheme.onPrimary
     val good = status.good
     val caution = status.caution
     val danger = scheme.error
-    val labelSize = with(LocalDensity.current) { 12.sp.toPx() }
-    // Not animated: the angle wraps around the dial and a tween would spin the needle the long way.
-    val animatedAngle = angle
+    val labelSize = with(LocalDensity.current) { 13.sp.toPx() }
+    // A springy needle that always takes the short way round: the target is unwrapped against the current value.
+    val needle = remember { Animatable(angle) }
+    LaunchedEffect(angle) {
+        val target = needle.value + deltaAngle(needle.value, angle)
+        needle.animateTo(target, spring(dampingRatio = 0.62f, stiffness = Spring.StiffnessMediumLow))
+    }
+    val animatedAngle = needle.value
+    // The band the needle sits in is lit: thicker and fully opaque, the rest a step quieter.
+    val folded = (((angle - 90f) % 180f) + 180f) % 180f
+    val slope = if (folded > 90f) 180f - folded else folded
+    val activeBand = when {
+        slope in 30f..45f -> 0
+        slope in 45f..60f -> 1
+        else -> 2
+    }
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Box(
@@ -124,6 +142,14 @@ private fun ClinometerContent(
                 shape = MaterialShapes.Cookie12Sided.toShape(),
                 color = scheme.primaryContainer
             ) {}
+            // A bright face inside the scallops, so labels and needle read at full contrast.
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(22.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = scheme.surfaceContainerLowest
+            ) {}
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
@@ -131,33 +157,34 @@ private fun ClinometerContent(
             ) {
                 val radius = min(size.width, size.height) / 2f
                 val center = Offset(size.width / 2f, size.height / 2f)
-                val bandWidth = 10.dp.toPx()
+                val bandWidth = 12.dp.toPx()
                 val bandRadius = radius - bandWidth / 2f
                 val bandTopLeft = Offset(center.x - bandRadius, center.y - bandRadius)
                 val bandSize = Size(bandRadius * 2, bandRadius * 2)
 
-                fun band(start: Float, stop: Float, color: Color) {
+                fun band(start: Float, stop: Float, color: Color, index: Int) {
                     // A hair of gap at each end lets the rounded caps read as separate bands.
                     val gap = 3f
+                    val active = index == activeBand
                     drawArc(
-                        color = color,
+                        color = if (active) color else color.copy(alpha = 0.55f),
                         startAngle = min(start, stop) + gap,
                         sweepAngle = abs(stop - start) - gap * 2,
                         useCenter = false,
                         topLeft = bandTopLeft,
                         size = bandSize,
-                        style = Stroke(width = bandWidth, cap = StrokeCap.Round)
+                        style = Stroke(width = if (active) bandWidth * 1.5f else bandWidth * 0.8f, cap = StrokeCap.Round)
                     )
                 }
 
                 // The avalanche zones: 30-45° high risk, 45-60° moderate, the rest low; mirrored on both sides.
                 listOf(0f, 180f).forEach { base ->
                     listOf(1f, -1f).forEach { sign ->
-                        band(base + sign * 30f, base + sign * 45f, danger)
-                        band(base + sign * 45f, base + sign * 60f, caution)
-                        band(base + sign * 60f, base + sign * 90f, good)
+                        band(base + sign * 30f, base + sign * 45f, danger, 0)
+                        band(base + sign * 45f, base + sign * 60f, caution, 1)
+                        band(base + sign * 60f, base + sign * 90f, good, 2)
                     }
-                    band(base - 30f, base + 30f, good)
+                    band(base - 30f, base + 30f, good, 2)
                 }
 
                 // Ticks every 10°, longer every 30°.
@@ -169,7 +196,7 @@ private fun ClinometerContent(
                     val c = cos(radians).toFloat()
                     val s = sin(radians).toFloat()
                     drawLine(
-                        ink.copy(alpha = if (major) 0.7f else 0.35f),
+                        ink.copy(alpha = if (major) 0.9f else 0.45f),
                         Offset(center.x + c * (tickOuter - length), center.y + s * (tickOuter - length)),
                         Offset(center.x + c * tickOuter, center.y + s * tickOuter),
                         if (major) 2.5.dp.toPx() else 1.5.dp.toPx(),
@@ -178,7 +205,7 @@ private fun ClinometerContent(
                 }
 
                 val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = ink.copy(alpha = 0.8f).toArgb()
+                    color = ink.toArgb()
                     textAlign = Paint.Align.CENTER
                     textSize = labelSize
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)

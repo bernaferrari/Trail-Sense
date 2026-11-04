@@ -64,6 +64,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.unit.sp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
@@ -509,6 +517,7 @@ private fun MetalDetectorScreen(
                 onToggle = onVibrationToggle,
                 icon = TrailIcons.Vibrate,
                 label = stringResource(R.string.tool_vibration),
+                shake = metalDetected && vibrationEnabled,
                 modifier = Modifier.testTag("metal_vibration_btn")
             )
             if (showAudioButton) {
@@ -559,6 +568,7 @@ private fun MetalDetectorScreen(
                     )
                 }
 
+                // Threshold, calibration and sensitivity as one segmented group.
                 Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                     TrailSenseGroupCard(
                         position = TrailSenseGroupPosition(isFirst = true, isLast = false)
@@ -572,17 +582,21 @@ private fun MetalDetectorScreen(
                             label = thresholdText,
                             onValueChange = onThresholdChange
                         )
-                        FilledTonalButton(
-                            onClick = onCalibrate,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 52.dp)
-                        ) {
-                            Icon(TrailIcons.Recenter, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(TrailSenseSpacing.sm))
-                            Text(stringResource(R.string.calibrate))
-                        }
                     }
+                    TrailSenseListItem(
+                        title = stringResource(R.string.calibrate),
+                        subtitle = stringResource(R.string.metal_detector_calibrate_hint),
+                        icon = rememberVectorPainter(TrailIcons.Recenter),
+                        position = TrailSenseGroupPosition(isFirst = false, isLast = false),
+                        onClick = onCalibrate,
+                        trailing = {
+                            Icon(
+                                TrailIcons.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
                     TrailSenseSwitchRow(
                         label = stringResource(R.string.high_sensitivity),
                         checked = isHighSensitivity,
@@ -607,9 +621,9 @@ private fun MetalDetectorScreen(
 }
 
 /**
- * The hero: the field strength large on a saturated card that flips from the calm primary tone to solid error when
- * metal is near. The badge turns into a burst and sends radar pings out while it detects; the live trace sits at the
- * bottom of the card as a filled area with the threshold band behind it.
+ * The hero: the field strength as the star number with a plain verdict under it, on a card that flips from the calm
+ * primary tone to solid error when metal is near. The badge pulses faster the further the field strays from normal.
+ * The live trace sits at the bottom with its bands named: Normal around the calibrated field, Metal beyond it.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -641,6 +655,11 @@ private fun MetalHero(
         effects,
         label = "metalAccent"
     )
+    // How far outside the normal band the latest reading is, 0 inside it to 1 far beyond.
+    val last = chartReadings.lastOrNull()
+    val halfBand = ((upperThreshold - lowerThreshold) / 2f).coerceAtLeast(0.1f)
+    val middle = (upperThreshold + lowerThreshold) / 2f
+    val strength = if (last == null) 0f else ((kotlin.math.abs(last - middle) / halfBand - 0.5f) / 2f).coerceIn(0f, 1f)
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -649,27 +668,14 @@ private fun MetalHero(
     ) {
         Column(
             modifier = Modifier.padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                MetalBadge(metalDetected = metalDetected, accent = accent, onAccent = container)
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.metal_detector_field),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = content.copy(alpha = 0.78f)
-                    )
-                    Text(
-                        text = stringResource(
-                            if (metalDetected) R.string.metal_detected else R.string.metal_not_detected
-                        ),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                MetalBadge(metalDetected = metalDetected, strength = strength, accent = accent, onAccent = container)
+                Spacer(Modifier.weight(1f))
+                AccuracyBadge(magnetometer = magnetometer, onClick = onAccuracyClick)
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
                 TrailSenseReading(
                     value = fieldValue,
                     unit = fieldUnit,
@@ -678,18 +684,25 @@ private fun MetalHero(
                     style = MaterialTheme.typography.displayLarge,
                     horizontalAlignment = Alignment.Start,
                     modifier = Modifier
-                        .weight(1f)
                         .testTag("metal_detector_title")
                         .semantics { contentDescription = title }
                 )
-                AccuracyBadge(magnetometer = magnetometer, onClick = onAccuracyClick)
+                Text(
+                    text = stringResource(
+                        if (metalDetected) R.string.metal_detected else R.string.metal_not_detected
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = content.copy(alpha = 0.88f)
+                )
             }
             MetalChart(
                 data = chartReadings,
                 lowerThreshold = lowerThreshold,
                 upperThreshold = upperThreshold,
                 lineColor = accent,
-                inkColor = content
+                inkColor = content,
+                metalColor = if (metalDetected) scheme.onError else scheme.tertiary
             )
         }
     }
@@ -697,24 +710,25 @@ private fun MetalHero(
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun MetalBadge(metalDetected: Boolean, accent: Color, onAccent: Color) {
+private fun MetalBadge(metalDetected: Boolean, strength: Float, accent: Color, onAccent: Color) {
+    // The pulse quickens as the field strengthens: about one beat every 1.6 s when calm, five a second near metal.
+    val period = (1600 - 1400 * strength).toInt().coerceAtLeast(200)
     val ping by rememberInfiniteTransition(label = "ping").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1100, easing = LinearEasing), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(period, easing = LinearEasing), RepeatMode.Restart),
         label = "pingProgress"
     )
     Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
-        if (metalDetected) {
-            Canvas(Modifier.fillMaxSize()) {
-                repeat(2) { i ->
-                    val t = (ping + i * 0.5f) % 1f
-                    drawCircle(
-                        accent.copy(alpha = 0.5f * (1f - t)),
-                        radius = size.minDimension / 2f * (0.7f + 0.6f * t),
-                        style = Stroke(width = 3.dp.toPx())
-                    )
-                }
+        Canvas(Modifier.fillMaxSize()) {
+            val rings = if (metalDetected) 2 else 1
+            repeat(rings) { i ->
+                val t = (ping + i * 0.5f) % 1f
+                drawCircle(
+                    accent.copy(alpha = (if (metalDetected) 0.5f else 0.18f + 0.3f * strength) * (1f - t)),
+                    radius = size.minDimension / 2f * (0.7f + 0.6f * t),
+                    style = Stroke(width = 3.dp.toPx())
+                )
             }
         }
         TrailSenseShapeBadge(
@@ -790,8 +804,15 @@ private fun ToolToggle(
     onToggle: () -> Unit,
     icon: ImageVector,
     label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shake: Boolean = false
 ) {
+    val wobble by rememberInfiniteTransition(label = "shake").animateFloat(
+        initialValue = -12f,
+        targetValue = 12f,
+        animationSpec = infiniteRepeatable(tween(90, easing = LinearEasing), RepeatMode.Reverse),
+        label = "shakeAngle"
+    )
     IconToggleButton(
         checked = checked,
         onCheckedChange = { onToggle() },
@@ -803,7 +824,11 @@ private fun ToolToggle(
             checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         )
     ) {
-        Icon(icon, contentDescription = label)
+        Icon(
+            icon,
+            contentDescription = label,
+            modifier = Modifier.graphicsLayer { rotationZ = if (shake) wobble else 0f }
+        )
     }
 }
 
@@ -934,10 +959,13 @@ private fun MetalChart(
     lowerThreshold: Float,
     upperThreshold: Float,
     lineColor: Color,
-    inkColor: Color
+    inkColor: Color,
+    metalColor: Color
 ) {
-    val grid = inkColor.copy(alpha = 0.16f)
-    val band = inkColor.copy(alpha = 0.10f)
+    val band = inkColor.copy(alpha = 0.12f)
+    val normalLabel = stringResource(R.string.metal_detector_normal)
+    val metalLabel = stringResource(R.string.metal_detector_metal)
+    val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 12.sp.toPx() }
 
     // Holds its height while the first readings arrive, so nothing jumps.
     Box(
@@ -967,14 +995,25 @@ private fun MetalChart(
                 return size.height - ((value - minimum) / range).coerceIn(0f, 1f) * size.height
             }
 
-            val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 6.dp.toPx()))
-            repeat(3) { index ->
-                val y = (index + 1) / 4f * size.height
+            // Beyond the band is where metal shows: a soft tint above and below it.
+            val top = y(upperThreshold)
+            val bottom = y(lowerThreshold)
+            drawRect(
+                Brush.verticalGradient(listOf(metalColor.copy(alpha = 0.22f), metalColor.copy(alpha = 0.04f)), endY = top),
+                size = androidx.compose.ui.geometry.Size(size.width, top.coerceAtLeast(0f))
+            )
+            drawRect(
+                Brush.verticalGradient(listOf(metalColor.copy(alpha = 0.04f), metalColor.copy(alpha = 0.22f)), startY = bottom, endY = size.height),
+                topLeft = androidx.compose.ui.geometry.Offset(0f, bottom),
+                size = androidx.compose.ui.geometry.Size(size.width, (size.height - bottom).coerceAtLeast(0f))
+            )
+            val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
+            listOf(top, bottom).forEach { yLine ->
                 drawLine(
-                    color = grid,
-                    start = androidx.compose.ui.geometry.Offset(0f, y),
-                    end = androidx.compose.ui.geometry.Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx(),
+                    color = inkColor.copy(alpha = 0.45f),
+                    start = androidx.compose.ui.geometry.Offset(0f, yLine),
+                    end = androidx.compose.ui.geometry.Offset(size.width, yLine),
+                    strokeWidth = 1.5.dp.toPx(),
                     pathEffect = dash
                 )
             }
@@ -1014,7 +1053,26 @@ private fun MetalChart(
                 )
             )
             val last = data.last()
-            drawCircle(lineColor, 5.dp.toPx(), androidx.compose.ui.geometry.Offset(x(data.lastIndex), y(last)))
+            val now = androidx.compose.ui.geometry.Offset(x(data.lastIndex), y(last))
+            drawCircle(lineColor.copy(alpha = 0.25f), 11.dp.toPx(), now)
+            drawCircle(lineColor, 5.dp.toPx(), now)
+
+            // Word labels for the bands, at the left so they never sit under the "now" dot.
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = labelSize
+                typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+            }
+            val pad = 8.dp.toPx()
+            drawIntoCanvas { canvas ->
+                paint.color = inkColor.copy(alpha = 0.8f).toArgb()
+                if (bottom - top > labelSize * 1.4f) {
+                    canvas.nativeCanvas.drawText(normalLabel, pad, (top + bottom) / 2f + labelSize / 3f, paint)
+                }
+                if (top > labelSize * 1.6f) {
+                    paint.color = metalColor.toArgb()
+                    canvas.nativeCanvas.drawText(metalLabel, pad, labelSize + 2.dp.toPx(), paint)
+                }
+            }
         }
     }
 }
