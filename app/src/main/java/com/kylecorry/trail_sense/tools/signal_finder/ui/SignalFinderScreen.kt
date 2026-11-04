@@ -95,6 +95,7 @@ import com.kylecorry.trail_sense.shared.ApproximateCoordinate
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
+import androidx.compose.material.icons.rounded.AddLocationAlt
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.openTool
@@ -450,21 +451,20 @@ private fun SignalReading(
             fontWeight = FontWeight.SemiBold,
             maxLines = 1
         )
+        // The percentage is the one display value; the service and network are a single line under it.
         Text(
-            text = if (signal.isRegistered) {
-                stringResource(R.string.full_service)
-            } else {
-                stringResource(R.string.emergency_calls_only)
-            },
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = if (signal.isRegistered) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+            text = formatter.join(
+                if (signal.isRegistered) {
+                    stringResource(R.string.full_service)
+                } else {
+                    stringResource(R.string.emergency_calls_only)
+                },
+                formatter.formatCellNetwork(signal.network),
+                separator = FormatService.Separator.Dot
+            ),
+            style = MaterialTheme.typography.titleMedium,
+            color = if (signal.isRegistered) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center
-        )
-        Text(
-            text = formatter.formatCellNetwork(signal.network),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -588,18 +588,34 @@ private fun TowerRadar(
             }
             paint.color = ink.toArgb()
             drawContext.canvas.nativeCanvas.drawText("N", center.x, center.y - radius + labelSize + 4.dp.toPx(), paint)
-            // Range labels down the east side of each ring.
-            paint.textAlign = android.graphics.Paint.Align.LEFT
+            // Range labels on each ring along the one diagonal furthest from every tower, each with a halo in the
+            // disc's colour, so no tower ever sits on a label.
+            val bearings = towers.map { location.bearingTo(it.coordinate).value }
+            val labelBearing = listOf(135f, 45f, 225f, 315f).maxBy { candidate ->
+                bearings.minOfOrNull { b ->
+                    val d = kotlin.math.abs(((b - candidate) % 360f + 540f) % 360f - 180f)
+                    d
+                } ?: 180f
+            }
+            val labelAngle = Math.toRadians(labelBearing.toDouble() - 90)
+            val halo = android.graphics.Paint(paint).apply {
+                style = android.graphics.Paint.Style.STROKE
+                strokeWidth = 4.dp.toPx()
+                strokeJoin = android.graphics.Paint.Join.ROUND
+                color = disc.toArgb()
+                isFakeBoldText = false
+            }
+            paint.isFakeBoldText = false
             paint.color = ink.copy(alpha = 0.7f).toArgb()
             listOf(1f, 0.66f, 0.33f).forEachIndexed { i, f ->
-                drawContext.canvas.nativeCanvas.drawText(
-                    rangeLabels[i],
-                    center.x + 4.dp.toPx(),
-                    center.y + radius * f - 4.dp.toPx(),
-                    paint
-                )
+                // The outer ring's label sits just inside the rim.
+                val r = radius * f - if (f == 1f) labelSize else 0f
+                val x = center.x + kotlin.math.cos(labelAngle).toFloat() * r
+                val y = center.y + kotlin.math.sin(labelAngle).toFloat() * r + labelSize / 3f
+                drawContext.canvas.nativeCanvas.drawText(rangeLabels[i], x, y, halo)
+                drawContext.canvas.nativeCanvas.drawText(rangeLabels[i], x, y, paint)
             }
-            paint.textAlign = android.graphics.Paint.Align.CENTER
+            paint.isFakeBoldText = true
             drawCircle(you, 7.dp.toPx(), center)
             drawCircle(scheme.surfaceContainerLowest, 3.dp.toPx(), center)
             // Towers close together are nudged apart (outward, then sideways) so no two markers overlap.
@@ -636,8 +652,8 @@ private fun TowerRadar(
 }
 
 /**
- * A tower as one compact 72 dp row: its number in a scallop (the nearest in the radar's accent), the distance, the
- * bearing, and two labelled actions.
+ * A tower as one compact 72 dp row: its number in a scallop (the nearest in the radar's accent), the distance and
+ * the bearing. The row navigates; its one button saves the tower as a beacon.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -660,7 +676,10 @@ private fun CellTowerRow(
     val container = scheme.surfaceContainerLow
     val content = scheme.onSurface
 
+    // Tapping the row navigates to the tower; the one trailing button saves it as a beacon. No second arrow beside
+    // the bearing: the radar already shows the way.
     Surface(
+        onClick = onNavigate,
         modifier = Modifier.fillMaxWidth(),
         shape = trailSenseGroupShape(position),
         color = container,
@@ -703,22 +722,9 @@ private fun CellTowerRow(
             }
             androidx.compose.material3.IconButton(onClick = onCreateBeacon) {
                 Icon(
-                    TrailIcons.Beacon,
+                    androidx.compose.material.icons.Icons.Rounded.AddLocationAlt,
                     contentDescription = stringResource(R.string.create_beacon),
-                    tint = content.copy(alpha = 0.8f)
-                )
-            }
-            androidx.compose.material3.FilledIconButton(
-                onClick = onNavigate,
-                colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
-                    containerColor = scheme.secondaryContainer,
-                    contentColor = scheme.onSecondaryContainer
-                )
-            ) {
-                Icon(
-                    TrailIcons.NavigationArrow,
-                    contentDescription = stringResource(R.string.navigate),
-                    modifier = Modifier.size(20.dp)
+                    tint = scheme.onSurfaceVariant
                 )
             }
         }
