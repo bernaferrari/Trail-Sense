@@ -68,18 +68,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import androidx.compose.animation.togetherWith
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseChoiceColors
 
 /*
- * Convert in Calcula's language: both values live in one card, one row above the other. The row you type into reads
+ * Convert in Calcula's language: both values are two flat rows of one group (24/6 corners, a 2 dp seam), one above
+ * the other, with no card around them. The row you type into reads
  * as a field; the other one is the answer, in primary. Tap the answer and it becomes the input, carrying its value.
  * Each row's unit is a pill; tapping it hides the keyboard and puts that category's units in its place. A swap
  * button rides the seam between the rows. Long-press a value to copy it.
  */
 
-/** The two rows and, where it makes sense, the swap button on the seam between them. */
+/**
+ * The two rows as one flat group and, where it makes sense, the swap button riding the seam between them, ringed in
+ * the page colour so it cuts the seam cleanly instead of sitting on a card.
+ */
 @Composable
 internal fun ConvertCard(
     onSwap: (() -> Unit)?,
@@ -89,26 +95,26 @@ internal fun ConvertCard(
 ) {
     var turns by remember { mutableFloatStateOf(0f) }
     val rotation by animateFloatAsState(turns * 180f, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "swap")
-    Surface(
-        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Box {
-            Column(
-                modifier = Modifier.padding(TrailSenseSpacing.xs + TrailSenseSpacing.xxs),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
-                content = rows
-            )
-            if (onSwap != null) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
+            content = rows
+        )
+        if (onSwap != null) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = TrailSenseSpacing.lg)
+            ) {
                 FilledTonalIconButton(
                     onClick = {
                         turns += 1f
                         onSwap()
                     },
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = TrailSenseSpacing.screen)
+                        .padding(TrailSenseSpacing.xs)
                         .size(52.dp)
                 ) {
                     Icon(
@@ -139,13 +145,14 @@ internal fun ConvertRow(
     copyText: String?,
     modifier: Modifier = Modifier,
     leaveRoomForSwap: Boolean = true,
+    position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single,
     content: @Composable RowScope.() -> Unit
 ) {
     val colors = MaterialTheme.colorScheme
     val clipboard = LocalClipboardManager.current
     val haptics = LocalHapticFeedback.current
     val field by animateColorAsState(
-        if (active || picking) colors.surfaceContainerHigh else Color.Transparent,
+        if (active || picking) colors.surfaceContainerHigh else colors.surfaceContainer,
         label = "field"
     )
     val pillColor by animateColorAsState(if (picking) colors.primary else colors.surfaceContainerHighest, label = "pill")
@@ -158,7 +165,7 @@ internal fun ConvertRow(
             .fillMaxWidth()
             .heightIn(min = 128.dp)
             .graphicsLayer { this.alpha = alpha }
-            .clip(RoundedCornerShape(20.dp))
+            .clip(trailSenseGroupShape(position))
             .background(field)
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -281,16 +288,35 @@ internal fun RowScope.ConvertInput(
     )
 }
 
-/** The answer: in primary, so it reads as the result rather than something to edit. */
+/**
+ * The answer: in primary, so it reads as the result rather than something to edit. It rolls like an odometer when
+ * it changes: the new value slides up into place as the old one leaves.
+ */
 @Composable
 internal fun RowScope.ConvertValue(text: String, placeholder: String = "0") {
     val colors = MaterialTheme.colorScheme
-    Text(
-        text.ifEmpty { placeholder },
-        style = convertNumberStyle(text.ifEmpty { placeholder }),
-        color = if (text.isEmpty()) colors.onSurfaceVariant.copy(alpha = 0.4f) else colors.primary,
+    val slide = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+    val fade = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    androidx.compose.animation.AnimatedContent(
+        targetState = text,
+        transitionSpec = {
+            (androidx.compose.animation.slideInVertically(slide) { it / 2 } + androidx.compose.animation.fadeIn(fade))
+                .togetherWith(
+                    androidx.compose.animation.slideOutVertically(slide) { -it / 2 } +
+                        androidx.compose.animation.fadeOut(fade)
+                )
+        },
+        contentAlignment = Alignment.CenterEnd,
+        label = "answer",
         modifier = Modifier.weight(1f)
-    )
+    ) { shown ->
+        Text(
+            shown.ifEmpty { placeholder },
+            style = convertNumberStyle(shown.ifEmpty { placeholder }),
+            color = if (shown.isEmpty()) colors.onSurfaceVariant.copy(alpha = 0.4f) else colors.primary,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
 
 /** A unit's symbol beside its number, quieter than the number. */

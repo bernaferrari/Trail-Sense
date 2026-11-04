@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -113,9 +114,10 @@ class AstroChart(
     fun Content(modifier: Modifier = Modifier) {
         // The frame style: Above / Horizon / Below in the gutter, the sun as the one primary line, the moon a quiet
         // dotted line, the horizon (and twilight limits when asked for) as dashed limits, and the sun's place as the
-        // "now" dot. No day and night bands and no washes under the curves.
+        // "now" dot. Daylight (the sun's curve above the horizon) is one soft primaryContainer lake.
         val scheme = androidx.compose.material3.MaterialTheme.colorScheme
         val sunColor = scheme.primary
+        val daylightColor = scheme.primaryContainer.copy(alpha = 0.55f)
         val moonColor = scheme.outline
         val limitColor = scheme.outlineVariant
         val horizonColor = scheme.outline
@@ -173,6 +175,19 @@ class AstroChart(
                             AstronomyService.SUN_MIN_ALTITUDE_CIVIL
                         ).forEach {
                             drawHorizontal(it, limitColor, left, right, top, bottom, dashed = true)
+                        }
+                    }
+                    // Daylight as a filled lake: the area under the sun's curve while it is above the horizon.
+                    if (sunLine.size >= 2) {
+                        val horizonY = toScreen(Vector2(0f, 0f), left, right, top, bottom).y
+                        val screen = sunLine.map { toScreen(it, left, right, top, bottom) }
+                        val lake = trailSenseSmoothPath(screen).apply {
+                            lineTo(screen.last().x, horizonY)
+                            lineTo(screen.first().x, horizonY)
+                            close()
+                        }
+                        clipRect(left = left, top = 0f, right = right, bottom = horizonY) {
+                            drawPath(lake, daylightColor)
                         }
                     }
                     drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)

@@ -1015,6 +1015,16 @@ private fun AstronomyScreen(
             AstronomyTitle(views.astronomyTitle)
         }
 
+        // The sun's rise, noon and set sit right under the countdown, so the answer and its evidence share one
+        // glance; the chart and the other bodies follow.
+        val sun = astronomyItems.firstOrNull { it.id == SUN_ITEM_ID }
+        val others = astronomyItems.filter { it.id != SUN_ITEM_ID }
+        if (sun != null && !views.timeSeeker.isVisible) {
+            item(key = "sun") {
+                AstronomyDetailRow(sun, TrailSenseGroupPosition.Single)
+            }
+        }
+
         // The day being charted heads the chart, straight on the page.
         item(key = "day") {
             Column {
@@ -1049,7 +1059,7 @@ private fun AstronomyScreen(
         } else {
             item(key = "bodies") {
                 AstronomyDetailList(
-                    items = astronomyItems,
+                    items = others,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -1061,6 +1071,9 @@ private fun AstronomyScreen(
         }
     }
 }
+
+/** The sun's row id (see SunListItemProducer); it leads the page under the countdown. */
+private const val SUN_ITEM_ID = 1L
 
 private fun createAstronomyViews(
     context: Context,

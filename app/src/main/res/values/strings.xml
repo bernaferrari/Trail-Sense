@@ -2336,7 +2336,7 @@
         <item quantity="other">%d sightings</item>
     </plurals>
     <!-- Family redesign: climate, clouds -->
-    <string name="clouds_empty_description">Log a cloud with the camera, a photo or by hand to see what the sky is saying.</string>
+    <string name="clouds_empty_description">Log a cloud to read what the sky says.</string>
     <!-- Family redesign: light meter -->
     <string name="light_meter_illuminance">Illuminance</string>
     <string name="light_meter_peak">Peak %s</string>

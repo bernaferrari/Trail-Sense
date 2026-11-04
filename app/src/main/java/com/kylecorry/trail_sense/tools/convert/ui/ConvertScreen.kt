@@ -140,7 +140,18 @@ fun ConverterTabs(
 @Composable
 private fun ConvertCategories(names: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     val state = rememberLazyListState()
-    LaunchedEffect(selected) { state.animateScrollToItem(selected, scrollOffset = -120) }
+    // Only scroll when the chosen category is not fully in view, so the row opens at its start with every chip
+    // whole rather than cut at the left edge.
+    LaunchedEffect(selected) {
+        val info = state.layoutInfo
+        val item = info.visibleItemsInfo.firstOrNull { it.index == selected }
+        val fullyVisible = if (item == null) {
+            info.visibleItemsInfo.isEmpty() && selected < 3
+        } else {
+            item.offset >= info.viewportStartOffset && item.offset + item.size <= info.viewportEndOffset
+        }
+        if (!fullyVisible) state.animateScrollToItem(selected, scrollOffset = -120)
+    }
     LazyRow(
         state = state,
         contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg),

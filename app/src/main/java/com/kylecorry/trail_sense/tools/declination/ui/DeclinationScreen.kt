@@ -69,6 +69,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -96,6 +98,7 @@ fun DeclinationScreen(
     var location by remember { mutableStateOf(sensors.lastKnownLocation) }
     var isLocationUpToDate by remember { mutableStateOf(false) }
     var declination by remember { mutableStateOf(0f) }
+    var magneticToTrue by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         location = withContext(Dispatchers.IO) {
@@ -151,30 +154,35 @@ fun DeclinationScreen(
             )
         }
 
-        // What the number is for: which way to apply it to a bearing. The amount is the headline above, so the
-        // rows are pure instructions and never repeat it.
-        trailSenseSection(key = "stats") {
+        // What the number is for: which way to apply it to a bearing, as one choice and the one sentence it gives.
+        // The amount is the headline above, so the sentence never repeats it.
+        item("correction") {
             val east = declination >= 0
-            row { position ->
-                CorrectionRow(
-                    label = stringResource(R.string.declination_magnetic_to_true),
-                    supportingText = stringResource(
-                        if (east) R.string.declination_add_to_compass_bearing
-                        else R.string.declination_subtract_from_compass_bearing
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                TrailSenseConnectedChoice(
+                    options = listOf(
+                        TrailSenseChoice(true, stringResource(R.string.declination_magnetic_to_true)),
+                        TrailSenseChoice(false, stringResource(R.string.declination_true_to_magnetic))
                     ),
-                    icon = TrailIcons.CompassIcon,
-                    position = position
+                    selected = magneticToTrue,
+                    onSelect = { magneticToTrue = it }
                 )
-            }
-            row { position ->
-                CorrectionRow(
-                    label = stringResource(R.string.declination_true_to_magnetic),
-                    supportingText = stringResource(
-                        if (east) R.string.declination_subtract_from_map_bearing
-                        else R.string.declination_add_to_map_bearing
+                Text(
+                    text = stringResource(
+                        when {
+                            magneticToTrue && east -> R.string.declination_add_to_compass_bearing
+                            magneticToTrue -> R.string.declination_subtract_from_compass_bearing
+                            east -> R.string.declination_subtract_from_map_bearing
+                            else -> R.string.declination_add_to_map_bearing
+                        }
                     ),
-                    icon = TrailIcons.Maps,
-                    position = position
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -200,9 +208,10 @@ fun DeclinationScreen(
 }
 
 /**
- * The instrument is a compass face on the plain page: a scalloped primaryContainer bezel, a bright dial with N, E,
- * S and W, true north as a small tertiary dot on the rim above N, and magnetic north as the one primary needle that
- * swings in with a spring, the wedge between them a soft wash of primary. Under it, the reading (display type) and
+ * The instrument is a compass face on the plain page: one calm disc with N, E, S and W, true north as a ghosted
+ * outline needle pointing at N, and magnetic north as the one solid primary needle that swings away from it on a
+ * spring when the screen opens, so the gap between the two needles is the declination. The wedge between them is
+ * filled in primary. Under it, the reading (display type) and
  * the verdict (headline small).
  */
 @Composable
@@ -218,21 +227,16 @@ private fun DeclinationHeroCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(256.dp)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(240.dp)) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
-                shape = MaterialShapes.Cookie12Sided.toShape(),
-                color = scheme.primaryContainer
-            ) {}
-            Surface(
-                modifier = Modifier.size(216.dp),
                 shape = CircleShape,
-                color = scheme.surfaceContainerLowest
+                color = scheme.surfaceContainer
             ) {}
             DeclinationArrow(
                 declination = declination,
                 modifier = Modifier
-                    .size(216.dp)
+                    .fillMaxSize()
                     .testTag("declination")
             )
         }
@@ -252,22 +256,6 @@ private fun DeclinationHeroCard(
             modifier = Modifier.fillMaxWidth()
         )
     }
-}
-
-/** One correction: what it converts and whether to add or subtract the headline amount. */
-@Composable
-private fun CorrectionRow(
-    label: String,
-    supportingText: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    position: TrailSenseGroupPosition
-) {
-    com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem(
-        title = label,
-        subtitle = supportingText,
-        icon = rememberVectorPainter(icon),
-        position = position
-    )
 }
 
 @Composable
@@ -376,7 +364,7 @@ private fun DeclinationArrow(
     val magneticColor = scheme.primary
     val tick = scheme.onSurfaceVariant.copy(alpha = 0.55f)
     // The wedge between the norths is a soft wash of the needle's colour, so it never blends into the bezel.
-    val wedge = scheme.primary.copy(alpha = 0.22f)
+    val wedge = scheme.primary.copy(alpha = 0.32f)
     val letterColor = scheme.onSurface
     val letters = listOf(
         stringResource(R.string.direction_north),
@@ -444,8 +432,21 @@ private fun DeclinationArrow(
             topLeft = Offset(c.x - needle, c.y - needle),
             size = androidx.compose.ui.geometry.Size(needle * 2, needle * 2)
         )
-        // True north: a small dot on the rim above N, clear of the letter and the needle.
-        drawCircle(trueColor, radius = 4.dp.toPx(), center = Offset(c.x, c.y - radius + 6.dp.toPx()))
+        // True north: a ghosted outline needle pointing straight at N.
+        val ghost = Path().apply {
+            moveTo(c.x, c.y - needle - 4.dp.toPx())
+            lineTo(c.x - 11.dp.toPx(), c.y - needle + 20.dp.toPx())
+            lineTo(c.x + 11.dp.toPx(), c.y - needle + 20.dp.toPx())
+            close()
+        }
+        drawLine(
+            trueColor.copy(alpha = 0.6f),
+            c,
+            Offset(c.x, c.y - needle + 20.dp.toPx()),
+            strokeWidth = 2.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+        drawPath(ghost, trueColor.copy(alpha = 0.6f), style = Stroke(2.dp.toPx(), join = androidx.compose.ui.graphics.StrokeJoin.Round))
 
         // Magnetic north: the one needle, in primary, with a filled head.
         rotate(animatedDeclination, c) {
@@ -459,6 +460,6 @@ private fun DeclinationArrow(
             drawPath(head, magneticColor)
         }
         drawCircle(scheme.primary, radius = 9.dp.toPx(), center = c)
-        drawCircle(scheme.surfaceContainerLowest, radius = 4.dp.toPx(), center = c)
+        drawCircle(scheme.surfaceContainer, radius = 4.dp.toPx(), center = c)
     }
 }

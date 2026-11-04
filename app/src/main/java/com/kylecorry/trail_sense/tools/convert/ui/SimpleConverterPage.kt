@@ -131,7 +131,11 @@ fun <T : Serializable> SimpleConvertScreen(
                             topActive = isTop
                         }
                     },
-                    copyText = (if (isActive) input else output).ifEmpty { null }
+                    copyText = (if (isActive) input else output).ifEmpty { null },
+                    position = com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition(
+                        isFirst = isTop,
+                        isLast = !isTop
+                    )
                 ) {
                     if (isActive) {
                         ConvertInput(
