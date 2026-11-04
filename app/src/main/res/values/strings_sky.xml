@@ -34,4 +34,8 @@
     <string name="sky_pressure_chart_waiting">The history fills in as readings arrive</string>
     <string name="sky_clouds_log">Log a cloud</string>
     <string name="sky_experimentation_slot">A plugin will appear here</string>
+    <string name="sky_pressure_steady">Steady</string>
+    <string name="sky_pressure_rising">Rising</string>
+    <string name="sky_pressure_falling">Falling</string>
 </resources>
+

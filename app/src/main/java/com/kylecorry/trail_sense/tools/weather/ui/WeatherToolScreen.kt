@@ -787,8 +787,16 @@ private fun WeatherPressureCard(
                     modifier = Modifier.weight(1f)
                 )
                 if (tendency?.trailingText != null) {
+                    // The trend in a word first, so a flat line still says something: "Steady · 0.00 hPa / 3h".
+                    val trendWord = stringResource(
+                        when {
+                            tendencyDirection > 0 -> R.string.sky_pressure_rising
+                            tendencyDirection < 0 -> R.string.sky_pressure_falling
+                            else -> R.string.sky_pressure_steady
+                        }
+                    )
                     TrailSenseValueChip(
-                        text = tendency.trailingText,
+                        text = "$trendWord · ${tendency.trailingText}",
                         icon = tendency.icon,
                         tone = when {
                             tendencyDirection >= 1 -> TrailSenseTone.Good
@@ -1233,6 +1241,13 @@ private fun WeatherHeroCard(
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "weatherHero"
     )
+    // The sky card's lower edge takes the time of day: a warm glow around dawn and dusk, a deeper tint at night.
+    val hour = remember { java.time.LocalTime.now().hour }
+    val horizon = when (hour) {
+        in 5..8, in 17..20 -> androidx.compose.ui.graphics.lerp(container, trailSenseToneColors(TrailSenseTone.Caution).container, 0.55f)
+        in 21..23, in 0..4 -> androidx.compose.ui.graphics.lerp(container, MaterialTheme.colorScheme.primaryContainer, 0.6f)
+        else -> container
+    }
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(TrailSenseShape.hero),
@@ -1242,6 +1257,7 @@ private fun WeatherHeroCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(container, container, horizon)))
                 .clickable(enabled = state.onTitleClick != null) { state.onTitleClick?.invoke() }
                 .padding(TrailSenseSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -1268,7 +1284,7 @@ private fun WeatherHeroCard(
                         WeatherCondition.Wind -> MaterialShapes.Flower.toShape()
                         null -> MaterialShapes.Cookie12Sided.toShape()
                     },
-                    size = 132.dp,
+                    size = 108.dp,
                     containerColor = colors.accent,
                     contentColor = colors.onAccent,
                     spin = state.condition == WeatherCondition.Clear ||
@@ -1293,13 +1309,21 @@ private fun WeatherHeroCard(
                     textAlign = TextAlign.Center
                 )
             }
-            // An alert rides in the hero as a strong chip; tap it for what it means.
+            // An alert rides in the hero as a warning chip (red for storms, amber otherwise); tap it for what it means.
             if (alert != null) {
+                val alertColors = trailSenseToneColors(
+                    if (state.condition == WeatherCondition.Storm || state.condition == WeatherCondition.Thunderstorm) {
+                        TrailSenseTone.Error
+                    } else {
+                        TrailSenseTone.Caution
+                    }
+                )
                 Surface(
                     onClick = { alert.onClick?.invoke() },
                     shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.inverseSurface,
-                    contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                    color = alertColors.accent,
+                    contentColor = alertColors.onAccent,
+
                     modifier = Modifier
                         .padding(top = TrailSenseSpacing.md)
                         .testTag("weather_item_${alert.id}")
