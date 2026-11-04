@@ -143,15 +143,15 @@ class NavigationSheetView(private val context: Context) {
         val off = state.offCourse
         val badgeContainer by animateColorAsState(
             when (off) {
-                null -> scheme.surfaceContainerHighest
-                else -> lerp(status.goodContainer, scheme.errorContainer, off)
+                null -> scheme.primary
+                else -> lerp(status.good, scheme.tertiary, off)
             },
             label = "badgeContainer"
         )
         val badgeContent by animateColorAsState(
             when (off) {
-                null -> scheme.onSurfaceVariant
-                else -> lerp(status.onGoodContainer, scheme.onErrorContainer, off)
+                null -> scheme.onPrimary
+                else -> lerp(status.goodContainer, scheme.onTertiary, off)
             },
             label = "badgeContent"
         )
@@ -165,7 +165,8 @@ class NavigationSheetView(private val context: Context) {
                 .fillMaxWidth()
                 .padding(top = 8.dp, bottom = 8.dp),
             shape = RoundedCornerShape(28.dp),
-            color = scheme.surfaceContainerHigh,
+            color = scheme.primaryContainer,
+            contentColor = scheme.onPrimaryContainer,
             shadowElevation = 6.dp
         ) {
             Column(
@@ -222,7 +223,7 @@ class NavigationSheetView(private val context: Context) {
                             Text(
                                 text = state.bearingText,
                                 style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                                color = badgeContent.takeIf { off != null && off > 0.5f } ?: scheme.primary,
+                                color = if (off != null && off > 0.5f) scheme.tertiary else scheme.primary,
                                 maxLines = 1
                             )
                         }
@@ -230,14 +231,20 @@ class NavigationSheetView(private val context: Context) {
                             Text(
                                 text = state.subtitle,
                                 style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
-                                color = scheme.onSurfaceVariant,
+                                color = scheme.onPrimaryContainer.copy(alpha = 0.78f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                     if (state.showCancel) {
-                        FilledTonalIconButton(onClick = ::requestCancelNavigation) {
+                        FilledTonalIconButton(
+                            onClick = ::requestCancelNavigation,
+                            colors = androidx.compose.material3.IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = scheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                                contentColor = scheme.onPrimaryContainer
+                            )
+                        ) {
                             Icon(
                                 imageVector = Icons.Rounded.Close,
                                 contentDescription = stringResource(R.string.stop)
@@ -256,7 +263,7 @@ class NavigationSheetView(private val context: Context) {
                         state.stats.forEachIndexed { index, stat ->
                             Surface(
                                 shape = trailSenseGridCellShape(index, state.stats.size, 0, 1),
-                                color = scheme.surface,
+                                color = scheme.surfaceContainerLowest.copy(alpha = 0.72f),
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -285,7 +292,7 @@ class NavigationSheetView(private val context: Context) {
                                             Icon(
                                                 imageVector = stat.labelIcon,
                                                 contentDescription = null,
-                                                tint = scheme.onSurfaceVariant,
+                                                tint = scheme.onPrimaryContainer.copy(alpha = 0.78f),
                                                 modifier = Modifier
                                                     .padding(end = 4.dp)
                                                     .size(14.dp)
@@ -294,7 +301,7 @@ class NavigationSheetView(private val context: Context) {
                                         Text(
                                             text = stat.label,
                                             style = MaterialTheme.typography.labelMedium,
-                                            color = scheme.onSurfaceVariant,
+                                            color = scheme.onPrimaryContainer.copy(alpha = 0.78f),
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )

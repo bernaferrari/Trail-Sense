@@ -829,19 +829,16 @@ private fun MapEmptyState(
     onAddMap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TrailSenseEmptyState(
-        icon = TrailSenseIcons.Filled.Map,
-        title = stringResource(R.string.no_offline_maps),
-        description = stringResource(R.string.map_empty_description),
-        action = {
-            Button(onClick = onAddMap, modifier = Modifier.height(52.dp)) {
-                Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(TrailSenseSpacing.sm))
-                Text(stringResource(R.string.add_offline_map), style = MaterialTheme.typography.titleSmall)
-            }
-        },
-        modifier = modifier
-    )
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        TrailSenseEmptyState(
+            icon = TrailSenseIcons.Filled.Map,
+            title = stringResource(R.string.no_offline_maps),
+            description = stringResource(R.string.map_empty_description),
+            actionLabel = stringResource(R.string.add_offline_map),
+            actionIcon = TrailSenseIcons.Filled.Add,
+            onAction = onAddMap
+        )
+    }
 }
 
 private fun createMapViews(context: Context): MapViews {
