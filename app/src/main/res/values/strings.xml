@@ -2227,6 +2227,14 @@
         <item quantity="one">%d issue found</item>
         <item quantity="other">%d issues found</item>
     </plurals>
+    <plurals name="diagnostics_error_count">
+        <item quantity="one">%d error</item>
+        <item quantity="other">%d errors</item>
+    </plurals>
+    <plurals name="diagnostics_warning_count">
+        <item quantity="one">%d warning</item>
+        <item quantity="other">%d warnings</item>
+    </plurals>
     <string name="weather_chart_empty">Pressure appears here as the weather monitor records it.</string>
     <!-- Calibration and tool settings redesign -->
     <string name="calibration_chart_legend">The colored line is the calibrated reading; the gray line is what the sensor reported.</string>
