@@ -27,4 +27,7 @@
     </plurals>
     <!-- Notes -->
     <string name="places_notes_latest">Latest note</string>
+    <!-- Convert -->
+    <string name="places_convert_hint">Type an amount above</string>
+    <string name="places_convert_coordinate_hint">Type or paste a location above</string>
 </resources>
