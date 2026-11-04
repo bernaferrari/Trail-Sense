@@ -73,7 +73,6 @@ import androidx.compose.animation.togetherWith
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
@@ -85,6 +84,13 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import androidx.compose.material3.Icon
+import androidx.compose.ui.unit.sp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
@@ -139,17 +145,20 @@ fun RulerScreen(
         )
     }
     val mapDistance = mapDistanceValue?.let { context.getString(R.string.map_distance, it) }.orEmpty()
+    val scaleSummary = remember(scaleMode, fractionalFrom, fractionalTo, verbalFrom, verbalTo) {
+        formatScale(scaleMode, fractionalFrom, fractionalTo, verbalFrom, verbalTo, formatService)
+    }
+    var isEditingScale by remember { mutableStateOf(false) }
+    val zeroLength = remember(rulerUnits) { formatService.formatDistance(Distance.from(0f, rulerUnits), 0, false) }
 
     val tapHint = stringResource(R.string.ruler_tap_hint)
     val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     val cmLabel = getUnitText(DistanceUnits.Centimeters)
     val inLabel = getUnitText(DistanceUnits.Inches)
-    val ratioLabel = stringResource(R.string.map_scale_ratio)
-    val verbalLabel = stringResource(R.string.map_scale_verbal)
 
     // One question: how long is it?
-    // The ruler runs down the screen's edge and is the live object; the measurement sits plainly beside it, then the
-    // units, then the map scale as one group that ends in the distance on the ground.
+    // The ruler runs down the screen's edge and is the live object. Beside it: the length in display type with the
+    // units under it, then the map scale as two quiet rows (the scale, and the length on the ground).
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.tool_ruler_title),
         modifier = modifier
@@ -191,69 +200,50 @@ fun RulerScreen(
                         top = TrailSenseSpacing.sm,
                         bottom = TrailSenseSpacing.xxxl
                     ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                RulerLength(
-                    measurement = measurement,
-                    hint = tapHint,
-                    modifier = Modifier.testTag("measurement")
-                )
-
-                TrailSenseConnectedChoice(
-                    options = listOf(
-                        TrailSenseChoice(DistanceUnits.Centimeters, cmLabel),
-                        TrailSenseChoice(DistanceUnits.Inches, inLabel)
-                    ),
-                    selected = rulerUnits,
-                    onSelect = { rulerUnits = it },
-                    modifier = Modifier.testTag("ruler_unit_btn")
-                )
-
-                // The map scale: its kind as the family's choice under the header, then one group of the scale's
-                // numbers that ends in its answer, the distance on the ground.
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    TrailSenseGroupHeader(
-                        stringResource(R.string.map_scale_title),
-                        modifier = Modifier.testTag("map_scale_title")
+                // The answer: the length in display type, the units right under it.
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+                    RulerLength(
+                        measurement = measurement,
+                        placeholder = zeroLength,
+                        hint = tapHint,
+                        modifier = Modifier.testTag("measurement")
                     )
                     TrailSenseConnectedChoice(
                         options = listOf(
-                            TrailSenseChoice(MapScaleMode.Fractional, ratioLabel),
-                            TrailSenseChoice(MapScaleMode.Relational, verbalLabel)
+                            TrailSenseChoice(DistanceUnits.Centimeters, cmLabel),
+                            TrailSenseChoice(DistanceUnits.Inches, inLabel)
                         ),
-                        selected = scaleMode,
-                        onSelect = { scaleMode = it },
-                        modifier = Modifier
-                            .padding(bottom = TrailSenseSpacing.sm)
-                            .testTag(if (scaleMode == MapScaleMode.Fractional) "map_ratio_btn" else "map_verbal_btn")
+                        selected = rulerUnits,
+                        onSelect = { rulerUnits = it },
+                        modifier = Modifier.testTag("ruler_unit_btn")
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                        val enterSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-                        val exitSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
-                        AnimatedContent(
-                            targetState = scaleMode,
-                            transitionSpec = { fadeIn(enterSpec) togetherWith fadeOut(exitSpec) },
-                            label = "mapScaleMode"
-                        ) { mode ->
-                            if (mode == MapScaleMode.Fractional) {
-                                FractionalScaleInput(
-                                    from = fractionalFrom,
-                                    to = fractionalTo,
-                                    onFromChanged = { fractionalFrom = it },
-                                    onToChanged = { fractionalTo = it },
-                                    modifier = Modifier.testTag("fractional_map_scale")
+                }
+
+                // The map scale as two quiet rows, not a form: the scale (tap to set it in a sheet) and what the
+                // measured length is on the ground.
+                TrailSenseRowGroup(
+                    title = stringResource(R.string.map_scale_title),
+                    modifier = Modifier.testTag("map_scale_title")
+                ) {
+                    row { position ->
+                        TrailSenseListItem(
+                            title = stringResource(R.string.ruler_scale),
+                            subtitle = scaleSummary ?: stringResource(R.string.ruler_scale_not_set),
+                            position = position,
+                            onClick = { isEditingScale = true },
+                            trailing = {
+                                Icon(
+                                    imageVector = TrailIcons.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            } else {
-                                VerbalScaleInput(
-                                    from = verbalFrom,
-                                    to = verbalTo,
-                                    onFromChanged = { verbalFrom = it },
-                                    onToChanged = { verbalTo = it },
-                                    formatService = formatService,
-                                    modifier = Modifier.testTag("verbal_map_scale")
-                                )
-                            }
-                        }
+                            },
+                            modifier = Modifier.testTag("map_scale")
+                        )
+                    }
+                    row { position ->
                         TrailSenseListItem(
                             title = stringResource(R.string.ruler_on_the_ground),
                             subtitle = if (mapDistanceValue == null) {
@@ -263,18 +253,8 @@ fun RulerScreen(
                             } else {
                                 null
                             },
-                            position = TrailSenseGroupPosition(isFirst = false, isLast = true),
-                            trailing = mapDistanceValue?.let { value ->
-                                {
-                                    Text(
-                                        text = value,
-                                        style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 1
-                                    )
-                                }
-                            },
+                            trailingText = mapDistanceValue,
+                            position = position,
                             modifier = Modifier
                                 .testTag("map_distance")
                                 .semantics(mergeDescendants = true) { contentDescription = mapDistance }
@@ -282,6 +262,136 @@ fun RulerScreen(
                     }
                 }
             }
+        }
+    }
+
+    if (isEditingScale) {
+        MapScaleSheet(
+            scaleMode = scaleMode,
+            onScaleModeChange = { scaleMode = it },
+            fractionalFrom = fractionalFrom,
+            fractionalTo = fractionalTo,
+            onFractionalFromChange = { fractionalFrom = it },
+            onFractionalToChange = { fractionalTo = it },
+            verbalFrom = verbalFrom,
+            verbalTo = verbalTo,
+            onVerbalFromChange = { verbalFrom = it },
+            onVerbalToChange = { verbalTo = it },
+            onReset = {
+                fractionalFrom = "1"
+                fractionalTo = ""
+                verbalFrom = null
+                verbalTo = null
+            },
+            onDismiss = { isEditingScale = false },
+            formatService = formatService
+        )
+    }
+}
+
+/**
+ * The map's scale, set in a sheet so the ruler's panel stays two quiet rows: the kind of scale, its numbers ("1 : 24000"
+ * or "1 cm = 1 km"), and two equal buttons.
+ */
+@OptIn(
+    androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class,
+    androidx.compose.material3.ExperimentalMaterial3Api::class
+)
+@Composable
+private fun MapScaleSheet(
+    scaleMode: MapScaleMode,
+    onScaleModeChange: (MapScaleMode) -> Unit,
+    fractionalFrom: String,
+    fractionalTo: String,
+    onFractionalFromChange: (String) -> Unit,
+    onFractionalToChange: (String) -> Unit,
+    verbalFrom: Distance?,
+    verbalTo: Distance?,
+    onVerbalFromChange: (Distance?) -> Unit,
+    onVerbalToChange: (Distance?) -> Unit,
+    onReset: () -> Unit,
+    onDismiss: () -> Unit,
+    formatService: FormatService
+) {
+    TrailSenseSheet(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.map_scale_title)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+            TrailSenseConnectedChoice(
+                options = listOf(
+                    TrailSenseChoice(MapScaleMode.Fractional, stringResource(R.string.map_scale_ratio)),
+                    TrailSenseChoice(MapScaleMode.Relational, stringResource(R.string.map_scale_verbal))
+                ),
+                selected = scaleMode,
+                onSelect = onScaleModeChange,
+                modifier = Modifier.testTag(
+                    if (scaleMode == MapScaleMode.Fractional) "map_ratio_btn" else "map_verbal_btn"
+                )
+            )
+            val enterSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+            val exitSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+            AnimatedContent(
+                targetState = scaleMode,
+                transitionSpec = { fadeIn(enterSpec) togetherWith fadeOut(exitSpec) },
+                label = "mapScaleMode"
+            ) { mode ->
+                if (mode == MapScaleMode.Fractional) {
+                    FractionalScaleInput(
+                        from = fractionalFrom,
+                        to = fractionalTo,
+                        onFromChanged = onFractionalFromChange,
+                        onToChanged = onFractionalToChange,
+                        modifier = Modifier.testTag("fractional_map_scale")
+                    )
+                } else {
+                    VerbalScaleInput(
+                        from = verbalFrom,
+                        to = verbalTo,
+                        onFromChanged = onVerbalFromChange,
+                        onToChanged = onVerbalToChange,
+                        formatService = formatService,
+                        modifier = Modifier.testTag("verbal_map_scale")
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                TrailSenseButton(
+                    text = stringResource(R.string.reset),
+                    onClick = onReset,
+                    style = TrailSenseButtonStyle.Tonal,
+                    modifier = Modifier.weight(1f)
+                )
+                TrailSenseButton(
+                    text = stringResource(R.string.done),
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+/** "1 : 24000" or "1 cm = 1 km": the scale as a map prints it, or null until both sides are entered. */
+private fun formatScale(
+    scaleMode: MapScaleMode,
+    fractionalFrom: String,
+    fractionalTo: String,
+    verbalFrom: Distance?,
+    verbalTo: Distance?,
+    formatService: FormatService
+): String? {
+    return when (scaleMode) {
+        MapScaleMode.Fractional -> {
+            val from = fractionalFrom.toFloatOrNull() ?: return null
+            val to = fractionalTo.toFloatOrNull() ?: return null
+            "${DecimalFormatter.format(from, 2, false)} : ${DecimalFormatter.format(to, 2, false)}"
+        }
+
+        MapScaleMode.Relational -> {
+            val from = verbalFrom ?: return null
+            val to = verbalTo ?: return null
+            "${formatService.formatDistance(from, 2, false)} = ${formatService.formatDistance(to, 2, false)}"
         }
     }
 }
@@ -492,29 +602,36 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLabels(
 }
 
 /**
- * The length: once measured, the one display value in large tabular figures; before that, a calm instruction.
+ * The length, always in display type: a dimmed zero with the one instruction line under it until something is
+ * measured, then the measurement itself in large tabular figures.
  */
 @Composable
-private fun RulerLength(measurement: String, hint: String, modifier: Modifier = Modifier) {
+private fun RulerLength(measurement: String, placeholder: String, hint: String, modifier: Modifier = Modifier) {
+    val measured = measurement.isNotEmpty()
+    val text = if (measured) measurement else placeholder
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = TrailSenseSpacing.sm)
-            .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
+            .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
-        if (measurement.isNotEmpty()) {
-            Text(
-                text = measurement,
-                style = (if (measurement.length > 8) {
-                    MaterialTheme.typography.displaySmall
-                } else {
-                    MaterialTheme.typography.displayMedium
-                }).copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
+        Text(
+            text = text,
+            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            color = if (measured) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            },
+            maxLines = 1,
+            autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(
+                minFontSize = 24.sp,
+                maxFontSize = MaterialTheme.typography.displayMedium.fontSize
             )
-        } else {
+        )
+        if (!measured) {
             Text(
                 text = hint,
                 style = MaterialTheme.typography.bodyLarge,
@@ -533,8 +650,7 @@ private fun FractionalScaleInput(
     onToChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // "1 : 25000" on one line, the way a map prints its scale: the two numbers as the group's first row, the colon
-    // leading the second.
+    // "1 : 25000" on one line, the way a map prints its scale, the colon leading the second number.
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
@@ -543,7 +659,7 @@ private fun FractionalScaleInput(
             value = from,
             onValueChange = onFromChanged,
             label = stringResource(R.string.distance_from),
-            position = FIRST,
+            position = TrailSenseGroupPosition.Single,
             modifier = Modifier
                 .weight(1f)
                 .testTag("fractional_map_from")
@@ -552,7 +668,7 @@ private fun FractionalScaleInput(
             value = to,
             onValueChange = onToChanged,
             label = stringResource(R.string.distance_to),
-            position = FIRST,
+            position = TrailSenseGroupPosition.Single,
             leadingIcon = {
                 Text(
                     text = stringResource(R.string.map_fractional_separator),
@@ -597,7 +713,7 @@ private fun VerbalScaleInput(
             units = formatService.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
             defaultUnit = DistanceUnits.Meters,
             onValueChange = onToChanged,
-            position = MIDDLE,
+            position = LAST,
             modifier = Modifier.testTag("verbal_map_scale_to")
         )
     }
@@ -648,9 +764,9 @@ private fun DistanceAmountInput(
     }
 }
 
-/** The map scale group's rows: the first rounds at the top, the rest are tight; the ground distance closes it. */
+/** The verbal scale's two fields as one group in the sheet: rounded outside, tight where they meet. */
 private val FIRST = TrailSenseGroupPosition(isFirst = true, isLast = false)
-private val MIDDLE = TrailSenseGroupPosition(isFirst = false, isLast = false)
+private val LAST = TrailSenseGroupPosition(isFirst = false, isLast = true)
 
 private fun calculateMapDistance(
     currentDistance: Distance?,
