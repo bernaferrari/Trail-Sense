@@ -1254,7 +1254,7 @@ private fun WeatherHeroCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                state.leftButton.Content()
+                state.leftButton.Content(offContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
                 SkyFocalShape(
                     // The clear-sky glyph is a bare disc; a sun with rays reads as the sun inside the shape.
                     icon = if (state.condition == WeatherCondition.Clear) {
@@ -1278,7 +1278,7 @@ private fun WeatherHeroCard(
                             state.condition == WeatherCondition.Wind ||
                             state.condition == null
                 )
-                state.rightButton.Content()
+                state.rightButton.Content(offContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
             }
             Spacer(Modifier.height(TrailSenseSpacing.lg))
             Text(

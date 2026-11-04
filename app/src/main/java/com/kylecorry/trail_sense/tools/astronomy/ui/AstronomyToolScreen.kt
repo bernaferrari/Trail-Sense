@@ -822,8 +822,8 @@ private fun AstronomyTitle(
                     .padding(TrailSenseSpacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                state.leftButton.Content()
-                state.rightButton.Content()
+                state.leftButton.Content(offContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
+                state.rightButton.Content(offContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f))
             }
             Column(
                 Modifier

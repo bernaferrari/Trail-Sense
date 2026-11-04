@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.core.animateIntAsState
@@ -58,7 +59,11 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
 
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
-    fun Content(modifier: Modifier = Modifier) {
+    fun Content(
+        modifier: Modifier = Modifier,
+        offContainerColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
+        offContentColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified
+    ) {
         val icon = iconVector
         if (!isVisible || icon == null) {
             Box(modifier = modifier.size(48.dp))
@@ -67,12 +72,20 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
 
         // On: the circle rounds into a square and fills with the accent container, the expressive toggle shape.
         val container by animateColorAsState(
-            if (isOn) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+            if (isOn) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                offContainerColor.takeOrElse { MaterialTheme.colorScheme.surfaceContainerHigh }
+            },
             MaterialTheme.motionScheme.defaultEffectsSpec(),
             label = "quickActionContainer"
         )
         val tint by animateColorAsState(
-            if (isOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+            if (isOn) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                offContentColor.takeOrElse { MaterialTheme.colorScheme.onSurface }
+            },
             MaterialTheme.motionScheme.defaultEffectsSpec(),
             label = "quickActionTint"
         )
