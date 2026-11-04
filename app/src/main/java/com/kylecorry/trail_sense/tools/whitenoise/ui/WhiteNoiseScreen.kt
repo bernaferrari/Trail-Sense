@@ -210,14 +210,16 @@ fun WhiteNoiseScreen(
                     }
                 )
 
-                TrailSenseValueChip(
+                Text(
                     text = if (isRunning) {
                         stringResource(R.string.dot_separated_pair, stringResource(R.string.on), soundName)
                     } else {
                         stringResource(R.string.dot_separated_pair, stringResource(R.string.off), soundName)
                     },
-                    tone = if (isRunning) TrailSenseTone.Primary else TrailSenseTone.Secondary,
-                    strong = isRunning
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
                 )
             }
 
