@@ -792,11 +792,11 @@ private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
         R.string.places_maps_camera_hint,
         R.string.places_maps_blank_hint
     )
-    // Each way in has its own colour and cookie; the file import is the recommended path, so it leads in primary.
+    // Each way in has its own colour and cookie; the file import is the recommended path, so it leads in the warm action colour.
     val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Cookie7Sided, MaterialShapes.Cookie6Sided)
     val badgeColors = listOf(
-        scheme.primary to scheme.onPrimary,
-        scheme.tertiaryContainer to scheme.onTertiaryContainer,
+        scheme.tertiary to scheme.onTertiary,
+        scheme.secondaryContainer to scheme.onSecondaryContainer,
         scheme.secondaryContainer to scheme.onSecondaryContainer
     )
     Spacer(Modifier.height(TrailSenseSpacing.lg))
@@ -811,7 +811,7 @@ private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
                 subtitle = stringResource(subtitles[index]),
                 position = TrailSenseGroupPosition.at(index, entries.size),
                 modifier = if (index == 0) Modifier.testTag("add_btn") else Modifier,
-                containerColor = if (recommended) scheme.primaryContainer else scheme.surfaceContainerHigh,
+                containerColor = if (recommended) scheme.tertiaryContainer else scheme.surfaceContainerHigh,
                 leading = {
                     PlacesBadge(
                         containerColor = badgeColors[index].first,
@@ -825,8 +825,8 @@ private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
                 actions = {
                     Surface(
                         shape = CircleShape,
-                        color = if (recommended) scheme.primary else scheme.surfaceContainerHighest,
-                        contentColor = if (recommended) scheme.onPrimary else scheme.onSurface,
+                        color = if (recommended) scheme.tertiary else scheme.surfaceContainerHighest,
+                        contentColor = if (recommended) scheme.onTertiary else scheme.onSurface,
                         modifier = Modifier
                             .padding(end = TrailSenseSpacing.sm)
                             .size(36.dp)

@@ -122,7 +122,7 @@ fun NotesScreen(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 icon = { Icon(TrailIcons.Edit, contentDescription = null) },
-                text = { Text(stringResource(if (items.isEmpty()) R.string.places_notes_new else R.string.add)) }
+                text = { Text(stringResource(R.string.places_notes_new)) }
             )
         }
     ) {

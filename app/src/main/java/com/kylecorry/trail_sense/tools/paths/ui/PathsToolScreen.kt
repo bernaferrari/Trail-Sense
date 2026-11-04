@@ -922,7 +922,7 @@ private fun BacktrackRow(
                     Box(Modifier.rotate(if (isOn) turn else 0f)) {
                         TrailSenseShapeBadge(
                             icon = TrailIcons.ToolBacktrack,
-                            shape = MaterialShapes.Cookie9Sided.toShape(),
+                            shape = (if (isOn) MaterialShapes.Cookie9Sided else MaterialShapes.Cookie6Sided).toShape(),
                             size = 64.dp,
                             containerColor = colors.accent,
                             contentColor = colors.onAccent,
@@ -936,8 +936,8 @@ private fun BacktrackRow(
                     onClick = onToggleClick,
                     shapes = IconButtonDefaults.shapes(),
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = colors.accent,
-                        contentColor = colors.onAccent
+                        containerColor = if (isOn) colors.accent else MaterialTheme.colorScheme.tertiary,
+                        contentColor = if (isOn) colors.onAccent else MaterialTheme.colorScheme.onTertiary
                     ),
                     modifier = Modifier
                         .size(64.dp)

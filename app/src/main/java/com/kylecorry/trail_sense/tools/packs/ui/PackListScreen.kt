@@ -309,8 +309,8 @@ private fun PackListScreen(
             if (loaded && packs.isEmpty()) ExtendedFloatingActionButton(
                 onClick = onCreatePack,
                 modifier = Modifier.testTag("add_btn"),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 icon = { Icon(TrailIcons.ToolPack, contentDescription = null) },
                 text = { Text(stringResource(R.string.new_packing_list)) }
             )
@@ -318,8 +318,8 @@ private fun PackListScreen(
                 ExtendedFloatingActionButton(
                     onClick = { isCreateMenuOpen = true },
                     modifier = Modifier.testTag("add_btn"),
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                     icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                     text = { Text(stringResource(R.string.add)) }
                 )

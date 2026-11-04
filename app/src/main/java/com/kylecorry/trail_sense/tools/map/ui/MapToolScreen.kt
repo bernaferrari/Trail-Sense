@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
+import androidx.compose.foundation.layout.heightIn
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -854,25 +855,41 @@ private fun MapEmptyState(
             icon = TrailSenseIcons.Filled.Map,
             title = stringResource(R.string.no_offline_maps),
             description = stringResource(R.string.map_empty_description),
-            actionLabel = stringResource(R.string.add_offline_map),
-            actionIcon = TrailSenseIcons.Filled.Add,
-            onAction = onAddMap,
             tone = com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone.Primary,
             accents = listOf(TrailIcons.Location, TrailIcons.Layers, TrailIcons.Camera),
             modifier = Modifier.padding(bottom = TrailSenseSpacing.xxxl),
-            action = { MapSourceChips(onAddMap) }
+            action = { MapAddActions(onAddMap) }
         )
     }
 }
 
-/** What you can bring in, as three small tonal chips under the button; each opens the same add flow. */
+/**
+ * The tab's one warm action, "Add offline map" in the tertiary role, with what you can bring in as three quiet
+ * chips under it; each chip opens the same add flow.
+ */
 @Composable
-private fun MapSourceChips(onAddMap: () -> Unit) {
+private fun MapAddActions(onAddMap: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
+    androidx.compose.material3.Button(
+        onClick = onAddMap,
+        shapes = androidx.compose.material3.ButtonDefaults.shapes(),
+        modifier = Modifier.heightIn(min = 56.dp),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = scheme.tertiaryContainer,
+            contentColor = scheme.onTertiaryContainer
+        ),
+        contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(56.dp)
+    ) {
+        androidx.compose.material3.Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(24.dp))
+        androidx.compose.foundation.layout.Spacer(Modifier.width(TrailSenseSpacing.sm))
+        Text(stringResource(R.string.add_offline_map), style = MaterialTheme.typography.titleMedium)
+    }
+    androidx.compose.foundation.layout.Spacer(Modifier.height(TrailSenseSpacing.lg))
+    val neutral = scheme.surfaceContainerHigh to scheme.onSurface
     val sources = listOf(
-        Triple(stringResource(R.string.places_map_source_photo), TrailIcons.Camera, scheme.tertiaryContainer to scheme.onTertiaryContainer),
-        Triple(stringResource(R.string.places_map_source_pdf), TrailIcons.File, scheme.secondaryContainer to scheme.onSecondaryContainer),
-        Triple(stringResource(R.string.places_map_source_file), TrailIcons.Layers, scheme.primaryContainer to scheme.onPrimaryContainer)
+        Triple(stringResource(R.string.places_map_source_photo), TrailIcons.Camera, neutral),
+        Triple(stringResource(R.string.places_map_source_pdf), TrailIcons.File, neutral),
+        Triple(stringResource(R.string.places_map_source_file), TrailIcons.Layers, neutral)
     )
     androidx.compose.foundation.layout.Row(
         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(TrailSenseSpacing.xs)

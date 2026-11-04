@@ -1000,8 +1000,8 @@ private fun NearestBeaconSpotlight(
                     .heightIn(min = 56.dp),
                 shape = RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp, topEnd = 6.dp, bottomEnd = 6.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = scheme.tertiaryContainer,
-                    contentColor = scheme.onTertiaryContainer
+                    containerColor = scheme.tertiary,
+                    contentColor = scheme.onTertiary
                 )
             ) {
                 Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(20.dp))
