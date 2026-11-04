@@ -4,6 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.material3.MaterialShapes

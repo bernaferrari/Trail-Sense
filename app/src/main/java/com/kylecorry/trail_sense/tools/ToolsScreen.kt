@@ -81,7 +81,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool

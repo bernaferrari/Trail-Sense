@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
+import androidx.compose.animation.core.animateFloat
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
