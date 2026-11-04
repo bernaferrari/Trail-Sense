@@ -4,6 +4,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.toShape
@@ -350,6 +352,14 @@ private fun TidesScreen(
         nextTide
     ).joinToString(" · ").ifBlank { null }
 
+    // One accent for the whole screen: the tide now sets the hero, the chart and the highlighted next tide.
+    val heroTone = when (currentType) {
+        TideType.High -> TrailSenseTone.Primary
+        TideType.Low -> TrailSenseTone.Tertiary
+        else -> TrailSenseTone.Secondary
+    }
+    val heroColors = trailSenseToneColors(heroTone)
+
     TrailSensePage(
         title = stringResource(R.string.tides),
         onBack = onBack,
@@ -365,12 +375,7 @@ private fun TidesScreen(
         }
     ) {
         item(key = "hero") {
-            val tone = when (currentType) {
-                TideType.High -> TrailSenseTone.Primary
-                TideType.Low -> TrailSenseTone.Tertiary
-                else -> TrailSenseTone.Secondary
-            }
-            val colors = trailSenseToneColors(tone)
+            val colors = trailSenseToneColors(heroTone)
             TrailSenseSpotlight(
                 modifier = Modifier
                     .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
@@ -379,7 +384,7 @@ private fun TidesScreen(
                 title = title,
                 titleStyle = MaterialTheme.typography.displaySmall,
                 supportingText = isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) },
-                tone = tone,
+                tone = heroTone,
                 badge = {
                     // The tide's mark on a wavy cookie, with an arrow for which way the water is going.
                     Box {
@@ -460,7 +465,7 @@ private fun TidesScreen(
             }
             row { position ->
                 TrailSenseGroupCard(position = position) {
-                    TideChartView(daily = daily, displayDate = displayDate)
+                    TideChartView(daily = daily, displayDate = displayDate, accent = heroColors.accent)
                 }
             }
         }
@@ -484,7 +489,7 @@ private fun TidesScreen(
                 val now = Instant.now()
                 val next = tides.firstOrNull { it.time.toInstant().isAfter(now) }
                 tides.forEach { tide ->
-                    row { position -> TideRow(tide = tide, position = position, isNext = tide == next) }
+                    row { position -> TideRow(tide = tide, position = position, isNext = tide == next, highlight = heroColors) }
                 }
             }
         }
@@ -587,13 +592,22 @@ private val chartAxisHours = listOf(0, 6, 12, 18, 24)
 private fun TideChartView(
     daily: DailyTideData?,
     displayDate: LocalDate,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accent: Color = MaterialTheme.colorScheme.primary
 ) {
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
     val dailyData = daily
-    val levelColor = MaterialTheme.colorScheme.primary
-    val lowColor = MaterialTheme.colorScheme.tertiary
+    val levelColor = accent
+    val lowColor = accent
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val labelPaint = remember(labelColor) {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = labelColor
+            textAlign = android.graphics.Paint.Align.CENTER
+            textSize = context.resources.displayMetrics.scaledDensity * 11f
+        }
+    }
     val markRing = MaterialTheme.colorScheme.surfaceContainerLow
     val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
     val highlightColor = MaterialTheme.colorScheme.onSurface
@@ -699,6 +713,15 @@ private fun TideChartView(
                     val center = Offset(x(reading.time), y(reading.value))
                     drawCircle(color = markRing, radius = 7.dp.toPx(), center = center)
                     drawCircle(color = if (tide.isHigh) levelColor else lowColor, radius = 4.5.dp.toPx(), center = center)
+                    // Each high and low says when it is: above a high, below a low.
+                    val label = formatter.formatTime(tide.time.toLocalTime(), includeSeconds = false)
+                    val labelY = if (tide.isHigh) center.y - 12.dp.toPx() else center.y + 20.dp.toPx()
+                    drawContext.canvas.nativeCanvas.drawText(
+                        label,
+                        center.x.coerceIn(24.dp.toPx(), size.width - 24.dp.toPx()),
+                        labelY.coerceIn(12.dp.toPx(), size.height - 4.dp.toPx()),
+                        labelPaint
+                    )
                 }
 
                 val currentLevel = dailyData.waterLevels.minByOrNull {
@@ -731,7 +754,12 @@ private fun TideChartView(
 }
 
 @Composable
-private fun TideRow(tide: Tide, position: TrailSenseGroupPosition, isNext: Boolean = false) {
+private fun TideRow(
+    tide: Tide,
+    position: TrailSenseGroupPosition,
+    isNext: Boolean = false,
+    highlight: com.kylecorry.trail_sense.shared.views.compose.TrailSenseToneColors? = null
+) {
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
     val units = remember(context) { UserPreferences(context).baseDistanceUnits }
@@ -742,7 +770,7 @@ private fun TideRow(tide: Tide, position: TrailSenseGroupPosition, isNext: Boole
     TidesGroupRow(
         position = position,
         containerColor = if (isNext) {
-            if (tide.isHigh) scheme.primaryContainer else scheme.tertiaryContainer
+            highlight?.container ?: if (tide.isHigh) scheme.primaryContainer else scheme.tertiaryContainer
         } else {
             scheme.surfaceContainerLow
         },
@@ -760,9 +788,9 @@ private fun TideRow(tide: Tide, position: TrailSenseGroupPosition, isNext: Boole
         },
         leading = {
             PlacesBadge(
-                containerColor = if (isNext) accent else if (tide.isHigh) scheme.primaryContainer else scheme.tertiaryContainer,
+                containerColor = if (isNext) highlight?.accent ?: accent else if (tide.isHigh) scheme.primaryContainer else scheme.tertiaryContainer,
                 contentColor = if (isNext) {
-                    if (tide.isHigh) scheme.onPrimary else scheme.onTertiary
+                    highlight?.onAccent ?: if (tide.isHigh) scheme.onPrimary else scheme.onTertiary
                 } else {
                     if (tide.isHigh) scheme.onPrimaryContainer else scheme.onTertiaryContainer
                 },
