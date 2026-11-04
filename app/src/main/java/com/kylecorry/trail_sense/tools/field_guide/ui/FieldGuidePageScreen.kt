@@ -1,7 +1,16 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.tools.guide.ui.articleBodyStyle
+import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
+import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
@@ -212,10 +221,13 @@ private fun FieldGuidePageScreen(
                         )
                     }
                 ).joinToString(" · ")
-                TrailSenseListItem(
+                SkyValueRow(
                     title = stringResource(R.string.sightings),
                     subtitle = subtitle,
-                    icon = rememberVectorPainter(TrailIcons.Binoculars),
+                    icon = TrailIcons.Binoculars,
+                    accent = TrailSenseAccents.Leaf,
+                    badgeShape = MaterialShapes.Clover4Leaf.toShape(),
+                    value = page.sightings.size.toString(),
                     position = position,
                     onClick = onSightings,
                     trailing = {
@@ -233,13 +245,14 @@ private fun FieldGuidePageScreen(
         val notes = page.notes.orEmpty()
         if (notes.isNotBlank()) {
             trailSenseSection(key = "notes", title = context.getString(R.string.note)) {
-                row { position ->
-                    TrailSenseGroupCard(position = position) {
-                        LinkifiedNotes(
-                            notes = notes,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                row { _ ->
+                    // Notes read as an article, straight on the page.
+                    LinkifiedNotes(
+                        notes = notes,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = TrailSenseSpacing.sm)
+                    )
                 }
             }
         }
@@ -254,16 +267,34 @@ private fun FieldGuidePageScreen(
                 .filter { it.type == type }
                 .sortedBy { it.ordinal }
                 .map { tagNameMapper.getName(it) }
-            if (names.isEmpty()) null else context.getString(label) to names.joinToString(", ")
+            if (names.isEmpty()) null else Triple(type, context.getString(label), names.joinToString(", "))
         }
 
         if (detailTypes.isNotEmpty()) {
             trailSenseSection(key = "details", title = context.getString(R.string.details)) {
-                detailTypes.forEach { (label, value) ->
+                detailTypes.forEach { (type, label, value) ->
                     row { position ->
-                        TrailSenseListItem(
+                        SkyValueRow(
                             title = value,
                             subtitle = label,
+                            icon = when (type) {
+                                FieldGuidePageTagType.Location -> TrailIcons.Location
+                                FieldGuidePageTagType.Habitat -> TrailIcons.Tree
+                                FieldGuidePageTagType.ActivityPattern -> TrailIcons.Sun
+                                else -> TrailIcons.Paw
+                            },
+                            accent = when (type) {
+                                FieldGuidePageTagType.Location -> TrailSenseAccents.Sky
+                                FieldGuidePageTagType.Habitat -> TrailSenseAccents.Leaf
+                                FieldGuidePageTagType.ActivityPattern -> TrailSenseAccents.Sun
+                                else -> TrailSenseAccents.Apricot
+                            },
+                            badgeShape = when (type) {
+                                FieldGuidePageTagType.Location -> MaterialShapes.Cookie6Sided.toShape()
+                                FieldGuidePageTagType.Habitat -> MaterialShapes.Clover4Leaf.toShape()
+                                FieldGuidePageTagType.ActivityPattern -> MaterialShapes.Sunny.toShape()
+                                else -> MaterialShapes.Puffy.toShape()
+                            },
                             position = position
                         )
                     }
@@ -286,9 +317,9 @@ private fun FieldGuidePageHero(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        shape = RoundedCornerShape(TrailSenseShape.hero),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
         Column {
             if (images.isNotEmpty()) {
@@ -310,15 +341,23 @@ private fun FieldGuidePageHero(
                     if (otherName != null) {
                         Text(
                             text = otherName,
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                     if (classification.isNotBlank()) {
-                        Text(
-                            text = classification,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs),
+                            modifier = Modifier.padding(top = TrailSenseSpacing.xs)
+                        ) {
+                            classification.split(" · ").forEachIndexed { index, name ->
+                                SkyPill(
+                                    name,
+                                    containerColor = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.7f),
+                                    contentColor = if (index == 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -439,7 +478,7 @@ private fun LinkifiedNotes(
         TrailSenseLinkedText(
             text = noteText,
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodyLarge
+            style = articleBodyStyle()
         )
     }
 }
