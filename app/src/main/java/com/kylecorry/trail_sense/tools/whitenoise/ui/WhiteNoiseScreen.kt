@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -202,20 +204,14 @@ fun WhiteNoiseScreen(
                     }
                 )
 
-                Text(
+                TrailSenseValueChip(
                     text = if (isRunning) {
                         stringResource(R.string.dot_separated_pair, stringResource(R.string.on), soundName)
                     } else {
-                        stringResource(R.string.off)
+                        stringResource(R.string.dot_separated_pair, stringResource(R.string.off), soundName)
                     },
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isRunning) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    textAlign = TextAlign.Center
+                    tone = if (isRunning) TrailSenseTone.Primary else TrailSenseTone.Secondary,
+                    strong = isRunning
                 )
             }
 
@@ -398,7 +394,7 @@ private fun PlayControl(
                 modifier = Modifier.size(64.dp)
             )
             Text(
-                text = if (isRunning) soundName else stringResource(R.string.white_noise_tap_to_play),
+                text = stringResource(if (isRunning) R.string.white_noise_tap_to_stop else R.string.white_noise_tap_to_play),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = contentColor,
@@ -417,12 +413,12 @@ private fun SoundChip(
 ) {
     val scheme = MaterialTheme.colorScheme
     val container by animateColorAsState(
-        if (selected) scheme.primary else scheme.surfaceContainerHighest,
+        if (selected) scheme.primary else scheme.secondaryContainer,
         MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "soundChip"
     )
     val content by animateColorAsState(
-        if (selected) scheme.onPrimary else scheme.onSurface,
+        if (selected) scheme.onPrimary else scheme.onSecondaryContainer,
         MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "soundChipContent"
     )
