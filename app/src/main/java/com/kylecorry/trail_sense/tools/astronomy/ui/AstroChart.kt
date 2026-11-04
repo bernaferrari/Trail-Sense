@@ -104,19 +104,23 @@ class AstroChart(
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        // Theme colours: the sun warm (tertiary), the moon cool (primary), night as a primary wash, light dashed guides.
+        // Two distinct roles: the sun a bold amber line, the moon a thinner cool primary one; night is a primary
+        // wash under the dashed horizon, guides are light and dashed.
         val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+        val status = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors()
         val textColor = scheme.onSurfaceVariant
         val lineColor = scheme.outlineVariant
-        val sunColor = scheme.tertiary
-        val moonColor = scheme.primary.copy(alpha = 0.7f)
+        val sunColor = status.caution
+        val moonColor = scheme.primary.copy(alpha = 0.55f)
+        val haloColor = scheme.surfaceContainerLowest
         val nightColor = scheme.primaryContainer
         val horizonColor = scheme.outline
-        // The horizon's name sits just under its line at the left, inside the night band, clear of the curves.
+        // The horizon's name sits just under its line at the right end, inside the night band, away from the markers
+        // (which start the day at the left).
         val horizonPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = scheme.onPrimaryContainer.copy(alpha = 0.75f).toArgb()
             textSize = Resources.sp(context, 11f)
-            textAlign = Paint.Align.LEFT
+            textAlign = Paint.Align.RIGHT
             isFakeBoldText = true
         }
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -170,18 +174,23 @@ class AstroChart(
             drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
             drawContext.canvas.nativeCanvas.drawText(
                 context.getString(R.string.horizon),
-                left + 6.dp.toPx(),
+                right - 6.dp.toPx(),
                 toScreen(Vector2(0f, 0f), left, right, top, bottom).y + 14.dp.toPx(),
                 horizonPaint
             )
 
-            drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.28f), left, right, top, bottom)
-            drawArea(moonLine, moonPosition, moonColor.copy(alpha = 0.16f), left, right, top, bottom)
+            drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.3f), left, right, top, bottom)
+            drawArea(moonLine, moonPosition, moonColor.copy(alpha = 0.14f), left, right, top, bottom)
             drawLineChart(moonLine, moonColor, left, right, top, bottom, 2.dp.toPx())
-            drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx())
+            drawLineChart(sunLine, sunColor, left, right, top, bottom, 4.dp.toPx())
 
+            // A light halo lifts each marker off the curves and off each other when they meet.
+            val halo = imageSize / 2f + 4.dp.toPx()
+            moonPosition?.let { drawCircle(haloColor, halo, toScreen(it, left, right, top, bottom)) }
             sunPosition?.let {
                 val point = toScreen(it, left, right, top, bottom)
+                drawCircle(haloColor, halo, point)
+                drawCircle(sunColor, halo, point, style = Stroke(2.dp.toPx()))
                 drawContext.canvas.nativeCanvas.drawBitmap(
                     sunImage,
                     point.x - imageSize / 2f,
@@ -236,7 +245,7 @@ class AstroChart(
                 path.lineTo(screen.x, screen.y)
             }
         }
-        drawPath(path, color, style = Stroke(width = strokeWidth))
+        drawPath(path, color, style = Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
     }
 
     private fun DrawScope.drawArea(

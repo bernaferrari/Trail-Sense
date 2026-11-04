@@ -96,7 +96,8 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.DatePickerContent
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.combinedClickable
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
@@ -773,15 +774,14 @@ private class AstronomyDatePickerState(context: Context) {
 
     @Composable
     fun Content() {
-        DatePickerContent(
-            date = date,
-            formatter = formatter,
+        AstronomyDateHeader(
+            date = formatter.formatRelativeDate(date),
             searchEnabled = searchEnabled,
             onPrevious = ::previous,
             onNext = ::next,
             onPickDate = ::pickDate,
-            onCalendarLongPress = onCalendarLongPress,
-            onSearch = onSearch
+            onCalendarLongPress = { onCalendarLongPress() },
+            onSearch = { onSearch() }
         )
     }
 }
@@ -797,11 +797,14 @@ private fun AstronomyTitle(
     state: AstronomyTitleState,
     modifier: Modifier = Modifier
 ) {
-    val tone = if (state.sunUp) TrailSenseTone.Tertiary else TrailSenseTone.Primary
+    // Amber by day, cool primary by night; in the last fifth of the night the card warms towards dawn.
+    val tone = if (state.sunUp) TrailSenseTone.Caution else TrailSenseTone.Primary
     val colors = trailSenseToneColors(tone)
+    val dawn = trailSenseToneColors(TrailSenseTone.Caution).container
+    val dawnMix = if (!state.sunUp) (((state.progress ?: 0f) - 0.8f) / 0.2f).coerceIn(0f, 0.6f) else 0f
     val container by androidx.compose.animation.animateColorAsState(
-        colors.container,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        androidx.compose.ui.graphics.lerp(colors.container, dawn, dawnMix),
+        MaterialTheme.motionScheme.slowEffectsSpec(),
         label = "astroHero"
     )
     val progress by androidx.compose.animation.core.animateFloatAsState(
@@ -1033,11 +1036,13 @@ private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
         verticalAlignment = Alignment.Top
     ) {
         // Rise, peak and set read as one strip: warm for the rise, neutral for the peak, cool for the set.
+        // Sun-phase colours: dawn amber for the rise, a pale midday gold for the peak, dusk blue for the set.
+        val status = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors()
         val tints = if (data.size == 3) {
             listOf(
-                MaterialTheme.colorScheme.tertiaryContainer,
-                MaterialTheme.colorScheme.secondaryContainer,
-                MaterialTheme.colorScheme.primaryContainer
+                status.cautionContainer,
+                androidx.compose.ui.graphics.lerp(status.cautionContainer, MaterialTheme.colorScheme.surfaceContainerLowest, 0.55f),
+                MaterialTheme.colorScheme.tertiaryContainer
             )
         } else {
             List(data.size) { MaterialTheme.colorScheme.surfaceContainer }
@@ -1055,12 +1060,12 @@ private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
                             bottomEnd = if (index == data.lastIndex) 18.dp else 6.dp
                         )
                     )
-                    .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
+                    .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md)
                     .testTag("astronomy_detail_data")
             ) {
                 Text(
                     text = it.value,
-                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                    style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1
@@ -1097,9 +1102,9 @@ private fun AstronomyScreen(
         ) {
             AstronomyTitle(views.astronomyTitle)
 
-            views.displayDate.Content()
-
+            // The day being charted heads the chart, on the same surface, so the date and its sky read as one.
             TrailSenseGroupCard(TrailSenseGroupPosition.Single, contentPadding = PaddingValues(TrailSenseSpacing.sm)) {
+                views.displayDate.Content()
                 views.sunMoonChart.Content(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1269,5 +1274,92 @@ private fun AstronomyHostPreview() {
             views = createAstronomyViews(LocalContext.current),
             astronomyItems = emptyList()
         )
+    }
+}
+
+/**
+ * The charted day as a compact header on the chart's own surface: round previous/next buttons at the ends and the
+ * date as a tonal pill in the middle (tap to pick, long-press for today), with search beside it when it applies.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+private fun AstronomyDateHeader(
+    date: String,
+    searchEnabled: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onPickDate: () -> Unit,
+    onCalendarLongPress: () -> Unit,
+    onSearch: () -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val buttonColors = androidx.compose.material3.IconButtonDefaults.filledTonalIconButtonColors(
+        containerColor = scheme.surfaceContainerHigh,
+        contentColor = scheme.onSurface
+    )
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = TrailSenseSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+    ) {
+        androidx.compose.material3.FilledTonalIconButton(
+            onClick = onPrevious,
+            modifier = Modifier.testTag("prev_date"),
+            colors = buttonColors
+        ) {
+            Icon(
+                TrailIcons.KeyboardArrowRight,
+                contentDescription = stringResource(R.string.previous),
+                modifier = Modifier.rotate(180f)
+            )
+        }
+        Surface(
+            shape = androidx.compose.foundation.shape.CircleShape,
+            color = scheme.secondaryContainer,
+            contentColor = scheme.onSecondaryContainer,
+            modifier = Modifier
+                .weight(1f)
+                .height(40.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .combinedClickable(onClick = onPickDate, onLongClick = onCalendarLongPress)
+                .testTag("date_btn")
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    TrailIcons.Date,
+                    contentDescription = stringResource(R.string.date),
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.size(TrailSenseSpacing.sm))
+                Text(
+                    date,
+                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    modifier = Modifier.testTag("date")
+                )
+            }
+        }
+        if (searchEnabled) {
+            androidx.compose.material3.FilledTonalIconButton(
+                onClick = onSearch,
+                modifier = Modifier.testTag("search_btn"),
+                colors = buttonColors
+            ) {
+                Icon(TrailIcons.Search, contentDescription = stringResource(R.string.search))
+            }
+        }
+        androidx.compose.material3.FilledTonalIconButton(
+            onClick = onNext,
+            modifier = Modifier.testTag("next_date"),
+            colors = buttonColors
+        ) {
+            Icon(TrailIcons.KeyboardArrowRight, contentDescription = stringResource(R.string.next))
+        }
     }
 }
