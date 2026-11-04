@@ -1,18 +1,20 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,11 +23,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -35,9 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,14 +57,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.exifinterface.media.ExifInterface
@@ -75,10 +80,14 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
@@ -100,6 +109,7 @@ fun CreateFieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
         }
     }
 
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     CreateFieldGuidePageContent(
         page = controller.page,
         photoIndex = controller.photoIndex,
@@ -116,7 +126,8 @@ fun CreateFieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
         onSetDefaultPhoto = controller::setDefaultPhoto,
         onDeleteImage = controller::deleteImage,
         onSave = controller::save,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        onBack = { dispatcher?.onBackPressed() }
     )
 }
 
@@ -316,227 +327,119 @@ private fun CreateFieldGuidePageContent(
     onSetDefaultPhoto: (Int) -> Unit,
     onDeleteImage: (Int) -> Unit,
     onSave: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit = {}
 ) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-            ) {
-                CreateFieldGuidePageHeader(onSave = onSave)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .testTag("scroll_view")
-                        .padding(horizontal = TrailSenseSpacing.screen)
-                        .padding(bottom = TrailSenseSpacing.xl),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                ) {
-                Spacer(modifier = Modifier.height(TrailSenseSpacing.xxs))
+    val saveLabel = stringResource(R.string.save)
+    val detailsTitle = stringResource(R.string.details)
+    val photoTitle = stringResource(R.string.map_type_photo)
+    val notesTitle = stringResource(R.string.tool_notes_title)
+    val nameLabel = stringResource(R.string.name)
+    val scientificNameLabel = stringResource(R.string.scientific_name)
+    val tagSelectors = listOf(
+        Triple(FieldGuidePageTagType.Classification, R.string.classification, "tag_classifications"),
+        Triple(FieldGuidePageTagType.Location, R.string.location, "tag_locations"),
+        Triple(FieldGuidePageTagType.Habitat, R.string.habitat, "tag_habitats"),
+        Triple(FieldGuidePageTagType.HumanInteraction, R.string.human_interaction, "tag_human_interactions"),
+        Triple(FieldGuidePageTagType.ActivityPattern, R.string.activity_pattern, "tag_activity_patterns")
+    ).map { (type, label, tag) -> Triple(type, stringResource(label), tag) }
 
-                // Details
-                FieldGuideSection(
-                    label = stringResource(R.string.details),
-                    icon = painterResource(R.drawable.ic_edit)
+    Box(modifier = modifier.testTag("scroll_view")) {
+        TrailSensePage(
+            title = stringResource(R.string.create_page),
+            onBack = onBack,
+            backLabel = stringResource(R.string.back),
+            modifier = Modifier.testTag("create_field_guide_page_title"),
+            actions = {
+                IconButton(
+                    onClick = onSave,
+                    modifier = Modifier.testTag("toolbar_right_button")
                 ) {
-                    OutlinedTextField(
+                    Icon(
+                        painter = rememberVectorPainter(TrailIcons.Check),
+                        contentDescription = saveLabel,
+                        modifier = Modifier.testTag("create_field_guide_page_save_btn")
+                    )
+                }
+            }
+        ) {
+            // The photo leads, as it does on the page itself.
+            trailSenseSection(key = "photos", title = photoTitle) {
+                row { position ->
+                    FieldGuidePhotos(
+                        images = page.images,
+                        photoIndex = photoIndex,
+                        position = position,
+                        onTakePhoto = onTakePhoto,
+                        onSelectPhoto = onSelectPhoto,
+                        onSetDefaultPhoto = onSetDefaultPhoto,
+                        onDeleteImage = onDeleteImage
+                    )
+                }
+            }
+
+            trailSenseSection(key = "names") {
+                row { position ->
+                    FieldGuideTextField(
                         value = page.name,
                         onValueChange = onNameChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("name"),
-                        label = { Text(stringResource(R.string.name)) },
-                        singleLine = true
+                        label = nameLabel,
+                        position = position,
+                        modifier = Modifier.testTag("name"),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                     )
-                    OutlinedTextField(
+                }
+                row { position ->
+                    FieldGuideTextField(
                         value = page.scientificName.orEmpty(),
                         onValueChange = onScientificNameChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("scientific_name"),
-                        label = { Text(stringResource(R.string.scientific_name)) },
-                        singleLine = true
-                    )
-                    TagSelector(
-                        label = stringResource(R.string.classification),
-                        type = FieldGuidePageTagType.Classification,
-                        tags = tags,
-                        selected = page.directTags,
-                        tagNames = tagNames,
-                        onSelectionChange = onTagsChange,
-                        modifier = Modifier.testTag("tag_classifications")
+                        label = scientificNameLabel,
+                        position = position,
+                        modifier = Modifier.testTag("scientific_name"),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                     )
                 }
+            }
 
-                FieldGuidePhotos(
-                    images = page.images,
-                    photoIndex = photoIndex,
-                    onTakePhoto = onTakePhoto,
-                    onSelectPhoto = onSelectPhoto,
-                    onSetDefaultPhoto = onSetDefaultPhoto,
-                    onDeleteImage = onDeleteImage
-                )
+            trailSenseSection(key = "tags", title = detailsTitle) {
+                tagSelectors.forEach { (type, label, testTag) ->
+                    row { position ->
+                        TagSelector(
+                            label = label,
+                            type = type,
+                            tags = tags,
+                            selected = page.directTags,
+                            tagNames = tagNames,
+                            position = position,
+                            onSelectionChange = onTagsChange,
+                            modifier = Modifier.testTag(testTag)
+                        )
+                    }
+                }
+            }
 
-                // Notes
-                FieldGuideSection(
-                    label = stringResource(R.string.tool_notes_title),
-                    icon = painterResource(R.drawable.ic_tool_notes)
-                ) {
-                    OutlinedTextField(
+            trailSenseSection(key = "notes", title = notesTitle) {
+                row { position ->
+                    FieldGuideTextField(
                         value = page.notes.orEmpty(),
                         onValueChange = onNotesChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .testTag("notes"),
-                        label = { Text(stringResource(R.string.tool_notes_title)) }
+                        label = notesTitle,
+                        position = position,
+                        singleLine = false,
+                        minLines = 6,
+                        modifier = Modifier.testTag("notes"),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                     )
                 }
+            }
 
-                // Tags
-                FieldGuideSection(
-                    label = stringResource(R.string.field_guide),
-                    icon = painterResource(R.drawable.field_guide)
-                ) {
-                    TagSelector(
-                        label = stringResource(R.string.location),
-                        type = FieldGuidePageTagType.Location,
-                        tags = tags,
-                        selected = page.directTags,
-                        tagNames = tagNames,
-                        onSelectionChange = onTagsChange,
-                        modifier = Modifier.testTag("tag_locations")
-                    )
-                    TagSelector(
-                        label = stringResource(R.string.habitat),
-                        type = FieldGuidePageTagType.Habitat,
-                        tags = tags,
-                        selected = page.directTags,
-                        tagNames = tagNames,
-                        onSelectionChange = onTagsChange,
-                        modifier = Modifier.testTag("tag_habitats")
-                    )
-                    TagSelector(
-                        label = stringResource(R.string.human_interaction),
-                        type = FieldGuidePageTagType.HumanInteraction,
-                        tags = tags,
-                        selected = page.directTags,
-                        tagNames = tagNames,
-                        onSelectionChange = onTagsChange,
-                        modifier = Modifier.testTag("tag_human_interactions")
-                    )
-                    TagSelector(
-                        label = stringResource(R.string.activity_pattern),
-                        type = FieldGuidePageTagType.ActivityPattern,
-                        tags = tags,
-                        selected = page.directTags,
-                        tagNames = tagNames,
-                        onSelectionChange = onTagsChange,
-                        modifier = Modifier.testTag("tag_activity_patterns")
-                    )
-                }
-
+            item(key = "save") {
                 TrailSenseButton(
-                    text = stringResource(R.string.save),
+                    text = saveLabel,
                     onClick = onSave,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-        }
-    }
-}
-
-@Composable
-private fun FieldGuideSection(
-    label: String,
-    icon: Painter,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-    ) {
-        Row(
-            modifier = Modifier.padding(start = TrailSenseSpacing.xs),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-        TrailSenseCard(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-private fun CreateFieldGuidePageHeader(
-    onSave: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm)
-            .padding(vertical = TrailSenseSpacing.sm)
-            .testTag("create_field_guide_page_title"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(R.string.create_page),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        IconButton(
-            onClick = onSave,
-            modifier = Modifier
-                .size(TrailSenseSize.minimumTouchTarget)
-                .testTag("toolbar_right_button")
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_check),
-                contentDescription = stringResource(R.string.save),
-                modifier = Modifier.testTag("create_field_guide_page_save_btn")
-            )
         }
     }
 }
@@ -545,6 +448,7 @@ private fun CreateFieldGuidePageHeader(
 private fun FieldGuidePhotos(
     images: List<String>,
     photoIndex: Int,
+    position: TrailSenseGroupPosition,
     onTakePhoto: () -> Unit,
     onSelectPhoto: () -> Unit,
     onSetDefaultPhoto: (Int) -> Unit,
@@ -561,24 +465,28 @@ private fun FieldGuidePhotos(
         }
     }
 
-    FieldGuideSection(
-        label = stringResource(R.string.map_type_photo),
-        icon = painterResource(R.drawable.ic_camera)
+    TrailSenseGroupCard(
+        position = position,
+        contentPadding = PaddingValues(0.dp),
+        modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
     ) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(220.dp)
         ) { index ->
             val path = images.getOrNull(index)
             if (path == null) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(TrailSenseSpacing.xl),
                     verticalArrangement = Arrangement.spacedBy(
                         TrailSenseSpacing.md,
                         Alignment.CenterVertically
-                    )
+                    ),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     PhotoSourceButtons(onTakePhoto = onTakePhoto, onSelectPhoto = onSelectPhoto)
                 }
@@ -588,36 +496,53 @@ private fun FieldGuidePhotos(
                     canSetDefault = index > 0,
                     onSetDefault = { onSetDefaultPhoto(index) },
                     onDelete = { onDeleteImage(index) },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(MaterialTheme.shapes.large)
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
         if (images.isNotEmpty()) {
             val onAddPage = pagerState.currentPage >= images.size
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Text(
+                    text = if (onAddPage) {
+                        ""
+                    } else {
+                        stringResource(
+                            R.string.image_index,
+                            pagerState.currentPage + 1,
+                            images.size
+                        )
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = TrailSenseSpacing.sm)
+                        .then(if (onAddPage) Modifier else Modifier.testTag("photo_position")),
+                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 IconButton(
                     onClick = {
                         scope.launch {
-                            pagerState.scrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
+                            pagerState.animateScrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
                         }
                     },
                     enabled = pagerState.currentPage > 0,
                     modifier = Modifier.testTag("previous_photo_button")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_prev),
+                        painter = rememberVectorPainter(TrailIcons.Prev),
                         contentDescription = stringResource(R.string.previous)
                     )
                 }
                 IconButton(
                     onClick = {
                         scope.launch {
-                            pagerState.scrollToPage(
+                            pagerState.animateScrollToPage(
                                 (pagerState.currentPage + 1).coerceAtMost(images.size)
                             )
                         }
@@ -626,22 +551,8 @@ private fun FieldGuidePhotos(
                     modifier = Modifier.testTag("next_photo_button")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                        painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
                         contentDescription = stringResource(R.string.next)
-                    )
-                }
-                if (!onAddPage) {
-                    Text(
-                        text = stringResource(
-                            R.string.image_index,
-                            pagerState.currentPage + 1,
-                            images.size
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("photo_position"),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -654,18 +565,26 @@ private fun PhotoSourceButtons(
     onTakePhoto: () -> Unit,
     onSelectPhoto: () -> Unit
 ) {
-    FilledTonalButton(
+    Button(
         onClick = onTakePhoto,
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .testTag("take_photo_button")
     ) {
+        Icon(
+            painter = rememberVectorPainter(TrailIcons.Camera),
+            contentDescription = null,
+            modifier = Modifier.size(ButtonDefaults.IconSize)
+        )
+        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
         Text(stringResource(R.string.take_photo))
     }
-    OutlinedButton(
+    FilledTonalButton(
         onClick = onSelectPhoto,
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .testTag("select_photo_button")
     ) {
         Text(stringResource(R.string.select_from_gallery))
@@ -692,16 +611,10 @@ private fun FieldGuideImage(
     }
 
     Box(modifier = modifier) {
-        bitmap?.let { image ->
-            Image(
-                bitmap = image.asImageBitmap(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("image")
-            )
-        }
+        FieldGuideBitmapImage(
+            bitmap = bitmap,
+            modifier = Modifier.testTag("image")
+        )
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -711,13 +624,13 @@ private fun FieldGuideImage(
                 onClick = { menuOpen = true },
                 modifier = Modifier.testTag("photo_upload_menu_button"),
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = stringResource(R.string.delete)
+                    imageVector = Icons.Rounded.MoreVert,
+                    contentDescription = stringResource(R.string.field_guide_more_options)
                 )
             }
             DropdownMenu(
@@ -752,6 +665,7 @@ private fun TagSelector(
     tags: List<FieldGuidePageTag>,
     selected: List<FieldGuidePageTag>,
     tagNames: Map<FieldGuidePageTag, String>,
+    position: TrailSenseGroupPosition,
     onSelectionChange: (FieldGuidePageTagType, List<FieldGuidePageTag>) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -760,15 +674,19 @@ private fun TagSelector(
     val text = selectedOfType.joinToString(", ") { tagNames[it] ?: it.name }
     var isOpen by remember { mutableStateOf(false) }
 
-    OutlinedTextField(
-        value = text,
-        onValueChange = {},
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { isOpen = true },
-        label = { Text(label) },
-        readOnly = true,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
+    TrailSenseListItem(
+        title = label,
+        subtitle = text.ifBlank { stringResource(R.string.none) },
+        position = position,
+        onClick = { isOpen = true },
+        modifier = modifier,
+        trailing = {
+            Icon(
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     )
 
     if (isOpen) {
@@ -798,6 +716,8 @@ private fun TagSelectionDialog(
     var current by remember(selected) { mutableStateOf(selected.toSet()) }
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(28.dp),
         title = { Text(title) },
         text = {
             Column(
@@ -806,28 +726,27 @@ private fun TagSelectionDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 options.forEach { tag ->
+                    val checked = tag in current
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                current = if (tag in current) {
-                                    current - tag
-                                } else {
-                                    current + tag
+                            .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                            .toggleable(
+                                value = checked,
+                                role = Role.Checkbox,
+                                onValueChange = { isChecked ->
+                                    current = if (isChecked) current + tag else current - tag
                                 }
-                            }
-                            .padding(vertical = TrailSenseSpacing.xs),
+                            ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = tag in current,
-                            onCheckedChange = { checked ->
-                                current = if (checked) current + tag else current - tag
-                            }
+                            checked = checked,
+                            onCheckedChange = null
                         )
                         Text(
                             text = tagNames[tag] ?: tag.name,
-                            modifier = Modifier.padding(start = TrailSenseSpacing.sm),
+                            modifier = Modifier.padding(start = TrailSenseSpacing.md),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )

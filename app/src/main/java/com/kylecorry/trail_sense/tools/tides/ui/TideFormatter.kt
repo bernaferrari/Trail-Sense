@@ -2,7 +2,9 @@ package com.kylecorry.trail_sense.tools.tides.ui
 
 import android.content.Context
 import com.kylecorry.sol.science.oceanography.TideType
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
 
 class TideFormatter(private val context: Context) {
 
@@ -19,6 +21,14 @@ class TideFormatter(private val context: Context) {
             TideType.High -> R.drawable.ic_tide_high
             TideType.Low -> R.drawable.ic_tide_low
             null -> R.drawable.ic_tide_half
+        }
+    }
+
+    fun getTideTypeIcon(tideType: TideType?): ImageVector {
+        return when (tideType) {
+            TideType.High -> TrailIcons.TideHigh
+            TideType.Low -> TrailIcons.TideLow
+            null -> TrailIcons.TideHalf
         }
     }
 }

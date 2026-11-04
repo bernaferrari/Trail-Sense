@@ -2,29 +2,27 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+
 import android.text.InputType
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -35,19 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
@@ -58,6 +49,14 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
@@ -71,6 +70,7 @@ import kotlin.math.floor
 @Composable
 fun CreateItemToolScreen(host: TrailSenseDestinationHost) {
     val controller = remember(host) { CreateItemController(host) }
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -101,7 +101,8 @@ fun CreateItemToolScreen(host: TrailSenseDestinationHost) {
             controller.selectedWeightUnit = unit
         },
         onOptionalChange = { controller.isOptional = it },
-        onSave = controller::saveItem
+        onSave = controller::saveItem,
+        onBack = { dispatcher?.onBackPressed() }
     )
 }
 
@@ -249,6 +250,10 @@ private class CreateItemController(private val host: TrailSenseDestinationHost) 
     }
 }
 
+/**
+ * Create or edit an item: what it is (name, category, optional) in one group, how many in a second, its weight in a
+ * third, and Save at the bottom. The category is a row that opens the category menu, not an outlined button.
+ */
 @Composable
 private fun CreateItemScreen(
     title: String,
@@ -268,37 +273,19 @@ private fun CreateItemScreen(
     onWeightChange: (Weight?, WeightUnits?) -> Unit,
     onOptionalChange: (Boolean) -> Unit,
     onSave: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val weightTitle = stringResource(R.string.weight_per_item)
+    TrailSensePage(
+        title = title,
+        onBack = onBack,
+        backLabel = stringResource(R.string.back),
+        modifier = modifier.testTag("create_item_title")
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-            ) {
-                CreateItemHeader(title = title)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = TrailSenseSpacing.screen)
-                        .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.xl),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                ) {
-                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    SectionLabel(
-                        text = stringResource(R.string.details),
-                        icon = painterResource(R.drawable.ic_edit)
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
+        trailSenseSection(key = "details") {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
                     PackTextInput(
                         text = name,
                         label = stringResource(R.string.name),
@@ -306,117 +293,76 @@ private fun CreateItemScreen(
                         tag = "name_edit",
                         onTextChange = onNameChange
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    CategoryInput(
-                        category = category,
-                        categories = categories,
-                        onCategoryChange = onCategoryChange
-                    )
                 }
+            }
+            row { position ->
+                CategoryInput(
+                    category = category,
+                    categories = categories,
+                    position = position,
+                    onCategoryChange = onCategoryChange
+                )
+            }
+            row { position ->
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.packing_list_optional),
+                    checked = isOptional,
+                    onCheckedChange = onOptionalChange,
+                    position = position,
+                    modifier = Modifier.testTag("optional_switch")
+                )
+            }
+        }
 
-                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    SectionLabel(
-                        text = stringResource(R.string.packed_amount),
-                        icon = painterResource(R.drawable.ic_tool_pack)
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    PackTextInput(
-                        text = amount,
-                        label = stringResource(R.string.packed_amount),
-                        inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
-                        tag = "count_edit",
-                        onTextChange = onAmountChange
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    PackTextInput(
-                        text = desiredAmount,
-                        label = stringResource(R.string.desired_amount),
-                        inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
-                        tag = "desired_amount_edit",
-                        onTextChange = onDesiredAmountChange
-                    )
+        trailSenseSection(key = "amount") {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+                        PackTextInput(
+                            text = amount,
+                            label = stringResource(R.string.packed_amount),
+                            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
+                            tag = "count_edit",
+                            onTextChange = onAmountChange,
+                            modifier = Modifier.weight(1f)
+                        )
+                        PackTextInput(
+                            text = desiredAmount,
+                            label = stringResource(R.string.desired_amount),
+                            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
+                            tag = "desired_amount_edit",
+                            onTextChange = onDesiredAmountChange,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
+            }
+        }
 
-                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    SectionLabel(
-                        text = stringResource(R.string.weight_per_item),
-                        icon = painterResource(R.drawable.ic_weight)
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
+        trailSenseSection(key = "weight", title = weightTitle) {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
                     WeightInput(
                         weight = weight,
                         selectedUnit = weightUnit,
                         units = weightUnits,
                         onWeightChange = onWeightChange
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    OptionalInput(
-                        checked = isOptional,
-                        onCheckedChange = onOptionalChange
-                    )
                 }
-
-                TrailSenseButton(
-                    text = stringResource(R.string.save),
-                    onClick = onSave,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("create_btn")
-                )
             }
         }
-        }
-    }
-}
 
-@Composable
-private fun CreateItemHeader(title: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.md)
-                .testTag("create_item_title"),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-private fun SectionLabel(
-    text: String,
-    icon: Painter,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(36.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(18.dp)
-                )
+        item(key = "save") {
+            Button(
+                onClick = onSave,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .testTag("create_btn")
+            ) {
+                Text(stringResource(R.string.save))
             }
         }
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
 
@@ -452,42 +398,46 @@ private fun PackTextInput(
 private fun CategoryInput(
     category: ItemCategory,
     categories: List<Pair<ItemCategory, String>>,
+    position: TrailSenseGroupPosition,
     onCategoryChange: (ItemCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
+    var isOpen by remember { mutableStateOf(false) }
     val selected = categories.firstOrNull { it.first == category }?.second.orEmpty()
     val iconMapper = remember { ItemCategoryIconMapper() }
 
     Box(modifier = modifier.fillMaxWidth()) {
-        OutlinedButton(
+        PacksGroupRow(
+            position = position,
+            modifier = Modifier.testTag("category_spinner"),
             onClick = { isOpen = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .testTag("category_spinner")
+            leading = { PacksIconWell(rememberVectorPainter(iconMapper.getIconVector(category))) }
         ) {
-            Icon(
-                painter = painterResource(iconMapper.getIcon(category)),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
             Text(
-                text = selected.ifBlank { stringResource(R.string.category) },
-                modifier = Modifier.weight(1f)
+                text = stringResource(R.string.category),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
+            if (selected.isNotBlank()) {
+                Text(
+                    text = selected,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         DropdownMenu(
             expanded = isOpen,
-            onDismissRequest = { isOpen = false }
+            onDismissRequest = { isOpen = false },
+            shape = RoundedCornerShape(TrailSenseShape.iconContainer),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             categories.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option.second) },
                     leadingIcon = {
                         Icon(
-                            painter = painterResource(iconMapper.getIcon(option.first)),
+                            painter = rememberVectorPainter(iconMapper.getIconVector(option.first)),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
@@ -654,20 +604,6 @@ private fun formatWeightAmount(weight: Weight?, unit: WeightUnits?, ounces: Bool
     } else {
         DecimalFormatter.format(weight.value, 4, false)
     }
-}
-
-@Composable
-private fun OptionalInput(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TrailSenseSwitchRow(
-        label = stringResource(R.string.packing_list_optional),
-        checked = checked,
-        onCheckedChange = onCheckedChange,
-        modifier = modifier.testTag("optional_switch")
-    )
 }
 
 @Preview(showBackground = true)

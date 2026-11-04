@@ -1,38 +1,40 @@
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
 import android.graphics.Bitmap
 import android.util.Size
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
@@ -83,11 +85,12 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.andromeda.core.sensors.Quality
@@ -172,6 +175,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     private var initialLocation: GeoUri? = null
     private var beaconItems by mutableStateOf<List<IBeacon>>(emptyList())
     private var beaconListResetKey by mutableIntStateOf(0)
+    private var isLoaded by mutableStateOf(false)
     private var title by mutableStateOf("")
     private var searchText by mutableStateOf("")
     private var sortMenuText by mutableStateOf("")
@@ -203,7 +207,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             },
             searchText = searchText,
             items = beaconItems,
-            isEmpty = beaconItems.isEmpty(),
+            loaded = isLoaded,
             resetKey = beaconListResetKey,
             formatService = formatService,
             baseDistanceUnits = prefs.baseDistanceUnits,
@@ -265,6 +269,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
         manager.onChange = { root, items, rootChanged ->
             beaconItems = items
+            isLoaded = true
             if (rootChanged) {
                 beaconListResetKey++
             }
@@ -734,13 +739,18 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     }
 }
 
+/**
+ * The beacon list: the group you're in as the page title (back goes up a group), search as the first row, every
+ * group and beacon in one grouped card in the chosen sort order, and the create menu on the floating button.
+ * Nothing is shown below the search bar until the first load, so "No beacons" never flashes.
+ */
 @Composable
 private fun BeaconListScreen(
     title: String,
     sortMenuText: String,
     searchText: String,
     items: List<IBeacon>,
-    isEmpty: Boolean,
+    loaded: Boolean,
     resetKey: Int,
     formatService: FormatService,
     baseDistanceUnits: DistanceUnits,
@@ -754,223 +764,192 @@ private fun BeaconListScreen(
     onGroupAction: (BeaconGroup, BeaconGroupAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            BeaconListHeader(
-                title = title,
-                sortMenuText = sortMenuText,
-                onToolbarAction = onToolbarAction,
-                modifier = Modifier.fillMaxWidth()
-            )
-            TrailSenseSearchBar(
-                value = searchText,
-                onValueChange = onSearchChange,
-                placeholder = stringResource(R.string.search),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .testTag("searchbox")
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(top = TrailSenseSpacing.lg)
-            ) {
-                if (isEmpty) {
-                    TrailSenseEmptyState(
-                        icon = Icons.Default.Place,
-                        title = stringResource(R.string.no_beacons),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("beacon_empty_text")
-                    )
-                } else {
-                    BeaconList(
-                        items = items,
-                        resetKey = resetKey,
-                        formatService = formatService,
-                        baseDistanceUnits = baseDistanceUnits,
-                        currentLocation = currentLocation,
-                        onBeaconAction = onBeaconAction,
-                        onGroupAction = onGroupAction,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                BeaconCreateButton(
-                    isOpen = isCreateMenuOpen,
-                    onOpenChange = onCreateMenuOpenChange,
-                    onAction = onCreateAction,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(TrailSenseSpacing.screen)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BeaconListHeader(
-    title: String,
-    sortMenuText: String,
-    onToolbarAction: (BeaconToolbarAction) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var isMenuOpen by remember { mutableStateOf(false) }
-    Row(
-        modifier = modifier
-            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.md)
-            .padding(vertical = TrailSenseSpacing.sm)
-            .testTag("beacon_title"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Box {
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("beacon_list_menu_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = stringResource(R.string.sort)
-                )
-            }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                BeaconToolbarMenuItem(sortMenuText, { isMenuOpen = it }, onToolbarAction, BeaconToolbarAction.Sort)
-                BeaconToolbarMenuItem(stringResource(R.string.export), { isMenuOpen = it }, onToolbarAction, BeaconToolbarAction.Export)
-                BeaconToolbarMenuItem(
-                    stringResource(R.string.navigate_to_nearest_cell_signal),
-                    { isMenuOpen = it },
-                    onToolbarAction,
-                    BeaconToolbarAction.NavigateToNearestCellSignal
-                )
-                BeaconToolbarMenuItem(stringResource(R.string.delete), { isMenuOpen = it }, onToolbarAction, BeaconToolbarAction.Delete)
-            }
-        }
-    }
-}
-
-@Composable
-private fun BeaconToolbarMenuItem(
-    label: String,
-    onMenuOpenChange: (Boolean) -> Unit,
-    onAction: (BeaconToolbarAction) -> Unit,
-    action: BeaconToolbarAction
-) {
-    DropdownMenuItem(
-        text = { Text(label) },
-        onClick = {
-            onMenuOpenChange(false)
-            onAction(action)
-        }
-    )
-}
-
-@Composable
-private fun BeaconCreateButton(
-    isOpen: Boolean,
-    onOpenChange: (Boolean) -> Unit,
-    onAction: (BeaconCreateAction) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(modifier = modifier) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 72.dp),
-            horizontalAlignment = Alignment.End
-        ) {
-            DropdownMenu(
-                expanded = isOpen,
-                onDismissRequest = { onOpenChange(false) }
-            ) {
-                BeaconCreateMenuItem(R.string.qr_code, onAction, BeaconCreateAction.ImportQr)
-                BeaconCreateMenuItem(R.string.import_gpx, onAction, BeaconCreateAction.ImportGpx)
-                BeaconCreateMenuItem(R.string.group, onAction, BeaconCreateAction.CreateGroup)
-                BeaconCreateMenuItem(R.string.beacon, onAction, BeaconCreateAction.CreateBeacon)
-            }
-        }
-        FloatingActionButton(
-            onClick = { onOpenChange(!isOpen) },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .testTag("create_btn")
-        ) {
-            Icon(
-                painter = painterResource(if (isOpen) R.drawable.ic_cancel else R.drawable.ic_add),
-                contentDescription = stringResource(R.string.add)
-            )
-        }
-    }
-}
-
-@Composable
-private fun BeaconCreateMenuItem(
-    label: Int,
-    onAction: (BeaconCreateAction) -> Unit,
-    action: BeaconCreateAction
-) {
-    DropdownMenuItem(
-        text = { Text(stringResource(label)) },
-        onClick = { onAction(action) }
-    )
-}
-
-@Composable
-private fun BeaconList(
-    items: List<IBeacon>,
-    resetKey: Int,
-    formatService: FormatService,
-    baseDistanceUnits: DistanceUnits,
-    currentLocation: Coordinate,
-    onBeaconAction: (Beacon, BeaconAction) -> Unit,
-    onGroupAction: (BeaconGroup, BeaconGroupAction) -> Unit,
-    modifier: Modifier = Modifier
-) {
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val listState = rememberLazyListState()
 
     LaunchedEffect(resetKey) {
         listState.scrollToItem(0)
     }
 
-    LazyColumn(
-        state = listState,
-        modifier = modifier.testTag("beacon_list")
-    ) {
-        items(items, key = { item ->
-            if (item is BeaconGroup) {
-                -item.id
-            } else {
-                item.id
-            }
-        }) { item ->
-            when (item) {
-                is Beacon -> BeaconRow(
-                    beacon = item,
-                    formatService = formatService,
-                    baseDistanceUnits = baseDistanceUnits,
-                    currentLocation = currentLocation,
-                    onAction = { onBeaconAction(item, it) }
+    Box(modifier = modifier.testTag("beacon_title")) {
+        TrailSensePage(
+            title = title,
+            onBack = { dispatcher?.onBackPressed() },
+            backLabel = stringResource(R.string.back),
+            state = listState,
+            contentPadding = PaddingValues(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.sm,
+                bottom = 112.dp
+            ),
+            actions = {
+                BeaconListMenu(
+                    sortMenuText = sortMenuText,
+                    onToolbarAction = onToolbarAction
                 )
+            },
+            floatingActionButton = {
+                BeaconCreateMenu(
+                    isOpen = isCreateMenuOpen,
+                    onOpenChange = onCreateMenuOpenChange,
+                    onAction = onCreateAction
+                )
+            }
+        ) {
+            item(key = "search") {
+                TrailSenseSearchBar(
+                    value = searchText,
+                    onValueChange = onSearchChange,
+                    placeholder = stringResource(R.string.search),
+                    clearContentDescription = stringResource(R.string.beacon_search_clear),
+                    modifier = Modifier.testTag("searchbox")
+                )
+            }
 
-                is BeaconGroup -> BeaconGroupRow(
-                    group = item,
-                    onAction = { onGroupAction(item, it) }
+            if (!loaded) return@TrailSensePage
+
+            if (items.isEmpty()) {
+                item(key = "empty") {
+                    val isSearching = searchText.isNotBlank()
+                    TrailSenseEmptyState(
+                        icon = if (isSearching) Icons.Default.Search else Icons.Default.Place,
+                        title = stringResource(if (isSearching) R.string.no_results else R.string.no_beacons),
+                        description = if (isSearching) {
+                            null
+                        } else {
+                            stringResource(R.string.beacon_list_empty_description)
+                        },
+                        modifier = Modifier
+                            .heightIn(max = 480.dp)
+                            .testTag("beacon_empty_text")
+                    )
+                }
+            } else {
+                item(key = "beacons") {
+                    TrailSenseRowGroup(modifier = Modifier.testTag("beacon_list")) {
+                        items.forEach { item ->
+                            row { position ->
+                                when (item) {
+                                    is Beacon -> BeaconRow(
+                                        beacon = item,
+                                        position = position,
+                                        formatService = formatService,
+                                        baseDistanceUnits = baseDistanceUnits,
+                                        currentLocation = currentLocation,
+                                        onAction = { onBeaconAction(item, it) }
+                                    )
+
+                                    is BeaconGroup -> BeaconGroupRow(
+                                        group = item,
+                                        position = position,
+                                        onAction = { onGroupAction(item, it) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BeaconListMenu(
+    sortMenuText: String,
+    onToolbarAction: (BeaconToolbarAction) -> Unit
+) {
+    var isMenuOpen by remember { mutableStateOf(false) }
+    Box {
+        IconButton(
+            onClick = { isMenuOpen = true },
+            modifier = Modifier.testTag("beacon_list_menu_btn")
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(R.string.beacon_more_options)
+            )
+        }
+        DropdownMenu(
+            expanded = isMenuOpen,
+            onDismissRequest = { isMenuOpen = false }
+        ) {
+            BeaconMenuEntry(sortMenuText, TrailIcons.SortAscending) {
+                isMenuOpen = false
+                onToolbarAction(BeaconToolbarAction.Sort)
+            }
+            BeaconMenuEntry(stringResource(R.string.export), TrailIcons.ImportExport) {
+                isMenuOpen = false
+                onToolbarAction(BeaconToolbarAction.Export)
+            }
+            BeaconMenuEntry(
+                stringResource(R.string.navigate_to_nearest_cell_signal),
+                TrailIcons.SignalCellular3
+            ) {
+                isMenuOpen = false
+                onToolbarAction(BeaconToolbarAction.NavigateToNearestCellSignal)
+            }
+            BeaconMenuEntry(stringResource(R.string.delete), TrailIcons.Delete) {
+                isMenuOpen = false
+                onToolbarAction(BeaconToolbarAction.Delete)
+            }
+        }
+    }
+}
+
+@Composable
+private fun BeaconMenuEntry(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    DropdownMenuItem(
+        text = { Text(label) },
+        leadingIcon = { Icon(icon, contentDescription = null) },
+        onClick = onClick
+    )
+}
+
+/** The create menu: the family's expressive FAB menu, with a new beacon closest to the thumb. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun BeaconCreateMenu(
+    isOpen: Boolean,
+    onOpenChange: (Boolean) -> Unit,
+    onAction: (BeaconCreateAction) -> Unit
+) {
+    val entries = listOf(
+        Triple(R.string.qr_code, TrailIcons.QrCode, BeaconCreateAction.ImportQr),
+        Triple(R.string.import_gpx, TrailIcons.ImportExport, BeaconCreateAction.ImportGpx),
+        Triple(R.string.group, TrailIcons.BeaconGroup, BeaconCreateAction.CreateGroup),
+        Triple(R.string.beacon, TrailIcons.Location, BeaconCreateAction.CreateBeacon)
+    )
+    FloatingActionButtonMenu(
+        expanded = isOpen,
+        button = {
+            ToggleFloatingActionButton(
+                checked = isOpen,
+                onCheckedChange = { onOpenChange(it) },
+                modifier = Modifier.testTag("create_btn")
+            ) {
+                val progress = checkedProgress
+                Icon(
+                    imageVector = if (progress > 0.5f) Icons.Default.Close else Icons.Default.Add,
+                    contentDescription = stringResource(if (isOpen) R.string.beacon_create_menu_close else R.string.add),
+                    modifier = with(ToggleFloatingActionButtonDefaults) {
+                        Modifier.animateIcon({ progress })
+                    }
                 )
             }
-            TrailSenseDivider()
+        }
+    ) {
+        entries.forEach { (label, icon, action) ->
+            FloatingActionButtonMenuItem(
+                onClick = { onAction(action) },
+                icon = { Icon(icon, contentDescription = null) },
+                text = { Text(stringResource(label)) }
+            )
         }
     }
 }
@@ -978,6 +957,7 @@ private fun BeaconList(
 @Composable
 private fun BeaconRow(
     beacon: Beacon,
+    position: TrailSenseGroupPosition,
     formatService: FormatService,
     baseDistanceUnits: DistanceUnits,
     currentLocation: Coordinate,
@@ -998,6 +978,9 @@ private fun BeaconRow(
         ),
         icon = painterResource(getBeaconIcon(beacon, formatService)),
         iconTint = Color(getBeaconIconTint(beacon, formatService)),
+        position = position,
+        onClick = { onAction(BeaconAction.View) },
+        onLongClick = { onAction(BeaconAction.Navigate) },
         trailing = {
             BeaconRowActions(
                 beacon = beacon,
@@ -1005,16 +988,7 @@ private fun BeaconRow(
                 onMenuOpenChange = { menuOpen = it },
                 onAction = onAction
             )
-        },
-        animateEntrance = false,
-        modifier = Modifier
-            .combinedClickable(
-                onClickLabel = stringResource(R.string.details),
-                onLongClickLabel = stringResource(R.string.navigate),
-                onClick = { onAction(BeaconAction.View) },
-                onLongClick = { onAction(BeaconAction.Navigate) }
-            )
-            .padding(horizontal = TrailSenseSpacing.screen)
+        }
     )
 }
 
@@ -1025,18 +999,18 @@ private fun BeaconRowActions(
     onMenuOpenChange: (Boolean) -> Unit,
     onAction: (BeaconAction) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.End) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         if (!beacon.temporary) {
             IconButton(
                 onClick = { onAction(BeaconAction.ToggleVisibility) },
                 modifier = Modifier.testTag("beacon_visibility_toggle")
             ) {
                 Icon(
-                    painter = painterResource(
+                    painter = rememberVectorPainter(
                         if (beacon.visible) {
-                            R.drawable.ic_visible
+                            TrailIcons.Visible
                         } else {
-                            R.drawable.ic_not_visible
+                            TrailIcons.NotVisible
                         }
                     ),
                     contentDescription = stringResource(
@@ -1053,8 +1027,8 @@ private fun BeaconRowActions(
                 modifier = Modifier.testTag("beacon_item_menu")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = stringResource(R.string.details),
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(R.string.beacon_more_options),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1093,15 +1067,16 @@ private fun BeaconMenuItem(
 @Composable
 private fun BeaconGroupRow(
     group: BeaconGroup,
+    position: TrailSenseGroupPosition,
     onAction: (BeaconGroupAction) -> Unit
 ) {
     var menuOpen by remember { mutableStateOf(false) }
 
     TrailSenseListItem(
         title = group.name,
-        subtitle = stringResource(R.plurals.beacon_group_summary, group.count, group.count),
-        icon = painterResource(R.drawable.ic_beacon_group),
-        iconTint = Color(AppColor.Gray.color),
+        subtitle = pluralStringResource(R.plurals.beacon_group_summary, group.count, group.count),
+        icon = rememberVectorPainter(TrailIcons.BeaconGroup),
+        position = position,
         onClick = { onAction(BeaconGroupAction.Open) },
         trailing = {
             Box {
@@ -1110,8 +1085,8 @@ private fun BeaconGroupRow(
                     modifier = Modifier.testTag("beacon_group_menu")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_menu_dots),
-                        contentDescription = stringResource(R.string.details),
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.beacon_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -1126,9 +1101,7 @@ private fun BeaconGroupRow(
                     BeaconGroupMenuItem(R.string.delete, { menuOpen = it }, onAction, BeaconGroupAction.Delete)
                 }
             }
-        },
-        animateEntrance = false,
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.screen)
+        }
     )
 }
 
@@ -1147,6 +1120,7 @@ private fun BeaconGroupMenuItem(
         }
     )
 }
+
 
 private fun getBeaconIcon(beacon: Beacon, formatService: FormatService): Int {
     if (beacon.owner == BeaconOwner.User) {
@@ -1204,7 +1178,7 @@ private fun BeaconListScreenPreview() {
             sortMenuText = "Sort by Closest",
             searchText = "",
             items = emptyList(),
-            isEmpty = true,
+            loaded = true,
             resetKey = 0,
             formatService = FormatService.getInstance(androidx.compose.ui.platform.LocalContext.current),
             baseDistanceUnits = DistanceUnits.Meters,

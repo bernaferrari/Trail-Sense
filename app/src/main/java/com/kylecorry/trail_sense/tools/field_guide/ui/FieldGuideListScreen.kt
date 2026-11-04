@@ -6,73 +6,62 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.core.graphics.createBitmap
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideCleanupCommand
@@ -100,9 +89,16 @@ fun FieldGuideToolScreen(host: TrailSenseDestinationHost) {
         }
     }
 
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     FieldGuideScreen(
         query = controller.filter,
+        loaded = controller.loaded,
         items = controller.getListItems(),
+        tagFilter = controller.tagFilter,
+        tagFilters = controller.getTagFilters(),
+        tagIcon = controller::getTagIcon,
+        onTagSelected = controller::toggleTag,
+        onBack = { dispatcher?.onBackPressed() },
         onQueryChange = { controller.filter = it },
         onViewPage = controller::viewPage,
         onEditPage = controller::editPage,
@@ -119,6 +115,8 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
     private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
     private val formatter by lazy { FieldGuideFormatService(UserPreferences(host.requireContext())) }
     private var pages by mutableStateOf(emptyList<FieldGuidePage>())
+    var loaded by mutableStateOf(false)
+        private set
     var filter by mutableStateOf("")
     var tagFilter by mutableStateOf<FieldGuidePageTag?>(null)
     private var backCallback: OnBackPressedCallback? = null
@@ -140,18 +138,18 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
     )
 
     private val tagImageMap = mapOf(
-        FieldGuidePageTag.Plant to R.drawable.ic_category_natural,
-        FieldGuidePageTag.Fungus to R.drawable.mushroom,
-        FieldGuidePageTag.Animal to R.drawable.paw,
-        FieldGuidePageTag.Mammal to R.drawable.ic_deer,
-        FieldGuidePageTag.Bird to R.drawable.bird,
-        FieldGuidePageTag.Reptile to R.drawable.lizard,
-        FieldGuidePageTag.Amphibian to R.drawable.frog,
-        FieldGuidePageTag.Fish to R.drawable.fish,
-        FieldGuidePageTag.Invertebrate to R.drawable.ant,
-        FieldGuidePageTag.Rock to R.drawable.gem,
-        FieldGuidePageTag.Weather to R.drawable.cloud,
-        FieldGuidePageTag.Other to R.drawable.ic_help
+        FieldGuidePageTag.Plant to TrailIcons.CategoryNatural,
+        FieldGuidePageTag.Fungus to TrailIcons.Mushroom,
+        FieldGuidePageTag.Animal to TrailIcons.Paw,
+        FieldGuidePageTag.Mammal to TrailIcons.Deer,
+        FieldGuidePageTag.Bird to TrailIcons.Bird,
+        FieldGuidePageTag.Reptile to TrailIcons.Lizard,
+        FieldGuidePageTag.Amphibian to TrailIcons.Frog,
+        FieldGuidePageTag.Fish to TrailIcons.Fish,
+        FieldGuidePageTag.Invertebrate to TrailIcons.Ant,
+        FieldGuidePageTag.Rock to TrailIcons.Gem,
+        FieldGuidePageTag.Weather to TrailIcons.Cloud,
+        FieldGuidePageTag.Other to TrailIcons.Help
     )
 
     fun onCreate() {
@@ -195,6 +193,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
                 FieldGuideCleanupCommand(host.requireContext()).execute()
                 repo.getAllPages().sortedBy { formatter.formatName(it).lowercase() }
             }
+            loaded = true
         }
     }
 
@@ -212,7 +211,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
                             filteredPages.count { it.tags.contains(tag) },
                             filteredPages.count { it.tags.contains(tag) }
                         ),
-                        icon = tagImageMap[tag] ?: R.drawable.ic_help,
+                        icon = tagImageMap[tag] ?: TrailIcons.Help,
                         onClick = { tagFilter = tag }
                     )
                 }
@@ -231,6 +230,19 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
                 }
             )
         }
+    }
+
+    fun getTagFilters(): List<Pair<FieldGuidePageTag, String>> {
+        val mapper = FieldGuideTagNameMapper(host.requireContext())
+        return headingTags.map { it to mapper.getName(it) }
+    }
+
+    fun getTagIcon(tag: FieldGuidePageTag): ImageVector {
+        return tagImageMap[tag] ?: TrailIcons.Help
+    }
+
+    fun toggleTag(tag: FieldGuidePageTag) {
+        tagFilter = if (tagFilter == tag) null else tag
     }
 
     private fun getFilteredPages(): List<FieldGuidePage> {
@@ -310,155 +322,132 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
         }
     }
 
-    suspend fun loadThumbnail(page: FieldGuidePage): Bitmap = onIO {
+    suspend fun loadThumbnail(page: FieldGuidePage): Bitmap? = onIO {
+        val path = page.images.firstOrNull() ?: return@onIO null
         val size = Resources.dp(host.requireContext(), 48f).toInt()
         try {
-            files.bitmap(page.images.first(), Size(size, size)) ?: getDefaultThumbnail(size)
+            files.bitmap(path, Size(size, size))
         } catch (e: Exception) {
-            getDefaultThumbnail(size)
+            null
         }
-    }
-
-    private fun getDefaultThumbnail(size: Int): Bitmap {
-        return createBitmap(size, size)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FieldGuideScreen(
     query: String,
+    loaded: Boolean,
     items: FieldGuideListItems,
+    tagFilter: FieldGuidePageTag?,
+    tagFilters: List<Pair<FieldGuidePageTag, String>>,
+    tagIcon: (FieldGuidePageTag) -> ImageVector,
+    onTagSelected: (FieldGuidePageTag) -> Unit,
+    onBack: () -> Unit,
     onQueryChange: (String) -> Unit,
     onViewPage: (FieldGuidePage) -> Unit,
     onEditPage: (FieldGuidePage) -> Unit,
     onDeletePage: (FieldGuidePage) -> Unit,
     onHidePage: (FieldGuidePage) -> Unit,
-    loadThumbnail: suspend (FieldGuidePage) -> Bitmap,
+    loadThumbnail: suspend (FieldGuidePage) -> Bitmap?,
     onCreate: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.field_guide),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            },
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = onCreate,
-                    modifier = Modifier.testTag("add_btn"),
-                    shape = MaterialTheme.shapes.large,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.add)
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.add),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                )
-            }
-        ) { padding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                FieldGuideList(
-                    query = query,
-                    items = items,
-                    onQueryChange = onQueryChange,
-                    onViewPage = onViewPage,
-                    onEditPage = onEditPage,
-                    onDeletePage = onDeletePage,
-                    onHidePage = onHidePage,
-                    loadThumbnail = loadThumbnail,
-                    modifier = Modifier
-                        .widthIn(max = TrailSenseSize.maximumContentWidth)
-                        .fillMaxSize()
-                )
-            }
-        }
-    }
-}
+    val isBrowsing = tagFilter == null && query.isBlank()
+    val selectedTagName = tagFilters.firstOrNull { it.first == tagFilter }?.second
+    val pages = items.items.filterIsInstance<FieldGuideListItem.PageItem>()
+    val categories = items.items.filterIsInstance<FieldGuideListItem.TagItem>()
+    val sections = remember(pages) { groupPagesByLetter(pages) }
+    val noPagesDescription = stringResource(R.string.field_guide_no_pages_description)
 
-@Composable
-private fun FieldGuideList(
-    query: String,
-    items: FieldGuideListItems,
-    onQueryChange: (String) -> Unit,
-    onViewPage: (FieldGuidePage) -> Unit,
-    onEditPage: (FieldGuidePage) -> Unit,
-    onDeletePage: (FieldGuidePage) -> Unit,
-    onHidePage: (FieldGuidePage) -> Unit,
-    loadThumbnail: suspend (FieldGuidePage) -> Bitmap,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier.testTag("list"),
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.screen,
-            end = TrailSenseSpacing.screen,
-            top = TrailSenseSpacing.lg,
-            bottom = 96.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    TrailSensePage(
+        title = stringResource(R.string.field_guide),
+        subtitle = selectedTagName,
+        onBack = onBack,
+        backLabel = stringResource(R.string.back),
+        modifier = Modifier.testTag("list"),
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onCreate,
+                modifier = Modifier.testTag("add_btn"),
+                icon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = null
+                    )
+                },
+                text = { Text(stringResource(R.string.add)) }
+            )
+        }
     ) {
         item(key = "search") {
             TrailSenseSearchBar(
                 value = query,
                 onValueChange = onQueryChange,
                 placeholder = stringResource(R.string.search),
+                clearContentDescription = stringResource(R.string.field_guide_clear_search),
                 modifier = Modifier.testTag("search")
             )
         }
 
-        if (items.items.isEmpty()) {
+        // Once a category or a search narrows the list, the categories become filter chips at the top so the
+        // reader can hop between them without going back.
+        if (!isBrowsing) {
+            item(key = "tag_filters") {
+                FieldGuideTagFilters(
+                    tags = tagFilters,
+                    selected = tagFilter,
+                    tagIcon = tagIcon,
+                    onSelect = onTagSelected
+                )
+            }
+        }
+
+        if (!loaded) {
+            return@TrailSensePage
+        }
+
+        if (isBrowsing) {
+            trailSenseSection(key = "categories") {
+                categories.forEach { category ->
+                    row { position ->
+                        FieldGuideRow(
+                            title = AnnotatedString(category.title),
+                            subtitle = category.subtitle,
+                            position = position,
+                            leading = { FieldGuideIconWell(rememberVectorPainter(category.icon)) },
+                            onClick = category.onClick
+                        )
+                    }
+                }
+            }
+        } else if (pages.isEmpty()) {
             item(key = "empty") {
                 TrailSenseEmptyState(
-                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                    icon = Icons.AutoMirrored.Rounded.MenuBook,
                     title = stringResource(R.string.no_pages),
-                    modifier = Modifier.testTag("empty_text")
+                    description = noPagesDescription,
+                    modifier = Modifier.testTag("empty_text"),
+                    action = {
+                        FilledTonalButton(onClick = onCreate) {
+                            Text(stringResource(R.string.create_page))
+                        }
+                    }
                 )
             }
         } else {
-            items(items.items, key = { it.id }) { item ->
-                when (item) {
-                    is FieldGuideListItem.TagItem -> {
-                        FieldGuideTagRow(item = item)
-                    }
-
-                    is FieldGuideListItem.PageItem -> {
-                        FieldGuidePageRow(
-                            item = item,
-                            onViewPage = onViewPage,
-                            onEditPage = onEditPage,
-                            onDeletePage = onDeletePage,
-                            onHidePage = onHidePage,
-                            loadThumbnail = loadThumbnail
-                        )
+            sections.forEach { section ->
+                trailSenseSection(key = "letter_${section.title}", title = section.title) {
+                    section.pages.forEach { item ->
+                        row { position ->
+                            FieldGuidePageRow(
+                                item = item,
+                                position = position,
+                                onViewPage = onViewPage,
+                                onEditPage = onEditPage,
+                                onDeletePage = onDeletePage,
+                                onHidePage = onHidePage,
+                                loadThumbnail = loadThumbnail
+                            )
+                        }
                     }
                 }
             }
@@ -466,50 +455,74 @@ private fun FieldGuideList(
     }
 }
 
-@Composable
-private fun FieldGuideTagRow(item: FieldGuideListItem.TagItem) {
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = item.onClick
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(item.icon),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
-            }
+private data class FieldGuidePageSection(
+    val title: String?,
+    val pages: List<FieldGuideListItem.PageItem>
+)
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = TrailSenseSpacing.lg)
-            ) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+/**
+ * Short lists read best as one group. Longer ones get an index of first letters so the reader can find their place
+ * while scrolling; the pages already arrive sorted by name.
+ */
+private fun groupPagesByLetter(pages: List<FieldGuideListItem.PageItem>): List<FieldGuidePageSection> {
+    if (pages.size <= LETTER_SECTION_THRESHOLD) {
+        return listOf(FieldGuidePageSection(null, pages))
+    }
+    return pages
+        .groupBy { page ->
+            val first = page.title.text.trim().firstOrNull()?.uppercaseChar() ?: '#'
+            if (first.isLetter()) first.toString() else "#"
+        }
+        .map { (letter, items) -> FieldGuidePageSection(letter, items) }
+}
+
+private const val LETTER_SECTION_THRESHOLD = 12
+
+@Composable
+private fun FieldGuideTagFilters(
+    tags: List<Pair<FieldGuidePageTag, String>>,
+    selected: FieldGuidePageTag?,
+    tagIcon: (FieldGuidePageTag) -> ImageVector,
+    onSelect: (FieldGuidePageTag) -> Unit
+) {
+    val state = rememberLazyListState()
+    LaunchedEffect(Unit) {
+        val index = tags.indexOfFirst { it.first == selected }
+        if (index > 0) {
+            state.scrollToItem(index)
+        }
+    }
+    LazyRow(
+        state = state,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("field_guide_tag_filters"),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+    ) {
+        items(tags, key = { it.first.id }) { (tag, name) ->
+            val isSelected = tag == selected
+            FilterChip(
+                selected = isSelected,
+                onClick = { onSelect(tag) },
+                label = { Text(name) },
+                leadingIcon = {
+                    Icon(
+                        painter = if (isSelected) {
+                            rememberVectorPainter(Icons.Rounded.Check)
+                        } else {
+                            rememberVectorPainter(tagIcon(tag))
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    )
+                },
+                shape = CircleShape,
+                border = null,
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
-                Text(
-                    text = item.subtitle,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontFeatureSettings = "tnum"
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            )
         }
     }
 }
@@ -517,11 +530,12 @@ private fun FieldGuideTagRow(item: FieldGuideListItem.TagItem) {
 @Composable
 private fun FieldGuidePageRow(
     item: FieldGuideListItem.PageItem,
+    position: TrailSenseGroupPosition,
     onViewPage: (FieldGuidePage) -> Unit,
     onEditPage: (FieldGuidePage) -> Unit,
     onDeletePage: (FieldGuidePage) -> Unit,
     onHidePage: (FieldGuidePage) -> Unit,
-    loadThumbnail: suspend (FieldGuidePage) -> Bitmap
+    loadThumbnail: suspend (FieldGuidePage) -> Bitmap?
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var thumbnail by remember(item.page.id, item.page.images) {
@@ -532,76 +546,28 @@ private fun FieldGuidePageRow(
         thumbnail = loadThumbnail(item.page)
     }
 
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { onViewPage(item.page) }
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (thumbnail != null) {
-                Image(
-                    bitmap = thumbnail!!.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
-            } else {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = TrailSenseSpacing.lg)
-            ) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.testTag("field_guide_page_title")
-                )
-                if (item.subtitle.isNotBlank()) {
-                    Text(
-                        text = item.subtitle,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
+    FieldGuideRow(
+        title = item.title,
+        subtitle = item.subtitle,
+        position = position,
+        titleModifier = Modifier.testTag("field_guide_page_title"),
+        leading = {
+            FieldGuideThumbnail(
+                bitmap = thumbnail,
+                fallback = rememberVectorPainter(Icons.AutoMirrored.Rounded.MenuBook)
+            )
+        },
+        onClick = { onViewPage(item.page) },
+        onLongClick = { menuOpen = true },
+        trailing = {
             Box {
                 IconButton(
                     onClick = { menuOpen = true },
                     modifier = Modifier.testTag("field_guide_page_menu")
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_menu_dots),
-                        contentDescription = stringResource(
-                            if (item.page.isReadOnly) R.string.hide else R.string.edit
-                        ),
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = stringResource(R.string.field_guide_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -636,7 +602,7 @@ private fun FieldGuidePageRow(
                 }
             }
         }
-    }
+    )
 }
 
 private data class FieldGuideListItems(
@@ -650,7 +616,7 @@ private sealed interface FieldGuideListItem {
         val tag: FieldGuidePageTag,
         val title: String,
         val subtitle: String,
-        val icon: Int,
+        val icon: ImageVector,
         val onClick: () -> Unit
     ) : FieldGuideListItem {
         override val id: Long = tag.id

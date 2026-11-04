@@ -2,33 +2,22 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -36,29 +25,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
@@ -68,6 +55,9 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun SightingListToolScreen(host: TrailSenseDestinationHost) {
@@ -87,8 +77,12 @@ fun SightingListToolScreen(host: TrailSenseDestinationHost) {
         }
     }
 
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     SightingListScreen(
+        title = controller.pageTitle,
+        loaded = controller.loaded,
         items = controller.getSightingListItems(),
+        onBack = { dispatcher?.onBackPressed() },
         onCreate = controller::createSighting
     )
 }
@@ -103,12 +97,17 @@ private class SightingListController(private val host: TrailSenseDestinationHost
     }
 
     private var page by mutableStateOf<FieldGuidePage?>(null)
+    var loaded by mutableStateOf(false)
+        private set
+    val pageTitle: String?
+        get() = page?.name?.takeIf { it.isNotBlank() }
 
     fun loadPage() {
         host.lifecycleScope.launch {
             page = withContext(Dispatchers.IO) {
                 repo.getPage(pageId)
             }
+            loaded = true
         }
     }
 
@@ -203,168 +202,123 @@ private class SightingListController(private val host: TrailSenseDestinationHost
 
 @Composable
 private fun SightingListScreen(
+    title: String?,
+    loaded: Boolean,
     items: List<SightingListItem>,
+    onBack: () -> Unit,
     onCreate: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .align(Alignment.TopCenter)
-            ) {
-                SightingListHeader()
-                SightingListView(
-                    items = items,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+    val unknownLabel = stringResource(R.string.unknown)
+    val sections = remember(items, unknownLabel) { groupSightingsByMonth(items, unknownLabel) }
+
+    TrailSensePage(
+        title = stringResource(R.string.sightings),
+        subtitle = title,
+        onBack = onBack,
+        backLabel = stringResource(R.string.back),
+        modifier = Modifier.testTag("list"),
+        floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onCreate,
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.testTag("create_btn"),
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add)
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = null
                     )
                 },
-                text = { Text(stringResource(R.string.sighting)) },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(TrailSenseSpacing.screen)
-                    .testTag("create_btn")
+                text = { Text(stringResource(R.string.record_sighting)) }
             )
         }
-    }
-}
-
-@Composable
-private fun SightingListHeader() {
-    Text(
-        text = stringResource(R.string.sightings),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = TrailSenseSpacing.screen,
-                end = TrailSenseSpacing.screen,
-                top = TrailSenseSpacing.xl,
-                bottom = TrailSenseSpacing.sm
-            ),
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.onBackground
-    )
-}
-
-@Composable
-private fun SightingListView(
-    items: List<SightingListItem>,
-    modifier: Modifier = Modifier
-) {
-    Box(modifier = modifier.testTag("list")) {
-        if (items.isEmpty()) {
-            TrailSenseEmptyState(
-                icon = Icons.Outlined.Pets,
-                title = stringResource(R.string.no_sightings),
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    top = TrailSenseSpacing.sm,
-                    bottom = 96.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-            ) {
-                items(items, key = { it.sighting.id }) { item ->
-                    SightingRow(item)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SightingRow(item: SightingListItem) {
-    var menuOpen by remember { mutableStateOf(false) }
-
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { item.onEdit() }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_date),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
-            }
+        if (!loaded) {
+            return@TrailSensePage
+        }
 
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+        if (items.isEmpty()) {
+            item(key = "empty") {
+                TrailSenseEmptyState(
+                    icon = Icons.Outlined.Pets,
+                    title = stringResource(R.string.no_sightings),
+                    description = stringResource(R.string.field_guide_no_sightings_description),
+                    action = {
+                        FilledTonalButton(onClick = onCreate) {
+                            Text(stringResource(R.string.record_sighting))
+                        }
+                    }
                 )
-                if (item.subtitle.isNotBlank()) {
-                    Spacer(Modifier.size(TrailSenseSpacing.xxs))
-                    Text(
-                        text = item.subtitle,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (item.hasLocation || item.isHarvested) {
-                    Spacer(Modifier.size(TrailSenseSpacing.sm))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-                    ) {
-                        if (item.hasLocation) {
-                            SightingTag(
-                                text = stringResource(R.string.location),
-                                iconRes = R.drawable.ic_location
-                            )
-                        }
-                        if (item.isHarvested) {
-                            SightingTag(
-                                text = stringResource(R.string.harvested)
-                            )
-                        }
+            }
+            return@TrailSensePage
+        }
+
+        sections.forEach { section ->
+            trailSenseSection(key = "month_${section.key}", title = section.title) {
+                section.items.forEach { item ->
+                    row { position ->
+                        SightingRow(item = item, position = position)
                     }
                 }
             }
+        }
+    }
+}
 
+private data class SightingSection(
+    val key: String,
+    val title: String,
+    val items: List<SightingListItem>
+)
+
+/** Sightings fall into months, newest first, so a long history reads like a field journal. */
+private fun groupSightingsByMonth(
+    items: List<SightingListItem>,
+    unknownLabel: String
+): List<SightingSection> {
+    val formatter = DateTimeFormatter.ofPattern("LLLL yyyy", Locale.getDefault())
+    return items
+        .groupBy { item -> item.sighting.time?.let { YearMonth.from(it.toZonedDateTime()) } }
+        .map { (month, sightings) ->
+            SightingSection(
+                key = month?.toString() ?: "unknown",
+                title = month?.format(formatter)?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                    ?: unknownLabel,
+                items = sightings
+            )
+        }
+}
+
+@Composable
+private fun SightingRow(
+    item: SightingListItem,
+    position: TrailSenseGroupPosition
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val harvested = stringResource(R.string.harvested)
+    val subtitle = listOfNotNull(
+        harvested.takeIf { item.isHarvested },
+        item.subtitle.lineSequence().firstOrNull { it.isNotBlank() }?.trim()
+    ).joinToString(" · ")
+
+    FieldGuideRow(
+        title = AnnotatedString(item.title),
+        subtitle = subtitle,
+        position = position,
+        leading = {
+            FieldGuideIconWell(
+                rememberVectorPainter(if (item.hasLocation) TrailIcons.Location else TrailIcons.Date)
+            )
+        },
+        onClick = item.onEdit,
+        onLongClick = { menuOpen = true },
+        trailing = {
             Box {
                 IconButton(
                     onClick = { menuOpen = true },
                     modifier = Modifier.testTag("field_guide_sighting_menu")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.edit),
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = stringResource(R.string.field_guide_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -405,41 +359,7 @@ private fun SightingRow(item: SightingListItem) {
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SightingTag(
-    text: String,
-    iconRes: Int? = null
-) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.secondaryContainer
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.sm,
-                vertical = TrailSenseSpacing.xxs
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-        ) {
-            if (iconRes != null) {
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(14.dp)
-                )
-            }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-        }
-    }
+    )
 }
 
 private data class SightingListItem(

@@ -2153,6 +2153,49 @@
     <string name="settings_bottom_navigation_tools_slot">Slot %d always opens Tools</string>
     <string name="settings_error_banners_footer">Choose which problems can show a banner at the top of a tool.</string>
     <string name="settings_tools_summary">Quick actions, widgets and bottom navigation</string>
+    <!-- Family redesign: beacons, notes -->
+    <string name="note_more_options">More options</string>
+    <string name="notes_empty_description">Write down anything you want to keep with you on the trail.</string>
+    <string name="beacon_more_options">More options</string>
+    <string name="beacon_search_clear">Clear search</string>
+    <string name="beacon_create_menu_close">Close menu</string>
+    <string name="beacon_list_empty_description">Save a place to find your way back to it.</string>
+    <string name="beacon_direction_value" translatable="false">%1$s %2$s</string>
+    <!-- Family redesign: paths, comms, experimentation -->
+    <string name="paths_clear_search">Clear search</string>
+    <string name="paths_empty_description">Start Backtrack to record where you walk, or tap add to make a path.</string>
+    <plurals name="path_points_count">
+        <item quantity="one">%d point</item>
+        <item quantity="other">%d points</item>
+    </plurals>
+    <string name="experimentation_no_plugins">No plugins connected</string>
+    <!-- Family redesign: packs, tides -->
+    <string name="packs_empty_description">Plan what to bring on a trip and check things off as you pack.</string>
+    <string name="packs_items_empty_description">Add what you plan to bring. Items are grouped by category.</string>
+    <string name="packs_more_options">More options</string>
+    <string name="packs_items_packed">%1$d of %2$d items packed</string>
+    <string name="tides_rising">Rising</string>
+    <string name="tides_falling">Falling</string>
+    <string name="tides_next_tide">Next: %1$s at %2$s</string>
+    <string name="tides_more_options">More options</string>
+    <string name="tides_hidden">Hidden</string>
+    <string name="tides_empty_description">Enter tides from an official tide table to estimate the tides for your trip.</string>
+    <!-- Family redesign: survival guide, user guide, diagnostics, sensors, pedometer -->
+    <string name="survival_guide_clear_search">Clear search</string>
+    <string name="survival_guide_section_open">Expanded</string>
+    <string name="survival_guide_section_closed">Collapsed</string>
+    <string name="guide_clear_search">Clear search</string>
+    <string name="diagnostics_warnings">Warnings</string>
+    <string name="diagnostics_checking">Checking your device</string>
+    <string name="diagnostics_issues_summary">Tap an issue to see what it affects and how to fix it.</string>
+    <string name="diagnostics_no_issues_summary">Every tool has what it needs to work.</string>
+    <string name="diagnostics_sensor_details_summary">Live readings and status of each sensor</string>
+    <string name="diagnostics_export_logs_summary">Save a log file to share when reporting a problem</string>
+    <string name="pedometer_reset_steps">Reset steps</string>
+    <plurals name="diagnostics_issue_count">
+        <item quantity="one">%d issue found</item>
+        <item quantity="other">%d issues found</item>
+    </plurals>
     <string name="weather_chart_empty">Pressure appears here as the weather monitor records it.</string>
     <!-- Calibration and tool settings redesign -->
     <string name="calibration_chart_legend">The colored line is the calibrated reading; the gray line is what the sensor reported.</string>
@@ -2210,4 +2253,16 @@
     <string name="clinometer_locked">Reading locked</string>
     <string name="ruler_tap_hint">Tap the ruler at the end of what you\'re measuring</string>
     <string name="camera_unavailable_description">Allow camera access in settings to use this tool.</string>
+    <!-- Family redesign: field guide -->
+    <string name="field_guide_clear_search">Clear search</string>
+    <string name="field_guide_more_options">More options</string>
+    <string name="field_guide_no_pages_description">Try another search or category, or add a page of your own.</string>
+    <string name="field_guide_no_sightings_description">Record when and where you see it to build a history of this page.</string>
+    <string name="field_guide_last_seen">Last seen %s</string>
+    <plurals name="field_guide_sighting_count">
+        <item quantity="one">%d sighting</item>
+        <item quantity="other">%d sightings</item>
+    </plurals>
+    <!-- Family redesign: climate, clouds -->
+    <string name="clouds_empty_description">Log a cloud with the camera, a photo or by hand to see what the sky is saying.</string>
 </resources>

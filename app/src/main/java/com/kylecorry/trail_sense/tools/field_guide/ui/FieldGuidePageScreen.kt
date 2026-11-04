@@ -2,31 +2,24 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,33 +35,33 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.core.ui.Colors
+import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
-import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import kotlinx.coroutines.Dispatchers
@@ -96,11 +89,13 @@ fun FieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
     val formatter = remember(host) {
         FieldGuideFormatService(UserPreferences(host.requireContext()))
     }
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     FieldGuidePageScreen(
         page = controller.page,
         files = controller.files,
         tagNameMapper = controller.tagNameMapper,
         formatter = formatter,
+        onBack = { dispatcher?.onBackPressed() },
         onEdit = controller::editPage,
         onSightings = controller::openSightings
     )
@@ -153,195 +148,178 @@ private fun FieldGuidePageScreen(
     files: FileSubsystem,
     tagNameMapper: FieldGuideTagNameMapper,
     formatter: FieldGuideFormatService,
+    onBack: () -> Unit,
     onEdit: () -> Unit,
     onSightings: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val context = LocalContext.current
+    val dates = remember(context) { FormatService.getInstance(context) }
+    val editLabel = stringResource(R.string.edit)
+
+    TrailSensePage(
+        title = page?.let { formatter.formatTitle(it).text }.orEmpty(),
+        onBack = onBack,
+        backLabel = stringResource(R.string.back),
+        actions = {
+            if (page != null && !page.isReadOnly) {
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier.testTag("field_guide_page_edit_btn")
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(TrailIcons.Edit),
+                        contentDescription = editLabel
+                    )
+                }
+            }
+        }
     ) {
+        // Nothing until the page arrives: the title fills in with the content instead of flashing a placeholder.
         if (page == null) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                FieldGuidePageTopBar(
-                    title = AnnotatedString(stringResource(R.string.loading)),
-                    canEdit = false,
-                    onEdit = onEdit
-                )
-                Text(
-                    text = stringResource(R.string.loading),
-                    modifier = Modifier.padding(TrailSenseSpacing.lg),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            return@TrailSensePage
+        }
+
+        val classification = page.tags
+            .filter { it.type == FieldGuidePageTagType.Classification }
+            .sortedBy { it.ordinal }
+            .map { tagNameMapper.getName(it) }
+        val otherName = formatter.formatSubtitle(page)
+
+        if (page.images.isNotEmpty() || otherName != null || classification.isNotEmpty()) {
+            item(key = "hero") {
+                FieldGuidePageHero(
+                    images = page.images,
+                    files = files,
+                    otherName = otherName,
+                    classification = classification.joinToString(" · ")
                 )
             }
-        } else {
-            FieldGuidePageContent(
-                page = page,
-                files = files,
-                tagNameMapper = tagNameMapper,
-                formatter = formatter,
-                onEdit = onEdit,
-                onSightings = onSightings
-            )
+        }
+
+        trailSenseSection(key = "sightings") {
+            row { position ->
+                val lastSeen = page.sightings.mapNotNull { it.time }.maxOrNull()
+                val subtitle = listOfNotNull(
+                    pluralStringResource(
+                        R.plurals.field_guide_sighting_count,
+                        page.sightings.size,
+                        page.sightings.size
+                    ),
+                    lastSeen?.let {
+                        stringResource(
+                            R.string.field_guide_last_seen,
+                            dates.formatRelativeDateTime(it.toZonedDateTime(), includeSeconds = false)
+                        )
+                    }
+                ).joinToString(" · ")
+                TrailSenseListItem(
+                    title = stringResource(R.string.sightings),
+                    subtitle = subtitle,
+                    icon = rememberVectorPainter(TrailIcons.Binoculars),
+                    position = position,
+                    onClick = onSightings,
+                    trailing = {
+                        Icon(
+                            painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier.testTag("field_guide_page_sightings")
+                )
+            }
+        }
+
+        val notes = page.notes.orEmpty()
+        if (notes.isNotBlank()) {
+            trailSenseSection(key = "notes", title = context.getString(R.string.note)) {
+                row { position ->
+                    TrailSenseGroupCard(position = position) {
+                        LinkifiedNotes(
+                            notes = notes,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+
+        val detailTypes = listOf(
+            FieldGuidePageTagType.Location to R.string.location,
+            FieldGuidePageTagType.Habitat to R.string.habitat,
+            FieldGuidePageTagType.ActivityPattern to R.string.activity_pattern,
+            FieldGuidePageTagType.HumanInteraction to R.string.human_interaction
+        ).mapNotNull { (type, label) ->
+            val names = page.tags
+                .filter { it.type == type }
+                .sortedBy { it.ordinal }
+                .map { tagNameMapper.getName(it) }
+            if (names.isEmpty()) null else context.getString(label) to names.joinToString(", ")
+        }
+
+        if (detailTypes.isNotEmpty()) {
+            trailSenseSection(key = "details", title = context.getString(R.string.details)) {
+                detailTypes.forEach { (label, value) ->
+                    row { position ->
+                        TrailSenseListItem(
+                            title = value,
+                            subtitle = label,
+                            position = position
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 /**
- * Slim top bar holding the edit affordance. The prominent title lives in the
- * hero header below so the entry reads like a field-guide card.
+ * The page's one key fact up front: its photo, the name it's also known by, and what kind of thing it is. The page
+ * title already names it, so the hero doesn't say the name again.
  */
 @Composable
-private fun FieldGuidePageTopBar(
-    title: AnnotatedString,
-    canEdit: Boolean,
-    onEdit: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .widthIn(max = TrailSenseSize.maximumContentWidth)
-            .fillMaxWidth()
-            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm)
-            .height(56.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier
-                .weight(1f)
-                .testTag("field_guide_page_title"),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        if (canEdit) {
-            IconButton(
-                onClick = onEdit,
-                modifier = Modifier.testTag("field_guide_page_edit_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_edit),
-                    contentDescription = stringResource(R.string.edit),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FieldGuidePageContent(
-    page: FieldGuidePage,
+private fun FieldGuidePageHero(
+    images: List<String>,
     files: FileSubsystem,
-    tagNameMapper: FieldGuideTagNameMapper,
-    formatter: FieldGuideFormatService,
-    onEdit: () -> Unit,
-    onSightings: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        FieldGuidePageTopBar(
-            title = formatter.formatTitle(page),
-            canEdit = !page.isReadOnly,
-            onEdit = onEdit
-        )
-
-        Column(
-            modifier = Modifier
-                .widthIn(max = TrailSenseSize.maximumContentWidth)
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally)
-                .padding(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    bottom = TrailSenseSpacing.xl
-                ),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
-            // Hero card: photo + entry name in a tonal primaryContainer surface
-            HeroCard(page = page, files = files, formatter = formatter)
-
-            SightingsCard(
-                count = page.sightings.size,
-                onClick = onSightings
-            )
-
-            val notes = page.notes.orEmpty()
-            if (notes.isNotBlank()) {
-                NotesCard(notes = notes)
-            }
-
-            TagsCard(
-                tags = page.tags,
-                tagNameMapper = tagNameMapper
-            )
-        }
-    }
-}
-
-/**
- * Circular tonal icon chip used as a section/leading affordance.
- */
-@Composable
-private fun TonalIconChip(
-    icon: Painter,
-    contentDescription: String?
-) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = Modifier.size(40.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = icon,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
-    }
-}
-
-@Composable
-private fun HeroCard(
-    page: FieldGuidePage,
-    files: FileSubsystem,
-    formatter: FieldGuideFormatService
+    otherName: AnnotatedString?,
+    classification: String
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
         Column {
-            if (page.images.isNotEmpty()) {
-                FieldGuideImagePager(images = page.images, files = files)
+            if (images.isNotEmpty()) {
+                FieldGuideImagePager(images = images, files = files)
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(TrailSenseSpacing.lg),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                Text(
-                    text = formatter.formatTitle(page),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                formatter.formatSubtitle(page)?.let { subtitle ->
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
+            val hasFacts = otherName != null || classification.isNotBlank()
+            if (hasFacts) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("field_guide_page_title")
+                        .semantics(mergeDescendants = true) {}
+                        .padding(
+                            horizontal = TrailSenseSpacing.xl,
+                            vertical = TrailSenseSpacing.lg
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                ) {
+                    if (otherName != null) {
+                        Text(
+                            text = otherName,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                    if (classification.isNotBlank()) {
+                        Text(
+                            text = classification,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
                 }
             }
         }
@@ -362,17 +340,19 @@ private fun FieldGuideImagePager(
         }
     }
 
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(260.dp)
-    ) { index ->
-        FieldGuidePageImage(
-            path = images[index],
-            files = files,
-            modifier = Modifier.fillMaxSize()
-        )
+    Box {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp)
+        ) { index ->
+            FieldGuidePageImage(
+                path = images[index],
+                files = files,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 
     if (images.size > 1) {
@@ -380,28 +360,35 @@ private fun FieldGuideImagePager(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TrailSenseSpacing.sm),
+                .padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.xs),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(
+                text = stringResource(R.string.image_index, page + 1, images.size),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = TrailSenseSpacing.lg)
+                    .testTag("photo_position"),
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum")
+            )
             IconButton(
                 onClick = {
                     scope.launch {
-                        pagerState.scrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
+                        pagerState.animateScrollToPage((pagerState.currentPage - 1).coerceAtLeast(0))
                     }
                 },
                 enabled = page > 0,
                 modifier = Modifier.testTag("previous_photo_button")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_prev),
-                    contentDescription = stringResource(R.string.previous),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    painter = rememberVectorPainter(TrailIcons.Prev),
+                    contentDescription = stringResource(R.string.previous)
                 )
             }
             IconButton(
                 onClick = {
                     scope.launch {
-                        pagerState.scrollToPage(
+                        pagerState.animateScrollToPage(
                             (pagerState.currentPage + 1).coerceAtMost(images.lastIndex)
                         )
                     }
@@ -410,19 +397,10 @@ private fun FieldGuideImagePager(
                 modifier = Modifier.testTag("next_photo_button")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                    contentDescription = stringResource(R.string.next),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
+                    contentDescription = stringResource(R.string.next)
                 )
             }
-            Text(
-                text = stringResource(R.string.image_index, page + 1, images.size),
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("photo_position"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
         }
     }
 }
@@ -441,110 +419,10 @@ private fun FieldGuidePageImage(
         }
     }
 
-    bitmap?.let { image ->
-        Image(
-            bitmap = image.asImageBitmap(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = modifier.testTag("image")
-        )
-    }
-}
-
-@Composable
-private fun SightingsCard(
-    count: Int,
-    onClick: () -> Unit
-) {
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
-    ) {
-        Text(
-            text = stringResource(R.string.sightings),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TonalIconChip(
-                icon = painterResource(R.drawable.ic_binoculars),
-                contentDescription = null
-            )
-            Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
-            Text(
-                text = count.toString(),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = stringResource(R.string.sightings_count, count),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun NotesCard(notes: String) {
-    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TonalIconChip(
-                icon = painterResource(R.drawable.ic_tool_notes),
-                contentDescription = null
-            )
-            Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
-            Text(
-                text = stringResource(R.string.note),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-        LinkifiedNotes(
-            notes = notes,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Composable
-private fun TagsCard(
-    tags: List<FieldGuidePageTag>,
-    tagNameMapper: FieldGuideTagNameMapper
-) {
-    val sortedTags = tags.sortedWith(compareBy({ it.type.ordinal }, { it.ordinal }))
-    if (sortedTags.isEmpty()) {
-        return
-    }
-
-    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TonalIconChip(
-                icon = painterResource(R.drawable.ic_info),
-                contentDescription = null
-            )
-            Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
-            Text(
-                text = stringResource(R.string.details),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-        FieldGuideTags(
-            tags = sortedTags,
-            tagNameMapper = tagNameMapper
-        )
-    }
+    FieldGuideBitmapImage(
+        bitmap = bitmap,
+        modifier = modifier.testTag("image")
+    )
 }
 
 @Composable
@@ -565,62 +443,3 @@ private fun LinkifiedNotes(
         )
     }
 }
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun FieldGuideTags(
-    tags: List<FieldGuidePageTag>,
-    tagNameMapper: FieldGuideTagNameMapper,
-    modifier: Modifier = Modifier
-) {
-    val sortedTags = tags.sortedWith(compareBy({ it.type.ordinal }, { it.ordinal }))
-    if (sortedTags.isEmpty()) {
-        return
-    }
-
-    FlowRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-    ) {
-        sortedTags.forEach {
-            FieldGuideTagChip(
-                tag = it,
-                label = tagNameMapper.getName(it)
-            )
-        }
-    }
-}
-
-@Composable
-private fun FieldGuideTagChip(
-    tag: FieldGuidePageTag,
-    label: String
-) {
-    val background = (tagTypeColorMap[tag.type] ?: AppColor.Gray).color
-    val foreground = Colors.mostContrastingColor(
-        android.graphics.Color.WHITE,
-        android.graphics.Color.BLACK,
-        background
-    )
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = Color(background)
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Medium,
-            color = Color(foreground)
-        )
-    }
-}
-
-private val tagTypeColorMap = mapOf(
-    FieldGuidePageTagType.Location to AppColor.Gray,
-    FieldGuidePageTagType.Habitat to AppColor.Green,
-    FieldGuidePageTagType.Classification to AppColor.Blue,
-    FieldGuidePageTagType.ActivityPattern to AppColor.Yellow,
-    FieldGuidePageTagType.HumanInteraction to AppColor.Brown
-)

@@ -2,34 +2,38 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -38,26 +42,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * The notes list: newest first, one grouped card of rows (title, then the date and the start of the note), with the
+ * note's QR code and delete in each row's overflow. Nothing is shown until the notes have loaded, so "No notes"
+ * never flashes on a list that has some.
+ */
 @Composable
 fun NotesScreen(
     notes: LiveData<List<Note>>,
@@ -66,13 +80,18 @@ fun NotesScreen(
     onEdit: (Note) -> Unit,
     onDelete: (Note) -> Unit,
     onShowQR: (Note) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null
 ) {
     var items by remember { mutableStateOf(emptyList<Note>()) }
+    var loaded by remember { mutableStateOf(false) }
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val back: () -> Unit = onBack ?: { dispatcher?.onBackPressed() }
 
     DisposableEffect(notes, lifecycleOwner) {
         val observer = Observer<List<Note>> {
             items = it.orEmpty().sortedByDescending { note -> note.createdOn }
+            loaded = true
         }
         notes.observe(lifecycleOwner, observer)
         onDispose {
@@ -80,71 +99,46 @@ fun NotesScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.tool_notes_title),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
+    TrailSensePage(
+        title = stringResource(R.string.tool_notes_title),
+        onBack = back,
+        backLabel = stringResource(R.string.back),
+        modifier = modifier,
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAdd,
                 modifier = Modifier.testTag("add_btn"),
-                shape = MaterialTheme.shapes.large,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.add)
-                    )
-                },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.add)) }
             )
         }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            if (items.isEmpty()) {
+    ) {
+        if (!loaded) return@TrailSensePage
+
+        if (items.isEmpty()) {
+            item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = Icons.AutoMirrored.Filled.MenuBook,
                     title = stringResource(R.string.notes_empty_text),
-                    modifier = Modifier.testTag("notes_empty_text")
-                )
-            } else {
-                LazyColumn(
+                    description = stringResource(R.string.notes_empty_description),
                     modifier = Modifier
-                        .widthIn(max = TrailSenseSize.maximumContentWidth)
-                        .fillMaxSize()
-                        .testTag("note_list"),
-                    contentPadding = PaddingValues(
-                        start = TrailSenseSpacing.screen,
-                        end = TrailSenseSpacing.screen,
-                        top = TrailSenseSpacing.sm,
-                        bottom = 96.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-                ) {
-                    items(items, key = { it.id }) { note ->
-                        NoteListItem(
-                            note = note,
-                            onEdit = onEdit,
-                            onDelete = onDelete,
-                            onShowQR = onShowQR
-                        )
+                        .heightIn(max = 480.dp)
+                        .testTag("notes_empty_text")
+                )
+            }
+        } else {
+            item(key = "notes") {
+                TrailSenseRowGroup(modifier = Modifier.testTag("note_list")) {
+                    items.forEach { note ->
+                        row { position ->
+                            NoteRow(
+                                note = note,
+                                position = position,
+                                onEdit = onEdit,
+                                onDelete = onDelete,
+                                onShowQR = onShowQR
+                            )
+                        }
                     }
                 }
             }
@@ -152,9 +146,11 @@ fun NotesScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun NoteListItem(
+private fun NoteRow(
     note: Note,
+    position: TrailSenseGroupPosition,
     onEdit: (Note) -> Unit,
     onDelete: (Note) -> Unit,
     onShowQR: (Note) -> Unit
@@ -163,56 +159,91 @@ private fun NoteListItem(
     val title = if (note.title?.trim().isNullOrEmpty()) {
         stringResource(android.R.string.untitled)
     } else {
-        note.title.orEmpty()
+        note.title.orEmpty().trim()
     }
-    val preview = note.contents.orEmpty().trim()
     val timestamp = remember(note.createdOn) { formatTimestamp(note.createdOn) }
+    val preview = remember(note.contents) {
+        note.contents.orEmpty().trim().replace(Regex("\\s+"), " ")
+    }
+    val subtitle = listOfNotNull(timestamp, preview.ifEmpty { null }).joinToString(" · ")
 
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = { onEdit(note) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.985f else 1f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "notePress"
+    )
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+        shape = trailSenseGroupShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
-        Row(verticalAlignment = Alignment.Top) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(),
+                    role = Role.Button,
+                    onClick = { onEdit(note) }
+                )
+                .padding(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.xs,
+                    top = TrailSenseSpacing.md,
+                    bottom = TrailSenseSpacing.md
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = rememberVectorPainter(TrailIcons.ToolNotes),
+                        contentDescription = null,
+                        modifier = Modifier.size(TrailSenseSize.leadingIcon)
+                    )
+                }
+            }
+            Spacer(Modifier.width(TrailSenseSpacing.md))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (preview.isNotEmpty()) {
+                if (subtitle.isNotEmpty()) {
                     Text(
-                        text = preview,
+                        text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                if (timestamp != null) {
-                    Spacer(Modifier.height(TrailSenseSpacing.xs))
-                    Text(
-                        text = timestamp,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
-
             Box {
                 IconButton(onClick = { isMenuOpen = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.qr_code),
+                        contentDescription = stringResource(R.string.note_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -222,6 +253,9 @@ private fun NoteListItem(
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.qr_code)) },
+                        leadingIcon = {
+                            Icon(rememberVectorPainter(TrailIcons.QrCode), contentDescription = null)
+                        },
                         onClick = {
                             isMenuOpen = false
                             onShowQR(note)
@@ -229,6 +263,9 @@ private fun NoteListItem(
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.delete)) },
+                        leadingIcon = {
+                            Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null)
+                        },
                         onClick = {
                             isMenuOpen = false
                             onDelete(note)

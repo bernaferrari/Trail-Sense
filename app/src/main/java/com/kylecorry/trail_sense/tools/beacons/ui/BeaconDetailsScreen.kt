@@ -2,31 +2,28 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -57,10 +54,15 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseHeroCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
@@ -106,6 +108,7 @@ fun BeaconDetailsToolScreen(host: TrailSenseDestinationHost) {
     BeaconDetailsScreen(
         beacon = controller.beacon,
         distance = controller.distance,
+        direction = controller.direction,
         altitude = controller.altitude,
         temperature = controller.temperature,
         sunrise = controller.sunrise,
@@ -138,6 +141,8 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
         private set
     var distance by mutableStateOf("")
         private set
+    var direction by mutableStateOf<String?>(null)
+        private set
     var altitude by mutableStateOf<String?>(null)
         private set
     var temperature by mutableStateOf("")
@@ -148,7 +153,7 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
         private set
     var tide by mutableStateOf<String?>(null)
         private set
-    var tideIcon by mutableStateOf(R.drawable.ic_tide_half)
+    var tideIcon by mutableStateOf(TrailIcons.TideHalf)
         private set
 
     fun onResume() {
@@ -190,6 +195,12 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
             .convertTo(prefs.baseDistanceUnits)
             .toRelativeDistance()
         distance = formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
+        val bearing = NavigationService().navigate(gps.location, currentBeacon.coordinate, 0f).direction
+        direction = host.getString(
+            R.string.beacon_direction_value,
+            formatService.formatDegrees(bearing.value, replace360 = true),
+            formatService.formatDirection(bearing.direction)
+        )
     }
 
     private suspend fun updateBeaconSunTimes(beacon: Beacon) {
@@ -212,7 +223,7 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
     private suspend fun updateBeaconTides(beacon: Beacon) {
         val nearestTide = tides.getNearestTide(beacon.coordinate)
         tide = nearestTide?.let { tideFormatter.getTideTypeName(it.now.type) }
-        tideIcon = tideFormatter.getTideTypeImage(nearestTide?.now?.type)
+        tideIcon = tideFormatter.getTideTypeIcon(nearestTide?.now?.type)
     }
 
     private suspend fun updateBeaconTemperature(beacon: Beacon) {
@@ -282,16 +293,22 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
     }
 }
 
+/**
+ * Beacon details: the beacon's name as the page title, a hero with the one thing you open a beacon for (how far it is,
+ * which way, and where), Navigate as the hero's action, then the conditions at the beacon and its notes as groups.
+ * Edit, share and delete live in the top bar.
+ */
 @Composable
 private fun BeaconDetailsScreen(
     beacon: Beacon?,
     distance: String,
+    direction: String?,
     altitude: String?,
     temperature: String,
     sunrise: String?,
     sunset: String?,
     tide: String?,
-    @DrawableRes tideIcon: Int,
+    tideIcon: ImageVector,
     onShare: () -> Unit,
     onDelete: () -> Unit,
     onNavigate: () -> Unit,
@@ -300,219 +317,198 @@ private fun BeaconDetailsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val coordinates = beacon?.coordinate?.let {
         FormatService.getInstance(context).formatLocation(it)
     }.orEmpty()
     val comment = beacon?.comment.orEmpty()
+    val placeholder = VALUE_PLACEHOLDER
+    val detailsTitle = stringResource(R.string.details)
+    val notesTitle = stringResource(R.string.notes)
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(TrailSenseSpacing.screen),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-            ) {
-                BeaconHero(
-                    title = beacon?.name.orEmpty(),
-                    coordinates = coordinates,
-                    distance = distance,
+    TrailSensePage(
+        title = beacon?.name.orEmpty(),
+        onBack = { dispatcher?.onBackPressed() },
+        backLabel = stringResource(R.string.back),
+        modifier = modifier.testTag("beacon_title"),
+        actions = {
+            if (beacon != null) {
+                BeaconDetailsActions(
+                    showEdit = !beacon.temporary,
+                    onEdit = onEdit,
                     onShare = onShare,
                     onDelete = onDelete
                 )
+            }
+        }
+    ) {
+        if (beacon == null) return@TrailSensePage
 
-                BeaconDetailsCard(
-                    altitude = altitude,
-                    distance = distance,
-                    temperature = temperature,
-                    sunrise = sunrise,
-                    sunset = sunset,
-                    tide = tide,
-                    tideIcon = tideIcon,
-                    onTemperatureClick = onTemperatureClick
-                )
-
-                if (comment.isNotBlank()) {
-                    NotesCard(comment = comment)
+        item(key = "hero") {
+            TrailSenseHeroCard(
+                modifier = Modifier.testTag("beacon_distance"),
+                eyebrow = stringResource(R.string.distance),
+                title = distance.ifBlank { placeholder },
+                supportingText = direction,
+                icon = painterResource(beacon.icon?.icon ?: R.drawable.ic_location),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                if (coordinates.isNotBlank()) {
+                    SelectionContainer {
+                        Text(
+                            text = coordinates,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.82f)
+                        )
+                    }
+                }
+                Button(
+                    onClick = onNavigate,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .padding(top = TrailSenseSpacing.xs)
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(TrailIcons.NavigationArrow),
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                    )
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.navigate))
                 }
             }
+        }
 
-            ActionRow(
-                showEdit = beacon?.temporary != true,
-                onNavigate = onNavigate,
-                onEdit = onEdit
-            )
+        trailSenseSection(key = "conditions", title = detailsTitle) {
+            altitude?.let {
+                row { position ->
+                    DetailRow(
+                        tag = "beacon_altitude",
+                        title = it,
+                        description = stringResource(R.string.elevation),
+                        icon = TrailIcons.Altitude,
+                        position = position
+                    )
+                }
+            }
+            row { position ->
+                DetailRow(
+                    tag = "beacon_temperature",
+                    title = temperature.ifBlank { placeholder },
+                    description = stringResource(R.string.temperature_high_low),
+                    icon = TrailIcons.TemperatureRange,
+                    position = position,
+                    onClick = onTemperatureClick
+                )
+            }
+            sunrise?.let {
+                row { position ->
+                    DetailRow(
+                        tag = "beacon_sunrise",
+                        title = it,
+                        description = stringResource(R.string.sunrise),
+                        icon = TrailIcons.SunriseNotification,
+                        position = position
+                    )
+                }
+            }
+            sunset?.let {
+                row { position ->
+                    DetailRow(
+                        tag = "beacon_sunset",
+                        title = it,
+                        description = stringResource(R.string.sunset),
+                        icon = TrailIcons.SunsetNotification,
+                        position = position
+                    )
+                }
+            }
+            tide?.let {
+                row { position ->
+                    DetailRow(
+                        tag = "beacon_tide",
+                        title = it,
+                        description = stringResource(R.string.tide),
+                        icon = tideIcon,
+                        position = position
+                    )
+                }
+            }
+        }
+
+        if (comment.isNotBlank()) {
+            trailSenseSection(key = "notes", title = notesTitle) {
+                row { position ->
+                    TrailSenseGroupCard(position = position) {
+                        SelectionContainer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("comment_text")
+                        ) {
+                            Text(
+                                text = comment,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun BeaconHero(
-    title: String,
-    coordinates: String,
-    distance: String,
+private fun BeaconDetailsActions(
+    showEdit: Boolean,
+    onEdit: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TrailSenseSpacing.xl)
+    if (showEdit) {
+        IconButton(
+            onClick = onEdit,
+            modifier = Modifier.testTag("edit_btn")
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    text = title,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("beacon_title"),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Box {
-                    IconButton(
-                        onClick = { isMenuOpen = true },
-                        modifier = Modifier.testTag("beacon_menu_btn")
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_menu_dots),
-                            contentDescription = stringResource(R.string.details),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = isMenuOpen,
-                        onDismissRequest = { isMenuOpen = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.share_ellipsis)) },
-                            onClick = {
-                                isMenuOpen = false
-                                onShare()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.delete)) },
-                            onClick = {
-                                isMenuOpen = false
-                                onDelete()
-                            }
-                        )
-                    }
-                }
-            }
-
-            if (distance.isNotBlank()) {
-                Text(
-                    text = distance,
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = stringResource(R.string.distance),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-            }
-
-            if (coordinates.isNotBlank()) {
-                Text(
-                    text = coordinates,
-                    modifier = Modifier.padding(top = TrailSenseSpacing.sm),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-            }
+            Icon(
+                painter = rememberVectorPainter(TrailIcons.Edit),
+                contentDescription = stringResource(R.string.edit)
+            )
         }
     }
-}
-
-@Composable
-private fun BeaconDetailsCard(
-    altitude: String?,
-    distance: String,
-    temperature: String,
-    sunrise: String?,
-    sunset: String?,
-    tide: String?,
-    @DrawableRes tideIcon: Int,
-    onTemperatureClick: () -> Unit
-) {
-    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.details),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = TrailSenseSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    Box {
+        IconButton(
+            onClick = { isMenuOpen = true },
+            modifier = Modifier.testTag("beacon_menu_btn")
         ) {
-            altitude?.let {
-                DetailRow(
-                    tag = "beacon_altitude",
-                    title = it,
-                    description = stringResource(R.string.elevation),
-                    icon = R.drawable.ic_altitude
-                )
-            }
-            DetailRow(
-                tag = "beacon_distance",
-                title = distance,
-                description = stringResource(R.string.distance),
-                icon = R.drawable.ruler
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = stringResource(R.string.beacon_more_options)
             )
-            DetailRow(
-                tag = "beacon_temperature",
-                title = temperature,
-                description = stringResource(R.string.temperature_high_low),
-                icon = R.drawable.ic_temperature_range,
-                onClick = onTemperatureClick
+        }
+        DropdownMenu(
+            expanded = isMenuOpen,
+            onDismissRequest = { isMenuOpen = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.share_ellipsis)) },
+                leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Share), contentDescription = null) },
+                onClick = {
+                    isMenuOpen = false
+                    onShare()
+                }
             )
-            sunrise?.let {
-                DetailRow(
-                    tag = "beacon_sunrise",
-                    title = it,
-                    description = stringResource(R.string.sunrise),
-                    icon = R.drawable.ic_sunrise_notification
-                )
-            }
-            sunset?.let {
-                DetailRow(
-                    tag = "beacon_sunset",
-                    title = it,
-                    description = stringResource(R.string.sunset),
-                    icon = R.drawable.ic_sunset_notification
-                )
-            }
-            tide?.let {
-                DetailRow(
-                    tag = "beacon_tide",
-                    title = it,
-                    description = stringResource(R.string.tide),
-                    icon = tideIcon
-                )
-            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.delete)) },
+                leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null) },
+                onClick = {
+                    isMenuOpen = false
+                    onDelete()
+                }
+            )
         }
     }
 }
@@ -522,109 +518,18 @@ private fun DetailRow(
     tag: String,
     title: String,
     description: String,
-    @DrawableRes icon: Int,
+    icon: ImageVector,
+    position: TrailSenseGroupPosition,
     onClick: (() -> Unit)? = null
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .testTag(tag),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-        Column(modifier = Modifier.padding(start = TrailSenseSpacing.lg)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun NotesCard(comment: String) {
-    TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.notes),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-        SelectionContainer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = TrailSenseSpacing.md)
-                .testTag("comment_text")
-        ) {
-            Text(
-                text = comment,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionRow(
-    showEdit: Boolean,
-    onNavigate: () -> Unit,
-    onEdit: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TrailSenseSpacing.screen),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            TrailSenseButton(
-                text = stringResource(R.string.navigate),
-                onClick = onNavigate,
-                modifier = Modifier.weight(1f)
-            )
-            if (showEdit) {
-                FilledTonalIconButton(
-                    onClick = onEdit,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .testTag("edit_btn"),
-                    colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_edit),
-                        contentDescription = stringResource(R.string.edit)
-                    )
-                }
-            }
-        }
-    }
+    TrailSenseListItem(
+        title = title,
+        subtitle = description,
+        icon = rememberVectorPainter(icon),
+        position = position,
+        onClick = onClick,
+        modifier = Modifier.testTag(tag)
+    )
 }
 
 @Preview(showBackground = true)
@@ -634,12 +539,13 @@ private fun BeaconDetailsScreenPreview() {
         BeaconDetailsScreen(
             beacon = null,
             distance = "1.2 mi",
+            direction = "45° NE",
             altitude = "1000 ft",
             temperature = "80 °F / 60 °F",
             sunrise = "6:00 AM",
             sunset = "7:30 PM",
             tide = "High",
-            tideIcon = R.drawable.ic_tide_high,
+            tideIcon = TrailIcons.TideHigh,
             onShare = {},
             onDelete = {},
             onNavigate = {},
@@ -648,3 +554,5 @@ private fun BeaconDetailsScreenPreview() {
         )
     }
 }
+
+private const val VALUE_PLACEHOLDER = "--"

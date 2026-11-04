@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -12,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -23,6 +26,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 
@@ -36,7 +40,9 @@ fun PathPointRow(
     onNavigate: (PathPoint) -> Unit,
     onNavigateDirect: (PathPoint) -> Unit,
     onView: (PathPoint) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val title = point.time?.toZonedDateTime()?.let { date ->
@@ -59,7 +65,7 @@ fun PathPointRow(
 
     TrailSenseListItem(
         title = title,
-        subtitle = listOfNotNull(subtitle, networkText).joinToString("\n"),
+        subtitle = listOfNotNull(subtitle, networkText).joinToString(" · ").ifBlank { null },
         icon = point.cellSignal?.let {
             painterResource(CellSignalUtils.getCellQualityImage(it.quality))
         },
@@ -70,8 +76,8 @@ fun PathPointRow(
                 modifier = Modifier.testTag("waypoint_menu_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_menu_dots),
-                    contentDescription = null,
+                    painter = rememberVectorPainter(TrailIcons.MenuDots),
+                    contentDescription = stringResource(R.string.details),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -110,6 +116,9 @@ fun PathPointRow(
             }
         },
         onClick = { onView(point) },
+        onLongClick = { menuOpen = true },
+        position = position,
+        containerColor = containerColor,
         animateEntrance = false,
         modifier = modifier.testTag("waypoint_time")
     )
@@ -123,6 +132,6 @@ private fun getPathPointSubtitle(
 ): String? {
     return point.elevation?.let {
         val elevation = Distance.meters(it).convertTo(baseDistanceUnits)
-        "${formatService.formatDistance(elevation, Units.getDecimalPlaces(elevation.units), false)}    $slopeText"
+        "${formatService.formatDistance(elevation, Units.getDecimalPlaces(elevation.units), false)} · $slopeText"
     }
 }

@@ -2,23 +2,16 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import android.os.Bundle
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -26,9 +19,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,14 +36,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -96,6 +91,7 @@ fun CreateFieldGuideSightingToolScreen(host: TrailSenseDestinationHost) {
         }
     }
 
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     CreateFieldGuideSightingScreen(
         datetime = controller.datetime,
         location = controller.location,
@@ -122,7 +118,8 @@ fun CreateFieldGuideSightingToolScreen(host: TrailSenseDestinationHost) {
             if (controller.location == null) {
                 controller.locationAutofillRequest++
             }
-        }
+        },
+        onBack = { dispatcher?.onBackPressed() }
     )
 }
 
@@ -255,101 +252,99 @@ private fun CreateFieldGuideSightingScreen(
     onBeaconSelected: (Beacon) -> Unit,
     elevationAutofillRequest: Int,
     onAutoElevationClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit = {}
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-            ) {
-                CreateFieldGuideSightingHeader(
-                    title = stringResource(R.string.record_sighting),
-                    onSave = onSave
-                )
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .testTag("field_guide_sighting_scroll")
-                        .padding(TrailSenseSpacing.screen),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+    val saveLabel = stringResource(R.string.save)
+    val locationTitle = stringResource(R.string.location)
+    val notesTitle = stringResource(R.string.tool_notes_title)
+    val harvestedLabel = stringResource(R.string.harvested)
+    val showOnMapLabel = stringResource(R.string.show_on_map)
+
+    Box(modifier = modifier.testTag("field_guide_sighting_scroll")) {
+        TrailSensePage(
+            title = stringResource(R.string.record_sighting),
+            onBack = onBack,
+            backLabel = stringResource(R.string.back),
+            modifier = Modifier.testTag("field_guide_sighting_title"),
+            actions = {
+                IconButton(
+                    onClick = onSave,
+                    modifier = Modifier.testTag("field_guide_sighting_save_btn")
                 ) {
-                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    SightingSectionLabel(
-                        icon = painterResource(R.drawable.ic_date),
-                        text = stringResource(R.string.record_sighting)
+                    Icon(
+                        painter = rememberVectorPainter(TrailIcons.Check),
+                        contentDescription = saveLabel
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                }
+            }
+        ) {
+            trailSenseSection(key = "time") {
+                row { position ->
                     DateTimeInput(
                         datetime = datetime,
-                        onDatetimeChange = onDatetimeChange
+                        onDatetimeChange = onDatetimeChange,
+                        position = position
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    SightingSectionLabel(
-                        icon = painterResource(R.drawable.ic_location),
-                        text = stringResource(R.string.location)
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                }
+            }
+
+            trailSenseSection(key = "where", title = locationTitle) {
+                row { position ->
                     CoordinateInput(
                         location = location,
                         onLocationChange = onLocationChange,
                         autoFillRequest = locationAutofillRequest,
                         onAutoLocationClick = onAutoLocationClick,
-                        onBeaconSelected = onBeaconSelected
+                        onBeaconSelected = onBeaconSelected,
+                        position = position
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-                    SightingSectionLabel(
-                        icon = painterResource(R.drawable.ic_altitude),
-                        text = stringResource(R.string.elevation)
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                }
+                row { position ->
                     ElevationInput(
                         elevation = elevation,
                         onElevationChange = onElevationChange,
                         autoFillRequest = elevationAutofillRequest,
-                        onAutoElevationClick = onAutoElevationClick
+                        onAutoElevationClick = onAutoElevationClick,
+                        position = position
                     )
                 }
+            }
 
-                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    SightingSwitch(
-                        tag = "harvested",
-                        text = stringResource(R.string.harvested),
+            trailSenseSection(key = "options") {
+                row { position ->
+                    TrailSenseSwitchRow(
+                        label = harvestedLabel,
                         checked = harvested,
-                        onCheckedChange = onHarvestedChange
-                    )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
-                    SightingSwitch(
-                        tag = "show_on_map",
-                        text = stringResource(R.string.show_on_map),
-                        checked = showOnMap,
-                        onCheckedChange = onShowOnMapChange
+                        onCheckedChange = onHarvestedChange,
+                        position = position,
+                        modifier = Modifier.testTag("harvested")
                     )
                 }
-
-                TrailSenseCard(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    SightingSectionLabel(
-                        icon = painterResource(R.drawable.ic_tool_notes),
-                        text = stringResource(R.string.tool_notes_title)
+                row { position ->
+                    TrailSenseSwitchRow(
+                        label = showOnMapLabel,
+                        checked = showOnMap,
+                        onCheckedChange = onShowOnMapChange,
+                        position = position,
+                        modifier = Modifier.testTag("show_on_map")
                     )
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
+                }
+            }
+
+            trailSenseSection(key = "notes", title = notesTitle) {
+                row { position ->
                     NotesInput(
                         notes = notes,
-                        onNotesChange = onNotesChange
+                        onNotesChange = onNotesChange,
+                        position = position
                     )
                 }
+            }
 
+            item(key = "save") {
                 TrailSenseButton(
-                    text = stringResource(R.string.save),
+                    text = saveLabel,
                     onClick = onSave,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -357,79 +352,6 @@ private fun CreateFieldGuideSightingScreen(
                 )
             }
         }
-        }
-    }
-}
-
-@Composable
-private fun CreateFieldGuideSightingHeader(
-    title: String,
-    onSave: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = TrailSenseSpacing.md)
-                    .testTag("field_guide_sighting_title"),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            IconButton(
-                onClick = onSave,
-                modifier = Modifier
-                    .size(TrailSenseSize.minimumTouchTarget)
-                    .testTag("field_guide_sighting_save_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_check),
-                    contentDescription = stringResource(R.string.save)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SightingSectionLabel(
-    icon: Painter,
-    text: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(36.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
 
@@ -437,6 +359,7 @@ private fun SightingSectionLabel(
 private fun DateTimeInput(
     datetime: LocalDateTime?,
     onDatetimeChange: (LocalDateTime?) -> Unit,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -445,20 +368,53 @@ private fun DateTimeInput(
     val selected = datetime ?: LocalDateTime.now()
     val text = formatter.formatDateTime(selected.toZonedDateTime(), relative = true)
 
-    OutlinedTextField(
-        value = text,
-        onValueChange = {},
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable {
-                CustomUiUtils.pickDatetime(context, prefs.use24HourTime, selected) {
-                    onDatetimeChange(it)
-                }
+    TrailSenseListItem(
+        title = stringResource(R.string.time),
+        subtitle = text,
+        icon = rememberVectorPainter(TrailIcons.Date),
+        position = position,
+        onClick = {
+            CustomUiUtils.pickDatetime(context, prefs.use24HourTime, selected) {
+                onDatetimeChange(it)
             }
-            .testTag("time"),
-        readOnly = true,
-        singleLine = true
+        },
+        modifier = modifier.testTag("time")
     )
+}
+
+@Composable
+private fun SightingAutofillButton(
+    isLoading: Boolean,
+    icon: Painter,
+    contentDescription: String,
+    buttonTag: String,
+    loadingTag: String,
+    onClick: () -> Unit
+) {
+    if (isLoading) {
+        Box(
+            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(24.dp)
+                    .testTag(loadingTag),
+                strokeWidth = 2.dp
+            )
+        }
+    } else {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.testTag(buttonTag)
+        ) {
+            Icon(
+                painter = icon,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
 }
 
 @Composable
@@ -468,6 +424,7 @@ private fun CoordinateInput(
     autoFillRequest: Int,
     onAutoLocationClick: () -> Unit,
     onBeaconSelected: (Beacon) -> Unit,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -512,18 +469,26 @@ private fun CoordinateInput(
         }
     }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isLoadingLocation) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag("gps_loading")
-            )
-        } else {
-            IconButton(
+    val isInvalid = locationText.isNotBlank() && parsedCoordinate == null
+    FieldGuideTextField(
+        value = locationText,
+        onValueChange = {
+            locationText = it
+            onLocationChange(Coordinate.parse(it))
+        },
+        label = stringResource(R.string.location),
+        position = position,
+        modifier = modifier.testTag("location"),
+        enabled = !isLoadingLocation,
+        isError = isInvalid,
+        supportingText = if (isInvalid) stringResource(R.string.coordinate_input_invalid_location) else null,
+        leadingIcon = {
+            SightingAutofillButton(
+                isLoading = isLoadingLocation,
+                icon = rememberVectorPainter(TrailIcons.Location),
+                contentDescription = stringResource(R.string.gps),
+                buttonTag = "gps_btn",
+                loadingTag = "gps_loading",
                 onClick = {
                     Pickers.item(
                         context,
@@ -547,50 +512,28 @@ private fun CoordinateInput(
                             }
                         }
                     }
-                },
-                modifier = Modifier.testTag("gps_btn")
+                }
+            )
+        },
+        trailingIcon = {
+            IconButton(
+                onClick = { showHelp = true },
+                modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_location),
-                    contentDescription = stringResource(R.string.gps)
+                    painter = rememberVectorPainter(TrailIcons.Help),
+                    contentDescription = stringResource(R.string.location_input_help_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-        Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = locationText,
-            onValueChange = {
-                locationText = it
-                onLocationChange(Coordinate.parse(it))
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("location"),
-            label = { Text(stringResource(R.string.location)) },
-            isError = locationText.isNotBlank() && parsedCoordinate == null,
-            supportingText = {
-                if (locationText.isNotBlank() && parsedCoordinate == null) {
-                    Text(stringResource(R.string.coordinate_input_invalid_location))
-                }
-            },
-            singleLine = true,
-            enabled = !isLoadingLocation
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        IconButton(
-            onClick = { showHelp = true },
-            modifier = Modifier.testTag("coordinate_input_help_btn")
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_help),
-                contentDescription = stringResource(R.string.location_input_help_title)
-            )
-        }
-    }
+    )
 
     if (showHelp) {
         AlertDialog(
             onDismissRequest = { showHelp = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = RoundedCornerShape(28.dp),
             confirmButton = {
                 TextButton(onClick = { showHelp = false }) {
                     Text(stringResource(android.R.string.ok))
@@ -608,6 +551,7 @@ private fun ElevationInput(
     onElevationChange: (Distance?) -> Unit,
     autoFillRequest: Int,
     onAutoElevationClick: () -> Unit,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -661,18 +605,24 @@ private fun ElevationInput(
         }
     }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        if (isLoadingElevation) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag("elevation_loading")
-            )
-        } else {
-            IconButton(
+    FieldGuideTextField(
+        value = elevationText,
+        onValueChange = {
+            elevationText = it
+            publish(text = it)
+        },
+        label = stringResource(R.string.elevation),
+        position = position,
+        modifier = modifier.testTag("elevation"),
+        enabled = !isLoadingElevation,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        leadingIcon = {
+            SightingAutofillButton(
+                isLoading = isLoadingElevation,
+                icon = rememberVectorPainter(TrailIcons.Altitude),
+                contentDescription = stringResource(R.string.elevation),
+                buttonTag = "elevation_gps_btn",
+                loadingTag = "elevation_loading",
                 onClick = {
                     Pickers.item(
                         context,
@@ -699,59 +649,39 @@ private fun ElevationInput(
                             }
                         }
                     }
-                },
-                modifier = Modifier.testTag("elevation_gps_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_altitude),
-                    contentDescription = stringResource(R.string.elevation)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = elevationText,
-            onValueChange = {
-                elevationText = it
-                publish(text = it)
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("elevation"),
-            label = { Text(stringResource(R.string.elevation)) },
-            singleLine = true,
-            enabled = !isLoadingElevation
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Box(modifier = Modifier.weight(1f)) {
-            OutlinedButton(
-                onClick = { isUnitOpen = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("elevation_unit")
-            ) {
-                Text(formatter.getDistanceUnitName(unit))
-            }
-            DropdownMenu(
-                expanded = isUnitOpen,
-                onDismissRequest = { isUnitOpen = false }
-            ) {
-                units.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(formatter.getDistanceUnitName(option)) },
-                        onClick = {
-                            isUnitOpen = false
-                            val converted = parseElevation(elevationText, unit)?.convertTo(option)
-                            unit = option
-                            elevationText = formatElevationAmount(converted, option)
-                            publish(text = elevationText, newUnit = option)
-                        }
-                    )
+                }
+            )
+        },
+        trailingIcon = {
+            Box {
+                TextButton(
+                    onClick = { isUnitOpen = true },
+                    modifier = Modifier
+                        .padding(end = TrailSenseSpacing.xs)
+                        .testTag("elevation_unit")
+                ) {
+                    Text(formatter.getDistanceUnitName(unit))
+                }
+                DropdownMenu(
+                    expanded = isUnitOpen,
+                    onDismissRequest = { isUnitOpen = false }
+                ) {
+                    units.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(formatter.getDistanceUnitName(option)) },
+                            onClick = {
+                                isUnitOpen = false
+                                val converted = parseElevation(elevationText, unit)?.convertTo(option)
+                                unit = option
+                                elevationText = formatElevationAmount(converted, option)
+                                publish(text = elevationText, newUnit = option)
+                            }
+                        )
+                    }
                 }
             }
         }
-    }
+    )
 }
 
 private fun parseElevation(
@@ -776,39 +706,22 @@ private fun formatElevationAmount(
 }
 
 @Composable
-private fun SightingSwitch(
-    tag: String,
-    text: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TrailSenseSwitchRow(
-        label = text,
-        checked = checked,
-        onCheckedChange = onCheckedChange,
-        modifier = modifier.testTag(tag)
-    )
-}
-
-@Composable
 private fun NotesInput(
     notes: String?,
     onNotesChange: (String?) -> Unit,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val hint = stringResource(R.string.tool_notes_title)
-
-    OutlinedTextField(
+    FieldGuideTextField(
         value = notes.orEmpty(),
         onValueChange = { onNotesChange(it.ifBlank { null }) },
-        modifier = modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .testTag("notes"),
-        label = { Text(hint) },
+        label = stringResource(R.string.tool_notes_title),
+        position = position,
+        modifier = modifier.testTag("notes"),
+        singleLine = false,
         minLines = 6,
-        maxLines = 8
+        maxLines = 8,
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
     )
 }
 
