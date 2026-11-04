@@ -2146,4 +2146,7 @@
     <string name="back">Back</string>
     <string name="theme_mode_auto">Auto</string>
     <string name="search_tools">Search tools</string>
+    <!-- Family redesign: beacons, notes -->
+    <string name="note_more_options">More options</string>
+    <string name="notes_empty_description">Write down anything you want to keep with you on the trail.</string>
 </resources>
