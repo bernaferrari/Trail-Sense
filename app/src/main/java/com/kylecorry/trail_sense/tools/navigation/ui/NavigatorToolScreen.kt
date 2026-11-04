@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -1090,15 +1091,16 @@ private fun NavigationTitle(
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = state.title,
-            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.Medium,
             color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
             maxLines = 1
         )
         Text(
             text = state.direction,
-            style = MaterialTheme.typography.titleMedium,
-            color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+            fontWeight = FontWeight.Medium,
+            color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
         )
     }
@@ -1256,24 +1258,28 @@ private fun NavigatorHost(
                         .weight(1f)
                         .height(56.dp)
                 ) {
-                    Icon(TrailSenseIcons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(TrailSenseIcons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(24.dp))
                     Text(
                         stringResource(R.string.navigation_places),
                         modifier = Modifier.padding(start = TrailSenseSpacing.sm),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
                 androidx.compose.material3.Button(
                     onClick = { views.onBeaconLongClick?.invoke() },
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(1.25f)
                         .height(56.dp)
                 ) {
-                    Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(24.dp))
                     Text(
                         stringResource(R.string.navigation_save_spot),
                         modifier = Modifier.padding(start = TrailSenseSpacing.sm),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }

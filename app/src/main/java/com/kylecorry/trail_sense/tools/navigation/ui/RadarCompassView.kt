@@ -118,6 +118,7 @@ class RadarCompassView(
     private var surfaceColor: Int = Color.WHITE
     private var hubColor: Int = Color.WHITE
     private var onPrimaryColor: Int = Color.WHITE
+    private var outlineColor: Int = Color.GRAY
     private val hubPolygon = androidx.compose.material3.MaterialShapes.Cookie12Sided
     private val dialPolygon = androidx.compose.material3.MaterialShapes.Cookie12Sided
     private val hubMorph = androidx.graphics.shapes.Morph(
@@ -145,6 +146,7 @@ class RadarCompassView(
         surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
         hubColor = MaterialTheme.colorScheme.primaryContainer.toArgb()
         onPrimaryColor = MaterialTheme.colorScheme.onPrimary.toArgb()
+        outlineColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
         Canvas(
             modifier = modifier
                 .fillMaxSize()
@@ -245,13 +247,13 @@ class RadarCompassView(
         paint.isAntiAlias = true
         paint.style = Paint.Style.STROKE
         paint.strokeCap = Paint.Cap.BUTT
-        for (degrees in 0 until 360 step 2) {
+        for (degrees in 0 until 360 step 5) {
             val major = degrees % 30 == 0
             val mid = degrees % 10 == 0
-            paint.color = textColor
-            paint.alpha = when { major -> 255; mid -> 170; else -> 90 }
-            paint.strokeWidth = when { major -> dp(2.5f); mid -> dp(1.6f); else -> dp(1f) }
-            val len = when { major -> dp(16f); mid -> dp(12f); else -> dp(8f) }
+            paint.color = if (major) textColor else outlineColor
+            paint.alpha = when { major -> 255; mid -> 160; else -> 100 }
+            paint.strokeWidth = when { major -> dp(3f); mid -> dp(2f); else -> dp(1.5f) }
+            val len = when { major -> dp(14f); mid -> dp(9f); else -> dp(6f) }
             val rad = Math.toRadians((degrees - 90).toDouble())
             val c = cos(rad).toFloat()
             val sn = sin(rad).toFloat()
@@ -261,17 +263,18 @@ class RadarCompassView(
         paint.reset()
         paint.isAntiAlias = true
         paint.color = textColor
-        paint.alpha = 200
-        paint.textSize = sp(13f)
+        paint.alpha = 150
+        paint.textSize = sp(12f)
         paint.textAlign = Paint.Align.CENTER
-        val numberRadius = r + dp(16f)
+        val numberRadius = r + dp(15f)
         for (degrees in 30 until 360 step 30) {
+            if (degrees % 90 == 0) continue
             val rad = Math.toRadians((degrees - 90).toDouble())
             val x = centerPixel.x + cos(rad).toFloat() * numberRadius
             val y = centerPixel.y + sin(rad).toFloat() * numberRadius
             nativeCanvas.save()
             nativeCanvas.rotate(azimuth, x, y)
-            nativeCanvas.drawText(degrees.toString(), x, y + sp(13f) * 0.36f, paint)
+            nativeCanvas.drawText(degrees.toString(), x, y + sp(12f) * 0.36f, paint)
             nativeCanvas.restore()
         }
         // Cardinal letters inside the ring, upright; north in primary, with a triangle at the ring.
@@ -294,10 +297,10 @@ class RadarCompassView(
         paint.typeface = Typeface.DEFAULT
         // North's triangle takes the 0's place outside the ring, pointing in at the north tick.
         val tri = Path().apply {
-            val tip = centerPixel.y - r - dp(4f)
-            moveTo(centerPixel.x, tip)
-            lineTo(centerPixel.x - dp(8f), tip - dp(13f))
-            lineTo(centerPixel.x + dp(8f), tip - dp(13f))
+            val base = centerPixel.y - r - dp(3f)
+            moveTo(centerPixel.x, base + dp(10f))
+            lineTo(centerPixel.x - dp(6f), base)
+            lineTo(centerPixel.x + dp(6f), base)
             close()
         }
         paint.reset()
@@ -317,7 +320,7 @@ class RadarCompassView(
         val target = (1f - (toCardinal / DETENT_DEGREES)).coerceIn(0f, 1f)
         hubProgress += (target - hubProgress) * 0.25f
         if (kotlin.math.abs(target - hubProgress) > 0.01f) requestRedraw()
-        val side = outerRadius * 0.86f * 2f * 0.56f
+        val side = outerRadius * 0.86f * 2f * 0.59f
         val path = android.graphics.Path()
         hubMorph.toPath(hubProgress, path)
         path.transform(android.graphics.Matrix().apply {
@@ -337,9 +340,13 @@ class RadarCompassView(
         paint.isAntiAlias = true
         paint.style = Paint.Style.STROKE
         paint.strokeCap = Paint.Cap.ROUND
-        paint.color = textColor
+        paint.color = surfaceColor
+        paint.strokeWidth = dp(8f)
+        nativeCanvas.drawLine(centerPixel.x, centerPixel.y - r - dp(12f), centerPixel.x, centerPixel.y - r + dp(16f), paint)
+        // Lined up with a cardinal, the lubber takes the primary colour with the hub's detent.
+        paint.color = androidx.core.graphics.ColorUtils.blendARGB(textColor, primaryColor, hubProgress)
         paint.strokeWidth = dp(4f)
-        nativeCanvas.drawLine(centerPixel.x, centerPixel.y - r - dp(10f), centerPixel.x, centerPixel.y - r + dp(20f), paint)
+        nativeCanvas.drawLine(centerPixel.x, centerPixel.y - r - dp(12f), centerPixel.x, centerPixel.y - r + dp(16f), paint)
         if (!crosshair) return
         paint.strokeWidth = dp(1.5f)
         paint.alpha = 120
