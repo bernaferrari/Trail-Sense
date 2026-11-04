@@ -5,6 +5,7 @@
 package com.kylecorry.trail_sense.tools.notes.ui
 
 import androidx.compose.material3.MaterialShapes
+import com.kylecorry.trail_sense.shared.views.NotesEmptyIllustration
 import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
@@ -133,6 +134,7 @@ fun NotesScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolNotes,
+                    illustration = { NotesEmptyIllustration() },
                     title = stringResource(R.string.notes_empty_text),
                     description = stringResource(R.string.notes_empty_description),
                     modifier = Modifier
