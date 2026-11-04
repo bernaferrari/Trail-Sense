@@ -2146,4 +2146,13 @@
     <string name="back">Back</string>
     <string name="theme_mode_auto">Auto</string>
     <string name="search_tools">Search tools</string>
+    <!-- Family redesign: sensor tools -->
+    <string name="lightning_hint_flash">Tap when you see the flash</string>
+    <string name="lightning_hint_thunder">Tap again when you hear the thunder</string>
+    <string name="tool_sound">Sound</string>
+    <string name="tool_vibration">Vibration</string>
+    <string name="metal_detected">Metal detected</string>
+    <string name="metal_not_detected">No metal nearby</string>
+    <string name="turn_back_empty_description">Pick when you need to be back and you\'ll be told when to turn around</string>
+    <string name="turn_back_cancel">Cancel turn back alert</string>
 </resources>

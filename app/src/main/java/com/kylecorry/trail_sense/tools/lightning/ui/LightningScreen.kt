@@ -1,32 +1,35 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,14 +37,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
@@ -50,11 +51,13 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +66,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 
+/**
+ * Lightning distance: the distance is the hero, one big button below it says which event to tap for next (the
+ * flash, then the thunder), and the previous strike sits under it. The hint under the reading replaces the old
+ * numbered instructions card, since the button already names each step.
+ */
 @Composable
 fun LightningScreen(
     modifier: Modifier = Modifier
@@ -106,13 +114,6 @@ fun LightningScreen(
 
     val currentDistance = lightningTime?.let { getDistance(it, now) } ?: strike?.value?.distance
     val relativeDistance = currentDistance?.convertTo(units)?.toRelativeDistance()
-    val distanceText = relativeDistance?.let {
-        formatService.formatDistance(
-            it,
-            Units.getDecimalPlaces(it.units),
-            false
-        )
-    }.orEmpty()
     val isDangerous = relativeDistance?.let { Meteorology.isLightningStrikeDangerous(it) } ?: false
     val previousStrikeText = lastStrike?.let {
         val distance = it.value.distance.convertTo(units).toRelativeDistance()
@@ -129,213 +130,149 @@ fun LightningScreen(
     }.orEmpty()
 
     val waitingForThunder = lightningTime != null
+    val distanceValue = relativeDistance?.let {
+        DecimalFormatter.format(it.value, Units.getDecimalPlaces(it.units), false)
+    } ?: "--"
+    val distanceUnit = formatService.getDistanceUnitName(relativeDistance?.units ?: units, true)
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.tool_lightning_title),
+        modifier = modifier
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             Column(
                 modifier = Modifier
                     .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
+                    .fillMaxWidth()
+                    .padding(vertical = TrailSenseSpacing.xxxl),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
             ) {
-            // Hero distance readout in a tonal primaryContainer card
-            DistanceHero(
-                distanceText = distanceText,
-                isDangerous = isDangerous,
-                waitingForThunder = waitingForThunder,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Primary record action
-            TrailSenseButton(
-                text = stringResource(
-                    if (!waitingForThunder) R.string.lightning else R.string.thunder
-                ),
-                onClick = {
-                    val startedAt = lightningTime
-                    if (startedAt == null) {
-                        lightningTime = Instant.now()
+                val readingColor by animateColorAsState(
+                    targetValue = if (isDangerous) {
+                        MaterialTheme.colorScheme.error
                     } else {
-                        val distance = getDistance(startedAt, Instant.now())
-                        val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
-                        strike?.let { lastStrike = it }
-                        strike = currentStrike
-                        lightningTime = null
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                repo.add(currentStrike)
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                    label = "readingColor"
+                )
+                TrailSenseReading(
+                    value = distanceValue,
+                    unit = distanceUnit,
+                    color = readingColor
+                )
+                Text(
+                    text = when {
+                        isDangerous -> stringResource(R.string.lightning_dangerously_close)
+                        waitingForThunder -> stringResource(R.string.lightning_hint_thunder)
+                        else -> stringResource(R.string.lightning_hint_flash)
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (isDangerous) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+                StrikeButton(
+                    waitingForThunder = waitingForThunder,
+                    onClick = {
+                        val startedAt = lightningTime
+                        if (startedAt == null) {
+                            lightningTime = Instant.now()
+                        } else {
+                            val distance = getDistance(startedAt, Instant.now())
+                            val currentStrike = Reading(LightningStrike(0, distance), Instant.now())
+                            strike?.let { lastStrike = it }
+                            strike = currentStrike
+                            lightningTime = null
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    repo.add(currentStrike)
+                                }
                             }
                         }
                     }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // Instructions and previous strike grouped in a surface card
-            InfoCard(
-                previousStrikeText = previousStrikeText,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        }
-    }
-}
-
-@Composable
-private fun DistanceHero(
-    distanceText: String,
-    isDangerous: Boolean,
-    waitingForThunder: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val hasReading = distanceText.isNotBlank()
-
-    val containerColor by animateColorAsState(
-        targetValue = when {
-            isDangerous -> MaterialTheme.colorScheme.errorContainer
-            else -> MaterialTheme.colorScheme.primaryContainer
-        },
-        animationSpec = tween(durationMillis = 250),
-        label = "heroContainer"
-    )
-    val onContainerColor by animateColorAsState(
-        targetValue = when {
-            isDangerous -> MaterialTheme.colorScheme.onErrorContainer
-            else -> MaterialTheme.colorScheme.onPrimaryContainer
-        },
-        animationSpec = tween(durationMillis = 250),
-        label = "heroOnContainer"
-    )
-
-    // Spring-animate the readout so a new distance value pops into place.
-    val valueScale by animateFloatAsState(
-        targetValue = if (hasReading) 1f else 0.96f,
-        animationSpec = TrailSenseAnimation.standardSpring,
-        label = "heroValueScale"
-    )
-
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.extraLarge,
-        color = containerColor,
-        contentColor = onContainerColor
-    ) {
-        Column(
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.xl,
-                vertical = TrailSenseSpacing.xxl
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            Text(
-                text = if (hasReading) distanceText else "—",
-                modifier = Modifier.scale(valueScale),
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                fontWeight = FontWeight.Bold,
-                color = onContainerColor,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = stringResource(
-                    when {
-                        isDangerous -> R.string.lightning_dangerously_close
-                        waitingForThunder -> R.string.thunder
-                        else -> R.string.lightning
-                    }
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isDangerous) {
-                    onContainerColor
-                } else {
-                    onContainerColor.copy(alpha = 0.7f)
-                },
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun InfoCard(
-    previousStrikeText: String,
-    modifier: Modifier = Modifier
-) {
-    TrailSenseCard(modifier = modifier) {
-        // Instructions section
-        Text(
-            text = stringResource(R.string.instructions),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-        InstructionStep(
-            number = stringResource(R.string.one),
-            iconRes = R.drawable.ic_torch_on,
-            text = stringResource(R.string.lightning)
-        )
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-        InstructionStep(
-            number = stringResource(R.string.two),
-            iconRes = R.drawable.ic_thunder,
-            text = stringResource(R.string.thunder)
-        )
-
-        // Previous strike section
-        if (previousStrikeText.isNotBlank()) {
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-            Text(
-                text = stringResource(R.string.previous),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
-            Text(
-                text = previousStrikeText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun InstructionStep(
-    number: String,
-    iconRes: Int,
-    text: String
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(20.dp)
                 )
+
+                AnimatedVisibility(
+                    visible = previousStrikeText.isNotBlank(),
+                    enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
+                    exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
+                ) {
+                    TrailSenseListItem(
+                        title = stringResource(R.string.previous),
+                        subtitle = previousStrikeText,
+                        icon = painterResource(R.drawable.ic_thunder),
+                        position = TrailSenseGroupPosition.Single
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
+    }
+}
+
+/** The one action: a big button that names the event to tap for next. */
+@Composable
+private fun StrikeButton(
+    waitingForThunder: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val container by animateColorAsState(
+        targetValue = if (waitingForThunder) {
+            MaterialTheme.colorScheme.tertiary
+        } else {
+            MaterialTheme.colorScheme.primary
+        },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "strikeButtonColor"
+    )
+    val content = if (waitingForThunder) {
+        MaterialTheme.colorScheme.onTertiary
+    } else {
+        MaterialTheme.colorScheme.onPrimary
+    }
+    val height = ButtonDefaults.LargeContainerHeight
+    Button(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(height)
+            .trailSensePressScale(interactionSource, 0.97f),
+        shapes = ButtonDefaults.shapesFor(height),
+        colors = ButtonDefaults.buttonColors(containerColor = container, contentColor = content),
+        contentPadding = ButtonDefaults.contentPaddingFor(height)
+    ) {
+        Icon(
+            painter = painterResource(
+                if (waitingForThunder) R.drawable.ic_thunder else R.drawable.ic_torch_on
+            ),
+            contentDescription = null,
+            modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
+        )
+        Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
         Text(
-            text = "$number. $text",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            text = stringResource(if (waitingForThunder) R.string.thunder else R.string.lightning),
+            style = MaterialTheme.typography.headlineSmall
         )
     }
 }
