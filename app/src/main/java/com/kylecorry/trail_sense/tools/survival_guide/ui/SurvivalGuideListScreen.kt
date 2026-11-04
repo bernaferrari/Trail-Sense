@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
+
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -163,46 +165,40 @@ private fun chapterShape(index: Int): androidx.compose.ui.graphics.Shape = when 
 private fun SurvivalGuideHero(item: SurvivalGuideListItem, chapters: Int) {
     SurvivalGuidePressableSurface(
         onClick = item.onClick,
-        shape = RoundedCornerShape(TrailSenseShape.hero),
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
         color = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
         modifier = Modifier.testTag("guide_item")
     ) {
-        Column(
-            Modifier.padding(TrailSenseSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        // One compact row, so four chapters show on the first screen: badge, "Overview", the chapter count.
+        Row(
+            Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SkyFocalShape(
-                    icon = item.icon,
-                    shape = MaterialShapes.Cookie12Sided.toShape(),
-                    size = 84.dp,
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
-                )
-                Spacer(Modifier.width(TrailSenseSpacing.lg))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        stringResource(R.string.sky_survival_chapters, chapters),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.78f)
-                    )
-                    Text(
-                        item.title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.testTag("guide_item_title")
-                    )
-                }
-                Icon(TrailIcons.KeyboardArrowRight, contentDescription = null)
-            }
-            item.subtitle?.takeIf { it.isNotBlank() }?.let {
+            SkyFocalShape(
+                icon = item.icon,
+                shape = MaterialShapes.Cookie12Sided.toShape(),
+                size = 56.dp,
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    it,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.88f)
+                    item.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.testTag("guide_item_title")
+                )
+                Text(
+                    stringResource(R.string.sky_survival_chapters, chapters),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.82f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+            Icon(TrailIcons.KeyboardArrowRight, contentDescription = null)
         }
     }
 }
@@ -225,12 +221,23 @@ private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
             modifier = Modifier.testTag("guide_item")
         ) {
             Row(Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md), verticalAlignment = Alignment.CenterVertically) {
+                // The one urgent door pulses once as the screen opens.
+                val pulse = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(1f) }
+                val pulseSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    pulse.animateTo(1.18f, pulseSpec)
+                    pulse.animateTo(1f, pulseSpec)
+                }
                 TrailSenseShapeBadge(
                     icon = medical.icon,
                     shape = MaterialShapes.SoftBurst.toShape(),
                     size = 48.dp,
                     containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = pulse.value
+                        scaleY = pulse.value
+                    }
                 )
                 Spacer(Modifier.width(TrailSenseSpacing.lg))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -279,7 +286,7 @@ private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
                         Column(
                             Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 148.dp)
+                                .heightIn(min = 128.dp)
                                 .padding(TrailSenseSpacing.lg),
                             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
                         ) {
@@ -307,7 +314,8 @@ private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
                                     it,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 3,
+                                    maxLines = 2,
+
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
