@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.shared.views
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,27 +55,32 @@ class NorthReferenceBadgeState(
             else -> context.getString(R.string.magnetic_north)
         }
 
-        TrailSenseTheme {
-            Row(
-                modifier = Modifier.clickable(
+        // A tonal pill (the app's own theme, not a fixed one), so the reference reads as a chip, not a stray glyph.
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .animateContentSize()
+                .heightIn(min = 32.dp)
+                .clip(CircleShape)
+                .clickable(
                     enabled = showDetailsOnClick,
                     onClick = { onSettingsClick?.invoke() ?: showDescription() }
-                ),
+                )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = if (text != null) 12.dp else 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
-                    painter = rememberVectorPainter(formatter.getCompassReferenceIcon(useTrueNorth)),
+                    imageVector = formatter.getCompassReferenceIcon(useTrueNorth),
                     contentDescription = text,
-                    tint = Color(Resources.androidTextColorSecondary(context)),
                     modifier = Modifier.size(16.dp)
                 )
                 if (text != null) {
-                    Text(
-                        text = text,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    Text(text = text, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

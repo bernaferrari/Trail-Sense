@@ -1,5 +1,26 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.style.TextOverflow
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Activity
@@ -97,148 +118,187 @@ class NavigationSheetView(private val context: Context) {
             sheetVisible = value
         }
 
+    /**
+     * The destination card: a direction badge whose arrow turns toward the destination and warms from the theme's
+     * on-course color to its error color as you drift off course, the name with the bearing, a tonal close button,
+     * and the remaining distance and arrival as a connected pair of large readings.
+     */
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        if (!sheetVisible) {
-            return
+        AnimatedVisibility(
+            visible = sheetVisible,
+            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom)
+        ) {
+            SheetCard(model, modifier)
         }
-        val state = model
+    }
+
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+    @Composable
+    private fun SheetCard(state: SheetModel, modifier: Modifier) {
+        val status = trailSenseStatusColors()
+        val scheme = MaterialTheme.colorScheme
+        val off = state.offCourse
+        val badgeContainer by animateColorAsState(
+            when (off) {
+                null -> scheme.surfaceContainerHighest
+                else -> lerp(status.goodContainer, scheme.errorContainer, off)
+            },
+            label = "badgeContainer"
+        )
+        val badgeContent by animateColorAsState(
+            when (off) {
+                null -> scheme.onSurfaceVariant
+                else -> lerp(status.onGoodContainer, scheme.onErrorContainer, off)
+            },
+            label = "badgeContent"
+        )
+        // Turn the short way round, so the arrow never spins a full circle when the bearing wraps past 180°.
+        var target by remember { mutableFloatStateOf(state.arrowRotation) }
+        target += ((state.arrowRotation - target + 540f) % 360f) - 180f
+        val rotation by animateFloatAsState(target, MaterialTheme.motionScheme.fastSpatialSpec(), label = "arrow")
+
         Surface(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp, bottom = 8.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 2.dp
+            shape = RoundedCornerShape(28.dp),
+            color = scheme.surfaceContainerHigh,
+            shadowElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (state.titleIcon != null) {
-                        Icon(
-                            painter = rememberVectorPainter(state.titleIcon),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier
-                                .padding(start = 12.dp)
-                                .size(24.dp)
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (state.showDirection) {
+                        Surface(
+                            shape = MaterialShapes.Cookie9Sided.toShape(),
+                            color = badgeContainer,
+                            contentColor = badgeContent,
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = state.arrowIcon,
+                                    contentDescription = state.bearingText,
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .rotate(rotation)
+                                )
+                            }
+                        }
                     }
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 8.dp)
-                            .clickable(enabled = titleAction != null) { titleAction?.invoke() },
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(horizontal = 12.dp)
+                            .clickable(enabled = titleAction != null) { titleAction?.invoke() }
                     ) {
-                        Text(
-                            text = state.title,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (state.titleIcon != null) {
+                                Icon(
+                                    imageVector = state.titleIcon,
+                                    contentDescription = state.titleDescription,
+                                    tint = scheme.primary,
+                                    modifier = Modifier
+                                        .padding(end = 6.dp)
+                                        .size(18.dp)
+                                )
+                            }
+                            Text(
+                                text = state.title,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = scheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        if (state.showDirection && state.bearingText.isNotEmpty()) {
+                            Text(
+                                text = state.bearingText,
+                                style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                                color = badgeContent.takeIf { off != null && off > 0.5f } ?: scheme.primary,
+                                maxLines = 1
+                            )
+                        }
                         if (!state.subtitle.isNullOrEmpty()) {
                             Text(
                                 text = state.subtitle,
-                                modifier = Modifier.padding(top = 4.dp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                    if (state.showDirection) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                painter = rememberVectorPainter(state.arrowIcon),
-                                contentDescription = null,
-                                tint = state.arrowColor,
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .rotate(state.arrowRotation)
-                            )
-                            Text(
-                                text = state.bearingText,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
+                                color = scheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                     if (state.showCancel) {
-                        IconButton(onClick = ::requestCancelNavigation) {
+                        FilledTonalIconButton(onClick = ::requestCancelNavigation) {
                             Icon(
-                                imageVector = TrailIcons.Cancel,
-                                contentDescription = stringResource(R.string.stop),
-                                tint = MaterialTheme.colorScheme.onSurface
+                                imageVector = Icons.Rounded.Close,
+                                contentDescription = stringResource(R.string.stop)
                             )
                         }
                     }
                 }
                 if (state.showProgress) {
-                    LinearProgressIndicator(
+                    LinearWavyProgressIndicator(
                         progress = { state.progress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
                 if (state.stats.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        state.stats.forEach { stat ->
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        state.stats.forEachIndexed { index, stat ->
+                            Surface(
+                                shape = trailSenseGridCellShape(index, state.stats.size, 0, 1),
+                                color = scheme.surface,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (stat.valueIcon != null) {
-                                        Icon(
-                                            painter = rememberVectorPainter(stat.valueIcon),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier
-                                                .padding(end = 4.dp)
-                                                .size(16.dp)
+                                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (stat.valueIcon != null) {
+                                            Icon(
+                                                imageVector = stat.valueIcon,
+                                                contentDescription = null,
+                                                tint = scheme.primary,
+                                                modifier = Modifier
+                                                    .padding(end = 6.dp)
+                                                    .size(18.dp)
+                                            )
+                                        }
+                                        Text(
+                                            text = stat.value,
+                                            style = MaterialTheme.typography.headlineSmall
+                                                .copy(fontFeatureSettings = "tnum"),
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = scheme.onSurface,
+                                            maxLines = 1
                                         )
                                     }
-                                    Text(
-                                        text = stat.value,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (stat.labelIcon != null) {
-                                        Icon(
-                                            painter = rememberVectorPainter(stat.labelIcon),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier
-                                                .padding(end = 4.dp)
-                                                .size(14.dp)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (stat.labelIcon != null) {
+                                            Icon(
+                                                imageVector = stat.labelIcon,
+                                                contentDescription = null,
+                                                tint = scheme.onSurfaceVariant,
+                                                modifier = Modifier
+                                                    .padding(end = 4.dp)
+                                                    .size(14.dp)
+                                            )
+                                        }
+                                        Text(
+                                            text = stat.label,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = scheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
-                                    Text(
-                                        text = stat.label,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        textAlign = TextAlign.Center
-                                    )
                                 }
                             }
                         }
@@ -470,7 +530,8 @@ class NavigationSheetView(private val context: Context) {
                 arrowIcon = TrailIcons.CompassUnavailable,
                 arrowRotation = 0f,
                 arrowColor = Color(Resources.androidTextColorSecondary(context)),
-                bearingText = bearingText
+                bearingText = bearingText,
+                offCourse = null
             )
         }
         val turn = deltaAngle(values.bearing.value, guidance.targetBearing.value)
@@ -478,7 +539,9 @@ class NavigationSheetView(private val context: Context) {
             arrowIcon = TrailIcons.NavigationArrow,
             arrowRotation = turn,
             arrowColor = Color(directionColor(turn.absoluteValue)),
-            bearingText = bearingText
+            bearingText = bearingText,
+            offCourse = ((turn.absoluteValue - ON_TARGET_DEGREES) / (WRONG_DIRECTION_DEGREES - ON_TARGET_DEGREES))
+                .coerceIn(0f, 1f)
         )
     }
 
@@ -537,7 +600,8 @@ class NavigationSheetView(private val context: Context) {
         val arrowIcon: ImageVector,
         val arrowRotation: Float,
         val arrowColor: Color,
-        val bearingText: String
+        val bearingText: String,
+        val offCourse: Float?
     ) {
         fun asModel(
             title: String,
@@ -560,6 +624,7 @@ class NavigationSheetView(private val context: Context) {
                 arrowRotation = arrowRotation,
                 arrowColor = arrowColor,
                 bearingText = bearingText,
+                offCourse = offCourse,
                 showProgress = showProgress,
                 progress = progress,
                 stats = stats
@@ -578,6 +643,8 @@ class NavigationSheetView(private val context: Context) {
         val arrowRotation: Float = 0f,
         val arrowColor: Color = Color.Unspecified,
         val bearingText: String = "",
+        /** 0 on course, 1 heading the wrong way; null without a compass. */
+        val offCourse: Float? = null,
         val showProgress: Boolean = false,
         val progress: Float = 0f,
         val stats: List<SheetStat> = emptyList()
