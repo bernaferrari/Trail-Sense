@@ -1,5 +1,22 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -1040,6 +1057,8 @@ private fun PathOverviewHost(
                 onClick = views.pathActions.onAddPointClick,
                 icon = { Icon(rememberVectorPainter(TrailIcons.Add), contentDescription = null) },
                 text = { Text(stringResource(R.string.point)) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.testTag("add_point_btn")
             )
         }
@@ -1061,16 +1080,28 @@ private fun PathOverviewHost(
         }
 
         trailSenseSection(key = "elevation", title = context.getString(R.string.elevation)) {
-            row { position ->
-                TrailSenseGroupCard(position = position) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                    ) {
-                        PathStat(views.pathElevationGain, Modifier.weight(1f))
-                        PathStat(views.pathElevationLoss, Modifier.weight(1f))
-                    }
-                }
+            row { _ ->
+                TrailSenseStatGrid(
+                    stats = listOfNotNull(
+                        views.pathElevationGain.takeIf { it.isVisible }?.let {
+                            TrailSenseStat(
+                                label = it.description,
+                                value = it.title.ifBlank { "–" },
+                                tone = TrailSenseTone.Tertiary,
+                                icon = it.icon
+                            )
+                        },
+                        views.pathElevationLoss.takeIf { it.isVisible }?.let {
+                            TrailSenseStat(
+                                label = it.description,
+                                value = it.title.ifBlank { "–" },
+                                tone = TrailSenseTone.Primary,
+                                icon = it.icon
+                            )
+                        }
+                    ),
+                    columns = 2
+                )
             }
             row { position ->
                 TrailSenseGroupCard(
@@ -1097,23 +1128,25 @@ private fun PathOverviewHost(
             }
         }
 
-        trailSenseSection(key = "navigate", title = context.getString(R.string.navigate)) {
-            row { position ->
-                TrailSenseListItem(
-                    title = context.getString(R.string.path_direction_to_start),
-                    icon = rememberVectorPainter(TrailIcons.NavigationArrow),
-                    iconRotation = 180f,
-                    position = position,
-                    onClick = views.pathActions.onFollowToStartClick
-                )
-            }
-            row { position ->
-                TrailSenseListItem(
-                    title = context.getString(R.string.path_direction_to_end),
-                    icon = rememberVectorPainter(TrailIcons.NavigationArrow),
-                    position = position,
-                    onClick = views.pathActions.onFollowToEndClick
-                )
+        item(key = "navigate") {
+            Column {
+                TrailSenseGroupHeader(context.getString(R.string.navigate))
+                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                    PathNavigateButton(
+                        label = context.getString(R.string.path_direction_to_start),
+                        rotation = 180f,
+                        first = true,
+                        onClick = views.pathActions.onFollowToStartClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PathNavigateButton(
+                        label = context.getString(R.string.path_direction_to_end),
+                        rotation = 0f,
+                        first = false,
+                        onClick = views.pathActions.onFollowToEndClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
 
@@ -1125,12 +1158,13 @@ private fun PathOverviewHost(
                     position = position,
                     onClick = style.onColorClick,
                     trailing = {
-                        Box(
+                        Surface(
                             modifier = Modifier
                                 .padding(end = TrailSenseSpacing.sm)
-                                .size(28.dp)
-                                .background(ComposeColor(style.pathColor), CircleShape)
-                        )
+                                .size(32.dp),
+                            shape = MaterialShapes.Cookie9Sided.toShape(),
+                            color = ComposeColor(style.pathColor)
+                        ) {}
                     },
                     modifier = Modifier.testTag("path_color")
                 )
@@ -1177,6 +1211,10 @@ private fun PathMapPreview(views: PathOverviewViews) {
         animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "pathMapHeight"
     )
+    val mapBackground = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
+    SideEffect {
+        views.pathImage.backgroundTintList = ColorStateList.valueOf(mapBackground)
+    }
     Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
         Box(
             modifier = Modifier
@@ -1209,45 +1247,134 @@ private fun PathMapPreview(views: PathOverviewViews) {
     }
 }
 
-/** The one fact you open a path for: how far it goes, with how long it takes, its points and difficulty under it. */
+/**
+ * The one fact you open a path for, as the Spotlight: how far it goes, on the path's own colour as a cookie badge,
+ * with how long it took, its points and its difficulty as connected tiles inside.
+ */
 @Composable
 private fun PathSummaryHero(views: PathOverviewViews) {
     val distance = views.pathDistance
-    TrailSenseHeroCard(
+    val pathColor = ComposeColor(views.pathStyleControls.pathColor)
+    val onPathColor = if (pathColor.luminance() > 0.5f) ComposeColor.Black else ComposeColor.White
+    TrailSenseSpotlight(
         eyebrow = distance.description,
         title = distance.title.ifBlank { stringResource(R.string.dash) },
-        icon = rememberVectorPainter(distance.icon),
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        titleStyle = MaterialTheme.typography.displaySmall,
+        tone = TrailSenseTone.Primary,
+        badge = {
+            TrailSenseShapeBadge(
+                icon = distance.icon,
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                size = 64.dp,
+                containerColor = pathColor,
+                contentColor = onPathColor
+            )
+        },
         modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            PathHeroStat(views.pathDuration, Modifier.weight(1f))
-            PathHeroStat(views.pathWaypoints, Modifier.weight(1f))
-            PathHeroStat(views.pathDifficulty, Modifier.weight(1f))
+        val stats = listOf(views.pathDuration, views.pathWaypoints, views.pathDifficulty)
+        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+            stats.forEachIndexed { index, state ->
+                PathHeroStat(
+                    state,
+                    shape = RoundedCornerShape(
+                        topStart = if (index == 0) 20.dp else 6.dp,
+                        bottomStart = if (index == 0) 20.dp else 6.dp,
+                        topEnd = if (index == stats.lastIndex) 20.dp else 6.dp,
+                        bottomEnd = if (index == stats.lastIndex) 20.dp else 6.dp
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun PathHeroStat(state: PathDataPointState, modifier: Modifier = Modifier) {
+private fun PathHeroStat(
+    state: PathDataPointState,
+    shape: androidx.compose.ui.graphics.Shape,
+    modifier: Modifier = Modifier
+) {
     val contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-        Text(
-            text = state.title.ifBlank { stringResource(R.string.dash) },
-            style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-            color = contentColor,
-            maxLines = 1
-        )
-        Text(
-            text = state.description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = contentColor.copy(alpha = 0.82f),
-            maxLines = 1
-        )
+    Surface(
+        modifier = modifier,
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+        contentColor = contentColor
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            Icon(
+                painter = rememberVectorPainter(state.icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = state.title.ifBlank { stringResource(R.string.dash) },
+                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = state.description,
+                style = MaterialTheme.typography.labelMedium,
+                color = contentColor.copy(alpha = 0.8f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+/** One half of the navigate pair: an arrow in a cookie and where it takes you. */
+@Composable
+private fun PathNavigateButton(
+    label: String,
+    rotation: Float,
+    first: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val outer = 24.dp
+    val inner = 6.dp
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(
+            topStart = if (first) outer else inner,
+            bottomStart = if (first) outer else inner,
+            topEnd = if (first) inner else outer,
+            bottomEnd = if (first) inner else outer
+        ),
+        color = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Row(
+            modifier = Modifier
+                .heightIn(min = 76.dp)
+                .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PlacesBadge(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                icon = TrailIcons.NavigationArrow,
+                shape = MaterialShapes.Cookie4Sided.toShape(),
+                size = 40.dp,
+                iconRotation = rotation
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.md))
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
