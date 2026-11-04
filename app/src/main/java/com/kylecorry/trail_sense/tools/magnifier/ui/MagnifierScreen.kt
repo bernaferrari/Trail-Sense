@@ -24,15 +24,19 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.ui.graphics.Color
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
-import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +66,6 @@ import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseChoiceColors
 
 @Composable
 internal fun MagnifierScreen(
@@ -133,7 +136,16 @@ internal fun MagnifierScreen(
         modifier = modifier,
         actions = {
             if (isCameraEnabled) {
-                IconButton(onClick = { cameraState.setTorch(!cameraState.torchOn) }) {
+                // A toggle that fills when the torch is on, so its state reads at a glance.
+                FilledTonalIconToggleButton(
+                    checked = cameraState.torchOn,
+                    onCheckedChange = { cameraState.setTorch(it) },
+                    colors = IconButtonDefaults.filledTonalIconToggleButtonColors(
+                        containerColor = Color.Transparent,
+                        checkedContainerColor = MaterialTheme.colorScheme.primary,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
                     Icon(
                         painter = rememberVectorPainter(
                             if (cameraState.torchOn) TrailIcons.TorchOn else TrailIcons.TorchOff
@@ -200,27 +212,25 @@ internal fun MagnifierScreen(
                     // A frozen picture doesn't zoom.
                     enabled = frozenFrame == null
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                     MagnifierToggle(
                         checked = isCloseUpFocus,
                         onCheckedChange = { isCloseUpFocus = it },
                         label = stringResource(R.string.magnifier_close_up),
                         icon = Icons.Default.CenterFocusStrong,
-                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("focus_toggle_btn")
                     )
-                    MagnifierToggle(
-                        checked = frozenFrame != null,
-                        onCheckedChange = { freeze ->
-                            frozenFrame = if (freeze) cameraState.previewImage else null
-                        },
-                        label = stringResource(
+                    TrailSenseButton(
+                        text = stringResource(
                             if (frozenFrame == null) R.string.magnifier_freeze else R.string.magnifier_live
                         ),
                         icon = if (frozenFrame == null) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                        style = TrailSenseButtonStyle.Filled,
+                        onClick = {
+                            frozenFrame = if (frozenFrame == null) cameraState.previewImage else null
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .testTag("freeze_btn")
@@ -244,7 +254,14 @@ private fun ZoomSlider(zoom: Float, onZoom: (Float) -> Unit, enabled: Boolean) {
             enabled = enabled,
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = TrailSenseSpacing.xs)
+                .padding(horizontal = TrailSenseSpacing.xs),
+            track = { state ->
+                SliderDefaults.Track(
+                    sliderState = state,
+                    enabled = enabled,
+                    drawStopIndicator = null
+                )
+            }
         )
         IconButton(onClick = { onZoom(zoom + ZOOM_STEP) }, enabled = enabled) {
             Icon(Icons.Default.ZoomIn, contentDescription = stringResource(R.string.zoom_in))
@@ -252,14 +269,13 @@ private fun ZoomSlider(zoom: Float, onZoom: (Float) -> Unit, enabled: Boolean) {
     }
 }
 
-/** One of the two connected toggles: on is solid primary, like every choice in the family. */
+/** The close-up toggle: tonal when off, solid primary when on. */
 @Composable
 private fun MagnifierToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     label: String,
     icon: ImageVector,
-    shapes: ToggleButtonShapes,
     modifier: Modifier = Modifier
 ) {
     val height = ButtonDefaults.MediumContainerHeight
@@ -267,8 +283,10 @@ private fun MagnifierToggle(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier.heightIn(min = height),
-        shapes = shapes,
-        colors = trailSenseChoiceColors(),
+        colors = ToggleButtonDefaults.tonalToggleButtonColors(
+            checkedContainerColor = MaterialTheme.colorScheme.primary,
+            checkedContentColor = MaterialTheme.colorScheme.onPrimary
+        ),
         contentPadding = ButtonDefaults.contentPaddingFor(height)
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(ToggleButtonDefaults.IconSize))
