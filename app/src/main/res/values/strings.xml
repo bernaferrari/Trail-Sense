@@ -2265,4 +2265,15 @@
     </plurals>
     <!-- Family redesign: climate, clouds -->
     <string name="clouds_empty_description">Log a cloud with the camera, a photo or by hand to see what the sky is saying.</string>
+    <!-- Family redesign: light meter -->
+    <string name="light_meter_illuminance">Illuminance</string>
+    <string name="light_meter_peak">Peak %s</string>
+    <string name="light_meter_reset_peak">Reset peak</string>
+    <string name="light_level_dark">Dark</string>
+    <string name="light_level_dim">Dim</string>
+    <string name="light_level_indoor">Indoor light</string>
+    <string name="light_level_overcast">Overcast daylight</string>
+    <string name="light_level_daylight">Daylight</string>
+    <string name="light_level_sun">Direct sun</string>
+    <string name="light_meter_preview_hint">Enter the distance, then shine the flashlight at the phone to see how far it reaches.</string>
 </resources>

@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.shared.dialogs
 
 import android.content.Context
@@ -46,6 +48,8 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -121,7 +125,7 @@ internal fun showComposeDialog(
             }
         }
     }
-    dialog = AlertDialog.Builder(context).create().apply {
+    dialog = AlertDialog.Builder(context, com.kylecorry.trail_sense.R.style.ComposeDialogTheme).create().apply {
         setView(view, 0, 0, 0, 0)
         setCancelable(cancelable)
         setCanceledOnTouchOutside(false)
@@ -208,11 +212,11 @@ private fun DialogButtons(
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.End)
     ) {
         if (cancelText != null) {
-            TextButton(onClick = onCancel) { Text(cancelText.toString()) }
+            TextButton(onClick = onCancel, shapes = ButtonDefaults.shapes()) { Text(cancelText.toString()) }
         }
         if (okText != null) {
-            TextButton(onClick = onOk, enabled = okEnabled) {
-                Text(okText.toString(), fontWeight = FontWeight.SemiBold)
+            Button(onClick = onOk, enabled = okEnabled, shapes = ButtonDefaults.shapes()) {
+                Text(okText.toString())
             }
         }
     }

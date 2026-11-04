@@ -28,6 +28,7 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -128,24 +129,44 @@ fun TrailSensePage(
         contentWindowInsets = WindowInsets(0),
         floatingActionButton = floatingActionButton,
         topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold) },
-                subtitle = subtitle?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(TrailSenseIcons.Filled.ArrowBack, contentDescription = backLabel)
-                        }
+            val titleContent: @Composable () -> Unit = {
+                Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+            }
+            val subtitleContent: (@Composable () -> Unit)? = subtitle?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+            val navigation: @Composable () -> Unit = {
+                if (onBack != null) {
+                    IconButton(onClick = onBack) {
+                        Icon(TrailSenseIcons.Filled.ArrowBack, contentDescription = backLabel)
                     }
-                },
-                actions = actions,
-                windowInsets = TopAppBarDefaults.windowInsets,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-                ),
-                scrollBehavior = scrollBehavior
+                }
+            }
+            val barColors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
             )
+            // Like QuietGuard: a tab's own screen gets the large title; a screen opened from another one (every
+            // tool) gets the medium bar, so the content starts higher and the title doesn't shout.
+            if (onBack == null) {
+                LargeFlexibleTopAppBar(
+                    title = titleContent,
+                    subtitle = subtitleContent,
+                    navigationIcon = navigation,
+                    actions = actions,
+                    windowInsets = TopAppBarDefaults.windowInsets,
+                    colors = barColors,
+                    scrollBehavior = scrollBehavior
+                )
+            } else {
+                MediumFlexibleTopAppBar(
+                    title = titleContent,
+                    subtitle = subtitleContent,
+                    navigationIcon = navigation,
+                    actions = actions,
+                    windowInsets = TopAppBarDefaults.windowInsets,
+                    colors = barColors,
+                    scrollBehavior = scrollBehavior
+                )
+            }
         }
     ) { padding ->
         Box(

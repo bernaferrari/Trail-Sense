@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
+import androidx.compose.ui.text.input.KeyboardType
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -580,25 +583,23 @@ private fun ClimateScreen(
                 }
             }
             row { position ->
-                TrailSenseGroupCard(position = position, contentPadding = inputPadding) {
-                    CoordinateInput(
-                        location = location,
-                        onLocationChange = onLocationChange,
-                        autoFillRequest = locationAutofillRequest,
-                        onAutoLocationClick = onAutoLocationClick,
-                        onBeaconSelected = onLocationBeaconSelected
-                    )
-                }
+                CoordinateInput(
+                    location = location,
+                    onLocationChange = onLocationChange,
+                    autoFillRequest = locationAutofillRequest,
+                    onAutoLocationClick = onAutoLocationClick,
+                    onBeaconSelected = onLocationBeaconSelected,
+                    position = position
+                )
             }
             row { position ->
-                TrailSenseGroupCard(position = position, contentPadding = inputPadding) {
-                    ElevationInput(
-                        elevation = elevation,
-                        onElevationChange = onElevationChange,
-                        autoFillRequest = elevationAutofillRequest,
-                        onAutoElevationClick = onAutoElevationClick
-                    )
-                }
+                ElevationInput(
+                    elevation = elevation,
+                    onElevationChange = onElevationChange,
+                    autoFillRequest = elevationAutofillRequest,
+                    onAutoElevationClick = onAutoElevationClick,
+                    position = position
+                )
             }
         }
 
@@ -827,6 +828,7 @@ private fun CoordinateInput(
     autoFillRequest: Int,
     onAutoLocationClick: () -> Unit,
     onBeaconSelected: (Beacon) -> Unit,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -871,19 +873,30 @@ private fun CoordinateInput(
         }
     }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isLoadingLocation) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag("gps_loading")
-            )
-        } else {
-            IconButton(
-                onClick = {
+    TrailSenseInputField(
+        value = locationText,
+        onValueChange = {
+            locationText = it
+            onLocationChange(Coordinate.parse(it))
+        },
+        label = stringResource(R.string.location),
+        modifier = modifier.testTag("utm"),
+        position = position,
+        keyboardType = KeyboardType.Text,
+        isError = locationText.isNotBlank() && parsedCoordinate == null,
+        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        enabled = !isLoadingLocation,
+        leadingIcon = {
+            if (isLoadingLocation) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .testTag("gps_loading"),
+                    strokeWidth = 3.dp
+                )
+            } else {
+                IconButton(
+                    onClick = {
                     Pickers.item(
                         context,
                         context.getString(R.string.autofill_source),
@@ -906,46 +919,26 @@ private fun CoordinateInput(
                             }
                         }
                     }
-                },
-                modifier = Modifier.testTag("gps_btn")
+},
+                    modifier = Modifier.testTag("gps_btn")
+                ) {
+                    Icon(imageVector = TrailIcons.Location, contentDescription = stringResource(R.string.gps))
+                }
+            }
+        },
+        trailingIcon = {
+            IconButton(
+                onClick = { showHelp = true },
+                modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
-                    imageVector = TrailIcons.Location,
-                    contentDescription = stringResource(R.string.gps)
+                    imageVector = TrailIcons.Help,
+                    contentDescription = stringResource(R.string.location_input_help_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-        Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = locationText,
-            onValueChange = {
-                locationText = it
-                onLocationChange(Coordinate.parse(it))
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("utm"),
-            label = { Text(stringResource(R.string.location)) },
-            isError = locationText.isNotBlank() && parsedCoordinate == null,
-            supportingText = {
-                if (locationText.isNotBlank() && parsedCoordinate == null) {
-                    Text(stringResource(R.string.coordinate_input_invalid_location))
-                }
-            },
-            singleLine = true,
-            enabled = !isLoadingLocation
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        IconButton(
-            onClick = { showHelp = true },
-            modifier = Modifier.testTag("coordinate_input_help_btn")
-        ) {
-            Icon(
-                imageVector = TrailIcons.Help,
-                contentDescription = stringResource(R.string.location_input_help_title)
-            )
-        }
-    }
+    )
 
     if (showHelp) {
         AlertDialog(
@@ -967,6 +960,7 @@ private fun ElevationInput(
     onElevationChange: (Distance?) -> Unit,
     autoFillRequest: Int,
     onAutoElevationClick: () -> Unit,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -1020,19 +1014,29 @@ private fun ElevationInput(
         }
     }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        if (isLoadingElevation) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag("elevation_loading")
-            )
-        } else {
-            IconButton(
-                onClick = {
+    TrailSenseInputField(
+        value = elevationText,
+        onValueChange = {
+            elevationText = it
+            publish(text = it)
+        },
+        label = stringResource(R.string.elevation),
+        modifier = modifier.testTag("elevation_input"),
+        position = position,
+        enabled = !isLoadingElevation,
+        unit = formatter.getDistanceUnitName(unit, true),
+        onUnitClick = { isUnitOpen = true },
+        leadingIcon = {
+            if (isLoadingElevation) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .testTag("elevation_loading"),
+                    strokeWidth = 3.dp
+                )
+            } else {
+                IconButton(
+                    onClick = {
                     Pickers.item(
                         context,
                         context.getString(R.string.autofill_source),
@@ -1057,58 +1061,29 @@ private fun ElevationInput(
                             }
                         }
                     }
-                },
-                modifier = Modifier.testTag("elevation_gps_btn")
-            ) {
-                Icon(
-                    imageVector = TrailIcons.Altitude,
-                    contentDescription = stringResource(R.string.elevation)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = elevationText,
-            onValueChange = {
-                elevationText = it
-                publish(text = it)
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("elevation_input"),
-            label = { Text(stringResource(R.string.elevation)) },
-            singleLine = true,
-            enabled = !isLoadingElevation
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Box(modifier = Modifier.weight(1f)) {
-            FilledTonalButton(
-                onClick = { isUnitOpen = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("elevation_unit")
-            ) {
-                Text(formatter.getDistanceUnitName(unit))
-            }
-            DropdownMenu(
-                expanded = isUnitOpen,
-                onDismissRequest = { isUnitOpen = false }
-            ) {
-                units.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(formatter.getDistanceUnitName(option)) },
-                        onClick = {
-                            isUnitOpen = false
-                            val converted = parseElevation(elevationText, unit)?.convertTo(option)
-                            unit = option
-                            elevationText = formatElevationAmount(converted, option)
-                            publish(text = elevationText, newUnit = option)
-                        }
-                    )
+},
+                    modifier = Modifier.testTag("elevation_gps_btn")
+                ) {
+                    Icon(imageVector = TrailIcons.Altitude, contentDescription = stringResource(R.string.elevation))
                 }
             }
         }
+    )
+
+    if (isUnitOpen) {
+        TrailSenseOptionsDialog(
+            title = stringResource(R.string.elevation),
+            options = units.map { formatter.getDistanceUnitName(it, false) to it },
+            selected = unit,
+            onSelect = { option ->
+                isUnitOpen = false
+                val converted = parseElevation(elevationText, unit)?.convertTo(option)
+                unit = option
+                elevationText = formatElevationAmount(converted, option)
+                publish(text = elevationText, newUnit = option)
+            },
+            onDismiss = { isUnitOpen = false }
+        )
     }
 }
 
@@ -1136,12 +1111,14 @@ private fun TemperatureChart(
     modifier: Modifier = Modifier
 ) {
     val data = temperatures.orEmpty()
-    val lowColor = Color(AppColor.Blue.color)
-    val highColor = Color(AppColor.Red.color)
-    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
-    val highlightColor = MaterialTheme.colorScheme.onSurface
-    val guideColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
-    val freezingColor = Color(AppColor.Gray.color).copy(alpha = 0.16f)
+    // Theme colours, not fixed red and blue: the warm tertiary for highs, the primary for lows, and the band between
+    // them filled so the year reads as one shape.
+    val lowColor = MaterialTheme.colorScheme.primary
+    val highColor = MaterialTheme.colorScheme.tertiary
+    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    val highlightColor = MaterialTheme.colorScheme.surfaceContainerLow
+    val guideColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)
+    val freezingColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     val year = data.firstOrNull()?.first?.year ?: selectedDate.year
 
@@ -1195,35 +1172,48 @@ private fun TemperatureChart(
                 return size.height - ((value - yMinimum) / yRange).coerceIn(0f, 1f) * size.height
             }
 
-            repeat(5) { index ->
-                val y = index / 4f * size.height
+            val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 6.dp.toPx()))
+            repeat(3) { index ->
+                val y = (index + 1) / 4f * size.height
                 drawLine(
                     color = grid,
                     start = androidx.compose.ui.geometry.Offset(0f, y),
                     end = androidx.compose.ui.geometry.Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx()
+                    strokeWidth = 1.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    pathEffect = dash
                 )
             }
 
-            drawRect(
-                color = freezingColor,
-                topLeft = androidx.compose.ui.geometry.Offset(0f, y(freezing)),
-                size = androidx.compose.ui.geometry.Size(
-                    size.width,
-                    (size.height - y(freezing)).coerceAtLeast(0f)
+            fun path(points: List<Pair<Float, Float>>) = androidx.compose.ui.graphics.Path().apply {
+                points.forEachIndexed { index, (day, value) ->
+                    if (index == 0) moveTo(x(day), y(value)) else lineTo(x(day), y(value))
+                }
+            }
+            val highPath = path(highs)
+            val lowPath = path(lows)
+            val band = androidx.compose.ui.graphics.Path().apply {
+                addPath(highPath)
+                lows.asReversed().forEach { (day, value) -> lineTo(x(day), y(value)) }
+                close()
+            }
+            drawPath(
+                band,
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                    listOf(highColor.copy(alpha = 0.28f), lowColor.copy(alpha = 0.18f))
                 )
             )
 
-            fun drawSeries(points: List<Pair<Float, Float>>, color: Color) {
-                points.zipWithNext().forEach { (start, end) ->
-                    drawLine(
-                        color = color,
-                        start = androidx.compose.ui.geometry.Offset(x(start.first), y(start.second)),
-                        end = androidx.compose.ui.geometry.Offset(x(end.first), y(end.second)),
-                        strokeWidth = 2.5.dp.toPx(),
-                        cap = androidx.compose.ui.graphics.StrokeCap.Round
-                    )
-                }
+            // Freezing: a quiet dashed rule rather than a grey block.
+            if (freezing in yMinimum..yMaximum) {
+                drawLine(
+                    color = freezingColor,
+                    start = androidx.compose.ui.geometry.Offset(0f, y(freezing)),
+                    end = androidx.compose.ui.geometry.Offset(size.width, y(freezing)),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
+                )
             }
 
             val selectedX = x(selectedDate.dayOfYear.toFloat())
@@ -1231,23 +1221,24 @@ private fun TemperatureChart(
                 color = guideColor,
                 start = androidx.compose.ui.geometry.Offset(selectedX, 0f),
                 end = androidx.compose.ui.geometry.Offset(selectedX, size.height),
-                strokeWidth = 1.dp.toPx()
+                strokeWidth = 2.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
             )
 
-            drawSeries(lows, lowColor)
-            drawSeries(highs, highColor)
+            val stroke = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 3.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                join = androidx.compose.ui.graphics.StrokeJoin.Round
+            )
+            drawPath(lowPath, lowColor, style = stroke)
+            drawPath(highPath, highColor, style = stroke)
 
-            listOf(lows, highs).forEach { points ->
+            listOf(lows to lowColor, highs to highColor).forEach { (points, color) ->
                 val selected = points.firstOrNull { it.first.toInt() == selectedDate.dayOfYear }
                 if (selected != null) {
-                    drawCircle(
-                        color = highlightColor,
-                        radius = 4.dp.toPx(),
-                        center = androidx.compose.ui.geometry.Offset(
-                            x(selected.first),
-                            y(selected.second)
-                        )
-                    )
+                    val center = androidx.compose.ui.geometry.Offset(x(selected.first), y(selected.second))
+                    drawCircle(color = highlightColor, radius = 7.dp.toPx(), center = center)
+                    drawCircle(color = color, radius = 5.dp.toPx(), center = center)
                 }
             }
         }
@@ -1263,7 +1254,7 @@ private fun PrecipitationChart(
     modifier: Modifier = Modifier
 ) {
     val data = precipitation.orEmpty()
-    val barColor = Color(AppColor.Blue.color)
+    val barColor = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
     val highlightColor = MaterialTheme.colorScheme.onSurface
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1309,18 +1300,21 @@ private fun PrecipitationChart(
                 return size.height - (value / yMaximum).coerceIn(0f, 1f) * size.height
             }
 
-            repeat(5) { index ->
-                val y = index / 4f * size.height
+            val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 6.dp.toPx()))
+            repeat(3) { index ->
+                val y = (index + 1) / 4f * size.height
                 drawLine(
                     color = grid,
                     start = androidx.compose.ui.geometry.Offset(0f, y),
                     end = androidx.compose.ui.geometry.Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx()
+                    strokeWidth = 1.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    pathEffect = dash
                 )
             }
 
-            val barWidth = size.width / 12f * 0.6f
-            val corner = androidx.compose.ui.geometry.CornerRadius(barWidth / 4f, barWidth / 4f)
+            val barWidth = size.width / 12f * 0.62f
+            val corner = androidx.compose.ui.geometry.CornerRadius(barWidth / 2f, barWidth / 2f)
             values.forEach { (month, value) ->
                 val centerX = x(month)
                 val top = y(value)
@@ -1334,24 +1328,16 @@ private fun PrecipitationChart(
                                 right = centerX + barWidth / 2f,
                                 bottom = size.height,
                                 topLeftCornerRadius = corner,
-                                topRightCornerRadius = corner
+                                topRightCornerRadius = corner,
+                                bottomLeftCornerRadius = corner,
+                                bottomRightCornerRadius = corner
                             )
                         )
                     },
-                    color = if (isSelected) barColor else barColor.copy(alpha = 0.45f)
+                    color = if (isSelected) barColor else barColor.copy(alpha = 0.28f)
                 )
             }
 
-            values.firstOrNull { it.first.toInt() == selectedMonth.value }?.let { selected ->
-                drawCircle(
-                    color = highlightColor,
-                    radius = 4.dp.toPx(),
-                    center = androidx.compose.ui.geometry.Offset(
-                        x(selected.first),
-                        y(selected.second)
-                    )
-                )
-            }
         }
     }
 }
