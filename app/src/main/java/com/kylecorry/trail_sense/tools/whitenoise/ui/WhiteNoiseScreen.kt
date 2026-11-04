@@ -2,6 +2,25 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
+import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.ToolWhiteNoise
@@ -34,7 +53,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -161,12 +179,13 @@ fun WhiteNoiseScreen(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             Column(
-                modifier = Modifier.padding(vertical = TrailSenseSpacing.xxl),
+                modifier = Modifier.padding(vertical = TrailSenseSpacing.lg),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
             ) {
                 PlayControl(
                     isRunning = isRunning,
+                    soundName = soundName,
                     contentDescription = stringResource(R.string.tool_white_noise_title),
                     stateDescription = stringResource(if (isRunning) R.string.on else R.string.off),
                     onClick = {
@@ -189,11 +208,12 @@ fun WhiteNoiseScreen(
                     } else {
                         stringResource(R.string.off)
                     },
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold,
                     color = if (isRunning) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        MaterialTheme.colorScheme.onSurface
                     },
                     textAlign = TextAlign.Center
                 )
@@ -205,13 +225,32 @@ fun WhiteNoiseScreen(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
-                TrailSenseListItem(
-                    title = stringResource(R.string.tool_sound),
-                    subtitle = soundName,
-                    icon = rememberVectorPainter(TrailIcons.ToolWhiteNoise),
-                    onClick = { showSoundPicker = true },
-                    position = TrailSenseGroupPosition(isFirst = true, isLast = false)
-                )
+                TrailSenseGroupHeader(stringResource(R.string.tool_sound))
+                // Every sound one tap away instead of behind a dialog; the chosen one is solid primary.
+                TrailSenseGroupCard(
+                    position = TrailSenseGroupPosition(isFirst = true, isLast = false),
+                    contentPadding = PaddingValues(TrailSenseSpacing.md)
+                ) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                        modifier = Modifier.selectableGroup()
+                    ) {
+                        soundTypes.forEach { sound ->
+                            SoundChip(
+                                label = sound.second,
+                                selected = sound.first == selectedSound,
+                                onClick = {
+                                    if (sound.first != selectedSound) {
+                                        selectedSound = sound.first
+                                        cache.putLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
+                                        stopWhiteNoise()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
                 TrailSenseSwitchRow(
                     label = stringResource(R.string.sleep_timer),
                     checked = useSleepTimer,
@@ -226,171 +265,189 @@ fun WhiteNoiseScreen(
                     enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
                     exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
                 ) {
-                    TrailSenseGroupCard(
-                        position = TrailSenseGroupPosition(isFirst = false, isLast = true)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                        ) {
-                            DurationField(
-                                value = hours,
-                                label = stringResource(R.string.hours),
-                                modifier = Modifier.weight(1f),
-                                onChange = {
-                                    hours = it.cleanDurationPart(99)
-                                    stopWhiteNoise()
-                                }
-                            )
-                            DurationField(
-                                value = minutes,
-                                label = stringResource(R.string.minutes),
-                                modifier = Modifier.weight(1f),
-                                onChange = {
-                                    minutes = it.cleanDurationPart(59)
-                                    stopWhiteNoise()
-                                }
-                            )
-                            DurationField(
-                                value = seconds,
-                                label = stringResource(R.string.seconds),
-                                modifier = Modifier.weight(1f),
-                                onChange = {
-                                    seconds = it.cleanDurationPart(59)
-                                    stopWhiteNoise()
-                                }
-                            )
-                        }
+                        val last = TrailSenseGroupPosition(isFirst = false, isLast = true)
+                        DurationField(
+                            value = hours,
+                            label = stringResource(R.string.hours),
+                            modifier = Modifier.weight(1f),
+                            position = last,
+                            onChange = {
+                                hours = it.cleanDurationPart(99)
+                                stopWhiteNoise()
+                            }
+                        )
+                        DurationField(
+                            value = minutes,
+                            label = stringResource(R.string.minutes),
+                            modifier = Modifier.weight(1f),
+                            position = last,
+                            onChange = {
+                                minutes = it.cleanDurationPart(59)
+                                stopWhiteNoise()
+                            }
+                        )
+                        DurationField(
+                            value = seconds,
+                            label = stringResource(R.string.seconds),
+                            modifier = Modifier.weight(1f),
+                            position = last,
+                            onChange = {
+                                seconds = it.cleanDurationPart(59)
+                                stopWhiteNoise()
+                            }
+                        )
                     }
                 }
             }
         }
     }
-
-    if (showSoundPicker) {
-        AlertDialog(
-            onDismissRequest = { showSoundPicker = false },
-            shape = MaterialTheme.shapes.extraLarge,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text(stringResource(R.string.tool_sound)) },
-            text = {
-                Column(modifier = Modifier.selectableGroup()) {
-                    soundTypes.forEach { sound ->
-                        SoundOption(
-                            label = sound.second,
-                            selected = sound.first == selectedSound,
-                            onClick = {
-                                selectedSound = sound.first
-                                cache.putLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
-                                stopWhiteNoise()
-                                showSoundPicker = false
-                            }
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showSoundPicker = false }) {
-                    Text(stringResource(R.string.done))
-                }
-            }
-        )
-    }
 }
 
+/**
+ * The control is the hero: a large cookie that plays and stops the sound. At rest it is a calm tonal shape saying
+ * "tap to play"; while sound plays it fills primary, breathes, turns slowly, and soft rings swell out behind it.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlayControl(
     isRunning: Boolean,
+    soundName: String,
     contentDescription: String,
     stateDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val scheme = MaterialTheme.colorScheme
     val containerColor by animateColorAsState(
-        targetValue = if (isRunning) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.primaryContainer
-        },
+        targetValue = if (isRunning) scheme.primary else scheme.primaryContainer,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "playContainerColor"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isRunning) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onPrimaryContainer
-        },
+        targetValue = if (isRunning) scheme.onPrimary else scheme.onPrimaryContainer,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "playContentColor"
     )
-    val haloAlpha by animateFloatAsState(
-        targetValue = if (isRunning) 0.3f else 0f,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "haloAlpha"
+    val transition = rememberInfiniteTransition(label = "breath")
+    val breath by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(3600), RepeatMode.Reverse),
+        label = "breathing"
     )
-    val haloScale by animateFloatAsState(
-        targetValue = if (isRunning) 1f else 0.85f,
-        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-        label = "haloScale"
+    val spin by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(40_000, easing = LinearEasing), RepeatMode.Restart),
+        label = "spin"
     )
+    val active by animateFloatAsState(
+        if (isRunning) 1f else 0f,
+        MaterialTheme.motionScheme.slowEffectsSpec(),
+        label = "active"
+    )
+    val ring = scheme.primary
 
-    // The halo appears only while sound plays, so the control reads as "on" at a glance.
     Box(
-        modifier = modifier.size(232.dp),
+        modifier = modifier.size(296.dp),
         contentAlignment = Alignment.Center
     ) {
-        Surface(
-            shape = CircleShape,
-            color = containerColor.copy(alpha = haloAlpha),
-            modifier = Modifier
-                .size(232.dp)
-                .scale(haloScale)
-        ) {}
+        Canvas(Modifier.fillMaxSize()) {
+            if (active > 0f) {
+                val base = size.minDimension * 0.36f
+                listOf(0.16f, 0.1f, 0.06f).forEachIndexed { i, alpha ->
+                    drawCircle(
+                        ring.copy(alpha = alpha * active),
+                        radius = base + (i + 1) * size.minDimension * (0.035f + 0.025f * breath)
+                    )
+                }
+            }
+        }
         Surface(
             onClick = onClick,
             interactionSource = interactionSource,
-            shape = CircleShape,
+            shape = MaterialShapes.Cookie12Sided.toShape(),
             color = containerColor,
             contentColor = contentColor,
             modifier = Modifier
-                .size(184.dp)
+                .size(208.dp)
+                .graphicsLayer {
+                    val s = 1f + 0.035f * breath * active
+                    scaleX = s
+                    scaleY = s
+                    rotationZ = spin * active
+                }
                 .trailSensePressScale(interactionSource)
-                .semantics { this.stateDescription = stateDescription }
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = rememberVectorPainter(TrailIcons.ToolWhiteNoise),
-                    contentDescription = contentDescription,
-                    modifier = Modifier.size(80.dp)
-                )
-            }
+                .semantics {
+                    this.contentDescription = contentDescription
+                    this.stateDescription = stateDescription
+                }
+        ) {}
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                painter = rememberVectorPainter(
+                    if (isRunning) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
+                ),
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(64.dp)
+            )
+            Text(
+                text = if (isRunning) soundName else stringResource(R.string.white_noise_tap_to_play),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = contentColor,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.widthIn(max = 150.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun SoundOption(
+private fun SoundChip(
     label: String,
     selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
+    val scheme = MaterialTheme.colorScheme
+    val container by animateColorAsState(
+        if (selected) scheme.primary else scheme.surfaceContainerHighest,
+        MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "soundChip"
+    )
+    val content by animateColorAsState(
+        if (selected) scheme.onPrimary else scheme.onSurface,
+        MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "soundChipContent"
+    )
+    Surface(
+        modifier = Modifier
             .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically
+        shape = if (selected) MaterialTheme.shapes.medium else CircleShape,
+        color = container,
+        contentColor = content
     ) {
-        RadioButton(selected = selected, onClick = null)
-        Spacer(Modifier.size(TrailSenseSpacing.md))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (selected) {
+                Icon(
+                    rememberVectorPainter(TrailIcons.Check),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.size(TrailSenseSpacing.xs))
+            }
+            Text(label, style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
 
@@ -398,18 +455,17 @@ private fun SoundOption(
 private fun DurationField(
     value: String,
     label: String,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     onChange: (String) -> Unit
 ) {
-    OutlinedTextField(
+    TrailSenseInputField(
         value = value,
         onValueChange = onChange,
+        label = label,
         modifier = modifier,
-        label = { Text(label) },
-        shape = MaterialTheme.shapes.medium,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        singleLine = true
+        position = position,
+        keyboardType = KeyboardType.Number
     )
 }
 

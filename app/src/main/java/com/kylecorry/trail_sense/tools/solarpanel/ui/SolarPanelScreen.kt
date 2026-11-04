@@ -3,6 +3,26 @@
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.icons.trail.Sun
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.Arrow
@@ -212,6 +232,42 @@ fun SolarPanelScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier
     ) {
+        val currentPosition = position
+        if (currentPosition == null) {
+            item("loading") {
+                // Holds roughly the hero's height so nothing jumps when the position arrives.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingIndicator(modifier = Modifier.size(72.dp).testTag("solar_loading"))
+                }
+            }
+        } else {
+            item("energy") {
+                frame.hashCode()
+                SolarHero(
+                    energy = getEnergyText(
+                        solarPanelService,
+                        gps,
+                        orientation,
+                        compass,
+                        alignToRestOfDay,
+                        nowDuration,
+                        formatter,
+                        context.getString(R.string.up_to_amount)
+                    ),
+                    position = currentPosition,
+                    compass = compass,
+                    orientation = orientation,
+                    declination = declination,
+                    prefs = prefs
+                )
+            }
+        }
+
         item("mode") {
             Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 TrailSenseConnectedChoice(
@@ -234,6 +290,7 @@ fun SolarPanelScreen(
                 ) {
                     TrailSenseListItem(
                         title = formatter.formatDuration(nowDuration),
+                        subtitle = durationOfChargeTitle,
                         position = TrailSenseGroupPosition.Single,
                         onClick = { showDurationPicker = true },
                         modifier = Modifier.padding(top = TrailSenseSpacing.sm),
@@ -249,20 +306,7 @@ fun SolarPanelScreen(
             }
         }
 
-        val currentPosition = position
-        if (currentPosition == null) {
-            item("loading") {
-                // Holds roughly the cards' height so nothing jumps when the position arrives.
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.testTag("solar_loading"))
-                }
-            }
-        } else {
+        if (currentPosition != null) {
             item("readout") {
                 SolarPanelReadout(
                     position = currentPosition,
@@ -276,27 +320,6 @@ fun SolarPanelScreen(
                         .fillMaxWidth()
                         .testTag("solar_content")
                 )
-            }
-            item("energy") {
-                TrailSenseGroupCard(position = TrailSenseGroupPosition.Single) {
-                    Text(
-                        text = getEnergyText(
-                            solarPanelService,
-                            gps,
-                            orientation,
-                            compass,
-                            alignToRestOfDay,
-                            nowDuration,
-                            formatter,
-                            context.getString(R.string.up_to_amount)
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("energy"),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum")
-                    )
-                }
             }
         }
     }
@@ -316,6 +339,112 @@ fun SolarPanelScreen(
                 showDurationPicker = false
             }
         )
+    }
+}
+
+/**
+ * The hero: how much energy the panel can collect where it points now, on a saturated card that turns to the good
+ * tone once both axes are aligned. Under it, a side view of the panel: the dashed target and the live panel tilting
+ * toward it, with the sun beyond.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun SolarHero(
+    energy: String,
+    position: Pair<Float, Bearing>,
+    compass: ICompass,
+    orientation: Level,
+    declination: IDeclinationStrategy,
+    prefs: UserPreferences
+) {
+    val aligned = getAltitudeDiff(position, orientation).absoluteValue < ALTITUDE_THRESHOLD &&
+        getAzimuthDiff(position, compass, declination, prefs).absoluteValue < AZIMUTH_THRESHOLD
+    val tone = if (aligned) TrailSenseTone.Good else TrailSenseTone.Tertiary
+    val colors = trailSenseToneColors(tone)
+    TrailSenseSpotlight(
+        title = energy,
+        titleStyle = MaterialTheme.typography.headlineMedium,
+        eyebrow = stringResource(if (aligned) R.string.solar_aligned else R.string.solar_align_to_collect),
+        tone = tone,
+        modifier = Modifier.testTag("energy"),
+        badge = {
+            TrailSenseShapeBadge(
+                icon = if (aligned) TrailIcons.Check else TrailIcons.Sun,
+                shape = MaterialShapes.Sunny.toShape(),
+                size = 64.dp,
+                containerColor = colors.accent,
+                contentColor = colors.onAccent
+            )
+        }
+    ) {
+        PanelSideView(
+            currentTilt = orientation.y,
+            targetTilt = position.first,
+            color = colors.accent,
+            ink = colors.content,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(112.dp)
+        )
+    }
+}
+
+@Composable
+private fun PanelSideView(
+    currentTilt: Float,
+    targetTilt: Float,
+    color: Color,
+    ink: Color,
+    modifier: Modifier = Modifier
+) {
+    val tilt by animateFloatAsState(currentTilt.coerceIn(-10f, 100f), TrailSenseAnimation.standardSpring, label = "tilt")
+    Canvas(modifier = modifier) {
+        val ground = size.height - 6.dp.toPx()
+        val pivot = Offset(size.width * 0.36f, ground - 8.dp.toPx())
+        val length = size.height * 0.95f
+        drawLine(
+            ink.copy(alpha = 0.25f),
+            Offset(0f, ground),
+            Offset(size.width, ground),
+            3.dp.toPx(),
+            StrokeCap.Round
+        )
+        // The sun, high in the direction the panel should face.
+        val sunAngle = Math.toRadians((90f - targetTilt).toDouble())
+        val sun = Offset(
+            pivot.x + kotlin.math.cos(sunAngle).toFloat() * size.width * 0.5f,
+            (pivot.y - kotlin.math.sin(sunAngle).toFloat() * size.height * 0.9f).coerceAtLeast(14.dp.toPx())
+        )
+        drawCircle(color.copy(alpha = 0.25f), 20.dp.toPx(), sun)
+        drawCircle(color, 11.dp.toPx(), sun)
+
+        fun end(angle: Float): Offset {
+            // A panel tilted by `angle` from flat rises to the left of the pivot, facing the sun to the right.
+            val r = Math.toRadians((180f - angle).toDouble())
+            return Offset(
+                pivot.x + kotlin.math.cos(r).toFloat() * length * 0.5f,
+                pivot.y - kotlin.math.sin(r).toFloat() * length * 0.5f
+            )
+        }
+
+        fun start(angle: Float): Offset {
+            val r = Math.toRadians((180f - angle).toDouble())
+            return Offset(
+                pivot.x - kotlin.math.cos(r).toFloat() * length * 0.5f,
+                pivot.y + kotlin.math.sin(r).toFloat() * length * 0.5f
+            )
+        }
+        drawLine(
+            ink.copy(alpha = 0.45f),
+            start(targetTilt),
+            end(targetTilt),
+            4.dp.toPx(),
+            StrokeCap.Round,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()))
+        )
+        drawLine(ink, pivot, Offset(pivot.x, ground), 4.dp.toPx(), StrokeCap.Round)
+        drawLine(color, start(tilt), end(tilt), 10.dp.toPx(), StrokeCap.Round)
+        drawCircle(ink, 5.dp.toPx(), pivot)
     }
 }
 
@@ -370,6 +499,12 @@ private fun SolarPanelReadout(
                 else -> null
             },
             arrowTag = if (altitudeDiff > 0) "arrow_up" else "arrow_down",
+            move = stringResource(
+                if (altitudeDiff > 0) R.string.solar_tilt_up else R.string.solar_tilt_down,
+                formatter.formatDegrees(altitudeDiff.absoluteValue)
+            ),
+            closeness = 1f - (altitudeDiff.absoluteValue / 90f),
+            shape = MaterialShapes.Cookie9Sided,
             position = TrailSenseGroupPosition(isFirst = true, isLast = false)
         )
         SolarReadoutCard(
@@ -387,11 +522,22 @@ private fun SolarPanelReadout(
                 else -> null
             },
             arrowTag = if (azimuthDiff < 0) "arrow_left" else "arrow_right",
+            move = stringResource(
+                if (azimuthDiff < 0) R.string.solar_turn_left else R.string.solar_turn_right,
+                formatter.formatDegrees(azimuthDiff.absoluteValue)
+            ),
+            closeness = 1f - (azimuthDiff.absoluteValue / 180f),
+            shape = MaterialShapes.Cookie6Sided,
             position = TrailSenseGroupPosition(isFirst = false, isLast = true)
         )
     }
 }
 
+/**
+ * One axis: the target large, where the phone is now beside it, a gauge that fills as the two meet, and a chip that
+ * says which way to move ("Tilt up 12°"). Aligned turns the card to the good tone with a check badge.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SolarReadoutCard(
     label: String,
@@ -404,112 +550,132 @@ private fun SolarReadoutCard(
     completeTag: String,
     arrowRotation: Float?,
     arrowTag: String,
+    move: String,
+    closeness: Float,
+    shape: androidx.graphics.shapes.RoundedPolygon,
     position: TrailSenseGroupPosition
 ) {
-    // Aligned is a tone change, not a bounce.
+    val scheme = MaterialTheme.colorScheme
+    val status = trailSenseStatusColors()
     val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
     val containerColor by animateColorAsState(
-        targetValue = if (isComplete) {
-            MaterialTheme.colorScheme.tertiaryContainer
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        },
+        targetValue = if (isComplete) status.goodContainer else scheme.surfaceContainerLow,
         animationSpec = effects,
         label = "solarReadoutContainer"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isComplete) {
-            MaterialTheme.colorScheme.onTertiaryContainer
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        },
+        targetValue = if (isComplete) status.onGoodContainer else scheme.onSurface,
         animationSpec = effects,
         label = "solarReadoutContent"
+    )
+    val accent = if (isComplete) status.good else scheme.primary
+    val progress by animateFloatAsState(
+        closeness.coerceIn(0f, 1f),
+        MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "closeness"
     )
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(
-            topStart = if (position.isFirst) TrailSenseShape.groupOuter else TrailSenseShape.groupInner,
-            topEnd = if (position.isFirst) TrailSenseShape.groupOuter else TrailSenseShape.groupInner,
-            bottomStart = if (position.isLast) TrailSenseShape.groupOuter else TrailSenseShape.groupInner,
-            bottomEnd = if (position.isLast) TrailSenseShape.groupOuter else TrailSenseShape.groupInner
-        ),
+        shape = trailSenseGroupShape(position),
         color = containerColor,
         contentColor = contentColor
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(TrailSenseSpacing.xl),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
-            ) {
-                Text(
-                    text = label,
-                    modifier = Modifier.testTag(labelTag),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if (isComplete) contentColor else MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = desired,
-                    modifier = Modifier.testTag(desiredTag),
-                    style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum")
-                )
-                Text(
-                    text = current,
-                    modifier = Modifier.testTag(currentTag),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-                    color = contentColor.copy(alpha = 0.72f)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                ) {
+                    Text(
+                        text = label,
+                        modifier = Modifier.testTag(labelTag),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = if (isComplete) contentColor else scheme.primary
+                    )
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = desired,
+                            modifier = Modifier.testTag(desiredTag),
+                            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.width(TrailSenseSpacing.md))
+                        Text(
+                            text = stringResource(R.string.solar_now, current),
+                            modifier = Modifier
+                                .padding(bottom = TrailSenseSpacing.xs)
+                                .testTag(currentTag),
+                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                            color = contentColor.copy(alpha = 0.72f)
+                        )
+                    }
+                }
+                SolarCue(
+                    isComplete = isComplete,
+                    completeTag = completeTag,
+                    arrowRotation = arrowRotation,
+                    arrowTag = arrowTag,
+                    shape = shape
                 )
             }
-            SolarCue(
-                isComplete = isComplete,
-                completeTag = completeTag,
-                arrowRotation = arrowRotation,
-                arrowTag = arrowTag
+            LinearWavyProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = accent,
+                trackColor = contentColor.copy(alpha = 0.12f)
             )
+            Surface(
+                shape = CircleShape,
+                color = if (isComplete) status.good else scheme.secondaryContainer,
+                contentColor = if (isComplete) status.goodContainer else scheme.onSecondaryContainer
+            ) {
+                Text(
+                    text = if (isComplete) stringResource(R.string.solar_aligned) else move,
+                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
+                )
+            }
         }
     }
 }
 
-/** A check when aligned; otherwise the way to move, or nothing while within a step of it. */
+/** A check when aligned; otherwise the way to move, or a quiet shape while within a step of it. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SolarCue(
     isComplete: Boolean,
     completeTag: String,
     arrowRotation: Float?,
-    arrowTag: String
+    arrowTag: String,
+    shape: androidx.graphics.shapes.RoundedPolygon
 ) {
-    Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+    val status = trailSenseStatusColors()
+    val scheme = MaterialTheme.colorScheme
+    Box(modifier = Modifier.size(64.dp), contentAlignment = Alignment.Center) {
         when {
-            isComplete -> Icon(
-                painter = rememberVectorPainter(TrailIcons.Check),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(32.dp)
-                    .testTag(completeTag),
-                tint = colorResource(R.color.positive)
+            isComplete -> TrailSenseShapeBadge(
+                icon = TrailIcons.Check,
+                shape = MaterialShapes.Sunny.toShape(),
+                size = 64.dp,
+                containerColor = status.good,
+                contentColor = status.goodContainer,
+                modifier = Modifier.testTag(completeTag)
             )
 
-            arrowRotation != null -> Surface(
-                modifier = Modifier.size(56.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = rememberVectorPainter(TrailIcons.Arrow),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(28.dp)
-                            .graphicsLayer(rotationZ = arrowRotation)
-                            .testTag(arrowTag)
-                    )
-                }
-            }
+            arrowRotation != null -> TrailSenseShapeBadge(
+                icon = TrailIcons.Arrow,
+                shape = shape.toShape(),
+                size = 64.dp,
+                containerColor = scheme.primary,
+                contentColor = scheme.onPrimary,
+                iconRotation = arrowRotation,
+                modifier = Modifier.testTag(arrowTag)
+            )
         }
     }
 }

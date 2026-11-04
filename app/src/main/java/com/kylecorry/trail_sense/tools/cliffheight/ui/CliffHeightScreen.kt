@@ -3,6 +3,29 @@
 
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.ToolCliffHeight
+import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
+import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -79,12 +102,14 @@ internal fun CliffHeightScreen(
     var title by remember { mutableStateOf("") }
     var heightValue by remember { mutableStateOf("--") }
     var elapsed by remember { mutableStateOf("") }
+    var lastFall by remember { mutableStateOf(0f) }
 
     LaunchedEffect(running, startTime, units, location) {
         while (running) {
             title = formatHeight(service, formatter, startTime, units, location)
             heightValue = formatHeightValue(service, startTime, units, location)
             elapsed = formatElapsed(startTime)
+            lastFall = startTime?.let { Duration.between(it, Instant.now()).toMillis() / 1000f } ?: 0f
             delay(16)
         }
     }
@@ -115,34 +140,21 @@ internal fun CliffHeightScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = TrailSenseSpacing.xxxl),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                ) {
-                    TrailSenseReading(
-                        value = heightValue,
-                        unit = formatter.getDistanceUnitName(units, true),
-                        label = stringResource(R.string.height),
-                        color = if (running) {
-                            MaterialTheme.colorScheme.primary
+                CliffHero(
+                    running = running,
+                    hasDropped = startTime != null,
+                    heightValue = heightValue,
+                    unit = formatter.getDistanceUnitName(units, true),
+                    title = title,
+                    elapsed = elapsed,
+                    elapsedSeconds = startTime?.let {
+                        if (running) {
+                            Duration.between(it, Instant.now()).toMillis() / 1000f
                         } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                        modifier = Modifier
-                            .testTag("cliff_height_title")
-                            .semantics { contentDescription = title }
-                    )
-                    // Holds its line even before the first drop so the button doesn't move.
-                    Text(
-                        text = elapsed.ifEmpty { " " },
-                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                            null
+                        }
+                    } ?: lastFall
+                )
 
                 DropTimerButton(
                     running = running,
@@ -165,12 +177,22 @@ internal fun CliffHeightScreen(
                 TrailSenseRowGroup(title = stringResource(R.string.instructions)) {
                     row { position ->
                         TrailSenseGroupCard(position = position) {
-                            Text(
-                                text = stringResource(R.string.tool_cliff_height_disclaimer),
-                                modifier = Modifier.testTag("tide_disclaimer"),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(verticalAlignment = Alignment.Top) {
+                                TrailSenseShapeBadge(
+                                    icon = TrailIcons.ToolCliffHeight,
+                                    shape = MaterialShapes.Cookie6Sided.toShape(),
+                                    size = 44.dp,
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Spacer(Modifier.width(TrailSenseSpacing.lg))
+                                Text(
+                                    text = stringResource(R.string.tool_cliff_height_disclaimer),
+                                    modifier = Modifier.testTag("tide_disclaimer"),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -219,12 +241,136 @@ private fun DropTimerButton(
         contentPadding = ButtonDefaults.contentPaddingFor(height),
         interactionSource = interactionSource
     ) {
+        Icon(
+            if (running) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
+            contentDescription = null,
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(Modifier.width(TrailSenseSpacing.sm))
         Text(
             text = stringResource(
                 if (running) R.string.reset else R.string.start
             ),
-            style = MaterialTheme.typography.headlineSmall
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold
         )
+    }
+}
+
+/**
+ * The hero: a saturated card with a cliff on its left edge and a stone falling down it in real time (free fall, so
+ * it speeds up), the height large beside it and the fall time as a pill. Primary at rest, tertiary while falling.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun CliffHero(
+    running: Boolean,
+    hasDropped: Boolean,
+    heightValue: String,
+    unit: String,
+    title: String,
+    elapsed: String,
+    elapsedSeconds: Float
+) {
+    val tone = if (running) TrailSenseTone.Tertiary else TrailSenseTone.Primary
+    val colors = trailSenseToneColors(tone)
+    val container by animateColorAsState(colors.container, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "cliff")
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = container,
+        contentColor = colors.content
+    ) {
+        Row(
+            modifier = Modifier
+                .height(260.dp)
+                .padding(end = TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CliffDrop(
+                seconds = elapsedSeconds,
+                ink = colors.content,
+                stone = colors.accent,
+                modifier = Modifier
+                    .width(112.dp)
+                    .fillMaxHeight()
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+            ) {
+                TrailSenseReading(
+                    value = heightValue,
+                    unit = unit,
+                    label = stringResource(R.string.height),
+                    color = colors.content,
+                    unitColor = colors.content.copy(alpha = 0.72f),
+                    style = MaterialTheme.typography.displayMedium,
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier
+                        .testTag("cliff_height_title")
+                        .semantics { contentDescription = title }
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = colors.accent,
+                    contentColor = colors.onAccent
+                ) {
+                    Text(
+                        text = when {
+                            running -> stringResource(R.string.cliff_falling, elapsed)
+                            hasDropped -> stringResource(R.string.cliff_fell_for, elapsed)
+                            else -> stringResource(R.string.cliff_ready)
+                        },
+                        style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CliffDrop(
+    seconds: Float,
+    ink: Color,
+    stone: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val top = 34.dp.toPx()
+        val bottom = size.height - 18.dp.toPx()
+        val cliffWidth = size.width * 0.42f
+        // The cliff: a block rising from the bottom with a ledge at the top, and the ground at its foot.
+        val cliff = Path().apply {
+            moveTo(0f, top)
+            lineTo(cliffWidth, top)
+            lineTo(cliffWidth * 0.92f, top + (bottom - top) * 0.35f)
+            lineTo(cliffWidth, top + (bottom - top) * 0.62f)
+            lineTo(cliffWidth * 0.88f, bottom)
+            lineTo(0f, bottom)
+            close()
+        }
+        drawPath(cliff, ink.copy(alpha = 0.16f))
+        drawLine(ink.copy(alpha = 0.3f), Offset(0f, bottom), Offset(size.width, bottom), 3.dp.toPx(), StrokeCap.Round)
+
+        // Free fall: the fraction of the drop covered grows with the square of the time (a 4 s fall fills it).
+        fun yAt(t: Float): Float {
+            val fraction = ((t / 4f) * (t / 4f)).coerceIn(0f, 1f)
+            return top - 10.dp.toPx() + (bottom - top) * fraction
+        }
+        val x = cliffWidth + 24.dp.toPx()
+        val radius = 10.dp.toPx()
+        // Ghost stones a beat behind, so the speed shows.
+        listOf(0.36f, 0.24f, 0.12f).forEachIndexed { i, lag ->
+            if (seconds > lag) {
+                drawCircle(stone.copy(alpha = 0.16f + i * 0.12f), radius * (0.6f + i * 0.12f), Offset(x, yAt(seconds - lag)))
+            }
+        }
+        drawCircle(stone, radius, Offset(x, yAt(seconds).coerceAtMost(bottom - radius)))
     }
 }
 

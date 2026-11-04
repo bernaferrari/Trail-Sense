@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bubble level -->
+    <string name="level_is_level">Level</string>
+    <string name="level_off_by">Off by %1$s</string>
+
+    <!-- Clinometer -->
+    <string name="clinometer_vertical">Vertical</string>
+
+    <!-- Water boil timer -->
+    <string name="water_boil_seconds_left">Seconds left</string>
+
+    <!-- Whistle -->
+    <string name="whistle_emergency">Emergency</string>
+    <string name="whistle_repeats_short">Repeats</string>
+    <string name="whistle_once">Once</string>
+    <string name="whistle_whistling">Whistling</string>
+
+    <!-- Flashlight -->
+    <string name="flashlight_turns_off_in">Off in %1$s</string>
+
+    <!-- Metal detector -->
+    <string name="metal_detector_field">Magnetic field</string>
+
+    <!-- Solar panel aligner -->
+    <string name="solar_aligned">Aligned</string>
+    <string name="solar_align_to_collect">Point the panel to collect</string>
+    <string name="solar_tilt_up">Tilt up %1$s</string>
+    <string name="solar_tilt_down">Tilt down %1$s</string>
+    <string name="solar_turn_left">Turn left %1$s</string>
+    <string name="solar_turn_right">Turn right %1$s</string>
+    <string name="solar_now">Now %1$s</string>
+
+    <!-- Cliff height -->
+    <string name="cliff_ready">Drop a stone, tap Start</string>
+    <string name="cliff_falling">Falling · %1$s</string>
+    <string name="cliff_fell_for">Fell for %1$s</string>
+
+    <!-- Magnifier -->
+    <string name="magnifier_close_up">Close-up</string>
+    <string name="magnifier_freeze">Freeze</string>
+    <string name="magnifier_live">Live</string>
+
+    <!-- White noise -->
+    <string name="white_noise_tap_to_play">Tap to play</string>
+
+    <!-- Battery -->
+    <string name="battery_charging">Charging</string>
+    <string name="battery_low">Battery low</string>
+    <string name="battery_on_battery">On battery</string>
+
+    <!-- Signal finder -->
+    <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
+
+    <!-- Ballistics -->
+    <plurals name="ballistics_clicks">
+        <item quantity="one">%d click</item>
+        <item quantity="other">%d clicks</item>
+    </plurals>
+    <string name="ballistics_up">Up</string>
+    <string name="ballistics_down">Down</string>
+    <string name="ballistics_enter_distance">Enter the distance to target</string>
+</resources>

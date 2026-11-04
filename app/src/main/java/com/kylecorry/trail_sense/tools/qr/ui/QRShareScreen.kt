@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.toShape
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -50,6 +54,7 @@ fun QRShareScreen(
 
 const val QR_SHARE_MAX_LENGTH = 1000
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun QRShareContent(
     title: String,
@@ -72,19 +77,34 @@ private fun QRShareContent(
                 .padding(TrailSenseSpacing.lg),
             contentAlignment = Alignment.Center
         ) {
-            // The code is the whole screen. Its immediate background stays white so it scans in any theme.
+            // The code sits on a white card (so it scans in any theme) inside a big primary cookie, the screen's mark.
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
-                    .background(Color.White)
-                    .padding(TrailSenseSpacing.xl),
+                    .widthIn(max = 420.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    bitmap = qrBitmap,
-                    contentDescription = stringResource(R.string.qr_code),
-                    modifier = Modifier.size(250.dp)
-                )
+                androidx.compose.material3.Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = androidx.compose.material3.MaterialShapes.Cookie12Sided.toShape(),
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer
+                ) {}
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(0.66f)
+                        .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                        .background(Color.White)
+                        .padding(TrailSenseSpacing.lg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        bitmap = qrBitmap,
+                        contentDescription = stringResource(R.string.qr_code),
+                        modifier = Modifier.fillMaxSize(),
+                        filterQuality = androidx.compose.ui.graphics.FilterQuality.None
+                    )
+                }
             }
         }
     }

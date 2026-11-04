@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.magnifier.ui
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Text
 import android.graphics.Bitmap
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -147,17 +149,19 @@ internal fun MagnifierScreen(
         ) {
             Row(
                 modifier = Modifier.padding(TrailSenseSpacing.sm),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 MagnifierButton(
                     onClick = { isCloseUpFocus = !isCloseUpFocus },
                     selected = isCloseUpFocus,
+                    label = stringResource(R.string.magnifier_close_up),
+                    first = true,
                     modifier = Modifier.testTag("focus_toggle_btn")
                 ) {
                     Icon(
                         imageVector = if (isCloseUpFocus) Icons.Default.Search else Icons.Default.CenterFocusStrong,
-                        contentDescription = stringResource(R.string.camera)
+                        contentDescription = null
                     )
                 }
                 MagnifierButton(
@@ -169,11 +173,13 @@ internal fun MagnifierScreen(
                         }
                     },
                     selected = frozenFrame != null,
+                    label = stringResource(if (frozenFrame == null) R.string.magnifier_freeze else R.string.magnifier_live),
+                    first = false,
                     modifier = Modifier.testTag("freeze_btn")
                 ) {
                     Icon(
                         imageVector = if (frozenFrame == null) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = stringResource(R.string.camera_capture)
+                        contentDescription = null
                     )
                 }
             }
@@ -186,6 +192,8 @@ internal fun MagnifierScreen(
 private fun MagnifierButton(
     onClick: () -> Unit,
     selected: Boolean,
+    label: String,
+    first: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -193,7 +201,7 @@ private fun MagnifierButton(
         targetValue = if (selected) {
             MaterialTheme.colorScheme.primary
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHighest
+            MaterialTheme.colorScheme.secondaryContainer
         },
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "magnifierButtonContainer"
@@ -202,25 +210,46 @@ private fun MagnifierButton(
         targetValue = if (selected) {
             MaterialTheme.colorScheme.onPrimary
         } else {
-            MaterialTheme.colorScheme.onSurface
+            MaterialTheme.colorScheme.onSecondaryContainer
         },
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "magnifierButtonContent"
     )
-
+    // Connected pair: round on the outside, tight where they meet; the chosen one rounds right out.
+    val outer = 28.dp
+    val inner by androidx.compose.animation.core.animateDpAsState(
+        if (selected) 28.dp else 8.dp,
+        MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "magnifierInner"
+    )
     val interactionSource = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
         interactionSource = interactionSource,
         modifier = modifier
-            .size(56.dp)
+            .heightIn(min = 60.dp)
             .trailSensePressScale(interactionSource),
-        shape = CircleShape,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(
+            topStart = if (first) outer else inner,
+            bottomStart = if (first) outer else inner,
+            topEnd = if (first) inner else outer,
+            bottomEnd = if (first) inner else outer
+        ),
         color = containerColor,
         contentColor = contentColor
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Row(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
             content()
+            androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.sm))
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+            )
         }
     }
 }
