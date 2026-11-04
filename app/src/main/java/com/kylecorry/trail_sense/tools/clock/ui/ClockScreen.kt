@@ -35,7 +35,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -295,7 +295,7 @@ private fun ClockScreen(
                 }
                 val buttonModifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .heightIn(min = ButtonDefaults.MediumContainerHeight)
                     .testTag("pip_button")
                 if (isGpsTime && drift <= TRIVIAL_OFFSET_SECONDS) {
                     androidx.compose.material3.FilledTonalButton(onClick = onClick, modifier = buttonModifier) {
@@ -313,7 +313,7 @@ private fun ClockScreen(
 
 /**
  * The face: dots for the hours, a short thick primary hour hand, a long thin minute hand in the face's ink and a
- * thin tertiary second hand that ticks with a small spring overshoot. The lengths differ enough that the hands never
+ * thin tertiary second hand that steps from mark to mark and stops on it. The lengths differ enough that the hands never
  * merge, even when they overlap. When the device clock drifts from GPS, a faint ghost second hand shows where the device
  * thinks it is.
  */
@@ -337,7 +337,8 @@ private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
             val step = ((totalSeconds - previous) * 6f)
             secondHand.animateTo(
                 secondHand.targetValue + step,
-                spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMedium)
+                // Lands on the mark without swinging past it (a bouncy tick overshot the face's marks).
+                spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
             )
         }
     }
@@ -389,7 +390,7 @@ private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
         }
         drawLine(
             color = second,
-            start = center.pointAt(radius * 0.08f, secondAngle + 180f),
+            start = center,
             end = center.pointAt(radius * 0.8f, secondAngle),
             strokeWidth = 3.dp.toPx(),
             cap = StrokeCap.Round
