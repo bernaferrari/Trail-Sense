@@ -3,6 +3,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
 import androidx.compose.ui.graphics.graphicsLayer
+import com.kylecorry.trail_sense.shared.views.PathsEmptyIllustration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FilledTonalButton
@@ -694,6 +695,7 @@ private fun PathsScreen(
                     val isSearching = searchText.isNotBlank()
                     TrailSenseEmptyState(
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
+                        illustration = if (isSearching) null else ({ PathsEmptyIllustration() }),
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_paths),
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
                         // No button here: Backtrack's switch above and the add FAB are the actions.

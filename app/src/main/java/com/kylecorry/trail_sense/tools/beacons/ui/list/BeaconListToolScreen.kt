@@ -3,6 +3,7 @@
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
 import com.kylecorry.trail_sense.tools.beacons.ui.polygon
+import com.kylecorry.trail_sense.shared.views.PlacesEmptyIllustration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
@@ -882,6 +883,7 @@ private fun BeaconListScreen(
                     TrailSenseEmptyState(
                         // A pin, not the navigation arrow: this list is where places are kept.
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Location,
+                        illustration = if (isSearching) null else ({ PlacesEmptyIllustration() }),
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_places),
                         description = if (isSearching) {
                             null

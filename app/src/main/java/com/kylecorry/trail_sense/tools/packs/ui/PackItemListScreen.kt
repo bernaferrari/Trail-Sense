@@ -5,6 +5,7 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import androidx.compose.foundation.layout.Spacer
+import com.kylecorry.trail_sense.shared.views.PackEmptyIllustration
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -488,6 +489,7 @@ private fun PackItemScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolPack,
+                    illustration = { PackEmptyIllustration() },
                     title = stringResource(R.string.inventory_empty_text),
                     description = stringResource(R.string.packs_items_empty_description),
                     actionLabel = stringResource(R.string.create_item_title),

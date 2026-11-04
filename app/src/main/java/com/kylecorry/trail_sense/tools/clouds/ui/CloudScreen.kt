@@ -5,6 +5,7 @@
 package com.kylecorry.trail_sense.tools.clouds.ui
 
 import androidx.compose.material3.MaterialShapes
+import com.kylecorry.trail_sense.shared.views.CloudsEmptyIllustration
 import androidx.compose.material3.toShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Spacer
@@ -337,6 +338,7 @@ private fun CloudScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = TrailIcons.Cloud,
+                    illustration = { CloudsEmptyIllustration() },
                     title = stringResource(R.string.no_clouds),
                     description = stringResource(R.string.clouds_empty_description),
                     modifier = Modifier

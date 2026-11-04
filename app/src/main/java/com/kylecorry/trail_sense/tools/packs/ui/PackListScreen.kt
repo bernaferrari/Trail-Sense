@@ -5,6 +5,7 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import androidx.compose.animation.core.animateFloatAsState
+import com.kylecorry.trail_sense.shared.views.PackEmptyIllustration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -341,6 +342,7 @@ private fun PackListScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolPack,
+                    illustration = { PackEmptyIllustration() },
                     title = stringResource(R.string.no_packing_lists),
                     description = stringResource(R.string.packs_empty_description),
                     modifier = Modifier
