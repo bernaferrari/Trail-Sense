@@ -360,3 +360,30 @@ internal fun SkyConnectedButtons(buttons: List<SkyButton>, modifier: Modifier = 
         }
     }
 }
+
+/**
+ * A value callout that floats over a chart's selected point: an inverse pill centred on [fraction] of the width,
+ * kept inside the chart's edges.
+ */
+@Composable
+internal fun SkyChartCallout(fraction: Float, text: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+    androidx.compose.ui.layout.Layout(
+        content = {
+            SkyPill(
+                text = text,
+                icon = icon,
+                containerColor = MaterialTheme.colorScheme.inverseSurface,
+                contentColor = MaterialTheme.colorScheme.inverseOnSurface
+            )
+        },
+        modifier = modifier.fillMaxWidth()
+    ) { measurables, constraints ->
+        val pill = measurables.first().measure(constraints.copy(minWidth = 0))
+        val width = constraints.maxWidth
+        layout(width, pill.height) {
+            val x = (fraction.coerceIn(0f, 1f) * width - pill.width / 2f).toInt()
+                .coerceIn(0, (width - pill.width).coerceAtLeast(0))
+            pill.place(x, 0)
+        }
+    }
+}
