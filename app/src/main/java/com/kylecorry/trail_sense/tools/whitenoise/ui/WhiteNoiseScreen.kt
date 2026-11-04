@@ -216,7 +216,7 @@ fun WhiteNoiseScreen(
                 Text(
                     text = soundName,
                     modifier = Modifier.padding(top = TrailSenseSpacing.sm),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
@@ -279,7 +279,7 @@ fun WhiteNoiseScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = false)),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow
+                        color = MaterialTheme.colorScheme.surfaceContainer
                     ) {
                         // The family's one selection look; a typed duration that matches none leaves all unchecked.
                         TrailSenseConnectedChoice(
@@ -418,7 +418,7 @@ private fun SoundTile(
             .heightIn(min = 56.dp)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
         shape = shape,
-        color = if (selected) scheme.secondaryContainer else scheme.surfaceContainerLow,
+        color = if (selected) scheme.secondaryContainer else scheme.surfaceContainer,
         contentColor = if (selected) scheme.onSecondaryContainer else scheme.onSurface
     ) {
         Row(
