@@ -38,7 +38,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinati
 @Composable
 fun TrailSenseComposeNavHost(
     navigator: TrailSenseComposeNavigator,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isTabRoot: (Int) -> Boolean = { false }
 ) {
     if (!navigator.isReady) {
         return
@@ -48,7 +49,7 @@ fun TrailSenseComposeNavHost(
     val depth = backStack.size
     val activityForBack = LocalContext.current.findMainActivity()
     // Screens opened from another one get a back arrow (TrailSensePage reads it); a tab's first screen doesn't.
-    val back: (() -> Unit)? = if (depth > 1 && activityForBack != null) {
+    val back: (() -> Unit)? = if (!isTabRoot(current.destination.id) && depth > 1 && activityForBack != null) {
         { activityForBack.onBackPressedDispatcher.onBackPressed() }
     } else {
         null
@@ -62,7 +63,7 @@ fun TrailSenseComposeNavHost(
         targetState = current,
         contentKey = { it.id },
         transitionSpec = {
-            val sameDepth = targetState.id != initialState.id && depth == 1
+            val sameDepth = isTabRoot(targetState.destination.id) && isTabRoot(initialState.destination.id)
             if (sameDepth) {
                 fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(90))
             } else {

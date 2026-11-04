@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.main
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -78,6 +81,7 @@ fun MainAdaptiveNavigation(
     onItemClick: (Int) -> Unit,
     onItemLongClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    showBar: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val visibleItems = state.items.filter { it.visible }
@@ -121,7 +125,14 @@ fun MainAdaptiveNavigation(
         if (maxWidth < 600.dp) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.weight(1f)) { movable() }
-                ShortNavigationBar {
+                // As in ChangeDetection: screens opened from a tab get the whole canvas; the bar slides away and
+                // their back arrow takes over, and it slides back on the tab's first screen.
+                AnimatedVisibility(
+                    visible = showBar,
+                    enter = expandVertically(expandFrom = Alignment.Top),
+                    exit = shrinkVertically(shrinkTowards = Alignment.Top)
+                ) {
+                ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     visibleItems.forEach { item ->
                         val selected = item.id == state.selectedItemId
                         ShortNavigationBarItem(
@@ -138,9 +149,11 @@ fun MainAdaptiveNavigation(
                         )
                     }
                 }
+                }
             }
         } else {
             Row(modifier = Modifier.fillMaxSize()) {
+                AnimatedVisibility(visible = showBar) {
                 WideNavigationRail(modifier = Modifier.fillMaxHeight()) {
                     visibleItems.forEach { item ->
                         val selected = item.id == state.selectedItemId
@@ -154,6 +167,7 @@ fun MainAdaptiveNavigation(
                             modifier = Modifier.longPress(item)
                         )
                     }
+                }
                 }
                 Box(modifier = Modifier
                     .weight(1f)
