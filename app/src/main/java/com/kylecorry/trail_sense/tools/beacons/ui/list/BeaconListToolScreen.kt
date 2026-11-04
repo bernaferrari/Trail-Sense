@@ -834,15 +834,6 @@ private fun BeaconListScreen(
             }
         ) {
             if (!loaded) {
-                item(key = "search") {
-                    TrailSenseSearchBar(
-                        value = searchText,
-                        onValueChange = onSearchChange,
-                        placeholder = stringResource(R.string.search),
-                        clearContentDescription = stringResource(R.string.beacon_search_clear),
-                        modifier = Modifier.testTag("searchbox")
-                    )
-                }
                 return@TrailSensePage
             }
 
@@ -867,19 +858,22 @@ private fun BeaconListScreen(
                 }
             }
 
-            item(key = "search") {
-                TrailSenseSearchBar(
-                    value = searchText,
-                    onValueChange = onSearchChange,
-                    placeholder = stringResource(R.string.search),
-                    clearContentDescription = stringResource(R.string.beacon_search_clear),
-                    modifier = Modifier.testTag("searchbox")
-                )
+            val isSearching = searchText.isNotBlank()
+            // Nothing to search yet: the empty state stands alone on the page, without a search bar above it.
+            if (items.isNotEmpty() || isSearching) {
+                item(key = "search") {
+                    TrailSenseSearchBar(
+                        value = searchText,
+                        onValueChange = onSearchChange,
+                        placeholder = stringResource(R.string.search),
+                        clearContentDescription = stringResource(R.string.beacon_search_clear),
+                        modifier = Modifier.testTag("searchbox")
+                    )
+                }
             }
 
             if (items.isEmpty()) {
                 item(key = "empty") {
-                    val isSearching = searchText.isNotBlank()
                     TrailSenseEmptyState(
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Beacon,
                         title = stringResource(if (isSearching) R.string.no_results else R.string.no_beacons),
@@ -890,7 +884,9 @@ private fun BeaconListScreen(
                         },
                         // No button here: the create FAB (beacon, group, QR, GPX) is the one action.
                         tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
-                        modifier = Modifier.testTag("beacon_empty_text")
+                        modifier = Modifier
+                            .fillParentMaxHeight(if (isSearching) 0.6f else 0.85f)
+                            .testTag("beacon_empty_text")
                     )
                 }
             } else {
@@ -1112,9 +1108,11 @@ private fun BeaconRow(
                     beacon.shape.polygon().toShape()
                 } else {
                     MaterialShapes.Pentagon.toShape()
-                }
+                },
+                size = 40.dp
             )
         },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         barFraction = null,
         onClick = { onAction(BeaconAction.View) },
         onLongClick = { onAction(BeaconAction.Navigate) },
@@ -1220,16 +1218,14 @@ private fun BeaconGroupRow(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 text = group.count.toString(),
-                shape = MaterialShapes.Clover4Leaf.toShape()
+                shape = MaterialShapes.Clover4Leaf.toShape(),
+                size = 40.dp
             )
         },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         onClick = { onAction(BeaconGroupAction.Open) },
+        // One trailing element: the row itself opens the group, so no chevron beside the menu.
         actions = {
-            Icon(
-                TrailIcons.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
             Box {
                 IconButton(
                     onClick = { menuOpen = true },
