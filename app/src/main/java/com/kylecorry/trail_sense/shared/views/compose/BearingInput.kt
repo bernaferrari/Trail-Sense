@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Column
@@ -94,7 +95,7 @@ fun BearingInput(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Icon(
-                    painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                    imageVector = TrailIcons.KeyboardArrowRight,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
@@ -108,7 +109,7 @@ fun BearingInput(
                 modifier = Modifier.testTag("clear_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_cancel),
+                    imageVector = TrailIcons.Cancel,
                     contentDescription = stringResource(android.R.string.cancel)
                 )
             }
@@ -120,7 +121,7 @@ fun BearingInput(
                 modifier = Modifier.testTag("camera_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_camera),
+                    imageVector = TrailIcons.Camera,
                     contentDescription = stringResource(R.string.camera)
                 )
             }
@@ -157,7 +158,7 @@ private fun CompassAutofillButton(
                 .testTag("compass_btn")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_compass_icon),
+                imageVector = TrailIcons.CompassIcon,
                 contentDescription = stringResource(R.string.direction)
             )
         }

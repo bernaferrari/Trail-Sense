@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import androidx.compose.foundation.layout.Arrangement
@@ -210,7 +211,7 @@ private fun WarpMapScreen(
                     horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_info),
+                        imageVector = TrailIcons.Info,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

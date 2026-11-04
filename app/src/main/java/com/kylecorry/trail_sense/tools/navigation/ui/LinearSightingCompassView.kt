@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
 import androidx.compose.foundation.background
@@ -332,7 +333,7 @@ private class SightingCompassButton {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_camera),
+                    imageVector = TrailIcons.Camera,
                     contentDescription = stringResource(R.string.sighting_compass),
                     tint = foreground,
                     modifier = Modifier.size(24.dp)

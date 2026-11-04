@@ -118,7 +118,10 @@ private fun ChartContent(content: ToolWidgetContent.Chart) {
             )
             Spacer(Modifier.height(4.dp))
         }
-        content.bitmap?.let {
+        val chart = content.chart
+        if (chart != null) {
+            Box(modifier = Modifier.fillMaxSize()) { chart() }
+        } else content.bitmap?.let {
             Image(
                 bitmap = it.asImageBitmap(),
                 contentDescription = content.title?.toString(),

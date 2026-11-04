@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -301,7 +302,7 @@ private fun BlankMapCoordinateInput(
                 }
             }) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_location),
+                    imageVector = TrailIcons.Location,
                     contentDescription = stringResource(R.string.gps)
                 )
             }
@@ -327,7 +328,7 @@ private fun BlankMapCoordinateInput(
         Spacer(modifier = Modifier.size(8.dp))
         IconButton(onClick = { showHelp = true }) {
             Icon(
-                painter = painterResource(R.drawable.ic_help),
+                imageVector = TrailIcons.Help,
                 contentDescription = stringResource(R.string.location_input_help_title)
             )
         }

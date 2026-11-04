@@ -1,5 +1,29 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseIconWell
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseWellColors
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
 import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -542,7 +566,10 @@ private fun WeatherHost(
                     .weight(1f)
                     .testTag("weather_list"),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    TrailSenseSpacing.screen
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.lg
                 ),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
@@ -554,93 +581,84 @@ private fun WeatherHost(
                     )
                 }
 
-                // The chart is a section, not another card nested beneath the hero.
+                // Pressure: a section header, then the chart in the group's card.
                 item(key = "weather_chart") {
-                    TrailSenseCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                    ) {
-                        WeatherSectionLabel(
-                            icon = TrailSenseIcons.Filled.Speed,
-                            text = stringResource(R.string.pressure_chart)
-                        )
+                    Column {
+                        TrailSenseGroupHeader(stringResource(R.string.pressure_chart))
+                        TrailSenseGroupCard(TrailSenseGroupPosition.Single) {
+                            val hasPressureHistory = pressureChartData.data.isNotEmpty() ||
+                                    pressureChartData.raw.isNotEmpty() ||
+                                    pressureChartData.forecast.isNotEmpty()
+                            if (hasPressureHistory) {
+                                WeatherPressureChart(
+                                    data = pressureChartData.data,
+                                    raw = pressureChartData.raw,
+                                    forecast = pressureChartData.forecast,
+                                    onMarkerSelected = onPressureMarkerSelected,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(168.dp)
+                                        .testTag("chart")
+                                )
+                            } else {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = TrailSenseSpacing.md)
+                                        .testTag("chart"),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                                ) {
+                                    Icon(
+                                        imageVector = TrailSenseIcons.Filled.Speed,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.no_data),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.weather_chart_empty),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
 
-                        Spacer(Modifier.height(TrailSenseSpacing.md))
-
-                        val hasPressureHistory = pressureChartData.data.isNotEmpty() ||
-                                pressureChartData.raw.isNotEmpty() ||
-                                pressureChartData.forecast.isNotEmpty()
-                        if (hasPressureHistory) {
-                            WeatherPressureChart(
-                                data = pressureChartData.data,
-                                raw = pressureChartData.raw,
-                                forecast = pressureChartData.forecast,
-                                onMarkerSelected = onPressureMarkerSelected,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(156.dp)
-                                    .testTag("chart")
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(72.dp)
-                                    .testTag("chart"),
-                                contentAlignment = Alignment.Center
+                            AnimatedVisibility(
+                                visible = pressureMarkerText != null,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
                             ) {
                                 Text(
-                                    text = stringResource(R.string.no_data),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = pressureMarkerText ?: "",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = TrailSenseSpacing.md)
+                                        .testTag("pressure_marker"),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontFeatureSettings = "tnum"
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
-
-                        if (pressureMarkerText != null) {
-                            Text(
-                                text = pressureMarkerText,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = TrailSenseSpacing.sm)
-                                    .testTag("pressure_marker"),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFeatureSettings = "tnum"
-                                ),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
                     }
                 }
 
-                // Forecast / tendency readouts
+                // Conditions: grouped rows, no dividers.
                 if (weatherItems.isNotEmpty()) {
                     item(key = "weather_readouts") {
-                        TrailSenseCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                vertical = TrailSenseSpacing.xs
-                            )
-                        ) {
-                            WeatherSectionLabel(
-                                icon = TrailSenseIcons.Filled.PartlyCloudyDay,
-                                text = stringResource(R.string.weather),
-                                modifier = Modifier.padding(
-                                    start = TrailSenseSpacing.lg,
-                                    end = TrailSenseSpacing.lg,
-                                    top = TrailSenseSpacing.md
-                                )
-                            )
-
-                            Spacer(Modifier.height(TrailSenseSpacing.xs))
-
-                            weatherItems.forEachIndexed { index, item ->
-                                WeatherListItemRow(item)
-                                if (index < weatherItems.lastIndex) {
-                                    TrailSenseDivider()
+                        Column {
+                            TrailSenseGroupHeader(stringResource(R.string.weather))
+                            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                                weatherItems.forEachIndexed { index, item ->
+                                    WeatherListItemRow(item, TrailSenseGroupPosition.at(index, weatherItems.size))
                                 }
                             }
                         }
@@ -665,9 +683,9 @@ private fun WeatherHost(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = TrailSenseSpacing.screen,
-                        end = TrailSenseSpacing.screen,
-                        bottom = TrailSenseSpacing.screen
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        bottom = TrailSenseSpacing.lg
                     )
             )
         }
@@ -763,38 +781,60 @@ private fun WeatherPressureChart(
             repeat(5) { index ->
                 val y = index / 4f * size.height
                 drawLine(
-                    color = grid,
+                    color = grid.copy(alpha = 0.5f),
                     start = Offset(0f, y),
                     end = Offset(size.width, y),
                     strokeWidth = 1.dp.toPx()
                 )
             }
 
-            fun drawSeries(points: List<WeatherPressureChartPoint>, color: Color, strokeWidth: Float) {
-                points.zipWithNext().forEach { (start, end) ->
-                    drawLine(
-                        color = color,
-                        start = Offset(
-                            chartPoints.x(start.x, size.width),
-                            chartPoints.y(start.pressure, size.height)
-                        ),
-                        end = Offset(
-                            chartPoints.x(end.x, size.width),
-                            chartPoints.y(end.pressure, size.height)
-                        ),
-                        strokeWidth = strokeWidth
-                    )
+            fun pathOf(points: List<WeatherPressureChartPoint>): Path = Path().apply {
+                points.forEachIndexed { index, point ->
+                    val x = chartPoints.x(point.x, size.width)
+                    val y = chartPoints.y(point.pressure, size.height)
+                    if (index == 0) moveTo(x, y) else lineTo(x, y)
                 }
+            }
+
+            fun drawSeries(points: List<WeatherPressureChartPoint>, color: Color, strokeWidth: Float) {
+                if (points.size < 2) return
+                drawPath(
+                    pathOf(points),
+                    color = color,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
             }
 
             drawSeries(chartPoints.raw, rawColor, 2.dp.toPx())
             drawSeries(chartPoints.forecast, forecastColor, 2.dp.toPx())
-            drawSeries(chartPoints.data, primary, 2.dp.toPx())
+            // The recorded pressure: a soft wash under the line, then the line itself.
+            if (chartPoints.data.size >= 2) {
+                val line = pathOf(chartPoints.data)
+                val area = Path().apply {
+                    addPath(line)
+                    lineTo(chartPoints.x(chartPoints.data.last().x, size.width), size.height)
+                    lineTo(chartPoints.x(chartPoints.data.first().x, size.width), size.height)
+                    close()
+                }
+                drawPath(
+                    area,
+                    Brush.verticalGradient(listOf(primary.copy(alpha = 0.22f), primary.copy(alpha = 0f)))
+                )
+            }
+            drawSeries(chartPoints.data, primary, 3.dp.toPx())
 
             selected?.let {
                 drawCircle(
+                    color = primary.copy(alpha = 0.2f),
+                    radius = 10.dp.toPx(),
+                    center = Offset(
+                        chartPoints.x(it.x, size.width),
+                        chartPoints.y(it.pressure, size.height)
+                    )
+                )
+                drawCircle(
                     color = highlightColor,
-                    radius = 4.dp.toPx(),
+                    radius = 5.dp.toPx(),
                     center = Offset(
                         chartPoints.x(it.x, size.width),
                         chartPoints.y(it.pressure, size.height)
@@ -813,7 +853,7 @@ private fun UpdatingWeather(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.Center
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_update),
+            imageVector = TrailIcons.Update,
             contentDescription = null,
             modifier = Modifier.size(12.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -847,32 +887,43 @@ private fun WeatherMonitorPlayBar(
         }"
     } ?: "")
 
-    TrailSenseCard(
+    // The monitor as one tonal bar: what it is and how often, and a play button that turns solid while it runs.
+    Surface(
         modifier = modifier.testTag("weather_play_bar"),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(TrailSenseSpacing.lg)
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.md, top = TrailSenseSpacing.md, bottom = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_weather),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
+            TrailSenseIconWell(
+                TrailSenseWellColors(
+                    MaterialTheme.colorScheme.secondaryContainer,
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Icon(
+                    imageVector = TrailIcons.Weather,
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .heightIn(min = TrailSenseSize.minimumTouchTarget)
                     .clickable(onClick = onSubtitleClick)
-                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(horizontal = TrailSenseSpacing.md)
                     .testTag("play_bar_title"),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = stringResource(R.string.weather_monitor),
                     style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
@@ -883,16 +934,20 @@ private fun WeatherMonitorPlayBar(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(
+            val playColors = if (isOn) {
+                IconButtonDefaults.filledIconButtonColors()
+            } else {
+                IconButtonDefaults.filledTonalIconButtonColors()
+            }
+            FilledIconButton(
                 onClick = onPlayClick,
+                colors = playColors,
                 modifier = Modifier
-                    .size(TrailSenseSize.minimumTouchTarget)
+                    .size(52.dp)
                     .testTag("play_btn")
             ) {
                 Icon(
-                    painter = painterResource(
-                        if (isOn) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_play_arrow_24
-                    ),
+                    imageVector = if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
                     contentDescription = stringResource(
                         if (isOn) R.string.stop else R.string.start
                     )
@@ -903,11 +958,12 @@ private fun WeatherMonitorPlayBar(
 }
 
 @Composable
-private fun WeatherListItemRow(item: WeatherListItem) {
+private fun WeatherListItemRow(item: WeatherListItem, position: TrailSenseGroupPosition) {
     TrailSenseListItem(
+        position = position,
         title = item.title,
         subtitle = item.subtitle,
-        icon = item.icon?.let { painterResource(it) },
+        icon = item.icon?.let { rememberVectorPainter(it) },
         iconTint = item.iconTint?.let { Color(it) } ?: MaterialTheme.colorScheme.primary,
         trailing = item.trailingText?.let {
             {
@@ -934,7 +990,7 @@ private fun WeatherHeroCard(
 ) {
     TrailSenseCard(
         modifier = modifier,
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = RoundedCornerShape(32.dp),
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
@@ -983,10 +1039,10 @@ private fun WeatherHeroCard(
                 }
                 Text(
                     text = state.title,
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = MaterialTheme.typography.displaySmall.copy(
                         fontFeatureSettings = "tnum"
                     ),
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center
                 )
@@ -1039,8 +1095,11 @@ private fun weatherPressureChartPoints(
     val maxX = allPoints.maxOfOrNull { it.x } ?: 1f
     val minYValue = allPoints.minOfOrNull { it.pressure } ?: 0f
     val maxYValue = allPoints.maxOfOrNull { it.pressure } ?: 1f
-    val yMinimum = minYValue - margin
-    val yMaximum = max(maxYValue + margin, yMinimum + minRange)
+    // At least the minimum range, centered on the readings so a steady pressure sits mid-chart, not on the floor.
+    val span = max(maxYValue - minYValue + 2 * margin, minRange)
+    val mid = (minYValue + maxYValue) / 2
+    val yMinimum = mid - span / 2
+    val yMaximum = mid + span / 2
     return WeatherPressureChartPoints(
         startTime = startTime,
         data = points,

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
@@ -435,7 +436,7 @@ fun CameraPreview(
                     .padding(8.dp)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.camera_flip),
+                    imageVector = TrailIcons.CameraFlip,
                     contentDescription = null
                 )
             }

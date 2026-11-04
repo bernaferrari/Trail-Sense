@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.maps.picker
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Color
 import android.view.View
@@ -148,13 +149,13 @@ class MapLocationPicker {
                     ) {
                         IconButton(onClick = { map.zoom(2f) }) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_add),
+                                imageVector = TrailIcons.Add,
                                 contentDescription = null
                             )
                         }
                         IconButton(onClick = { map.zoom(0.5f) }) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_zoom_out),
+                                imageVector = TrailIcons.ZoomOut,
                                 contentDescription = null
                             )
                         }

@@ -76,13 +76,18 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTile
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTileGrid
+import com.kylecorry.trail_sense.shared.views.compose.rememberTileTitleSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSearch
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
 
 /**
- * The Tools tab: pinned tools as large colored tiles, then every tool by category, each category one card of
- * compact icon tiles so the whole kit fits in a few screens. Searching swaps the grid for rows with each tool's
+ * The Tools tab, laid out like Keepout's settings: pinned tools, then every tool by category, each category one
+ * connected grid of tiles whose icon wells carry the category's accent. Searching swaps the grid for rows with each tool's
  * description, which is what you scan when you don't know a tool's name. Long press any tool for its actions.
  */
 @Composable
@@ -132,7 +137,10 @@ fun ToolsScreen(
     }
 
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            // One title size for every tile on the page, decided once from the longest tool name.
+            val gridWidth = minOf(maxWidth, TrailSenseSize.maximumContentWidth) - TrailSenseSpacing.lg * 2
+            val titleSize = rememberTileTitleSize(allTools.map { it.name }, gridWidth, if (gridWidth >= 600.dp) 3 else 2)
             LazyColumn(
                 modifier = Modifier
                     .widthIn(max = TrailSenseSize.maximumContentWidth)
@@ -156,6 +164,7 @@ fun ToolsScreen(
                         Text(
                             text = stringResource(R.string.tools),
                             style = MaterialTheme.typography.displaySmall,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
@@ -205,14 +214,20 @@ fun ToolsScreen(
                         item("pinned") {
                             Column {
                                 TrailSenseGroupHeader(stringResource(R.string.pinned))
-                                PinnedTools(pinned, onToolClick, onToolLongClick)
+                                TrailSenseTileGrid(
+                                    pinned.map { it.tile(onToolClick, onToolLongClick) },
+                                    titleSize = titleSize
+                                )
                             }
                         }
                     }
                     items(categories, key = { "category_${it.categoryName}" }) { group ->
                         Column {
                             if (group.categoryName != null) TrailSenseGroupHeader(group.categoryName)
-                            ToolGrid(group.tools, onToolClick, onToolLongClick)
+                            TrailSenseTileGrid(
+                                group.tools.map { it.tile(onToolClick, onToolLongClick) },
+                                titleSize = titleSize
+                            )
                         }
                     }
                 }
@@ -221,185 +236,28 @@ fun ToolsScreen(
     }
 }
 
-/** Pinned tools: two to a row, each in its own container color so the favorites read at a glance. */
-@Composable
-private fun PinnedTools(tools: List<Tool>, onClick: (Tool) -> Unit, onLongClick: (Tool) -> Unit) {
-    val scheme = MaterialTheme.colorScheme
-    val tones = listOf(
-        scheme.primaryContainer to scheme.onPrimaryContainer,
-        scheme.tertiaryContainer to scheme.onTertiaryContainer,
-        scheme.secondaryContainer to scheme.onSecondaryContainer
-    )
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-        tools.chunked(2).forEachIndexed { rowIndex, row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-                row.forEachIndexed { columnIndex, tool ->
-                    val (container, content) = tones[(rowIndex * 2 + columnIndex) % tones.size]
-                    PinnedTile(
-                        tool = tool,
-                        container = container,
-                        content = content,
-                        onClick = { onClick(tool) },
-                        onLongClick = { onLongClick(tool) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (row.size == 1) Spacer(Modifier.weight(1f))
-            }
-        }
-    }
+/** Each category's accent, used only in its tools' icon wells (Keepout's rule: color lives in the wells). */
+private fun ToolCategory.accent(): Color = when (this) {
+    ToolCategory.Signaling -> TrailSenseAccents.Coral
+    ToolCategory.Distance -> TrailSenseAccents.Sky
+    ToolCategory.Location -> TrailSenseAccents.Leaf
+    ToolCategory.Angles -> TrailSenseAccents.Lavender
+    ToolCategory.Time -> TrailSenseAccents.Apricot
+    ToolCategory.Power -> TrailSenseAccents.Sun
+    ToolCategory.Weather -> TrailSenseAccents.Periwinkle
+    ToolCategory.Communication -> TrailSenseAccents.Rose
+    ToolCategory.Books -> TrailSenseAccents.Seafoam
+    ToolCategory.Other -> TrailSenseAccents.Stone
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun PinnedTile(
-    tool: Tool,
-    container: Color,
-    content: Color,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        if (pressed) 0.96f else 1f,
-        MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "pinnedPress"
-    )
-    Surface(
-        modifier = modifier
-            .height(100.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            },
-        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = container,
-        contentColor = content
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .combinedClickable(
-                    interactionSource = interaction,
-                    indication = androidx.compose.material3.ripple(),
-                    role = Role.Button,
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                    onLongClickLabel = tool.name
-                )
-                .padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            val cookie = MaterialShapes.Cookie6Sided.toShape()
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .graphicsLayer {
-                        shape = cookie
-                        clip = true
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(color = content.copy(alpha = 0.12f), modifier = Modifier.fillMaxSize()) {}
-                Icon(painterResource(tool.icon), contentDescription = null, modifier = Modifier.size(22.dp))
-            }
-            Text(
-                text = tool.name,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-/**
- * A category: its tools as chips, two to a row on a phone (more on wider screens), each an icon well and a name on
- * one line. A category with a single tool stays a single chip instead of a mostly empty card.
- */
-@Composable
-private fun ToolGrid(tools: List<Tool>, onClick: (Tool) -> Unit, onLongClick: (Tool) -> Unit) {
-    BoxWithConstraints {
-        val columns = (maxWidth / 172.dp).toInt().coerceIn(2, 4)
-        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-            tools.chunked(columns).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-                    row.forEach { tool ->
-                        ToolChip(
-                            tool = tool,
-                            onClick = { onClick(tool) },
-                            onLongClick = { onLongClick(tool) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ToolChip(
-    tool: Tool,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        if (pressed) 0.96f else 1f,
-        MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "toolPress"
-    )
-    Surface(
-        modifier = modifier
-            .heightIn(min = 64.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            },
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-        Row(
-            modifier = Modifier
-                .combinedClickable(
-                    interactionSource = interaction,
-                    indication = androidx.compose.material3.ripple(),
-                    role = Role.Button,
-                    onClick = onClick,
-                    onLongClick = onLongClick,
-                    onLongClickLabel = tool.name
-                )
-                .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(painterResource(tool.icon), contentDescription = null, modifier = Modifier.size(22.dp))
-                }
-            }
-            Text(
-                text = tool.name,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
+private fun Tool.tile(onClick: (Tool) -> Unit, onLongClick: (Tool) -> Unit) = TrailSenseTile(
+    key = id,
+    title = name,
+    accent = category.accent(),
+    icon = { Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(22.dp)) },
+    onClick = { onClick(this) },
+    onLongClick = { onLongClick(this) }
+)
 
 @Composable
 private fun ToolRow(

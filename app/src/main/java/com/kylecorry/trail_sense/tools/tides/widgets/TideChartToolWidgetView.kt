@@ -44,37 +44,32 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
             Duration.between(Instant.now(), it.time).abs()
         }
 
-        var bitmap: android.graphics.Bitmap? = null
-        onMain {
-            bitmap = renderChart(
+        val title = if (tide == null) context.getString(R.string.no_tides) else tide.table.name ?: ""
+        return onMain {
+            chartContent(
                 context,
-                createTideChartView(
+                WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.TIDES))
+            ) {
+                TideChart(
                     context,
-                    if (tide == null) context.getString(R.string.no_tides) else tide.table.name ?: "",
+                    title,
                     tide?.today?.waterLevels.orEmpty(),
                     tide?.today?.waterLevelRange,
                     currentWaterLevel
                 )
-            )
+            }
         }
-
-        return ToolWidgetContent.Chart(
-            bitmap = bitmap,
-            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.TIDES))
-        )
     }
 
-    private fun createTideChartView(
+    @Composable
+    private fun TideChart(
         context: Context,
         title: String,
         waterLevels: List<Reading<Float>>,
         range: Range<Float>?,
         currentWaterLevel: Reading<Float>?
-    ): View {
-        return TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
+    ) {
+        run {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

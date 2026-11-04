@@ -2148,10 +2148,26 @@
     <string name="search_tools">Search tools</string>
     <!-- Settings pages: section headers, footers and rows -->
     <string name="settings_section_measurements">Measurements</string>
-    <string name="settings_section_notifications">Notifications</string>
     <string name="settings_time_format_example">Times look like %s</string>
     <string name="settings_bottom_navigation_slot">Slot %d</string>
     <string name="settings_bottom_navigation_tools_slot">Slot %d always opens Tools</string>
     <string name="settings_error_banners_footer">Choose which problems can show a banner at the top of a tool.</string>
     <string name="settings_tools_summary">Quick actions, widgets and bottom navigation</string>
+    <string name="weather_chart_empty">Pressure appears here as the weather monitor records it.</string>
+    <!-- Calibration and tool settings redesign -->
+    <string name="calibration_chart_legend">The colored line is the calibrated reading; the gray line is what the sensor reported.</string>
+    <string name="barometer_offset_explanation">The pressure may differ from nearby weather stations. Enter the pressure a station reports to set the barometer offset for you.</string>
+    <string name="barometer_offset_applied">Includes an offset of %s</string>
+    <string name="compass_calibration_explanation">If the accuracy is poor, calibrate away from metal and electronics.</string>
+    <string name="compass_declination_explanation">Declination is the angle between magnetic north and true north. It changes with where you are, so automatic is best unless you have no location.</string>
+    <string name="altimeter_override_explanation">Elevation is measured from the elevation you set here. Set it where you know your elevation, like at a trailhead sign or a summit.</string>
+    <string name="altimeter_calibration_explanation">The barometer tracks small changes in elevation and GPS keeps it from drifting over time.</string>
+    <string name="gps_permission_explanation">Without location permission, Trail Sense uses the location you set below.</string>
+    <string name="gps_override_explanation">Trail Sense uses this location while automatic location is off.</string>
+    <string name="settings_notifications_section">Notifications</string>
+    <string name="field_guide_name_common">Common</string>
+    <string name="field_guide_name_scientific">Scientific</string>
+    <string name="field_guide_name_both">Both</string>
+    <string name="thermometer_source_explanation">Historic estimates the air temperature from past weather where you are. Sensor reads your phone\'s own thermometer, which runs warm while the phone is in use or in a pocket.</string>
+    <string name="thermometer_calibration_explanation">To calibrate the sensor, note what your phone reads and what a real thermometer reads at the same time, once when it\'s cold and once when it\'s warm.</string>
 </resources>

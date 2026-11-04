@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.units.Reading
@@ -18,7 +19,7 @@ class CloudWeatherField(
         return WeatherListItem(
             id = 7,
             title = context.getString(R.string.clouds),
-            icon = R.drawable.cloudy,
+            icon = TrailIcons.Cloudy,
             trailingText = name
         ) {
             CloudDetailsModal(context).show(cloud.value)

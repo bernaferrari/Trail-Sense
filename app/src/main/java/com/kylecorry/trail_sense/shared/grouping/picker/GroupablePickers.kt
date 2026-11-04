@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.grouping.picker
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.app.Dialog
 import androidx.compose.foundation.layout.Box
@@ -188,7 +189,7 @@ private fun <T : Groupable> GroupableSelectContent(
             if (root != null) {
                 IconButton(onClick = onNavigateUp) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_prev),
+                        imageVector = TrailIcons.Prev,
                         contentDescription = null
                     )
                 }
@@ -216,7 +217,7 @@ private fun <T : Groupable> GroupableSelectContent(
                 label = { Text(stringResource(R.string.search)) },
                 leadingIcon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_search),
+                        imageVector = TrailIcons.Search,
                         contentDescription = null
                     )
                 }

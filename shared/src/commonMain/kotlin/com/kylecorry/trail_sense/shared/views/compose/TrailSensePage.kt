@@ -44,11 +44,57 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
+
+/** Goes back from the current screen, when there is somewhere to go back to (null on a tab's first screen). */
+val LocalTrailSenseBack = androidx.compose.runtime.staticCompositionLocalOf<(() -> Unit)?> { null }
+
+/**
+ * A screen's title bar for screens that don't scroll as a page (instruments, maps, lists with their own scrolling):
+ * a back arrow when there is somewhere to go back to, the title, and actions.
+ */
+@Composable
+fun TrailSenseTopBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    onBack: (() -> Unit)? = LocalTrailSenseBack.current,
+    backLabel: String = "Back",
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    androidx.compose.material3.TopAppBar(
+        modifier = modifier,
+        title = {
+            Column {
+                Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+                if (subtitle != null) {
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        },
+        navigationIcon = {
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(TrailSenseIcons.Filled.ArrowBack, contentDescription = backLabel)
+                }
+            }
+        },
+        actions = actions,
+        windowInsets = WindowInsets(0),
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+    )
+}
 
 /**
  * The standard scrolling page of the family: a large title that collapses into the bar as the page scrolls, a back
@@ -60,7 +106,7 @@ fun TrailSensePage(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
-    onBack: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = LocalTrailSenseBack.current,
     backLabel: String = "Back",
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
@@ -83,7 +129,7 @@ fun TrailSensePage(
         floatingActionButton = floatingActionButton,
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold) },
                 subtitle = subtitle?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
                 navigationIcon = {
                     if (onBack != null) {
@@ -261,12 +307,13 @@ fun TrailSenseGroupCard(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(TrailSenseSpacing.lg),
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainerLow,
     content: @Composable ColumnScope.() -> Unit
 ) {
     androidx.compose.material3.Surface(
         modifier = modifier.fillMaxWidth(),
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = color
     ) {
         Column(modifier = Modifier.padding(contentPadding), content = content)
     }
