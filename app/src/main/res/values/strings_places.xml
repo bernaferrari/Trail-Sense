@@ -4,6 +4,7 @@
     <string name="places_nearest_beacon">Nearest beacon</string>
     <string name="places_beacon_direction">%1$s · %2$s</string>
     <string name="places_beacon_empty_action">Place a beacon</string>
+    <string name="places_beacon_form_hint">Add a location below</string>
     <string name="places_hidden">Hidden</string>
     <!-- Paths -->
     <string name="places_paths_empty_action">Start Backtrack</string>

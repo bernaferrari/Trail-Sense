@@ -1,5 +1,16 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
+import androidx.compose.ui.graphics.luminance
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBearingField
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
@@ -446,6 +457,39 @@ private fun PlaceBeaconScreen(
                 }
             }
         ) {
+            item(key = "preview") {
+                // What you're making, as you make it: the beacon's colour and icon on a cookie, its name and place.
+                val color = Color(data.color.color)
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val coordinateText = data.coordinate?.let {
+                    com.kylecorry.trail_sense.shared.FormatService.getInstance(context).formatLocation(it)
+                }
+                TrailSenseSpotlight(
+                    eyebrow = groupName,
+                    title = data.name.ifBlank { stringResource(R.string.beacon) },
+                    titleStyle = MaterialTheme.typography.headlineMedium,
+                    supportingText = coordinateText ?: stringResource(R.string.places_beacon_form_hint),
+                    tone = TrailSenseTone.Primary,
+                    badge = {
+                        Surface(
+                            onClick = onColorClick,
+                            shape = MaterialShapes.Cookie9Sided.toShape(),
+                            color = color,
+                            contentColor = if (color.luminance() > 0.5f) Color.Black else Color.White,
+                            modifier = Modifier.size(72.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    data.icon?.icon ?: TrailIcons.Location,
+                                    contentDescription = stringResource(R.string.color),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+
             item(key = "name") {
                 TrailSenseRowGroup {
                     row { position ->
@@ -500,17 +544,17 @@ private fun PlaceBeaconScreen(
                             )
                         }
                         row { position ->
-                            TrailSenseGroupCard(position = position) {
-                                BearingInput(
-                                    bearing = data.bearingTo,
-                                    trueNorth = data.bearingIsTrueNorth,
-                                    onBearingChange = onBearingChange,
-                                    compassBearingText = compassBearingText,
-                                    hasCompass = hasCompass,
-                                    onCompassClick = onCompassBearingClick,
-                                    onCameraClick = onCameraBearingClick
-                                )
-                            }
+                            PlacesBearingField(
+                                bearing = data.bearingTo,
+                                trueNorth = data.bearingIsTrueNorth,
+                                compassBearingText = compassBearingText,
+                                hasCompass = hasCompass,
+                                onBearingChange = onBearingChange,
+                                onCompassClick = onCompassBearingClick,
+                                onCameraClick = onCameraBearingClick,
+                                position = position,
+                                tag = "bearing_to"
+                            )
                         }
                     }
                 }
@@ -518,30 +562,53 @@ private fun PlaceBeaconScreen(
 
             trailSenseSection(key = "appearance", title = appearanceTitle) {
                 row { position ->
-                    TrailSenseListItem(
+                    PlacesRow(
                         title = stringResource(R.string.group),
                         subtitle = groupName,
-                        icon = rememberVectorPainter(TrailIcons.BeaconGroup),
+                        leading = {
+                            PlacesBadge(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                icon = TrailIcons.BeaconGroup,
+                                shape = MaterialShapes.Clover4Leaf.toShape(),
+                                size = 44.dp
+                            )
+                        },
                         position = position,
                         onClick = onGroupClick,
                         modifier = Modifier.testTag("beacon_group_picker")
                     )
                 }
                 row { position ->
-                    TrailSenseListItem(
+                    val color = Color(data.color.color)
+                    PlacesRow(
                         title = stringResource(R.string.color),
-                        icon = rememberVectorPainter(TrailIcons.Bubble),
-                        iconTint = Color(data.color.color),
+                        leading = {
+                            PlacesBadge(
+                                containerColor = color,
+                                contentColor = color,
+                                shape = MaterialShapes.Cookie9Sided.toShape(),
+                                size = 44.dp
+                            )
+                        },
                         position = position,
                         onClick = onColorClick,
                         modifier = Modifier.testTag("beacon_color_picker")
                     )
                 }
                 row { position ->
-                    TrailSenseListItem(
+                    val color = Color(data.color.color)
+                    PlacesRow(
                         title = stringResource(R.string.icon),
-                        icon = rememberVectorPainter(data.icon?.icon ?: TrailIcons.Bubble),
-                        iconTint = Color(data.color.color),
+                        leading = {
+                            PlacesBadge(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = color,
+                                icon = data.icon?.icon ?: TrailIcons.Location,
+                                shape = MaterialShapes.Cookie4Sided.toShape(),
+                                size = 44.dp
+                            )
+                        },
                         position = position,
                         onClick = onIconClick,
                         modifier = Modifier.testTag("beacon_icon_picker")
