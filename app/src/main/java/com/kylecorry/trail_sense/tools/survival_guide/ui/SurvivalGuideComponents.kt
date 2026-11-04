@@ -102,7 +102,7 @@ internal fun SurvivalGuideGroupRow(
     SurvivalGuidePressableSurface(
         onClick = onClick,
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier
     ) {
         Row(
@@ -113,18 +113,18 @@ internal fun SurvivalGuideGroupRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
-                // One quiet shape for every chapter: the icon names it, colour adds nothing.
+                // The family's well: one 40 dp cookie in 12% primary for every chapter; the icon names it.
                 Surface(
                     shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(TrailSenseSize.compactIconContainer)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             painter = icon,
                             contentDescription = null,
-                            modifier = Modifier.size(TrailSenseSize.leadingIcon)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
@@ -137,7 +137,7 @@ internal fun SurvivalGuideGroupRow(
                 Text(
                     text = title,
                     modifier = titleModifier,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
