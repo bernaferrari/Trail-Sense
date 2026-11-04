@@ -138,7 +138,6 @@ fun DestinationContent(
             DESTINATION_MAP_SETTINGS -> MapSettings()
             DESTINATION_PHOTO_MAP_SETTINGS -> PhotoMapSettings()
             DESTINATION_BACKUP_SETTINGS -> BackupSettings()
-            DESTINATION_THEME_SETTINGS -> ThemeSettings()
             DESTINATION_EXPERIMENTAL_SETTINGS -> ExperimentalSettings()
             DESTINATION_UNIT_SETTINGS -> UnitSettings()
             DESTINATION_AUGMENTED_REALITY_SETTINGS -> AugmentedRealitySettings()

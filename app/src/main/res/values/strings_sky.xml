@@ -12,6 +12,7 @@
     <string name="sky_sensors_good">%1$d of %2$d good</string>
     <string name="sky_sensors_all_good">Every sensor is reporting well</string>
     <string name="sky_sensors_attention">%d need attention</string>
+    <string name="sky_sensors_needs_attention">Needs attention</string>
     <string name="sky_sensors_good_label">Good</string>
     <string name="sky_sensors_moderate_label">Moderate</string>
     <string name="sky_sensors_poor_label">Poor</string>
@@ -59,7 +60,7 @@
     <string name="sky_sensors_of_total">of %d</string>
     <string name="sky_diagnostics_checks_count">%1$d of %2$d checks</string>
     <string name="sky_units_imperial">Imperial</string>
-    <string name="sky_settings_sensors_summary">Location, altitude, compass and barometer</string>
+    <string name="sky_settings_sensors_summary">Location, compass and barometer</string>
     <string name="sky_settings_privacy_summary">Location sharing and screenshots</string>
     <string name="sky_settings_errors_summary">Crash reports and alerts</string>
     <string name="sky_settings_backup_summary">Save or restore your data</string>

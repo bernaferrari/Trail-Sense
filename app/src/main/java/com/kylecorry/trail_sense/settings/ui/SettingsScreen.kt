@@ -31,13 +31,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MonitorHeart
 import androidx.compose.material.icons.rounded.Policy
+import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -87,7 +87,6 @@ import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 private val navigationMap = mapOf(
     R.string.pref_unit_settings to R.id.action_settings_to_unit_settings,
     R.string.pref_privacy_settings to R.id.action_settings_to_privacy_settings,
-    R.string.pref_theme_settings to R.id.action_settings_to_theme_settings,
     R.string.pref_experimental_settings to R.id.action_settings_to_experimental_settings,
     R.string.pref_plugins_settings to R.id.action_settings_to_plugins_settings,
     R.string.pref_error_settings to R.id.action_settings_to_error_settings,
@@ -108,17 +107,32 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
         onBack = { host.mainActivity.onBackPressedDispatcher.onBackPressed() },
         onNavigate = { host.findNavController().navigateWithAnimation(it) },
         appearance = {
-            val prefs = remember { com.kylecorry.trail_sense.shared.UserPreferences(host.requireContext()) }
+            val context = host.requireContext()
+            val prefs = remember { com.kylecorry.trail_sense.shared.UserPreferences(context) }
+            val cache = remember {
+                com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem.getInstance(context).preferences
+            }
+            val fullscreenKey = stringResource(R.string.pref_night_mode_fullscreen)
+            val compassColorsKey = stringResource(R.string.pref_use_dynamic_colors_on_compass)
             ThemeAppearanceControls(
                 prefs = prefs,
                 wallpaperAvailable = remember { com.google.android.material.color.DynamicColors.isDynamicColorAvailable() },
+                nightFullscreen = remember { cache.getBoolean(fullscreenKey) ?: false },
+                compassWallpaperColors = remember { cache.getBoolean(compassColorsKey) ?: false },
                 onThemeChanged = {
                     prefs.theme = it
                     host.mainActivity.reloadTheme()
                 },
-                onPaletteChanged = { com.kylecorry.trail_sense.main.theme.ThemeChoices.changed() }
+                onPaletteChanged = { com.kylecorry.trail_sense.main.theme.ThemeChoices.changed() },
+                onNightFullscreenChanged = {
+                    cache.putBoolean(fullscreenKey, it)
+                    host.mainActivity.reloadTheme()
+                },
+                onCompassWallpaperColorsChanged = { cache.putBoolean(compassColorsKey, it) }
             )
         },
+        onCompactModeChanged = { host.mainActivity.changeBottomNavLabelsVisibility(it) },
+        onShowAllLabelsChanged = { host.mainActivity.showAllBottomNavLabels(it) },
         onOpenUrl = { host.startActivity(Intents.url(it)) },
         onEmailDeveloper = {
             val intent = Intents.email(
@@ -136,8 +150,8 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
 }
 
 /**
- * Settings, a calm list: the app's own pages (units and theme first, with their values), then every tool that has
- * settings, then the experiments and plugins, then about. One quiet icon well leads every row so the groups line up.
+ * Settings, a calm list: appearance in place, the navigation bar's switches, the app's own pages (units first, with
+ * its value), every tool that has settings, then the advanced pages and about. One quiet icon well leads every row so the groups line up.
  */
 @Composable
 private fun SettingsScreen(
@@ -147,13 +161,16 @@ private fun SettingsScreen(
     onNavigate: (Int) -> Unit,
     onOpenUrl: (String) -> Unit,
     onEmailDeveloper: () -> Unit,
-    appearance: @Composable () -> Unit = {}
+    appearance: @Composable () -> Unit = {},
+    onCompactModeChanged: (Boolean) -> Unit = {},
+    onShowAllLabelsChanged: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val toolGroups = remember {
-        com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort(context)
+        val categories = com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort(context)
             .sort(Tools.getTools(context).filter { it.settingsNavAction != null })
             .filter { it.tools.isNotEmpty() }
+        groupSettingsTools(categories.map { SettingsToolGroup(it.categoryName, it.tools) }, context.getString(R.string.other))
     }
     // Live values for the quick controls, read again whenever the screen comes back from a sub-page.
     var quick by remember { mutableStateOf(readQuickSettings(context)) }
@@ -163,7 +180,7 @@ private fun SettingsScreen(
     }
 
     val generalTitle = stringResource(R.string.general)
-    val toolsTitle = stringResource(R.string.tools)
+    val navigationBarTitle = stringResource(R.string.navigation_bar)
     val advancedTitle = stringResource(R.string.advanced)
     val aboutTitle = stringResource(R.string.pref_category_about)
 
@@ -177,10 +194,38 @@ private fun SettingsScreen(
         // One question: where do I change this? The list answers it; the two settings people change most lead it,
         // with their live values.
         // Appearance applies in place, like ChangeDetection: no sub-page for the choices people make most.
+        // Every appearance choice, including the rarer switches, lives here: there is no separate Theme page.
         item("appearance") {
             Column {
                 TrailSenseGroupHeader(stringResource(R.string.appearance))
                 appearance()
+            }
+        }
+        // The navigation bar's two switches. With compact mode on there are no labels to show, so that switch
+        // stays in place but turns off rather than vanishing (the group never shrinks to one row).
+        trailSenseSection("navigation_bar", title = navigationBarTitle) {
+            row { position ->
+                SettingsSwitchRow(
+                    label = stringResource(R.string.compact_mode),
+                    checked = quick.compact,
+                    onCheckedChange = {
+                        quick = quick.copy(compact = it)
+                        onCompactModeChanged(it)
+                    },
+                    position = position
+                )
+            }
+            row { position ->
+                SettingsSwitchRow(
+                    label = stringResource(R.string.pref_show_all_bottom_navigation_labels),
+                    checked = quick.allLabels && !quick.compact,
+                    enabled = !quick.compact,
+                    onCheckedChange = {
+                        quick = quick.copy(allLabels = it)
+                        onShowAllLabelsChanged(it)
+                    },
+                    position = position
+                )
             }
         }
         trailSenseSection("general", title = generalTitle) {
@@ -193,13 +238,14 @@ private fun SettingsScreen(
                     onClick = { go(R.string.pref_unit_settings) }
                 )
             }
+            // Quick actions and widgets apply across tools; a one-row "Tools" group above the tools would repeat
+            // its own title.
             row { position ->
                 SettingsNavRow(
-                    title = stringResource(R.string.pref_theme_title),
-                    icon = rememberVectorPainter(TrailIcons.Theme),
-                    value = quick.theme,
+                    title = stringResource(R.string.sky_settings_tools_summary),
+                    icon = rememberVectorPainter(Icons.Rounded.Widgets),
                     position = position,
-                    onClick = { go(R.string.pref_theme_settings) }
+                    onClick = { go(R.string.pref_tool_settings_header_key) }
                 )
             }
             listOf(
@@ -220,20 +266,10 @@ private fun SettingsScreen(
             }
         }
 
-        // Tools: the shared tool settings first, then each tool's own page grouped by its family, one row each.
-        trailSenseSection("tools_lead", title = toolsTitle) {
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.tools),
-                    subtitle = stringResource(R.string.sky_settings_tools_summary),
-                    icon = rememberVectorPainter(TrailIcons.Apps),
-                    position = position,
-                    onClick = { go(R.string.pref_tool_settings_header_key) }
-                )
-            }
-        }
+        // Each tool's own page grouped by its family, one row each; families with one tool share an "Other" group
+        // rather than each getting a header for a single row.
         toolGroups.forEachIndexed { index, group ->
-            trailSenseSection("tools_$index", title = group.categoryName) {
+            trailSenseSection("tools_$index", title = group.title) {
                 group.tools.forEach { tool ->
                     row { position ->
                         SettingsNavRow(
@@ -248,6 +284,14 @@ private fun SettingsScreen(
         }
 
         trailSenseSection("advanced", title = advancedTitle) {
+            row { position ->
+                SettingsNavRow(
+                    title = stringResource(R.string.diagnostics),
+                    icon = rememberVectorPainter(Icons.Rounded.MonitorHeart),
+                    position = position,
+                    onClick = { go(R.string.pref_diagnostics) }
+                )
+            }
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.experimental),
@@ -269,14 +313,6 @@ private fun SettingsScreen(
         }
 
         trailSenseSection("about", title = aboutTitle) {
-            row { position ->
-                SettingsNavRow(
-                    title = stringResource(R.string.diagnostics),
-                    icon = rememberVectorPainter(Icons.Rounded.MonitorHeart),
-                    position = position,
-                    onClick = { go(R.string.pref_diagnostics) }
-                )
-            }
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.pref_app_version_title),
@@ -323,8 +359,8 @@ private fun SettingsScreen(
 }
 
 /**
- * One row of the Settings list: a 40 dp icon well, the title (and a summary only when it adds something), and a
- * chevron when it opens something, or a quiet [value] when it only reports one. 64 dp tall on one line.
+ * One row of the Settings list: a 40 dp icon well, the title (and a one-line summary only when it adds something),
+ * and a quiet trailing [value] when it has one. 64 dp tall on one line.
  */
 @Composable
 private fun SettingsNavRow(
@@ -408,12 +444,13 @@ private fun SettingsNavRow(
                         text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
+            // No chevrons: every row of this list opens a page, so a chevron on each would only repeat that.
             if (value != null) {
                 Spacer(Modifier.width(TrailSenseSpacing.sm))
                 Text(
@@ -424,26 +461,13 @@ private fun SettingsNavRow(
                     modifier = Modifier.padding(end = TrailSenseSpacing.sm)
                 )
             }
-            if (onClick != null) {
-                Spacer(Modifier.width(TrailSenseSpacing.xs))
-                Box(
-                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
         }
     }
 }
 
 private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
 
-private data class QuickSettings(val units: String, val theme: String)
+private data class QuickSettings(val units: String, val compact: Boolean, val allLabels: Boolean)
 
 private fun readQuickSettings(context: android.content.Context): QuickSettings {
     val prefs = com.kylecorry.trail_sense.shared.UserPreferences(context)
@@ -454,15 +478,21 @@ private fun readQuickSettings(context: android.content.Context): QuickSettings {
             R.string.sky_units_imperial
         }
     )
-    val theme = context.getString(
-        when (prefs.theme) {
-            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Light -> R.string.theme_light
-            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Dark -> R.string.theme_dark
-            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Black -> R.string.theme_black
-            com.kylecorry.trail_sense.shared.UserPreferences.Theme.SunriseSunset -> R.string.theme_mode_sun
-            com.kylecorry.trail_sense.shared.UserPreferences.Theme.Night -> R.string.theme_night_vision
-            else -> R.string.theme_mode_auto
-        }
-    )
-    return QuickSettings(units, theme)
+    return QuickSettings(units, prefs.useCompactMode, prefs.useShowAllBottomNavigationLabels)
+}
+
+private data class SettingsToolGroup(
+    val title: String?,
+    val tools: List<com.kylecorry.trail_sense.tools.tools.infrastructure.Tool>
+)
+
+/** Families with a single tool go into one trailing [otherTitle] group (or join the last group if only one is left). */
+private fun groupSettingsTools(groups: List<SettingsToolGroup>, otherTitle: String): List<SettingsToolGroup> {
+    val (multi, single) = groups.partition { it.tools.size > 1 }
+    val loose = single.flatMap { it.tools }.sortedBy { it.name }
+    return when {
+        loose.isEmpty() -> multi
+        loose.size == 1 && multi.isNotEmpty() -> multi.dropLast(1) + multi.last().copy(tools = multi.last().tools + loose)
+        else -> multi + SettingsToolGroup(otherTitle, loose)
+    }
 }
