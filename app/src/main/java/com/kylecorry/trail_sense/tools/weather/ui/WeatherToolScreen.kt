@@ -776,27 +776,54 @@ private fun WeatherPressureCard(
                     color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
             }
+            // The star number: the value at display size with its unit small beside it, then a verdict in words.
+            val reading = pressure?.trailingText
+            val number = reading?.substringBeforeLast(' ')
+            val unit = reading?.substringAfterLast(' ', "")?.takeIf { reading.contains(' ') }
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Bottom,
                 modifier = Modifier.padding(top = TrailSenseSpacing.xs)
             ) {
                 Text(
-                    pressure?.trailingText ?: "--",
-                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                    number ?: stringResource(R.string.sky_pressure_waiting),
+                    style = (if (number != null) MaterialTheme.typography.displayMedium else MaterialTheme.typography.headlineSmall)
+                        .copy(fontFeatureSettings = "tnum"),
                     fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.alignByBaseline()
                 )
-                if (tendency?.trailingText != null) {
-                    // The trend in a word first, so a flat line still says something: "Steady · 0.00 hPa / 3h".
-                    val trendWord = stringResource(
-                        when {
-                            tendencyDirection > 0 -> R.string.sky_pressure_rising
-                            tendencyDirection < 0 -> R.string.sky_pressure_falling
-                            else -> R.string.sky_pressure_steady
-                        }
+                if (unit != null) {
+                    Text(
+                        unit,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                        color = scheme.onPrimaryContainer.copy(alpha = 0.75f),
+                        modifier = Modifier
+                            .padding(start = TrailSenseSpacing.xs)
+                            .alignByBaseline()
                     )
+                }
+            }
+            if (tendency?.trailingText != null) {
+                Text(
+                    stringResource(
+                        when {
+                            tendencyDirection > 0 -> R.string.sky_pressure_verdict_rising
+                            tendencyDirection < 0 -> R.string.sky_pressure_verdict_falling
+                            else -> R.string.sky_pressure_verdict_steady
+                        }
+                    ),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = scheme.onPrimaryContainer.copy(alpha = 0.85f),
+                    modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = TrailSenseSpacing.sm)
+            ) {
+                if (tendency?.trailingText != null) {
                     TrailSenseValueChip(
-                        text = "$trendWord · ${tendency.trailingText}",
+                        text = tendency.trailingText,
                         icon = tendency.icon,
                         tone = when {
                             tendencyDirection >= 1 -> TrailSenseTone.Good
@@ -996,7 +1023,13 @@ private fun WeatherPressureChart(
         ) {
             val pad = 12.dp.toPx()
             val h = size.height - 2 * pad
-            drawSkyGrid(grid, lines = 3, top = pad, bottom = size.height - pad)
+            // No numeric grid: a soft middle band marks the window's usual range, the words at the left do the rest.
+            drawRoundRect(
+                grid.copy(alpha = 0.22f),
+                topLeft = Offset(0f, pad + h / 3f),
+                size = androidx.compose.ui.geometry.Size(size.width, h / 3f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx())
+            )
 
             fun at(point: WeatherPressureChartPoint) = Offset(
                 chartPoints.x(point.x, size.width),
@@ -1051,12 +1084,12 @@ private fun WeatherPressureChart(
                 )
             }
 
-            // Now: a ringed dot at the end of the record.
+            // Now: a 12dp dot with a soft halo at the end of the record.
             chartPoints.data.lastOrNull()?.let {
                 val o = at(it)
-                drawCircle(primary.copy(alpha = 0.18f), radius = 12.dp.toPx(), center = o)
-                drawCircle(surface, radius = 6.dp.toPx(), center = o)
-                drawCircle(primary, radius = 4.dp.toPx(), center = o)
+                drawCircle(primary.copy(alpha = 0.16f), radius = 14.dp.toPx(), center = o)
+                drawCircle(surface, radius = 8.dp.toPx(), center = o)
+                drawCircle(primary, radius = 6.dp.toPx(), center = o)
             }
 
             selected?.let {
@@ -1090,14 +1123,20 @@ private fun WeatherPressureChart(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.End
         ) {
-            listOf(1f, 0.5f, 0f).forEach { fraction ->
-                val value = chartPoints.yMinimum + chartPoints.yRange * fraction
+            // Word axes: High, Normal and Low for this window, so the shape reads before the numbers do.
+            listOf(
+                R.string.sky_axis_high,
+                R.string.sky_axis_normal,
+                R.string.sky_axis_low
+            ).forEach { label ->
                 Text(
-                    String.format(java.util.Locale.getDefault(), "%.${decimals}f", value),
-                    style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                    stringResource(label),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                     color = textColor
                 )
             }
+
         }
     }
 }
@@ -1171,9 +1210,13 @@ private fun WeatherMonitorPlayBar(
                     color = content.copy(alpha = 0.75f)
                 )
             }
+            // The screen's one action, in the warm action role.
             FilledIconButton(
                 onClick = onPlayClick,
-                colors = IconButtonDefaults.filledIconButtonColors(),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary
+                ),
                 shape = if (isOn) RoundedCornerShape(16.dp) else RoundedCornerShape(50),
                 modifier = Modifier
                     .size(width = 64.dp, height = 52.dp)

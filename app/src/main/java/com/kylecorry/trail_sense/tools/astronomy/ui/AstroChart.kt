@@ -111,14 +111,16 @@ class AstroChart(
         val textColor = scheme.onSurfaceVariant
         val lineColor = scheme.outlineVariant
         val sunColor = status.caution
-        val moonColor = scheme.primary.copy(alpha = 0.55f)
+        val moonColor = scheme.outline
         val haloColor = scheme.surfaceContainerLowest
-        val nightColor = scheme.primaryContainer
+        val nightColor = scheme.surfaceContainerHighest
+        val dayColor = status.cautionContainer.copy(alpha = 0.45f)
+        val nowColor = scheme.onSurface.copy(alpha = 0.35f)
         val horizonColor = scheme.outline
         // The horizon's name sits just under its line at the right end, inside the night band, away from the markers
         // (which start the day at the left).
         val horizonPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = scheme.onPrimaryContainer.copy(alpha = 0.75f).toArgb()
+            color = scheme.onSurfaceVariant.toArgb()
             textSize = Resources.sp(context, 11f)
             textAlign = Paint.Align.RIGHT
             isFakeBoldText = true
@@ -168,7 +170,15 @@ class AstroChart(
                     drawHorizontal(it, lineColor, left, right, top, bottom, dashed = true)
                 }
             } else {
-                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.85f), left, right, top, bottom)
+                drawBand(0f, MIN_Y, nightColor, left, right, top, bottom)
+            }
+            // Day and night as a two-tone band: a warm sky above the horizon, the night below it.
+            drawBand(MAX_Y, 0f, dayColor, left, right, top, bottom)
+
+            // Now: a hairline through the day at the sun's current place.
+            sunPosition?.let {
+                val x = toScreen(it, left, right, top, bottom).x
+                drawLine(nowColor, Offset(x, top), Offset(x, bottom), strokeWidth = 1.5.dp.toPx())
             }
 
             drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
@@ -181,7 +191,10 @@ class AstroChart(
 
             drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.3f), left, right, top, bottom)
             drawArea(moonLine, moonPosition, moonColor.copy(alpha = 0.14f), left, right, top, bottom)
-            drawLineChart(moonLine, moonColor, left, right, top, bottom, 2.dp.toPx())
+            drawLineChart(
+                moonLine, moonColor, left, right, top, bottom, 2.dp.toPx(),
+                dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 5.dp.toPx()))
+            )
             drawLineChart(sunLine, sunColor, left, right, top, bottom, 4.dp.toPx())
 
             // A light halo lifts each marker off the curves and off each other when they meet.
@@ -233,7 +246,8 @@ class AstroChart(
         right: Float,
         top: Float,
         bottom: Float,
-        strokeWidth: Float
+        strokeWidth: Float,
+        dash: androidx.compose.ui.graphics.PathEffect? = null
     ) {
         if (points.size < 2) return
         val path = Path()
@@ -245,7 +259,8 @@ class AstroChart(
                 path.lineTo(screen.x, screen.y)
             }
         }
-        drawPath(path, color, style = Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+        drawPath(path, color, style = Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round, pathEffect = dash))
+
     }
 
     private fun DrawScope.drawArea(

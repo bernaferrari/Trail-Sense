@@ -905,7 +905,7 @@ private fun AstronomyTitle(
                 Spacer(Modifier.height(TrailSenseSpacing.md))
                 Text(
                     text = state.title,
-                    style = MaterialTheme.typography.displaySmall.copy(
+                    style = (if (state.title.length <= 9) MaterialTheme.typography.displayLarge else MaterialTheme.typography.displaySmall).copy(
                         fontFeatureSettings = "tnum"
                     ),
                     fontWeight = FontWeight.SemiBold,

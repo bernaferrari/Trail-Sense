@@ -37,5 +37,13 @@
     <string name="sky_pressure_steady">Steady</string>
     <string name="sky_pressure_rising">Rising</string>
     <string name="sky_pressure_falling">Falling</string>
+    <string name="sky_pressure_waiting">Waiting for a reading</string>
+    <string name="sky_pressure_verdict_steady">Pressure steady · no change expected</string>
+    <string name="sky_pressure_verdict_rising">Pressure rising · weather may improve</string>
+    <string name="sky_pressure_verdict_falling">Pressure falling · weather may worsen</string>
+    <string name="sky_axis_high">High</string>
+    <string name="sky_axis_normal">Normal</string>
+    <string name="sky_axis_low">Low</string>
 </resources>
+
 
