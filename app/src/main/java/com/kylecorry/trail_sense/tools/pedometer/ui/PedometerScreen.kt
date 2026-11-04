@@ -222,13 +222,6 @@ internal fun PedometerScreen(
         }
         dateString
     }
-    val subtitle = resetLabel?.let { stringResource(R.string.since_time, it) }
-    val activeTime = resetLabel?.let {
-        stringResource(
-            R.string.active_duration,
-            formatService.formatDuration(openPeriod?.activeTime ?: Duration.ZERO)
-        )
-    }
     val currentSpeed = speedText(instantSpeedometer, formatService)
     val averageSpeed = speedText(averageSpeedometer, formatService)
     val currentPace = paceText(instantSpeedometer, formatService)
@@ -306,8 +299,7 @@ internal fun PedometerScreen(
                 distance = title,
                 goal = goalText,
                 goalProgress = goalProgress,
-                since = subtitle,
-                activeTime = activeTime,
+                since = resetLabel,
                 isOn = isOn,
                 onToggle = onTogglePedometer,
                 onReset = onReset,
@@ -565,18 +557,12 @@ private fun PedometerHero(
     goal: String?,
     goalProgress: Float?,
     since: String?,
-    activeTime: String?,
     isOn: Boolean,
     onToggle: () -> Unit,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
-    val dot by animateColorAsState(
-        if (isOn) scheme.primary else scheme.outline,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "pedometerStatus"
-    )
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -607,39 +593,17 @@ private fun PedometerHero(
                 )
             }
         }
-        Row(
-            modifier = Modifier.padding(top = TrailSenseSpacing.xs),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(dot)
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.sm))
-            val quiet = MaterialTheme.typography.bodyMedium
+        // The button already says whether it runs; while it does, one quiet line says since when.
+        if (isOn && since != null) {
             Text(
-                text = stringResource(if (isOn) R.string.on else R.string.off),
-                modifier = Modifier.testTag("play_bar_title"),
-                style = quiet,
-                fontWeight = FontWeight.SemiBold,
-                color = scheme.onSurface
+                text = stringResource(R.string.pedometer_counting_since, since),
+                modifier = Modifier
+                    .padding(top = TrailSenseSpacing.xs)
+                    .testTag("pedometer_session_time"),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                color = scheme.onSurfaceVariant,
+                maxLines = 1
             )
-            listOfNotNull(since, activeTime).forEachIndexed { index, part ->
-                Text(
-                    text = "  ·  ",
-                    style = quiet,
-                    color = scheme.onSurfaceVariant
-                )
-                Text(
-                    text = part,
-                    modifier = if (index == 1) Modifier.testTag("pedometer_session_time") else Modifier,
-                    style = quiet.copy(fontFeatureSettings = "tnum"),
-                    color = scheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
         }
         Row(
             modifier = Modifier

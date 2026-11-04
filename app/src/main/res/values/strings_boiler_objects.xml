@@ -7,4 +7,5 @@
 
     <!-- Pedometer -->
     <string name="pedometer_of_goal">of %1$s</string>
+    <string name="pedometer_counting_since">Counting since %1$s</string>
 </resources>
