@@ -51,6 +51,15 @@ import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
+import com.kylecorry.trail_sense.shared.icons.trail.Alert
+import com.kylecorry.trail_sense.shared.icons.trail.Apps
+import com.kylecorry.trail_sense.shared.icons.trail.BackupRestore
+import com.kylecorry.trail_sense.shared.icons.trail.Experimental
+import com.kylecorry.trail_sense.shared.icons.trail.Ruler
+import com.kylecorry.trail_sense.shared.icons.trail.Sensors
+import com.kylecorry.trail_sense.shared.icons.trail.Theme
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Visible
 import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -140,7 +149,7 @@ private fun SettingsScreen(
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.units),
-                    icon = painterResource(R.drawable.ruler),
+                    icon = rememberVectorPainter(TrailIcons.Ruler),
                     position = position,
                     onClick = { go(R.string.pref_unit_settings) }
                 )
@@ -148,7 +157,7 @@ private fun SettingsScreen(
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.pref_theme_title),
-                    icon = painterResource(R.drawable.ic_theme),
+                    icon = rememberVectorPainter(TrailIcons.Theme),
                     position = position,
                     onClick = { go(R.string.pref_theme_settings) }
                 )
@@ -157,7 +166,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.sensors),
                     subtitle = stringResource(R.string.sensor_summary),
-                    icon = painterResource(R.drawable.ic_sensors),
+                    icon = rememberVectorPainter(TrailIcons.Sensors),
                     position = position,
                     onClick = { go(R.string.pref_sensor_settings) }
                 )
@@ -165,7 +174,7 @@ private fun SettingsScreen(
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.privacy),
-                    icon = painterResource(R.drawable.ic_visible),
+                    icon = rememberVectorPainter(TrailIcons.Visible),
                     position = position,
                     onClick = { go(R.string.pref_privacy_settings) }
                 )
@@ -173,7 +182,7 @@ private fun SettingsScreen(
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.errors),
-                    icon = painterResource(R.drawable.ic_alert),
+                    icon = rememberVectorPainter(TrailIcons.Alert),
                     position = position,
                     onClick = { go(R.string.pref_error_settings) }
                 )
@@ -181,7 +190,7 @@ private fun SettingsScreen(
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.backup_restore),
-                    icon = painterResource(R.drawable.backup_restore),
+                    icon = rememberVectorPainter(TrailIcons.BackupRestore),
                     position = position,
                     onClick = { go(R.string.pref_backup_settings) }
                 )
@@ -193,7 +202,7 @@ private fun SettingsScreen(
                 SettingsNavRow(
                     title = stringResource(R.string.tools),
                     subtitle = stringResource(R.string.settings_tools_summary),
-                    icon = painterResource(R.drawable.apps),
+                    icon = rememberVectorPainter(TrailIcons.Apps),
                     position = position,
                     onClick = { go(R.string.pref_tool_settings_header_key) }
                 )
@@ -214,7 +223,7 @@ private fun SettingsScreen(
             row { position ->
                 SettingsNavRow(
                     title = stringResource(R.string.experimental),
-                    icon = painterResource(R.drawable.ic_experimental),
+                    icon = rememberVectorPainter(TrailIcons.Experimental),
                     position = position,
                     onClick = { go(R.string.pref_experimental_settings) }
                 )
@@ -223,7 +232,7 @@ private fun SettingsScreen(
                 row { position ->
                     SettingsNavRow(
                         title = stringResource(R.string.plugins),
-                        icon = painterResource(R.drawable.apps),
+                        icon = rememberVectorPainter(TrailIcons.Apps),
                         position = position,
                         onClick = { go(R.string.pref_plugins_settings) }
                     )

@@ -13,9 +13,17 @@ import android.text.util.Linkify.WEB_URLS
 import android.view.View
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.DrawableRes
 import androidx.annotation.IdRes
 import androidx.compose.foundation.background
+import com.kylecorry.trail_sense.shared.icons.trail.Altitude
+import com.kylecorry.trail_sense.shared.icons.trail.Barometer
+import com.kylecorry.trail_sense.shared.icons.trail.Camera
+import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
+import com.kylecorry.trail_sense.shared.icons.trail.Satellite
+import com.kylecorry.trail_sense.shared.icons.trail.Sensors
+import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular3
+import com.kylecorry.trail_sense.shared.icons.trail.Thermometer
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -1376,7 +1384,7 @@ class TrailSenseComposeDestinationHost(
         val cameraTitle = stringResource(R.string.camera)
         val gpsTitle = stringResource(R.string.gps)
         val weatherTitle = stringResource(R.string.weather)
-        val notificationsTitle = stringResource(R.string.settings_section_notifications)
+        val notificationsTitle = stringResource(R.string.settings_notifications_section)
 
         // Each experiment sits under the part of the app it changes, so no row needs to say where it applies.
         SettingsList(title = stringResource(R.string.experimental)) {
@@ -2219,7 +2227,7 @@ class TrailSenseComposeDestinationHost(
                         row { position ->
                             TrailSenseListItem(
                                 title = stringResource(item.title),
-                                icon = painterResource(item.icon),
+                                icon = androidx.compose.ui.graphics.vector.rememberVectorPainter(item.icon),
                                 trailing = {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -3624,26 +3632,26 @@ class TrailSenseComposeDestinationHost(
             SensorSettingsItem(
                 key = "compass",
                 title = R.string.pref_compass_sensor_title,
-                icon = R.drawable.ic_compass_icon,
+                icon = TrailIcons.CompassIcon,
                 destination = R.id.calibrateCompassFragment
             ),
             SensorSettingsItem(
                 key = "gps",
                 title = R.string.gps,
-                icon = R.drawable.satellite,
+                icon = TrailIcons.Satellite,
                 destination = R.id.calibrateGPSFragment
             ),
             SensorSettingsItem(
                 key = "altimeter",
                 title = R.string.pref_altimeter_calibration_title,
-                icon = R.drawable.ic_altitude,
+                icon = TrailIcons.Altitude,
                 destination = R.id.calibrateAltimeterFragment
             ),
             if (hasBarometer) {
                 SensorSettingsItem(
                     key = "barometer",
                     title = R.string.barometer,
-                    icon = R.drawable.ic_barometer,
+                    icon = TrailIcons.Barometer,
                     destination = R.id.calibrateBarometerFragment
                 )
             } else {
@@ -3652,25 +3660,25 @@ class TrailSenseComposeDestinationHost(
             SensorSettingsItem(
                 key = "temperature",
                 title = R.string.tool_thermometer_title,
-                icon = R.drawable.thermometer,
+                icon = TrailIcons.Thermometer,
                 destination = R.id.thermometerSettingsFragment
             ),
             SensorSettingsItem(
                 key = "camera",
                 title = R.string.camera,
-                icon = R.drawable.ic_camera,
+                icon = TrailIcons.Camera,
                 destination = R.id.cameraSettingsFragment
             ),
             SensorSettingsItem(
                 key = "cell_signal",
                 title = R.string.cell_signal,
-                icon = R.drawable.signal_cellular_3,
+                icon = TrailIcons.SignalCellular3,
                 destination = R.id.cellSignalSettingsFragment
             ),
             SensorSettingsItem(
                 key = "details",
                 title = R.string.pref_sensor_details_title,
-                icon = R.drawable.ic_sensors,
+                icon = TrailIcons.Sensors,
                 destination = R.id.sensorDetailsFragment
             )
         )
@@ -3679,7 +3687,7 @@ class TrailSenseComposeDestinationHost(
     private data class SensorSettingsItem(
         val key: String,
         val title: Int,
-        @DrawableRes val icon: Int,
+        val icon: androidx.compose.ui.graphics.vector.ImageVector,
         @IdRes val destination: Int
     )
 
