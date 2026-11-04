@@ -31,6 +31,7 @@ import com.kylecorry.sol.science.meteorology.WeatherCondition
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -610,16 +611,12 @@ private fun WeatherHost(
                 item(key = "weather_hero") {
                     WeatherHeroCard(
                         state = views.weatherTitle,
+                        alert = alert,
                         isUpdating = isWeatherUpdating,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                if (alert != null) {
-                    item(key = "weather_alert") {
-                        WeatherAlertBanner(alert)
-                    }
-                }
 
                 // Pressure leads as one full-width card holding its value, where it is heading and its history;
                 // the other readings sit two-up under it.
@@ -911,7 +908,7 @@ private fun WeatherChartAxis(data: WeatherPressureChartData, formatService: Form
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(top = TrailSenseSpacing.sm)
+            .padding(top = TrailSenseSpacing.sm, start = 44.dp)
     ) {
         Text(
             stringResource(R.string.time_ago, formatService.formatDuration(span, short = true)),
@@ -963,6 +960,8 @@ private fun WeatherPressureChart(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
+                // The value labels get their own column at the left; the plot keeps room for the now dot's halo.
+                .padding(start = 44.dp, end = 12.dp)
                 .onSizeChanged { chartSize = it }
                 .pointerInput(data, chartSize) {
                     detectTapGestures { tap ->
@@ -1079,24 +1078,20 @@ private fun WeatherPressureChart(
         }
         Column(
             Modifier
-                .fillMaxSize()
-                .padding(vertical = 2.dp),
+                .align(Alignment.CenterStart)
+                .fillMaxHeight()
+                .width(40.dp)
+                .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.Start
+            horizontalAlignment = Alignment.End
         ) {
             listOf(1f, 0.5f, 0f).forEach { fraction ->
                 val value = chartPoints.yMinimum + chartPoints.yRange * fraction
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = surface.copy(alpha = 0.9f)
-                ) {
-                    Text(
-                        String.format(java.util.Locale.getDefault(), "%.${decimals}f", value),
-                        style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
-                        color = textColor,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                    )
-                }
+                Text(
+                    String.format(java.util.Locale.getDefault(), "%.${decimals}f", value),
+                    style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
+                    color = textColor
+                )
             }
         }
     }
@@ -1231,6 +1226,7 @@ private fun weatherTone(condition: WeatherCondition?): TrailSenseTone = when (co
 @Composable
 private fun WeatherHeroCard(
     state: WeatherTitleState,
+    alert: WeatherListItem?,
     isUpdating: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -1299,6 +1295,31 @@ private fun WeatherHeroCard(
                     color = colors.content.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
                 )
+            }
+            // An alert rides in the hero as a strong chip; tap it for what it means.
+            if (alert != null) {
+                Surface(
+                    onClick = { alert.onClick?.invoke() },
+                    shape = RoundedCornerShape(50),
+                    color = trailSenseToneColors(TrailSenseTone.Caution).accent,
+                    contentColor = trailSenseToneColors(TrailSenseTone.Caution).onAccent,
+                    modifier = Modifier
+                        .padding(top = TrailSenseSpacing.md)
+                        .testTag("weather_item_${alert.id}")
+                ) {
+                    Row(
+                        Modifier.padding(start = 12.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(TrailIcons.Alert, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(
+                            listOfNotNull(alert.title, alert.trailingText).joinToString(" · "),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                        )
+                    }
+                }
             }
             AnimatedVisibility(visible = isUpdating) {
                 Row(
