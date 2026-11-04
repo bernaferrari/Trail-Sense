@@ -267,6 +267,10 @@ private fun ClockScreen(
                 exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
             ) {
                 androidx.compose.material3.FilledTonalButton(
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
                     onClick = {
                         requestExactAlarms {
                             onScheduleNextMinute(gpsTime, systemTime)
