@@ -843,7 +843,8 @@ private fun MapEmptyState(
             // Where am I on my map? Until there is a map, the one thing to do is add one: one filled button, no
             // chips that all lead to the same place.
             TrailSenseEmptyState(
-                icon = TrailSenseIcons.Filled.Map,
+                // A map with a "you are here" dot: this tab answers where you are, not which maps you keep.
+                icon = MapHereIcon,
                 title = stringResource(R.string.no_offline_maps),
                 description = stringResource(R.string.map_empty_description),
                 actionLabel = stringResource(R.string.add_offline_map),
