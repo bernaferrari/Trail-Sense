@@ -28,10 +28,10 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
 
     @Test
     fun verifyBasicFunctionality() {
-        hasText(id("beacon_title"), string(R.string.beacons))
+        hasText(id("beacon_title"), string(R.string.places_title))
 
         // No beacons by default
-        hasText(id("beacon_empty_text"), string(R.string.no_beacons))
+        hasText(id("beacon_empty_text"), string(R.string.no_places))
 
         createBeacon()
         openBeacon()
@@ -48,8 +48,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun createBeacon() {
+        // The list is empty, so its button saves a place directly.
         click(id("create_btn"))
-        click(string(R.string.beacon), exact = true)
 
         hasText(string(R.string.create_beacon))
 
@@ -69,7 +69,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
 
         click(id("create_beacon_save_btn"))
 
-        hasText(id("beacon_title"), string(R.string.beacons))
+        hasText(id("beacon_title"), string(R.string.places_title))
         hasText("Test beacon")
     }
 
@@ -168,14 +168,14 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         hasText("Test group")
         hasText("0 beacons")
         click("Test group")
-        hasText("No beacons")
+        hasText(string(R.string.no_places))
 
         createBeaconInGroup()
     }
 
     private fun createBeaconInGroup() {
+        // The new group is empty, so its button saves a place directly.
         click(id("create_btn"))
-        click(string(R.string.beacon))
 
         input(id("beacon_name")(), "Test beacon 2")
         input(id("beacon_location")(), "42, -72")
@@ -211,7 +211,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         click(id("beacon_group_menu"))
         click("Delete")
         clickOk()
-        hasText("No beacons")
+        hasText(string(R.string.no_places))
         not { hasText("Test group", exact = true) }
     }
 

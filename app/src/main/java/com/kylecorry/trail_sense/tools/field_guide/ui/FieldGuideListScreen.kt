@@ -389,8 +389,16 @@ private fun FieldGuideScreen(
     val sections = remember(pages) { groupPagesByLetter(pages) }
     val noPagesDescription = stringResource(R.string.field_guide_no_pages_description)
 
+    // While there is more list under it, the button folds to its icon so it covers only the rows' empty trailing
+    // edge; at the end of the list (which leaves room for it) it shows its label again.
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val addExpanded by remember {
+        androidx.compose.runtime.derivedStateOf { !listState.canScrollForward }
+    }
+
     // One question: what is this plant or animal? Search and the kinds answer it; the page count is the one figure.
     TrailSensePage(
+        state = listState,
         title = stringResource(R.string.field_guide),
         subtitle = selectedTagName,
         onBack = onBack,
@@ -407,6 +415,7 @@ private fun FieldGuideScreen(
             // The screen's one main action. An empty result has its own button, so nothing floats over it.
             if (!(loaded && !isBrowsing && pages.isEmpty())) ExtendedFloatingActionButton(
                 onClick = onCreate,
+                expanded = addExpanded,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.testTag("add_btn"),

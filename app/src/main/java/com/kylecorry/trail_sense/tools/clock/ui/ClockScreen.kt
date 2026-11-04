@@ -221,8 +221,8 @@ private fun ClockScreen(
                         shape = androidx.compose.material3.MaterialShapes.Cookie12Sided.toShape(),
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier
-                            .padding(bottom = TrailSenseSpacing.lg)
-                            .size(320.dp)
+                            .padding(bottom = TrailSenseSpacing.md)
+                            .size(288.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             AnalogClock(time = myTime.toLocalTime(), driftSeconds = driftSeconds)
@@ -311,15 +311,14 @@ private fun ClockScreen(
 }
 
 /**
- * The face: dots for the hours, a short thick primary hour hand, a long thin minute hand in the face's ink and a
- * thin tertiary second hand that steps from mark to mark and stops on it. The lengths differ enough that the hands never
- * merge, even when they overlap. When the device clock drifts from GPS, a faint ghost second hand shows where the device
- * thinks it is.
+ * The face: four quarter marks (twelve larger), a short, thick hour hand and a longer, thinner minute hand, both in
+ * the face's ink, and a thin second hand that is the face's one accent colour, stepping from mark to mark. Width and
+ * length set the hierarchy, so the hands never read as the same value. When the device clock drifts from GPS, a faint
+ * ghost second hand shows where the device thinks it is.
  */
 @Composable
 private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
     val face = MaterialTheme.colorScheme.onPrimaryContainer
-    val primary = MaterialTheme.colorScheme.primary
     val second = MaterialTheme.colorScheme.tertiary
     val container = MaterialTheme.colorScheme.primaryContainer
 
@@ -342,18 +341,17 @@ private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
         }
     }
 
-    Canvas(modifier = Modifier.size(248.dp)) {
+    Canvas(modifier = Modifier.size(224.dp)) {
         val radius = min(size.width, size.height) / 2f
         val center = Offset(size.width / 2f, size.height / 2f)
 
-        // Twelve hour marks as dots, the quarters larger: a face that reads at a glance without a ring of ticks.
-        for (hourMark in 0 until 12) {
-            val angle = hourMark / 12f * 360f - 90f
-            val quarter = hourMark % 3 == 0
+        // Only the quarters, so the marks don't compete with the cookie's lobes; twelve is the larger one.
+        for (quarter in 0 until 4) {
+            val angle = quarter * 90f - 90f
             drawCircle(
-                color = face.copy(alpha = if (quarter) 0.9f else 0.5f),
-                radius = if (quarter) 6.dp.toPx() else 3.5.dp.toPx(),
-                center = center.pointAt(radius * 0.9f, angle)
+                color = face.copy(alpha = if (quarter == 0) 0.9f else 0.6f),
+                radius = if (quarter == 0) 6.dp.toPx() else 4.dp.toPx(),
+                center = center.pointAt(radius * 0.92f, angle)
             )
         }
 
@@ -363,17 +361,17 @@ private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
         val secondAngle = secondHand.value - 90f
 
         drawLine(
-            color = face,
+            color = face.copy(alpha = 0.85f),
             start = center,
-            end = center.pointAt(radius * 0.78f, minuteAngle),
-            strokeWidth = 5.dp.toPx(),
+            end = center.pointAt(radius * 0.8f, minuteAngle),
+            strokeWidth = 6.dp.toPx(),
             cap = StrokeCap.Round
         )
         drawLine(
-            color = primary,
+            color = face,
             start = center,
-            end = center.pointAt(radius * 0.42f, hourAngle),
-            strokeWidth = 12.dp.toPx(),
+            end = center.pointAt(radius * 0.5f, hourAngle),
+            strokeWidth = 14.dp.toPx(),
             cap = StrokeCap.Round
         )
         if (kotlin.math.abs(driftSeconds) >= 0.5f) {
@@ -395,8 +393,8 @@ private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
             cap = StrokeCap.Round
         )
         drawCircle(second, radius = 6.dp.toPx(), center = center.pointAt(radius * 0.8f, secondAngle))
-        // A clean pivot cap over every hand.
-        drawCircle(face, radius = 10.dp.toPx(), center = center)
+        // The pivot in the accent too, so the second hand reads as one piece.
+        drawCircle(second, radius = 12.dp.toPx(), center = center)
         drawCircle(container, radius = 4.dp.toPx(), center = center)
     }
 }

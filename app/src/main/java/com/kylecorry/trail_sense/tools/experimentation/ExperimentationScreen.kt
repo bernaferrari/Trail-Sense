@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
@@ -99,7 +100,8 @@ internal fun ExperimentationContent() {
                     TrailSenseEmptyState(
                         icon = Icons.Rounded.Extension,
                         title = stringResource(R.string.experimentation_no_plugins),
-                        description = stringResource(R.string.sky_experimentation_empty),
+                        // Say what a plugin is, in plain words: a separate app that adds data to Trail Sense.
+                        description = stringResource(R.string.experimentation_what_is_a_plugin),
                         actionLabel = stringResource(R.string.experimentation_find_plugins),
                         onAction = {
                             context.findComponentActivity()?.findNavController()
@@ -113,29 +115,21 @@ internal fun ExperimentationContent() {
 
             else -> {
                 item(key = "summary") {
-                    val features = loaded.sumOf { it.features.weather.size + it.features.mapLayers.size }
+                    val weather = loaded.sumOf { it.features.weather.size }
+                    val layers = loaded.sumOf { it.features.mapLayers.size }
                     Column(Modifier.padding(horizontal = TrailSenseSpacing.lg)) {
-                        Row(verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
-                            Text(
-                                loaded.size.toString(),
-                                style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.alignByBaseline()
-                            )
-                            Text(
-                                pluginsTitle,
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier
-                                    .padding(start = TrailSenseSpacing.sm)
-                                    .alignByBaseline()
-                            )
-                        }
                         Text(
-                            "$features ${stringResource(R.string.sky_experimentation_features)}",
+                            pluralStringResource(R.plurals.experimentation_plugin_count, loaded.size, loaded.size),
+                            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        // What they add, in plain words, instead of a bare "features" count.
+                        Text(
+                            addsText(weather, layers),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = TrailSenseSpacing.xs)
                         )
                     }
                 }
@@ -149,16 +143,35 @@ internal fun ExperimentationContent() {
     }
 }
 
+/** "Adds 2 weather sources and 1 map layer", or that it adds nothing yet. */
+@Composable
+private fun addsText(weather: Int, layers: Int): String {
+    val parts = listOfNotNull(
+        pluralStringResource(R.plurals.experimentation_weather_count, weather, weather).takeIf { weather > 0 },
+        pluralStringResource(R.plurals.experimentation_layer_count, layers, layers).takeIf { layers > 0 }
+    )
+    return if (parts.isEmpty()) {
+        stringResource(R.string.experimentation_adds_nothing)
+    } else {
+        stringResource(R.string.experimentation_adds, parts.joinToString(stringResource(R.string.experimentation_and)))
+    }
+}
+
+/**
+ * One plugin: its name, what it adds (and its version) underneath. Tapping it lists each feature by name, with the
+ * package id last for whoever needs it.
+ */
 @Composable
 private fun ExperimentationPluginRow(
     plugin: PluginResourceServiceDetails,
     position: TrailSenseGroupPosition
 ) {
     var expanded by rememberSaveable(plugin.packageId) { mutableStateOf(false) }
+    val adds = addsText(plugin.features.weather.size, plugin.features.mapLayers.size)
     Column {
         TrailSenseListItem(
             title = plugin.name,
-            subtitle = listOfNotNull(plugin.packageId, plugin.version).joinToString(" · "),
+            subtitle = listOfNotNull(adds, plugin.version).joinToString(" · "),
             icon = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Rounded.Extension),
             position = if (expanded) position.copy(isLast = false) else position,
             onClick = { expanded = !expanded }
@@ -176,11 +189,27 @@ private fun ExperimentationPluginRow(
                     .fillMaxWidth()
                     .padding(top = TrailSenseSpacing.xxs)
             ) {
-                Text(
-                    text = plugin.features.toString(),
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                    plugin.features.mapLayers.forEach { layer ->
+                        Text(
+                            stringResource(R.string.experimentation_map_layer, layer.name),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    plugin.features.weather.forEach { feature ->
+                        Text(
+                            stringResource(R.string.experimentation_weather_feature, feature),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Text(
+                        plugin.packageId,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

@@ -77,6 +77,20 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.Altitude
+import com.kylecorry.trail_sense.shared.icons.trail.BackupRestore
+import com.kylecorry.trail_sense.shared.icons.trail.Barometer
+import com.kylecorry.trail_sense.shared.icons.trail.Camera
+import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
+import com.kylecorry.trail_sense.shared.icons.trail.Flashlight
+import com.kylecorry.trail_sense.shared.icons.trail.Gyro
+import com.kylecorry.trail_sense.shared.icons.trail.Notification
+import com.kylecorry.trail_sense.shared.icons.trail.Satellite
+import com.kylecorry.trail_sense.shared.icons.trail.Steps
+import com.kylecorry.trail_sense.shared.icons.trail.Sunny
+import com.kylecorry.trail_sense.shared.icons.trail.ToolBattery
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Weather
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseHeroCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -154,6 +168,8 @@ internal fun DiagnosticsScreen(
 
     // One question: is anything stopping a tool from working? The issue count answers it; each issue is one row.
     val toolsTitle = stringResource(R.string.sky_diagnostics_tools)
+    val errorsTitle = pluralStringResource(R.plurals.diagnostics_error_count, errors.size, errors.size)
+    val warningsTitle = pluralStringResource(R.plurals.diagnostics_warning_count, warnings.size, warnings.size)
     TrailSensePage(
         title = stringResource(R.string.diagnostics),
         onBack = { dispatcher?.onBackPressed() },
@@ -170,8 +186,18 @@ internal fun DiagnosticsScreen(
             )
         }
 
-        diagnosticsSection("errors", R.string.errors, errors, onShowDiagnostic)
-        diagnosticsSection("warnings", R.string.diagnostics_warnings, warnings, onShowDiagnostic)
+        diagnosticsSection(
+            "errors",
+            errorsTitle,
+            errors,
+            onShowDiagnostic
+        )
+        diagnosticsSection(
+            "warnings",
+            warningsTitle,
+            warnings,
+            onShowDiagnostic
+        )
 
         trailSenseSection(key = "actions", title = toolsTitle) {
             row { position ->
@@ -201,14 +227,14 @@ internal fun DiagnosticsScreen(
 
 private fun LazyListScope.diagnosticsSection(
     key: String,
-    title: Int,
+    title: String,
     items: List<DiagnosticItem>,
     onShowDiagnostic: (DiagnosticItem) -> Unit
 ) {
     if (items.isEmpty()) return
     item(key = key) {
         TrailSenseRowGroup(
-            title = stringResource(title),
+            title = title,
             modifier = Modifier.animateItem()
         ) {
             items.forEach { item ->
@@ -232,14 +258,10 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         loaded -> stringResource(R.string.no_issues)
         else -> stringResource(R.string.diagnostics_checking)
     }
-    // One quiet line under the count: the split by severity, or why "no issues" is good news.
-    val errorsLabel = pluralStringResource(R.plurals.diagnostics_error_count, errorCount, errorCount)
-    val warningsLabel = pluralStringResource(R.plurals.diagnostics_warning_count, warningCount, warningCount)
+    // One quiet line under the count only when there are none, saying why that is good news; the sections below
+    // already split errors from warnings.
     val supporting = when {
-        issueCount > 0 -> listOfNotNull(
-            errorsLabel.takeIf { errorCount > 0 },
-            warningsLabel.takeIf { warningCount > 0 }
-        ).joinToString(" · ")
+        issueCount > 0 -> null
         loaded -> stringResource(R.string.diagnostics_no_issues_summary)
         else -> null
     }
@@ -295,10 +317,15 @@ private fun DiagnosticListItem(
     SkyValueRow(
         title = item.result.name,
         subtitle = item.result.description,
-        icon = statusIcon(severity),
-        // Same cookie for both; the role carries severity: error for errors, tertiary for warnings.
-        iconContainerColor = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer,
-        iconContentColor = if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer,
+        // The glyph says what the issue is about (steps, GPS, alarms); only a real error gets the error container,
+        // warnings sit in the family's quiet well.
+        icon = issueIcon(item),
+        iconContainerColor = if (isError) {
+            MaterialTheme.colorScheme.errorContainer
+        } else {
+            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f)
+        },
+        iconContentColor = if (isError) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.tertiary,
         position = position,
         onClick = onClick,
         modifier = Modifier.semantics {
@@ -318,6 +345,28 @@ private fun DiagnosticsChevron() {
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onSurfaceVariant
     )
+}
+
+/** What the issue is about, from its id; the tool's own icon, then the severity mark, when nothing matches. */
+private fun issueIcon(item: DiagnosticItem): ImageVector {
+    val id = item.result.id.lowercase()
+    return when {
+        "pedometer" in id -> TrailIcons.Steps
+        "background-location" in id || "location" in id || "gps" in id -> TrailIcons.Satellite
+        "alarm" in id -> TrailIcons.Notification
+        "notification" in id -> TrailIcons.Notification
+        "weather" in id -> TrailIcons.Weather
+        "battery" in id || "power" in id -> TrailIcons.ToolBattery
+        "camera" in id -> TrailIcons.Camera
+        "flashlight" in id -> TrailIcons.Flashlight
+        "light-sensor" in id -> TrailIcons.Sunny
+        "barometer" in id -> TrailIcons.Barometer
+        "altitude" in id -> TrailIcons.Altitude
+        "accelerometer" in id || "gyroscope" in id -> TrailIcons.Gyro
+        "magnetometer" in id || "compass" in id -> TrailIcons.CompassIcon
+        "backup" in id -> TrailIcons.BackupRestore
+        else -> item.tools.firstOrNull()?.icon ?: statusIcon(item.result.severity)
+    }
 }
 
 private fun statusIcon(severity: ToolDiagnosticSeverity): ImageVector {
