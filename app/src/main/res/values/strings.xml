@@ -2161,4 +2161,5 @@
     <string name="battery_time_to_full">Time to full</string>
     <string name="battery_capacity_label">Capacity</string>
     <string name="battery_health_label">Health</string>
+    <string name="qr_camera_denied_description">Allow camera access in settings to scan codes. You can still scan a photo from your gallery.</string>
 </resources>
