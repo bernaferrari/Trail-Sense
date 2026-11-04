@@ -121,6 +121,12 @@
     <!-- Signal finder -->
     <string name="signal_finder_nearest_bearing">Nearest · %1$s</string>
     <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
+    <string name="signal_verdict_strong">Strong signal</string>
+    <string name="signal_verdict_good">Good signal</string>
+    <string name="signal_verdict_fair">Fair signal</string>
+    <string name="signal_verdict_weak">Weak signal</string>
+    <string name="signal_finder_nearest_tower">Nearest tower %1$s %2$s</string>
+    <string name="signal_finder_other_signals">Other signals</string>
 
     <!-- Ballistics -->
     <plurals name="sensor_gps_satellites">

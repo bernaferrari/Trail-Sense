@@ -1,4 +1,5 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.light.ui
 
@@ -37,6 +38,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.lerp
 import kotlin.math.log10
+import androidx.compose.ui.graphics.asComposePath
+import androidx.graphics.shapes.Morph
+import androidx.graphics.shapes.toPath
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -291,8 +295,9 @@ private fun lightScalePosition(lux: Float): Float {
 
 /**
  * The instrument: a sun inside a ring that fills along the worded light scale (dark, dim, indoor, daylight, with a
- * notch between each band and the two ends named). The sun is the reading made visible: unlit grey in the dark, it
- * warms from primary to tertiary, its rays lengthen and its glow spreads as the light rises, and it turns slowly.
+ * notch between each band and the two ends named). The sun is the reading made visible: an unlit grey disc in the
+ * dark, it warms from primary to tertiary, grows, morphs into a rayed sun and spreads its halo as the light rises,
+ * and it turns slowly.
  * The reading sits under the sun and the verdict under the ring.
  */
 @Composable
@@ -322,6 +327,7 @@ private fun LightHero(
     val surface = scheme.surface
     val unlit = scheme.outlineVariant
     val warm = scheme.tertiary
+    val sunMorph = remember { Morph(MaterialShapes.Circle, MaterialShapes.VerySunny) }
     val turn = rememberInfiniteTransition(label = "sun")
     val spin by turn.animateFloat(
         initialValue = 0f,
@@ -381,16 +387,19 @@ private fun LightHero(
                     )
                 }
 
-                // The sun, in the upper half of the ring.
+                // The sun, in the upper half of the ring: a smooth disc in the dark that grows its rays (a circle
+                // morphing into M3's Very Sunny shape) as the light rises, with a soft halo behind it.
                 val b = animatedPosition.coerceIn(0f, 1f)
-                val sunCenter = Offset(center.x, center.y - 30.dp.toPx())
-                val core = 26.dp.toPx()
+                val sunCenter = Offset(center.x, center.y - 34.dp.toPx())
                 val sun = if (b < 0.5f) lerp(unlit, fill, b * 2f) else lerp(fill, warm, (b - 0.5f) * 2f)
+                val body = 64.dp.toPx() + 36.dp.toPx() * b
                 if (b > 0.05f) {
-                    val glow = core + 50.dp.toPx() * b
+                    val glow = body * (0.6f + 0.5f * b)
                     drawCircle(
                         brush = Brush.radialGradient(
-                            listOf(sun.copy(alpha = 0.35f * b), Color.Transparent),
+                            0f to sun.copy(alpha = 0.32f * b),
+                            0.55f to sun.copy(alpha = 0.12f * b),
+                            1f to Color.Transparent,
                             center = sunCenter,
                             radius = glow
                         ),
@@ -398,27 +407,30 @@ private fun LightHero(
                         center = sunCenter
                     )
                 }
-                val rayStart = core + 7.dp.toPx()
-                val rayLength = 4.dp.toPx() + 26.dp.toPx() * b
-                for (ray in 0 until 12) {
-                    val angle = Math.toRadians((ray * 30f + spin).toDouble())
-                    val dir = Offset(kotlin.math.cos(angle).toFloat(), kotlin.math.sin(angle).toFloat())
-                    drawLine(
-                        sun.copy(alpha = 0.45f + 0.55f * b),
-                        sunCenter + dir * rayStart,
-                        sunCenter + dir * (rayStart + rayLength),
-                        strokeWidth = 5.dp.toPx(),
-                        cap = androidx.compose.ui.graphics.StrokeCap.Round
+                val shape = sunMorph.toPath(b)
+                shape.transform(
+                    android.graphics.Matrix().apply {
+                        setScale(body, body)
+                        postTranslate(sunCenter.x - body / 2f, sunCenter.y - body / 2f)
+                        postRotate(spin, sunCenter.x, sunCenter.y)
+                    }
+                )
+                drawPath(
+                    shape.asComposePath(),
+                    Brush.radialGradient(
+                        0f to lerp(sun, Color.White, 0.22f * b),
+                        1f to sun,
+                        center = sunCenter,
+                        radius = body / 2f
                     )
-                }
-                drawCircle(sun, core, sunCenter)
+                )
             }
             Text(
                 text = luxText,
                 style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
-                modifier = Modifier.padding(top = 120.dp)
+                modifier = Modifier.padding(top = 128.dp)
             )
           }
           // The scale's two ends, named under the arc's tips.

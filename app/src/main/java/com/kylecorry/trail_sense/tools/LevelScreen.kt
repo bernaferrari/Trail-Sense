@@ -30,8 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -235,11 +240,16 @@ private fun edgeHighSide(edge: Int, gx: Float, gy: Float): Int {
 }
 
 /**
- * The one live object, a real spirit level. Flat, it is a round bull's-eye vial: a bubble of light floats toward the
- * high side, presses into an oval against the glass when it is far out, and rounds into a circle inside the centre
- * ring when level. On edge, a tube vial lies along the phone's edge and the bubble slides along it between two
- * marks. The bubble moves on a bouncy spring, so it overshoots and settles like air in liquid. Level turns the
- * liquid primaryContainer and the target tertiary.
+ * The one live object, a real spirit level: a liquid-filled glass vial set in a tonal housing, with the level marks
+ * engraved into the glass and a bubble of air floating in the liquid. The bubble is see-through: the liquid shows
+ * through it, its edge darkens where the light bends (the refraction rim), a soft highlight sits on its upper side and
+ * a faint caustic glows on the lower one.
+ * - Flat, it is a round bull's-eye vial: the bubble floats toward the high side, presses into an oval against the
+ *   glass when it is far out, and rounds into a circle inside the engraved ring when level.
+ * - On edge, a tube vial lies along the phone's edge and the bubble hugs the top of the tube, sliding between two
+ *   engraved marks.
+ * The bubble moves on a bouncy spring, so it overshoots and settles like air in liquid. Level turns the liquid
+ * primaryContainer and fills the engraved marks with primary.
  */
 @Composable
 private fun LevelWell(
@@ -252,18 +262,17 @@ private fun LevelWell(
 ) {
     val scheme = MaterialTheme.colorScheme
     val liquid by animateColorAsState(
-        if (isLevel) scheme.primaryContainer else scheme.surfaceContainerHigh,
+        if (isLevel) scheme.primaryContainer else scheme.secondaryContainer,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "liquid"
     )
-    val target by animateColorAsState(
-        if (isLevel) scheme.tertiary else scheme.outline,
+    val engraving by animateColorAsState(
+        if (isLevel) scheme.primary else Color.Black.copy(alpha = 0.32f),
         MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "target"
+        label = "engraving"
     )
+    val housing = scheme.surfaceContainerHigh
     val glass = scheme.outlineVariant
-    val air = scheme.primary
-    val shine = scheme.onPrimary
     val wobble = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
     val bubbleX by animateFloatAsState(bubble.x, wobble, label = "bubbleX")
     val bubbleY by animateFloatAsState(bubble.y, wobble, label = "bubbleY")
@@ -278,94 +287,253 @@ private fun LevelWell(
         Canvas(Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = size.minDimension / 2f
-            val thin = 2.dp.toPx()
+            val thin = 1.5.dp.toPx()
 
             // Flat: the bull's-eye vial.
             val flatAlpha = 1f - edgeShown
             if (flatAlpha > 0f) {
-                drawCircle(liquid.copy(alpha = flatAlpha), radius, center)
-                drawCircle(glass.copy(alpha = flatAlpha), radius - thin, center, style = Stroke(thin))
-                val bubbleRadius = radius * 0.2f
-                val ringRadius = bubbleRadius + 10.dp.toPx()
-                drawCircle(target.copy(alpha = flatAlpha), ringRadius, center, style = Stroke(3.dp.toPx()))
-                drawCircle(glass.copy(alpha = flatAlpha * 0.6f), radius * 0.62f, center, style = Stroke(thin))
+                drawCircle(housing.copy(alpha = flatAlpha), radius, center)
+                val vial = radius - 16.dp.toPx()
+                drawGlassLiquid(liquid, flatAlpha) { brush, alpha -> drawCircle(brush, vial, center, alpha) }
+                // The glass curves away at the rim, so the liquid darkens toward it.
+                drawCircle(
+                    Brush.radialGradient(
+                        0.78f to Color.Transparent,
+                        1f to Color.Black.copy(alpha = 0.28f),
+                        center = center,
+                        radius = vial
+                    ),
+                    vial,
+                    center,
+                    flatAlpha
+                )
+                drawCircle(glass.copy(alpha = flatAlpha), vial, center, style = Stroke(thin))
+
+                val bubbleRadius = vial * 0.24f
+                // The engraved marks: the ring the bubble sits in when level, a wider guide ring, and four ticks.
+                drawEngravedRing(engraving, center, bubbleRadius + 8.dp.toPx(), 2.5.dp.toPx(), flatAlpha)
+                drawEngravedRing(engraving.copy(alpha = engraving.alpha * 0.5f), center, vial * 0.66f, thin, flatAlpha)
+                for (quarter in 0 until 4) {
+                    rotate(quarter * 90f, center) {
+                        drawEngravedLine(
+                            engraving,
+                            Offset(center.x, center.y - vial + 6.dp.toPx()),
+                            Offset(center.x, center.y - vial + 18.dp.toPx()),
+                            2.dp.toPx(),
+                            flatAlpha
+                        )
+                    }
+                }
 
                 // The bubble's travel ends at the glass; its direction is kept when it gets there.
                 var offset = Offset(bubbleX, bubbleY)
                 val length = hypot(offset.x, offset.y)
                 if (length > 1f) offset /= length
                 val reach = min(length, 1f)
-                val travel = radius - bubbleRadius - 8.dp.toPx()
+                val travel = vial - bubbleRadius - 6.dp.toPx()
                 val at = center + offset * travel
                 // Far out it presses against the glass into an oval; centred it is a perfect circle.
-                val along = bubbleRadius * (1f + 0.18f * reach)
-                val across = bubbleRadius * (1f - 0.14f * reach)
+                val along = bubbleRadius * (1f - 0.14f * reach)
+                val across = bubbleRadius * (1f + 0.12f * reach)
                 val angle = if (length > 0.001f) Math.toDegrees(atan2(offset.y, offset.x).toDouble()).toFloat() else 0f
                 rotate(angle, at) {
-                    drawOval(
-                        air.copy(alpha = flatAlpha),
-                        topLeft = Offset(at.x - along, at.y - across),
-                        size = Size(along * 2f, across * 2f)
-                    )
+                    val topLeft = Offset(at.x - along, at.y - across)
+                    val ovalSize = Size(along * 2f, across * 2f)
+                    drawOval(airBrush(at, maxOf(along, across)), topLeft, ovalSize, flatAlpha)
+                    drawOval(Color.Black.copy(alpha = 0.3f * flatAlpha), topLeft, ovalSize, style = Stroke(thin))
                 }
+                // Light from above: a soft highlight on the upper side, and a faint caustic where it focuses below.
                 drawCircle(
-                    shine.copy(alpha = 0.35f * flatAlpha),
-                    bubbleRadius * 0.28f,
-                    at + Offset(-bubbleRadius * 0.38f, -bubbleRadius * 0.38f)
+                    Brush.radialGradient(
+                        0f to Color.White.copy(alpha = 0.55f * flatAlpha),
+                        1f to Color.Transparent,
+                        center = at + Offset(-bubbleRadius * 0.32f, -bubbleRadius * 0.4f),
+                        radius = bubbleRadius * 0.42f
+                    ),
+                    bubbleRadius * 0.42f,
+                    at + Offset(-bubbleRadius * 0.32f, -bubbleRadius * 0.4f)
+                )
+                drawArc(
+                    Color.White.copy(alpha = 0.22f * flatAlpha),
+                    startAngle = 30f,
+                    sweepAngle = 90f,
+                    useCenter = false,
+                    topLeft = at - Offset(bubbleRadius * 0.72f, bubbleRadius * 0.72f),
+                    size = Size(bubbleRadius * 1.44f, bubbleRadius * 1.44f),
+                    style = Stroke(bubbleRadius * 0.12f, cap = StrokeCap.Round)
                 )
             }
 
             // On edge: a tube vial along the edge the phone stands on.
             if (edgeShown > 0f) {
                 rotate(axisDegrees, center) {
-                    val length = radius * 1.9f
-                    val height = radius * 0.42f
+                    val housingLength = radius * 1.96f
+                    val housingHeight = radius * 0.62f
+                    drawRoundRect(
+                        housing.copy(alpha = edgeShown),
+                        topLeft = Offset(center.x - housingLength / 2f, center.y - housingHeight / 2f),
+                        size = Size(housingLength, housingHeight),
+                        cornerRadius = CornerRadius(housingHeight / 2f)
+                    )
+                    val length = housingLength - 28.dp.toPx()
+                    val height = housingHeight - 28.dp.toPx()
                     val left = center.x - length / 2f
                     val top = center.y - height / 2f
+                    val corner = CornerRadius(height / 2f)
+                    drawGlassLiquid(liquid, edgeShown) { brush, alpha ->
+                        drawRoundRect(brush, Offset(left, top), Size(length, height), corner, alpha = alpha)
+                    }
+                    // A round tube: darker along its upper and lower walls, clearer through the middle.
                     drawRoundRect(
-                        liquid.copy(alpha = edgeShown),
-                        topLeft = Offset(left, top),
-                        size = Size(length, height),
-                        cornerRadius = CornerRadius(height / 2f)
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.26f),
+                            0.3f to Color.Transparent,
+                            0.7f to Color.Transparent,
+                            1f to Color.Black.copy(alpha = 0.3f),
+                            startY = top,
+                            endY = top + height
+                        ),
+                        Offset(left, top),
+                        Size(length, height),
+                        corner,
+                        alpha = edgeShown
                     )
                     drawRoundRect(
                         glass.copy(alpha = edgeShown),
-                        topLeft = Offset(left + thin / 2f, top + thin / 2f),
-                        size = Size(length - thin, height - thin),
-                        cornerRadius = CornerRadius(height / 2f),
+                        topLeft = Offset(left, top),
+                        size = Size(length, height),
+                        cornerRadius = corner,
                         style = Stroke(thin)
                     )
-                    val bubbleLength = height * 1.5f
-                    val bubbleHeight = height - 14.dp.toPx()
-                    // The two marks the bubble sits between when the edge is level.
-                    val gap = bubbleLength / 2f + 6.dp.toPx()
+
+                    val wall = 3.dp.toPx()
+                    val bubbleLength = height * 1.7f
+                    val bubbleThickness = (height - wall * 2f) * 0.7f
+                    // The two marks the bubble sits between when the edge is level, and quieter ones beyond them.
+                    val gap = bubbleLength / 2f + 5.dp.toPx()
                     listOf(-gap, gap).forEach { dx ->
-                        drawLine(
-                            target.copy(alpha = edgeShown),
-                            Offset(center.x + dx, top + 4.dp.toPx()),
-                            Offset(center.x + dx, top + height - 4.dp.toPx()),
-                            3.dp.toPx(),
-                            StrokeCap.Round
+                        drawEngravedLine(
+                            engraving,
+                            Offset(center.x + dx, top + 5.dp.toPx()),
+                            Offset(center.x + dx, top + height - 5.dp.toPx()),
+                            2.5.dp.toPx(),
+                            edgeShown
                         )
                     }
-                    val travel = (length - bubbleLength) / 2f - 7.dp.toPx()
+                    listOf(-gap - 14.dp.toPx(), gap + 14.dp.toPx()).forEach { dx ->
+                        drawEngravedLine(
+                            engraving.copy(alpha = engraving.alpha * 0.5f),
+                            Offset(center.x + dx, top + height * 0.3f),
+                            Offset(center.x + dx, top + height * 0.7f),
+                            thin,
+                            edgeShown
+                        )
+                    }
+
+                    val travel = (length - bubbleLength) / 2f - 10.dp.toPx()
                     val bx = center.x + tube.coerceIn(-1f, 1f) * travel
-                    drawRoundRect(
-                        air.copy(alpha = edgeShown),
-                        topLeft = Offset(bx - bubbleLength / 2f, center.y - bubbleHeight / 2f),
-                        size = Size(bubbleLength, bubbleHeight),
-                        cornerRadius = CornerRadius(bubbleHeight / 2f)
-                    )
-                    drawRoundRect(
-                        shine.copy(alpha = 0.35f * edgeShown),
-                        topLeft = Offset(bx - bubbleLength * 0.3f, center.y - bubbleHeight * 0.32f),
-                        size = Size(bubbleLength * 0.4f, bubbleHeight * 0.16f),
-                        cornerRadius = CornerRadius(bubbleHeight * 0.08f)
-                    )
+                    drawTubeBubble(bx, top + wall, bubbleLength, bubbleThickness, thin, edgeShown)
                 }
             }
         }
     }
+}
+
+/** The liquid: lit a little from above, so it reads as depth rather than a flat fill. */
+private fun DrawScope.drawGlassLiquid(
+    liquid: Color,
+    alpha: Float,
+    draw: DrawScope.(Brush, Float) -> Unit
+) {
+    val brush = Brush.verticalGradient(
+        0f to lerp(liquid, Color.White, 0.08f),
+        1f to lerp(liquid, Color.Black, 0.12f)
+    )
+    draw(brush, alpha)
+}
+
+/**
+ * The see-through body of the bubble: mostly clear, brighter just inside its edge where the light bends, and darker
+ * at the very edge (the refraction rim).
+ */
+private fun airBrush(at: Offset, radius: Float): Brush = Brush.radialGradient(
+    0f to Color.White.copy(alpha = 0.06f),
+    0.62f to Color.White.copy(alpha = 0.12f),
+    0.86f to Color.White.copy(alpha = 0.3f),
+    1f to Color.Black.copy(alpha = 0.32f),
+    center = at,
+    radius = radius
+)
+
+/**
+ * The bubble in a tube vial: it rises against the top wall, so its top is flat on the glass and its belly curves
+ * underneath, with a highlight streak along the top and a faint caustic in the belly.
+ */
+private fun DrawScope.drawTubeBubble(
+    centerX: Float,
+    top: Float,
+    length: Float,
+    thickness: Float,
+    rim: Float,
+    alpha: Float
+) {
+    val left = centerX - length / 2f
+    val right = centerX + length / 2f
+    val bottom = top + thickness
+    val shape = Path().apply {
+        moveTo(left, top + thickness * 0.4f)
+        cubicTo(left, top, left + thickness * 0.3f, top, left + thickness * 0.7f, top)
+        lineTo(right - thickness * 0.7f, top)
+        cubicTo(right - thickness * 0.3f, top, right, top, right, top + thickness * 0.4f)
+        cubicTo(right, top + thickness * 0.85f, right - length * 0.28f, bottom, centerX, bottom)
+        cubicTo(left + length * 0.28f, bottom, left, top + thickness * 0.85f, left, top + thickness * 0.4f)
+        close()
+    }
+    drawPath(
+        shape,
+        Brush.verticalGradient(
+            0f to Color.White.copy(alpha = 0.3f),
+            0.45f to Color.White.copy(alpha = 0.1f),
+            0.82f to Color.White.copy(alpha = 0.16f),
+            1f to Color.Black.copy(alpha = 0.3f),
+            startY = top,
+            endY = bottom
+        ),
+        alpha = alpha
+    )
+    drawPath(shape, Color.Black.copy(alpha = 0.3f * alpha), style = Stroke(rim))
+    drawLine(
+        Color.White.copy(alpha = 0.55f * alpha),
+        Offset(left + thickness * 0.75f, top + thickness * 0.2f),
+        Offset(centerX - length * 0.08f, top + thickness * 0.2f),
+        thickness * 0.14f,
+        StrokeCap.Round
+    )
+    drawLine(
+        Color.White.copy(alpha = 0.2f * alpha),
+        Offset(centerX - length * 0.16f, bottom - thickness * 0.22f),
+        Offset(centerX + length * 0.22f, bottom - thickness * 0.22f),
+        thickness * 0.1f,
+        StrokeCap.Round
+    )
+}
+
+/** A line cut into the glass: the groove in [color], with a thin catch of light along its lower lip. */
+private fun DrawScope.drawEngravedLine(color: Color, start: Offset, end: Offset, width: Float, alpha: Float) {
+    val lip = Offset(0f, width * 0.6f)
+    drawLine(Color.White.copy(alpha = 0.16f * alpha), start + lip, end + lip, width * 0.6f, StrokeCap.Round)
+    drawLine(color.copy(alpha = color.alpha * alpha), start, end, width, StrokeCap.Round)
+}
+
+/** A ring cut into the glass, lit the same way as [drawEngravedLine]. */
+private fun DrawScope.drawEngravedRing(color: Color, center: Offset, radius: Float, width: Float, alpha: Float) {
+    drawCircle(
+        Color.White.copy(alpha = 0.16f * alpha),
+        radius,
+        center + Offset(0f, width * 0.6f),
+        style = Stroke(width * 0.6f)
+    )
+    drawCircle(color.copy(alpha = color.alpha * alpha), radius, center, style = Stroke(width))
 }
 
 /** A bubble reaches the rim at this tilt, so the last few degrees still move it plainly. */
