@@ -360,7 +360,7 @@ fun TrailSenseCameraUnavailable(
             color = scheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.size(TrailSenseSpacing.xl))
         androidx.compose.material3.Button(
             onClick = {
                 com.kylecorry.andromeda.core.tryOrNothing {
@@ -373,5 +373,6 @@ fun TrailSenseCameraUnavailable(
         ) {
             Text(stringResource(R.string.open_settings), style = MaterialTheme.typography.titleMedium)
         }
+        Spacer(Modifier.weight(1f))
     }
 }

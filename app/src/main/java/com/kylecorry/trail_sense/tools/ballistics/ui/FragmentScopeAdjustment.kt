@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.Role
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -307,7 +312,7 @@ private fun MissCard(
                     }
                 }
             )
-            TrailSenseConnectedChoice(
+            MissSide(
                 options = options,
                 selected = direction,
                 onSelect = onDirectionChange,
@@ -327,6 +332,52 @@ private fun MissCard(
             },
             onDismiss = { isPickingUnit = false }
         )
+    }
+}
+
+/** Which side the shot landed: two connected text-only buttons, so both labels fit in a half-width card. */
+@Composable
+private fun MissSide(
+    options: List<TrailSenseChoice<ScopeDirection>>,
+    selected: ScopeDirection,
+    onSelect: (ScopeDirection) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+    ) {
+        options.forEachIndexed { index, option ->
+            val checked = option.value == selected
+            val outer = 24.dp
+            val inner = 6.dp
+            Surface(
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                    .selectable(selected = checked, role = Role.RadioButton, onClick = { onSelect(option.value) }),
+                shape = RoundedCornerShape(
+                    topStart = if (index == 0) outer else inner,
+                    bottomStart = if (index == 0) outer else inner,
+                    topEnd = if (index == options.lastIndex) outer else inner,
+                    bottomEnd = if (index == options.lastIndex) outer else inner
+                ),
+                color = if (checked) scheme.primary else scheme.secondaryContainer,
+                contentColor = if (checked) scheme.onPrimary else scheme.onSecondaryContainer
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        option.label,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Medium,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
     }
 }
 
