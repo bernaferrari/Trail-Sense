@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -133,7 +135,17 @@ fun TrailSensePage(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0),
-        floatingActionButton = floatingActionButton,
+        // The page draws edge to edge with no window insets; a screen opened from a tab has no bottom bar under it,
+        // so its FAB clears the gesture/navigation bar itself.
+        floatingActionButton = {
+            androidx.compose.foundation.layout.Box(
+                if (onBack != null) {
+                    androidx.compose.ui.Modifier.windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars)
+                } else {
+                    androidx.compose.ui.Modifier
+                }
+            ) { floatingActionButton() }
+        },
         topBar = {
             val titleContent: @Composable () -> Unit = {
                 Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)

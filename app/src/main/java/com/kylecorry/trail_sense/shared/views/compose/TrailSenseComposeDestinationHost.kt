@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.shared.views.compose
 import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.Scale
 import androidx.compose.material.icons.rounded.Compress
@@ -3070,8 +3071,20 @@ class TrailSenseComposeDestinationHost(
                         color = content.copy(alpha = 0.75f)
                     )
                 }
-                androidx.compose.animation.AnimatedVisibility(selected, modifier = Modifier.align(Alignment.TopEnd)) {
-                    Icon(androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null)
+                // A radio-style mark at the top start: filled with a check when chosen, an empty ring otherwise.
+                Box(
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .size(24.dp)
+                        .then(
+                            if (selected) Modifier.background(scheme.primary, androidx.compose.foundation.shape.CircleShape)
+                            else Modifier.border(2.dp, scheme.outline, androidx.compose.foundation.shape.CircleShape)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (selected) {
+                        Icon(androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null, tint = scheme.onPrimary, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
         }
