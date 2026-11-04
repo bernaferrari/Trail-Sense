@@ -119,7 +119,7 @@ internal fun MagnifierScreen(
         modifier = modifier
     ) {
         if (hasPermissionAnswer && !isCameraEnabled) {
-            TrailSenseCameraUnavailable()
+            MagnifierCameraUnavailable(onNotNow = com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack())
             return@TrailSenseInstrumentScaffold
         }
 

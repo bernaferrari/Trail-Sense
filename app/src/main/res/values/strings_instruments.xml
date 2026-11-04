@@ -49,6 +49,7 @@
     <string name="magnifier_close_up">Close-up</string>
     <string name="magnifier_freeze">Freeze</string>
     <string name="magnifier_live">Live</string>
+    <string name="magnifier_not_now">Not now</string>
 
     <!-- White noise -->
     <string name="white_noise_tap_to_play">Tap to play</string>
