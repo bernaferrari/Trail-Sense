@@ -2331,4 +2331,8 @@
     <string name="light_meter_preview_hint">Set the distance, then shine the flashlight at the top of the screen. The brightest reading counts.</string>
     <string name="climate_monthly_total">Monthly total</string>
     <string name="ruler_length">Length</string>
+    <string name="places_title">Places</string>
+    <string name="no_places">No places yet</string>
+    <string name="places_empty_description">Save a spot to find your way back.</string>
+    <string name="save_a_place">Save a place</string>
 </resources>

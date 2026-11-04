@@ -237,7 +237,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
         BeaconListScreen(
-            title = title.ifBlank { stringResource(R.string.beacons) },
+            title = title.ifBlank { stringResource(R.string.places_title) },
             sortMenuText = sortMenuText.ifBlank {
                 stringResource(R.string.sort_by, stringResource(R.string.closest))
             },
@@ -309,7 +309,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             if (rootChanged) {
                 beaconListResetKey++
             }
-            title = root?.name ?: host.getString(R.string.beacons)
+            title = root?.name ?: host.getString(R.string.places_title)
         }
 
         initialLocation?.let {
@@ -337,7 +337,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             host.lifecycleOwner,
             backPressedCallback!!
         )
-        title = host.getString(R.string.beacons)
+        title = host.getString(R.string.places_title)
     }
 
     private suspend fun sortBeacons(beacons: List<IBeacon>): List<IBeacon> {
@@ -827,11 +827,15 @@ private fun BeaconListScreen(
                 )
             },
             floatingActionButton = {
-                BeaconCreateMenu(
-                    isOpen = isCreateMenuOpen,
-                    onOpenChange = onCreateMenuOpenChange,
-                    onAction = onCreateAction
-                )
+                // When there is nothing yet, the empty state's own button is the action; the menu returns with the
+                // first place.
+                if (loaded && (items.isNotEmpty() || searchText.isNotBlank())) {
+                    BeaconCreateMenu(
+                        isOpen = isCreateMenuOpen,
+                        onOpenChange = onCreateMenuOpenChange,
+                        onAction = onCreateAction
+                    )
+                }
             }
         ) {
             if (!loaded) {
@@ -876,14 +880,21 @@ private fun BeaconListScreen(
             if (items.isEmpty()) {
                 item(key = "empty") {
                     TrailSenseEmptyState(
-                        icon = if (isSearching) TrailIcons.Search else TrailIcons.Beacon,
-                        title = stringResource(if (isSearching) R.string.no_results else R.string.no_beacons),
+                        // A pin, not the navigation arrow: this list is where places are kept.
+                        icon = if (isSearching) TrailIcons.Search else TrailIcons.Location,
+                        title = stringResource(if (isSearching) R.string.no_results else R.string.no_places),
                         description = if (isSearching) {
                             null
                         } else {
-                            stringResource(R.string.beacon_list_empty_description)
+                            stringResource(R.string.places_empty_description)
                         },
-                        // No button here: the create FAB (beacon, group, QR, GPX) is the one action.
+                        // The one action sits under the sentence that explains it; importing is the quiet second.
+                        actionLabel = if (isSearching) null else stringResource(R.string.save_a_place),
+                        actionIcon = TrailIcons.Add,
+                        onAction = { onCreateAction(BeaconCreateAction.CreateBeacon) },
+                        actionModifier = Modifier.testTag("create_btn"),
+                        secondaryActionLabel = if (isSearching) null else stringResource(R.string.import_gpx),
+                        onSecondaryAction = { onCreateAction(BeaconCreateAction.ImportGpx) },
                         tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
                         modifier = Modifier
                             .fillParentMaxHeight(0.9f)
