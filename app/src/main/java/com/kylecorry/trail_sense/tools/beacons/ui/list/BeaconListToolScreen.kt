@@ -1025,12 +1025,17 @@ private fun BeaconCreateMenu(
         expanded = isOpen,
         button = {
             ToggleFloatingActionButton(
+                containerColor = ToggleFloatingActionButtonDefaults.containerColor(
+                    initialColor = MaterialTheme.colorScheme.primary,
+                    finalColor = MaterialTheme.colorScheme.primary
+                ),
                 checked = isOpen,
                 onCheckedChange = { onOpenChange(it) },
                 modifier = Modifier.testTag("create_btn")
             ) {
                 val progress = checkedProgress
                 Icon(
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     imageVector = if (progress > 0.5f) Icons.Default.Close else Icons.Default.Add,
                     contentDescription = stringResource(if (isOpen) R.string.beacon_create_menu_close else R.string.add),
                     modifier = with(ToggleFloatingActionButtonDefaults) {

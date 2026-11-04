@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -801,6 +802,10 @@ private fun PathsCreateMenu(
         expanded = isOpen,
         button = {
             ToggleFloatingActionButton(
+                containerColor = ToggleFloatingActionButtonDefaults.containerColor(
+                    initialColor = MaterialTheme.colorScheme.primary,
+                    finalColor = MaterialTheme.colorScheme.primary
+                ),
                 checked = isOpen,
                 onCheckedChange = { isOpen = !isOpen },
                 modifier = Modifier
@@ -814,6 +819,7 @@ private fun PathsCreateMenu(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.animateIcon({ checkedProgress })
                 )
             }
