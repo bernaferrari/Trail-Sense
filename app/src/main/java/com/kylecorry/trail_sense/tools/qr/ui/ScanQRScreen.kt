@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import com.kylecorry.trail_sense.shared.views.roundedRectangleBackground
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
@@ -409,7 +410,7 @@ private fun QrScannerScreen(
     val context = LocalContext.current
     val cameraState = remember {
         CameraState(context).apply {
-            setBackgroundResource(R.drawable.rounded_rectangle)
+            setBackground(roundedRectangleBackground(context))
         }
     }
 

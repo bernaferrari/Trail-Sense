@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
+import android.graphics.drawable.Drawable
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.content.Context
@@ -30,7 +31,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -121,7 +122,7 @@ class CameraState(val context: Context) {
     internal var previewBitmap by mutableStateOf<Bitmap?>(null)
         private set
 
-    private var backgroundResource: Int? = null
+    private var backgroundDrawable: Drawable? = null
     private var backgroundColor: Int? = null
     private var zoomListener: ((Float) -> Unit)? = null
     private var clickListener: View.OnClickListener? = null
@@ -307,9 +308,9 @@ class CameraState(val context: Context) {
         clickListener = listener
     }
 
-    fun setBackgroundResource(resId: Int) {
-        backgroundResource = resId
-        preview.setBackgroundResource(resId)
+    fun setBackground(drawable: Drawable?) {
+        backgroundDrawable = drawable
+        preview.background = drawable
     }
 
     fun setFlipEnabled(enabled: Boolean) {
@@ -321,7 +322,7 @@ class CameraState(val context: Context) {
     }
 
     internal fun applyViewAttributes() {
-        backgroundResource?.let(preview::setBackgroundResource)
+        backgroundDrawable?.let { preview.background = it }
         backgroundColor?.let(preview::setBackgroundColor)
         preview.clipToOutline = clipToOutline
     }
@@ -449,11 +450,11 @@ fun CameraPreview(
                     .padding(8.dp)
             ) {
                 Icon(
-                    painter = painterResource(
+                    painter = rememberVectorPainter(
                         if (state.torchOn) {
-                            R.drawable.ic_torch_on
+                            TrailIcons.TorchOn
                         } else {
-                            R.drawable.ic_torch_off
+                            TrailIcons.TorchOff
                         }
                     ),
                     contentDescription = null

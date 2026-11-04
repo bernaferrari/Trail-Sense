@@ -167,10 +167,6 @@ class MapView(private val context: Context) : IMapView {
         invalidate()
     }
 
-    fun setBackgroundResource(resourceId: Int) {
-        // Background shapes are drawn by the Compose/container layer. Keep this for API compatibility.
-    }
-
     fun measure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         contentWidth = View.MeasureSpec.getSize(widthMeasureSpec)
         contentHeight = View.MeasureSpec.getSize(heightMeasureSpec)

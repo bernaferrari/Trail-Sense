@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.icons.toBitmap
+import com.kylecorry.andromeda.core.system.Resources
+import android.graphics.drawable.BitmapDrawable
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.FrameLayout
@@ -26,6 +30,15 @@ class MaterialSpinnerView(context: Context, attrs: AttributeSet?) : FrameLayout(
         inflate(context, R.layout.view_material_spinner, this)
         edittext = findViewById(R.id.material_spinner_edittext)
         holder = findViewById(R.id.material_spinner_holder)
+        edittext.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            null,
+            null,
+            BitmapDrawable(
+                resources,
+                TrailIcons.DropDown.toBitmap(context, 24f, Resources.androidTextColorSecondary(context))
+            ),
+            null
+        )
 
         edittext.setOnClickListener {
             val pickerItems = items.mapIndexed { index, item ->

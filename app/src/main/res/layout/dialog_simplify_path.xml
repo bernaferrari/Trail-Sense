@@ -19,9 +19,7 @@
         <FrameLayout
             android:id="@+id/simplify_preview_map"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/rounded_rectangle"
-            android:backgroundTint="@color/colorSecondary" />
+            android:layout_height="match_parent" />
 
         <ProgressBar
             android:id="@+id/simplify_loading"

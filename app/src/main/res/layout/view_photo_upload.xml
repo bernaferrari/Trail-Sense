@@ -27,8 +27,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|end"
-                android:layout_margin="8dp"
-                app:icon="@drawable/ic_menu_dots" />
+                android:layout_margin="8dp" />
 
         </FrameLayout>
 

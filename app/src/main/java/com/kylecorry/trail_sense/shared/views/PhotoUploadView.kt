@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.icons.toBitmap
+import android.graphics.drawable.BitmapDrawable
 import android.content.Context
 import android.net.Uri
 import android.util.AttributeSet
@@ -56,6 +59,7 @@ class PhotoUploadView(context: Context, attrs: AttributeSet? = null) :
         emptyView = findViewById(R.id.photo_upload_empty)
         image = findViewById(R.id.photo_upload_image)
         menuButton = findViewById(R.id.photo_upload_menu_button)
+        findViewById<com.google.android.material.button.MaterialButton>(R.id.photo_upload_menu_button).icon = BitmapDrawable(resources, TrailIcons.MenuDots.toBitmap(context, 24f))
         takePhotoButton = findViewById(R.id.photo_upload_take_photo_button)
         selectPhotoButton = findViewById(R.id.photo_upload_select_photo_button)
 

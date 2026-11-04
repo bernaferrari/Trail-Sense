@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clouds.infrastructure
 
+import androidx.core.graphics.drawable.toDrawable
 import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.toColorInt
@@ -87,8 +88,7 @@ class CloudDetailsService(private val context: Context) {
             CloudGenus.Stratocumulus -> files.drawable("${files.SCHEME_ASSETS}survival_guide/stratocumulus.webp")
             CloudGenus.Cumulus -> files.drawable("${files.SCHEME_ASSETS}survival_guide/cumulus.webp")
             CloudGenus.Cumulonimbus -> files.drawable("${files.SCHEME_ASSETS}survival_guide/cumulonimbus.webp")
-            null -> Resources.drawable(context, R.drawable.rectangle)
-                ?.also { it.setTint("#84bfdf".toColorInt()) }
+            null -> "#84bfdf".toColorInt().toDrawable()
         }
     }
 

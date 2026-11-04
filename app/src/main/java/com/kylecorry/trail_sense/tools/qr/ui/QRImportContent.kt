@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import com.kylecorry.trail_sense.shared.views.roundedRectangleBackground
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -88,7 +89,7 @@ private fun rememberQrCameraState(onCameraReady: (CameraState) -> Unit): CameraS
     val context = LocalContext.current
     val camera = remember {
         CameraState(context).apply {
-            setBackgroundResource(R.drawable.rounded_rectangle)
+            setBackground(roundedRectangleBackground(context))
             setFlipEnabled(true)
         }
     }

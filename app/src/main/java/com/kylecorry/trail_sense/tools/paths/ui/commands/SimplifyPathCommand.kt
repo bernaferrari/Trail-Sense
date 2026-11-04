@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
+import com.kylecorry.trail_sense.shared.views.roundedRectangleBackground
 import android.content.Context
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -59,6 +60,7 @@ class SimplifyPathCommand(
     private fun showPreview(path: Path, points: List<PathPoint>) {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_simplify_path, null)
         val mapHost = view.findViewById<FrameLayout>(R.id.simplify_preview_map)
+        mapHost.background = roundedRectangleBackground(context, context.getColor(R.color.colorSecondary))
         val removedText = view.findViewById<TextView>(R.id.simplify_points_removed)
         val qualitySpinner = view.findViewById<MaterialSpinnerView>(R.id.simplify_quality)
         val loadingIndicator = view.findViewById<View>(R.id.simplify_loading)

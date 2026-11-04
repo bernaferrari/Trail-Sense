@@ -4,11 +4,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.toColorInt
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
+import com.kylecorry.trail_sense.shared.icons.toBitmap
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import org.mapsforge.map.rendertheme.XmlThemeResourceProvider
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -27,7 +30,7 @@ class DrawableResourceProvider(private val context: Context) : XmlThemeResourceP
     }
 
     private fun getDrawable(source: String?): Bitmap? {
-        val (resourceId, color, isIconOnly) = getResourceId(source) ?: return null
+        val (icon, color, isIconOnly) = getIcon(source) ?: return null
         val size = Resources.dp(context, 24f).toInt()
         val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
@@ -42,19 +45,41 @@ class DrawableResourceProvider(private val context: Context) : XmlThemeResourceP
         } else {
             color?.let { drawer.tint(it) }
         }
-        val icon = drawer.loadImage(resourceId, size, size)
-        drawer.image(icon, padding, padding, canvas.width - 2 * padding, canvas.height - 2 * padding)
+        drawer.image(icon.toBitmap(size, size), padding, padding, canvas.width - 2 * padding, canvas.height - 2 * padding)
         return bitmap
     }
 
-    private fun getResourceId(source: String?): Triple<Int, Int?, Boolean>? {
+    private fun getIcon(source: String?): Triple<ImageVector, Int?, Boolean>? {
         val matches = sourcePattern.find(source ?: "") ?: return null
         val resourceName = matches.groupValues[1]
         val color = tryOrDefault(null) {
             matches.groupValues[2].toColorInt()
         }
         val iconOnly = matches.groupValues[3].isNotEmpty()
-        val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
-        return if (resourceId != 0) Triple(resourceId, color, iconOnly) else null
+        val icon = icons[resourceName] ?: return null
+        return Triple(icon, color, iconOnly)
+    }
+
+    companion object {
+        // The render theme (assets/mapsforge/trail_sense_outdoors.xml) names its symbols by their old drawable names
+        private val icons by lazy {
+            mapOf(
+                "swamp_pattern" to TrailIcons.SwampPattern,
+                "cave" to TrailIcons.Cave,
+                "triangle" to TrailIcons.Triangle,
+                "volcano" to TrailIcons.Volcano,
+                "shelter" to TrailIcons.Shelter,
+                "ic_cabin" to TrailIcons.Cabin,
+                "ic_category_shelter" to TrailIcons.CategoryShelter,
+                "ic_restrooms" to TrailIcons.Restrooms,
+                "ic_picnic" to TrailIcons.Picnic,
+                "ic_phone" to TrailIcons.Phone,
+                "ic_category_water" to TrailIcons.CategoryWater,
+                "ic_car" to TrailIcons.Car,
+                "ranger_station" to TrailIcons.RangerStation,
+                "ic_binoculars" to TrailIcons.Binoculars,
+                "ic_info" to TrailIcons.Info
+            )
+        }
     }
 }
