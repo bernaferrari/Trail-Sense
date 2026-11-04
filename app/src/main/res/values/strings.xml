@@ -2146,4 +2146,15 @@
     <string name="back">Back</string>
     <string name="theme_mode_auto">Auto</string>
     <string name="search_tools">Search tools</string>
+    <!-- Family redesign: flashlight, battery, QR -->
+    <string name="flashlight_mode">Light mode</string>
+    <string name="flashlight_mode_steady">Steady</string>
+    <string name="flashlight_mode_strobe">Strobe</string>
+    <string name="flashlight_strobe_rate">Flashes per second</string>
+    <string name="flashlight_use_screen">Screen light</string>
+    <string name="flashlight_use_screen_summary">Light up the whole screen, in white or red</string>
+    <string name="flashlight_unavailable_title">No flashlight on this device</string>
+    <string name="flashlight_unavailable_description">You can still use the screen as a light.</string>
+    <string name="screen_flashlight_white">White</string>
+    <string name="screen_flashlight_red">Red</string>
 </resources>
