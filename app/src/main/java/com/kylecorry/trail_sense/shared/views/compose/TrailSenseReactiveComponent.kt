@@ -40,14 +40,14 @@ class TrailSenseReactiveComponent(
 
     override fun useEffect(values: Array<out Any?>, action: () -> Unit) {
         val key = "effect_${currentHookCount++}"
-        hooks.effect(key, values.copyOf()) {
+        hooks.effect(key, *values) {
             action()
         }
     }
 
     override fun useEffectWithCleanup(values: Array<out Any?>, action: () -> () -> Unit) {
         val key = "effect_${currentHookCount++}"
-        hooks.effect(key, values.copyOf()) {
+        hooks.effect(key, *values) {
             effectCleanups.remove(key)?.invoke()
             effectCleanups[key] = action()
         }
@@ -55,7 +55,9 @@ class TrailSenseReactiveComponent(
 
     override fun <T> useMemo(values: Array<out Any?>, value: () -> T): T {
         val key = "memo_${currentHookCount++}"
-        return hooks.memo(key, values.copyOf(), value = value)
+        // Spread the dependencies: passed as one array they'd compare unequal every time, so every memo would
+        // recompute (a new sensor per update) and every effect would re-run.
+        return hooks.memo(key, *values, value = value)
     }
 
     @Suppress("UNCHECKED_CAST")
