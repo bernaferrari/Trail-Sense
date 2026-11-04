@@ -297,13 +297,7 @@ private fun PackListScreen(
             // empty state until its button's label was cut off.
             bottom = if (loaded && packs.isEmpty()) TrailSenseSpacing.xxxl else 112.dp
         ),
-        actions = {
-            PacksOverflowMenu(
-                contentDescription = stringResource(R.string.packs_more_options),
-                modifier = Modifier.testTag("pack_list_menu_btn"),
-                actions = listOf(PacksMenuAction(stringResource(R.string.import_packing_list), onImportPack))
-            )
-        },
+        // No overflow menu: its one item, import, is in the add menu, and on the empty page beside the first list.
         floatingActionButton = {
             // No FAB while empty: the empty state's in-flow button starts the first list.
             if (loaded && packs.isNotEmpty()) Box {
@@ -340,7 +334,7 @@ private fun PackListScreen(
         }
     ) {
         // Am I packed? Each list's packed share answers it, newest first, in one grouped list; the FAB is the one
-        // action (import also lives in the overflow menu).
+        // action (its menu also imports).
         if (!loaded) return@TrailSensePage
 
         if (packs.isEmpty()) {
@@ -355,7 +349,9 @@ private fun PackListScreen(
                     actionLabel = stringResource(R.string.new_packing_list),
                     actionIcon = Icons.Rounded.Add,
                     onAction = onCreatePack,
-                    actionModifier = Modifier.testTag("add_btn")
+                    actionModifier = Modifier.testTag("add_btn"),
+                    secondaryActionLabel = stringResource(R.string.import_packing_list),
+                    onSecondaryAction = onImportPack
                 )
             }
             return@TrailSensePage
