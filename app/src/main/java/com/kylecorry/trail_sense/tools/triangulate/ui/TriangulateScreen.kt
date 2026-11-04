@@ -4,6 +4,19 @@
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBearingDialog
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.res.ColorStateList
@@ -214,8 +227,6 @@ private class TriangulateController(
     private var location2Instructions by mutableStateOf("")
     private var location1Complete by mutableStateOf(false)
     private var location2Complete by mutableStateOf(false)
-    private var location1Expanded by mutableStateOf(true)
-    private var location2Expanded by mutableStateOf(false)
     private var location1Coordinate by mutableStateOf<Coordinate?>(null)
     private var location2Coordinate by mutableStateOf<Coordinate?>(null)
     private var bearing1Value by mutableStateOf<Float?>(null)
@@ -267,8 +278,6 @@ private class TriangulateController(
             location2Instructions = location2Instructions,
             location1Complete = location1Complete,
             location2Complete = location2Complete,
-            location1Expanded = location1Expanded,
-            location2Expanded = location2Expanded,
             location1 = location1Coordinate,
             location2 = location2Coordinate,
             bearing1 = bearing1Value,
@@ -297,8 +306,6 @@ private class TriangulateController(
             onCompassBearing2Click = { setBearingFromCompass(2) },
             onCameraBearing1Click = { setBearingFromCamera(1) },
             onCameraBearing2Click = { setBearingFromCamera(2) },
-            onLocation1ExpandedChange = { location1Expanded = it },
-            onLocation2ExpandedChange = { location2Expanded = it },
             onReset = ::reset,
             modifier = modifier.fillMaxSize()
         )
@@ -692,9 +699,10 @@ private class TriangulateController(
 }
 
 /**
- * Triangulate: the answer first (the coordinate, with what you can do with it, over a map of both sightings), then
- * what you're finding, then the two sightings as expandable cards. Reset lives in the top bar so it can't be hit by
- * accident at the end of the form.
+ * Triangulate: what is being found on top (a destination, or where I am), then the answer as the screen's one
+ * emphasised thing (until there is one, the next step to take), the map of both sightings under it, and the two
+ * sightings as two plain groups: where you stood, which way you looked, and the ways to take that bearing. Reset lives
+ * in the top bar so it can't be hit by accident.
  */
 @Composable
 private fun TriangulateScreen(
@@ -709,8 +717,6 @@ private fun TriangulateScreen(
     location2Instructions: String,
     location1Complete: Boolean,
     location2Complete: Boolean,
-    location1Expanded: Boolean,
-    location2Expanded: Boolean,
     location1: Coordinate?,
     location2: Coordinate?,
     bearing1: Float?,
@@ -733,28 +739,25 @@ private fun TriangulateScreen(
     onCompassBearing2Click: () -> Unit,
     onCameraBearing1Click: () -> Unit,
     onCameraBearing2Click: () -> Unit,
-    onLocation1ExpandedChange: (Boolean) -> Unit,
-    onLocation2ExpandedChange: (Boolean) -> Unit,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Where do my two sightings meet? The result at the top answers it; the map and the two sightings support it.
+    // Where do my two sightings meet? The answer at the top says it; the map and the two sightings support it.
     // The map is held here, outside the lazy list, so scrolling it off screen never trades it for a fresh, empty one.
     val mapView = rememberTriangulateMap(onMapReady)
-    val modeTitle = stringResource(R.string.location_to_triangulate)
     val hasSighting = location1 != null || location2 != null
-    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val completed = listOf(location1Complete, location2Complete).count { it }
+    // The sighting still to take carries the screen's one filled button (its compass bearing); none once both are in.
+    val activeSighting = when {
+        !location1Complete -> 1
+        !location2Complete -> 2
+        else -> 0
+    }
 
     TrailSensePage(
         title = stringResource(R.string.tool_triangulate_title),
         backLabel = stringResource(R.string.back),
         modifier = modifier,
-        contentPadding = PaddingValues(
-            start = TrailSenseSpacing.lg,
-            end = TrailSenseSpacing.lg,
-            top = TrailSenseSpacing.sm,
-            bottom = TrailSenseSpacing.xxxl + navBottom
-        ),
         actions = {
             IconButton(onClick = onReset, modifier = Modifier.testTag("reset_btn")) {
                 Icon(
@@ -764,22 +767,32 @@ private fun TriangulateScreen(
             }
         }
     ) {
-        item(key = "result") {
-            TriangulateResultCard(
-                title = title,
-                actionsVisible = actionsVisible,
-                navigateVisible = navigateVisible,
-                updateGpsOverrideVisible = updateGpsOverrideVisible,
-                shouldCalculateMyLocation = shouldCalculateMyLocation,
-                completed = listOf(location1Complete, location2Complete).count { it },
-                onCreateBeacon = onCreateBeacon,
-                onNavigate = onNavigate,
-                onShareLocation = onShareLocation,
-                onUpdateGpsOverride = onUpdateGpsOverride
+        item(key = "mode") {
+            TrailSenseConnectedChoice(
+                options = listOf(
+                    TrailSenseChoice(false, stringResource(R.string.destination), TrailIcons.Flag),
+                    TrailSenseChoice(true, stringResource(R.string.my_location), TrailIcons.Location)
+                ),
+                selected = shouldCalculateMyLocation,
+                onSelect = onModeChanged,
+                label = stringResource(R.string.location_to_triangulate)
             )
         }
 
-        // The map only appears once there's something to put on it, as a tinted card rather than a black void.
+        item(key = "result") {
+            TriangulateAnswer(
+                title = title,
+                solved = actionsVisible,
+                shouldCalculateMyLocation = shouldCalculateMyLocation,
+                completed = completed,
+                nextInstructions = if (activeSighting == 2) location2Instructions else location1Instructions,
+                navigateVisible = navigateVisible,
+                onNavigate = onNavigate,
+                onCreateBeacon = onCreateBeacon
+            )
+        }
+
+        // The map only appears once there's something to put on it.
         item(key = "map") {
             AnimatedVisibility(
                 visible = hasSighting,
@@ -788,45 +801,58 @@ private fun TriangulateScreen(
                 exit = shrinkVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) +
                         fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
             ) {
-                Surface(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh
-                ) {
+                val shape = RoundedCornerShape(TrailSenseShape.groupOuter)
+                Surface(shape = shape, color = MaterialTheme.colorScheme.surfaceContainer) {
                     mapView.Content(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(240.dp)
-                            .clip(MaterialTheme.shapes.extraLarge)
+                            .height(220.dp)
+                            .clip(shape)
                             .testTag("map")
                     )
                 }
             }
         }
 
-        item(key = "mode") {
-            Column {
-                TrailSenseGroupHeader(modeTitle)
-                TrailSenseConnectedChoice(
-                    options = listOf(
-                        TrailSenseChoice(false, stringResource(R.string.destination), TrailIcons.Flag),
-                        TrailSenseChoice(true, stringResource(R.string.my_location), TrailIcons.Location)
-                    ),
-                    selected = shouldCalculateMyLocation,
-                    onSelect = onModeChanged,
-                    label = stringResource(R.string.location_to_triangulate)
-                )
+        // What else to do with the answer, besides the main button: quiet rows.
+        if (actionsVisible) {
+            trailSenseSection(key = "actions") {
+                if (navigateVisible) {
+                    row { position ->
+                        TrailSenseListItem(
+                            title = stringResource(R.string.create_beacon),
+                            icon = rememberVectorPainter(TrailIcons.Beacon),
+                            position = position,
+                            onClick = onCreateBeacon
+                        )
+                    }
+                }
+                row { position ->
+                    TrailSenseListItem(
+                        title = stringResource(R.string.share_ellipsis),
+                        icon = rememberVectorPainter(TrailIcons.Share),
+                        position = position,
+                        onClick = onShareLocation
+                    )
+                }
+                if (updateGpsOverrideVisible) {
+                    row { position ->
+                        TrailSenseListItem(
+                            title = stringResource(R.string.update_gps_override),
+                            icon = rememberVectorPainter(TrailIcons.Satellite),
+                            position = position,
+                            onClick = onUpdateGpsOverride
+                        )
+                    }
+                }
             }
         }
 
         item(key = "location_1") {
-            TriangulateLocationCard(
+            TriangulateSighting(
                 number = 1,
                 title = location1Title,
-                instructions = location1Instructions,
-                isComplete = location1Complete,
-                isActive = !location1Complete,
-                isExpanded = location1Expanded,
-                onExpandedChange = onLocation1ExpandedChange,
+                isActive = activeSighting == 1,
                 coordinate = location1,
                 bearing = bearing1,
                 trueNorth = bearing1TrueNorth,
@@ -842,14 +868,10 @@ private fun TriangulateScreen(
         }
 
         item(key = "location_2") {
-            TriangulateLocationCard(
+            TriangulateSighting(
                 number = 2,
                 title = location2Title,
-                instructions = location2Instructions,
-                isComplete = location2Complete,
-                isActive = location1Complete && !location2Complete,
-                isExpanded = location2Expanded,
-                onExpandedChange = onLocation2ExpandedChange,
+                isActive = activeSighting == 2,
                 coordinate = location2,
                 bearing = bearing2,
                 trueNorth = bearing2TrueNorth,
@@ -867,85 +889,84 @@ private fun TriangulateScreen(
 }
 
 /**
- * The answer as plain type: until there is one, the next step as a headline with how many sightings are in; once
- * solved, the coordinate in display type with one filled main action (navigate to a destination, or save it as a
- * beacon) and the rest as tonal buttons.
+ * The answer as plain type. Solved: the coordinate as the display value, what it is as the verdict, and one filled
+ * main action (navigate to a destination, or save where you are as a beacon). Until then: the next step and how to
+ * take it.
  */
 @Composable
-private fun TriangulateResultCard(
+private fun TriangulateAnswer(
     title: String,
-    actionsVisible: Boolean,
-    navigateVisible: Boolean,
-    updateGpsOverrideVisible: Boolean,
+    solved: Boolean,
     shouldCalculateMyLocation: Boolean,
     completed: Int,
-    onCreateBeacon: () -> Unit,
+    nextInstructions: String,
+    navigateVisible: Boolean,
     onNavigate: () -> Unit,
-    onShareLocation: () -> Unit,
-    onUpdateGpsOverride: () -> Unit
+    onCreateBeacon: () -> Unit
 ) {
+    val scheme = MaterialTheme.colorScheme
     Column(
-        modifier = Modifier.testTag("triangulate_title"),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("triangulate_title")
+            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
-        if (actionsVisible) {
-            PlacesKeyValue(
-                value = title,
-                verdict = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination)
+        if (solved) {
+            val display = MaterialTheme.typography.displaySmall
+            Text(
+                text = title,
+                style = display.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                color = scheme.onSurface,
+                maxLines = 1,
+                // A long coordinate format steps down to fit on one line rather than wrapping or cutting off.
+                autoSize = TextAutoSize.StepBased(minFontSize = 18.sp, maxFontSize = display.fontSize)
             )
-        } else {
-            // Until there's an answer the headline says what to do next; a failure is the line under it. No
-            // "n of 2" count: the headline and the steps' own number badges already say how far along it is.
-            PlacesKeyValue(
-                value = when (completed) {
-                    0 -> stringResource(R.string.places_triangulate_take_first)
-                    1 -> stringResource(R.string.places_triangulate_take_second)
-                    else -> stringResource(R.string.places_triangulate_check)
-                },
-                valueStyle = MaterialTheme.typography.headlineSmall,
-                verdict = if (completed == 2) title else null
+            Text(
+                text = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination),
+                style = MaterialTheme.typography.headlineSmall,
+                color = scheme.onSurfaceVariant
             )
-        }
-        if (actionsVisible) {
-            val buttonModifier = Modifier.heightIn(min = 48.dp)
-            androidx.compose.foundation.layout.FlowRow(
-                modifier = Modifier.padding(horizontal = TrailSenseSpacing.sm),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+            Spacer(Modifier.height(TrailSenseSpacing.md))
+            val height = ButtonDefaults.MediumContainerHeight
+            Button(
+                onClick = if (navigateVisible) onNavigate else onCreateBeacon,
+                shapes = ButtonDefaults.shapesFor(height),
+                contentPadding = ButtonDefaults.contentPaddingFor(height),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = height)
             ) {
-                if (navigateVisible) {
-                    Button(onClick = onNavigate, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
-                        Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(TrailSenseSpacing.sm))
-                        Text(stringResource(R.string.navigate))
-                    }
-                    FilledTonalButton(onClick = onCreateBeacon, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
-                        Text(stringResource(R.string.beacon))
-                    }
-                } else {
-                    Button(onClick = onCreateBeacon, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
-                        Icon(TrailIcons.Location, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(TrailSenseSpacing.sm))
-                        Text(stringResource(R.string.beacon))
-                    }
-                }
-                FilledTonalButton(onClick = onShareLocation, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
-                    Text(stringResource(R.string.share_ellipsis))
-                }
+                Icon(
+                    imageVector = if (navigateVisible) TrailIcons.NavigationArrow else TrailIcons.Beacon,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
+                )
+                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
+                Text(
+                    text = stringResource(if (navigateVisible) R.string.navigate else R.string.create_beacon),
+                    style = ButtonDefaults.textStyleFor(height)
+                )
             }
-            if (updateGpsOverrideVisible) {
-                FilledTonalButton(
-                    onClick = onUpdateGpsOverride,
-                    shapes = ButtonDefaults.shapes(),
-                    modifier = Modifier
-                        .padding(horizontal = TrailSenseSpacing.sm)
-                        .heightIn(min = 48.dp)
-                ) {
-                    Icon(TrailIcons.Satellite, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(TrailSenseSpacing.sm))
-                    Text(stringResource(R.string.update_gps_override))
-                }
-            }
+        } else {
+            Text(
+                text = stringResource(
+                    when (completed) {
+                        0 -> R.string.places_triangulate_take_first
+                        1 -> R.string.places_triangulate_take_second
+                        else -> R.string.places_triangulate_check
+                    }
+                ),
+                style = MaterialTheme.typography.titleLarge,
+                color = scheme.onSurface
+            )
+            Text(
+                // Both in but no meeting point: the line says so ("Could not triangulate").
+                text = if (completed == 2) title else nextInstructions,
+                style = MaterialTheme.typography.bodyLarge,
+                color = scheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -953,7 +974,7 @@ private fun TriangulateResultCard(
 @Composable
 private fun rememberTriangulateMap(onMapReady: (MapView) -> Unit): MapView {
     val context = LocalContext.current
-    val background = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
+    val background = MaterialTheme.colorScheme.surfaceContainer.toArgb()
     val mapView = remember {
         MapView(context).apply {
             id = R.id.map
@@ -970,18 +991,14 @@ private fun rememberTriangulateMap(onMapReady: (MapView) -> Unit): MapView {
 }
 
 /**
- * One sighting: a header that says where you are with it (its number, or a check once it has a location and a
- * bearing, plus how far it is from the answer), opening onto the instructions and the two inputs.
+ * One sighting as a plain group under its own header ("Location 1"), with how far it is from the answer as the
+ * footer: where you stood, which way you looked (tap to type it), and the two ways to take the bearing live.
  */
 @Composable
-private fun TriangulateLocationCard(
+private fun TriangulateSighting(
     number: Int,
     title: String,
-    instructions: String,
-    isComplete: Boolean,
-    isActive: Boolean = false,
-    isExpanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
+    isActive: Boolean,
     coordinate: Coordinate?,
     bearing: Float?,
     trueNorth: Boolean,
@@ -996,115 +1013,254 @@ private fun TriangulateLocationCard(
     modifier: Modifier = Modifier
 ) {
     // The controller's title is "Location n" with the distance to the answer on a second line.
-    val fallbackTitle = stringResource(R.string.location_number, number)
-    val lines = title.ifBlank { fallbackTitle }.split('\n', limit = 2)
-    val headline = lines.first()
-    val distance = lines.getOrNull(1)?.takeIf { it.isNotBlank() }
-    val chevronRotation by animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f,
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "triangulateChevron"
-    )
-    val scheme = MaterialTheme.colorScheme
-    // Every step sits on the same quiet surface; the number turning into a check says which ones are done.
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-        Surface(
-            shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = true, isLast = !isExpanded)),
-            color = scheme.surfaceContainerLow,
-            contentColor = scheme.onSurface
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 76.dp)
-                    .clickable(
-                        onClickLabel = headline,
-                        onClick = { onExpandedChange(!isExpanded) }
-                    )
-                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                PlacesBadge(
-                    containerColor = if (isActive) scheme.secondaryContainer else scheme.surfaceContainerHighest,
-                    contentColor = if (isActive) scheme.onSecondaryContainer else scheme.onSurfaceVariant,
-                    icon = if (isComplete) Icons.Rounded.Check else null,
-                    text = if (isComplete) null else number.toString(),
-                    shape = MaterialShapes.Cookie4Sided.toShape(),
-                    size = 44.dp
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = TrailSenseSpacing.lg),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+    val lines = title.ifBlank { stringResource(R.string.location_number, number) }.split('\n', limit = 2)
+    var showManualEntry by remember { mutableStateOf(false) }
+
+    TrailSenseRowGroup(
+        modifier = modifier,
+        title = lines.first(),
+        footer = lines.getOrNull(1)?.takeIf { it.isNotBlank() }
+    ) {
+        row { position ->
+            CoordinateInput(
+                coordinate = coordinate,
+                onCoordinateChange = onCoordinateChange,
+                tag = coordinateTag,
+                position = position
+            )
+        }
+        row { position ->
+            TriangulateBearingRow(
+                bearing = bearing,
+                trueNorth = trueNorth,
+                position = position,
+                tag = bearingTag,
+                onClick = { showManualEntry = true },
+                onClear = { onBearingChange(null, false) }
+            )
+        }
+        if (hasCompass) {
+            row { position ->
+                TrailSenseGroupCard(
+                    position = position,
+                    contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
                 ) {
-                    Text(
-                        text = headline,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = scheme.onSurface
+                    TriangulateBearingButtons(
+                        isActive = isActive,
+                        compassBearingText = compassBearingText,
+                        onCompassClick = onCompassBearingClick,
+                        onCameraClick = onCameraBearingClick
                     )
-                    if (distance != null) {
-                        Text(
-                            text = distance,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                            color = scheme.onSurfaceVariant
-                        )
-                    }
-                    // The instruction lives in the step's own header, so an open step is one card, not four.
-                    AnimatedVisibility(visible = isExpanded) {
-                        Text(
-                            text = instructions,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = scheme.onSurfaceVariant
-                        )
-                    }
                 }
-                Icon(
-                    imageVector = Icons.Rounded.ExpandMore,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .rotate(chevronRotation),
-                    tint = scheme.onSurfaceVariant
-                )
             }
         }
+    }
 
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                    fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()),
-            exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) +
-                    fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
+    if (showManualEntry) {
+        PlacesBearingDialog(
+            initialBearing = bearing,
+            initialTrueNorth = trueNorth,
+            onDismiss = { showManualEntry = false },
+            onConfirm = { selectedBearing, selectedTrueNorth ->
+                showManualEntry = false
+                onBearingChange(selectedBearing, selectedTrueNorth)
+            }
+        )
+    }
+}
+
+/**
+ * The bearing as a family row: a well whose arrow points the way you looked, "Bearing", and the value with its north
+ * reference. Tapping it types one in; once set, its one trailing element clears it.
+ */
+@Composable
+private fun TriangulateBearingRow(
+    bearing: Float?,
+    trueNorth: Boolean,
+    position: TrailSenseGroupPosition,
+    tag: String,
+    onClick: () -> Unit,
+    onClear: () -> Unit
+) {
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val scheme = MaterialTheme.colorScheme
+    val rotation by animateFloatAsState(
+        targetValue = bearing ?: 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "triangulateBearing"
+    )
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(tag),
+        shape = trailSenseGroupShape(position),
+        color = scheme.surfaceContainer
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .clickable(onClickLabel = stringResource(R.string.enter_manually), onClick = onClick)
+                .testTag("manual_bearing")
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                CoordinateInput(
-                    coordinate = coordinate,
-                    onCoordinateChange = onCoordinateChange,
-                    tag = coordinateTag,
-                    modifier = Modifier.fillMaxWidth()
+            TriangulateWell {
+                Icon(
+                    imageVector = if (bearing != null) TrailIcons.NavigationArrow else TrailIcons.CompassIcon,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .rotate(if (bearing != null) rotation else 0f)
                 )
-                PlacesBearingField(
-                    bearing = bearing,
-                    trueNorth = trueNorth,
-                    compassBearingText = compassBearingText,
-                    hasCompass = hasCompass,
-                    onBearingChange = onBearingChange,
-                    onCompassClick = onCompassBearingClick,
-                    onCameraClick = onCameraBearingClick,
-                    position = TrailSenseGroupPosition(isFirst = false, isLast = true),
-                    tag = bearingTag
+            }
+            Spacer(Modifier.width(TrailSenseSpacing.md))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                Text(
+                    text = stringResource(R.string.bearing),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = scheme.onSurface
                 )
+                Text(
+                    text = if (bearing != null) {
+                        "${formatter.formatDegrees(bearing, replace360 = true)} · " +
+                                stringResource(if (trueNorth) R.string.true_north else R.string.magnetic_north)
+                    } else {
+                        stringResource(R.string.direction_not_set)
+                    },
+                    modifier = Modifier.testTag("bearing"),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                    color = scheme.onSurfaceVariant
+                )
+            }
+            if (bearing != null) {
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+                IconButton(onClick = onClear, modifier = Modifier.testTag("clear_btn")) {
+                    Icon(
+                        TrailIcons.Cancel,
+                        contentDescription = stringResource(android.R.string.cancel),
+                        tint = scheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
 }
 
+/**
+ * Taking the bearing live: from the compass (the value it would record; filled on the sighting still to take) or
+ * through the camera, as two equal medium buttons.
+ */
+@Composable
+private fun TriangulateBearingButtons(
+    isActive: Boolean,
+    compassBearingText: String,
+    onCompassClick: () -> Unit,
+    onCameraClick: () -> Unit
+) {
+    val height = ButtonDefaults.MediumContainerHeight
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+    ) {
+        val compassModifier = Modifier
+            .weight(1f)
+            .heightIn(min = height)
+            .testTag("compass_btn")
+        val compassContent: @Composable RowScope.() -> Unit = {
+            Icon(
+                TrailIcons.CompassIcon,
+                contentDescription = stringResource(R.string.places_triangulate_compass),
+                modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
+            )
+            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
+            Text(
+                compassBearingText,
+                modifier = Modifier.testTag("compass_bearing"),
+                style = ButtonDefaults.textStyleFor(height).copy(fontFeatureSettings = "tnum"),
+                maxLines = 1
+            )
+        }
+        if (isActive) {
+            Button(
+                onClick = onCompassClick,
+                shapes = ButtonDefaults.shapesFor(height),
+                contentPadding = ButtonDefaults.contentPaddingFor(height),
+                modifier = compassModifier,
+                content = compassContent
+            )
+        } else {
+            FilledTonalButton(
+                onClick = onCompassClick,
+                shapes = ButtonDefaults.shapesFor(height),
+                contentPadding = ButtonDefaults.contentPaddingFor(height),
+                modifier = compassModifier,
+                content = compassContent
+            )
+        }
+        FilledTonalButton(
+            onClick = onCameraClick,
+            shapes = ButtonDefaults.shapesFor(height),
+            contentPadding = ButtonDefaults.contentPaddingFor(height),
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = height)
+                .testTag("camera_btn")
+        ) {
+            Icon(
+                TrailIcons.Camera,
+                contentDescription = null,
+                modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
+            )
+            Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
+            Text(stringResource(R.string.camera), style = ButtonDefaults.textStyleFor(height), maxLines = 1)
+        }
+    }
+}
+
+/** The family's 40 dp Cookie6 well in 12% primary; tappable when given [onClick]. */
+@Composable
+private fun TriangulateWell(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    val primary = MaterialTheme.colorScheme.primary
+    val shape = MaterialShapes.Cookie6Sided.toShape()
+    val wellContent: @Composable () -> Unit = {
+        Box(contentAlignment = Alignment.Center) { content() }
+    }
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            modifier = modifier.size(40.dp),
+            shape = shape,
+            color = primary.copy(alpha = 0.12f),
+            contentColor = primary,
+            content = wellContent
+        )
+    } else {
+        Surface(
+            modifier = modifier.size(40.dp),
+            shape = shape,
+            color = primary.copy(alpha = 0.12f),
+            contentColor = primary,
+            content = wellContent
+        )
+    }
+}
+
+/**
+ * Where you stood, typed in place on the group's surface. The well in front fills it in (from the GPS or a beacon);
+ * the help button explains the formats.
+ */
 @Composable
 private fun CoordinateInput(
     coordinate: Coordinate?,
     onCoordinateChange: (Coordinate?) -> Unit,
     tag: String,
+    position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -1141,29 +1297,56 @@ private fun CoordinateInput(
     }
 
     val isInvalid = coordinateText.isNotBlank() && parsedCoordinate == null
-    TrailSenseInputField(
+    val container = MaterialTheme.colorScheme.surfaceContainer
+    val autofillLabel = stringResource(R.string.autofill_source)
+    TextField(
         value = coordinateText,
         onValueChange = {
             coordinateText = it
             onCoordinateChange(Coordinate.parse(it))
         },
-        label = stringResource(R.string.location),
-        modifier = modifier.testTag(tag),
-        position = TrailSenseGroupPosition(isFirst = false, isLast = false),
-        keyboardType = KeyboardType.Text,
-        isError = isInvalid,
-        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        label = { Text(stringResource(R.string.location)) },
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .testTag(tag),
         enabled = !isLoadingLocation,
+        isError = isInvalid,
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+        supportingText = if (isInvalid) {
+            { Text(stringResource(R.string.coordinate_input_invalid_location)) }
+        } else {
+            null
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+        shape = trailSenseGroupShape(position),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = container,
+            unfocusedContainerColor = container,
+            disabledContainerColor = container,
+            errorContainerColor = container,
+            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+            disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+            errorIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+        ),
         leadingIcon = {
             if (isLoadingLocation) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .testTag("gps_loading"),
-                    strokeWidth = 3.dp
-                )
+                Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .testTag("gps_loading"),
+                        strokeWidth = 3.dp
+                    )
+                }
             } else {
-                FilledTonalIconButton(
+                TriangulateWell(
+                    modifier = Modifier
+                        .padding(start = TrailSenseSpacing.xs)
+                        .testTag("gps_btn")
+                        .semantics { contentDescription = autofillLabel },
                     onClick = {
                         Pickers.item(
                             context,
@@ -1186,20 +1369,18 @@ private fun CoordinateInput(
                                 }
                             }
                         }
-                    },
-                    modifier = Modifier
-                        .padding(start = TrailSenseSpacing.xs)
-                        .testTag("gps_btn")
+                    }
                 ) {
                     Icon(
                         imageVector = TrailIcons.Location,
-                        contentDescription = stringResource(R.string.gps)
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
         },
         trailingIcon = {
-            androidx.compose.material3.IconButton(
+            IconButton(
                 onClick = { showHelp = true },
                 modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
@@ -1215,6 +1396,7 @@ private fun CoordinateInput(
     if (showHelp) {
         AlertDialog(
             onDismissRequest = { showHelp = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             confirmButton = {
                 TextButton(onClick = { showHelp = false }) {
                     Text(stringResource(android.R.string.ok))
@@ -1224,31 +1406,6 @@ private fun CoordinateInput(
             text = { Text(stringResource(R.string.location_input_help)) }
         )
     }
-}
-
-@Composable
-private fun BearingInput(
-    bearing: Float?,
-    trueNorth: Boolean,
-    compassBearingText: String,
-    hasCompass: Boolean,
-    tag: String,
-    onBearingChange: (Float?, Boolean) -> Unit,
-    onCompassBearingClick: () -> Unit,
-    onCameraBearingClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    ComposeBearingInput(
-        bearing = bearing,
-        trueNorth = trueNorth,
-        compassBearingText = compassBearingText,
-        hasCompass = hasCompass,
-        onBearingChange = onBearingChange,
-        onCompassClick = onCompassBearingClick,
-        onCameraClick = onCameraBearingClick,
-        modifier = modifier,
-        tag = tag
-    )
 }
 
 @Preview(showBackground = true)
@@ -1271,8 +1428,6 @@ private fun TriangulateScreenPreview() {
             ),
             location1Complete = false,
             location2Complete = true,
-            location1Expanded = true,
-            location2Expanded = false,
             location1 = null,
             location2 = null,
             bearing1 = null,
@@ -1295,8 +1450,6 @@ private fun TriangulateScreenPreview() {
             onCompassBearing2Click = {},
             onCameraBearing1Click = {},
             onCameraBearing2Click = {},
-            onLocation1ExpandedChange = {},
-            onLocation2ExpandedChange = {},
             onReset = {}
         )
     }

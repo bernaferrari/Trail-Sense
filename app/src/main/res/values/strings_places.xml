@@ -22,6 +22,7 @@
     <string name="places_triangulate_take_second">Take one more sighting</string>
     <string name="places_triangulate_check">Check your sightings</string>
     <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
+    <string name="places_triangulate_compass">Use the compass bearing</string>
     <!-- Offline maps -->
     <string name="places_maps_file">File</string>
     <string name="places_maps_file_formats">JPG, PNG, PDF or Mapsforge</string>

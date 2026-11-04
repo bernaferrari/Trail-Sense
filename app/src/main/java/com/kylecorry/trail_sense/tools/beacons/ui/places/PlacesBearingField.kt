@@ -257,7 +257,7 @@ fun PlacesBearingField(
 }
 
 @Composable
-private fun PlacesBearingDialog(
+internal fun PlacesBearingDialog(
     initialBearing: Float?,
     initialTrueNorth: Boolean,
     onDismiss: () -> Unit,
