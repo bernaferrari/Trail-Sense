@@ -159,7 +159,7 @@ fun UnitSystemOnboardingScreen(
                 .fillMaxWidth()
                 .padding(top = TrailSenseSpacing.xl),
             shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-            color = MaterialTheme.colorScheme.surfaceContainerLow
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             Row(
                 modifier = Modifier.padding(TrailSenseSpacing.lg),
@@ -282,7 +282,7 @@ private fun UnitPreviewValue(
     shape: androidx.compose.ui.graphics.Shape,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier, shape = shape, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(modifier = modifier, shape = shape, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(
             modifier = Modifier.padding(vertical = TrailSenseSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -362,7 +362,7 @@ fun OnboardingScreen(
                 .fillMaxWidth()
                 .padding(top = TrailSenseSpacing.lg),
             shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-            color = MaterialTheme.colorScheme.surfaceContainerLow
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             OnboardingPageContents(
                 contents = page.contents,

@@ -144,29 +144,6 @@ internal fun FieldGuideRow(
     }
 }
 
-/** The family's icon well: a 40 dp cookie in 12% primary. */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-internal fun FieldGuideIconWell(
-    icon: Painter,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-        contentColor = MaterialTheme.colorScheme.primary,
-        modifier = modifier.size(TrailSenseSize.compactIconContainer)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-    }
-}
-
 /** A page photo in the icon well's footprint; the well holds its place while the photo loads. */
 @Composable
 internal fun FieldGuideThumbnail(
@@ -175,7 +152,7 @@ internal fun FieldGuideThumbnail(
     modifier: Modifier = Modifier
 ) {
     if (bitmap == null) {
-        FieldGuideIconWell(icon = fallback, modifier = modifier)
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(icon = fallback, modifier = modifier)
         return
     }
     val image = remember(bitmap) { bitmap.asImageBitmap() }

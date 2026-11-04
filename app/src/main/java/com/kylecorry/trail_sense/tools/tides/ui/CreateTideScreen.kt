@@ -592,7 +592,7 @@ private fun CreateTideScreen(
                             position = position,
                             modifier = Modifier.testTag("add_tide_entry"),
                             onClick = onAddTideEntry,
-                            leading = { TidesIconWell(rememberVectorPainter(TrailIcons.Add)) }
+                            leading = { com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(rememberVectorPainter(TrailIcons.Add)) }
                         ) {
                             Text(
                                 text = stringResource(R.string.add),

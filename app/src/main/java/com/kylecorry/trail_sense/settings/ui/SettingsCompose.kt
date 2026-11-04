@@ -316,30 +316,12 @@ fun SettingsSliderRow(
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsRowIcon(icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    Surface(
-        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-        contentColor = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(40.dp)
-    ) {
-        androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
-            androidx.compose.material3.Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
-        }
-    }
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(icon))
 }
 
 /** [SettingsRowIcon] for a painter (rows that carry drawable or vector painters). */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsRowIcon(painter: androidx.compose.ui.graphics.painter.Painter) {
-    Surface(
-        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-        contentColor = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(40.dp)
-    ) {
-        androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
-            androidx.compose.material3.Icon(painter, contentDescription = null, modifier = Modifier.size(22.dp))
-        }
-    }
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(painter)
 }

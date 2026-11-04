@@ -444,28 +444,21 @@ private fun TemperatureWell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-    Surface(
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(
         onClick = onClick,
         enabled = !isLoading,
         modifier = modifier
             .padding(start = TrailSenseSpacing.xs)
-            .size(40.dp)
-            .semantics { this.contentDescription = contentDescription },
-        shape = MaterialShapes.Cookie6Sided.toShape(),
-        color = primary.copy(alpha = 0.12f),
-        contentColor = primary
+            .semantics { this.contentDescription = contentDescription }
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            } else {
-                Icon(
-                    painter = rememberVectorPainter(TrailIcons.Thermometer),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        } else {
+            Icon(
+                painter = rememberVectorPainter(TrailIcons.Thermometer),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
         }
     }
 }

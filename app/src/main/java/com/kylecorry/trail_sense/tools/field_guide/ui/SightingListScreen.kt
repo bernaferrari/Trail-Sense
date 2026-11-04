@@ -304,7 +304,7 @@ private fun SightingRow(
         subtitle = subtitle,
         position = position,
         leading = {
-            FieldGuideIconWell(
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(
                 rememberVectorPainter(if (item.hasLocation) TrailIcons.Location else TrailIcons.Date)
             )
         },

@@ -418,7 +418,7 @@ private fun CloudSelectionRow(
         targetValue = if (selection.isSelected) {
             MaterialTheme.colorScheme.secondaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
+            MaterialTheme.colorScheme.surfaceContainer
         },
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "cloudSelectionContainer"

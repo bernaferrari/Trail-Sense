@@ -776,13 +776,7 @@ private fun ClimateEcologyRow(
                 .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TrailSenseShapeBadge(
-                icon = TrailIcons.Ant,
-                shape = MaterialShapes.Cookie6Sided.toShape(),
-                size = 40.dp,
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.Ant))
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(
                 text = text,

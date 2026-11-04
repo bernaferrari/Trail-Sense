@@ -222,7 +222,7 @@ fun LightMeterScreen(
                 row { position ->
                     Surface(
                         shape = trailSenseGroupShape(position),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow
+                        color = MaterialTheme.colorScheme.surfaceContainer
                     ) {
                         LightBeamChart(
                             candela = candela,

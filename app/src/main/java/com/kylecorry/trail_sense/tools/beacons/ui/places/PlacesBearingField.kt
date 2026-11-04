@@ -79,7 +79,7 @@ fun PlacesBearingField(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     tag: String? = null,
-    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainerLow
+    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainer
 ) {
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }

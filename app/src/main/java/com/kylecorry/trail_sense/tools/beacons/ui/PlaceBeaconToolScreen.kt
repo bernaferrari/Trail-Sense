@@ -530,13 +530,7 @@ private fun PlaceBeaconScreen(
                         title = stringResource(R.string.group),
                         subtitle = groupName,
                         leading = {
-                            PlacesBadge(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                icon = TrailIcons.BeaconGroup,
-                                shape = MaterialShapes.Clover4Leaf.toShape(),
-                                size = 44.dp
-                            )
+                            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.BeaconGroup))
                         },
                         position = position,
                         onClick = onGroupClick,
@@ -617,7 +611,7 @@ private fun BeaconFormField(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null
 ) {
-    val container = MaterialTheme.colorScheme.surfaceContainerLow
+    val container = MaterialTheme.colorScheme.surfaceContainer
     TextField(
         value = value,
         onValueChange = onValueChange,

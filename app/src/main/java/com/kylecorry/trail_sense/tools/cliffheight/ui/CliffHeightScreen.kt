@@ -178,13 +178,7 @@ internal fun CliffHeightScreen(
                     row { position ->
                         TrailSenseGroupCard(position = position) {
                             Row(verticalAlignment = Alignment.Top) {
-                                TrailSenseShapeBadge(
-                                    icon = TrailIcons.ToolCliffHeight,
-                                    shape = MaterialShapes.Cookie6Sided.toShape(),
-                                    size = 44.dp,
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
+                                com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.ToolCliffHeight))
                                 Spacer(Modifier.width(TrailSenseSpacing.lg))
                                 Text(
                                     text = stringResource(R.string.tool_cliff_height_disclaimer),

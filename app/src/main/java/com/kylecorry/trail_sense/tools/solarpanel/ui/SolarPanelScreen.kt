@@ -604,7 +604,7 @@ private fun SolarReadoutCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = trailSenseGroupShape(position),
-        color = scheme.surfaceContainerLow
+        color = scheme.surfaceContainer
     ) {
         Row(
             modifier = Modifier

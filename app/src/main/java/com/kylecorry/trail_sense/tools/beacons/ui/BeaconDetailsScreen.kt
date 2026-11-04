@@ -526,7 +526,7 @@ private fun BeaconTileGrid(tiles: List<BeaconTile>) {
             Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 row.forEachIndexed { columnIndex, tile ->
                     // Every tile quiet: the distance above is the screen's one emphasised value.
-                    val container = scheme.surfaceContainerLow
+                    val container = scheme.surfaceContainer
                     val content = scheme.onSurface
                     val shape = trailSenseGridCellShape(columnIndex, if (row.size == 1 && rows.size > 1) 2 else row.size, rowIndex, rows.size)
                     val body: @Composable () -> Unit = {

@@ -432,7 +432,7 @@ private fun CloudReadingRow(
                 scaleY = scale
             },
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         interactionSource = interactionSource
     ) {
         Row(

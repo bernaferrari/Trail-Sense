@@ -673,7 +673,7 @@ private fun CellTowerRow(
     val direction = location.bearingTo(tower.coordinate)
     val scheme = MaterialTheme.colorScheme
     val isNearest = index == 0
-    val container = scheme.surfaceContainerLow
+    val container = scheme.surfaceContainer
     val content = scheme.onSurface
 
     // Tapping the row navigates to the tower; the one trailing button saves it as a beacon. No second arrow beside
@@ -693,10 +693,10 @@ private fun CellTowerRow(
         ) {
             TrailSenseShapeBadge(
                 text = (index + 1).toString(),
-                shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 44.dp,
-                containerColor = if (isNearest) scheme.tertiary else scheme.secondaryContainer,
-                contentColor = if (isNearest) scheme.onTertiary else scheme.onSecondaryContainer
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                containerColor = if (isNearest) scheme.primary else scheme.primary.copy(alpha = 0.12f),
+                contentColor = if (isNearest) scheme.onPrimary else scheme.primary
             )
             Spacer(Modifier.width(TrailSenseSpacing.lg))
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

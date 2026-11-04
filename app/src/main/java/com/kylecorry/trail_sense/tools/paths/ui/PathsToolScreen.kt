@@ -1062,14 +1062,7 @@ private fun PathGroupRow(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         leading = {
             // The count is already in the subtitle, so the mark is the group's icon, not the number again.
-            PlacesBadge(
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                contentColor = MaterialTheme.colorScheme.primary,
-                icon = TrailIcons.PathGroup,
-                shape = MaterialShapes.Cookie6Sided.toShape(),
-                size = 40.dp,
-                iconScale = 0.55f
-            )
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.PathGroup))
         },
         onClick = { onAction(PathGroupAction.Open) },
         onLongClick = { menuOpen = true },

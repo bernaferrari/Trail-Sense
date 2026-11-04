@@ -113,21 +113,8 @@ internal fun SurvivalGuideGroupRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
-                // The family's well: one 40 dp cookie in 12% primary for every chapter; the icon names it.
-                Surface(
-                    shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(TrailSenseSize.compactIconContainer)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
+                // The family's well for every chapter; the icon names it.
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(icon)
                 Spacer(Modifier.width(TrailSenseSpacing.md))
             }
             Column(

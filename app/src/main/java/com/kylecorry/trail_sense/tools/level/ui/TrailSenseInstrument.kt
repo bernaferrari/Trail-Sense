@@ -220,7 +220,7 @@ data class TrailSenseMetricItem(val label: String, val value: String, val unit: 
 fun TrailSenseMetricRow(
     items: List<TrailSenseMetricItem>,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single
 ) {
     if (items.isEmpty()) return

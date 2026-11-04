@@ -563,11 +563,11 @@ private fun CategoryHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         PlacesBadge(
-            containerColor = if (done) status.goodContainer else MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = if (done) status.onGoodContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+            containerColor = if (done) status.goodContainer else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            contentColor = if (done) status.onGoodContainer else MaterialTheme.colorScheme.primary,
             icon = iconMapper.getIconVector(category),
             shape = MaterialShapes.Cookie6Sided.toShape(),
-            size = 32.dp,
+            size = 40.dp,
             iconScale = 0.55f
         )
         Spacer(Modifier.width(TrailSenseSpacing.md))

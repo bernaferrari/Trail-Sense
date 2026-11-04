@@ -126,21 +126,6 @@ internal fun TidesGroupRow(
     }
 }
 
-/** The family's leading icon well: a soft rounded square in the secondary container. */
-@Composable
-internal fun TidesIconWell(painter: Painter, modifier: Modifier = Modifier) {
-    Surface(
-        shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.primary,
-        modifier = modifier.size(TrailSenseSize.leadingIconContainer)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(painter, contentDescription = null, modifier = Modifier.size(TrailSenseSize.leadingIcon))
-        }
-    }
-}
-
 /** One entry of a [TidesOverflowMenu]. */
 internal data class TidesMenuAction(val label: String, val onClick: () -> Unit)
 

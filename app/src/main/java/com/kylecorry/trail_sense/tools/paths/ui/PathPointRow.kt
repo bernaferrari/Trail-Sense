@@ -42,7 +42,7 @@ fun PathPointRow(
     onView: (PathPoint) -> Unit,
     modifier: Modifier = Modifier,
     position: TrailSenseGroupPosition? = null,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val title = point.time?.toZonedDateTime()?.let { date ->

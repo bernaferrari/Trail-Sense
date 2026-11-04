@@ -1214,13 +1214,8 @@ private fun BeaconGroupRow(
         position = position,
         modifier = modifier,
         leading = {
-            PlacesBadge(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                text = group.count.toString(),
-                shape = MaterialShapes.Clover4Leaf.toShape(),
-                size = 40.dp
-            )
+            // The count is in the subtitle, so the mark is the group's icon rather than the number again.
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.BeaconGroup))
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         onClick = { onAction(BeaconGroupAction.Open) },

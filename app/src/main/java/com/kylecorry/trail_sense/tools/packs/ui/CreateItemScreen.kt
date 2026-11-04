@@ -409,7 +409,7 @@ private fun CategoryInput(
             position = position,
             modifier = Modifier.testTag("category_spinner"),
             onClick = { isOpen = true },
-            leading = { PacksIconWell(rememberVectorPainter(iconMapper.getIconVector(category))) }
+            leading = { com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(rememberVectorPainter(iconMapper.getIconVector(category))) }
         ) {
             Text(
                 text = stringResource(R.string.category),

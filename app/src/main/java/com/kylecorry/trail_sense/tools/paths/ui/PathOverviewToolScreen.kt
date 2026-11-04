@@ -1316,7 +1316,7 @@ private fun PathNavigateButton(
             topEnd = if (first) inner else outer,
             bottomEnd = if (first) inner else outer
         ),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Row(
             modifier = Modifier
@@ -1324,14 +1324,7 @@ private fun PathNavigateButton(
                 .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PlacesBadge(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                icon = TrailIcons.NavigationArrow,
-                shape = MaterialShapes.Cookie4Sided.toShape(),
-                size = 40.dp,
-                iconRotation = rotation
-            )
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.NavigationArrow), rotation = rotation)
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(
                 label,

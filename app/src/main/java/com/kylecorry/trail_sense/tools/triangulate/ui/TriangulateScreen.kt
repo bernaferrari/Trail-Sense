@@ -1092,7 +1092,7 @@ private fun TriangulateBearingRow(
                 .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TriangulateWell {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell {
                 Icon(
                     imageVector = if (bearing != null) TrailIcons.NavigationArrow else TrailIcons.CompassIcon,
                     contentDescription = null,
@@ -1174,38 +1174,6 @@ private fun TriangulateBearingButtons(
             modifier = Modifier
                 .weight(1f)
                 .testTag("camera_btn")
-        )
-    }
-}
-
-/** The family's 40 dp Cookie6 well in 12% primary; tappable when given [onClick]. */
-@Composable
-private fun TriangulateWell(
-    modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
-    content: @Composable () -> Unit
-) {
-    val primary = MaterialTheme.colorScheme.primary
-    val shape = MaterialShapes.Cookie6Sided.toShape()
-    val wellContent: @Composable () -> Unit = {
-        Box(contentAlignment = Alignment.Center) { content() }
-    }
-    if (onClick != null) {
-        Surface(
-            onClick = onClick,
-            modifier = modifier.size(40.dp),
-            shape = shape,
-            color = primary.copy(alpha = 0.12f),
-            contentColor = primary,
-            content = wellContent
-        )
-    } else {
-        Surface(
-            modifier = modifier.size(40.dp),
-            shape = shape,
-            color = primary.copy(alpha = 0.12f),
-            contentColor = primary,
-            content = wellContent
         )
     }
 }
@@ -1301,7 +1269,7 @@ private fun CoordinateInput(
                     )
                 }
             } else {
-                TriangulateWell(
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(
                     modifier = Modifier
                         .padding(start = TrailSenseSpacing.xs)
                         .testTag("gps_btn")

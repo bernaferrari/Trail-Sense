@@ -877,14 +877,7 @@ private fun OfflineMapCreateSheet(
                     position = TrailSenseGroupPosition.at(index, entries.size),
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     leading = {
-                        PlacesBadge(
-                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            icon = icon,
-                            shape = MaterialShapes.Cookie6Sided.toShape(),
-                            size = 40.dp,
-                            iconScale = 0.55f
-                        )
+                        com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(icon))
                     },
                     onClick = { onAction(action) }
                 )
@@ -1171,15 +1164,8 @@ private fun MapGroupRow(
         position = position,
         modifier = modifier,
         leading = {
-            PlacesBadge(
-                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                contentColor = MaterialTheme.colorScheme.primary,
-                // The count is in the subtitle, so the mark is a folder rather than the number again.
-                icon = TrailSenseIcons.Filled.Folder,
-                shape = MaterialShapes.Cookie6Sided.toShape(),
-                size = 40.dp,
-                iconScale = 0.55f
-            )
+            // The count is in the subtitle, so the mark is a folder rather than the number again.
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailSenseIcons.Filled.Folder))
         },
         onClick = { onAction(MapGroupAction.View) },
         containerColor = MaterialTheme.colorScheme.surfaceContainer,

@@ -115,22 +115,6 @@ internal fun PacksGroupRow(
     }
 }
 
-/** The family's leading icon well: a 40 dp cookie in 12% primary. */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-internal fun PacksIconWell(painter: Painter, modifier: Modifier = Modifier) {
-    Surface(
-        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-        contentColor = MaterialTheme.colorScheme.primary,
-        modifier = modifier.size(TrailSenseSize.compactIconContainer)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(painter, contentDescription = null, modifier = Modifier.size(22.dp))
-        }
-    }
-}
-
 /** One entry of a [PacksOverflowMenu]. */
 internal data class PacksMenuAction(val label: String, val onClick: () -> Unit)
 
