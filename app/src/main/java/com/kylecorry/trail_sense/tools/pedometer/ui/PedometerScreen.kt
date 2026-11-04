@@ -2,6 +2,29 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -272,19 +295,13 @@ internal fun PedometerScreen(
                 subtitle = subtitle,
                 sessionTime = sessionTime,
                 isOn = isOn,
+                onToggle = onTogglePedometer,
+                onReset = onReset,
                 modifier = Modifier.testTag("pedometer_title")
             )
         }
 
         trailSenseSection(key = "controls") {
-            row { position ->
-                PedometerStartStopRow(
-                    isOn = isOn,
-                    onClick = onTogglePedometer,
-                    position = position,
-                    modifier = Modifier.testTag("pedometer_play_bar")
-                )
-            }
             row { position ->
                 TrailSenseSwitchRow(
                     label = stringResource(R.string.distance_alert),
@@ -294,27 +311,15 @@ internal fun PedometerScreen(
                     modifier = Modifier.testTag("pedometer_alert_btn")
                 )
             }
-            row { position ->
-                TrailSenseListItem(
-                    title = stringResource(R.string.pedometer_reset_steps),
-                    icon = rememberVectorPainter(TrailIcons.BaselineRefresh24),
-                    position = position,
-                    onClick = onReset,
-                    modifier = Modifier.testTag("reset_btn")
-                )
-            }
         }
 
         trailSenseSection(key = "pace", title = speedTitle) {
-            row { position ->
-                PedometerMetricPair(
-                    points = speedData,
-                    position = position,
+            row { _ ->
+                PedometerTiles(
+                    rows = listOf(speedData, paceData),
+                    highlightFirst = isOn,
                     modifier = Modifier.testTag("beacon_grid")
                 )
-            }
-            row { position ->
-                PedometerMetricPair(points = paceData, position = position)
             }
         }
 
@@ -485,23 +490,15 @@ private fun HourlyStepsHistory(
         }
         row { position ->
             TrailSenseGroupCard(position = position) {
-                AndroidView(
+                HourlyStepsBars(
+                    hours = hourlySteps,
+                    selected = selectedHour,
+                    onSelect = { selectedStart = if (it.startTime == selectedStart) null else it.startTime },
+                    formatHour = { formatService.formatTime(it, includeSeconds = false, includeMinutes = false) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(dimensionResource(R.dimen.chart_height))
-                        .testTag("hourly_steps_chart"),
-                    factory = { viewContext ->
-                        Chart(viewContext).apply {
-                            tag = HourlyStepsChart(this) { hour ->
-                                selectedStart = hour.startTime
-                            }
-                        }
-                    },
-                    update = { chart ->
-                        val hourlyChart = chart.tag as? HourlyStepsChart ?: return@AndroidView
-                        hourlyChart.plot(hourlySteps)
-                        hourlyChart.highlight(selectedHour)
-                    }
+                        .testTag("hourly_steps_chart")
                 )
             }
         }
@@ -536,7 +533,12 @@ private fun HourlyStepsHistory(
     }
 }
 
-/** The one fact of the screen: today's steps, big, with the distance they make beside it. */
+/**
+ * The one fact of the screen: today's steps, huge, on a saturated card that is primary while counting and quiet
+ * while off. The badge walks while it counts; distance and session time sit as pills; start/stop and reset are the
+ * card's connected actions.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PedometerHeroCard(
     steps: Long,
@@ -544,17 +546,27 @@ private fun PedometerHeroCard(
     subtitle: String?,
     sessionTime: String?,
     isOn: Boolean,
+    onToggle: () -> Unit,
+    onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
     val container by animateColorAsState(
-        if (isOn) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        if (isOn) scheme.primaryContainer else scheme.surfaceContainerHigh,
+        effects,
         label = "pedometerHeroContainer"
     )
     val content by animateColorAsState(
-        if (isOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        if (isOn) scheme.onPrimaryContainer else scheme.onSurface,
+        effects,
         label = "pedometerHeroContent"
+    )
+    val stride by rememberInfiniteTransition(label = "stride").animateFloat(
+        initialValue = -8f,
+        targetValue = 8f,
+        animationSpec = infiniteRepeatable(tween(520), RepeatMode.Reverse),
+        label = "strideTilt"
     )
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -566,40 +578,265 @@ private fun PedometerHeroCard(
             modifier = Modifier.padding(TrailSenseSpacing.xl),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
-            Row(verticalAlignment = Alignment.Bottom) {
-                PedometerHeroMetric(
-                    value = DecimalFormatter.format(steps, 0),
-                    label = stringResource(R.string.steps),
-                    style = MaterialTheme.typography.displayMedium,
-                    valueModifier = Modifier.testTag("pedometer_steps"),
-                    modifier = Modifier.weight(1f)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TrailSenseShapeBadge(
+                    icon = TrailIcons.Steps,
+                    shape = MaterialShapes.Cookie9Sided.toShape(),
+                    size = 56.dp,
+                    containerColor = if (isOn) scheme.primary else scheme.secondaryContainer,
+                    contentColor = if (isOn) scheme.onPrimary else scheme.onSecondaryContainer,
+                    iconRotation = if (isOn) stride else 0f
                 )
                 Spacer(Modifier.width(TrailSenseSpacing.lg))
-                PedometerHeroMetric(
-                    value = distance,
-                    label = stringResource(R.string.distance),
-                    style = MaterialTheme.typography.headlineMedium,
-                    horizontalAlignment = Alignment.End
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.pedometer),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = content.copy(alpha = 0.78f)
+                    )
+                    Text(
+                        text = stringResource(if (isOn) R.string.on else R.string.off),
+                        modifier = Modifier.testTag("play_bar_title"),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Column {
+                Text(
+                    text = DecimalFormatter.format(steps, 0),
+                    modifier = Modifier.testTag("pedometer_steps"),
+                    style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+                Text(
+                    text = stringResource(R.string.steps),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = content.copy(alpha = 0.78f)
                 )
             }
-            if (subtitle != null || sessionTime != null) {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                    if (subtitle != null) {
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = content.copy(alpha = 0.85f)
-                        )
-                    }
-                    if (sessionTime != null) {
-                        Text(
-                            text = sessionTime,
-                            modifier = Modifier.testTag("pedometer_session_time"),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = content.copy(alpha = 0.7f)
-                        )
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                HeroPill(
+                    icon = TrailIcons.Ruler,
+                    text = distance,
+                    container = if (isOn) scheme.primary else scheme.secondaryContainer,
+                    content = if (isOn) scheme.onPrimary else scheme.onSecondaryContainer
+                )
+                if (sessionTime != null) {
+                    HeroPill(
+                        icon = TrailIcons.ToolClock,
+                        text = sessionTime,
+                        container = content.copy(alpha = 0.1f),
+                        content = content,
+                        modifier = Modifier.testTag("pedometer_session_time")
+                    )
+                }
+            }
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = content.copy(alpha = 0.8f)
+                )
+            }
+            Row(
+                modifier = Modifier.testTag("pedometer_play_bar"),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                val outer = 28.dp
+                val inner = 8.dp
+                Button(
+                    onClick = onToggle,
+                    modifier = Modifier
+                        .weight(1.4f)
+                        .heightIn(min = 56.dp)
+                        .testTag("play_btn"),
+                    shape = RoundedCornerShape(topStart = outer, bottomStart = outer, topEnd = inner, bottomEnd = inner),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isOn) scheme.primary else scheme.primary,
+                        contentColor = scheme.onPrimary
+                    )
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(
+                            if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(TrailSenseSpacing.sm))
+                    Text(
+                        stringResource(if (isOn) R.string.stop else R.string.start),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
+                FilledTonalButton(
+                    onClick = onReset,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 56.dp)
+                        .testTag("reset_btn"),
+                    shape = RoundedCornerShape(topStart = inner, bottomStart = inner, topEnd = outer, bottomEnd = outer),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = scheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                        contentColor = content
+                    )
+                ) {
+                    Icon(
+                        painter = rememberVectorPainter(TrailIcons.BaselineRefresh24),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(TrailSenseSpacing.sm))
+                    Text(stringResource(R.string.reset), style = MaterialTheme.typography.titleSmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroPill(
+    icon: ImageVector,
+    text: String,
+    container: Color,
+    content: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(shape = CircleShape, color = container, contentColor = content, modifier = modifier) {
+        Row(
+            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(rememberVectorPainter(icon), contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(TrailSenseSpacing.xs))
+            Text(
+                text,
+                style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * Readings as connected tiles, two to a row: icon and label over a large tabular value. The first tile can be the
+ * highlighted one (the live speed), in the primary tone.
+ */
+@Composable
+private fun PedometerTiles(
+    rows: List<List<PedometerDataPoint>>,
+    modifier: Modifier = Modifier,
+    highlightFirst: Boolean = false
+) {
+    val scheme = MaterialTheme.colorScheme
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+        rows.forEachIndexed { rowIndex, points ->
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                points.forEachIndexed { columnIndex, point ->
+                    val highlighted = highlightFirst && rowIndex == 0 && columnIndex == 0
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(point.tag),
+                        shape = trailSenseGridCellShape(columnIndex, points.size, rowIndex, rows.size),
+                        color = if (highlighted) scheme.primaryContainer else scheme.surfaceContainerLow,
+                        contentColor = if (highlighted) scheme.onPrimaryContainer else scheme.onSurface
+                    ) {
+                        Column(
+                            Modifier
+                                .heightIn(min = 88.dp)
+                                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    rememberVectorPainter(point.icon),
+                                    contentDescription = null,
+                                    tint = if (highlighted) scheme.onPrimaryContainer else scheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(Modifier.width(TrailSenseSpacing.xs))
+                                Text(
+                                    point.label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = if (highlighted) scheme.onPrimaryContainer.copy(alpha = 0.8f) else scheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
+                            Text(
+                                point.title,
+                                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** Steps by hour as rounded bars; tap one to select it (it fills primary, the rest stay soft). */
+@Composable
+private fun HourlyStepsBars(
+    hours: List<com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount>,
+    selected: com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount?,
+    onSelect: (com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount) -> Unit,
+    formatHour: (Instant) -> String,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val bar = scheme.primary
+    val soft = scheme.primary.copy(alpha = 0.32f)
+    val track = scheme.onSurface.copy(alpha = 0.06f)
+    val label = scheme.onSurfaceVariant
+    val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 11.sp.toPx() }
+    val currentHours by rememberUpdatedState(hours)
+    Canvas(
+        modifier = modifier.pointerInput(Unit) {
+            detectTapGestures { offset ->
+                val list = currentHours
+                if (list.isEmpty()) return@detectTapGestures
+                val index = (offset.x / (size.width / list.size.toFloat())).toInt().coerceIn(0, list.lastIndex)
+                onSelect(list[index])
+            }
+        }
+    ) {
+        if (hours.isEmpty()) return@Canvas
+        val labelSpace = labelSize + 8.dp.toPx()
+        val chartHeight = size.height - labelSpace
+        val slot = size.width / hours.size
+        val width = (slot * 0.64f).coerceAtLeast(2.dp.toPx())
+        val max = (hours.maxOf { it.steps }.coerceAtLeast(100L)).toFloat()
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = label.toArgb()
+            textSize = labelSize
+            textAlign = android.graphics.Paint.Align.CENTER
+            fontFeatureSettings = "tnum"
+        }
+        hours.forEachIndexed { index, hour ->
+            val x = slot * index + (slot - width) / 2f
+            drawRoundRect(track, Offset(x, 0f), androidx.compose.ui.geometry.Size(width, chartHeight), CornerRadius(width / 2f))
+            val h = (hour.steps / max) * chartHeight
+            if (h > 0f) {
+                drawRoundRect(
+                    if (selected == null || hour == selected) bar else soft,
+                    Offset(x, chartHeight - h.coerceAtLeast(width)),
+                    androidx.compose.ui.geometry.Size(width, h.coerceAtLeast(width)),
+                    CornerRadius(width / 2f)
+                )
+            }
+            if (index % 6 == 0) {
+                drawContext.canvas.nativeCanvas.drawText(
+                    formatHour(hour.startTime),
+                    slot * index + slot / 2f,
+                    size.height - 2.dp.toPx(),
+                    paint
+                )
             }
         }
     }
@@ -676,85 +913,6 @@ private fun PedometerMetricPair(
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
-            }
-        }
-    }
-}
-
-/** Pedometer on or off, with the start/stop button at the end of the row. */
-@Composable
-private fun PedometerStartStopRow(
-    isOn: Boolean,
-    onClick: () -> Unit,
-    position: TrailSenseGroupPosition,
-    modifier: Modifier = Modifier
-) {
-    val wellColor by animateColorAsState(
-        if (isOn) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "pedometerWell"
-    )
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp)
-                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-                color = wellColor,
-                contentColor = if (isOn) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
-                modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = rememberVectorPainter(TrailIcons.Steps),
-                        contentDescription = null,
-                        modifier = Modifier.size(TrailSenseSize.leadingIcon)
-                    )
-                }
-            }
-            Spacer(Modifier.width(TrailSenseSpacing.md))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                Text(
-                    text = stringResource(R.string.pedometer),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = stringResource(if (isOn) R.string.on else R.string.off),
-                    modifier = Modifier.testTag("play_bar_title"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(Modifier.width(TrailSenseSpacing.md))
-            FilledIconButton(
-                onClick = onClick,
-                modifier = Modifier
-                    .size(56.dp)
-                    .testTag("play_btn"),
-                shape = if (isOn) MaterialTheme.shapes.large else CircleShape
-            ) {
-                Icon(
-                    painter = rememberVectorPainter(
-                        if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24
-                    ),
-                    contentDescription = stringResource(if (isOn) R.string.stop else R.string.start)
-                )
             }
         }
     }
