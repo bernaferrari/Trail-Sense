@@ -2146,4 +2146,8 @@
     <string name="back">Back</string>
     <string name="theme_mode_auto">Auto</string>
     <string name="search_tools">Search tools</string>
+    <!-- Family redesign: utilities -->
+    <string name="convert_swap_units">Swap units</string>
+    <string name="ballistics_trajectory">Trajectory</string>
+    <string name="ballistics_trajectory_empty">Enter a sight-in range and muzzle velocity to see the trajectory.</string>
 </resources>

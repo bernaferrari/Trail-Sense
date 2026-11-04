@@ -1,35 +1,39 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 
 @Composable
 fun ConvertScreen(
@@ -61,52 +65,72 @@ fun ConvertScreen(
     )
 }
 
+/**
+ * Convert as a standard page: what you're converting is a row of chips (six don't fit a segmented control), and
+ * the chosen converter fades in beneath it.
+ */
 @Composable
 fun ConverterTabs(
     pages: List<ConverterPage>,
     names: List<String>,
     modifier: Modifier = Modifier
 ) {
-    var selectedIndex by remember { mutableIntStateOf(0) }
+    var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
+    val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
 
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .widthIn(max = TrailSenseSize.maximumContentWidth)
+    TrailSensePage(
+        title = stringResource(R.string.convert),
+        onBack = rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back),
+        modifier = modifier
     ) {
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(
-                    horizontal = TrailSenseSpacing.screen,
-                    vertical = TrailSenseSpacing.md
-                ),
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            names.forEachIndexed { index, name ->
-                FilterChip(
-                    selected = selectedIndex == index,
-                    onClick = { selectedIndex = index },
-                    label = { Text(name, style = MaterialTheme.typography.labelLarge) },
-                    modifier = Modifier.heightIn(min = TrailSenseSize.minimumTouchTarget),
-                    shape = MaterialTheme.shapes.large,
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = selectedIndex == index,
-                        borderColor = MaterialTheme.colorScheme.outlineVariant,
-                        selectedBorderColor = MaterialTheme.colorScheme.primaryContainer
+        item("categories") {
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+            ) {
+                names.forEachIndexed { index, name ->
+                    val selected = selectedIndex == index
+                    FilterChip(
+                        selected = selected,
+                        onClick = { selectedIndex = index },
+                        label = { Text(name, style = MaterialTheme.typography.labelLarge) },
+                        leadingIcon = if (selected) {
+                            {
+                                Icon(
+                                    Icons.Rounded.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier.heightIn(min = TrailSenseSize.minimumTouchTarget),
+                        shape = MaterialTheme.shapes.large,
+                        border = null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
-                )
+                }
             }
         }
-        pages[selectedIndex].Content()
-    }
-    }
+        item("converter") {
+            AnimatedContent(
+                targetState = selectedIndex,
+                transitionSpec = {
+                    fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec)
+                },
+                label = "converter"
+            ) { index ->
+                pages[index].Content()
+            }
+        }
     }
 }
