@@ -294,8 +294,9 @@ internal fun BallisticsHero(
 }
 
 /**
- * The answer, plainly: the turret moves as emphasised type ("4 clicks right", "2 clicks up"), beside a small reticle
- * showing where the shot landed and the way back to the centre. No card.
+ * The scope is the object: a large reticle where the hit lands as you type the miss (on a bouncy spring) and a
+ * dashed line draws back to the centre, the way the turret moves the shot. The clicks to dial sit under it as the
+ * verdict, one turret beside the other. No card.
  */
 @Composable
 private fun ScopeHero(
@@ -308,45 +309,45 @@ private fun ScopeHero(
     val scheme = MaterialTheme.colorScheme
     val waiting = adjustmentX == null && adjustmentY == null
     val onTarget = !waiting && (adjustmentX?.clicks ?: 0) == 0 && (adjustmentY?.clicks ?: 0) == 0
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.lg)
             .testTag("adjustment_amount")
             .semantics(mergeDescendants = true) { contentDescription = description },
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            when {
-                // Idle: the reticle at rest and one hint line, no "waiting" header.
-                waiting -> Text(
-                    stringResource(R.string.ballistics_waiting_hint),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = scheme.onSurfaceVariant
-                )
-
-                onTarget -> Text(
-                    stringResource(R.string.ballistics_on_target),
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                else -> {
-                    TurretMove(adjustmentX)
-                    TurretMove(adjustmentY)
-                }
-            }
-        }
-        Spacer(Modifier.width(TrailSenseSpacing.lg))
         Reticle(
             missX = missX,
             missY = missY,
+            onTarget = onTarget,
             ink = scheme.onSurfaceVariant,
-            modifier = Modifier.size(120.dp)
+            modifier = Modifier.size(248.dp)
         )
+        when {
+            // Idle: the reticle at rest and one instruction line.
+            waiting -> Text(
+                stringResource(R.string.ballistics_waiting_hint),
+                style = MaterialTheme.typography.bodyLarge,
+                color = scheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
+            )
+
+            onTarget -> Text(
+                stringResource(R.string.ballistics_on_target),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            else -> Row(
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TurretMove(adjustmentX)
+                TurretMove(adjustmentY)
+            }
+        }
     }
 }
 
@@ -398,13 +399,28 @@ private fun TurretMove(adjustment: ScopeAdjustment?) {
 
 /** Where the shot hit (x right, y up, any unit), scaled so the furthest miss sits near the edge. */
 @Composable
-private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+private fun Reticle(
+    missX: Float,
+    missY: Float,
+    onTarget: Boolean,
+    ink: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
+) {
     val scheme = MaterialTheme.colorScheme
     val hit = scheme.tertiary
     val path = scheme.primary
-    val face = scheme.surfaceContainer
-    val x by animateFloatAsState(missX, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missX")
-    val y by animateFloatAsState(missY, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missY")
+    val face by androidx.compose.animation.animateColorAsState(
+        if (onTarget) scheme.primaryContainer else scheme.surfaceContainer,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "face"
+    )
+    // The hit lands with a little bounce, like a shot settling on paper.
+    val landing = androidx.compose.animation.core.spring<Float>(
+        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
+    )
+    val x by animateFloatAsState(missX, landing, label = "missX")
+    val y by animateFloatAsState(missY, landing, label = "missY")
     Canvas(modifier = modifier) {
         val radius = size.minDimension / 2f
         drawCircle(face, radius, center)
@@ -421,9 +437,10 @@ private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphic
         drawLine(ink.copy(alpha = 0.55f), Offset(center.x, center.y + gap), Offset(center.x, center.y + radius - 6.dp.toPx()), stroke, StrokeCap.Round)
         drawCircle(path, 3.dp.toPx(), center)
 
-        val largest = maxOf(kotlin.math.abs(x), kotlin.math.abs(y))
-        if (largest > 0f) {
-            val scale = radius * 0.7f / largest
+        val largest = maxOf(kotlin.math.abs(missX), kotlin.math.abs(missY))
+        if (largest > 0f || x != 0f || y != 0f) {
+            // Small misses stay near the centre; the furthest miss never leaves the reticle.
+            val scale = radius * 0.72f / maxOf(largest, MIN_RETICLE_SCALE_INCHES)
             val impact = Offset(center.x + x * scale, center.y - y * scale)
             drawLine(
                 path,
@@ -433,7 +450,8 @@ private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphic
                 StrokeCap.Round,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
             )
-            drawCircle(hit, 8.dp.toPx(), impact)
+            drawCircle(hit.copy(alpha = 0.3f), 16.dp.toPx(), impact)
+            drawCircle(hit, 9.dp.toPx(), impact)
         }
     }
 }
@@ -580,7 +598,7 @@ private fun <T, U> UnitAmountField(
     }
 }
 
-/** A choice from a list, as a read-only field of the group (so it reads like the fields beside it); tapping opens the choice. */
+/** A choice from a list, as a read-only row of the group with the choice as its trailing pill; tapping opens it. */
 @Composable
 internal fun <T> UnitPickerField(
     label: String,
@@ -593,18 +611,15 @@ internal fun <T> UnitPickerField(
     var isOpen by remember { mutableStateOf(false) }
     val selectedName = options.firstOrNull { it.second == selected }?.first
 
+    // The choice is the same tonal pill at the end as the unit of a distance field, so the two rows match.
     TrailSenseInputField(
-        value = selectedName.orEmpty(),
+        value = "",
         onValueChange = {},
         label = label,
         position = position,
         onClick = { isOpen = true },
-        trailingIcon = {
-            androidx.compose.material3.Icon(
-                androidx.compose.material.icons.Icons.Rounded.ArrowDropDown,
-                contentDescription = null
-            )
-        },
+        unit = selectedName.orEmpty(),
+        onUnitClick = { isOpen = true },
         modifier = modifier
     )
 
@@ -751,6 +766,9 @@ private fun getScopeAdjustment(
     }
     return ScopeAdjustment(clicks.roundToInt(), clickDirection)
 }
+
+/** A miss this size (in inches) or smaller sits partway out, so a tiny miss doesn't jump to the edge. */
+private const val MIN_RETICLE_SCALE_INCHES = 4f
 
 private data class ScopeAdjustment(val clicks: Int, val direction: ScopeDirection)
 
