@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.level.ui
 
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -113,7 +119,6 @@ fun LevelScreen(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
         ) {
-            LevelStatus(isLevel = isLevel, tilt = formattedTilt)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,28 +127,103 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     .semantics(mergeDescendants = true) { contentDescription = levelDescription },
                 contentAlignment = Alignment.Center
             ) {
-                LevelBezel(xAngle = xAngle, yAngle = yAngle, isLevel = isLevel)
-            }
-            val tone = if (isLevel) TrailSenseTone.Good else TrailSenseTone.Neutral
-            TrailSenseStatGrid(
-                stats = listOf(
-                    TrailSenseStat(label = "X", value = formattedX, tone = tone),
-                    TrailSenseStat(label = "Y", value = formattedY, tone = tone),
-                    TrailSenseStat(
-                        label = stringResource(R.string.tilt),
-                        value = formattedTilt,
-                        tone = if (isLevel) TrailSenseTone.Good else TrailSenseTone.Primary
+                LevelBezel(xAngle = xAngle, yAngle = yAngle, isLevel = isLevel) {
+                    TrailSenseValueChip(
+                        text = if (isLevel) {
+                            stringResource(R.string.level_is_level)
+                        } else {
+                            stringResource(R.string.level_off_by, formattedTilt)
+                        },
+                        tone = if (isLevel) TrailSenseTone.Good else TrailSenseTone.Primary,
+                        strong = true
                     )
-                ),
-                columns = 3,
-                valueStyle = MaterialTheme.typography.headlineSmall
-            )
+                }
+            }
+            LevelStats(x = formattedX, y = formattedY, tilt = formattedTilt, isLevel = isLevel)
         }
     }
 }
 
 private const val LEVEL_TOLERANCE_DEGREES = 1.0f
 private const val MAX_ANGLE = 45f
+
+/** Tilt is the reading that matters, so it gets the big toned tile; X and Y stack quietly beside it. */
+@Composable
+private fun LevelStats(x: String, y: String, tilt: String, isLevel: Boolean) {
+    val scheme = MaterialTheme.colorScheme
+    val status = trailSenseStatusColors()
+    val tiltContainer by animateColorAsState(
+        if (isLevel) status.good else scheme.primaryContainer,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "tiltTile"
+    )
+    val tiltContent by animateColorAsState(
+        if (isLevel) status.goodContainer else scheme.onPrimaryContainer,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "tiltTileContent"
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+    ) {
+        Surface(
+            modifier = Modifier
+                .weight(1.2f)
+                .fillMaxHeight(),
+            shape = trailSenseGridCellShape(0, 2, 0, 1),
+            color = tiltContainer,
+            contentColor = tiltContent
+        ) {
+            Column(
+                modifier = Modifier.padding(TrailSenseSpacing.lg),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    stringResource(R.string.tilt),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = tiltContent.copy(alpha = 0.8f)
+                )
+                Text(
+                    tilt,
+                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            listOf("X" to x, "Y" to y).forEachIndexed { index, (label, value) ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = trailSenseGridCellShape(1, 2, index, 2),
+                    color = scheme.surfaceContainerLow
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = scheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            value,
+                            style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun LevelStatus(isLevel: Boolean, tilt: String) {
@@ -163,11 +243,11 @@ private fun LevelStatus(isLevel: Boolean, tilt: String) {
 
 /** The bezel: a twelve-sided cookie in the primary tone (good once level) around a deep round face. */
 @Composable
-private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
+private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean, status: @Composable () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val status = trailSenseStatusColors()
     val bezel by animateColorAsState(
-        if (isLevel) status.goodContainer else scheme.primaryContainer,
+        if (isLevel) status.good else scheme.primaryContainer,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "bezel"
     )
@@ -184,7 +264,7 @@ private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
     )
     Box(
         modifier = Modifier
-            .widthIn(max = 420.dp)
+            .widthIn(max = 460.dp)
             .fillMaxWidth()
             .aspectRatio(1f)
             .graphicsLayer {
@@ -209,6 +289,11 @@ private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
         ) {
             BubbleFace(xAngle = xAngle, yAngle = yAngle, isLevel = isLevel, modifier = Modifier.fillMaxSize())
         }
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 64.dp)
+        ) { status() }
     }
 }
 
