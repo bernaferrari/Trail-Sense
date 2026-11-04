@@ -84,6 +84,10 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.widthIn
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -205,6 +209,7 @@ private class WeatherController(
     private var weatherMonitorState by mutableStateOf(FeatureState.Off)
     private var weatherMonitorFrequency by mutableStateOf<Duration?>(null)
     private var showWeatherFrequencyPicker by mutableStateOf(false)
+    private var hasLoaded by mutableStateOf(false)
 
     private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
     private var weather: CurrentWeather? = null
@@ -245,7 +250,8 @@ private class WeatherController(
             onPressureMarkerSelected = ::onPressureMarkerSelected,
             onToggleMonitor = ::toggleWeatherMonitor,
             modifier = modifier,
-            tendencyDirection = tendencyDirection
+            tendencyDirection = tendencyDirection,
+            isEmpty = hasLoaded && pressureChartData.data.size < 2
         )
 
         if (showWeatherFrequencyPicker) {
@@ -403,6 +409,7 @@ private class WeatherController(
                 pressureForecast = nextForecast
                 displayPressureChart(history, rawHistory, pressureForecast)
                 updateList()
+                hasLoaded = true
             }
             updateForecast()
         }
@@ -586,7 +593,8 @@ private fun WeatherHost(
     onPressureMarkerSelected: (Duration?, Float?) -> Unit,
     onToggleMonitor: () -> Unit,
     modifier: Modifier = Modifier,
-    tendencyDirection: Int = 0
+    tendencyDirection: Int = 0,
+    isEmpty: Boolean = false
 ) {
     // One question: will the weather turn? The forecast answers it; it is the product's second hero moment and turns
     // errorContainer only for a storm. Pressure (the evidence) and the other readings sit calmly under it.
@@ -613,31 +621,41 @@ private fun WeatherHost(
                 }
         }
     ) {
-            item(key = "weather_hero") {
-                WeatherHeroCard(
-                    state = views.weatherTitle,
-                    isUpdating = isWeatherUpdating,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            // Before the monitor has two readings there is no forecast to give: the hero becomes the empty state,
+            // whose one button starts the monitor. The pressure and readings the phone has now still sit below it.
+            if (isEmpty) {
+                item(key = "weather_empty") {
+                    val isOn = monitorState == FeatureState.On
+                    TrailSenseEmptyState(
+                        icon = TrailIcons.Weather,
+                        title = stringResource(R.string.weather_empty_title),
+                        description = stringResource(
+                            if (isOn) R.string.weather_empty_recording else R.string.weather_empty_description
+                        ),
+                        actionLabel = if (isOn) null else stringResource(R.string.weather_empty_action),
+                        onAction = if (isOn) null else onToggleMonitor,
+                        actionModifier = Modifier.testTag("play_btn"),
+                        modifier = Modifier.testTag("chart")
+                    )
+                }
+            } else {
+                item(key = "weather_hero") {
+                    WeatherHeroCard(
+                        state = views.weatherTitle,
+                        isUpdating = isWeatherUpdating,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             // An alert is one plain row under the forecast: the warning role, and the error role only in a storm.
             if (alert != null) {
                 item(key = "weather_alert") {
-                    SkyValueRow(
+                    TrailSenseListItem(
                         title = alert.title,
-                        value = alert.trailingText,
-                        icon = TrailIcons.Alert,
-                        iconContainerColor = if (storm) {
-                            MaterialTheme.colorScheme.errorContainer
-                        } else {
-                            MaterialTheme.colorScheme.tertiaryContainer
-                        },
-                        iconContentColor = if (storm) {
-                            MaterialTheme.colorScheme.onErrorContainer
-                        } else {
-                            MaterialTheme.colorScheme.onTertiaryContainer
-                        },
+                        subtitle = alert.trailingText,
+                        icon = rememberVectorPainter(TrailIcons.Alert),
+                        iconTint = if (storm) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
                         position = TrailSenseGroupPosition.Single,
                         onClick = alert.onClick,
                         modifier = Modifier.testTag("weather_item_${alert.id}")
@@ -645,15 +663,18 @@ private fun WeatherHost(
                 }
             }
 
-            item(key = "weather_monitor") {
-                WeatherMonitorRow(
-                    state = monitorState,
-                    frequency = monitorFrequency,
-                    formatService = formatService,
-                    onSubtitleClick = onChangeMonitorFrequency,
-                    onPlayClick = onToggleMonitor,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            // Once it is on (or once there is a forecast), the monitor is one row: its state and how often it reads.
+            if (!isEmpty || monitorState == FeatureState.On) {
+                item(key = "weather_monitor") {
+                    WeatherMonitorRow(
+                        state = monitorState,
+                        frequency = monitorFrequency,
+                        formatService = formatService,
+                        onSubtitleClick = onChangeMonitorFrequency,
+                        onPlayClick = onToggleMonitor,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             item(key = "weather_chart") {
@@ -664,7 +685,8 @@ private fun WeatherHost(
                     data = pressureChartData,
                     markerText = pressureMarkerText,
                     formatService = formatService,
-                    onMarkerSelected = onPressureMarkerSelected
+                    onMarkerSelected = onPressureMarkerSelected,
+                    showChart = !isEmpty
                 )
             }
 
@@ -695,7 +717,8 @@ private fun WeatherPressureSection(
     data: WeatherPressureChartData,
     markerText: String?,
     formatService: FormatService,
-    onMarkerSelected: (Duration?, Float?) -> Unit
+    onMarkerSelected: (Duration?, Float?) -> Unit,
+    showChart: Boolean = true
 ) {
     val scheme = MaterialTheme.colorScheme
     Column(
@@ -719,13 +742,13 @@ private fun WeatherPressureSection(
                     scheme.primary,
                     Modifier
                         .padding(end = TrailSenseSpacing.sm)
-                        .size(36.dp)
+                        .size(32.dp)
                         .align(Alignment.CenterVertically)
                 )
             }
             Text(
                 number ?: stringResource(R.string.sky_pressure_waiting),
-                style = (if (number != null) MaterialTheme.typography.displaySmall else MaterialTheme.typography.titleLarge)
+                style = (if (number != null) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.titleLarge)
                     .copy(fontFeatureSettings = "tnum"),
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                 color = scheme.onSurface,
@@ -764,6 +787,7 @@ private fun WeatherPressureSection(
                     .testTag("weather_item_2")
             )
         }
+        if (!showChart) return@Column
         Spacer(Modifier.height(TrailSenseSpacing.lg))
         if (data.data.size >= 2) {
             // A steady pressure has nothing to show in a tall box: the chart shrinks to a compact strip.
@@ -966,8 +990,8 @@ private fun WeatherPressureChart(
 }
 
 /**
- * The monitor as one quiet row: its state and frequency (tap to change it), and the screen's one filled primary
- * action, start or stop.
+ * The monitor as one family row: its state and how often it reads (tap the row to change that), and a switch as the
+ * one trailing element.
  */
 @Composable
 private fun WeatherMonitorRow(
@@ -982,70 +1006,51 @@ private fun WeatherMonitorRow(
     val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
         " · ${formatService.formatDuration(it, short = true, includeSeconds = true)}"
     } ?: "")
+    val label = stringResource(if (isOn) R.string.stop else R.string.start)
 
-    Surface(
-        modifier = modifier.testTag("weather_play_bar"),
-        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = TrailSenseSpacing.xs,
-                    end = TrailSenseSpacing.md,
-                    top = TrailSenseSpacing.sm,
-                    bottom = TrailSenseSpacing.sm
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
+    Box(modifier.testTag("weather_play_bar")) {
+    TrailSenseListItem(
+        title = stringResource(R.string.weather_monitor),
+        subtitle = subtitle,
+        icon = rememberVectorPainter(TrailIcons.Update),
+        position = TrailSenseGroupPosition.Single,
+        onClick = onSubtitleClick,
+        modifier = Modifier.testTag("play_bar_title"),
+        trailing = {
+            androidx.compose.material3.Switch(
+                checked = isOn,
+                onCheckedChange = { onPlayClick() },
                 modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                    .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
-                    .clickable(onClick = onSubtitleClick)
-                    .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
-                    .testTag("play_bar_title"),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.weather_monitor),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            FilledIconButton(
-                onClick = onPlayClick,
-                shape = if (isOn) RoundedCornerShape(16.dp) else RoundedCornerShape(50),
-                modifier = Modifier
-                    .size(width = 64.dp, height = 52.dp)
+                    .semantics { contentDescription = label }
                     .testTag("play_btn")
-            ) {
-                Icon(
-                    imageVector = if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
-                    contentDescription = stringResource(if (isOn) R.string.stop else R.string.start)
-                )
-            }
+            )
         }
+    )
     }
 }
 
 @Composable
 private fun WeatherListItemRow(item: WeatherListItem, position: TrailSenseGroupPosition) {
-    SkyValueRow(
+    TrailSenseListItem(
         title = item.title,
         subtitle = item.subtitle,
-        value = item.trailingText,
-        icon = item.icon,
+        icon = item.icon?.let { rememberVectorPainter(it) },
         position = position,
         onClick = item.onClick,
-        modifier = Modifier.testTag("weather_item_${item.id}")
+        modifier = Modifier.testTag("weather_item_${item.id}"),
+        trailing = item.trailingText?.let { value ->
+            {
+                Text(
+                    value,
+                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.End,
+                    maxLines = 3,
+                    modifier = Modifier.widthIn(max = 200.dp)
+                )
+            }
+        }
     )
 }
 
