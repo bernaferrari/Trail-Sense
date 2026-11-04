@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -398,7 +400,8 @@ private fun FieldGuideScreen(
             bottom = 112.dp
         ),
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            // While browsing, adding a page lives in the notebook hero, so nothing floats over the tiles.
+            if (!isBrowsing) ExtendedFloatingActionButton(
                 onClick = onCreate,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -444,7 +447,8 @@ private fun FieldGuideScreen(
             item(key = "notebook") {
                 FieldGuideNotebookHero(
                     pages = items.totalPages,
-                    kinds = categories.count { it.count > 0 }
+                    kinds = categories.count { it.count > 0 },
+                    onCreate = onCreate
                 )
             }
             item(key = "categories") {
@@ -698,8 +702,16 @@ private fun categoryShape(index: Int): androidx.compose.ui.graphics.Shape = when
 
 /** The notebook's cover: a leaf in a turning clover, how many pages it holds and across how many kinds. */
 @Composable
-private fun FieldGuideNotebookHero(pages: Int, kinds: Int) {
+private fun FieldGuideNotebookHero(pages: Int, kinds: Int, onCreate: () -> Unit) {
     TrailSenseSpotlight(
+        actions = listOf(
+            TrailSenseSpotlightAction(
+                label = stringResource(R.string.create_page),
+                icon = Icons.Rounded.Add,
+                testTag = "add_btn",
+                onClick = onCreate
+            )
+        ),
         title = androidx.compose.ui.res.pluralStringResource(R.plurals.page_group_summary, pages, pages),
         eyebrow = stringResource(R.string.field_guide),
         supportingText = stringResource(R.string.sky_field_guide_kinds, kinds),
@@ -730,9 +742,15 @@ private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>)
                     val empty = category.count == 0
                     Surface(
                         onClick = category.onClick,
+                        modifier = Modifier
+                            .weight(1f)
+                            .graphicsLayer { alpha = if (empty) 0.55f else 1f },
                         shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        modifier = Modifier.weight(1f)
+                        color = if (empty) {
+                            MaterialTheme.colorScheme.surfaceContainerLow
+                        } else {
+                            androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surfaceContainerLow, wells.container, 0.35f)
+                        }
                     ) {
                         Column(
                             Modifier.padding(TrailSenseSpacing.lg),
