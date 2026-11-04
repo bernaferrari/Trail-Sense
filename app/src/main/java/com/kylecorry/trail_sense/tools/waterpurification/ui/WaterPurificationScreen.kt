@@ -266,9 +266,12 @@ private fun BoilPot(
         animationSpec = infiniteRepeatable(tween(if (isRunning) 1400 else 4200, easing = LinearEasing), RepeatMode.Restart),
         label = "wave"
     )
-    val water = if (isRunning) scheme.tertiary else scheme.primary
+    // Light water under dark digits: the number always reads, whatever the level.
+    val ring = if (isRunning) scheme.tertiary else scheme.primary
+    val ringColor by animateColorAsState(ring, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "ring")
+    val water = if (isRunning) scheme.tertiaryContainer else scheme.primaryContainer
     val waterColor by animateColorAsState(water, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "water")
-    val face = if (isRunning) scheme.tertiaryContainer else scheme.primaryContainer
+    val face = scheme.surfaceContainerLow
     val faceColor by animateColorAsState(face, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "face")
     val ink = if (isRunning) scheme.onTertiaryContainer else scheme.onPrimaryContainer
     val inkColor by animateColorAsState(ink, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "ink")
@@ -283,7 +286,7 @@ private fun BoilPot(
         CircularWavyProgressIndicator(
             progress = { progress },
             modifier = Modifier.fillMaxSize(),
-            color = waterColor,
+            color = ringColor,
             trackColor = scheme.surfaceContainerHighest,
             stroke = Stroke(width = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.toPx() }, cap = androidx.compose.ui.graphics.StrokeCap.Round),
             trackStroke = Stroke(width = with(androidx.compose.ui.platform.LocalDensity.current) { 14.dp.toPx() }, cap = androidx.compose.ui.graphics.StrokeCap.Round),
@@ -314,7 +317,7 @@ private fun BoilPot(
                     lineTo(size.width, size.height)
                     close()
                 }
-                drawPath(path, waterColor.copy(alpha = 0.28f))
+                drawPath(path, waterColor.copy(alpha = 0.6f))
                 // A second, offset wave in front for depth.
                 val front = Path().apply {
                     moveTo(0f, size.height)
@@ -329,14 +332,14 @@ private fun BoilPot(
                     lineTo(size.width, size.height)
                     close()
                 }
-                drawPath(front, waterColor.copy(alpha = 0.42f))
+                drawPath(front, waterColor)
                 if (isRunning) {
                     // Rising bubbles.
                     listOf(0.22f, 0.4f, 0.58f, 0.76f).forEachIndexed { i, fx ->
                         val t = (phase + i * 0.27f) % 1f
                         val y = size.height - (size.height - level) * t
                         drawCircle(
-                            waterColor.copy(alpha = 0.5f * (1f - t)),
+                            ringColor.copy(alpha = 0.45f * (1f - t)),
                             radius = (3f + i % 2 * 2f).dp.toPx(),
                             center = Offset(size.width * fx, y)
                         )
@@ -379,9 +382,21 @@ private fun WaterStep(
     TrailSenseGroupCard(
         position = position,
         color = rowColor,
-        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
+        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = 0.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+          Box(contentAlignment = Alignment.Center) {
+            // The rail: a line through the badges joins the steps into one sequence.
+            val rail = scheme.outlineVariant
+            Canvas(Modifier.size(width = 44.dp, height = 72.dp)) {
+                val x = size.width / 2f
+                if (!position.isFirst) {
+                    drawLine(rail, Offset(x, -20f), Offset(x, size.height / 2f), 3.dp.toPx())
+                }
+                if (!position.isLast) {
+                    drawLine(rail, Offset(x, size.height / 2f), Offset(x, size.height + 20f), 3.dp.toPx())
+                }
+            }
             when (state) {
                 StepState.Done -> TrailSenseShapeBadge(
                     icon = TrailIcons.Check,
@@ -405,6 +420,7 @@ private fun WaterStep(
                     contentColor = scheme.onSecondaryContainer
                 )
             }
+          }
             Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
             Text(
                 text = text,
