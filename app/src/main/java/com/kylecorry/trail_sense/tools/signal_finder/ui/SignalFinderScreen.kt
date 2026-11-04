@@ -69,6 +69,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -374,6 +378,7 @@ private fun SignalFinderScreen(
                     ) {
                         if (sortedTowers.isNotEmpty()) {
                             TowerRadar(
+                                strength = bestSignal?.strength,
                                 towers = sortedTowers,
                                 location = location,
                                 formatter = formatter,
@@ -395,10 +400,12 @@ private fun SignalFinderScreen(
                     }
                 }
 
-                // A single signal is already the reading; the list only earns its place with two or more.
-                if (signals.size > 1) {
+                // The strongest signal is already the reading above; the list holds only the others, so no network
+                // and percentage is shown twice.
+                val otherSignals = signals.filter { it !== bestSignal }
+                if (otherSignals.isNotEmpty()) {
                     trailSenseSection(key = "signals", title = signalsTitle) {
-                        signals.forEach { signal ->
+                        otherSignals.forEach { signal ->
                             row { position ->
                                 CellSignalRow(signal, formatter, prefs, position)
                             }
@@ -550,6 +557,7 @@ private fun CellSignalRow(
  */
 @Composable
 private fun TowerRadar(
+    strength: Float?,
     towers: List<ApproximateCoordinate>,
     location: Coordinate,
     formatter: FormatService,
@@ -571,6 +579,19 @@ private fun TowerRadar(
             0
         )
     }
+    // A ring leaves you and spreads to the rim, faster the stronger the signal: the radar shows the reading too.
+    val period = strength?.let { (3200 - 20 * it.coerceIn(0f, 100f)).toInt() } ?: 0
+    val pulse = if (period > 0) {
+        val p by androidx.compose.animation.core.rememberInfiniteTransition(label = "pulse").animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(period, easing = LinearEasing), RepeatMode.Restart),
+            label = "pulse"
+        )
+        p
+    } else {
+        -1f
+    }
     Canvas(
         Modifier
             .fillMaxWidth()
@@ -580,6 +601,14 @@ private fun TowerRadar(
             drawCircle(disc, radius, center)
             listOf(1f, 0.66f, 0.33f).forEach {
                 drawCircle(ringLine, radius * it, center, style = Stroke(width = 1.5.dp.toPx()))
+            }
+            if (pulse >= 0f) {
+                drawCircle(
+                    dot.copy(alpha = 0.35f * (1f - pulse)),
+                    radius * pulse,
+                    center,
+                    style = Stroke(width = 3.dp.toPx())
+                )
             }
             val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 textAlign = android.graphics.Paint.Align.CENTER
@@ -619,7 +648,8 @@ private fun TowerRadar(
             drawCircle(you, 7.dp.toPx(), center)
             drawCircle(scheme.surfaceContainerLowest, 3.dp.toPx(), center)
             // Towers close together are nudged apart (outward, then sideways) so no two markers overlap.
-            val placed = mutableListOf<Offset>()
+            // You count as a marker too, so no tower sits on your dot.
+            val placed = mutableListOf(center)
             val markerGap = 28.dp.toPx()
             towers.forEachIndexed { index, tower ->
                 val bearingDegrees = location.bearingTo(tower.coordinate).value
@@ -695,8 +725,9 @@ private fun CellTowerRow(
                 text = (index + 1).toString(),
                 shape = MaterialShapes.Cookie6Sided.toShape(),
                 size = 40.dp,
-                containerColor = if (isNearest) scheme.primary else scheme.primary.copy(alpha = 0.12f),
-                contentColor = if (isNearest) scheme.onPrimary else scheme.primary
+                // The same colours as its dot on the radar, so the number and the dot read as one tower.
+                containerColor = if (isNearest) scheme.tertiary else scheme.primary,
+                contentColor = if (isNearest) scheme.onTertiary else scheme.onPrimary
             )
             Spacer(Modifier.width(TrailSenseSpacing.lg))
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
