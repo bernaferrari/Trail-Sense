@@ -145,105 +145,78 @@ fun ToolsScreen(
         pinnedToolIds.mapNotNull { id -> allTools.firstOrNull { it.id == id } }
     }
 
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-            // One title size for every tile on the page, decided once from the longest tool name.
-            val gridWidth = minOf(maxWidth, TrailSenseSize.maximumContentWidth) - TrailSenseSpacing.lg * 2
-            val titleSize = rememberTileTitleSize(allTools.map { it.name }, gridWidth, if (gridWidth >= 600.dp) 3 else 2)
-            LazyColumn(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.statusBars),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.lg,
-                    end = TrailSenseSpacing.lg,
-                    top = TrailSenseSpacing.sm,
-                    bottom = TrailSenseSpacing.xxxl
-                ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-                item("header") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = TrailSenseSpacing.xs, top = TrailSenseSpacing.lg),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.tools),
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(
-                            onClick = onSettingsClick,
-                            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
-                        ) {
-                            Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings))
-                        }
-                    }
-                }
+    // One title size for every tile on the page, decided once from the longest tool name.
+    val screenWidth = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
+    val gridWidth = minOf(screenWidth, TrailSenseSize.maximumContentWidth) - TrailSenseSpacing.lg * 2
+    val titleSize = rememberTileTitleSize(allTools.map { it.name }, gridWidth, if (gridWidth >= 600.dp) 3 else 2)
 
-                item("search") {
-                    com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar(
-                        value = filter,
-                        onValueChange = { filter = it },
-                        placeholder = stringResource(R.string.search_tools),
-                        clearContentDescription = stringResource(R.string.clouds_clear),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(searchFocusRequester)
+    // The tab's page: the family's large title that collapses as the grid scrolls, settings as its one action.
+    com.kylecorry.trail_sense.shared.views.compose.TrailSensePage(
+        title = stringResource(R.string.tools),
+        onBack = null,
+        modifier = modifier,
+        actions = {
+            IconButton(onClick = onSettingsClick) {
+                Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings))
+            }
+        }
+    ) {
+        item("search") {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar(
+                value = filter,
+                onValueChange = { filter = it },
+                placeholder = stringResource(R.string.search_tools),
+                clearContentDescription = stringResource(R.string.clouds_clear),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(searchFocusRequester)
+            )
+        }
+
+        if (isSearching) {
+            if (results.isEmpty()) {
+                item("no_results") {
+                    TrailSenseEmptyState(
+                        icon = Icons.Rounded.Search,
+                        title = stringResource(R.string.no_results),
+                        modifier = Modifier.fillParentMaxHeight(0.9f)
                     )
                 }
-
-                if (isSearching) {
-                    if (results.isEmpty()) {
-                        item("no_results") {
-                            TrailSenseEmptyState(
-                                icon = Icons.Rounded.Search,
-                                title = stringResource(R.string.no_results),
-                                modifier = Modifier.heightIn(max = 360.dp)
-                            )
-                        }
-                    } else {
-                        item("results") {
-                            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                                results.forEachIndexed { index, tool ->
-                                    ToolRow(
-                                        tool = tool,
-                                        position = TrailSenseGroupPosition.at(index, results.size),
-                                        onClick = { onToolClick(tool) },
-                                        onLongClick = { onToolLongClick(tool) }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    if (pinned.isNotEmpty()) {
-                        item("pinned") {
-                            Column {
-                                TrailSenseGroupHeader(stringResource(R.string.pinned))
-                                TrailSenseTileGrid(
-                                    pinned.map { it.tile(onToolClick, onToolLongClick) },
-                                    titleSize = titleSize
-                                )
-                            }
-                        }
-                    }
-                    items(categories, key = { "category_${it.categoryName}" }) { group ->
-                        Column {
-                            if (group.categoryName != null) {
-                                TrailSenseGroupHeader(group.categoryName)
-                            }
-                            TrailSenseTileGrid(
-                                group.tools.map { it.tile(onToolClick, onToolLongClick) },
-                                titleSize = titleSize
+            } else {
+                item("results") {
+                    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                        results.forEachIndexed { index, tool ->
+                            ToolRow(
+                                tool = tool,
+                                position = TrailSenseGroupPosition.at(index, results.size),
+                                onClick = { onToolClick(tool) },
+                                onLongClick = { onToolLongClick(tool) }
                             )
                         }
                     }
+                }
+            }
+        } else {
+            if (pinned.isNotEmpty()) {
+                item("pinned") {
+                    Column {
+                        TrailSenseGroupHeader(stringResource(R.string.pinned))
+                        TrailSenseTileGrid(
+                            pinned.map { it.tile(onToolClick, onToolLongClick) },
+                            titleSize = titleSize
+                        )
+                    }
+                }
+            }
+            items(categories, key = { "category_${it.categoryName}" }) { group ->
+                Column {
+                    if (group.categoryName != null) {
+                        TrailSenseGroupHeader(group.categoryName)
+                    }
+                    TrailSenseTileGrid(
+                        group.tools.map { it.tile(onToolClick, onToolLongClick) },
+                        titleSize = titleSize
+                    )
                 }
             }
         }

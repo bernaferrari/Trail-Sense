@@ -15,6 +15,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -201,39 +202,12 @@ private fun VectorMapScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("title"),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text(
-                        text = map?.name ?: stringResource(R.string.offline_maps),
-                        modifier = Modifier.padding(
-                            start = TrailSenseSpacing.screen,
-                            top = TrailSenseSpacing.lg,
-                            end = TrailSenseSpacing.xxxl + TrailSenseSpacing.lg,
-                            bottom = TrailSenseSpacing.lg
-                        ),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .padding(end = TrailSenseSpacing.sm)
-                    ) {
-                        FilledIconButton(
-                            onClick = { isMenuOpen = true },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            )
-                        ) {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentTopBar(
+                title = map?.name ?: stringResource(R.string.offline_maps),
+                modifier = Modifier.testTag("title"),
+                actions = {
+                    Box {
+                        IconButton(onClick = { isMenuOpen = true }) {
                             Icon(
                                 imageVector = TrailIcons.MenuDots,
                                 contentDescription = stringResource(R.string.map_options)
@@ -267,7 +241,7 @@ private fun VectorMapScreen(
                         }
                     }
                 }
-            }
+            )
 
             Box(modifier = Modifier.weight(1f)) {
                 val composeMapView = remember {

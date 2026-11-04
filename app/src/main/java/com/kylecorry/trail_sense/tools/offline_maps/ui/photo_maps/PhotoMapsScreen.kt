@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -436,6 +437,7 @@ private fun PhotoMapsScreen(
     }
 }
 
+/** The map's title in the standard instrument bar: back, the map's name and rotation, recenter and the menu. */
 @Composable
 private fun PhotoMapHeader(
     title: String,
@@ -444,88 +446,22 @@ private fun PhotoMapHeader(
     onRecenter: () -> Unit,
     onMenuClick: (View) -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .padding(
-                    horizontal = TrailSenseSpacing.sm,
-                    vertical = TrailSenseSpacing.sm
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    val anchor = LocalView.current
+    com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentTopBar(
+        title = title,
+        subtitle = subtitle,
+        modifier = Modifier.testTag("map_title"),
+        actions = {
             if (showRecenter) {
-                HeaderImageButton(
-                    icon = TrailIcons.Recenter,
-                    contentDescription = stringResource(R.string.center),
-                    tag = "map_recenter_btn",
-                    onClick = { _ -> onRecenter() }
-                )
-            } else {
-                Spacer(modifier = Modifier.size(48.dp))
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = TrailSenseSpacing.md)
-                    .testTag("map_title")
-            ) {
-                Text(
-                    text = title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (!subtitle.isNullOrBlank()) {
-                    Text(
-                        text = subtitle,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                IconButton(onClick = onRecenter, modifier = Modifier.testTag("map_recenter_btn")) {
+                    Icon(rememberVectorPainter(TrailIcons.Recenter), contentDescription = stringResource(R.string.center))
                 }
             }
-
-            HeaderImageButton(
-                icon = TrailIcons.MenuDots,
-                contentDescription = stringResource(R.string.map_options),
-                tag = "map_menu_btn",
-                onClick = onMenuClick
-            )
+            IconButton(onClick = { onMenuClick(anchor) }, modifier = Modifier.testTag("map_menu_btn")) {
+                Icon(rememberVectorPainter(TrailIcons.MenuDots), contentDescription = stringResource(R.string.map_options))
+            }
         }
-    }
-}
-
-@Composable
-private fun HeaderImageButton(
-    icon: ImageVector,
-    contentDescription: String,
-    tag: String,
-    onClick: (View) -> Unit
-) {
-    val anchor = LocalView.current
-    FilledTonalIconButton(
-        onClick = { onClick(anchor) },
-        modifier = Modifier
-            .size(48.dp)
-            .testTag(tag),
-        colors = IconButtonDefaults.filledTonalIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        )
-    ) {
-        Icon(
-            painter = rememberVectorPainter(icon),
-            contentDescription = contentDescription
-        )
-    }
+    )
 }
 
 private sealed class PhotoMapChildSpec(val key: String) {

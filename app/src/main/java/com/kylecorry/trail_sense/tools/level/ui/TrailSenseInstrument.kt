@@ -81,10 +81,22 @@ fun TrailSenseInstrumentTopBar(
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     largeTitle: Boolean = false,
+    subtitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     val titleContent: @Composable () -> Unit = {
-        Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+        androidx.compose.foundation.layout.Column {
+            Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
     val navigation: @Composable () -> Unit = {
         if (onBack != null) {
