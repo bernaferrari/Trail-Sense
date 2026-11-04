@@ -5,6 +5,7 @@
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.shared.views.TurnBackEmptyIllustration
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
@@ -375,6 +376,7 @@ private fun TurnBackScreen(
             item("empty") {
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolClock,
+                    illustration = { TurnBackEmptyIllustration() },
                     title = stringResource(R.string.places_turn_back_idle_title),
                     description = stringResource(R.string.turn_back_empty_description),
                     modifier = Modifier
