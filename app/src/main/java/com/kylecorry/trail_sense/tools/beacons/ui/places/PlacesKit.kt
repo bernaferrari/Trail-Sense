@@ -117,8 +117,8 @@ fun PlacesMiniBar(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.primary,
     trackColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    width: Dp = 56.dp,
-    height: Dp = 6.dp
+    width: Dp = 64.dp,
+    height: Dp = 8.dp
 ) {
     val animated by animateFloatAsState(
         fraction.coerceIn(0f, 1f),
@@ -246,7 +246,7 @@ fun PlacesRow(
                 ) {
                     Text(
                         value,
-                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
                         fontWeight = FontWeight.SemiBold,
                         color = valueColor,
                         maxLines = 1

@@ -142,6 +142,7 @@ fun DeclinationScreen(
                     TrailSenseStat(
                         label = stringResource(R.string.declination),
                         value = formatter.formatDegrees(kotlin.math.abs(declination), 1),
+                        supportingText = stringResource(R.string.places_declination_here),
                         tone = TrailSenseTone.Primary,
                         icon = TrailIcons.Declination
                     ),
@@ -152,7 +153,9 @@ fun DeclinationScreen(
                         } else {
                             formatter.formatDirection(if (declination < 0) CompassDirection.West else CompassDirection.East)
                         },
-                        supportingText = if (aligned) null else stringResource(R.string.places_declination_of_true_north),
+                        supportingText = stringResource(
+                            if (aligned) R.string.places_declination_with_true_north else R.string.places_declination_of_true_north
+                        ),
                         tone = TrailSenseTone.Tertiary,
                         icon = TrailIcons.CompassIcon
                     )
@@ -303,7 +306,7 @@ private fun CoordinateInput(
             }
         },
         trailingIcon = {
-            IconButton(
+            androidx.compose.material3.FilledTonalIconButton(
                 onClick = { showHelp = true },
                 modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
