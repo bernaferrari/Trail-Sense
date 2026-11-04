@@ -70,8 +70,8 @@ import kotlin.math.hypot
 
 /**
  * Bubble level: one live object, a scalloped bezel holding a bubble that stretches toward the tilt, with the tilt
- * and the verdict right under it and X and Y as one quiet list. Once the phone is level the bezel smooths into a
- * true circle, turns green and gives one haptic tick.
+ * and the verdict right under it and X and Y as one quiet caption. Once the phone is level the bezel smooths into a
+ * true circle, deepens to primary and gives one haptic tick.
  */
 @Composable
 fun LevelScreen(modifier: Modifier = Modifier) {
@@ -119,6 +119,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
 
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.tool_bubble_level_title),
+        largeTitle = true,
         modifier = modifier
     ) {
         Column(
@@ -147,9 +148,8 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                 LevelBezel(xAngle = xAngle, yAngle = yAngle, isLevel = isLevel)
             }
             // The reading and its verdict, then the two axes as one quiet list.
-            val statusColors = trailSenseStatusColors()
             val starColor by animateColorAsState(
-                if (isLevel) statusColors.good else MaterialTheme.colorScheme.onSurface,
+                if (isLevel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 MaterialTheme.motionScheme.defaultEffectsSpec(),
                 label = "star"
             )
@@ -177,27 +177,15 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     color = starColor
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                AxisRow("X", formattedX, TrailSenseGroupPosition(isFirst = true, isLast = false))
-                AxisRow("Y", formattedY, TrailSenseGroupPosition(isFirst = false, isLast = true))
-            }
-        }
-    }
-}
-
-@Composable
-private fun AxisRow(label: String, value: String, position: TrailSenseGroupPosition) {
-    TrailSenseListItem(
-        title = label,
-        position = position,
-        trailing = {
+            // X and Y as one subdued caption, and only while off level: when level they would only repeat 0.0°.
             Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold
+                text = if (isLevel) "" else "X $formattedX  ·  Y $formattedY",
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
             )
         }
-    )
+    }
 }
 
 private const val LEVEL_TOLERANCE_DEGREES = 1.0f
@@ -218,15 +206,14 @@ private class LevelMorphShape(private val morph: Morph, private val progress: Fl
 }
 
 /**
- * The bezel: a twelve-sided cookie in the primary tone that smooths into a circle and turns good once level,
+ * The bezel: a twelve-sided cookie in primaryContainer that smooths into a circle and deepens to primary once level,
  * around a deep round face.
  */
 @Composable
 private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
     val scheme = MaterialTheme.colorScheme
-    val statusColors = trailSenseStatusColors()
     val bezel by animateColorAsState(
-        if (isLevel) statusColors.good else scheme.primaryContainer,
+        if (isLevel) scheme.primary else scheme.primaryContainer,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "bezel"
     )
@@ -266,17 +253,7 @@ private fun LevelBezel(xAngle: Float, yAngle: Float, isLevel: Boolean) {
 @Composable
 private fun BubbleFace(xAngle: Float, yAngle: Float, isLevel: Boolean, modifier: Modifier = Modifier) {
     val scheme = MaterialTheme.colorScheme
-    val status = trailSenseStatusColors()
-    val bubbleColor by animateColorAsState(
-        if (isLevel) status.good else scheme.primary,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "bubble"
-    )
-    val targetColor by animateColorAsState(
-        if (isLevel) status.goodContainer else scheme.primaryContainer.copy(alpha = 0.7f),
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "target"
-    )
+    val bubbleColor = scheme.primary
     val tick = scheme.onSurfaceVariant
     val ring = scheme.outline.copy(alpha = 0.6f)
     val animatedX by animateFloatAsState(xAngle, TrailSenseAnimation.standardSpring, label = "bubbleX")
@@ -291,23 +268,13 @@ private fun BubbleFace(xAngle: Float, yAngle: Float, isLevel: Boolean, modifier:
         val dy = (animatedY / MAX_ANGLE).coerceIn(-1f, 1f)
         val bubbleCenter = center + Offset(dx * travel, dy * travel)
 
-        // The level zone: a soft filled target the bubble settles into.
-        drawCircle(targetColor, bubbleRadius + 10.dp.toPx(), center)
-        drawCircle(
-            ring,
-            bubbleRadius + 10.dp.toPx(),
-            center,
-            style = Stroke(2.dp.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f)))
-        )
-        // Rings every 15°.
-        listOf(1f / 3f, 2f / 3f).forEach {
-            drawCircle(ring, travel * it, center, style = Stroke(1.5.dp.toPx()))
-        }
+        // One tolerance circle, the level zone the bubble settles into; nothing else is drawn at the centre.
+        drawCircle(ring, bubbleRadius + 10.dp.toPx(), center, style = Stroke(2.dp.toPx()))
         // Major ticks at the four points of the rim, minor ones between.
         val stroke = 3.dp.toPx()
-        for (i in 0 until 24) {
-            val angle = i * 15f
-            val major = i % 6 == 0
+        for (i in 0 until 12) {
+            val angle = i * 30f
+            val major = i % 3 == 0
             val length = if (major) 16.dp.toPx() else 7.dp.toPx()
             rotate(angle, center) {
                 drawLine(
@@ -319,9 +286,6 @@ private fun BubbleFace(xAngle: Float, yAngle: Float, isLevel: Boolean, modifier:
                 )
             }
         }
-        val cross = 7.dp.toPx()
-        drawLine(tick, center - Offset(cross, 0f), center + Offset(cross, 0f), 2.dp.toPx(), StrokeCap.Round)
-        drawLine(tick, center - Offset(0f, cross), center + Offset(0f, cross), 2.dp.toPx(), StrokeCap.Round)
 
         // A liquid bubble: it stretches along the tilt and narrows across it, the further it is off level.
         val pull = hypot(dx, dy).coerceIn(0f, 1f)
@@ -331,11 +295,6 @@ private fun BubbleFace(xAngle: Float, yAngle: Float, isLevel: Boolean, modifier:
         rotate(direction, bubbleCenter) {
             val w = bubbleRadius * 2 * stretch
             val h = bubbleRadius * 2 * squash
-            drawOval(
-                bubbleColor.copy(alpha = 0.22f),
-                topLeft = bubbleCenter - Offset(w / 2f + 8.dp.toPx(), h / 2f + 8.dp.toPx()),
-                size = Size(w + 16.dp.toPx(), h + 16.dp.toPx())
-            )
             drawOval(bubbleColor, topLeft = bubbleCenter - Offset(w / 2f, h / 2f), size = Size(w, h))
         }
     }

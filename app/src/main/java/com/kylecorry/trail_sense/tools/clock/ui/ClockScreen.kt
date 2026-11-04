@@ -7,6 +7,8 @@ import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.icons.trail.Alert
 import com.kylecorry.trail_sense.shared.icons.trail.Satellite
 import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
 import android.content.Intent
@@ -245,19 +247,35 @@ private fun ClockScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
-                // The verdict: how far the device clock drifts from GPS.
-                Text(
-                    text = when {
-                        isUpdatingClock -> stringResource(R.string.clock_waiting_for_gps)
-                        isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
-                        else -> stringResource(R.string.no_gps_signal)
-                    },
+                // The verdict: how far the device clock drifts from GPS, one quiet line under the time (the time is
+                // the one display value), led by a check when it can be trusted and a warning when it can't.
+                val offset = getClockOffset(Duration.between(systemTime, gpsTime))
+                val trusted = isGpsTime && !isUpdatingClock && offset.seconds <= TRIVIAL_OFFSET_SECONDS
+                androidx.compose.foundation.layout.Row(
                     modifier = Modifier.padding(top = TrailSenseSpacing.md),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isGpsTime && !isUpdatingClock) {
+                        Icon(
+                            imageVector = if (trusted) TrailIcons.Check else TrailIcons.Alert,
+                            contentDescription = null,
+                            tint = if (trusted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier
+                                .padding(end = TrailSenseSpacing.sm)
+                                .size(20.dp)
+                        )
+                    }
+                    Text(
+                        text = when {
+                            isUpdatingClock -> stringResource(R.string.clock_waiting_for_gps)
+                            isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
+                            else -> stringResource(R.string.no_gps_signal)
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
 
@@ -268,21 +286,25 @@ private fun ClockScreen(
                 enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
                 exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
             ) {
-                Button(
-                    onClick = {
-                        requestExactAlarms {
-                            onScheduleNextMinute(gpsTime, systemTime)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .testTag("pip_button")
-                ) {
-                    Text(
-                        stringResource(R.string.pip_button),
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                // Emphasis follows importance: a trivial drift gets a tonal button, a real one the filled primary.
+                val drift = getClockOffset(Duration.between(systemTime, gpsTime)).seconds
+                val onClick = {
+                    requestExactAlarms {
+                        onScheduleNextMinute(gpsTime, systemTime)
+                    }
+                }
+                val buttonModifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .testTag("pip_button")
+                if (isGpsTime && drift <= TRIVIAL_OFFSET_SECONDS) {
+                    androidx.compose.material3.FilledTonalButton(onClick = onClick, modifier = buttonModifier) {
+                        Text(stringResource(R.string.pip_button), style = MaterialTheme.typography.titleMedium)
+                    }
+                } else {
+                    Button(onClick = onClick, modifier = buttonModifier) {
+                        Text(stringResource(R.string.pip_button), style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
         }
@@ -290,8 +312,9 @@ private fun ClockScreen(
 }
 
 /**
- * The face: dots for the hours, a dark hour stub, a primary minute hand and a thin second hand that ticks with a
- * small spring overshoot. When the device clock drifts from GPS, a faint ghost second hand shows where the device
+ * The face: dots for the hours, a short thick primary hour hand, a long thin minute hand in the face's ink and a
+ * thin tertiary second hand that ticks with a small spring overshoot. The lengths differ enough that the hands never
+ * merge, even when they overlap. When the device clock drifts from GPS, a faint ghost second hand shows where the device
  * thinks it is.
  */
 @Composable
@@ -342,15 +365,15 @@ private fun AnalogClock(time: LocalTime, driftSeconds: Float) {
         drawLine(
             color = face,
             start = center,
-            end = center.pointAt(radius * 0.46f, hourAngle),
-            strokeWidth = 14.dp.toPx(),
+            end = center.pointAt(radius * 0.78f, minuteAngle),
+            strokeWidth = 5.dp.toPx(),
             cap = StrokeCap.Round
         )
         drawLine(
             color = primary,
             start = center,
-            end = center.pointAt(radius * 0.72f, minuteAngle),
-            strokeWidth = 9.dp.toPx(),
+            end = center.pointAt(radius * 0.42f, hourAngle),
+            strokeWidth = 12.dp.toPx(),
             cap = StrokeCap.Round
         )
         if (kotlin.math.abs(driftSeconds) >= 0.5f) {
@@ -459,6 +482,9 @@ private fun clockOffsetLabel(systemTime: Instant, gpsTime: Instant): String {
         )
     }
 }
+
+/** A drift this small doesn't make the clock untrustworthy. */
+private const val TRIVIAL_OFFSET_SECONDS = 2L
 
 internal data class ClockOffset(val seconds: Long, val direction: ClockOffsetDirection)
 

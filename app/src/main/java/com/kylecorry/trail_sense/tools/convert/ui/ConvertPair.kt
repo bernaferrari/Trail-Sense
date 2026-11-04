@@ -38,6 +38,7 @@ import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -78,9 +79,9 @@ import kotlinx.coroutines.launch
 
 /**
  * A converter as one group of two rows: what you type, then the answer as the screen's one emphasised value, each
- * with its unit as a chip. A tonal badge sits on the seam: it swaps the units where that makes sense, or simply
- * points down. The answer rolls in when it changes and can be copied with one tap. Idle, the answer row shows a
- * plain instruction, and a row of quick starts (paste, or a round amount) sits under the pair.
+ * with its unit as a chip. Where swapping makes sense, a tonal badge on the seam swaps the units. The answer rolls in
+ * when it changes and can be copied with one tap. Idle, the answer row shows a plain instruction. Paste is the input's
+ * trailing button.
  */
 @Composable
 internal fun ConvertPair(
@@ -140,9 +141,19 @@ internal fun ConvertPair(
                             placeholder = {
                                 Text(
                                     if (keyboardType == KeyboardType.Text) "47.6062, -122.3321" else "0",
-                                    style = MaterialTheme.typography.headlineMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     color = scheme.onSurfaceVariant
                                 )
+                            },
+                            // Paste lives in the field it fills.
+                            trailingIcon = {
+                                IconButton(onClick = { clipboard.getText()?.text?.trim()?.let { onValueChange(it) } }) {
+                                    Icon(
+                                        Icons.Rounded.ContentPaste,
+                                        contentDescription = stringResource(R.string.convert_paste),
+                                        tint = scheme.onSurfaceVariant
+                                    )
+                                }
                             },
                             supportingText = if (isError && errorText != null) {
                                 { Text(errorText) }
@@ -237,18 +248,16 @@ internal fun ConvertPair(
                     }
                 }
             }
-            // The seam badge: swap where it makes sense, otherwise a quiet arrow from the question to the answer.
-            val badgeModifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = TrailSenseSpacing.xl)
-                .size(52.dp)
+            // Swap sits centred on the seam, clear of both unit chips; converters that can't swap show nothing there.
             if (onSwap != null) {
                 Surface(
                     onClick = {
                         turns += 1f
                         onSwap()
                     },
-                    modifier = badgeModifier,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(48.dp),
                     shape = MaterialShapes.Cookie9Sided.toShape(),
                     color = scheme.secondaryContainer,
                     contentColor = scheme.onSecondaryContainer
@@ -258,67 +267,12 @@ internal fun ConvertPair(
                             Icons.Rounded.SwapVert,
                             contentDescription = swapLabel,
                             modifier = Modifier
-                                .size(26.dp)
+                                .size(24.dp)
                                 .rotate(rotation)
                         )
                     }
                 }
-            } else {
-                Surface(
-                    modifier = badgeModifier,
-                    shape = MaterialShapes.Cookie9Sided.toShape(),
-                    color = scheme.secondaryContainer,
-                    contentColor = scheme.onSecondaryContainer
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.ArrowDownward, contentDescription = null, modifier = Modifier.size(24.dp))
-                    }
-                }
             }
-        }
-
-        // Quick starts: paste what's on the clipboard, or try a round amount.
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            QuickChip(
-                label = stringResource(R.string.convert_paste),
-                icon = true,
-                onClick = { clipboard.getText()?.text?.trim()?.let { onValueChange(it) } }
-            )
-            if (keyboardType != KeyboardType.Text) {
-                listOf("1", "10", "100").forEach { amount ->
-                    QuickChip(label = amount, icon = false, onClick = { onValueChange(amount) })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuickChip(label: String, icon: Boolean, onClick: () -> Unit) {
-    val scheme = MaterialTheme.colorScheme
-    Surface(
-        onClick = onClick,
-        shape = CircleShape,
-        color = scheme.secondaryContainer,
-        contentColor = scheme.onSecondaryContainer,
-        modifier = Modifier.heightIn(min = 40.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (icon) {
-                Icon(Icons.Rounded.ContentPaste, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(TrailSenseSpacing.xs))
-            }
-            Text(
-                label,
-                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold
-            )
         }
     }
 }

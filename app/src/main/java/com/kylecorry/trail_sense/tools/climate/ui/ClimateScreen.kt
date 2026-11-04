@@ -587,33 +587,30 @@ private fun ClimateScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("climate_scroll")
     ) {
-        // One question: what is this day usually like here? The typical high and low answer it, with the month's
-        // precipitation as the one verdict line; the date that drives it sits right under it.
+        // One question: what is this day usually like here? The typical high is the one display value, the low its
+        // quieter neighbour, each with its caption; the month's precipitation sits with its own chart below.
         item(key = "hero") {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = TrailSenseSpacing.lg)
-                    .testTag("climate_title")
+                    .testTag("climate_title"),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
             ) {
-                Text(
-                    text = if (highLow != null) {
-                        stringResource(R.string.slash_separated_pair, highLow.first, highLow.second)
-                    } else {
-                        "--"
-                    },
-                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
+                ClimateHeroValue(
+                    caption = stringResource(R.string.high),
+                    modifier = Modifier.alignByBaseline(),
+                    value = highLow?.first ?: "--",
+                    style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                if (precipitationValue != null) {
-                    Text(
-                        text = precipitationTitle,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
-                    )
-                }
+                ClimateHeroValue(
+                    caption = stringResource(R.string.low),
+                    modifier = Modifier.alignByBaseline(),
+                    value = highLow?.second ?: "--",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
 
@@ -643,7 +640,8 @@ private fun ClimateScreen(
         trailSenseSection(
             key = "precipitation",
             title = precipitationLabel,
-            footer = precipitationSource
+            // The month's total belongs to its chart, not the headline.
+            footer = if (precipitationValue != null) "$precipitationTitle\n$precipitationSource" else precipitationSource
         ) {
             row { _ ->
                 Column {
@@ -724,6 +722,31 @@ private fun ClimateScreen(
  * One insect-activity line. The whole line stays one text node ("Ticks: Active from March to November") so it reads
  * as a sentence; tapping opens the detailed timing.
  */
+/** One headline figure with its caption (High / Low) above it. */
+@Composable
+private fun ClimateHeroValue(
+    caption: String,
+    value: String,
+    style: androidx.compose.ui.text.TextStyle,
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier) {
+        Text(
+            text = caption,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = style.copy(fontFeatureSettings = "tnum"),
+            fontWeight = FontWeight.SemiBold,
+            color = color,
+            maxLines = 1
+        )
+    }
+}
+
 @Composable
 private fun ClimateEcologyRow(
     text: String,
@@ -1147,10 +1170,11 @@ private fun TemperatureChart(
     modifier: Modifier = Modifier
 ) {
     val data = temperatures.orEmpty()
-    // The frame style: High / Low in the gutter, the daily high as the one primary line, the low a fainter line of
-    // the same role, freezing as a dashed limit and the chosen day as the "now" dot. No band between the lines.
+    // The frame style: High / Low in the gutter, the daily high as the one primary line, the low in tertiary (the
+    // screen's one accent) so the two never blur, freezing as a dashed limit and the chosen day as the "now" dot.
+    // No band between the lines.
     val highColor = MaterialTheme.colorScheme.primary
-    val lowColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+    val lowColor = MaterialTheme.colorScheme.tertiary
     val freezingColor = MaterialTheme.colorScheme.outline
     val ringColor = MaterialTheme.colorScheme.background
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1250,7 +1274,7 @@ private fun TemperatureChart(
                 lows.firstOrNull { it.first.toInt() == selectedDate.dayOfYear }?.let {
                     val center = androidx.compose.ui.geometry.Offset(x(it.first), y(it.second))
                     drawCircle(color = ringColor, radius = 7.dp.toPx(), center = center)
-                    drawCircle(color = highColor, radius = 5.dp.toPx(), center = center)
+                    drawCircle(color = lowColor, radius = 5.dp.toPx(), center = center)
                 }
                 highs.firstOrNull { it.first.toInt() == selectedDate.dayOfYear }?.let {
                     drawTrailSenseNowDot(androidx.compose.ui.geometry.Offset(x(it.first), y(it.second)), highColor, ringColor)

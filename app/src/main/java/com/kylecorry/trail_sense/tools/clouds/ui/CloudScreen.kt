@@ -292,10 +292,12 @@ private fun CloudScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("cloud_list_title"),
         actions = {
+            // A bare "?" in onSurfaceVariant like the other bars' actions, not a filled disc louder than the page.
             IconButton(onClick = onGuideClick) {
                 Icon(
-                    imageVector = TrailIcons.Help,
-                    contentDescription = stringResource(R.string.help)
+                    imageVector = TrailIcons.HelpSimple,
+                    contentDescription = stringResource(R.string.help),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
@@ -345,16 +347,21 @@ private fun CloudScreen(
                         .testTag("cloud_empty_text"),
                     action = {
                         Box {
+                            // The kit's empty-state button: 48 dp, a leading plus, labelLarge.
                             androidx.compose.material3.Button(
                                 onClick = { isCreateMenuOpen = true },
                                 modifier = Modifier
-                                    .heightIn(min = 56.dp)
+                                    .heightIn(min = 48.dp)
                                     .testTag("add_btn"),
-                                contentPadding = PaddingValues(horizontal = TrailSenseSpacing.xl)
+                                contentPadding = androidx.compose.material3.ButtonDefaults.contentPaddingFor(48.dp)
                             ) {
-                                Icon(TrailIcons.Add, contentDescription = null)
-                                Spacer(Modifier.width(TrailSenseSpacing.sm))
-                                Text(stringResource(R.string.sky_clouds_log), style = MaterialTheme.typography.titleMedium)
+                                Icon(
+                                    TrailIcons.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(androidx.compose.material3.ButtonDefaults.iconSizeFor(48.dp))
+                                )
+                                Spacer(Modifier.width(androidx.compose.material3.ButtonDefaults.iconSpacingFor(48.dp)))
+                                Text(stringResource(R.string.sky_clouds_log), style = MaterialTheme.typography.labelLarge)
                             }
                             CloudCreateMenu(
                                 expanded = isCreateMenuOpen,

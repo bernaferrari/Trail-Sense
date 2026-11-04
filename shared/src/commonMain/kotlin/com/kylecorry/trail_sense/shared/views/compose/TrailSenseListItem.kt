@@ -31,12 +31,19 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 /**
- * Modern, expressive list item — Material 3 Expressive style.
- * Supports leading icon, rich content, and trailing elements.
+ * The family's list row. Every grouped list follows this spec:
+ * - 16 dp side padding, 12 dp top and bottom; at least 56 dp tall with one line, 72 dp with a supporting line.
+ * - An optional leading icon in a 48 dp rounded square (secondaryContainer). Use icons only when they differ in
+ *   meaning; if every row would get the same icon, pass none.
+ * - Title in bodyLarge onSurface; one supporting line in bodyMedium onSurfaceVariant (at most two lines).
+ * - At most one trailing element: either [trailingText] (a short value, bodyLarge onSurfaceVariant) or [trailing]
+ *   (one switch, icon button or chevron), never both.
+ * - State colour comes from the caller only for real meaning: error for danger, tertiary for attention.
  */
 @Composable
 fun TrailSenseListItem(
@@ -47,6 +54,7 @@ fun TrailSenseListItem(
     iconTint: Color = MaterialTheme.colorScheme.primary,
     iconRotation: Float = 0f,
     trailing: (@Composable () -> Unit)? = null,
+    trailingText: String? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     position: TrailSenseGroupPosition? = null,
@@ -91,7 +99,7 @@ fun TrailSenseListItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 72.dp)
+                .heightIn(min = if (subtitle != null) 72.dp else 56.dp)
                 .then(
                     if (onClick != null) {
                         Modifier.combinedClickable(
@@ -107,7 +115,7 @@ fun TrailSenseListItem(
                 )
                 .padding(
                     horizontal = TrailSenseSpacing.lg,
-                    vertical = TrailSenseSpacing.sm
+                    vertical = TrailSenseSpacing.md
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -149,12 +157,22 @@ fun TrailSenseListItem(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            if (trailing != null) {
+            if (trailingText != null) {
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+                Text(
+                    text = trailingText,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            } else if (trailing != null) {
                 Spacer(Modifier.width(TrailSenseSpacing.md))
                 trailing()
             }

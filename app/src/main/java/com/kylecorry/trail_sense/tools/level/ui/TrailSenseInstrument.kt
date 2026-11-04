@@ -68,7 +68,11 @@ fun rememberTrailSenseBack(): (() -> Unit)? {
     return hostBack ?: remember(owner) { owner?.let { { it.onBackPressedDispatcher.onBackPressed() } } }
 }
 
-/** The small top bar of an instrument: back arrow, one-line title, actions. Sits on [containerColor]. */
+/**
+ * The top bar of an instrument: back arrow, title, actions, on [containerColor]. With [largeTitle] the title sits
+ * large under the arrow like every [TrailSensePage] (the rule for instruments); without it, the small one-line bar
+ * kept for full-bleed camera and light screens (Flashlight, Magnifier, QR, AR).
+ */
 @Composable
 fun TrailSenseInstrumentTopBar(
     title: String,
@@ -76,29 +80,47 @@ fun TrailSenseInstrumentTopBar(
     onBack: (() -> Unit)? = rememberTrailSenseBack(),
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    largeTitle: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
-    TopAppBar(
-        modifier = modifier,
-        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold) },
-        navigationIcon = {
-            if (onBack != null) {
-                IconButton(onClick = onBack) {
-                    Icon(TrailSenseIcons.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                }
+    val titleContent: @Composable () -> Unit = {
+        Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+    }
+    val navigation: @Composable () -> Unit = {
+        if (onBack != null) {
+            IconButton(onClick = onBack) {
+                Icon(TrailSenseIcons.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
             }
-        },
-        actions = actions,
-        // The activity already pads the status bar.
-        windowInsets = WindowInsets(0),
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = containerColor,
-            scrolledContainerColor = containerColor,
-            titleContentColor = contentColor,
-            navigationIconContentColor = contentColor,
-            actionIconContentColor = contentColor
-        )
+        }
+    }
+    val colors = TopAppBarDefaults.topAppBarColors(
+        containerColor = containerColor,
+        scrolledContainerColor = containerColor,
+        titleContentColor = contentColor,
+        navigationIconContentColor = contentColor,
+        actionIconContentColor = contentColor
     )
+    if (largeTitle) {
+        androidx.compose.material3.MediumFlexibleTopAppBar(
+            modifier = modifier,
+            title = titleContent,
+            navigationIcon = navigation,
+            actions = actions,
+            // The activity already pads the status bar.
+            windowInsets = WindowInsets(0),
+            colors = colors
+        )
+    } else {
+        TopAppBar(
+            modifier = modifier,
+            title = titleContent,
+            navigationIcon = navigation,
+            actions = actions,
+            // The activity already pads the status bar.
+            windowInsets = WindowInsets(0),
+            colors = colors
+        )
+    }
 }
 
 /**
@@ -113,6 +135,7 @@ fun TrailSenseInstrumentScaffold(
     onBack: (() -> Unit)? = rememberTrailSenseBack(),
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    largeTitle: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -123,6 +146,7 @@ fun TrailSenseInstrumentScaffold(
                 onBack = onBack,
                 containerColor = containerColor,
                 contentColor = contentColor,
+                largeTitle = largeTitle,
                 actions = actions
             )
             Box(

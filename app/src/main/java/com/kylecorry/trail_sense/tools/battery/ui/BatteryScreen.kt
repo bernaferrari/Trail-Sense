@@ -4,7 +4,7 @@
 package com.kylecorry.trail_sense.tools.battery.ui
 
 import com.kylecorry.trail_sense.tools.level.ui.CalmKeyValue
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -18,7 +18,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.material3.MaterialShapes
@@ -63,7 +63,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -464,17 +463,17 @@ private fun BatteryScreen(
                 verdict = verdict.ifEmpty { status },
                 verdictTag = "battery_current"
             ) {
-                LinearProgressIndicator(
+                // The charge as the screen's one primary fill: it waves only while charging, so its shape says
+                // "filling", and lies flat on battery.
+                LinearWavyProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = TrailSenseSpacing.md)
-                        .height(12.dp)
                         .testTag("battery_level_progress"),
                     color = if (isLow && !isCharging) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    gapSize = 4.dp,
-                    drawStopIndicator = {}
+                    amplitude = { if (isCharging) 1f else 0f }
                 )
             }
         }
@@ -569,13 +568,7 @@ private fun DetailRow(
         subtitle = supportingText,
         position = position,
         modifier = modifier,
-        trailing = {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        trailingText = value
     )
 }
 
@@ -600,7 +593,7 @@ private fun RunningServiceRow(
         position = position,
         onClick = null
     ) {
-        OutlinedButton(
+        TextButton(
             onClick = onDisable,
             modifier = Modifier
                 .heightIn(min = TrailSenseSize.minimumTouchTarget)
@@ -656,20 +649,14 @@ private fun UsageRow(
                 .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TrailSenseShapeBadge(
-                icon = getUsageIcon(usage),
-                shape = MaterialShapes.Cookie9Sided.toShape(),
-                size = 44.dp,
-                containerColor = scheme.secondaryContainer,
-                contentColor = scheme.onSecondaryContainer
-            )
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            // No leading badge: it was the same check (or warning) on every row. The cost is in the supporting line,
+            // in tertiary only when it is high enough to deserve attention.
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(title, style = MaterialTheme.typography.bodyLarge)
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (!calm && usage == BatteryUsage.High) scheme.tertiary else scheme.onSurfaceVariant
                 )
             }
             Spacer(Modifier.width(TrailSenseSpacing.sm))
@@ -750,14 +737,5 @@ private fun getBatteryUsage(service: RunningService): BatteryUsage {
         service.frequency < Duration.ofMinutes(15) -> BatteryUsage.High
         service.frequency <= Duration.ofMinutes(25) -> BatteryUsage.Moderate
         else -> BatteryUsage.Low
-    }
-}
-
-private fun getUsageIcon(usage: BatteryUsage): ImageVector {
-    return when (usage) {
-        BatteryUsage.Unknown -> TrailIcons.Help
-        BatteryUsage.Low -> TrailIcons.Check
-        BatteryUsage.Moderate -> TrailIcons.Alert
-        BatteryUsage.High -> TrailIcons.Alert
     }
 }

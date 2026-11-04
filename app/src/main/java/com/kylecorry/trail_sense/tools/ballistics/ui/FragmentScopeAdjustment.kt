@@ -179,24 +179,17 @@ fun ScopeAdjustmentPage(
             }
         }
 
-        val windageLabel = stringResource(R.string.windage_miss)
+        val missUnits = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits)
         val leftLabel = stringResource(R.string.left)
         val rightLabel = stringResource(R.string.right)
-        val elevationLabel = stringResource(R.string.elevation_miss)
         val aboveLabel = stringResource(R.string.above)
         val belowLabel = stringResource(R.string.below)
-        val missUnits = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits)
-        Column {
-            TrailSenseGroupHeader(stringResource(R.string.ballistics_where_hit))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-            MissCard(
-                shape = trailSenseGridCellShape(0, 2, 0, 1),
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+        val windageLabel = stringResource(R.string.windage_miss)
+        val elevationLabel = stringResource(R.string.elevation_miss)
+        val whereHitLabel = stringResource(R.string.ballistics_where_hit)
+        // Each miss is a real field (how far, with its unit) and, right under it, which side: the kit's selection.
+        TrailSenseRowGroup(title = whereHitLabel) {
+            missRows(
                 label = windageLabel,
                 offset = offsetX,
                 onOffsetChange = { offsetX = it ?: Distance.from(0f, DistanceUnits.Inches) },
@@ -210,9 +203,7 @@ fun ScopeAdjustmentPage(
                 directionTag = "miss_direction_x",
                 units = missUnits
             )
-            MissCard(
-                shape = trailSenseGridCellShape(1, 2, 0, 1),
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+            missRows(
                 label = elevationLabel,
                 offset = offsetY,
                 onOffsetChange = { offsetY = it ?: Distance.from(0f, DistanceUnits.Inches) },
@@ -227,16 +218,11 @@ fun ScopeAdjustmentPage(
                 units = missUnits
             )
         }
-        }
     }
 }
 
-/**
- * One miss as a card: the axis and its unit chip in the header, how far off as a large number you type straight
- * into, and which side under it. Windage and elevation sit side by side so the pair reads as one answer, not a form.
- */
-@Composable
-private fun MissCard(
+/** One miss as two rows of the group: how far off (a filled field with its unit) and which side. */
+private fun TrailSenseRowGroupScope.missRows(
     label: String,
     offset: Distance,
     onOffsetChange: (Distance?) -> Unit,
@@ -245,142 +231,31 @@ private fun MissCard(
     onDirectionChange: (ScopeDirection) -> Unit,
     fieldTag: String,
     directionTag: String,
-    units: List<DistanceUnits>,
-    shape: androidx.compose.ui.graphics.Shape,
-    modifier: Modifier = Modifier
+    units: List<DistanceUnits>
 ) {
-    val formatter = remember { DependencyRegistry.get<FormatService>() }
-    val scheme = MaterialTheme.colorScheme
-    var amountText by remember {
-        mutableStateOf(offset.value.takeIf { it != 0f }?.let { DecimalFormatter.format(it, 5, false) } ?: "")
+    row { position ->
+        DistanceField(
+            label = label,
+            value = offset.takeIf { it.value != 0f },
+            units = units,
+            defaultUnit = offset.units,
+            onValueChange = onOffsetChange,
+            position = position,
+            modifier = Modifier.testTag(fieldTag)
+        )
     }
-    var unit by remember { mutableStateOf(offset.units) }
-    var isPickingUnit by remember { mutableStateOf(false) }
-    Surface(modifier = modifier, shape = shape, color = scheme.surfaceContainerLow) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    row { position ->
+        TrailSenseGroupCard(
+            position = position,
+            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = scheme.primary,
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1
-                )
-                Surface(
-                    onClick = { isPickingUnit = true },
-                    shape = androidx.compose.foundation.shape.CircleShape,
-                    color = scheme.secondaryContainer,
-                    contentColor = scheme.onSecondaryContainer
-                ) {
-                    Text(
-                        formatter.getDistanceUnitName(unit, true),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs)
-                    )
-                }
-            }
-            androidx.compose.foundation.text.BasicTextField(
-                value = amountText,
-                onValueChange = {
-                    amountText = it
-                    onOffsetChange(it.toFloatOrNull()?.let { amount -> Distance.from(amount, unit) })
-                },
-                singleLine = true,
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                ),
-                textStyle = MaterialTheme.typography.displaySmall.copy(
-                    fontFeatureSettings = "tnum",
-                    fontWeight = FontWeight.SemiBold,
-                    color = scheme.onSurface
-                ),
-                cursorBrush = androidx.compose.ui.graphics.SolidColor(scheme.primary),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(fieldTag),
-                decorationBox = { inner ->
-                    Box {
-                        if (amountText.isEmpty()) {
-                            Text(
-                                "0",
-                                style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = scheme.onSurfaceVariant
-                            )
-                        }
-                        inner()
-                    }
-                }
-            )
-            MissSide(
+            TrailSenseConnectedChoice(
                 options = options,
                 selected = direction,
                 onSelect = onDirectionChange,
+                label = label,
                 modifier = Modifier.testTag(directionTag)
             )
-        }
-    }
-    if (isPickingUnit) {
-        TrailSenseOptionsDialog(
-            title = stringResource(R.string.units),
-            options = units.map { formatter.getDistanceUnitName(it) to it },
-            selected = unit,
-            onSelect = {
-                unit = it
-                isPickingUnit = false
-                onOffsetChange(amountText.toFloatOrNull()?.let { amount -> Distance.from(amount, it) })
-            },
-            onDismiss = { isPickingUnit = false }
-        )
-    }
-}
-
-/** Which side the shot landed: two connected text-only buttons, so both labels fit in a half-width card. */
-@Composable
-private fun MissSide(
-    options: List<TrailSenseChoice<ScopeDirection>>,
-    selected: ScopeDirection,
-    onSelect: (ScopeDirection) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val scheme = MaterialTheme.colorScheme
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-    ) {
-        options.forEachIndexed { index, option ->
-            val checked = option.value == selected
-            val outer = 24.dp
-            val inner = 6.dp
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                    .selectable(selected = checked, role = Role.RadioButton, onClick = { onSelect(option.value) }),
-                shape = RoundedCornerShape(
-                    topStart = if (index == 0) outer else inner,
-                    bottomStart = if (index == 0) outer else inner,
-                    topEnd = if (index == options.lastIndex) outer else inner,
-                    bottomEnd = if (index == options.lastIndex) outer else inner
-                ),
-                color = if (checked) scheme.secondary else scheme.secondaryContainer,
-                contentColor = if (checked) scheme.onSecondary else scheme.onSecondaryContainer
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        option.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = if (checked) FontWeight.SemiBold else FontWeight.Medium,
-                        maxLines = 1
-                    )
-                }
-            }
         }
     }
 }
@@ -444,18 +319,12 @@ private fun ScopeHero(
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
             when {
-                waiting -> {
-                    Text(
-                        stringResource(R.string.ballistics_waiting),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        stringResource(R.string.ballistics_waiting_hint),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = scheme.onSurfaceVariant
-                    )
-                }
+                // Idle: the reticle at rest and one hint line, no "waiting" header.
+                waiting -> Text(
+                    stringResource(R.string.ballistics_waiting_hint),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = scheme.onSurfaceVariant
+                )
 
                 onTarget -> Text(
                     stringResource(R.string.ballistics_on_target),
@@ -537,6 +406,8 @@ private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphic
     Canvas(modifier = modifier) {
         val radius = size.minDimension / 2f
         drawCircle(face, radius, center)
+        // The live object keeps its primary ring at rest, so it never reads as a ghost.
+        drawCircle(path, radius - 1.dp.toPx(), center, style = Stroke(2.dp.toPx()))
         listOf(0.33f, 0.66f).forEach {
             drawCircle(ink.copy(alpha = 0.3f), radius * it, center, style = Stroke(1.5.dp.toPx()))
         }
