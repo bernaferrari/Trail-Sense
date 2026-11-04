@@ -91,10 +91,9 @@ internal fun GuideListScreen(
         item(key = "hero") {
             TrailSenseSpotlight(
                 title = stringResource(R.string.sky_guides_count, total),
-                eyebrow = stringResource(R.string.tool_user_guide_title),
                 supportingText = stringResource(R.string.sky_guides_supporting, guides.size),
                 tone = TrailSenseTone.Primary,
-                titleStyle = MaterialTheme.typography.headlineMedium,
+                titleStyle = MaterialTheme.typography.displaySmall,
                 badge = {
                     SkyFocalShape(
                         icon = TrailIcons.OpenBook,
@@ -135,7 +134,8 @@ internal fun GuideListScreen(
 
         filtered.forEach { category ->
             val index = guides.indexOfFirst { it.name == category.name }.coerceAtLeast(0)
-            trailSenseSection(key = "category-${category.name}", title = category.name) {
+            // The shelf's name carries its size, so a long list still has a sense of proportion.
+            trailSenseSection(key = "category-${category.name}", title = "${category.name} · ${category.guides.size}") {
                 category.guides.forEach { guide ->
                     row { position ->
                         GuideRow(guide, index, position) { onOpenGuide(guide) }
@@ -154,8 +154,10 @@ private fun GuideRow(
     onClick: () -> Unit
 ) {
     SkyValueRow(
+        // One line per guide: a uniform shelf reads better than rows that are sometimes one line and sometimes two.
         title = guide.name,
-        subtitle = guide.description,
+        subtitle = null,
+
         icon = guide.icon ?: TrailIcons.OpenBook,
         accent = categoryAccents[categoryIndex % categoryAccents.size],
         badgeShape = categoryShape(categoryIndex),

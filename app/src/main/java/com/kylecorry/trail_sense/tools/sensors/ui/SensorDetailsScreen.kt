@@ -657,26 +657,8 @@ private fun SensorDetailsScreen(
         // Readings arrive a moment after the screen opens; until then the page stays quiet instead of empty.
         if (sensors.isNotEmpty()) {
             item(key = "health") {
-                SensorHealthHero(good = good, moderate = moderate, poor = poor, total = sensors.size)
-            }
-            item(key = "counts") {
-                TrailSenseStatGrid(
-                    stats = listOf(
-                        TrailSenseStat(stringResource(R.string.sky_sensors_good_label), good.toString(), tone = TrailSenseTone.Good),
-                        TrailSenseStat(
-                            stringResource(R.string.sky_sensors_moderate_label),
-                            moderate.toString(),
-                            tone = if (moderate > 0) TrailSenseTone.Caution else TrailSenseTone.Neutral
-                        ),
-                        TrailSenseStat(
-                            stringResource(R.string.sky_sensors_poor_label),
-                            poor.toString(),
-                            tone = if (poor > 0) TrailSenseTone.Error else TrailSenseTone.Neutral
-                        )
-                    ),
-                    columns = 3,
-                    valueStyle = MaterialTheme.typography.headlineMedium
-                )
+                val attention = sensors.filterIndexed { index, _ -> tones[index] != TrailSenseTone.Good }.map { it.name }
+                SensorHealthHero(good = good, moderate = moderate, poor = poor, total = sensors.size, attention = attention)
             }
             item(key = "sensors") {
                 Column(
@@ -710,8 +692,13 @@ private fun SensorDetailsScreen(
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
-    val tone = if (poor == 0 && moderate == 0) TrailSenseTone.Good else TrailSenseTone.Secondary
+private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int, attention: List<String>) {
+    // Green when every sensor is fine, amber when some need a look.
+    val tone = if (poor == 0 && moderate == 0) TrailSenseTone.Good else TrailSenseTone.Caution
+    // The ring draws itself in once, segment by segment.
+    val drawIn = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
+    val drawSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
+    androidx.compose.runtime.LaunchedEffect(Unit) { drawIn.animateTo(1f, drawSpec) }
     val colors = trailSenseToneColors(tone)
     val status = trailSenseStatusColors()
     val goodColor = trailSenseToneColors(TrailSenseTone.Good).container
@@ -723,14 +710,16 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
             poor + moderate == 0 -> stringResource(R.string.sky_sensors_all_good)
             else -> stringResource(R.string.sky_sensors_attention, poor + moderate)
         },
-        eyebrow = stringResource(R.string.sensors),
-        supportingText = stringResource(R.string.sky_sensors_good, good, total),
+        // Which ones, by name, so the verdict is actionable without scrolling.
+        supportingText = attention.takeIf { it.isNotEmpty() }?.let {
+            if (it.size <= 3) it.joinToString(" · ") else stringResource(R.string.sky_sensors_and_more, it.take(2).joinToString(" · "), it.size - 2)
+        },
         tone = tone,
-        titleStyle = MaterialTheme.typography.headlineMedium,
+        titleStyle = MaterialTheme.typography.headlineSmall,
         badge = {
-            Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
-                androidx.compose.foundation.Canvas(Modifier.size(96.dp)) {
-                    val stroke = 12.dp.toPx()
+            Box(Modifier.size(120.dp), contentAlignment = Alignment.Center) {
+                androidx.compose.foundation.Canvas(Modifier.size(120.dp)) {
+                    val stroke = 8.dp.toPx()
                     val inset = stroke / 2
                     val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
                     val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
@@ -739,7 +728,7 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
                     var start = -90f
                     listOf(good to goodColor, moderate to moderateColor, poor to poorColor).forEach { (count, color) ->
                         if (count > 0 && total > 0) {
-                            val sweep = 360f * count / total
+                            val sweep = 360f * count / total * drawIn.value
                             drawArc(
                                 color,
                                 start + gap / 2,
@@ -753,16 +742,42 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
                         }
                     }
                 }
-                TrailSenseShapeBadge(
-                    text = good.toString(),
-                    shape = MaterialShapes.Cookie9Sided.toShape(),
-                    size = 60.dp,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                // The star number: how many are good, out of how many.
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        (good * drawIn.value).toInt().toString(),
+                        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                    Text(
+                        stringResource(R.string.sky_sensors_of_total, total),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = colors.content.copy(alpha = 0.78f)
+                    )
+                }
+            }
+        }
+    ) {
+        // The legend for the ring, as three quiet chips instead of three loud tiles.
+        Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip(
+                text = "$good ${stringResource(R.string.sky_sensors_good_label)}",
+                tone = TrailSenseTone.Good
+            )
+            if (moderate > 0) {
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip(
+                    text = "$moderate ${stringResource(R.string.sky_sensors_moderate_label)}",
+                    tone = TrailSenseTone.Caution
+                )
+            }
+            if (poor > 0) {
+                com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip(
+                    text = "$poor ${stringResource(R.string.sky_sensors_poor_label)}",
+                    tone = TrailSenseTone.Error
                 )
             }
         }
-    )
+    }
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
@@ -789,9 +804,12 @@ private fun SensorDetailsRow(
 
 @Composable
 private fun SensorStatus(sensor: SensorDetails) {
-    val colors = trailSenseToneColors(sensorTone(sensor.statusColor))
+    // "Unknown" is not an error: it gets a neutral pill so only real problems are red.
+    val unknown = sensor.statusMessage == stringResource(R.string.unknown)
+    val colors = trailSenseToneColors(if (unknown) TrailSenseTone.Neutral else sensorTone(sensor.statusColor))
     val container by animateColorAsState(
-        colors.container,
+        if (unknown) MaterialTheme.colorScheme.surfaceContainerHighest else colors.container,
+
         MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "sensorStatus"
     )
