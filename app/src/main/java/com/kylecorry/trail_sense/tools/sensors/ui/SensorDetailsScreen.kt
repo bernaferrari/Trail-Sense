@@ -454,7 +454,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             host.getString(R.string.cell_signal),
             "${
                 formatService.formatCellNetwork(signal?.network)
-            }\n${formatService.formatPercentage(signal?.strength ?: 0f)} (${
+            } · ${formatService.formatPercentage(signal?.strength ?: 0f)} (${
                 formatService.formatDbm(
                     signal?.dbm ?: 0
                 )
@@ -659,16 +659,25 @@ private fun SensorDetailsScreen(
         // Readings arrive a moment after the screen opens; until then the page stays quiet instead of empty.
         if (sensors.isNotEmpty()) {
             item(key = "health") {
-                val attention = sensors.filterIndexed { index, _ -> tones[index] != TrailSenseTone.Good }.map { it.name }
-                SensorHealthHero(good = good, moderate = moderate, poor = poor, total = sensors.size, attention = attention)
+                SensorHealthHero(good = good, moderate = moderate, poor = poor, total = sensors.size)
             }
             item(key = "sensors") {
                 Column(
                     modifier = Modifier.testTag("sensors_list"),
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
                 ) {
+                    // The sensors that need a look lead, in their own group, so the verdict above points at them;
+                    // the good ones follow, grouped by what they measure.
+                    val attention = sensors.filterIndexed { index, _ -> tones[index] != TrailSenseTone.Good }
+                    if (attention.isNotEmpty()) {
+                        TrailSenseRowGroup(title = stringResource(R.string.sky_sensors_needs_attention)) {
+                            attention.forEach { sensor ->
+                                row { position -> SensorDetailsRow(sensor, position) }
+                            }
+                        }
+                    }
                     SensorCategory.entries.forEach { category ->
-                        val inCategory = sensors.filter { it.category == category }
+                        val inCategory = sensors.filter { it.category == category && it !in attention }
                         if (inCategory.isNotEmpty()) {
                             TrailSenseRowGroup(
                                 title = stringResource(
@@ -692,9 +701,9 @@ private fun SensorDetailsScreen(
     }
 }
 
-/** The answer on the plain page: how many sensors are good, the verdict, and which ones need a look. */
+/** The answer on the plain page: how many sensors are good and the verdict; the group below names the rest. */
 @Composable
-private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int, attention: List<String>) {
+private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -716,18 +725,6 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int, at
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
         )
-        // Which ones, by name, so the verdict is actionable without scrolling.
-        attention.takeIf { it.isNotEmpty() }?.let {
-            Text(
-                if (it.size <= 3) {
-                    it.joinToString(" · ")
-                } else {
-                    stringResource(R.string.sky_sensors_and_more, it.take(2).joinToString(" · "), it.size - 2)
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }
 
@@ -745,17 +742,35 @@ private fun SensorDetailsRow(
     )
 }
 
-/** The status in words; only a poor sensor turns the word to error. */
+/**
+ * The status in words. A good sensor stays quiet; one that needs a look gets a small dot and the attention role
+ * (tertiary), and only a poor one turns to error.
+ */
 @Composable
 private fun SensorStatus(sensor: SensorDetails) {
-    val poor = sensorTone(sensor.statusColor) == TrailSenseTone.Error &&
-        sensor.statusMessage != stringResource(R.string.unknown)
+    val tone = sensorTone(sensor.statusColor)
+    val unknown = sensor.statusMessage == stringResource(R.string.unknown)
+    val color = when {
+        tone == TrailSenseTone.Good -> MaterialTheme.colorScheme.onSurfaceVariant
+        tone == TrailSenseTone.Error && !unknown -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.tertiary
+    }
     Spacer(Modifier.width(TrailSenseSpacing.sm))
-    Text(
-        text = sensor.statusMessage,
-        style = MaterialTheme.typography.labelLarge,
-        color = if (poor) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 2,
-        modifier = Modifier.widthIn(max = 120.dp)
-    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (tone != TrailSenseTone.Good) {
+            Box(
+                Modifier
+                    .size(8.dp)
+                    .background(color, CircleShape)
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.xs))
+        }
+        Text(
+            text = sensor.statusMessage,
+            style = MaterialTheme.typography.labelLarge,
+            color = color,
+            maxLines = 2,
+            modifier = Modifier.widthIn(max = 120.dp)
+        )
+    }
 }
