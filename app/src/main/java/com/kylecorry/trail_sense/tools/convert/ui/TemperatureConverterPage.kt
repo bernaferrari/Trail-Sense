@@ -20,9 +20,12 @@ class TemperatureConverterPage(private val context: Context) :
 
     override val units: List<TemperatureUnits> = TemperatureUnits.values().toList()
 
-    override fun convert(amount: Float, from: TemperatureUnits, to: TemperatureUnits): String {
-        val converted = Temperature.from(amount, from).convertTo(to)
-        return formatService.formatTemperature(converted, 4, false)
+    override fun convertValue(amount: Float, from: TemperatureUnits, to: TemperatureUnits): Float {
+        return Temperature.from(amount, from).convertTo(to).value
+    }
+
+    override fun format(amount: Float, unit: TemperatureUnits): String {
+        return formatService.formatTemperature(Temperature.from(amount, unit), 4, false)
     }
 
 }

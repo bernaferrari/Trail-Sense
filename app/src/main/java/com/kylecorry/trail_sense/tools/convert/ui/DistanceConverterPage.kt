@@ -40,9 +40,12 @@ class DistanceConverterPage(private val context: Context) :
         }
     }
 
-    override fun convert(amount: Float, from: DistanceUnits, to: DistanceUnits): String {
-        val converted = Distance.from(amount.absoluteValue, from).convertTo(to)
-        return formatService.formatDistance(converted, 4, false)
+    override fun convertValue(amount: Float, from: DistanceUnits, to: DistanceUnits): Float {
+        return Distance.from(amount.absoluteValue, from).convertTo(to).value
+    }
+
+    override fun format(amount: Float, unit: DistanceUnits): String {
+        return formatService.formatDistance(Distance.from(amount, unit), 4, false)
     }
 
 }
