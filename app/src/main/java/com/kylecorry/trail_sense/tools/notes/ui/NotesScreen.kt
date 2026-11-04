@@ -119,13 +119,14 @@ fun NotesScreen(
             if (loaded) ExtendedFloatingActionButton(
                 onClick = onAdd,
                 modifier = Modifier.testTag("add_btn"),
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(TrailIcons.Edit, contentDescription = null) },
                 text = { Text(stringResource(R.string.places_notes_new)) }
             )
         }
     ) {
+        // What did I write down? The notes themselves, newest first, in one grouped list; the FAB is the one action.
         if (!loaded) return@TrailSensePage
 
         if (items.isEmpty()) {
@@ -134,23 +135,15 @@ fun NotesScreen(
                     icon = TrailIcons.ToolNotes,
                     title = stringResource(R.string.notes_empty_text),
                     description = stringResource(R.string.notes_empty_description),
-                    // A warm notebook: a pencil, ruled lines and a date ride round the page.
-                    tone = TrailSenseTone.Tertiary,
-                    accents = listOf(TrailIcons.Edit, TrailIcons.Summary, TrailIcons.Date),
                     modifier = Modifier
                         .fillParentMaxHeight(0.78f)
                         .testTag("notes_empty_text")
                 )
             }
         } else {
-            val latest = items.first()
-            item(key = "latest") {
-                LatestNoteSpotlight(note = latest, onEdit = onEdit, onShowQR = onShowQR, onDelete = onDelete)
-            }
-            val rest = items.drop(1)
             placesGroup(
                 key = "notes",
-                items = rest,
+                items = items,
                 itemKey = { it.id }
             ) { note, position, rowModifier ->
                 NoteRow(
@@ -164,68 +157,6 @@ fun NotesScreen(
             }
         }
     }
-}
-
-/** The newest note, opened up on a warm card: its title, the start of what it says, and the two things you do with it. */
-@Composable
-private fun LatestNoteSpotlight(
-    note: Note,
-    onEdit: (Note) -> Unit,
-    onShowQR: (Note) -> Unit,
-    onDelete: (Note) -> Unit
-) {
-    var isMenuOpen by remember { mutableStateOf(false) }
-    val title = if (note.title?.trim().isNullOrEmpty()) {
-        stringResource(android.R.string.untitled)
-    } else {
-        note.title.orEmpty().trim()
-    }
-    val preview = remember(note.contents) {
-        note.contents.orEmpty().trim().replace(Regex("\\s+"), " ").let {
-            if (it.length > 160) it.take(160).trimEnd() + "…" else it
-        }
-    }
-    val timestamp = remember(note.createdOn) { formatTimestamp(note.createdOn) }
-    TrailSenseSpotlight(
-        eyebrow = listOfNotNull(stringResource(R.string.places_notes_latest), timestamp).joinToString(" · "),
-        title = title,
-        titleStyle = MaterialTheme.typography.headlineSmall,
-        supportingText = preview.ifEmpty { null },
-        tone = TrailSenseTone.Tertiary,
-        trailing = {
-            Box {
-                IconButton(onClick = { isMenuOpen = true }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.note_more_options)
-                    )
-                }
-                DropdownMenu(expanded = isMenuOpen, onDismissRequest = { isMenuOpen = false }) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.delete)) },
-                        leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null) },
-                        onClick = {
-                            isMenuOpen = false
-                            onDelete(note)
-                        }
-                    )
-                }
-            }
-        },
-        badge = {
-            TrailSenseShapeBadge(
-                icon = TrailIcons.ToolNotes,
-                shape = MaterialShapes.Cookie7Sided.toShape(),
-                size = 56.dp,
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary
-            )
-        },
-        actions = listOf(
-            TrailSenseSpotlightAction(stringResource(R.string.edit), TrailIcons.Edit) { onEdit(note) },
-            TrailSenseSpotlightAction(stringResource(R.string.qr_code), TrailIcons.QrCode) { onShowQR(note) }
-        )
-    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
