@@ -293,7 +293,9 @@ private fun PackListScreen(
             start = TrailSenseSpacing.lg,
             end = TrailSenseSpacing.lg,
             top = TrailSenseSpacing.sm,
-            bottom = 112.dp
+            // Room for the FAB under the last list; an empty screen needs none, and the extra padding squeezed the
+            // empty state until its button's label was cut off.
+            bottom = if (loaded && packs.isEmpty()) TrailSenseSpacing.xxxl else 112.dp
         ),
         actions = {
             PacksOverflowMenu(
