@@ -9,7 +9,6 @@ import androidx.compose.material3.toShape
 import androidx.compose.ui.text.font.FontWeight
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
 import com.kylecorry.trail_sense.tools.guide.ui.articleBodyStyle
-import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter

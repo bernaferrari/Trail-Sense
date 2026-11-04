@@ -489,9 +489,7 @@ private fun CloudReadingRow(
                 }
                 DropdownMenu(
                     expanded = isMenuOpen,
-                    onDismissRequest = { isMenuOpen = false },
-                    shape = RoundedCornerShape(TrailSenseSpacing.lg),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    onDismissRequest = { isMenuOpen = false }
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.delete)) },
@@ -630,9 +628,7 @@ private fun CloudCreateMenu(
 ) {
     DropdownMenu(
         expanded = expanded,
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(TrailSenseSpacing.lg),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        onDismissRequest = onDismiss
     ) {
         DropdownMenuItem(
             text = { Text(stringResource(R.string.camera)) },

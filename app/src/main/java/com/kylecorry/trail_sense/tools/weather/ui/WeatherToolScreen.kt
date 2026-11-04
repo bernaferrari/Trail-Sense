@@ -820,8 +820,10 @@ private fun WeatherPressureSection(
             exit = fadeOut() + shrinkVertically(),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            SkyPill(
+            Text(
                 text = markerText ?: "",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(top = TrailSenseSpacing.md)
                     .testTag("pressure_marker")

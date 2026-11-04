@@ -221,7 +221,7 @@ private fun DropTimerButton(
 
 /**
  * The hero: a saturated card with a cliff on its left edge and a stone falling down it in real time (free fall, so
- * it speeds up), the height large beside it and the fall time as a pill. Primary at rest, tertiary while falling.
+ * it speeds up), the height large beside it and the fall time under it. Primary at rest, tertiary while falling.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -274,22 +274,16 @@ private fun CliffHero(
                         .testTag("cliff_height_title")
                         .semantics { contentDescription = title }
                 )
-                Surface(
-                    shape = CircleShape,
-                    color = colors.accent,
-                    contentColor = colors.onAccent
-                ) {
-                    Text(
-                        text = when {
-                            running -> stringResource(R.string.cliff_falling, elapsed)
-                            hasDropped -> stringResource(R.string.cliff_fell_for, elapsed)
-                            else -> stringResource(R.string.cliff_ready)
-                        },
-                        style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
-                    )
-                }
+                // The fall time as one quiet status line, not a pill.
+                Text(
+                    text = when {
+                        running -> stringResource(R.string.cliff_falling, elapsed)
+                        hasDropped -> stringResource(R.string.cliff_fell_for, elapsed)
+                        else -> stringResource(R.string.cliff_ready)
+                    },
+                    style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                    color = colors.content.copy(alpha = 0.82f)
+                )
             }
         }
     }

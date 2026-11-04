@@ -166,9 +166,9 @@ internal fun SkyValueRow(
     }
 }
 
-/** A small pill of status (a tendency, a phase, a count) on any surface. */
+/** The chart callout's pill (only used by [SkyChartCallout]; status elsewhere is a quiet text line). */
 @Composable
-internal fun SkyPill(
+private fun SkyPill(
     text: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,

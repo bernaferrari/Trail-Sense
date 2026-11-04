@@ -158,31 +158,17 @@ private fun GuideContents(titles: List<String>, onSelect: (Int) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
             titles.forEachIndexed { index, title ->
-                Surface(
+                // A jump to a section: a standard Material assist chip, numbered like the section it opens.
+                androidx.compose.material3.AssistChip(
                     onClick = { onSelect(index) },
-                    shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ) {
-                    Row(
-                        Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    label = {
                         Text(
-                            (index + 1).toString(),
-                            style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(end = TrailSenseSpacing.sm)
-                        )
-                        Text(
-                            title,
-                            style = MaterialTheme.typography.labelLarge,
+                            "${index + 1}  $title",
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                }
+                )
             }
         }
     }

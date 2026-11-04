@@ -317,9 +317,7 @@ private fun PackListScreen(
                 )
                 DropdownMenu(
                     expanded = isCreateMenuOpen,
-                    onDismissRequest = { isCreateMenuOpen = false },
-                    shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    onDismissRequest = { isCreateMenuOpen = false }
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.new_packing_list)) },

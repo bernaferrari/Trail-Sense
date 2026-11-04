@@ -587,7 +587,7 @@ private fun CategoryHeader(
 
 /**
  * How packed the list is, as the Spotlight: the percentage large beside a cookie that turns green with a check when
- * everything's in, the packed weight as a pill, a thick wavy bar and the item count.
+ * everything's in, a thick wavy bar and the item count, and the packed weight as one quiet line.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -648,31 +648,19 @@ private fun PackHeroCard(
                 trackColor = content.copy(alpha = 0.16f)
             )
             if (showWeightOverview) {
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-                    contentColor = content
-                ) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(TrailIcons.Weight, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(TrailSenseSpacing.md))
-                        Text(
-                            stringResource(R.string.weight),
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            text = totalPackedWeight,
-                            modifier = Modifier.testTag("total_packed_weight"),
-                            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                // One quiet line, not a card inside the card.
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.weight),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = content.copy(alpha = 0.82f),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = totalPackedWeight,
+                        modifier = Modifier.testTag("total_packed_weight"),
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum")
+                    )
                 }
             }
         }

@@ -174,19 +174,14 @@ fun CalibrationHero(
     }
 }
 
+/** The calibration's status as one quiet line beside the value, not a pill. */
 @Composable
 private fun CalibrationStatusChip(text: String, contentColor: Color) {
-    Surface(
-        shape = CircleShape,
-        color = contentColor.copy(alpha = 0.12f),
-        contentColor = contentColor
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md, vertical = 6.dp)
-        )
-    }
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = contentColor
+    )
 }
 
 /**

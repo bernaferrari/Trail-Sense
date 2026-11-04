@@ -179,9 +179,7 @@ class SensorStatusBadgeView(
             }
             DropdownMenu(
                 expanded = open,
-                onDismissRequest = { open = false },
-                shape = RoundedCornerShape(20.dp),
-                containerColor = scheme.surfaceContainerHigh
+                onDismissRequest = { open = false }
             ) {
                 items.forEach { (badge, label, icon) ->
                     val color = if (badge.caution()) scheme.tertiary else scheme.error

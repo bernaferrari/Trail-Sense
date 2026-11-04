@@ -557,17 +557,6 @@ private fun FieldGuideTagFilters(
                         modifier = Modifier.size(FilterChipDefaults.IconSize)
                     )
                 },
-                shape = CircleShape,
-                border = null,
-                // The family's choice colours: the chosen one solid primary, the rest a quiet raised surface.
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
-                )
             )
         }
     }

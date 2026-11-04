@@ -147,9 +147,7 @@ internal fun TidesOverflowMenu(
         }
         DropdownMenu(
             expanded = isOpen,
-            onDismissRequest = { isOpen = false },
-            shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            onDismissRequest = { isOpen = false }
         ) {
             actions.forEach { action ->
                 DropdownMenuItem(

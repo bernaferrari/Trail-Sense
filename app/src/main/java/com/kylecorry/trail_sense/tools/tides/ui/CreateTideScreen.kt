@@ -809,9 +809,7 @@ private fun EstimateTypeInput(
         }
         DropdownMenu(
             expanded = isOpen,
-            onDismissRequest = { isOpen = false },
-            shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            onDismissRequest = { isOpen = false }
         ) {
             estimateTypes.forEach { type ->
                 DropdownMenuItem(
