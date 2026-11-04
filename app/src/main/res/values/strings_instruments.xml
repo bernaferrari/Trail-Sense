@@ -76,6 +76,15 @@
     <string name="battery_full_in">Full in %1$s</string>
     <string name="battery_lasts_about">Lasts about %1$s</string>
 
+    <!-- Declination -->
+    <string name="declination_verdict_east">Magnetic north is %1$s east of true north</string>
+    <string name="declination_verdict_west">Magnetic north is %1$s west of true north</string>
+    <string name="declination_verdict_aligned">Magnetic north lines up with true north here</string>
+    <string name="declination_magnetic_to_true">Magnetic to true</string>
+    <string name="declination_true_to_magnetic">True to magnetic</string>
+    <string name="declination_to_a_compass_bearing">Apply to a compass bearing</string>
+    <string name="declination_to_a_map_bearing">Apply to a map bearing</string>
+
     <!-- Convert -->
     <string name="convert_copy">Copy</string>
     <string name="convert_paste">Paste</string>
