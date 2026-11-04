@@ -85,7 +85,7 @@ class RadarCompassView(
     @Composable
     override fun Content(modifier: Modifier) {
         primaryColor = MaterialTheme.colorScheme.primary.toArgb()
-        secondaryColor = MaterialTheme.colorScheme.surfaceContainerHighest.toArgb()
+        secondaryColor = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
         textColor = MaterialTheme.colorScheme.onSurface.toArgb()
         Canvas(
             modifier = modifier
@@ -161,10 +161,7 @@ class RadarCompassView(
         paint.reset()
         paint.isAntiAlias = true
         paint.isFilterBitmap = true
-        paint.colorFilter = PorterDuffColorFilter(
-            textColor.withAlpha(220),
-            PorterDuff.Mode.SRC_IN
-        )
+        paint.colorFilter = PorterDuffColorFilter(primaryColor, PorterDuff.Mode.SRC_IN)
         nativeCanvas.drawBitmap(bitmap, canvasWidth / 2f - iconSize / 2f, 0f, paint)
         paint.colorFilter = null
     }
@@ -276,6 +273,19 @@ class RadarCompassView(
 
         if (!drawTicks) {
             return
+        }
+
+        // A tonal bezel band under the graduations and letters, the family's tone language on an instrument. The
+        // middle stays clear so a map under the radar still shows through.
+        if (!drawDialBezel) {
+            paint.reset()
+            paint.isAntiAlias = true
+            paint.style = Paint.Style.STROKE
+            paint.color = secondaryColor
+            val outer = backgroundRadius
+            val inner = dialTickRadius - dp(10f) - cardinalSize - dp(6f)
+            paint.strokeWidth = outer - inner
+            nativeCanvas.drawCircle(centerPixel.x, centerPixel.y, (outer + inner) / 2f, paint)
         }
 
         // Fine graduations every 5°, stronger every 15° and 45°, and north in the accent color: a dial that reads

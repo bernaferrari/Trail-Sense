@@ -1261,6 +1261,8 @@ private fun createNavigatorViews(
     )
 }
 
+/** The beacon button: an Expressive medium FAB; long press navigates to the last beacon. */
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun NavigatorIconButton(
     icon: ImageVector,
@@ -1269,25 +1271,28 @@ private fun NavigatorIconButton(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
+    androidx.compose.material3.Surface(
         modifier = modifier
-            .size(56.dp)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .size(80.dp)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
             .combinedClickable(
                 onClickLabel = contentDescription,
                 onLongClickLabel = stringResource(R.string.navigate),
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        contentAlignment = Alignment.Center
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        shadowElevation = 3.dp
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.size(24.dp)
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                modifier = Modifier.size(28.dp)
+            )
+        }
     }
 }
 
