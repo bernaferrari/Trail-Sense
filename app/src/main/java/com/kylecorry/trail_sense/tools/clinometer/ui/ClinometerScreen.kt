@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.PaddingValues
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -695,8 +694,8 @@ private fun ClinometerReading(
             } else {
                 stringResource(R.string.clinometer_waiting)
             },
-            style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         AnimatedVisibility(
@@ -731,13 +730,15 @@ private fun ClinometerHost(
     val dialLabel = stringResource(R.string.clinometer_mode_phone)
     val cameraLabel = stringResource(R.string.camera)
     // One question: how steep is this slope?
+    // How it is measured comes first (the phone's edge, or sighting through the camera), then the one live object,
+    // the angle and its slope under it, and what that angle means as one short list.
     val scheme = MaterialTheme.colorScheme
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.clinometer_title),
         largeTitle = true,
         modifier = modifier
     ) {
-        // Touch-and-hold anywhere below the bar locks the reading, as before.
+        // Tap or hold anywhere below the bar to lock the reading, as before.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -754,6 +755,15 @@ private fun ClinometerHost(
                 ),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
+            TrailSenseConnectedChoice(
+                options = listOf(
+                    TrailSenseChoice(false, dialLabel, TrailIcons.PhonePortrait),
+                    TrailSenseChoice(true, cameraLabel, TrailIcons.Camera)
+                ),
+                selected = views.clinometerTitle.isCameraMode,
+                onSelect = { views.clinometerTitle.onLeftButtonClick?.invoke() }
+            )
+
             val instruction = when {
                 views.clinometerInstructions.isVisible -> TrailIcons.RotateFlatToPortrait
                 views.cameraClinometerInstructions.isVisible -> TrailIcons.RotateLandscapeToPortrait
@@ -767,53 +777,28 @@ private fun ClinometerHost(
             ) {
                 views.clinometer.Content(Modifier.fillMaxSize())
                 if (views.cameraViewHolder.isVisible) {
-                    Row(
+                    // The sight: the camera in one rounded window, a level line across it with a ring at the centre.
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(TrailSenseShape.hero))
-                            .background(scheme.primaryContainer)
+                            .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                            .background(scheme.surfaceContainer)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                        ) {
-                            CameraPreview(
-                                state = views.camera,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            views.arView.Content(Modifier.fillMaxSize())
-                            // The sight: a short primary bar with a dot in the middle, like a level vial.
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .width(72.dp)
-                                    .height(4.dp)
-                                    .clip(CircleShape)
-                                    .background(scheme.primary)
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .size(12.dp)
-                                    .clip(CircleShape)
-                                    .background(scheme.primary)
-                            )
-                        }
-                        views.cameraClinometer.Content(
-                            Modifier
-                                .width(56.dp)
-                                .fillMaxHeight()
+                        CameraPreview(
+                            state = views.camera,
+                            showZoomSlider = false,
+                            modifier = Modifier.fillMaxSize()
                         )
+                        views.arView.Content(Modifier.fillMaxSize())
+                        ClinometerSight(Modifier.fillMaxSize())
                     }
                 }
                 if (views.clinometerInstructions.isVisible) {
-                    views.clinometer.Preview(Modifier.fillMaxSize().alpha(0.55f))
+                    views.clinometer.Preview(Modifier.fillMaxSize().alpha(0.4f))
                 }
             }
 
-            // Idle (held the wrong way): the dial rests dimmed above and one hint line takes the reading's place,
-            // with no dash and no headline. Measuring: the incline and the slope verdict.
+            // Held the wrong way: one hint line takes the reading's place. Measuring: the angle and its slope.
             if (instruction != null) {
                 ClinometerInstruction(
                     icon = instruction,
@@ -823,29 +808,16 @@ private fun ClinometerHost(
                 ClinometerReading(views.clinometerTitle, showVerdict = true)
             }
 
-            // The controls as one group: the mode, the avalanche risk of this slope, and the height prompt.
+            // What the angle means: the avalanche risk of this slope, and the height (or distance) it gives.
             val risk = views.avalancheRisk
             val measurement = views.estimatedHeight
             val showRisk = instruction == null && risk.title.isNotEmpty()
             Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                TrailSenseGroupCard(
-                    position = TrailSenseGroupPosition(isFirst = true, isLast = false),
-                    contentPadding = PaddingValues(TrailSenseSpacing.sm)
-                ) {
-                    TrailSenseConnectedChoice(
-                        options = listOf(
-                            TrailSenseChoice(false, dialLabel, TrailIcons.PhonePortrait),
-                            TrailSenseChoice(true, cameraLabel, TrailIcons.Camera)
-                        ),
-                        selected = views.clinometerTitle.isCameraMode,
-                        onSelect = { views.clinometerTitle.onLeftButtonClick?.invoke() }
-                    )
-                }
                 if (showRisk) {
                     TrailSenseListItem(
                         title = risk.description,
                         icon = rememberVectorPainter(risk.icon),
-                        position = TrailSenseGroupPosition(isFirst = false, isLast = false),
+                        position = TrailSenseGroupPosition(isFirst = true, isLast = false),
                         trailing = {
                             Text(
                                 text = risk.title,
@@ -853,7 +825,8 @@ private fun ClinometerHost(
                                 fontWeight = FontWeight.SemiBold,
                                 color = when (risk.tone) {
                                     TrailSenseTone.Error -> scheme.error
-                                    else -> scheme.onSurface
+                                    TrailSenseTone.Caution -> scheme.tertiary
+                                    else -> scheme.onSurfaceVariant
                                 }
                             )
                         }
@@ -862,7 +835,7 @@ private fun ClinometerHost(
                 TrailSenseListItem(
                     title = measurement.description,
                     icon = rememberVectorPainter(TrailIcons.Ruler),
-                    position = TrailSenseGroupPosition(isFirst = false, isLast = true),
+                    position = TrailSenseGroupPosition(isFirst = !showRisk, isLast = true),
                     onClick = { views.clinometerTitle.onRightButtonClick?.invoke() },
                     trailing = {
                         Text(
@@ -875,6 +848,39 @@ private fun ClinometerHost(
                 )
             }
         }
+    }
+}
+
+/** The camera's sight: a primary level line across the picture, broken by a ring at the centre where you aim. */
+@Composable
+private fun ClinometerSight(modifier: Modifier = Modifier) {
+    val color = MaterialTheme.colorScheme.primary
+    // A faint dark edge so the sight reads on a bright sky as well as on dark ground.
+    val halo = ComposeColor.Black.copy(alpha = 0.25f)
+    androidx.compose.foundation.Canvas(modifier) {
+        val center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
+        val ring = 14.dp.toPx()
+        val gap = ring + 8.dp.toPx()
+        val inset = 24.dp.toPx()
+        val stroke = 3.dp.toPx()
+        listOf(halo to stroke + 2.dp.toPx(), color to stroke).forEach { (c, w) ->
+            drawLine(
+                c,
+                androidx.compose.ui.geometry.Offset(inset, center.y),
+                androidx.compose.ui.geometry.Offset(center.x - gap, center.y),
+                w,
+                androidx.compose.ui.graphics.StrokeCap.Round
+            )
+            drawLine(
+                c,
+                androidx.compose.ui.geometry.Offset(center.x + gap, center.y),
+                androidx.compose.ui.geometry.Offset(size.width - inset, center.y),
+                w,
+                androidx.compose.ui.graphics.StrokeCap.Round
+            )
+            drawCircle(c, ring, center, style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+        }
+        drawCircle(color, 3.dp.toPx(), center)
     }
 }
 

@@ -211,10 +211,10 @@ private fun ClinometerContent(
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     fontFeatureSettings = "tnum"
                 }
-                // Upright labels: 90° at the top and bottom, 0° at the sides.
+                // Upright labels down the right half only (90° top, 0° at the side, 90° bottom): the left would repeat them.
                 // Clear of the long ticks, so no label touches one.
                 val labelRadius = tickOuter - 12.dp.toPx() - 8.dp.toPx() - labelSize * 0.6f
-                for (i in 0 until 360 step 30) {
+                for (i in 0..180 step 30) {
                     val radians = Math.toRadians((i - 90).toDouble())
                     val fromHorizontal = abs(((i % 180) - 90).toFloat())
                     drawContext.canvas.nativeCanvas.drawText(

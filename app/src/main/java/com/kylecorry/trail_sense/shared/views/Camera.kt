@@ -405,7 +405,8 @@ class CameraState(val context: Context) {
 @Composable
 fun CameraPreview(
     state: CameraState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showZoomSlider: Boolean = true
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     Box(
@@ -461,16 +462,18 @@ fun CameraPreview(
                 )
             }
         }
-        Slider(
-            value = state.zoomValue.coerceIn(0f, 1f),
-            onValueChange = {
-                state.setZoomFromUser(it)
-            },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        )
+        if (showZoomSlider) {
+            Slider(
+                value = state.zoomValue.coerceIn(0f, 1f),
+                onValueChange = {
+                    state.setZoomFromUser(it)
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+        }
     }
     state.setLifecycleOwner(lifecycleOwner)
 }
