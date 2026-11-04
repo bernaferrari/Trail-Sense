@@ -2192,4 +2192,12 @@
     <string name="battery_capacity_label">Capacity</string>
     <string name="battery_health_label">Health</string>
     <string name="qr_camera_denied_description">Allow camera access in settings to scan codes. You can still scan a photo from your gallery.</string>
+    <!-- Family redesign: instruments -->
+    <string name="whistle_hold">Hold to whistle</string>
+    <string name="whistle_signals">Signals</string>
+    <string name="whistle_playing">Playing · tap to stop</string>
+    <string name="whistle_signal_repeats">Repeats until you stop it</string>
+    <string name="light_meter_intensity">Intensity</string>
+    <string name="light_meter_reach">Beam distance</string>
+    <string name="camera_unavailable_description">Allow camera access in settings to use this tool.</string>
 </resources>
