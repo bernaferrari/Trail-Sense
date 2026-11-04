@@ -44,6 +44,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -312,6 +314,13 @@ fun FlashlightScreen(
             ) {
                 PowerToggle(
                     on = isOn,
+                    kind = selectedMode.kind(),
+                    strobeHz = strobeHz(selectedMode),
+                    brightness = if (hasBrightnessControl && maxBrightness > 0) {
+                        (brightnessValue / maxBrightness).coerceIn(0f, 1f)
+                    } else {
+                        1f
+                    },
                     onClick = ::toggle,
                     modifier = Modifier.testTag("flashlight_on_btn")
                 )
@@ -394,29 +403,27 @@ private fun FlashlightControls(
     )
     val modeLabel = stringResource(R.string.flashlight_mode)
 
-    TrailSenseRowGroup {
-        row { position ->
-            TrailSenseGroupCard(position = position) {
-                TrailSenseConnectedChoice(
-                    options = choices,
-                    selected = kind,
-                    onSelect = {
-                        if (areHapticsEnabled) {
-                            haptics.click()
-                        }
-                        onDialSelectionChanged(
-                            when (it) {
-                                FlashlightModeKind.Torch -> 0
-                                FlashlightModeKind.Strobe -> 1
-                                FlashlightModeKind.Sos -> 11
-                            }
-                        )
-                    },
-                    modifier = Modifier.testTag("flashlight_dial"),
-                    label = modeLabel
-                )
+    // The mode is the one choice row, on the page itself (not boxed in a card); the rest is one grouped list.
+    TrailSenseConnectedChoice(
+        options = choices,
+        selected = kind,
+        onSelect = {
+            if (areHapticsEnabled) {
+                haptics.click()
             }
-        }
+            onDialSelectionChanged(
+                when (it) {
+                    FlashlightModeKind.Torch -> 0
+                    FlashlightModeKind.Strobe -> 1
+                    FlashlightModeKind.Sos -> 11
+                }
+            )
+        },
+        modifier = Modifier.testTag("flashlight_dial"),
+        label = modeLabel
+    )
+    Spacer(Modifier.height(TrailSenseSpacing.lg))
+    TrailSenseRowGroup {
         if (kind == FlashlightModeKind.Strobe) {
             row { position ->
                 TrailSenseGroupCard(
@@ -486,13 +493,17 @@ private fun FlashlightControls(
 }
 
 /**
- * The switch: a large cookie that rounds into a sun when the light comes on (the shape is the state) and fills with
- * primary, and shrinks slightly under the finger.
+ * The lamp: a large cookie that rounds into a sun when the light comes on (the shape is the state) and fills with
+ * primary. Lit, it throws a glow that grows with the brightness, flashes at the strobe rate and spells SOS in SOS
+ * mode, so the screen shows what the torch is doing. Off, it is a quiet unlit bulb, not a crossed-out one.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PowerToggle(
     on: Boolean,
+    kind: FlashlightModeKind,
+    strobeHz: Int,
+    brightness: Float,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -514,6 +525,30 @@ private fun PowerToggle(
         animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "powerBloom"
     )
+    val glowSize by animateFloatAsState(
+        targetValue = if (on) 0.55f + 0.45f * brightness else 0f,
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "glowSize"
+    )
+    // How lit the lamp is right now: steady, the strobe's on/off beat, or the SOS pattern.
+    var pulse by remember { mutableFloatStateOf(1f) }
+    LaunchedEffect(on, kind, strobeHz) {
+        pulse = 1f
+        if (!on || kind == FlashlightModeKind.Torch || (kind == FlashlightModeKind.Strobe && strobeHz > 20)) {
+            return@LaunchedEffect
+        }
+        val start = withFrameMillis { it }
+        while (isActive) {
+            withFrameMillis { now ->
+                val elapsed = now - start
+                pulse = when (kind) {
+                    FlashlightModeKind.Strobe -> if ((elapsed * strobeHz * 2 / 1000) % 2 == 0L) 1f else 0.12f
+                    else -> if (sosLit(elapsed)) 1f else 0.12f
+                }
+            }
+        }
+    }
+    val glowColor = scheme.primary
     val morph = remember { Morph(MaterialShapes.Cookie12Sided, MaterialShapes.VerySunny) }
     val shape = remember(bloom) { MorphShape(morph, bloom) }
     val stateText = stringResource(if (on) R.string.on else R.string.off)
@@ -524,10 +559,29 @@ private fun PowerToggle(
             .trailSensePressScale(interactionSource),
         contentAlignment = Alignment.Center
     ) {
+        // The light it throws, behind the lamp.
+        Canvas(Modifier.fillMaxSize()) {
+            if (glowSize > 0f) {
+                val radius = size.minDimension / 2f * (0.9f + 0.45f * glowSize)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            glowColor.copy(alpha = 0.55f * glowSize * pulse),
+                            glowColor.copy(alpha = 0.18f * glowSize * pulse),
+                            Color.Transparent
+                        ),
+                        center = center,
+                        radius = radius
+                    ),
+                    radius = radius
+                )
+            }
+        }
         Surface(
             onClick = onClick,
             modifier = Modifier
                 .size(232.dp)
+                .graphicsLayer { alpha = if (on) 0.7f + 0.3f * pulse else 1f }
                 .semantics { stateDescription = stateText },
             shape = shape,
             color = container,
@@ -535,10 +589,10 @@ private fun PowerToggle(
             interactionSource = interactionSource
         ) {}
         Icon(
-            painter = rememberVectorPainter(if (on) TrailIcons.TorchOn else TrailIcons.TorchOff),
+            painter = rememberVectorPainter(TrailIcons.TorchOn),
             contentDescription = stringResource(R.string.flashlight_title),
             modifier = Modifier.size(88.dp),
-            tint = content
+            tint = if (on) content else content.copy(alpha = 0.6f)
         )
     }
 }
@@ -580,12 +634,12 @@ private fun BrightnessSlider(
     modifier: Modifier = Modifier
 ) {
     val brightnessMax = maxBrightness.coerceAtLeast(1)
+    // One plain handle without step dots; the value still snaps to the torch's own levels.
     Slider(
         value = value.coerceIn(0f, brightnessMax.toFloat()),
-        onValueChange = onValueChanged,
+        onValueChange = { onValueChanged(it.safeRoundToInt().toFloat()) },
         modifier = modifier,
-        valueRange = 0f..brightnessMax.toFloat(),
-        steps = (brightnessMax - 1).coerceAtLeast(0)
+        valueRange = 0f..brightnessMax.toFloat()
     )
 }
 
@@ -668,6 +722,35 @@ private fun StrobeFrequencies(
             }
         }
     }
+}
+
+/** Flashes per second for a strobe mode (0 otherwise). */
+private fun strobeHz(mode: FlashlightMode): Int {
+    return when (val index = getDialIndex(mode)) {
+        in 1..9 -> index
+        10 -> 200
+        else -> 0
+    }
+}
+
+/** S-O-S in Morse units of 200 ms: three short, three long, three short, then a long pause. */
+private val SOS_PATTERN: BooleanArray = run {
+    val units = mutableListOf<Boolean>()
+    fun mark(length: Int) {
+        repeat(length) { units.add(true) }
+        units.add(false)
+    }
+    repeat(3) { mark(1) }
+    repeat(2) { units.add(false) }
+    repeat(3) { mark(3) }
+    repeat(2) { units.add(false) }
+    repeat(3) { mark(1) }
+    repeat(6) { units.add(false) }
+    units.toBooleanArray()
+}
+
+private fun sosLit(elapsedMillis: Long): Boolean {
+    return SOS_PATTERN[((elapsedMillis / 200) % SOS_PATTERN.size).toInt()]
 }
 
 private fun getDialIndex(mode: FlashlightMode): Int {
