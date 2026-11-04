@@ -1,7 +1,21 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -129,6 +143,7 @@ internal fun DiagnosticsScreen(
     val errors = items.filter { it.result.severity == ToolDiagnosticSeverity.Error }
     val warnings = items.filter { it.result.severity == ToolDiagnosticSeverity.Warning }
 
+    val toolsTitle = stringResource(R.string.sky_diagnostics_tools)
     TrailSensePage(
         title = stringResource(R.string.diagnostics),
         onBack = { dispatcher?.onBackPressed() },
@@ -139,19 +154,50 @@ internal fun DiagnosticsScreen(
             DiagnosticsHero(
                 loaded = loaded,
                 errorCount = errors.size,
-                warningCount = warnings.size
+                warningCount = warnings.size,
+                checks = toolDiagnostics.size,
+                reported = results.size
+            )
+        }
+
+        item(key = "counts") {
+            TrailSenseStatGrid(
+                stats = listOf(
+                    TrailSenseStat(
+                        label = stringResource(R.string.errors),
+                        value = errors.size.toString(),
+                        tone = if (errors.isNotEmpty()) TrailSenseTone.Error else TrailSenseTone.Neutral,
+                        icon = Icons.Default.ErrorOutline
+                    ),
+                    TrailSenseStat(
+                        label = stringResource(R.string.diagnostics_warnings),
+                        value = warnings.size.toString(),
+                        tone = if (warnings.isNotEmpty()) TrailSenseTone.Caution else TrailSenseTone.Neutral,
+                        icon = Icons.Default.WarningAmber
+                    ),
+                    TrailSenseStat(
+                        label = stringResource(R.string.sky_diagnostics_checks),
+                        value = "${results.size.coerceAtMost(toolDiagnostics.size)}/${toolDiagnostics.size}",
+                        tone = if (loaded && items.isEmpty()) TrailSenseTone.Good else TrailSenseTone.Neutral,
+                        icon = Icons.Default.CheckCircle
+                    )
+                ),
+                columns = 3,
+                valueStyle = MaterialTheme.typography.headlineMedium
             )
         }
 
         diagnosticsSection("errors", R.string.errors, errors, onShowDiagnostic)
         diagnosticsSection("warnings", R.string.diagnostics_warnings, warnings, onShowDiagnostic)
 
-        trailSenseSection(key = "actions") {
+        trailSenseSection(key = "actions", title = toolsTitle) {
             row { position ->
-                TrailSenseListItem(
+                SkyValueRow(
                     title = stringResource(R.string.pref_sensor_details_title),
                     subtitle = stringResource(R.string.diagnostics_sensor_details_summary),
-                    icon = rememberVectorPainter(Icons.Default.Sensors),
+                    icon = Icons.Default.Sensors,
+                    accent = TrailSenseAccents.Sky,
+                    badgeShape = MaterialShapes.Cookie9Sided.toShape(),
                     position = position,
                     onClick = onShowSensorDetails,
                     modifier = Modifier.testTag("diagnostics_title"),
@@ -159,10 +205,12 @@ internal fun DiagnosticsScreen(
                 )
             }
             row { position ->
-                TrailSenseListItem(
+                SkyValueRow(
                     title = stringResource(R.string.export_logs),
                     subtitle = stringResource(R.string.diagnostics_export_logs_summary),
-                    icon = rememberVectorPainter(Icons.Default.Download),
+                    icon = Icons.Default.Download,
+                    accent = TrailSenseAccents.Lavender,
+                    badgeShape = MaterialShapes.Clover4Leaf.toShape(),
                     position = position,
                     onClick = onExportLogs,
                     modifier = Modifier.testTag("download_logs")
@@ -198,24 +246,15 @@ private fun LazyListScope.diagnosticsSection(
 }
 
 @Composable
-private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int) {
+private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int, checks: Int, reported: Int) {
     val issueCount = errorCount + warningCount
-    val (container, content) = when {
-        errorCount > 0 -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-        warningCount > 0 -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        loaded -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
-        else -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+    val tone = when {
+        errorCount > 0 -> TrailSenseTone.Error
+        warningCount > 0 -> TrailSenseTone.Caution
+        loaded -> TrailSenseTone.Good
+        else -> TrailSenseTone.Secondary
     }
-    val containerColor by animateColorAsState(
-        container,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "diagnosticsHeroContainer"
-    )
-    val contentColor by animateColorAsState(
-        content,
-        MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "diagnosticsHeroContent"
-    )
+    val colors = trailSenseToneColors(tone)
     val icon = when {
         errorCount > 0 -> Icons.Default.ErrorOutline
         warningCount > 0 -> Icons.Default.WarningAmber
@@ -232,15 +271,53 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int)
         loaded -> stringResource(R.string.diagnostics_no_issues_summary)
         else -> null
     }
-    TrailSenseHeroCard(
+    val progress by animateFloatAsState(
+        if (checks == 0) 1f else (reported.toFloat() / checks).coerceIn(0f, 1f),
+        MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "diagnosticsProgress"
+    )
+    TrailSenseSpotlight(
         title = title,
+        eyebrow = stringResource(R.string.diagnostics),
         supportingText = supporting,
-        icon = rememberVectorPainter(icon),
-        containerColor = containerColor,
-        contentColor = contentColor,
+        tone = tone,
+        titleStyle = MaterialTheme.typography.headlineMedium,
         modifier = Modifier
             .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
-            .then(if (issueCount == 0 && loaded) Modifier.testTag("empty_text") else Modifier)
+            .then(if (issueCount == 0 && loaded) Modifier.testTag("empty_text") else Modifier),
+        badge = {
+            // The health ring: fills as the checks report, around a badge whose shape says the state.
+            Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
+                if (loaded) {
+                    CircularProgressIndicator(
+                        progress = { 1f },
+                        modifier = Modifier.size(96.dp),
+                        color = colors.accent,
+                        trackColor = colors.content.copy(alpha = 0.12f),
+                        strokeWidth = 8.dp
+                    )
+                } else {
+                    CircularWavyProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.size(96.dp),
+                        color = colors.accent,
+                        trackColor = colors.content.copy(alpha = 0.12f)
+                    )
+                }
+                TrailSenseShapeBadge(
+                    icon = icon,
+                    shape = when (tone) {
+                        TrailSenseTone.Error -> MaterialShapes.SoftBurst.toShape()
+                        TrailSenseTone.Caution -> MaterialShapes.Pentagon.toShape()
+                        TrailSenseTone.Good -> MaterialShapes.Cookie9Sided.toShape()
+                        else -> MaterialShapes.Cookie6Sided.toShape()
+                    },
+                    size = 64.dp,
+                    containerColor = colors.accent,
+                    contentColor = colors.onAccent
+                )
+            }
+        }
     )
 }
 
@@ -283,7 +360,11 @@ private fun DiagnosticListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
+                shape = if (severity == ToolDiagnosticSeverity.Error) {
+                    MaterialShapes.SoftBurst.toShape()
+                } else {
+                    MaterialShapes.Pentagon.toShape()
+                },
                 color = statusContainerColor(severity),
                 contentColor = onStatusContainerColor(severity),
                 modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
@@ -340,7 +421,7 @@ private fun DiagnosticsChevron() {
 private fun statusContainerColor(severity: ToolDiagnosticSeverity): Color {
     return when (severity) {
         ToolDiagnosticSeverity.Error -> MaterialTheme.colorScheme.errorContainer
-        ToolDiagnosticSeverity.Warning -> MaterialTheme.colorScheme.tertiaryContainer
+        ToolDiagnosticSeverity.Warning -> trailSenseStatusColors().cautionContainer
     }
 }
 
@@ -348,7 +429,7 @@ private fun statusContainerColor(severity: ToolDiagnosticSeverity): Color {
 private fun onStatusContainerColor(severity: ToolDiagnosticSeverity): Color {
     return when (severity) {
         ToolDiagnosticSeverity.Error -> MaterialTheme.colorScheme.onErrorContainer
-        ToolDiagnosticSeverity.Warning -> MaterialTheme.colorScheme.onTertiaryContainer
+        ToolDiagnosticSeverity.Warning -> trailSenseStatusColors().onCautionContainer
     }
 }
 

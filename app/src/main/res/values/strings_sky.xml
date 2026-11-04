@@ -28,4 +28,6 @@
     <string name="sky_guides_supporting">How every tool works, in %d topics</string>
     <string name="sky_guides_no_results">Nothing matches \"%s\". Try a tool name or a shorter word.</string>
     <string name="sky_survival_chapters">%d chapters · works offline</string>
+    <string name="sky_diagnostics_checks">Checks</string>
+    <string name="sky_diagnostics_tools">Tools</string>
 </resources>
