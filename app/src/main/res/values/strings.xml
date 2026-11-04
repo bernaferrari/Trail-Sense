@@ -399,6 +399,11 @@
     <string name="pref_sea_level_pressure_override" translatable="false">pref_sea_level_pressure_override</string>
     <string name="pref_max_beacon_distance" translatable="false">pref_max_beacon_distance</string>
     <string name="error_occurred">An error occurred</string>
+    <string name="crash_title">Trail Sense stopped unexpectedly</string>
+    <string name="crash_message">Sorry about that. Sending a report helps get it fixed. It opens your email app with the details, and nothing is sent until you choose to.</string>
+    <string name="crash_send_report">Send report</string>
+    <string name="crash_not_now">Not now</string>
+    <string name="crash_details">Details</string>
     <string name="error_occurred_message">Trail Sense ran into an error. Please email the developer to get this issue fixed.</string>
     <string name="tool_user_guide_title">User Guide</string>
     <string name="tool_user_guide_summary">A how-to guide for using Trail Sense</string>

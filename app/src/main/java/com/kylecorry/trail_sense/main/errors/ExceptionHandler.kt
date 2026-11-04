@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.main.errors
 
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.exceptions.BugReportEmailMessage
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
@@ -17,35 +15,30 @@ object ExceptionHandler {
 
         TrailSenseExceptionHandler.error?.let {
             getAppService<Logger>().error("Trail Sense", it)
-            val message = BugReportEmailMessage(
-                activity.getString(R.string.error_occurred),
-                activity.getString(R.string.error_occurred_message) + if (isDebug()) {
-                    "\n\n$it"
-                } else {
-                    ""
-                },
-                activity.getString(R.string.pref_email_title),
-                activity.getString(android.R.string.cancel),
-                activity.getString(R.string.email),
-                "Error in ${activity.getString(R.string.app_name)}"
-            )
-            Alerts.dialog(
+            showCrashReportDialog(
                 activity,
-                message.title,
-                message.description,
-                okText = message.emailAction,
-                cancelText = message.ignoreAction
-            ) { cancelled ->
-                if (!cancelled) {
-                    val intent = Intents.email(
-                        message.emailAddress,
-                        message.emailSubject,
-                        it
+                log = it,
+                onCopy = {
+                    com.kylecorry.andromeda.clipboard.Clipboard.copy(activity, it, activity.getString(R.string.copied_to_clipboard_toast))
+                },
+                onSend = {
+                    activity.startActivity(
+                        Intents.email(
+                            activity.getString(R.string.email),
+                            "Error in ${activity.getString(R.string.app_name)}",
+                            it
+                        )
                     )
-
-                    activity.startActivity(intent)
                 }
-            }
+            )
+        }
+        // Debug builds: `adb shell setprop debug.ts.crashpreview 1` shows the dialog with a sample log, to review it.
+        if (isDebug() && TrailSenseExceptionHandler.error == null && runCatching {
+                Class.forName("android.os.SystemProperties").getMethod("get", String::class.java)
+                    .invoke(null, "debug.ts.crashpreview") == "1"
+            }.getOrDefault(false)
+        ) {
+            showCrashReportDialog(activity, "java.lang.IllegalStateException: sample\n\tat com.example.Sample.run(Sample.kt:1)", onCopy = {}, onSend = {})
         }
 
         TrailSenseExceptionHandler.error = null
