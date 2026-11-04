@@ -128,7 +128,9 @@
         <item name="dialogCornerRadius">@dimen/rounded_corner_size</item>
     </style>
 
-    <style name="SnackBarButtonTheme" parent="Widget.Material3Expressive.Button.TextButton.Snackbar">
+    <!-- Standard Material 3, not Expressive: the Expressive button needs containerPadding* attributes that only
+         Expressive containers set, and a View snackbar's action button has none (it crashed on "Undo"). -->
+    <style name="SnackBarButtonTheme" parent="Widget.Material3.Button.TextButton.Snackbar">
         <item name="android:textColor">?attr/colorPrimary</item>
     </style>
 
