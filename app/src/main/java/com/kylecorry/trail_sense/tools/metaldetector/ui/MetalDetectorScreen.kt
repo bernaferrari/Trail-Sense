@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import androidx.compose.foundation.clickable
+
+import androidx.compose.foundation.layout.wrapContentHeight
+
 import androidx.compose.ui.graphics.asComposePath
 import androidx.graphics.shapes.toPath
 import androidx.compose.foundation.layout.aspectRatio
@@ -753,7 +757,8 @@ private fun MetalHero(
                     upperThreshold = upperThreshold,
                     lineColor = core,
                     inkColor = scheme.onSurfaceVariant,
-                    metalColor = scheme.error
+                    metalColor = scheme.error,
+                    nowColor = scheme.tertiary
                 )
             }
         }
@@ -874,38 +879,19 @@ private fun AccuracyBadge(
         }
     }
 
-    // A quiet pill: the status color is a dot, the text stays in the card's tone.
-    Surface(
-        onClick = onClick,
+    // A plain label, no pill, dot or icon: the sensor's accuracy in words, tappable for the tips.
+    Text(
+        text = stringResource(R.string.metal_detector_accuracy, badge.name),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
             .heightIn(min = TrailSenseSize.minimumTouchTarget)
-            .testTag("accuracy_view"),
-        shape = CircleShape,
-        color = androidx.compose.material3.LocalContentColor.current.copy(alpha = 0.12f)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.md),
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .padding(0.dp)
-            ) {
-                Surface(shape = CircleShape, color = Color(badge.color), modifier = Modifier.fillMaxSize()) {}
-            }
-            Icon(
-                imageVector = TrailIcons.CompassIcon,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                text = badge.name,
-                style = MaterialTheme.typography.labelLarge
-            )
-        }
-    }
+            .wrapContentHeight(Alignment.CenterVertically)
+            .padding(horizontal = TrailSenseSpacing.sm)
+            .testTag("accuracy_view")
+    )
 }
 
 /**
@@ -971,7 +957,7 @@ private fun MagnetometerDirection(
     }
 }
 
-/** The live trace: a thick line over a soft filled area, the threshold band behind it, dashed light gridlines. */
+/** The live trace: one line, the dashed limits of the normal band, words in the gutter and a tertiary "now" dot. */
 @Composable
 private fun MetalChart(
     data: List<Float>,
@@ -979,9 +965,9 @@ private fun MetalChart(
     upperThreshold: Float,
     lineColor: Color,
     inkColor: Color,
-    metalColor: Color
+    metalColor: Color,
+    nowColor: Color
 ) {
-    val band = inkColor.copy(alpha = 0.12f)
     val normalLabel = stringResource(R.string.metal_detector_normal)
     val metalLabel = stringResource(R.string.metal_detector_metal)
     val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 12.sp.toPx() }
@@ -1006,12 +992,6 @@ private fun MetalChart(
             val inset = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset.toPx()
             val plotLeft = gutter
             val plotWidth = size.width - gutter
-            drawRoundRect(
-                Brush.verticalGradient(listOf(inkColor.copy(alpha = 0.05f), inkColor.copy(alpha = 0.05f))),
-                topLeft = androidx.compose.ui.geometry.Offset(plotLeft, 0f),
-                size = androidx.compose.ui.geometry.Size(plotWidth, size.height),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx())
-            )
             fun x(index: Int): Float {
                 val span = plotWidth - inset * 2
                 return if (data.size <= 1) {
@@ -1025,7 +1005,7 @@ private fun MetalChart(
                 return size.height - ((value - minimum) / range).coerceIn(0f, 1f) * size.height
             }
 
-            // Beyond the band is where metal shows: a soft tint above and below it, all clipped to the panel.
+            // Beyond the dashed limits is where metal shows; the gutter words name the bands.
             val top = y(upperThreshold)
             val bottom = y(lowerThreshold)
             val panel = androidx.compose.ui.graphics.Path().apply {
@@ -1037,16 +1017,6 @@ private fun MetalChart(
                 )
             }
             clipPath(panel) {
-            drawRect(
-                Brush.verticalGradient(listOf(metalColor.copy(alpha = 0.10f), metalColor.copy(alpha = 0f)), endY = top),
-                topLeft = androidx.compose.ui.geometry.Offset(plotLeft, 0f),
-                size = androidx.compose.ui.geometry.Size(plotWidth, top.coerceAtLeast(0f))
-            )
-            drawRect(
-                Brush.verticalGradient(listOf(metalColor.copy(alpha = 0f), metalColor.copy(alpha = 0.10f)), startY = bottom, endY = size.height),
-                topLeft = androidx.compose.ui.geometry.Offset(plotLeft, bottom),
-                size = androidx.compose.ui.geometry.Size(plotWidth, (size.height - bottom).coerceAtLeast(0f))
-            )
             val dash = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))
             listOf(top, bottom).forEach { yLine ->
                 drawLine(
@@ -1074,8 +1044,8 @@ private fun MetalChart(
             )
             val last = data.last()
             val now = androidx.compose.ui.geometry.Offset(x(data.lastIndex), y(last))
-            drawCircle(lineColor.copy(alpha = 0.18f), 14.dp.toPx(), now)
-            drawCircle(lineColor, 6.dp.toPx(), now)
+            // "Now" is the chart's one accent: a plain tertiary dot, no halo.
+            drawCircle(nowColor, 6.dp.toPx(), now)
             }
 
             // Word labels for the bands, in the gutter, right-aligned against the panel: no trace can cross them.
