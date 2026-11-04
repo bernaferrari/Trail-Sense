@@ -20,6 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,7 +57,10 @@ internal sealed interface ArticleBlock {
     data class Step(val number: String, val text: String) : ArticleBlock
     data class Note(val text: String) : ArticleBlock
     data class Heading(val text: String) : ArticleBlock
+    data class Image(val description: String, val path: String) : ArticleBlock
 }
+
+private val imagePattern = Regex("""^!\[(.*?)]\((.+?)\)$""")
 
 private val bulletPattern = Regex("""^(\s*)[-*•]\s+(.*)$""")
 private val stepPattern = Regex("""^\s*(\d+)[.)]\s+(.*)$""")
@@ -75,8 +81,14 @@ internal fun parseArticle(markdown: String): List<ArticleBlock> {
         val bullet = bulletPattern.find(line)
         val step = stepPattern.find(line)
         val heading = headingPattern.find(line.trim())
+        val image = imagePattern.find(line.trim())
         when {
             line.isBlank() -> flush()
+            image != null -> {
+                flush()
+                blocks += ArticleBlock.Image(image.groupValues[1], image.groupValues[2])
+            }
+
             heading != null -> {
                 flush()
                 blocks += ArticleBlock.Heading(heading.groupValues[1].trim())
@@ -202,6 +214,8 @@ internal fun ArticleBlocks(blocks: List<ArticleBlock>, modifier: Modifier = Modi
                     )
                 }
 
+                is ArticleBlock.Image -> ArticleImage(block)
+
                 is ArticleBlock.Note -> Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -219,6 +233,38 @@ internal fun ArticleBlocks(blocks: List<ArticleBlock>, modifier: Modifier = Modi
                 }
             }
         }
+    }
+}
+
+/** A picture from the app's assets, full width in a rounded frame on the quiet container. */
+@Composable
+private fun ArticleImage(block: ArticleBlock.Image) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val bitmap by androidx.compose.runtime.produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, block.path) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val asset = block.path.removePrefix("file:///android_asset/")
+                context.assets.open(asset).use { stream ->
+                    android.graphics.BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                }
+            }.getOrNull()
+        }
+    }
+    val image = bitmap ?: return
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        androidx.compose.foundation.Image(
+            bitmap = image,
+            contentDescription = block.description.ifBlank { null },
+            contentScale = androidx.compose.ui.layout.ContentScale.FillWidth,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TrailSenseSpacing.sm)
+                .clip(RoundedCornerShape(14.dp))
+        )
     }
 }
 

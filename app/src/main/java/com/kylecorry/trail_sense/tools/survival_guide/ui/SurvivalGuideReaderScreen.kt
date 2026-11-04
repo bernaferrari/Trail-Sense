@@ -1,7 +1,22 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.tools.guide.ui.ArticleBody
+import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
+import com.kylecorry.trail_sense.tools.weather.ui.SkyPill
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -105,7 +120,8 @@ fun SurvivalGuideReaderScreen(
             block is ReaderBlock.Sections && block.groups.any { it.index == target }
         } ?: return@LaunchedEffect
         if (blockIndex >= 0) {
-            listState.scrollToItem(blockIndex, offset)
+            // The hero sits before the first block.
+            listState.scrollToItem(blockIndex + 1, offset)
         }
     }
 
@@ -146,23 +162,31 @@ fun SurvivalGuideReaderScreen(
             return@TrailSensePage
         }
 
+        item(key = "hero") {
+            ReaderHero(chapter, sections = blocks.sumOf { (it as? ReaderBlock.Sections)?.groups?.size ?: 0 })
+        }
+
+        var sectionNumber = 0
         blocks.forEachIndexed { blockIndex, block ->
             when (block) {
                 is ReaderBlock.Text -> item(key = "text_$blockIndex") {
                     SelectionContainer {
-                        MarkdownText(
-                            text = block.markdown,
-                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.xs),
-                            style = MaterialTheme.typography.bodyLarge
+                        ArticleBody(
+                            markdown = block.markdown,
+                            modifier = Modifier.padding(horizontal = TrailSenseSpacing.xs)
                         )
                     }
                 }
 
-                is ReaderBlock.Sections -> item(key = "sections_$blockIndex") {
+                is ReaderBlock.Sections -> {
+                    val firstNumber = sectionNumber + 1
+                    sectionNumber += block.groups.size
+                    item(key = "sections_$blockIndex") {
                     TrailSenseRowGroup {
-                        block.groups.forEach { (index, sections) ->
+                        block.groups.forEachIndexed { groupIndex, (index, sections) ->
                             row { position ->
                                 ReaderSection(
+                                    number = firstNumber + groupIndex,
                                     sections = sections,
                                     position = position,
                                     expanded = expandedSections[index] ?: false,
@@ -180,6 +204,7 @@ fun SurvivalGuideReaderScreen(
                             }
                         }
                     }
+                    }
                 }
             }
         }
@@ -188,6 +213,7 @@ fun SurvivalGuideReaderScreen(
 
 @Composable
 private fun ReaderSection(
+    number: Int,
     sections: List<TextSection>,
     position: TrailSenseGroupPosition,
     expanded: Boolean,
@@ -209,16 +235,25 @@ private fun ReaderSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 64.dp)
+                .heightIn(min = 68.dp)
                 .clickable(role = Role.Button) { onExpandedChange(!expanded) }
                 .semantics { stateDescription = expandedLabel }
-                .padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.md),
+                .padding(start = TrailSenseSpacing.md, end = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            TrailSenseShapeBadge(
+                text = number.toString(),
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                size = 36.dp,
+                containerColor = if (expanded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = if (expanded) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = if (expanded) FontWeight.SemiBold else FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Icon(
@@ -237,14 +272,14 @@ private fun ReaderSection(
                 fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
         ) {
             SelectionContainer {
-                MarkdownText(
-                    text = buildSectionMarkdown(sections),
+                ArticleBody(
+                    markdown = buildSectionMarkdown(sections),
                     modifier = Modifier.padding(
                         start = TrailSenseSpacing.lg,
                         end = TrailSenseSpacing.lg,
-                        bottom = TrailSenseSpacing.lg
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
+                        top = TrailSenseSpacing.xs,
+                        bottom = TrailSenseSpacing.xl
+                    )
                 )
             }
         }
@@ -297,6 +332,47 @@ private fun buildSectionMarkdown(sections: List<TextSection>): String {
     val first = sections.firstOrNull() ?: return ""
     return TextUtils.removeMarkdownComments(first.content) + "\n" +
         sections.drop(1).joinToString("\n") {
-            it.toMarkdown(shouldUppercaseTitle = true)
+            it.toMarkdown()
         }
+}
+
+/** The chapter's hero: its icon in a big turning cookie, the chapter name and how many sections it holds. */
+@Composable
+private fun ReaderHero(chapter: Chapter, sections: Int) {
+    Surface(
+        shape = RoundedCornerShape(TrailSenseShape.hero),
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(Modifier.padding(TrailSenseSpacing.xl), verticalAlignment = Alignment.CenterVertically) {
+            SkyFocalShape(
+                icon = chapter.icon,
+                shape = MaterialShapes.Cookie12Sided.toShape(),
+                size = 84.dp,
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+                Text(
+                    stringResource(R.string.survival_guide),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.78f)
+                )
+                Text(
+                    chapter.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (sections > 0) {
+                    SkyPill(
+                        androidx.compose.ui.res.pluralStringResource(R.plurals.sky_sections, sections, sections),
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary
+                    )
+                }
+            }
+        }
+    }
 }
