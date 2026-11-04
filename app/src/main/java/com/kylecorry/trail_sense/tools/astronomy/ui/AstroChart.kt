@@ -117,6 +117,7 @@ class AstroChart(
         val dayColor = status.cautionContainer.copy(alpha = 0.45f)
         val nowColor = scheme.onSurface.copy(alpha = 0.35f)
         val horizonColor = scheme.outline
+        val labelBackground = scheme.surfaceContainerLow
         // The horizon's name sits just under its line at the right end, inside the night band, away from the markers
         // (which start the day at the left).
         val horizonPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -182,12 +183,18 @@ class AstroChart(
             }
 
             drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
-            drawContext.canvas.nativeCanvas.drawText(
-                context.getString(R.string.horizon),
-                right - 6.dp.toPx(),
-                toScreen(Vector2(0f, 0f), left, right, top, bottom).y + 14.dp.toPx(),
-                horizonPaint
+            // The label sits on a small pill of the card's colour so a curve passing under it never cuts it.
+            val horizonLabel = context.getString(R.string.horizon)
+            val labelBaseline = toScreen(Vector2(0f, 0f), left, right, top, bottom).y + 16.dp.toPx()
+            val labelWidth = horizonPaint.measureText(horizonLabel)
+            val pad = 6.dp.toPx()
+            drawRoundRect(
+                labelBackground,
+                topLeft = Offset(right - 6.dp.toPx() - labelWidth - pad, labelBaseline - horizonPaint.textSize - pad / 2),
+                size = androidx.compose.ui.geometry.Size(labelWidth + pad * 2, horizonPaint.textSize + pad * 1.5f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(50f, 50f)
             )
+            drawContext.canvas.nativeCanvas.drawText(horizonLabel, right - 6.dp.toPx(), labelBaseline, horizonPaint)
 
             drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.3f), left, right, top, bottom)
             drawArea(moonLine, moonPosition, moonColor.copy(alpha = 0.14f), left, right, top, bottom)

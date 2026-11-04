@@ -1118,7 +1118,7 @@ private fun WeatherPressureChart(
             Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxHeight()
-                .width(40.dp)
+                .width(60.dp)
                 .padding(vertical = 4.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.End
@@ -1133,7 +1133,9 @@ private fun WeatherPressureChart(
                     stringResource(label),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                    color = textColor
+                    color = textColor,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
 
@@ -1364,8 +1366,8 @@ private fun WeatherHeroCard(
                 Surface(
                     onClick = { alert.onClick?.invoke() },
                     shape = RoundedCornerShape(50),
-                    color = alertColors.accent,
-                    contentColor = alertColors.onAccent,
+                    color = alertColors.container,
+                    contentColor = alertColors.content,
 
                     modifier = Modifier
                         .padding(top = TrailSenseSpacing.md)
