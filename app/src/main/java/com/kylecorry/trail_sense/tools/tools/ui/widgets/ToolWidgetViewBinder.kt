@@ -80,11 +80,7 @@ class ToolWidgetViewBinder(
                     }
                     onMain {
                         tryOrLog {
-                            setWidgetContent(layout, content)
-                            updateWidgetSnapshot(
-                                widgetId,
-                                renderWidget(layout, widget.size, height)
-                            )
+                            updateWidgetSnapshot(widgetId, content)
                         }
                     }
                 }
@@ -92,8 +88,7 @@ class ToolWidgetViewBinder(
             }
 
             this.widgets.add(WidgetInstance(widget, layout, height, updateFunction = updateFunction))
-            setWidgetContent(layout, widget.widgetView.getLoadingContent(context, null))
-            updateWidgetSnapshot(widgetId, renderWidget(layout, widget.size, height))
+            updateWidgetSnapshot(widgetId, widget.widgetView.getLoadingContent(context, null))
         }
 
         this.widgets.forEach {
@@ -160,34 +155,13 @@ class ToolWidgetViewBinder(
         return true
     }
 
-    private fun setWidgetContent(layout: FrameLayout, content: ToolWidgetContent?) {
-        val child = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            ToolWidgetComposeContent(content, Modifier.fillMaxSize())
-        }
-        layout.removeAllViews()
-        layout.addView(child)
-    }
-
-    private fun renderWidget(
-        layout: FrameLayout,
-        size: ToolSummarySize,
-        height: Int
-    ): Bitmap {
-        val width = when (size) {
-            ToolSummarySize.Half -> Resources.dp(context, 172f).toInt()
-            ToolSummarySize.Full, ToolSummarySize.TallFull -> Resources.dp(context, 352f).toInt()
-        }
-        return Views.renderViewAsBitmap(layout, width, height)
-    }
-
-    private fun updateWidgetSnapshot(widgetId: String, bitmap: Bitmap) {
+    // The sheet draws each widget's content live; rendering a detached ComposeView into a bitmap crashed (a Compose
+    // view can't compose before it is attached to a window).
+    private fun updateWidgetSnapshot(widgetId: String, content: ToolWidgetContent?) {
         val snapshots = widgets.mapNotNull {
             val existing = it.snapshot
             val next = if (it.widget.id == widgetId) {
-                ToolWidgetSnapshot(it.widget.id, it.widget.size, bitmap)
+                ToolWidgetSnapshot(it.widget.id, it.widget.size, content)
             } else {
                 existing
             }
@@ -209,5 +183,5 @@ class ToolWidgetViewBinder(
 data class ToolWidgetSnapshot(
     val id: String,
     val size: ToolSummarySize,
-    val bitmap: Bitmap
+    val content: ToolWidgetContent?
 )

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetComposeContent
 import android.content.Context
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
@@ -243,11 +244,7 @@ private fun WidgetsContent(widgets: List<ToolWidgetSnapshot>) {
                     .fillMaxWidth()
                     .aspectRatio(352f / 306f)
             }
-            Image(
-                bitmap = widget.bitmap.asImageBitmap(),
-                contentDescription = null,
-                modifier = modifier.padding(4.dp)
-            )
+            ToolWidgetComposeContent(widget.content, modifier.padding(4.dp))
         }
     }
 }
