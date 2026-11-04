@@ -87,12 +87,17 @@ class RadarCompassView(
             requestRedraw()
         }
 
+    private var sunBackColor: Int = Color.YELLOW
+    private var moonBackColor: Int = Color.DKGRAY
+
     @Composable
     override fun Content(modifier: Modifier) {
         primaryColor = MaterialTheme.colorScheme.primary.toArgb()
         secondaryColor = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
         textColor = MaterialTheme.colorScheme.onSurface.toArgb()
         turnColor = MaterialTheme.colorScheme.tertiary.toArgb()
+        sunBackColor = MaterialTheme.colorScheme.tertiaryContainer.toArgb()
+        moonBackColor = MaterialTheme.colorScheme.inverseSurface.toArgb()
         Canvas(
             modifier = modifier
                 .fillMaxSize()
@@ -362,6 +367,13 @@ class RadarCompassView(
         nativeCanvas.save()
         nativeCanvas.rotate(reference.bearing, centerPixel.x, centerPixel.y)
         nativeCanvas.translate(centerPixel.x, iconSize / 2f + dp(1f))
+        // The sun and moon ride the rim on a small disc of their own (a warm day disc, a night disc for the moon),
+        // so the moon's pale art never reads as a hole in the dial.
+        val back = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = if (reference.icon == TrailIcons.Sun) sunBackColor else moonBackColor
+            alpha = (255 * reference.opacity).toInt()
+        }
+        nativeCanvas.drawCircle(0f, 0f, sizeDp / 2f + dp(3f), back)
         nativeCanvas.rotate(reference.rotation)
         nativeCanvas.drawBitmap(bitmap, -bitmap.width / 2f, -bitmap.height / 2f, paint)
         nativeCanvas.restore()
@@ -391,7 +403,18 @@ class RadarCompassView(
             paint.alpha = 255
             val ring = compassSize * 0.155f + stroke / 2f + dp(4f)
             arcRect.inset(ring, ring)
-            nativeCanvas.drawArc(arcRect, azimuth - 90, sweep, false, paint)
+            // The rounded caps end exactly on the wedge's edges instead of overhanging them.
+            val capDegrees = Math.toDegrees((stroke / 2f / (arcRect.width() / 2f)).toDouble()).toFloat()
+            if (kotlin.math.abs(sweep) > capDegrees * 2) {
+                val direction = kotlin.math.sign(sweep)
+                nativeCanvas.drawArc(
+                    arcRect,
+                    azimuth - 90 + direction * capDegrees,
+                    sweep - direction * capDegrees * 2,
+                    false,
+                    paint
+                )
+            }
             paint.style = Paint.Style.FILL
             paint.strokeCap = Paint.Cap.BUTT
             arcRect.set(inset, inset, inset + compassSize, inset + compassSize)

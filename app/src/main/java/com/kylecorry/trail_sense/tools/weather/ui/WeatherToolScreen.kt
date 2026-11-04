@@ -768,7 +768,12 @@ private fun WeatherPressureCard(
     ) {
         Column(Modifier.padding(TrailSenseSpacing.lg)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(TrailIcons.Barometer, contentDescription = null, modifier = Modifier.size(18.dp))
+                val hpa = pressure?.trailingText?.let(::pressureHpa)
+                if (hpa != null) {
+                    PressureGaugeIcon(hpa, scheme.onPrimaryContainer, Modifier.size(22.dp))
+                } else {
+                    Icon(TrailIcons.Barometer, contentDescription = null, modifier = Modifier.size(18.dp))
+                }
                 Spacer(Modifier.width(TrailSenseSpacing.xs))
                 Text(
                     stringResource(R.string.pressure),
@@ -1521,5 +1526,57 @@ private class StateLoadingIndicator(
 
     override fun hide() {
         setLoading(false)
+    }
+}
+
+
+/** The reading in hPa from its formatted text ("1013.2 hPa", "29.92 in", "760 mm"...), or null when unknown. */
+private fun pressureHpa(text: String): Float? {
+    val number = text.substringBefore(' ').replace(",", ".").toFloatOrNull() ?: return null
+    val unit = text.substringAfter(' ', "").lowercase()
+    return when {
+        unit.startsWith("in") -> number * 33.8639f
+        unit.startsWith("mm") -> number * 1.33322f
+        unit.startsWith("psi") -> number * 68.9476f
+        else -> number
+    }
+}
+
+/**
+ * A tiny barometer whose needle points at the reading: low pressure (stormy, 970 hPa) to the left, high (fair,
+ * 1050 hPa) to the right, with the arc filled up to the needle.
+ */
+@Composable
+private fun PressureGaugeIcon(hpa: Float, color: Color, modifier: Modifier = Modifier) {
+    val fraction = ((hpa - 970f) / (1050f - 970f)).coerceIn(0f, 1f)
+    val animated by androidx.compose.animation.core.animateFloatAsState(
+        fraction,
+        MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "gauge"
+    )
+    Canvas(modifier) {
+        val stroke = size.minDimension * 0.14f
+        val inset = stroke / 2f + size.minDimension * 0.04f
+        val arcSize = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
+        val topLeft = androidx.compose.ui.geometry.Offset(inset, inset + size.height * 0.08f)
+        val start = 150f
+        val sweep = 240f
+        val cap = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawArc(color.copy(alpha = 0.28f), start, sweep, false, topLeft, arcSize, style = cap)
+        drawArc(color, start, sweep * animated, false, topLeft, arcSize, style = cap)
+        val center = androidx.compose.ui.geometry.Offset(topLeft.x + arcSize.width / 2f, topLeft.y + arcSize.height / 2f)
+        val angle = Math.toRadians((start + sweep * animated).toDouble())
+        val length = arcSize.width / 2f * 0.62f
+        drawLine(
+            color,
+            center,
+            androidx.compose.ui.geometry.Offset(
+                center.x + (kotlin.math.cos(angle) * length).toFloat(),
+                center.y + (kotlin.math.sin(angle) * length).toFloat()
+            ),
+            strokeWidth = stroke * 0.9f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        drawCircle(color, radius = stroke * 0.9f, center = center)
     }
 }

@@ -267,6 +267,8 @@ class NavigationSheetView(private val context: Context) {
                     if (state.showCancel) {
                         FilledTonalIconButton(
                             onClick = ::requestCancelNavigation,
+                            // Top-aligned with the name, like a sheet's close, rather than floating mid-card.
+                            modifier = Modifier.align(Alignment.Top),
                             colors = androidx.compose.material3.IconButtonDefaults.filledTonalIconButtonColors(
                                 containerColor = scheme.surfaceContainerHighest,
                                 contentColor = scheme.onSurface
