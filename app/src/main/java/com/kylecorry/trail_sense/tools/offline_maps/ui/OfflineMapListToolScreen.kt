@@ -717,7 +717,8 @@ private fun OfflineMapListScreen(
                 item(key = "no_results") {
                     TrailSenseEmptyState(
                         icon = TrailIcons.Search,
-                        title = stringResource(R.string.no_results)
+                        title = stringResource(R.string.no_results),
+                        modifier = Modifier.fillParentMaxHeight(0.9f)
                     )
                 }
             }

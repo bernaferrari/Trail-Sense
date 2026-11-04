@@ -81,7 +81,9 @@ internal fun GuideListScreen(
                     description = stringResource(R.string.sky_guides_no_results, query),
                     actionLabel = stringResource(R.string.guide_clear_search),
                     onAction = { query = "" },
-                    modifier = Modifier.animateItem()
+                    modifier = Modifier
+                        .fillParentMaxHeight(0.9f)
+                        .animateItem()
                 )
             }
         }

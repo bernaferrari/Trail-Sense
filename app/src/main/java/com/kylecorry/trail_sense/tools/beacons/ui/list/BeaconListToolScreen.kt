@@ -885,7 +885,7 @@ private fun BeaconListScreen(
                         // No button here: the create FAB (beacon, group, QR, GPX) is the one action.
                         tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
                         modifier = Modifier
-                            .fillParentMaxHeight(if (isSearching) 0.6f else 0.85f)
+                            .fillParentMaxHeight(0.9f)
                             .testTag("beacon_empty_text")
                     )
                 }

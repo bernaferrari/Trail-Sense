@@ -698,7 +698,9 @@ private fun PathsScreen(
                         description = if (isSearching) null else stringResource(R.string.paths_empty_description),
                         // No button here: Backtrack's switch above and the add FAB are the actions.
                         tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
-                        modifier = Modifier.testTag("waypoints_empty_text")
+                        modifier = Modifier
+                            .fillParentMaxHeight(0.9f)
+                            .testTag("waypoints_empty_text")
                     )
                 }
             }

@@ -466,7 +466,9 @@ private fun FieldGuideScreen(
                     icon = Icons.AutoMirrored.Rounded.MenuBook,
                     title = stringResource(R.string.no_pages),
                     description = noPagesDescription,
-                    modifier = Modifier.testTag("empty_text"),
+                    modifier = Modifier
+                        .fillParentMaxHeight(0.9f)
+                        .testTag("empty_text"),
                     actionLabel = stringResource(R.string.create_page),
                     actionIcon = Icons.Rounded.Add,
                     onAction = onCreate

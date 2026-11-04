@@ -849,7 +849,7 @@ private fun MapEmptyState(
                 actionLabel = stringResource(R.string.add_offline_map),
                 actionIcon = TrailSenseIcons.Filled.Add,
                 onAction = onAddMap,
-                modifier = Modifier.fillParentMaxHeight()
+                modifier = Modifier.fillParentMaxHeight(0.9f)
             )
         }
     }
