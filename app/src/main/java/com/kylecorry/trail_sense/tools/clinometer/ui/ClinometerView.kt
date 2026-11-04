@@ -93,9 +93,10 @@ class ClinometerView : IClinometerView {
 }
 
 /**
- * The side clinometer: a twelve-sided cookie dial in the primary tone. The avalanche bands run round the rim as
- * thick rounded arcs in the good, caution and error colours, the needle is a solid primary hand, and a held sweep
- * fills as a soft wedge.
+ * The side clinometer: one plain round dial (the object carries the colour, there is no backdrop). One track runs
+ * round the rim in surfaceContainerHighest; only the avalanche zone the needle is in lights up on it, in error for
+ * the 30-45° danger zone and tertiary for 45-60°. The needle is a solid primary hand and a held sweep fills as a soft
+ * wedge.
  */
 @Composable
 private fun ClinometerContent(
@@ -106,12 +107,11 @@ private fun ClinometerContent(
     val context = LocalContext.current
     val formatter = FormatService.getInstance(context)
     val scheme = MaterialTheme.colorScheme
-    val status = trailSenseStatusColors()
     val ink = scheme.onSurface
     val needleColor = scheme.primary
     val hub = scheme.onPrimary
-    val good = status.good
-    val caution = status.caution
+    val track = scheme.surfaceContainerHighest
+    val caution = scheme.tertiary
     val danger = scheme.error
     val labelSize = with(LocalDensity.current) { 13.sp.toPx() }
     // A springy needle that always takes the short way round: the target is unwrapped against the current value.
@@ -138,17 +138,11 @@ private fun ClinometerContent(
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                modifier = Modifier.fillMaxSize(),
-                shape = MaterialShapes.Cookie12Sided.toShape(),
-                color = scheme.primaryContainer
-            ) {}
-            // A bright face inside the scallops, so labels and needle read at full contrast.
-            Surface(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(22.dp),
                 shape = androidx.compose.foundation.shape.CircleShape,
-                color = scheme.surfaceContainerLowest
+                color = scheme.surfaceContainerLow
             ) {}
             Canvas(
                 modifier = Modifier
@@ -162,29 +156,35 @@ private fun ClinometerContent(
                 val bandTopLeft = Offset(center.x - bandRadius, center.y - bandRadius)
                 val bandSize = Size(bandRadius * 2, bandRadius * 2)
 
-                fun band(start: Float, stop: Float, color: Color, index: Int) {
-                    // A hair of gap at each end lets the rounded caps read as separate bands.
-                    val gap = 3f
-                    val active = index == activeBand
+                // One track round the rim.
+                drawCircle(track, bandRadius, center, style = Stroke(width = bandWidth))
+
+                fun band(start: Float, stop: Float, color: Color) {
                     drawArc(
-                        color = if (active) color else color.copy(alpha = 0.55f),
-                        startAngle = min(start, stop) + gap,
-                        sweepAngle = abs(stop - start) - gap * 2,
+                        color = color,
+                        startAngle = min(start, stop),
+                        sweepAngle = abs(stop - start),
                         useCenter = false,
                         topLeft = bandTopLeft,
                         size = bandSize,
-                        style = Stroke(width = if (active) bandWidth * 1.5f else bandWidth * 0.8f, cap = StrokeCap.Round)
+                        style = Stroke(width = bandWidth, cap = StrokeCap.Round)
                     )
                 }
 
-                // The avalanche zones: 30-45° high risk, 45-60° moderate, the rest low; mirrored on both sides.
-                listOf(0f, 180f).forEach { base ->
-                    listOf(1f, -1f).forEach { sign ->
-                        band(base + sign * 30f, base + sign * 45f, danger, 0)
-                        band(base + sign * 45f, base + sign * 60f, caution, 1)
-                        band(base + sign * 60f, base + sign * 90f, good, 2)
+                // Only the avalanche zone the needle is in shows, mirrored on both sides: 30-45° is the danger zone,
+                // 45-60° calls for attention, and a low-risk slope leaves the track plain.
+                val lit = when (activeBand) {
+                    0 -> 30f to 45f
+                    1 -> 45f to 60f
+                    else -> null
+                }
+                if (lit != null) {
+                    val color = if (activeBand == 0) danger else caution
+                    listOf(0f, 180f).forEach { base ->
+                        listOf(1f, -1f).forEach { sign ->
+                            band(base + sign * lit.first, base + sign * lit.second, color)
+                        }
                     }
-                    band(base - 30f, base + 30f, good, 2)
                 }
 
                 // Ticks every 10°, longer every 30°.
@@ -212,7 +212,8 @@ private fun ClinometerContent(
                     fontFeatureSettings = "tnum"
                 }
                 // Upright labels: 90° at the top and bottom, 0° at the sides.
-                val labelRadius = tickOuter - 14.dp.toPx() - labelSize / 2f
+                // Clear of the long ticks, so no label touches one.
+                val labelRadius = tickOuter - 12.dp.toPx() - 8.dp.toPx() - labelSize * 0.6f
                 for (i in 0 until 360 step 30) {
                     val radians = Math.toRadians((i - 90).toDouble())
                     val fromHorizontal = abs(((i % 180) - 90).toFloat())
@@ -239,7 +240,8 @@ private fun ClinometerContent(
                     drawLine(
                         needleColor,
                         Offset(center.x, center.y + radius * 0.14f),
-                        Offset(center.x, center.y - tickOuter + 4.dp.toPx()),
+                        // The hand stops short of the labels, so it never covers "90°".
+                        Offset(center.x, center.y - labelRadius + labelSize * 1.2f),
                         7.dp.toPx(),
                         StrokeCap.Round
                     )

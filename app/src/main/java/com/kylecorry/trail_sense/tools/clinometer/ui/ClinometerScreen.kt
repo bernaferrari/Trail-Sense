@@ -734,6 +734,7 @@ private fun ClinometerHost(
     val scheme = MaterialTheme.colorScheme
     TrailSenseInstrumentScaffold(
         title = stringResource(R.string.clinometer_title),
+        largeTitle = true,
         modifier = modifier
     ) {
         // Touch-and-hold anywhere below the bar locks the reading, as before.
@@ -809,20 +810,18 @@ private fun ClinometerHost(
                 if (views.clinometerInstructions.isVisible) {
                     views.clinometer.Preview(Modifier.fillMaxSize().alpha(0.55f))
                 }
-                if (instruction != null) {
-                    ClinometerInstruction(
-                        icon = instruction,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = TrailSenseSpacing.sm)
-                    )
-                }
             }
 
-            ClinometerReading(
-                views.clinometerTitle,
-                showVerdict = instruction == null
-            )
+            // Idle (held the wrong way): the dial rests dimmed above and one hint line takes the reading's place,
+            // with no dash and no headline. Measuring: the incline and the slope verdict.
+            if (instruction != null) {
+                ClinometerInstruction(
+                    icon = instruction,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            } else {
+                ClinometerReading(views.clinometerTitle, showVerdict = true)
+            }
 
             // The controls as one group: the mode, the avalanche risk of this slope, and the height prompt.
             val risk = views.avalancheRisk
@@ -914,27 +913,25 @@ private fun createClinometerViews(context: Context): ClinometerViews {
     )
 }
 
-/** Shown while the phone is held the wrong way: a calm secondary hint row over the dimmed dial. */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+/** Shown while the phone is held the wrong way: one plain hint line (how to hold it) under the resting dial. */
 @Composable
 private fun ClinometerInstruction(icon: ImageVector, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier,
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+    Row(
+        modifier = modifier.padding(vertical = TrailSenseSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(TrailSenseSpacing.md))
-            Text(
-                text = stringResource(R.string.clinometer_rotate_device),
-                style = MaterialTheme.typography.titleMedium,
-                )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(TrailSenseSpacing.sm))
+        Text(
+            text = stringResource(R.string.clinometer_rotate_device),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
