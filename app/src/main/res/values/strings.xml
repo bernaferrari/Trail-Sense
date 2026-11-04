@@ -2149,4 +2149,9 @@
     <!-- Family redesign: beacons, notes -->
     <string name="note_more_options">More options</string>
     <string name="notes_empty_description">Write down anything you want to keep with you on the trail.</string>
+    <string name="beacon_more_options">More options</string>
+    <string name="beacon_search_clear">Clear search</string>
+    <string name="beacon_create_menu_close">Close menu</string>
+    <string name="beacon_list_empty_description">Save a place to find your way back to it.</string>
+    <string name="beacon_direction_value" translatable="false">%1$s %2$s</string>
 </resources>

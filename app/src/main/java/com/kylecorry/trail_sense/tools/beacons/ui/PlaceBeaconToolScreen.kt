@@ -2,35 +2,33 @@ package com.kylecorry.trail_sense.tools.beacons.ui
 
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -49,9 +47,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -383,6 +388,13 @@ private class PlaceBeaconController(private val host: TrailSenseDestinationHost)
     }
 }
 
+/**
+ * Create or edit a beacon: each field is a row of a group (the field is the row, no outlines), grouped by what it
+ * says about the beacon: its name, where it is, how it looks on the map, and notes. Distance and bearing rows only
+ * appear when "create at distance" is on, and the location group grows to make room for them. Save sits in the top
+ * bar so it is always reachable.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlaceBeaconScreen(
     data: CreateBeaconData,
@@ -410,215 +422,300 @@ private fun PlaceBeaconScreen(
     onCameraBearingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .testTag("create_beacon_scroll")
-                .padding(TrailSenseSpacing.screen)
-                .padding(bottom = TrailSenseSpacing.xxl),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-        ) {
-            Text(
-                text = stringResource(R.string.create_beacon),
-                modifier = Modifier.testTag("create_beacon_title"),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val sizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
+    val appearanceTitle = stringResource(R.string.appearance)
 
-            // Details group
-            SectionLabel(stringResource(R.string.name))
-            TrailSenseCard {
-                Row(verticalAlignment = Alignment.Top) {
-                    TonalIconChip(icon = R.drawable.ic_beacon)
-                    Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
-                    TextInput(
-                        text = data.name,
-                        label = stringResource(R.string.name),
-                        tag = "beacon_name",
-                        modifier = Modifier.weight(1f),
-                        errorText = stringResource(R.string.beacon_invalid_name),
-                        validateOnBlur = { it.isNotBlank() },
-                        onTextChange = onNameChange
-                    )
+    Box(modifier = modifier.testTag("create_beacon_title")) {
+        TrailSensePage(
+            title = stringResource(R.string.create_beacon),
+            onBack = { dispatcher?.onBackPressed() },
+            backLabel = stringResource(R.string.back),
+            modifier = Modifier.testTag("create_beacon_scroll"),
+            actions = {
+                Button(
+                    onClick = onSave,
+                    enabled = canSave,
+                    modifier = Modifier
+                        .padding(end = TrailSenseSpacing.sm)
+                        .testTag("create_beacon_save_btn")
+                ) {
+                    Text(stringResource(R.string.save))
                 }
             }
-
-            // Location group
-            SectionLabel(stringResource(R.string.location))
-            TrailSenseCard {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
-                    CoordinateInput(
-                        coordinate = data.coordinate,
-                        onCoordinateChange = onCoordinateChange,
-                        autoFillRequest = locationAutofillRequest,
-                        onAutoLocationClick = onAutoLocationClick,
-                        onBeaconSelected = onCoordinateBeaconSelected
-                    )
-                    ElevationInput(
-                        elevation = data.elevation,
-                        onElevationChange = onElevationChange,
-                        autoFillRequest = elevationAutofillRequest
-                    )
-                    CreateAtDistanceSwitch(
-                        checked = data.createAtDistance,
-                        onCheckedChange = onCreateAtDistanceChange
-                    )
-                    if (data.createAtDistance) {
-                        DistanceInput(
-                            distance = data.distanceTo,
-                            units = hikingDistanceUnits,
-                            onDistanceChange = onDistanceChange
-                        )
-                        BearingInput(
-                            bearing = data.bearingTo,
-                            trueNorth = data.bearingIsTrueNorth,
-                            onBearingChange = onBearingChange,
-                            compassBearingText = compassBearingText,
-                            hasCompass = hasCompass,
-                            onCompassClick = onCompassBearingClick,
-                            onCameraClick = onCameraBearingClick
+        ) {
+            item(key = "name") {
+                TrailSenseRowGroup {
+                    row { position ->
+                        BeaconNameField(
+                            name = data.name,
+                            position = position,
+                            onNameChange = onNameChange
                         )
                     }
                 }
             }
 
-            // Appearance group
-            SectionLabel(stringResource(R.string.appearance))
-            TrailSenseCard {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
-                    PickerRow(
-                        tag = "beacon_group_picker",
-                        text = groupName,
-                        icon = R.drawable.ic_beacon_group,
-                        iconTint = AppColor.Gray.color,
-                        onClick = onGroupClick
+            item(key = "location") {
+                TrailSenseRowGroup(
+                    title = stringResource(R.string.location),
+                    modifier = Modifier.animateContentSize(sizeSpec)
+                ) {
+                    row { position ->
+                        CoordinateInput(
+                            coordinate = data.coordinate,
+                            position = position,
+                            onCoordinateChange = onCoordinateChange,
+                            autoFillRequest = locationAutofillRequest,
+                            onAutoLocationClick = onAutoLocationClick,
+                            onBeaconSelected = onCoordinateBeaconSelected
+                        )
+                    }
+                    row { position ->
+                        ElevationInput(
+                            elevation = data.elevation,
+                            position = position,
+                            onElevationChange = onElevationChange,
+                            autoFillRequest = elevationAutofillRequest
+                        )
+                    }
+                    row { position ->
+                        TrailSenseSwitchRow(
+                            label = stringResource(R.string.create_at_distance),
+                            checked = data.createAtDistance,
+                            onCheckedChange = onCreateAtDistanceChange,
+                            position = position,
+                            modifier = Modifier.testTag("create_at_distance")
+                        )
+                    }
+                    if (data.createAtDistance) {
+                        row { position ->
+                            DistanceInput(
+                                distance = data.distanceTo,
+                                units = hikingDistanceUnits,
+                                position = position,
+                                onDistanceChange = onDistanceChange
+                            )
+                        }
+                        row { position ->
+                            TrailSenseGroupCard(position = position) {
+                                BearingInput(
+                                    bearing = data.bearingTo,
+                                    trueNorth = data.bearingIsTrueNorth,
+                                    onBearingChange = onBearingChange,
+                                    compassBearingText = compassBearingText,
+                                    hasCompass = hasCompass,
+                                    onCompassClick = onCompassBearingClick,
+                                    onCameraClick = onCameraBearingClick
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            trailSenseSection(key = "appearance", title = appearanceTitle) {
+                row { position ->
+                    TrailSenseListItem(
+                        title = groupName,
+                        subtitle = stringResource(R.string.group),
+                        icon = painterResource(R.drawable.ic_beacon_group),
+                        position = position,
+                        onClick = onGroupClick,
+                        modifier = Modifier.testTag("beacon_group_picker")
                     )
-                    PickerRow(
-                        tag = "beacon_color_picker",
-                        text = stringResource(R.string.color),
-                        icon = R.drawable.bubble,
-                        iconTint = data.color.color,
-                        onClick = onColorClick
+                }
+                row { position ->
+                    TrailSenseListItem(
+                        title = stringResource(R.string.color),
+                        icon = painterResource(R.drawable.bubble),
+                        iconTint = Color(data.color.color),
+                        position = position,
+                        onClick = onColorClick,
+                        modifier = Modifier.testTag("beacon_color_picker")
                     )
-                    PickerRow(
-                        tag = "beacon_icon_picker",
-                        text = stringResource(R.string.icon),
-                        icon = data.icon?.icon ?: R.drawable.bubble,
-                        iconTint = null,
-                        onClick = onIconClick
+                }
+                row { position ->
+                    TrailSenseListItem(
+                        title = stringResource(R.string.icon),
+                        icon = painterResource(data.icon?.icon ?: R.drawable.bubble),
+                        iconTint = Color(data.color.color),
+                        position = position,
+                        onClick = onIconClick,
+                        modifier = Modifier.testTag("beacon_icon_picker")
                     )
                 }
             }
 
-            // Notes group
-            SectionLabel(stringResource(R.string.beacon_comment))
-            TrailSenseCard {
-                Row(verticalAlignment = Alignment.Top) {
-                    TonalIconChip(icon = R.drawable.ic_help)
-                    Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
-                    TextInput(
-                        text = data.notes,
-                        label = stringResource(R.string.beacon_comment),
-                        tag = "comment",
-                        modifier = Modifier.weight(1f),
-                        singleLine = false,
-                        onTextChange = onNotesChange
-                    )
+            item(key = "notes") {
+                TrailSenseRowGroup {
+                    row { position ->
+                        BeaconFormField(
+                            value = data.notes,
+                            onValueChange = onNotesChange,
+                            label = stringResource(R.string.beacon_comment),
+                            position = position,
+                            singleLine = false,
+                            modifier = Modifier.testTag("comment")
+                        )
+                    }
                 }
             }
-
-            TrailSenseButton(
-                text = stringResource(android.R.string.ok),
-                onClick = onSave,
-                enabled = canSave,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("create_beacon_save_btn")
-            )
         }
     }
 }
 
+/**
+ * One field of the form as a row of its group: the group's tone and silhouette, no outline or underline, the label
+ * inside. Errors still read in the error color with a supporting line.
+ */
 @Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary
+private fun BeaconFormField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    errorText: String? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null
+) {
+    val container = MaterialTheme.colorScheme.surfaceContainerLow
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        label = { Text(label) },
+        isError = isError,
+        supportingText = if (isError && errorText != null) {
+            { Text(errorText) }
+        } else {
+            null
+        },
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        singleLine = singleLine,
+        minLines = if (singleLine) 1 else 4,
+        enabled = enabled,
+        shape = trailSenseGroupShape(position),
+        keyboardOptions = KeyboardOptions(
+            capitalization = if (keyboardType == KeyboardType.Text) {
+                KeyboardCapitalization.Sentences
+            } else {
+                KeyboardCapitalization.None
+            },
+            keyboardType = keyboardType
+        ),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = container,
+            unfocusedContainerColor = container,
+            disabledContainerColor = container,
+            errorContainerColor = container,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent
+        )
     )
 }
 
 @Composable
-private fun TonalIconChip(
-    @DrawableRes icon: Int,
-    iconTint: Int? = null
+private fun BeaconNameField(
+    name: String,
+    position: TrailSenseGroupPosition,
+    onNameChange: (String) -> Unit
 ) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = Modifier.size(40.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = iconTint?.let { Color(it) } ?: MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
-    }
-}
-
-@Composable
-private fun TextInput(
-    text: String,
-    label: String,
-    tag: String,
-    onTextChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    singleLine: Boolean = true,
-    errorText: String? = null,
-    validateOnBlur: ((String) -> Boolean)? = null
-) {
-    var hasError by androidx.compose.runtime.remember { mutableStateOf(false) }
-
-    OutlinedTextField(
-        value = text,
+    var hasError by remember { mutableStateOf(false) }
+    var wasFocused by remember { mutableStateOf(false) }
+    BeaconFormField(
+        value = name,
         onValueChange = {
-            onTextChange(it)
-            if (hasError && validateOnBlur?.invoke(it) != false) {
+            onNameChange(it)
+            if (hasError && it.isNotBlank()) {
                 hasError = false
             }
         },
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag(tag)
-            .onFocusChanged {
-                if (!it.isFocused && validateOnBlur != null) {
-                    hasError = !validateOnBlur(text)
-                }
-            },
-        label = { Text(label) },
+        label = stringResource(R.string.name),
+        position = position,
         isError = hasError,
-        supportingText = {
-            if (hasError && errorText != null) {
-                Text(errorText)
+        errorText = stringResource(R.string.beacon_invalid_name),
+        modifier = Modifier
+            .testTag("beacon_name")
+            .onFocusChanged {
+                // Only flag an empty name once the field has been left, not before it was ever touched
+                if (wasFocused && !it.isFocused) {
+                    hasError = name.isBlank()
+                }
+                wasFocused = it.isFocused
             }
-        },
-        singleLine = singleLine,
-        minLines = if (singleLine) 1 else 4
     )
+}
+
+/** A compact unit chooser that sits at the end of a numeric field. */
+@Composable
+private fun UnitChooser(
+    unit: DistanceUnits,
+    units: List<DistanceUnits>,
+    tag: String,
+    onUnitChange: (DistanceUnits) -> Unit
+) {
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    var isOpen by remember { mutableStateOf(false) }
+    Box {
+        TextButton(
+            onClick = { isOpen = true },
+            modifier = Modifier
+                .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                .padding(end = TrailSenseSpacing.xs)
+                .testTag(tag)
+        ) {
+            Text(formatter.getDistanceUnitName(unit))
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null
+            )
+        }
+        DropdownMenu(
+            expanded = isOpen,
+            onDismissRequest = { isOpen = false }
+        ) {
+            units.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(formatter.getDistanceUnitName(option)) },
+                    onClick = {
+                        isOpen = false
+                        onUnitChange(option)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FieldProgress(tag: String) {
+    Box(
+        modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .size(24.dp)
+                .testTag(tag),
+            strokeWidth = 2.dp
+        )
+    }
 }
 
 @Composable
 private fun CoordinateInput(
     coordinate: Coordinate?,
+    position: TrailSenseGroupPosition,
     onCoordinateChange: (Coordinate?) -> Unit,
     autoFillRequest: Int,
     onAutoLocationClick: () -> Unit,
@@ -666,81 +763,71 @@ private fun CoordinateInput(
         }
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isLoadingLocation) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag("gps_loading")
-            )
-        } else {
-            IconButton(
-                onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
-                        listOf(
-                            context.getString(R.string.gps),
-                            context.getString(R.string.beacon)
-                        ),
-                        0
-                    ) { selection ->
-                        when (selection) {
-                            0 -> autofillFromGps()
-                            1 -> scope.launch {
-                                val beacon = BeaconPickers.pickBeacon(
-                                    context,
-                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
-                                ) ?: return@launch
-                                coordinateText = formatter.formatLocation(beacon.coordinate)
-                                onCoordinateChange(beacon.coordinate)
-                                onBeaconSelected(beacon)
+    val isInvalid = coordinateText.isNotBlank() && parsedCoordinate == null
+
+    BeaconFormField(
+        value = coordinateText,
+        onValueChange = {
+            coordinateText = it
+            onCoordinateChange(Coordinate.parse(it))
+        },
+        label = stringResource(R.string.location),
+        position = position,
+        enabled = !isLoadingLocation,
+        isError = isInvalid,
+        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        modifier = Modifier.testTag("beacon_location"),
+        leadingIcon = {
+            if (isLoadingLocation) {
+                FieldProgress("gps_loading")
+            } else {
+                IconButton(
+                    onClick = {
+                        Pickers.item(
+                            context,
+                            context.getString(R.string.autofill_source),
+                            listOf(
+                                context.getString(R.string.gps),
+                                context.getString(R.string.beacon)
+                            ),
+                            0
+                        ) { selection ->
+                            when (selection) {
+                                0 -> autofillFromGps()
+                                1 -> scope.launch {
+                                    val beacon = BeaconPickers.pickBeacon(
+                                        context,
+                                        sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                    ) ?: return@launch
+                                    coordinateText = formatter.formatLocation(beacon.coordinate)
+                                    onCoordinateChange(beacon.coordinate)
+                                    onBeaconSelected(beacon)
+                                }
                             }
                         }
-                    }
-                },
-                modifier = Modifier.testTag("gps_btn")
+                    },
+                    modifier = Modifier.testTag("gps_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_location),
+                        contentDescription = stringResource(R.string.gps),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        },
+        trailingIcon = {
+            IconButton(
+                onClick = { showHelp = true },
+                modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_location),
-                    contentDescription = stringResource(R.string.gps)
+                    painter = painterResource(R.drawable.ic_help),
+                    contentDescription = stringResource(R.string.location_input_help_title)
                 )
             }
         }
-        Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = coordinateText,
-            onValueChange = {
-                coordinateText = it
-                onCoordinateChange(Coordinate.parse(it))
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("beacon_location"),
-            label = { Text(stringResource(R.string.location)) },
-            isError = coordinateText.isNotBlank() && parsedCoordinate == null,
-            supportingText = {
-                if (coordinateText.isNotBlank() && parsedCoordinate == null) {
-                    Text(stringResource(R.string.coordinate_input_invalid_location))
-                }
-            },
-            singleLine = true,
-            enabled = !isLoadingLocation
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        IconButton(
-            onClick = { showHelp = true },
-            modifier = Modifier.testTag("coordinate_input_help_btn")
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_help),
-                contentDescription = stringResource(R.string.location_input_help_title)
-            )
-        }
-    }
+    )
 
     if (showHelp) {
         AlertDialog(
@@ -759,6 +846,7 @@ private fun CoordinateInput(
 @Composable
 private fun ElevationInput(
     elevation: Distance?,
+    position: TrailSenseGroupPosition,
     onElevationChange: (Distance?) -> Unit,
     autoFillRequest: Int
 ) {
@@ -777,7 +865,6 @@ private fun ElevationInput(
         mutableStateOf(formatDistanceAmount(elevation, unit))
     }
     var isLoadingElevation by remember { mutableStateOf(false) }
-    var isUnitOpen by remember { mutableStateOf(false) }
 
     fun publish(text: String = elevationText, newUnit: DistanceUnits = unit) {
         onElevationChange(parseDistance(text, newUnit))
@@ -810,143 +897,92 @@ private fun ElevationInput(
         }
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        if (isLoadingElevation) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(40.dp)
-                    .testTag("elevation_loading")
-            )
-        } else {
-            IconButton(
-                onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
-                        listOf(
-                            context.getString(R.string.pref_altimeter_calibration_title),
-                            context.getString(R.string.beacon)
-                        ),
-                        0
-                    ) { selection ->
-                        when (selection) {
-                            0 -> autofillFromAltimeter()
-                            1 -> scope.launch {
-                                val beacon = BeaconPickers.pickBeacon(
-                                    context,
-                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
-                                ) { beacons: List<IBeacon> ->
-                                    beacons.filterIsInstance<Beacon>().filter { it.elevation != null }
-                                } ?: return@launch
-                                val updated = Distance.meters(beacon.elevation!!).convertTo(unit)
-                                elevationText = formatDistanceAmount(updated, unit)
-                                onElevationChange(updated)
+    BeaconFormField(
+        value = elevationText,
+        onValueChange = {
+            elevationText = it
+            publish(text = it)
+        },
+        label = stringResource(R.string.elevation),
+        position = position,
+        enabled = !isLoadingElevation,
+        keyboardType = KeyboardType.Decimal,
+        modifier = Modifier.testTag("beacon_elevation"),
+        leadingIcon = {
+            if (isLoadingElevation) {
+                FieldProgress("elevation_loading")
+            } else {
+                IconButton(
+                    onClick = {
+                        Pickers.item(
+                            context,
+                            context.getString(R.string.autofill_source),
+                            listOf(
+                                context.getString(R.string.pref_altimeter_calibration_title),
+                                context.getString(R.string.beacon)
+                            ),
+                            0
+                        ) { selection ->
+                            when (selection) {
+                                0 -> autofillFromAltimeter()
+                                1 -> scope.launch {
+                                    val beacon = BeaconPickers.pickBeacon(
+                                        context,
+                                        sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                    ) { beacons: List<IBeacon> ->
+                                        beacons.filterIsInstance<Beacon>().filter { it.elevation != null }
+                                    } ?: return@launch
+                                    val updated = Distance.meters(beacon.elevation!!).convertTo(unit)
+                                    elevationText = formatDistanceAmount(updated, unit)
+                                    onElevationChange(updated)
+                                }
                             }
                         }
-                    }
-                },
-                modifier = Modifier.testTag("elevation_gps_btn")
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_altitude),
-                    contentDescription = stringResource(R.string.elevation)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
-            value = elevationText,
-            onValueChange = {
-                elevationText = it
-                publish(text = it)
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("beacon_elevation"),
-            label = { Text(stringResource(R.string.elevation)) },
-            singleLine = true,
-            enabled = !isLoadingElevation
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Box(modifier = Modifier.weight(1f)) {
-            OutlinedButton(
-                onClick = { isUnitOpen = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("beacon_elevation_unit")
-            ) {
-                Text(formatter.getDistanceUnitName(unit))
-            }
-            DropdownMenu(
-                expanded = isUnitOpen,
-                onDismissRequest = { isUnitOpen = false }
-            ) {
-                units.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(formatter.getDistanceUnitName(option)) },
-                        onClick = {
-                            isUnitOpen = false
-                            val converted = parseDistance(elevationText, unit)?.convertTo(option)
-                            unit = option
-                            elevationText = formatDistanceAmount(converted, option)
-                            publish(text = elevationText, newUnit = option)
-                        }
+                    },
+                    modifier = Modifier.testTag("elevation_gps_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_altitude),
+                        contentDescription = stringResource(R.string.elevation),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
+        },
+        trailingIcon = {
+            UnitChooser(
+                unit = unit,
+                units = units,
+                tag = "beacon_elevation_unit"
+            ) { option ->
+                val converted = parseDistance(elevationText, unit)?.convertTo(option)
+                unit = option
+                elevationText = formatDistanceAmount(converted, option)
+                publish(text = elevationText, newUnit = option)
+            }
         }
-    }
-}
-
-@Composable
-private fun CreateAtDistanceSwitch(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("create_at_distance"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = stringResource(R.string.create_at_distance),
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
-    }
+    )
 }
 
 @Composable
 private fun DistanceInput(
     distance: Distance?,
     units: List<DistanceUnits>,
+    position: TrailSenseGroupPosition,
     onDistanceChange: (Distance?) -> Unit
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
     var unit by remember(units) {
         mutableStateOf(distance?.units ?: units.firstOrNull() ?: DistanceUnits.Meters)
     }
     var distanceText by remember {
         mutableStateOf(formatDistanceAmount(distance, unit))
     }
-    var isUnitOpen by remember { mutableStateOf(false) }
 
     fun publish(text: String = distanceText, newUnit: DistanceUnits = unit) {
         onDistanceChange(parseDistance(text, newUnit))
     }
 
-    androidx.compose.runtime.LaunchedEffect(distance) {
+    LaunchedEffect(distance) {
         val current = parseDistance(distanceText, unit)
         if (current != distance) {
             val newUnit = distance?.units ?: unit
@@ -955,52 +991,29 @@ private fun DistanceInput(
         }
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        OutlinedTextField(
-            value = distanceText,
-            onValueChange = {
-                distanceText = it
-                publish(text = it)
-            },
-            modifier = Modifier
-                .weight(1f)
-                .testTag("distance_away"),
-            label = { Text(stringResource(R.string.distance)) },
-            singleLine = true
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Box(modifier = Modifier.weight(1f)) {
-            OutlinedButton(
-                onClick = { isUnitOpen = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .testTag("distance_away_unit")
-            ) {
-                Text(formatter.getDistanceUnitName(unit))
-            }
-            DropdownMenu(
-                expanded = isUnitOpen,
-                onDismissRequest = { isUnitOpen = false }
-            ) {
-                units.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(formatter.getDistanceUnitName(option)) },
-                        onClick = {
-                            isUnitOpen = false
-                            val converted = parseDistance(distanceText, unit)?.convertTo(option)
-                            unit = option
-                            distanceText = formatDistanceAmount(converted, option)
-                            publish(text = distanceText, newUnit = option)
-                        }
-                    )
-                }
+    BeaconFormField(
+        value = distanceText,
+        onValueChange = {
+            distanceText = it
+            publish(text = it)
+        },
+        label = stringResource(R.string.distance),
+        position = position,
+        keyboardType = KeyboardType.Decimal,
+        modifier = Modifier.testTag("distance_away"),
+        trailingIcon = {
+            UnitChooser(
+                unit = unit,
+                units = units,
+                tag = "distance_away_unit"
+            ) { option ->
+                val converted = parseDistance(distanceText, unit)?.convertTo(option)
+                unit = option
+                distanceText = formatDistanceAmount(converted, option)
+                publish(text = distanceText, newUnit = option)
             }
         }
-    }
+    )
 }
 
 private fun parseDistance(text: String, unit: DistanceUnits): Distance? {
@@ -1039,38 +1052,6 @@ private fun BearingInput(
         modifier = Modifier.fillMaxWidth(),
         tag = "bearing_to"
     )
-}
-
-@Composable
-private fun PickerRow(
-    tag: String,
-    text: String,
-    @DrawableRes icon: Int,
-    iconTint: Int?,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(4.dp)
-            .testTag(tag),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier
-                .padding(end = 8.dp)
-                .size(24.dp),
-            tint = iconTint?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
 }
 
 @Preview(showBackground = true)
