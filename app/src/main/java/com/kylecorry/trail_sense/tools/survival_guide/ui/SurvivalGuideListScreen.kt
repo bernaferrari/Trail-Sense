@@ -114,8 +114,8 @@ fun SurvivalGuideListScreen(
         // The chapters load in the background; until then nothing is shown rather than an empty list.
         if (listItems.isNotEmpty()) {
             if (query.isBlank()) {
-                // Browsing: the overview stands apart as the way in, then the chapters as one even list (one line
-                // each, so every row has the same rhythm).
+                // Browsing: the overview stands apart as the way in, then the chapters as one list. A chapter's line
+                // may wrap to a second line rather than cut off mid-word.
                 val overview = listItems.first()
                 item(key = "overview") {
                     TrailSenseRowGroup(modifier = Modifier.testTag("overview")) {
@@ -134,7 +134,7 @@ fun SurvivalGuideListScreen(
                 item(key = "list") {
                     TrailSenseRowGroup(modifier = Modifier.testTag("list")) {
                         listItems.drop(1).forEachIndexed { index, item ->
-                            row { position -> SurvivalGuideRow(item, position, index + 1, subtitleMaxLines = 1) }
+                            row { position -> SurvivalGuideRow(item, position, index + 1, subtitleMaxLines = 2) }
                         }
                     }
                 }
