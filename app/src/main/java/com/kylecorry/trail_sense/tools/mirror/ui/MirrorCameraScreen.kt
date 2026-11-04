@@ -37,6 +37,10 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.R
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCameraUnavailable
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 
 @Composable
 internal fun MirrorCameraScreen(
@@ -58,6 +62,7 @@ internal fun MirrorCameraScreen(
         mutableStateOf(Permissions.isCameraEnabled(context))
     }
     var wasPermissionRequested by remember { mutableStateOf(false) }
+    var wasPermissionAnswered by remember { mutableStateOf(false) }
     val cameraDescription = stringResource(R.string.camera)
 
     LaunchedEffect(Unit) {
@@ -65,6 +70,7 @@ internal fun MirrorCameraScreen(
             wasPermissionRequested = true
             onRequestCamera {
                 isCameraEnabled = it
+                wasPermissionAnswered = true
             }
         }
     }
@@ -106,30 +112,43 @@ internal fun MirrorCameraScreen(
         }
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(ComposeColor.White)
-            .padding(TrailSenseSpacing.screen),
-        contentAlignment = Alignment.Center
+    // The white page is the mirror's light: it stays white around a rounded preview, top bar included.
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.mirror_camera),
+        modifier = modifier,
+        containerColor = ComposeColor.White,
+        contentColor = ComposeColor.Black
     ) {
-        // Tonal frame floating over the bright mirror backdrop. The camera
-        // canvas itself is left untouched; only the surrounding chrome is styled.
-        Surface(
+        Box(
             modifier = Modifier
-                .widthIn(max = TrailSenseSize.maximumContentWidth)
-                .fillMaxHeight(0.9f),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainer
+                .fillMaxSize()
+                .padding(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.xl
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            CameraPreview(
-                state = cameraState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(MaterialTheme.shapes.large)
-                    .testTag("camera")
-                    .semantics { contentDescription = cameraDescription }
-            )
+            if (wasPermissionAnswered && !isCameraEnabled) {
+                // On the theme's own surface so the message stays legible on the white light in dark mode.
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    TrailSenseCameraUnavailable()
+                }
+            } else {
+                CameraPreview(
+                    state = cameraState,
+                    modifier = Modifier
+                        .widthIn(max = TrailSenseSize.maximumContentWidth)
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                        .testTag("camera")
+                        .semantics { contentDescription = cameraDescription }
+                )
+            }
         }
     }
 }

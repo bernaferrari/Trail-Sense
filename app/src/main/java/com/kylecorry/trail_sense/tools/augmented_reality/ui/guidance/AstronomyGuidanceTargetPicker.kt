@@ -29,7 +29,14 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.readableName
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.icons.trail.Search
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.itemsIndexed
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
@@ -205,8 +212,10 @@ class AstronomyGuidanceTargetPicker(
         var query by remember { mutableStateOf("") }
 
         Column {
-            OutlinedTextField(
+            TrailSenseInputField(
                 value = query,
+                label = context.getString(R.string.search),
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
                 onValueChange = {
                     query = it
                     filteredOptions = if (it.isBlank()) {
@@ -217,16 +226,9 @@ class AstronomyGuidanceTargetPicker(
                         }
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                singleLine = true,
-                label = { Text(context.getString(R.string.search)) },
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg),
                 leadingIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_search),
-                        contentDescription = null
-                    )
+                    Icon(TrailIcons.Search, contentDescription = null)
                 }
             )
 
@@ -240,10 +242,16 @@ class AstronomyGuidanceTargetPicker(
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .padding(top = 16.dp)
-                        .testTag("astronomy_guidance_target_list")
+                        .padding(top = TrailSenseSpacing.lg)
+                        .testTag("astronomy_guidance_target_list"),
+                    contentPadding = PaddingValues(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        bottom = TrailSenseSpacing.xl
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
                 ) {
-                    items(filteredOptions, key = { it.name }) { option ->
+                    itemsIndexed(filteredOptions, key = { _, it -> it.name }) { index, option ->
                         TrailSenseListItem(
                             title = option.name,
                             subtitle = option.subtitle,
@@ -253,9 +261,9 @@ class AstronomyGuidanceTargetPicker(
                             iconRotation = option.iconRotation,
                             onClick = { onSelected(option) },
                             animateEntrance = false,
+                            position = TrailSenseGroupPosition.at(index, filteredOptions.size),
                             modifier = Modifier.testTag("astronomy_guidance_target")
                         )
-                        TrailSenseDivider()
                     }
                 }
             }

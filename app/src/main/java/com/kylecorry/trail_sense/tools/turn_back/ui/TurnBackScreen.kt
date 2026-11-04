@@ -3,25 +3,25 @@
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
 import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,16 +34,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricRow
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -222,6 +225,11 @@ private class TurnBackController(private val host: TrailSenseDestinationHost) {
     }
 }
 
+/**
+ * Turn back: a scrolling page. While an alert is set the countdown to the turn-around point is the hero, with the
+ * journey's progress and the two times as a metric strip; otherwise a calm empty state. The return time choices are
+ * one group, and cancelling is a quiet button that names what it cancels.
+ */
 @Composable
 private fun TurnBackScreen(
     formatter: FormatService,
@@ -274,9 +282,6 @@ private fun TurnBackScreen(
     }
 
     // Fraction of the run still remaining before the turn-back alert (0f..1f).
-    // The turn-back point sits at 40% of the journey, so the full span is
-    // turnBackTime - (returnTime - turnBackTime) ... approximated from the
-    // remaining time relative to the return window.
     val progressTarget = run {
         val turnBack = turnBackTime
         val ret = returnTime
@@ -291,150 +296,113 @@ private fun TurnBackScreen(
     }
     val animatedProgress by animateFloatAsState(
         targetValue = progressTarget,
-        animationSpec = TrailSenseAnimation.standardSpring,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "turnBackProgress"
     )
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val returnTitle = stringResource(R.string.return_time)
+    TrailSensePage(
+        title = stringResource(R.string.tool_turn_back),
+        onBack = rememberTrailSenseBack(),
+        modifier = modifier
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-            ) {
-            // Hero countdown readout
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(TrailSenseSpacing.xl),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                ) {
-                    Text(
-                        text = stringResource(R.string.tool_turn_back).uppercase(),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = instructionText,
-                        modifier = Modifier.testTag("instructions"),
-                        style = if (isActive) {
-                            MaterialTheme.typography.titleMedium
-                        } else {
-                            MaterialTheme.typography.headlineSmall
-                        },
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        textAlign = TextAlign.Center
-                    )
-                    if (formattedRemainingTime != null) {
+        item("hero") {
+            Box(modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {
+                if (isActive) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = TrailSenseSpacing.xl),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+                    ) {
+                        TrailSenseReading(
+                            value = formattedRemainingTime ?: "--",
+                            style = MaterialTheme.typography.displayMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                         Text(
-                            text = formattedRemainingTime,
-                            style = MaterialTheme.typography.displayMedium.copy(
-                                fontFeatureSettings = "tnum"
-                            ),
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            text = instructionText,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("instructions"),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
-                    }
-                    if (isActive) {
                         LinearProgressIndicator(
                             progress = { animatedProgress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = TrailSenseSpacing.xs),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
+                                .padding(top = TrailSenseSpacing.sm),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
                         )
-                        Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            HeroStat(
-                                label = stringResource(R.string.tool_turn_back),
-                                value = formattedTurnBackTime.orEmpty()
-                            )
-                            HeroStat(
-                                label = stringResource(R.string.return_time),
-                                value = formattedReturnTime.orEmpty(),
-                                alignEnd = true
-                            )
-                        }
+                        TrailSenseMetricRow(
+                            items = listOf(
+                                TrailSenseMetricItem(
+                                    stringResource(R.string.tool_turn_back),
+                                    formattedTurnBackTime.orEmpty()
+                                ),
+                                TrailSenseMetricItem(
+                                    stringResource(R.string.return_time),
+                                    formattedReturnTime.orEmpty()
+                                )
+                            ),
+                            modifier = Modifier.padding(top = TrailSenseSpacing.sm)
+                        )
                     }
+                } else {
+                    TrailSenseEmptyState(
+                        icon = Icons.Default.Schedule,
+                        title = instructionText,
+                        description = stringResource(R.string.turn_back_empty_description),
+                        modifier = Modifier
+                            .testTag("instructions")
+                            .semantics(mergeDescendants = true) {}
+                    )
                 }
             }
+        }
 
-            // Settings group
-            Text(
-                text = stringResource(R.string.return_time),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            TrailSenseCard {
+        trailSenseSection(key = "return", title = returnTitle) {
+            row { position ->
                 TrailSenseListItem(
                     title = stringResource(R.string.return_time),
                     subtitle = formattedReturnTime ?: stringResource(R.string.time_not_set),
                     icon = rememberVectorPainter(Icons.Default.Schedule),
                     onClick = { onPickReturnTime(returnTime) },
+                    position = position,
                     modifier = Modifier.testTag("edittext")
                 )
+            }
+            row { position ->
                 TrailSenseListItem(
                     title = stringResource(R.string.return_before_dark),
                     icon = rememberVectorPainter(Icons.Default.WbSunny),
                     onClick = onUseSunset,
+                    position = position,
                     modifier = Modifier.testTag("sunset_button")
                 )
             }
+        }
 
-            if (isActive) {
-                TrailSenseButton(
-                    text = stringResource(android.R.string.cancel),
+        item("cancel") {
+            AnimatedVisibility(
+                visible = isActive,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
+            ) {
+                FilledTonalButton(
                     onClick = onCancel,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(min = TrailSenseSize.minimumTouchTarget)
                         .testTag("cancel_button")
-                )
+                ) {
+                    Text(stringResource(R.string.turn_back_cancel))
+                }
             }
         }
-        }
-    }
-}
-
-@Composable
-private fun HeroStat(
-    label: String,
-    value: String,
-    alignEnd: Boolean = false
-) {
-    Column(
-        horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
     }
 }

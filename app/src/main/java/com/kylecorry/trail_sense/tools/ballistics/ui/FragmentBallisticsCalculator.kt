@@ -1,26 +1,15 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,12 +19,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.tryOrDefault
@@ -51,7 +37,10 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.ballistics.domain.BallisticsCalculator
 import com.kylecorry.trail_sense.tools.ballistics.domain.G1DragModel
@@ -60,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.Duration
 
+/** Trajectory: the rifle as one group of inputs, then the table it produces as one card. */
 @Composable
 fun BallisticsCalculatorPage(
     modifier: Modifier = Modifier
@@ -76,7 +66,8 @@ fun BallisticsCalculatorPage(
         mutableStateOf(ballisticCoefficient?.let { DecimalFormatter.format(it, 5, false) } ?: "")
     }
     var trajectory by remember { mutableStateOf(emptyList<TrajectoryPoint>()) }
-    var loading by remember { mutableStateOf(false) }
+    // Starts loading so the empty hint never flashes before the first calculation.
+    var loading by remember { mutableStateOf(true) }
 
     LaunchedEffect(zeroDistance, scopeHeight, bulletSpeed, ballisticCoefficient) {
         loading = true
@@ -91,108 +82,118 @@ fun BallisticsCalculatorPage(
     }
 
     BallisticsForm(modifier = modifier) {
-        // Inputs group
-        TrailSenseCard {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TonalIconChip(Icons.Default.Tune)
-                    Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
-                    Text(
-                        text = stringResource(R.string.ballistics),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+        TrailSenseRowGroup {
+            row { position ->
                 DistanceField(
                     label = stringResource(R.string.sight_in_range),
                     value = zeroDistance,
                     units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
                     defaultUnit = DistanceUnits.Yards,
                     onValueChange = { setZeroDistance(it ?: Distance.from(0f, DistanceUnits.Yards)) },
+                    position = position,
                     modifier = Modifier.testTag("zero_distance")
                 )
+            }
+            row { position ->
                 DistanceField(
                     label = stringResource(R.string.scope_height),
                     value = scopeHeight,
                     units = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
                     defaultUnit = DistanceUnits.Inches,
                     onValueChange = { setScopeHeight(it ?: Distance.from(0f, DistanceUnits.Inches)) },
+                    position = position,
                     modifier = Modifier.testTag("scope_height")
                 )
+            }
+            row { position ->
                 SpeedField(
                     label = stringResource(R.string.muzzle_velocity),
                     value = bulletSpeed,
                     units = formatter.sortDistanceUnits(listOf(DistanceUnits.Feet, DistanceUnits.Meters)),
                     defaultUnit = DistanceUnits.Feet,
                     onValueChange = setBulletSpeed,
+                    position = position,
                     modifier = Modifier.testTag("bullet_speed")
                 )
-                OutlinedTextField(
+            }
+            row { position ->
+                TrailSenseInputField(
                     value = ballisticCoefficientText,
                     onValueChange = {
                         ballisticCoefficientText = it
                         setBallisticCoefficient(it.toFloatCompat())
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("ballistic_coefficient"),
-                    label = { Text(stringResource(R.string.ballistic_coefficient)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true
+                    label = stringResource(R.string.ballistic_coefficient),
+                    position = position,
+                    modifier = Modifier.testTag("ballistic_coefficient")
                 )
             }
         }
 
-        // Result group (calculated trajectory)
-        TrailSenseCard {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("ballistics_table"),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                when {
-                    loading -> CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(vertical = TrailSenseSpacing.xl)
-                            .testTag("loading")
-                    )
-
-                    trajectory.isEmpty() -> Text(
-                        text = stringResource(R.string.no_data),
-                        modifier = Modifier.padding(vertical = TrailSenseSpacing.xl),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    else -> BallisticsTable(
-                        trajectory = trajectory,
-                        zeroDistance = zeroDistance,
-                        bulletSpeed = bulletSpeed,
-                        formatter = formatter,
-                        prefs = prefs
-                    )
-                }
+        TrailSenseRowGroup(title = stringResource(R.string.ballistics_trajectory)) {
+            row { position ->
+                TrajectoryCard(
+                    position = position,
+                    loading = loading,
+                    trajectory = trajectory,
+                    zeroDistance = zeroDistance,
+                    bulletSpeed = bulletSpeed,
+                    formatter = formatter,
+                    prefs = prefs
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TonalIconChip(icon: ImageVector) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer,
-        modifier = Modifier.size(40.dp)
+private fun TrajectoryCard(
+    position: TrailSenseGroupPosition,
+    loading: Boolean,
+    trajectory: List<TrajectoryPoint>,
+    zeroDistance: Distance?,
+    bulletSpeed: Speed?,
+    formatter: FormatService,
+    prefs: UserPreferences
+) {
+    TrailSenseGroupCard(
+        position = position,
+        contentPadding = PaddingValues(vertical = TrailSenseSpacing.sm),
+        modifier = Modifier.animateContentSize()
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("ballistics_table"),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            when {
+                // Keep the last table on screen while a new one is worked out.
+                loading && trajectory.isEmpty() -> CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(vertical = TrailSenseSpacing.xl)
+                        .testTag("loading")
+                )
+
+                trajectory.isEmpty() -> Text(
+                    text = stringResource(R.string.ballistics_trajectory_empty),
+                    modifier = Modifier.padding(
+                        horizontal = TrailSenseSpacing.xl,
+                        vertical = TrailSenseSpacing.xl
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                else -> BallisticsTable(
+                    trajectory = trajectory,
+                    zeroDistance = zeroDistance,
+                    bulletSpeed = bulletSpeed,
+                    formatter = formatter,
+                    prefs = prefs
+                )
+            }
         }
     }
 }
@@ -230,16 +231,10 @@ private fun BallisticsTable(
         )
     )
 
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        item {
-            BallisticsTableRow(
-                values = headers,
-                header = true
-            )
-        }
-        items(trajectory) { point ->
+    // A plain column: the page already scrolls, and a trajectory is a few dozen rows at most.
+    Column(modifier = Modifier.fillMaxWidth()) {
+        BallisticsTableRow(values = headers, header = true)
+        trajectory.forEach { point ->
             val values = listOf(
                 DecimalFormatter.format(point.time, 2),
                 DecimalFormatter.format(
@@ -268,22 +263,20 @@ private fun BallisticsTableRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                if (header) {
-                    MaterialTheme.colorScheme.surfaceVariant
-                } else {
-                    MaterialTheme.colorScheme.surface
-                }
-            )
+            .padding(horizontal = TrailSenseSpacing.sm),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
         values.forEach { value ->
             Text(
                 text = value,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp, vertical = 10.dp),
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = if (header) FontWeight.SemiBold else FontWeight.Normal,
+                    .padding(horizontal = TrailSenseSpacing.sm, vertical = TrailSenseSpacing.sm),
+                style = if (header) {
+                    MaterialTheme.typography.labelMedium
+                } else {
+                    MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum")
+                },
                 color = if (header) {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 } else {

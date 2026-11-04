@@ -2170,4 +2170,44 @@
     <string name="field_guide_name_both">Both</string>
     <string name="thermometer_source_explanation">Historic estimates the air temperature from past weather where you are. Sensor reads your phone\'s own thermometer, which runs warm while the phone is in use or in a pocket.</string>
     <string name="thermometer_calibration_explanation">To calibrate the sensor, note what your phone reads and what a real thermometer reads at the same time, once when it\'s cold and once when it\'s warm.</string>
+    <!-- Family redesign: utilities -->
+    <string name="convert_swap_units">Swap units</string>
+    <string name="ballistics_trajectory">Trajectory</string>
+    <string name="ballistics_trajectory_empty">Enter a sight-in range and muzzle velocity to see the trajectory.</string>
+    <!-- Family redesign: sensor tools -->
+    <string name="lightning_hint_flash">Tap when you see the flash</string>
+    <string name="lightning_hint_thunder">Tap again when you hear the thunder</string>
+    <string name="tool_sound">Sound</string>
+    <string name="tool_vibration">Vibration</string>
+    <string name="metal_detected">Metal detected</string>
+    <string name="metal_not_detected">No metal nearby</string>
+    <string name="turn_back_empty_description">Pick when you need to be back and you\'ll be told when to turn around</string>
+    <string name="turn_back_cancel">Cancel turn back alert</string>
+    <!-- Family redesign: flashlight, battery, QR -->
+    <string name="flashlight_mode">Light mode</string>
+    <string name="flashlight_mode_steady">Steady</string>
+    <string name="flashlight_mode_strobe">Strobe</string>
+    <string name="flashlight_strobe_rate">Flashes per second</string>
+    <string name="flashlight_use_screen">Screen light</string>
+    <string name="flashlight_use_screen_summary">Light up the whole screen, in white or red</string>
+    <string name="flashlight_unavailable_title">No flashlight on this device</string>
+    <string name="flashlight_unavailable_description">You can still use the screen as a light.</string>
+    <string name="screen_flashlight_white">White</string>
+    <string name="screen_flashlight_red">Red</string>
+    <string name="battery_time_left">Time left</string>
+    <string name="battery_time_to_full">Time to full</string>
+    <string name="battery_capacity_label">Capacity</string>
+    <string name="battery_health_label">Health</string>
+    <string name="qr_camera_denied_description">Allow camera access in settings to scan codes. You can still scan a photo from your gallery.</string>
+    <!-- Family redesign: instruments -->
+    <string name="whistle_hold">Hold to whistle</string>
+    <string name="whistle_signals">Signals</string>
+    <string name="whistle_playing">Playing · tap to stop</string>
+    <string name="whistle_signal_repeats">Repeats until you stop it</string>
+    <string name="light_meter_intensity">Intensity</string>
+    <string name="light_meter_reach">Beam distance</string>
+    <string name="clinometer_mode_phone">Phone</string>
+    <string name="clinometer_locked">Reading locked</string>
+    <string name="ruler_tap_hint">Tap the ruler at the end of what you\'re measuring</string>
+    <string name="camera_unavailable_description">Allow camera access in settings to use this tool.</string>
 </resources>

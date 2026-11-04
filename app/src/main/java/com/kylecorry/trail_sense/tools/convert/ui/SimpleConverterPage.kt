@@ -2,34 +2,31 @@ package com.kylecorry.trail_sense.tools.convert.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.rounded.SwapVert
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 abstract class SimpleConverterPage<T>(private val defaultFrom: T, private val defaultTo: T) :
     ConverterPage {
@@ -52,11 +49,16 @@ abstract class SimpleConverterPage<T>(private val defaultFrom: T, private val de
     abstract fun getUnitName(unit: T): String
 }
 
+/** One converter, drawn as a plain column: the page around it owns scrolling and gutters. */
 interface ConverterPage {
     @Composable
     fun Content()
 }
 
+/**
+ * The result leads, so it stays in view above the keyboard while you type; the amount and its unit are one field,
+ * and the target unit sits right under it with the swap button between the two.
+ */
 @Composable
 fun <T> SimpleConvertScreen(
     units: List<T>,
@@ -75,115 +77,81 @@ fun <T> SimpleConvertScreen(
         convert(amount, from, to)
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top
-        ) {
-            OutlinedTextField(
-                value = amountText,
-                onValueChange = { amountText = it },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true
-            )
+    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+        ConvertResult(result)
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(R.string.distance_from),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            OutlinedButton(
-                onClick = { picker = UnitPicker.From },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(getUnitName(from))
-            }
-
-            IconButton(
-                onClick = {
-                    val previousFrom = from
-                    from = to
-                    to = previousFrom
-                },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SwapVert,
-                    contentDescription = null
+        TrailSenseRowGroup {
+            row { position ->
+                TrailSenseInputField(
+                    value = amountText,
+                    onValueChange = { amountText = it },
+                    label = stringResource(R.string.distance_from),
+                    position = position,
+                    unit = getUnitName(from),
+                    onUnitClick = { picker = UnitPicker.From }
                 )
             }
-
-            Text(
-                text = stringResource(R.string.distance_to),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            OutlinedButton(
-                onClick = { picker = UnitPicker.To },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(getUnitName(to))
+            row { position ->
+                TrailSenseListItem(
+                    title = getUnitName(to),
+                    subtitle = stringResource(R.string.distance_to),
+                    position = position,
+                    onClick = { picker = UnitPicker.To },
+                    trailing = {
+                        FilledTonalIconButton(
+                            onClick = {
+                                val previousFrom = from
+                                from = to
+                                to = previousFrom
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.SwapVert,
+                                contentDescription = stringResource(R.string.convert_swap_units)
+                            )
+                        }
+                    }
+                )
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                text = result,
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onBackground
-            )
         }
     }
 
     picker?.let { unitPicker ->
-        AlertDialog(
-            onDismissRequest = { picker = null },
-            title = {
-                Text(
-                    stringResource(
-                        if (unitPicker == UnitPicker.From) {
-                            R.string.distance_from
-                        } else {
-                            R.string.distance_to
-                        }
-                    )
-                )
-            },
-            text = {
-                Column {
-                    units.forEach { unit ->
-                        TextButton(
-                            onClick = {
-                                if (unitPicker == UnitPicker.From) {
-                                    from = unit
-                                } else {
-                                    to = unit
-                                }
-                                picker = null
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = getUnitName(unit),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
+        TrailSenseOptionsDialog(
+            title = stringResource(
+                if (unitPicker == UnitPicker.From) R.string.distance_from else R.string.distance_to
+            ),
+            options = units.map { getUnitName(it) to it },
+            selected = if (unitPicker == UnitPicker.From) from else to,
+            onSelect = { unit ->
+                if (unitPicker == UnitPicker.From) {
+                    from = unit
+                } else {
+                    to = unit
                 }
+                picker = null
             },
-            confirmButton = {
-                TextButton(onClick = { picker = null }) {
-                    Text(stringResource(R.string.done))
-                }
-            }
+            onDismiss = { picker = null }
+        )
+    }
+}
+
+/** The converted value: the one thing that matters on a converter, on the accent tone. */
+@Composable
+internal fun ConvertResult(text: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+    ) {
+        Text(
+            text = text.ifBlank { stringResource(R.string.dash) },
+            style = MaterialTheme.typography.headlineLarge.copy(fontFeatureSettings = "tnum"),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xxl)
         )
     }
 }

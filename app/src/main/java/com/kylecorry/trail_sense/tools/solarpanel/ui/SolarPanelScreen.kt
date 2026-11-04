@@ -1,25 +1,29 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Arrow
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.icons.trail.Edit
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,23 +39,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.sense.level.Level
 import com.kylecorry.andromeda.sense.compass.ICompass
+import com.kylecorry.andromeda.sense.level.Level
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
@@ -60,20 +61,32 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 import java.time.Duration
 import kotlin.math.absoluteValue
 
+/**
+ * The solar panel aligner as a page: when to charge is a segmented choice at the top, then one card per axis with
+ * the target as the hero number, where the phone is now under it, and an arrow beside it saying which way to move
+ * (the cue sits next to the number it fixes instead of at the screen's edges). A card turns to the confirmation
+ * tone once that axis is aligned. The energy estimate closes the page.
+ */
 @Composable
 fun SolarPanelScreen(
     modifier: Modifier = Modifier
@@ -188,103 +201,85 @@ fun SolarPanelScreen(
         }
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Directional alignment cues hugging the edges of the screen.
-            SolarArrow(
-                visible = position != null && getAltitudeDiff(position, orientation) > ALTITUDE_THRESHOLD,
-                rotation = 0f,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = TrailSenseSpacing.lg)
-                    .testTag("arrow_up")
-            )
-            SolarArrow(
-                visible = position != null && getAltitudeDiff(position, orientation) < -ALTITUDE_THRESHOLD,
-                rotation = 180f,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = TrailSenseSpacing.lg)
-                    .testTag("arrow_down")
-            )
-            SolarArrow(
-                visible = position != null && getAzimuthDiff(position, compass, declination, prefs) < -AZIMUTH_THRESHOLD,
-                rotation = 270f,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = TrailSenseSpacing.lg)
-                    .testTag("arrow_left")
-            )
-            SolarArrow(
-                visible = position != null && getAzimuthDiff(position, compass, declination, prefs) > AZIMUTH_THRESHOLD,
-                rotation = 90f,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = TrailSenseSpacing.lg)
-                    .testTag("arrow_right")
-            )
+    val modeOptions = listOf(
+        TrailSenseChoice(true, stringResource(R.string.today)),
+        TrailSenseChoice(false, durationOfChargeTitle)
+    )
 
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .align(Alignment.TopCenter)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-                // Charge-window mode toggle as expressive filter chips.
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        TrailSenseSpacing.sm,
-                        Alignment.CenterHorizontally
-                    ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TrailSenseChip(
-                        text = formatter.formatDuration(nowDuration),
-                        selected = !alignToRestOfDay,
-                        onClick = {
-                            showDurationPicker = true
-                        },
-                        modifier = Modifier.testTag("solar_now_btn")
-                    )
-                    TrailSenseChip(
-                        text = stringResource(R.string.today),
-                        selected = alignToRestOfDay,
-                        onClick = {
+    TrailSensePage(
+        title = stringResource(R.string.tool_solar_panel_title),
+        onBack = rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back),
+        modifier = modifier
+    ) {
+        item("mode") {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                TrailSenseConnectedChoice(
+                    options = modeOptions,
+                    selected = alignToRestOfDay,
+                    onSelect = { today ->
+                        if (today) {
                             alignToRestOfDay = true
-                        },
-                        modifier = Modifier.testTag("solar_today_btn")
+                        } else {
+                            // The window switches only once a duration is picked, as before.
+                            showDurationPicker = true
+                        }
+                    },
+                    modifier = Modifier.testTag(if (alignToRestOfDay) "solar_today_btn" else "solar_now_btn")
+                )
+                AnimatedVisibility(
+                    visible = !alignToRestOfDay,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    TrailSenseListItem(
+                        title = formatter.formatDuration(nowDuration),
+                        position = TrailSenseGroupPosition.Single,
+                        onClick = { showDurationPicker = true },
+                        modifier = Modifier.padding(top = TrailSenseSpacing.sm),
+                        trailing = {
+                            Icon(
+                                painter = rememberVectorPainter(TrailIcons.Edit),
+                                contentDescription = stringResource(R.string.edit),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     )
                 }
+            }
+        }
 
-                if (position == null) {
-                    Spacer(modifier = Modifier.height(TrailSenseSpacing.xxxl))
-                    CircularProgressIndicator(
-                        modifier = Modifier.testTag("solar_loading"),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    SolarPanelReadout(
-                        position = position!!,
-                        compass = compass,
-                        orientation = orientation,
-                        formatter = formatter,
-                        prefs = prefs,
-                        declination = declination,
-                        frame = frame,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("solar_content")
-                    )
-
-                    // Estimated energy capture for the selected window.
-                    EnergyCard(
+        val currentPosition = position
+        if (currentPosition == null) {
+            item("loading") {
+                // Holds roughly the cards' height so nothing jumps when the position arrives.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.testTag("solar_loading"))
+                }
+            }
+        } else {
+            item("readout") {
+                SolarPanelReadout(
+                    position = currentPosition,
+                    compass = compass,
+                    orientation = orientation,
+                    formatter = formatter,
+                    prefs = prefs,
+                    declination = declination,
+                    frame = frame,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("solar_content")
+                )
+            }
+            item("energy") {
+                TrailSenseGroupCard(position = TrailSenseGroupPosition.Single) {
+                    Text(
                         text = getEnergyText(
                             solarPanelService,
                             gps,
@@ -294,7 +289,12 @@ fun SolarPanelScreen(
                             nowDuration,
                             formatter,
                             context.getString(R.string.up_to_amount)
-                        )
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("energy"),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum")
                     )
                 }
             }
@@ -316,60 +316,6 @@ fun SolarPanelScreen(
                 showDurationPicker = false
             }
         )
-    }
-}
-
-@Composable
-private fun EnergyCard(
-    text: String
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = TrailSenseSpacing.lg,
-                    vertical = TrailSenseSpacing.md
-                )
-                .testTag("energy"),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-private fun SolarArrow(
-    visible: Boolean,
-    rotation: Float,
-    modifier: Modifier = Modifier
-) {
-    if (!visible) {
-        Spacer(modifier = modifier.size(40.dp))
-        return
-    }
-
-    Surface(
-        modifier = modifier.size(48.dp),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painterResource(R.drawable.ic_arrow),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(28.dp)
-                    .graphicsLayer(rotationZ = rotation),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
     }
 }
 
@@ -399,15 +345,16 @@ private fun SolarPanelReadout(
         -declination.getDeclination()
     }
     val desiredAzimuth = position.second.withDeclination(declinationOffset).inverse()
-    val azimuthAligned = getAzimuthDiff(position, compass, declination, prefs).absoluteValue < AZIMUTH_THRESHOLD
-    val altitudeAligned = getAltitudeDiff(position, orientation).absoluteValue < ALTITUDE_THRESHOLD
+    val azimuthDiff = getAzimuthDiff(position, compass, declination, prefs)
+    val altitudeDiff = getAltitudeDiff(position, orientation)
+    val azimuthAligned = azimuthDiff.absoluteValue < AZIMUTH_THRESHOLD
+    val altitudeAligned = altitudeDiff.absoluteValue < ALTITUDE_THRESHOLD
 
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
-        SolarReadoutRow(
+        SolarReadoutCard(
             label = stringResource(R.string.tilt),
             labelTag = "tilt_label",
             current = formatter.formatDegrees(orientation.y),
@@ -415,9 +362,17 @@ private fun SolarPanelReadout(
             desired = formatter.formatDegrees(position.first),
             desiredTag = "desired_altitude",
             isComplete = altitudeAligned,
-            completeTag = "altitude_complete"
+            completeTag = "altitude_complete",
+            // Up when the panel needs to tilt up, down when it needs to tilt down.
+            arrowRotation = when {
+                altitudeDiff > ALTITUDE_THRESHOLD -> 0f
+                altitudeDiff < -ALTITUDE_THRESHOLD -> 180f
+                else -> null
+            },
+            arrowTag = if (altitudeDiff > 0) "arrow_up" else "arrow_down",
+            position = TrailSenseGroupPosition(isFirst = true, isLast = false)
         )
-        SolarReadoutRow(
+        SolarReadoutCard(
             label = stringResource(R.string.compass_azimuth),
             labelTag = "azimuth_label",
             current = formatter.formatDegrees(compass.rawBearing, replace360 = true),
@@ -425,13 +380,20 @@ private fun SolarPanelReadout(
             desired = formatter.formatDegrees(desiredAzimuth.value, replace360 = true),
             desiredTag = "desired_azimuth",
             isComplete = azimuthAligned,
-            completeTag = "azimuth_complete"
+            completeTag = "azimuth_complete",
+            arrowRotation = when {
+                azimuthDiff < -AZIMUTH_THRESHOLD -> 270f
+                azimuthDiff > AZIMUTH_THRESHOLD -> 90f
+                else -> null
+            },
+            arrowTag = if (azimuthDiff < 0) "arrow_left" else "arrow_right",
+            position = TrailSenseGroupPosition(isFirst = false, isLast = true)
         )
     }
 }
 
 @Composable
-private fun SolarReadoutRow(
+private fun SolarReadoutCard(
     label: String,
     labelTag: String,
     current: String,
@@ -439,98 +401,115 @@ private fun SolarReadoutRow(
     desired: String,
     desiredTag: String,
     isComplete: Boolean,
-    completeTag: String
+    completeTag: String,
+    arrowRotation: Float?,
+    arrowTag: String,
+    position: TrailSenseGroupPosition
 ) {
-    // Shift the hero card toward a confirmation tone once the panel is aligned,
-    // with a subtle spring so the transition reads as a celebration.
+    // Aligned is a tone change, not a bounce.
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
     val containerColor by animateColorAsState(
         targetValue = if (isComplete) {
             MaterialTheme.colorScheme.tertiaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            MaterialTheme.colorScheme.surfaceContainerLow
         },
-        animationSpec = tween(durationMillis = 250),
+        animationSpec = effects,
         label = "solarReadoutContainer"
     )
-    val onContainerColor by animateColorAsState(
+    val contentColor by animateColorAsState(
         targetValue = if (isComplete) {
             MaterialTheme.colorScheme.onTertiaryContainer
         } else {
             MaterialTheme.colorScheme.onSurface
         },
-        animationSpec = tween(durationMillis = 250),
-        label = "solarReadoutOnContainer"
-    )
-    val accentColor by animateColorAsState(
-        targetValue = if (isComplete) {
-            MaterialTheme.colorScheme.onTertiaryContainer
-        } else {
-            MaterialTheme.colorScheme.primary
-        },
-        animationSpec = tween(durationMillis = 250),
-        label = "solarReadoutAccent"
-    )
-    val heroScale by animateFloatAsState(
-        targetValue = if (isComplete) 1.03f else 1f,
-        animationSpec = TrailSenseAnimation.quickSpring,
-        label = "solarReadoutScale"
+        animationSpec = effects,
+        label = "solarReadoutContent"
     )
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(heroScale),
-        shape = MaterialTheme.shapes.large,
-        color = containerColor
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(
+            topStart = if (position.isFirst) TrailSenseShape.groupOuter else TrailSenseShape.groupInner,
+            topEnd = if (position.isFirst) TrailSenseShape.groupOuter else TrailSenseShape.groupInner,
+            bottomStart = if (position.isLast) TrailSenseShape.groupOuter else TrailSenseShape.groupInner,
+            bottomEnd = if (position.isLast) TrailSenseShape.groupOuter else TrailSenseShape.groupInner
+        ),
+        color = containerColor,
+        contentColor = contentColor
     ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+        Row(
+            modifier = Modifier.padding(TrailSenseSpacing.xl),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Section label + aligned confirmation.
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            ) {
                 Text(
                     text = label,
                     modifier = Modifier.testTag(labelTag),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = accentColor
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (isComplete) contentColor else MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.weight(1f))
-                if (isComplete) {
+                Text(
+                    text = desired,
+                    modifier = Modifier.testTag(desiredTag),
+                    style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum")
+                )
+                Text(
+                    text = current,
+                    modifier = Modifier.testTag(currentTag),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                    color = contentColor.copy(alpha = 0.72f)
+                )
+            }
+            SolarCue(
+                isComplete = isComplete,
+                completeTag = completeTag,
+                arrowRotation = arrowRotation,
+                arrowTag = arrowTag
+            )
+        }
+    }
+}
+
+/** A check when aligned; otherwise the way to move, or nothing while within a step of it. */
+@Composable
+private fun SolarCue(
+    isComplete: Boolean,
+    completeTag: String,
+    arrowRotation: Float?,
+    arrowTag: String
+) {
+    Box(modifier = Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+        when {
+            isComplete -> Icon(
+                painter = rememberVectorPainter(TrailIcons.Check),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(32.dp)
+                    .testTag(completeTag),
+                tint = colorResource(R.color.positive)
+            )
+
+            arrowRotation != null -> Surface(
+                modifier = Modifier.size(56.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_check),
+                        painter = rememberVectorPainter(TrailIcons.Arrow),
                         contentDescription = null,
                         modifier = Modifier
                             .size(28.dp)
-                            .testTag(completeTag),
-                        tint = colorResource(R.color.positive)
-                    )
-                } else {
-                    Spacer(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .testTag(completeTag)
+                            .graphicsLayer(rotationZ = arrowRotation)
+                            .testTag(arrowTag)
                     )
                 }
             }
-
-            // Emphasized hero target readout.
-            Text(
-                text = desired,
-                modifier = Modifier.testTag(desiredTag),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = onContainerColor
-            )
-
-            // Supporting current-vs-target guidance.
-            Text(
-                text = current,
-                modifier = Modifier.testTag(currentTag),
-                style = MaterialTheme.typography.bodyLarge,
-                color = onContainerColor.copy(alpha = 0.7f)
-            )
         }
     }
 }

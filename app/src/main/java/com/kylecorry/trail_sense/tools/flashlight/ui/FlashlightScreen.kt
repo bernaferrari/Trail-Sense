@@ -1,32 +1,39 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
-import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
+import com.kylecorry.trail_sense.shared.icons.trail.Power
+import com.kylecorry.trail_sense.shared.icons.trail.ScreenFlashlight
+import com.kylecorry.trail_sense.shared.icons.trail.Strobe
+import com.kylecorry.trail_sense.shared.icons.trail.TorchOn
+import com.kylecorry.trail_sense.shared.icons.trail.WhistleSos
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.FlashlightOff
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -41,14 +48,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -60,10 +70,16 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import kotlinx.coroutines.delay
@@ -233,245 +249,283 @@ fun FlashlightScreen(
         }
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val isOn = flashlightMode != FlashlightMode.Off
+
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.flashlight_title),
+        modifier = modifier
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        if (!hasFlashlight) {
+            // No torch on this phone: the screen is the light.
+            TrailSenseEmptyState(
+                icon = Icons.Rounded.FlashlightOff,
+                title = stringResource(R.string.flashlight_unavailable_title),
+                description = stringResource(R.string.flashlight_unavailable_description),
+                action = {
+                    FilledTonalButton(
+                        onClick = onOpenScreenFlashlight,
+                        modifier = Modifier
+                            .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                            .testTag("screen_flashlight_btn")
+                    ) {
+                        Text(stringResource(R.string.flashlight_use_screen))
+                    }
+                }
+            )
+            return@TrailSenseInstrumentScaffold
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = TrailSenseSpacing.lg)
+                .padding(bottom = TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Hero: the switch itself, with the auto-off countdown under it.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.xxl, bottom = TrailSenseSpacing.xl)
+                    .testTag("flashlight_btn_holder"),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+                PowerToggle(
+                    on = isOn,
+                    onClick = ::toggle,
+                    modifier = Modifier.testTag("flashlight_on_btn")
+                )
+                // Always laid out so the controls below don't jump when the timer appears.
+                Text(
+                    text = timerText ?: " ",
+                    modifier = Modifier.alpha(if (timerText.isNullOrBlank()) 0f else 1f),
+                    style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Column(
                 modifier = Modifier
                     .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .padding(TrailSenseSpacing.screen),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
             ) {
-            Spacer(modifier = Modifier.weight(1f))
-            Column(
-                modifier = Modifier.testTag("flashlight_btn_holder"),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-            ) {
-                if (hasFlashlight) {
-                    PowerToggle(
-                        on = flashlightMode != FlashlightMode.Off,
-                        timerText = timerText,
-                        onClick = ::toggle,
-                        modifier = Modifier.testTag("flashlight_on_btn")
-                    )
-                }
-                ScreenFlashlightCard(
-                    onClick = onOpenScreenFlashlight,
-                    modifier = Modifier.testTag("screen_flashlight_btn")
+                FlashlightControls(
+                    selectedMode = selectedMode,
+                    areHapticsEnabled = isResumed,
+                    hasBrightnessControl = hasBrightnessControl,
+                    brightnessValue = brightnessValue,
+                    maxBrightness = maxBrightness,
+                    onBrightnessChanged = {
+                        brightnessValue = it
+                        flashlight.setBrightness(it / maxBrightness.toFloat())
+                        turnOn()
+                    },
+                    onDialSelectionChanged = ::onDialSelectionChanged,
+                    onOpenScreenFlashlight = onOpenScreenFlashlight
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-                if (hasBrightnessControl) {
-                    BrightnessCard(
+        }
+    }
+}
+
+private enum class FlashlightModeKind { Torch, Strobe, Sos }
+
+private fun FlashlightMode.kind(): FlashlightModeKind {
+    return when (getDialIndex(this)) {
+        in 1..10 -> FlashlightModeKind.Strobe
+        11 -> FlashlightModeKind.Sos
+        else -> FlashlightModeKind.Torch
+    }
+}
+
+/** Mode, strobe rate (only while strobing), brightness and the screen light, as one group. */
+@Composable
+private fun FlashlightControls(
+    selectedMode: FlashlightMode,
+    areHapticsEnabled: Boolean,
+    hasBrightnessControl: Boolean,
+    brightnessValue: Float,
+    maxBrightness: Int,
+    onBrightnessChanged: (Float) -> Unit,
+    onDialSelectionChanged: (Int) -> Unit,
+    onOpenScreenFlashlight: () -> Unit
+) {
+    val context = LocalContext.current
+    val haptics = remember { HapticSubsystem.getInstance(context) }
+    val kind = selectedMode.kind()
+    val choices = listOf(
+        TrailSenseChoice(
+            FlashlightModeKind.Torch,
+            stringResource(R.string.flashlight_mode_steady),
+            TrailIcons.TorchOn
+        ),
+        TrailSenseChoice(
+            FlashlightModeKind.Strobe,
+            stringResource(R.string.flashlight_mode_strobe),
+            TrailIcons.Strobe
+        ),
+        TrailSenseChoice(
+            FlashlightModeKind.Sos,
+            stringResource(R.string.sos),
+            TrailIcons.WhistleSos
+        )
+    )
+    val modeLabel = stringResource(R.string.flashlight_mode)
+
+    TrailSenseRowGroup {
+        row { position ->
+            TrailSenseGroupCard(position = position) {
+                TrailSenseConnectedChoice(
+                    options = choices,
+                    selected = kind,
+                    onSelect = {
+                        if (areHapticsEnabled) {
+                            haptics.click()
+                        }
+                        onDialSelectionChanged(
+                            when (it) {
+                                FlashlightModeKind.Torch -> 0
+                                FlashlightModeKind.Strobe -> 1
+                                FlashlightModeKind.Sos -> 11
+                            }
+                        )
+                    },
+                    modifier = Modifier.testTag("flashlight_dial"),
+                    label = modeLabel
+                )
+            }
+        }
+        if (kind == FlashlightModeKind.Strobe) {
+            row { position ->
+                TrailSenseGroupCard(
+                    position = position,
+                    contentPadding = PaddingValues(vertical = TrailSenseSpacing.md)
+                ) {
+                    Text(
+                        text = stringResource(R.string.flashlight_strobe_rate),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(
+                            horizontal = TrailSenseSpacing.lg,
+                            vertical = TrailSenseSpacing.xs
+                        )
+                    )
+                    StrobeFrequencies(
+                        selectedMode = selectedMode,
+                        areHapticsEnabled = areHapticsEnabled,
+                        onSelectionChanged = onDialSelectionChanged
+                    )
+                }
+            }
+        }
+        if (hasBrightnessControl) {
+            row { position ->
+                TrailSenseGroupCard(
+                    position = position,
+                    contentPadding = PaddingValues(
+                        start = TrailSenseSpacing.lg,
+                        end = TrailSenseSpacing.lg,
+                        top = TrailSenseSpacing.md,
+                        bottom = TrailSenseSpacing.xs
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.brightness),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    BrightnessSlider(
                         value = brightnessValue,
                         maxBrightness = maxBrightness,
-                        onValueChanged = {
-                            brightnessValue = it
-                            flashlight.setBrightness(it / maxBrightness.toFloat())
-                            turnOn()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                if (hasFlashlight) {
-                    FlashlightModeCard(
-                        selectedMode = selectedMode,
-                        areHapticsEnabled = isResumed,
-                        onSelectionChanged = ::onDialSelectionChanged,
-                        modifier = Modifier.fillMaxWidth()
+                        onValueChanged = onBrightnessChanged,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("brightness_seek")
                     )
                 }
             }
         }
-        }
-    }
-}
-
-/**
- * Large, satisfying circular toggle. When on it glows with the primary color and
- * a soft halo plus a gentle scale bump; when off it rests as a tonal surface.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PowerToggle(
-    on: Boolean,
-    timerText: String?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val container by animateColorAsState(
-        targetValue = if (on) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
-        },
-        animationSpec = tween(durationMillis = 250),
-        label = "powerContainer"
-    )
-    val content by animateColorAsState(
-        targetValue = if (on) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        animationSpec = tween(durationMillis = 250),
-        label = "powerContent"
-    )
-    val haloColor by animateColorAsState(
-        targetValue = if (on) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
-        } else {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0f)
-        },
-        animationSpec = tween(durationMillis = 250),
-        label = "powerHalo"
-    )
-    val scale by animateFloatAsState(
-        targetValue = when {
-            isPressed -> 0.94f
-            on -> 1.04f
-            else -> 1f
-        },
-        animationSpec = TrailSenseAnimation.quickSpring,
-        label = "powerScale"
-    )
-
-    Box(
-        modifier = modifier
-            .size(260.dp)
-            .scale(scale),
-        contentAlignment = Alignment.Center
-    ) {
-        // Soft glowing halo behind the button when on.
-        Box(
-            modifier = Modifier
-                .size(260.dp)
-                .background(haloColor, CircleShape)
-        )
-        Surface(
-            onClick = onClick,
-            modifier = Modifier.size(220.dp),
-            shape = CircleShape,
-            color = container,
-            contentColor = content,
-            interactionSource = interactionSource
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(TrailSenseSpacing.lg),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_power),
-                    contentDescription = stringResource(R.string.flashlight_title),
-                    modifier = Modifier.size(96.dp),
-                    tint = content
-                )
-                if (!timerText.isNullOrBlank()) {
-                    Text(
-                        text = timerText,
-                        modifier = Modifier.padding(top = TrailSenseSpacing.sm),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        fontWeight = FontWeight.SemiBold,
-                        color = content,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * A clean tonal pill that opens the screen-as-flashlight mode.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ScreenFlashlightCard(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.width(260.dp),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        contentColor = MaterialTheme.colorScheme.onSurface
-    ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.xl,
-                vertical = TrailSenseSpacing.lg
-            ),
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(44.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
+        row { position ->
+            TrailSenseListItem(
+                title = stringResource(R.string.flashlight_use_screen),
+                subtitle = stringResource(R.string.flashlight_use_screen_summary),
+                icon = rememberVectorPainter(TrailIcons.ScreenFlashlight),
+                position = position,
+                onClick = onOpenScreenFlashlight,
+                trailing = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_screen_flashlight),
-                        contentDescription = stringResource(R.string.screen_flashlight),
-                        modifier = Modifier.size(24.dp)
+                        painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-            }
-            Text(
-                text = stringResource(R.string.screen_flashlight),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                },
+                modifier = Modifier.testTag("screen_flashlight_btn")
             )
         }
     }
 }
 
 /**
- * Brightness slider presented inside a labeled tonal card.
+ * The switch: a large circle that fills with the accent color and gains a soft halo when the light is on, and
+ * shrinks slightly under the finger.
  */
 @Composable
-private fun BrightnessCard(
-    value: Float,
-    maxBrightness: Int,
-    onValueChanged: (Float) -> Unit,
+private fun PowerToggle(
+    on: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TrailSenseCard(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.brightness),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
-        BrightnessSlider(
-            value = value,
-            maxBrightness = maxBrightness,
-            onValueChanged = onValueChanged,
+    val interactionSource = remember { MutableInteractionSource() }
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
+    val container by animateColorAsState(
+        targetValue = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+        animationSpec = effects,
+        label = "powerContainer"
+    )
+    val content by animateColorAsState(
+        targetValue = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = effects,
+        label = "powerContent"
+    )
+    val halo by animateColorAsState(
+        targetValue = MaterialTheme.colorScheme.primary.copy(alpha = if (on) 0.18f else 0f),
+        animationSpec = effects,
+        label = "powerHalo"
+    )
+    val stateText = stringResource(if (on) R.string.on else R.string.off)
+
+    Box(
+        modifier = modifier
+            .size(232.dp)
+            .trailSensePressScale(interactionSource),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .testTag("brightness_seek")
+                .size(232.dp)
+                .background(halo, CircleShape)
         )
+        Surface(
+            onClick = onClick,
+            modifier = Modifier
+                .size(196.dp)
+                .semantics { stateDescription = stateText },
+            shape = CircleShape,
+            color = container,
+            contentColor = content,
+            interactionSource = interactionSource
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = rememberVectorPainter(TrailIcons.Power),
+                    contentDescription = stringResource(R.string.flashlight_title),
+                    modifier = Modifier.size(88.dp),
+                    tint = content
+                )
+            }
+        }
     }
 }
 
@@ -492,50 +546,9 @@ private fun BrightnessSlider(
     )
 }
 
-/**
- * Strobe / SOS mode controls grouped in a tonal card with a primary section
- * label and a row of selectable frequency chips.
- */
+/** Strobe rates in flashes per second: 1 to 9, then 200 (a near-steady flicker). */
 @Composable
-private fun FlashlightModeCard(
-    selectedMode: FlashlightMode,
-    areHapticsEnabled: Boolean,
-    onSelectionChanged: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TrailSenseCard(modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-        ) {
-            Text(
-                text = stringResource(R.string.frequency),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                    .testTag("flashlight_dial_indicator")
-            )
-        }
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
-        FlashlightDial(
-            selectedMode = selectedMode,
-            areHapticsEnabled = areHapticsEnabled,
-            onSelectionChanged = onSelectionChanged,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .testTag("flashlight_dial")
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FlashlightDial(
+private fun StrobeFrequencies(
     selectedMode: FlashlightMode,
     areHapticsEnabled: Boolean,
     onSelectionChanged: (Int) -> Unit,
@@ -543,44 +556,35 @@ private fun FlashlightDial(
 ) {
     val context = LocalContext.current
     val haptics = remember { HapticSubsystem.getInstance(context) }
-    val options = listOf(
-        "0",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "200",
-        stringResource(R.string.sos)
-    )
+    val options = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "200")
     val selectedIndex = getDialIndex(selectedMode)
     val listState = rememberLazyListState()
 
     LaunchedEffect(selectedIndex) {
-        listState.animateScrollToItem(selectedIndex.coerceIn(options.indices))
+        if (selectedIndex in 1..10) {
+            listState.animateScrollToItem(selectedIndex - 1)
+        }
     }
 
     LazyRow(
         state = listState,
-        modifier = modifier,
-        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.sm),
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        itemsIndexed(options) { index, option ->
+        itemsIndexed(options) { offset, option ->
+            val index = offset + 1
             val selected = index == selectedIndex
+            val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
             val container by animateColorAsState(
                 targetValue = if (selected) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
+                    MaterialTheme.colorScheme.surfaceContainerHighest
                 },
-                animationSpec = tween(durationMillis = 250),
-                label = "dialContainer"
+                animationSpec = effects,
+                label = "strobeContainer"
             )
             val itemContent by animateColorAsState(
                 targetValue = if (selected) {
@@ -588,9 +592,10 @@ private fun FlashlightDial(
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 },
-                animationSpec = tween(durationMillis = 250),
-                label = "dialContent"
+                animationSpec = effects,
+                label = "strobeContent"
             )
+            val interactionSource = remember { MutableInteractionSource() }
             Surface(
                 onClick = {
                     if (areHapticsEnabled) {
@@ -601,19 +606,18 @@ private fun FlashlightDial(
                     }
                 },
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(TrailSenseSize.minimumTouchTarget)
+                    .trailSensePressScale(interactionSource)
                     .testTag("flashlight_dial_$index"),
                 shape = CircleShape,
                 color = container,
-                contentColor = itemContent
+                contentColor = itemContent,
+                interactionSource = interactionSource
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = option,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )

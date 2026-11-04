@@ -1,35 +1,38 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.Satellite
+import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
 import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -64,8 +67,11 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import kotlinx.coroutines.delay
@@ -165,192 +171,119 @@ private fun ClockScreen(
     val dateText = formatService.formatDate(myTime)
     val showAnalogClock = prefs.clock.showAnalogClock
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .padding(TrailSenseSpacing.screen),
-                horizontalAlignment = Alignment.CenterHorizontally
+    TrailSensePage(
+        title = stringResource(R.string.tool_clock_title),
+        onBack = rememberTrailSenseBack(),
+        actions = {
+            // The instrumented test treats this as the toolbar's right button.
+            IconButton(
+                onClick = { startGpsUpdate() },
+                modifier = Modifier.testTag("toolbar_right_button")
             ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .testTag("clock_title"),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-            // Top bar: refresh. The instrumented test treats this as the toolbar's right button.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                FilledIconButton(
-                    onClick = { startGpsUpdate() },
-                    modifier = Modifier.testTag("toolbar_right_button"),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = stringResource(R.string.reload)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = stringResource(R.string.reload)
+                )
             }
-
-            // Hero
+        }
+    ) {
+        item("time") {
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(vertical = TrailSenseSpacing.xl)
+                    .testTag("clock_title"),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
                 if (showAnalogClock) {
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        modifier = Modifier.size(300.dp)
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier
+                            .padding(bottom = TrailSenseSpacing.lg)
+                            .size(280.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             AnalogClock(time = myTime.toLocalTime())
                         }
                     }
-                    Spacer(Modifier.height(TrailSenseSpacing.xl))
-                    Text(
-                        text = timeText,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center
-                    )
-                } else {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Text(
-                            text = timeText,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = TrailSenseSpacing.lg,
-                                    vertical = TrailSenseSpacing.xxl
-                                ),
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontFeatureSettings = "tnum"
-                            ),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            textAlign = TextAlign.Center
-                        )
-                    }
                 }
-
-                Spacer(Modifier.height(TrailSenseSpacing.lg))
+                Text(
+                    text = timeText,
+                    style = (if (showAnalogClock) {
+                        MaterialTheme.typography.displaySmall
+                    } else {
+                        MaterialTheme.typography.displayLarge
+                    }).copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
                 Text(
                     text = dateText,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
-                if (isGpsTime) {
-                    Spacer(Modifier.height(TrailSenseSpacing.sm))
-                    Text(
-                        text = clockOffsetLabel(systemTime, gpsTime),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-                }
-                Spacer(Modifier.height(TrailSenseSpacing.md))
-                ClockSourceChip(isGpsTime = isGpsTime)
             }
-            }
+        }
 
-            // Bottom action
-            if (isUpdatingClock) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(TrailSenseSpacing.md),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        TrailSenseSpacing.sm,
-                        Alignment.CenterHorizontally
+        trailSenseSection(key = "source") {
+            row { position ->
+                TrailSenseListItem(
+                    title = stringResource(
+                        if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
                     ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = stringResource(R.string.clock_waiting_for_gps),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
+                    subtitle = when {
+                        isUpdatingClock -> stringResource(R.string.clock_waiting_for_gps)
+                        isGpsTime -> clockOffsetLabel(systemTime, gpsTime)
+                        else -> null
+                    },
+                    icon = rememberVectorPainter(
+                        if (isGpsTime) TrailIcons.Satellite else TrailIcons.ToolClock
+                    ),
+                    trailing = if (isUpdatingClock) {
+                        {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    position = position
+                )
+            }
+        }
+
+        item("sync") {
+            AnimatedVisibility(
+                visible = !isUpdatingClock,
+                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
+            ) {
                 Button(
                     onClick = {
                         requestExactAlarms {
                             onScheduleNextMinute(gpsTime, systemTime)
                         }
                     },
-                    shape = MaterialTheme.shapes.large,
-                    contentPadding = ButtonDefaults.ContentPadding,
+                    shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
+                    contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.MediumContainerHeight),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(ButtonDefaults.MediumContainerHeight)
                         .testTag("pip_button")
                 ) {
                     Text(
                         stringResource(R.string.pip_button),
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.titleMedium
                     )
                 }
             }
         }
-        }
-    }
-}
-
-@Composable
-private fun ClockSourceChip(isGpsTime: Boolean) {
-    val container = if (isGpsTime) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHigh
-    }
-    val content = if (isGpsTime) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    Surface(shape = CircleShape, color = container) {
-        Text(
-            text = stringResource(
-                if (isGpsTime) R.string.clock_source_gps else R.string.clock_source_device
-            ),
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.sm
-            ),
-            style = MaterialTheme.typography.labelLarge,
-            color = content
-        )
     }
 }
 

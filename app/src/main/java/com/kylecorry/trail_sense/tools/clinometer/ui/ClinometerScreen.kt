@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.clinometer.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
-import android.view.Gravity
 import android.view.MotionEvent
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
@@ -28,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,7 +35,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -61,6 +58,32 @@ import com.kylecorry.sol.science.geology.AvalancheRisk
 import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.Avalanche
+import com.kylecorry.trail_sense.shared.icons.trail.Camera
+import com.kylecorry.trail_sense.shared.icons.trail.Lock
+import com.kylecorry.trail_sense.shared.icons.trail.PhonePortrait
+import com.kylecorry.trail_sense.shared.icons.trail.RotateFlatToPortrait
+import com.kylecorry.trail_sense.shared.icons.trail.RotateLandscapeToPortrait
+import com.kylecorry.trail_sense.shared.icons.trail.Ruler
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryMarkerColor
 import com.kylecorry.trail_sense.shared.DistanceUtils
@@ -71,9 +94,7 @@ import com.kylecorry.trail_sense.shared.extensions.getMarkdown
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
-import com.kylecorry.trail_sense.shared.views.DataPointContent
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
@@ -229,7 +250,7 @@ private class ClinometerController(
     private fun startSideClinometer() {
         views.camera.stop()
         views.arView.stop()
-        views.clinometerTitle.leftButtonIcon = R.drawable.ic_camera
+        views.clinometerTitle.isCameraMode = false
         views.clinometerTitle.isLeftButtonSelected = false
         useCamera = false
     }
@@ -242,7 +263,7 @@ private class ClinometerController(
                     readFrames = false, shouldStabilizePreview = false
                 )
                 views.arView.start(false)
-                views.clinometerTitle.leftButtonIcon = R.drawable.ic_phone_portrait
+                views.clinometerTitle.isCameraMode = true
                 views.clinometerTitle.isLeftButtonSelected = false
             } else {
                 startSideClinometer()
@@ -602,30 +623,14 @@ private class ClinometerVisibilityState(initialVisible: Boolean = true) {
 
 private class ClinometerDataPointState(
     initialDescription: String,
-    private val icon: Int
+    val icon: ImageVector
 ) {
     var title by mutableStateOf("")
     var description by mutableStateOf(initialDescription)
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        Box(modifier = modifier) {
-            DataPointContent(
-                title = title,
-                description = description,
-                icon = icon,
-                tint = MaterialTheme.colorScheme.onSurface,
-                showDescription = true,
-                gravity = Gravity.START,
-                onDescriptionClick = null
-            )
-        }
-    }
 }
 
 private class ClinometerTitleState {
-    var leftButtonIcon by mutableIntStateOf(R.drawable.ic_camera)
-    var rightButtonIcon by mutableIntStateOf(R.drawable.ruler)
+    var isCameraMode by mutableStateOf(false)
     var isLeftButtonSelected by mutableStateOf(false)
     var isRightButtonSelected by mutableStateOf(false)
     var title by mutableStateOf("")
@@ -635,193 +640,173 @@ private class ClinometerTitleState {
     var onRightButtonClick by mutableStateOf<(() -> Unit)?>(null)
 }
 
+/** The hero: the incline in large tabular figures, the slope under it, a lock mark while a reading is held. */
 @Composable
-private fun ClinometerTitle(
+private fun ClinometerReading(
     state: ClinometerTitleState,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Column(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.primaryContainer
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
     ) {
-        Row(
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.md,
-                vertical = TrailSenseSpacing.lg
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ClinometerTitleButton(
-                icon = state.leftButtonIcon,
-                contentDescription = stringResource(R.string.camera),
-                isSelected = state.isLeftButtonSelected,
-                onClick = { state.onLeftButtonClick?.invoke() }
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = TrailSenseSpacing.sm),
-                horizontalAlignment = Alignment.CenterHorizontally
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TrailSenseReading(value = state.title.ifEmpty { "--" })
+            AnimatedVisibility(
+                visible = state.isLocked,
+                enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                    scaleIn(MaterialTheme.motionScheme.fastSpatialSpec()),
+                exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                    scaleOut(MaterialTheme.motionScheme.fastSpatialSpec())
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = state.title,
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        textAlign = TextAlign.Center
-                    )
-                    if (state.isLocked) {
-                        Icon(
-                            painter = painterResource(R.drawable.lock),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier
-                                .padding(start = TrailSenseSpacing.sm)
-                                .size(24.dp)
-                        )
-                    }
-                }
-                Text(
-                    text = state.subtitle,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center
+                Icon(
+                    imageVector = TrailIcons.Lock,
+                    contentDescription = stringResource(R.string.clinometer_locked),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(start = TrailSenseSpacing.md)
+                        .size(28.dp)
                 )
             }
-            ClinometerTitleButton(
-                icon = state.rightButtonIcon,
-                contentDescription = stringResource(R.string.measure),
-                isSelected = state.isRightButtonSelected,
-                onClick = { state.onRightButtonClick?.invoke() }
-            )
         }
+        Text(
+            text = state.subtitle,
+            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
-@Composable
-private fun ClinometerTitleButton(
-    icon: Int,
-    contentDescription: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val containerColor = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.primaryContainer
-    }
-    val iconTint = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    }
-    Surface(
-        shape = CircleShape,
-        color = containerColor,
-        modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = contentDescription,
-                tint = iconTint,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-    }
-}
-
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ClinometerHost(
     views: ClinometerViews,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    val dialLabel = stringResource(R.string.clinometer_mode_phone)
+    val cameraLabel = stringResource(R.string.camera)
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.clinometer_title),
         modifier = modifier
-            .widthIn(max = TrailSenseSize.maximumContentWidth)
-            .pointerInteropFilter { event ->
-                views.onTouch?.invoke(event) ?: false
-            }
     ) {
-        ClinometerTitle(
-            views.clinometerTitle,
-            modifier = Modifier.padding(
-                start = TrailSenseSpacing.screen,
-                end = TrailSenseSpacing.screen,
-                top = TrailSenseSpacing.lg
-            )
-        )
-        Box(
+        // Touch-and-hold anywhere below the bar locks the reading, as before.
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(TrailSenseSpacing.screen),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .widthIn(max = TrailSenseSize.maximumContentWidth)
+                .align(Alignment.TopCenter)
+                .pointerInteropFilter { event ->
+                    views.onTouch?.invoke(event) ?: false
+                }
+                .padding(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    bottom = TrailSenseSpacing.lg
+                ),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
-            views.clinometer.Content(Modifier.fillMaxSize())
-            if (views.cameraViewHolder.isVisible) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(ComposeColor(Resources.color(LocalContext.current, R.color.colorSecondary)))
-                ) {
-                    Box(
+            ClinometerReading(views.clinometerTitle)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                views.clinometer.Content(Modifier.fillMaxSize())
+                if (views.cameraViewHolder.isVisible) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow)
                     ) {
-                        CameraPreview(
-                            state = views.camera,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        views.arView.Content(Modifier.fillMaxSize())
                         Box(
                             modifier = Modifier
-                                .align(Alignment.Center)
-                                .width(60.dp)
-                                .height(1.dp)
-                                .background(ComposeColor(Resources.color(LocalContext.current, R.color.orange_40)))
+                                .weight(1f)
+                                .fillMaxHeight()
+                        ) {
+                            CameraPreview(
+                                state = views.camera,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            views.arView.Content(Modifier.fillMaxSize())
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .width(60.dp)
+                                    .height(1.dp)
+                                    .background(ComposeColor(Resources.color(LocalContext.current, R.color.orange_40)))
+                            )
+                        }
+                        views.cameraClinometer.Content(
+                            Modifier
+                                .width(50.dp)
+                                .fillMaxHeight()
                         )
                     }
-                    views.cameraClinometer.Content(
-                        Modifier
-                            .width(50.dp)
-                            .fillMaxHeight()
+                }
+                if (views.clinometerInstructions.isVisible) {
+                    ClinometerInstruction(icon = TrailIcons.RotateFlatToPortrait)
+                }
+                if (views.cameraClinometerInstructions.isVisible) {
+                    ClinometerInstruction(icon = TrailIcons.RotateLandscapeToPortrait)
+                }
+            }
+
+            TrailSenseConnectedChoice(
+                options = listOf(
+                    TrailSenseChoice(false, dialLabel, TrailIcons.PhonePortrait),
+                    TrailSenseChoice(true, cameraLabel, TrailIcons.Camera)
+                ),
+                selected = views.clinometerTitle.isCameraMode,
+                onSelect = { views.clinometerTitle.onLeftButtonClick?.invoke() }
+            )
+
+            TrailSenseRowGroup {
+                row { position ->
+                    ClinometerDataRow(views.avalancheRisk, position = position)
+                }
+                row { position ->
+                    ClinometerDataRow(
+                        views.estimatedHeight,
+                        position = position,
+                        onClick = { views.clinometerTitle.onRightButtonClick?.invoke() },
+                        actionLabel = stringResource(R.string.measure)
                     )
                 }
             }
-            if (views.clinometerInstructions.isVisible) {
-                ClinometerInstruction(icon = R.drawable.ic_rotate_flat_to_portrait)
-            }
-            if (views.cameraClinometerInstructions.isVisible) {
-                ClinometerInstruction(icon = R.drawable.ic_rotate_landscape_to_portrait)
-            }
-        }
-        TrailSenseCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    bottom = TrailSenseSpacing.xl
-                )
-        ) {
-            Text(
-                text = LocalContext.current.getString(R.string.measure),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                views.avalancheRisk.Content(Modifier.weight(1f))
-                views.estimatedHeight.Content(Modifier.weight(1f))
-            }
         }
     }
+}
+
+/** One secondary reading as a grouped row; the measurement row opens the height/distance prompt. */
+@Composable
+private fun ClinometerDataRow(
+    state: ClinometerDataPointState,
+    position: TrailSenseGroupPosition,
+    onClick: (() -> Unit)? = null,
+    actionLabel: String? = null
+) {
+    TrailSenseListItem(
+        title = state.title,
+        subtitle = state.description,
+        icon = rememberVectorPainter(state.icon),
+        position = position,
+        onClick = onClick,
+        trailing = if (actionLabel != null) {
+            {
+                Text(
+                    text = actionLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        } else {
+            null
+        }
+    )
 }
 
 private fun createClinometerViews(context: Context): ClinometerViews {
@@ -829,11 +814,11 @@ private fun createClinometerViews(context: Context): ClinometerViews {
 
     val avalancheRisk = ClinometerDataPointState(
         initialDescription = context.getString(R.string.avalanche_risk),
-        icon = R.drawable.avalanche
+        icon = TrailIcons.Avalanche
     )
     val estimatedHeight = ClinometerDataPointState(
         initialDescription = context.getString(R.string.height),
-        icon = R.drawable.ruler
+        icon = TrailIcons.Ruler
     )
 
     val clinometer = ClinometerView()
@@ -860,13 +845,13 @@ private fun createClinometerViews(context: Context): ClinometerViews {
 }
 
 @Composable
-private fun ClinometerInstruction(icon: Int) {
+private fun ClinometerInstruction(icon: ImageVector) {
     val context = androidx.compose.ui.platform.LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
-            painter = painterResource(icon),
+            imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(48.dp)

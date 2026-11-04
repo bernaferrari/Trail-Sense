@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.icons.trail.ToolWhiteNoise
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -9,6 +12,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,17 +21,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,20 +47,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.SleepSound
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
@@ -59,6 +73,10 @@ import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
 
+/**
+ * White noise: the play button is the hero, with what is playing written under it; the sound and the sleep timer
+ * are one group of rows below, the timer's duration unfolding under its switch.
+ */
 @Composable
 fun WhiteNoiseScreen(
     modifier: Modifier = Modifier
@@ -128,89 +146,124 @@ fun WhiteNoiseScreen(
         }
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+    val soundName = soundTypes.first { it.first == selectedSound }.second
+
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.tool_white_noise_title),
+        modifier = modifier
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .widthIn(max = 560.dp)
-                .padding(
-                    horizontal = TrailSenseSpacing.screen,
-                    vertical = TrailSenseSpacing.xxl
-                ),
+                .verticalScroll(rememberScrollState())
+                .padding(TrailSenseSpacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
-            PlayControl(
-                isRunning = isRunning,
-                contentDescription = stringResource(R.string.tool_white_noise_title),
-                onClick = {
-                    if (isRunning) {
-                        stopWhiteNoise()
+            Column(
+                modifier = Modifier.padding(vertical = TrailSenseSpacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+                PlayControl(
+                    isRunning = isRunning,
+                    contentDescription = stringResource(R.string.tool_white_noise_title),
+                    stateDescription = stringResource(if (isRunning) R.string.on else R.string.off),
+                    onClick = {
+                        if (isRunning) {
+                            stopWhiteNoise()
+                        } else {
+                            WhiteNoiseService.play(
+                                context,
+                                null,
+                                if (useSleepTimer) currentDuration() else null
+                            )
+                            isRunning = true
+                        }
+                    }
+                )
+
+                Text(
+                    text = if (isRunning) {
+                        stringResource(R.string.dot_separated_pair, stringResource(R.string.on), soundName)
                     } else {
-                        WhiteNoiseService.play(
-                            context,
-                            null,
-                            if (useSleepTimer) currentDuration() else null
-                        )
-                        isRunning = true
+                        stringResource(R.string.off)
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isRunning) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            ) {
+                TrailSenseListItem(
+                    title = stringResource(R.string.tool_sound),
+                    subtitle = soundName,
+                    icon = rememberVectorPainter(TrailIcons.ToolWhiteNoise),
+                    onClick = { showSoundPicker = true },
+                    position = TrailSenseGroupPosition(isFirst = true, isLast = false)
+                )
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.sleep_timer),
+                    checked = useSleepTimer,
+                    onCheckedChange = {
+                        useSleepTimer = it
+                        stopWhiteNoise()
+                    },
+                    position = TrailSenseGroupPosition(isFirst = false, isLast = !useSleepTimer)
+                )
+                AnimatedVisibility(
+                    visible = useSleepTimer,
+                    enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
+                    exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
+                ) {
+                    TrailSenseGroupCard(
+                        position = TrailSenseGroupPosition(isFirst = false, isLast = true)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                        ) {
+                            DurationField(
+                                value = hours,
+                                label = stringResource(R.string.hours),
+                                modifier = Modifier.weight(1f),
+                                onChange = {
+                                    hours = it.cleanDurationPart(99)
+                                    stopWhiteNoise()
+                                }
+                            )
+                            DurationField(
+                                value = minutes,
+                                label = stringResource(R.string.minutes),
+                                modifier = Modifier.weight(1f),
+                                onChange = {
+                                    minutes = it.cleanDurationPart(59)
+                                    stopWhiteNoise()
+                                }
+                            )
+                            DurationField(
+                                value = seconds,
+                                label = stringResource(R.string.seconds),
+                                modifier = Modifier.weight(1f),
+                                onChange = {
+                                    seconds = it.cleanDurationPart(59)
+                                    stopWhiteNoise()
+                                }
+                            )
+                        }
                     }
                 }
-            )
-
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.lg))
-
-            Text(
-                text = stringResource(
-                    if (isRunning) R.string.on else R.string.off
-                ),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isRunning) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
-
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.xxl))
-
-            SoundSelector(
-                label = soundTypes.first { it.first == selectedSound }.second,
-                onClick = { showSoundPicker = true }
-            )
-
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-
-            SleepTimerCard(
-                enabled = useSleepTimer,
-                onEnabledChange = {
-                    useSleepTimer = it
-                    stopWhiteNoise()
-                },
-                hours = hours,
-                minutes = minutes,
-                seconds = seconds,
-                onHoursChange = {
-                    hours = it.cleanDurationPart(99)
-                    stopWhiteNoise()
-                },
-                onMinutesChange = {
-                    minutes = it.cleanDurationPart(59)
-                    stopWhiteNoise()
-                },
-                onSecondsChange = {
-                    seconds = it.cleanDurationPart(59)
-                    stopWhiteNoise()
-                }
-            )
-        }
+            }
         }
     }
 
@@ -219,9 +272,9 @@ fun WhiteNoiseScreen(
             onDismissRequest = { showSoundPicker = false },
             shape = MaterialTheme.shapes.extraLarge,
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text(stringResource(R.string.tool_white_noise_title)) },
+            title = { Text(stringResource(R.string.tool_sound)) },
             text = {
-                Column {
+                Column(modifier = Modifier.selectableGroup()) {
                     soundTypes.forEach { sound ->
                         SoundOption(
                             label = sound.second,
@@ -249,15 +302,18 @@ fun WhiteNoiseScreen(
 private fun PlayControl(
     isRunning: Boolean,
     contentDescription: String,
+    stateDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     val containerColor by animateColorAsState(
         targetValue = if (isRunning) {
             MaterialTheme.colorScheme.primary
         } else {
             MaterialTheme.colorScheme.primaryContainer
         },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "playContainerColor"
     )
     val contentColor by animateColorAsState(
@@ -266,149 +322,49 @@ private fun PlayControl(
         } else {
             MaterialTheme.colorScheme.onPrimaryContainer
         },
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "playContentColor"
     )
-    val pulse by animateFloatAsState(
-        targetValue = if (isRunning) 1.04f else 1f,
-        animationSpec = TrailSenseAnimation.standardSpring,
-        label = "playPulse"
+    val haloAlpha by animateFloatAsState(
+        targetValue = if (isRunning) 0.3f else 0f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "haloAlpha"
+    )
+    val haloScale by animateFloatAsState(
+        targetValue = if (isRunning) 1f else 0.85f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "haloScale"
     )
 
-    // Soft halo behind the control, emphasized while playing.
+    // The halo appears only while sound plays, so the control reads as "on" at a glance.
     Box(
-        modifier = modifier.size(240.dp),
+        modifier = modifier.size(232.dp),
         contentAlignment = Alignment.Center
     ) {
-        val haloAlpha by animateFloatAsState(
-            targetValue = if (isRunning) 0.35f else 0.18f,
-            animationSpec = TrailSenseAnimation.mediumFade,
-            label = "haloAlpha"
-        )
         Surface(
             shape = CircleShape,
             color = containerColor.copy(alpha = haloAlpha),
             modifier = Modifier
-                .size(240.dp)
-                .scale(pulse)
+                .size(232.dp)
+                .scale(haloScale)
         ) {}
         Surface(
             onClick = onClick,
+            interactionSource = interactionSource,
             shape = CircleShape,
             color = containerColor,
             contentColor = contentColor,
             modifier = Modifier
-                .size(196.dp)
-                .scale(pulse)
-                .clip(CircleShape)
+                .size(184.dp)
+                .trailSensePressScale(interactionSource)
+                .semantics { this.stateDescription = stateDescription }
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_tool_white_noise),
+                    painter = rememberVectorPainter(TrailIcons.ToolWhiteNoise),
                     contentDescription = contentDescription,
-                    modifier = Modifier.size(84.dp)
+                    modifier = Modifier.size(80.dp)
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SoundSelector(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = TrailSenseSpacing.lg, horizontal = TrailSenseSpacing.lg)
-        )
-    }
-}
-
-@Composable
-private fun SleepTimerCard(
-    enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit,
-    hours: String,
-    minutes: String,
-    seconds: String,
-    onHoursChange: (String) -> Unit,
-    onMinutesChange: (String) -> Unit,
-    onSecondsChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.sm
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = TrailSenseSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.sleep_timer),
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Switch(
-                    checked = enabled,
-                    onCheckedChange = onEnabledChange
-                )
-            }
-
-            AnimatedVisibility(
-                visible = enabled,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.xs, bottom = TrailSenseSpacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                ) {
-                    DurationField(
-                        value = hours,
-                        label = stringResource(R.string.hours),
-                        modifier = Modifier.weight(1f),
-                        onChange = onHoursChange
-                    )
-                    DurationField(
-                        value = minutes,
-                        label = stringResource(R.string.minutes),
-                        modifier = Modifier.weight(1f),
-                        onChange = onMinutesChange
-                    )
-                    DurationField(
-                        value = seconds,
-                        label = stringResource(R.string.seconds),
-                        modifier = Modifier.weight(1f),
-                        onChange = onSecondsChange
-                    )
-                }
             }
         }
     }
@@ -421,29 +377,19 @@ private fun SoundOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.large,
-        color = if (selected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            Color.Transparent
-        },
-        contentColor = if (selected) {
-            MaterialTheme.colorScheme.onPrimaryContainer
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        },
-        modifier = modifier.fillMaxWidth()
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = TrailSenseSize.minimumTouchTarget)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        RadioButton(selected = selected, onClick = null)
+        Spacer(Modifier.size(TrailSenseSpacing.md))
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            textAlign = TextAlign.Start,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -461,6 +407,7 @@ private fun DurationField(
         modifier = modifier,
         label = { Text(label) },
         shape = MaterialTheme.shapes.medium,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true
     )

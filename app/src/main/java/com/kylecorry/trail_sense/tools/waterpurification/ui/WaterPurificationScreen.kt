@@ -2,23 +2,24 @@
 
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -34,16 +35,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
 import kotlinx.coroutines.delay
 import java.time.Duration
@@ -51,6 +56,10 @@ import java.time.Instant
 
 const val WATER_PURIFICATION_END_TIME_KEY = "water_purification_start_time"
 
+/**
+ * The boil timer: the countdown is the hero, the duration choice and the one action sit right under it, and the
+ * three steps follow as a reference group. The duration choice folds away while the timer runs.
+ */
 @Composable
 internal fun WaterPurificationScreen(
     cache: IPreferences,
@@ -81,100 +90,88 @@ internal fun WaterPurificationScreen(
         remaining = null
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    val displayed = remaining ?: duration
+    // Full ring when idle; while running it empties as the time runs out.
+    val animatedProgress by animateFloatAsState(
+        targetValue = remainingFraction(remaining, duration),
+        animationSpec = TrailSenseAnimation.standardSpring,
+        label = "purificationProgress"
+    )
+    val durationOptions = listOf(
+        TrailSenseChoice(TimeSelection.Auto, stringResource(R.string.auto)),
+        TrailSenseChoice(
+            TimeSelection.LowAltitude,
+            formatService.formatDuration(Duration.ofMinutes(1), short = true)
+        ),
+        TrailSenseChoice(
+            TimeSelection.HighAltitude,
+            formatService.formatDuration(Duration.ofMinutes(3), short = true)
+        )
+    )
+
+    TrailSensePage(
+        title = stringResource(R.string.water_boil_timer),
+        onBack = rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xl),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
-            ) {
-            // Instructions card
-            StepsCard()
-
-            // Central timer readout with circular progress
-            val displayed = remaining ?: duration
-            // Progress fraction of the remaining run. When idle/selecting we show
-            // a full ring; while running we deplete from full to empty.
-            val progressTarget = remainingFraction(remaining, duration)
-            val animatedProgress by animateFloatAsState(
-                targetValue = progressTarget,
-                animationSpec = TrailSenseAnimation.standardSpring,
-                label = "purificationProgress"
-            )
-
-            TimerDial(
-                seconds = displayed?.seconds,
-                progress = animatedProgress,
-                loading = displayed == null
-            )
-
-            // Duration selection (only when not running)
-            if (!isRunning) {
-                Text(
-                    text = stringResource(R.string.duration),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        TrailSenseSpacing.xs,
-                        Alignment.CenterHorizontally
-                    )
-                ) {
-                    TrailSenseChip(
-                        text = stringResource(R.string.auto),
-                        selected = selectedTime == TimeSelection.Auto,
-                        onClick = { selectedTime = TimeSelection.Auto }
-                    )
-                    TrailSenseChip(
-                        text = formatService.formatDuration(Duration.ofMinutes(1), short = true),
-                        selected = selectedTime == TimeSelection.LowAltitude,
-                        onClick = { selectedTime = TimeSelection.LowAltitude }
-                    )
-                    TrailSenseChip(
-                        text = formatService.formatDuration(Duration.ofMinutes(3), short = true),
-                        selected = selectedTime == TimeSelection.HighAltitude,
-                        onClick = { selectedTime = TimeSelection.HighAltitude }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.xs))
-
-            // Primary start / stop action
-            if (displayed != null) {
-                TrailSenseButton(
-                    text = stringResource(if (isRunning) android.R.string.cancel else R.string.start),
-                    onClick = {
-                        if (isRunning) {
-                            stop()
-                        } else {
-                            val selectedDuration = duration ?: Duration.ofMinutes(3)
-                            cache.putInstant(
-                                WATER_PURIFICATION_END_TIME_KEY,
-                                Instant.now().plus(selectedDuration)
-                            )
-                            WaterPurificationTimerService.start(
-                                context,
-                                selectedDuration.seconds
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
+        item("dial") {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                TimerDial(
+                    seconds = displayed?.seconds,
+                    progress = animatedProgress
                 )
             }
         }
+
+        item("duration") {
+            AnimatedVisibility(
+                visible = !isRunning,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                TrailSenseConnectedChoice(
+                    options = durationOptions,
+                    selected = selectedTime,
+                    onSelect = { selectedTime = it },
+                    label = stringResource(R.string.duration)
+                )
+            }
+        }
+
+        item("action") {
+            // Holds its place while the duration is worked out, so nothing jumps when it appears.
+            TrailSenseButton(
+                text = stringResource(if (isRunning) android.R.string.cancel else R.string.start),
+                enabled = displayed != null,
+                onClick = {
+                    if (isRunning) {
+                        stop()
+                    } else {
+                        val selectedDuration = duration ?: Duration.ofMinutes(3)
+                        cache.putInstant(
+                            WATER_PURIFICATION_END_TIME_KEY,
+                            Instant.now().plus(selectedDuration)
+                        )
+                        WaterPurificationTimerService.start(
+                            context,
+                            selectedDuration.seconds
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        trailSenseSection(key = "steps", title = context.getString(R.string.steps)) {
+            row { position ->
+                WaterStep(position, context.getString(R.string.one), context.getString(R.string.water_purification_step_1))
+            }
+            row { position ->
+                WaterStep(position, context.getString(R.string.two), context.getString(R.string.water_purification_step_2))
+            }
+            row { position ->
+                WaterStep(position, context.getString(R.string.three), context.getString(R.string.water_purification_step_3))
+            }
         }
     }
 }
@@ -194,96 +191,66 @@ private fun remainingFraction(remaining: Duration?, duration: Duration?): Float 
 @Composable
 private fun TimerDial(
     seconds: Long?,
-    progress: Float,
-    loading: Boolean
+    progress: Float
 ) {
     Box(
-        modifier = Modifier.size(240.dp),
+        modifier = Modifier
+            .padding(vertical = TrailSenseSpacing.lg)
+            .size(240.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Track ring
         CircularProgressIndicator(
             progress = { 1f },
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.surfaceContainerHighest,
             strokeWidth = 12.dp
         )
-        // Active progress ring
         CircularProgressIndicator(
             progress = { progress },
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.primary,
             strokeWidth = 12.dp
         )
-
-        if (loading || seconds == null) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(56.dp),
-                color = MaterialTheme.colorScheme.primary
-            )
-        } else {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = seconds.toString(),
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontFeatureSettings = "tnum"
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = stringResource(R.string.seconds),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StepsCard() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer
-    ) {
-        Column(
-            modifier = Modifier.padding(TrailSenseSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
-        ) {
-            WaterStep(stringResource(R.string.one), stringResource(R.string.water_purification_step_1))
-            WaterStep(stringResource(R.string.two), stringResource(R.string.water_purification_step_2))
-            WaterStep(stringResource(R.string.three), stringResource(R.string.water_purification_step_3))
-        }
-    }
-}
-
-@Composable
-private fun WaterStep(number: String, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = number,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+        // The dash holds the number's place while the auto duration reads the altimeter.
+        TrailSenseReading(
+            value = seconds?.toString() ?: stringResource(R.string.dash),
+            label = stringResource(R.string.seconds)
         )
+    }
+}
+
+@Composable
+private fun WaterStep(
+    position: com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition,
+    number: String,
+    text: String
+) {
+    TrailSenseGroupCard(
+        position = position,
+        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = number,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(TrailSenseSpacing.lg))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 

@@ -45,6 +45,11 @@ import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.R
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCameraUnavailable
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentPanel
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 
 @Composable
 internal fun MagnifierScreen(
@@ -61,12 +66,14 @@ internal fun MagnifierScreen(
         }
     }
     var isCameraEnabled by remember { mutableStateOf(false) }
+    var hasPermissionAnswer by remember { mutableStateOf(false) }
     var isCloseUpFocus by remember { mutableStateOf(false) }
     var frozenFrame by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(Unit) {
         onRequestCamera {
             isCameraEnabled = it
+            hasPermissionAnswer = true
         }
     }
 
@@ -104,9 +111,16 @@ internal fun MagnifierScreen(
         }
     }
 
-    Box(
-        modifier = modifier.fillMaxSize()
+    // Full-bleed camera under a small top bar; the two controls float in one tonal panel at the bottom.
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.tool_magnifier_title),
+        modifier = modifier
     ) {
+        if (hasPermissionAnswer && !isCameraEnabled) {
+            TrailSenseCameraUnavailable()
+            return@TrailSenseInstrumentScaffold
+        }
+
         CameraPreview(
             state = cameraState,
             modifier = Modifier
@@ -125,22 +139,15 @@ internal fun MagnifierScreen(
             )
         }
 
-        // Floating translucent control pill anchored at the bottom so the controls
-        // read clearly against the live camera preview.
-        Surface(
+        TrailSenseInstrumentPanel(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 56.dp)
-                .testTag("magnifier_controls"),
-            shape = MaterialTheme.shapes.extraLarge,
-            color = Color.Black.copy(alpha = 0.45f)
+                .padding(bottom = TrailSenseSpacing.xl)
+                .testTag("magnifier_controls")
         ) {
             Row(
-                modifier = Modifier.padding(
-                    horizontal = TrailSenseSpacing.md,
-                    vertical = TrailSenseSpacing.sm
-                ),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
+                modifier = Modifier.padding(TrailSenseSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 MagnifierButton(
@@ -174,7 +181,7 @@ internal fun MagnifierScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MagnifierButton(
     onClick: () -> Unit,
@@ -186,9 +193,9 @@ private fun MagnifierButton(
         targetValue = if (selected) {
             MaterialTheme.colorScheme.primary
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.9f)
+            MaterialTheme.colorScheme.surfaceContainerHighest
         },
-        animationSpec = tween(durationMillis = 250),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "magnifierButtonContainer"
     )
     val contentColor by animateColorAsState(
@@ -197,13 +204,17 @@ private fun MagnifierButton(
         } else {
             MaterialTheme.colorScheme.onSurface
         },
-        animationSpec = tween(durationMillis = 250),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "magnifierButtonContent"
     )
 
+    val interactionSource = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
-        modifier = modifier.size(56.dp),
+        interactionSource = interactionSource,
+        modifier = modifier
+            .size(56.dp)
+            .trailSensePressScale(interactionSource),
         shape = CircleShape,
         color = containerColor,
         contentColor = contentColor
