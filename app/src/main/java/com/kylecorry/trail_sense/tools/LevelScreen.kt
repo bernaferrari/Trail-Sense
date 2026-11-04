@@ -3,7 +3,9 @@
 package com.kylecorry.trail_sense.tools.level.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +27,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -45,12 +49,15 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.abs
 import kotlin.math.acos
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -60,8 +67,8 @@ import kotlin.math.sqrt
  * Bubble level: one round well that works the way the phone is held.
  * - Lying flat, it is a bubble level for the surface under the phone: the bubble rides to the high side and settles
  *   in the centre ring when the surface is level.
- * - Standing on an edge, it is a line level for that edge: a line stays on the true horizon and meets the phone's
- *   own axis when the edge is level.
+ * - Standing on an edge, it is a tube level for that edge: the bubble slides along a vial lying on the edge and
+ *   sits between the two marks when the edge is level.
  * The tilt sits under the well with the verdict naming the high side, and one quiet line says which of the two it is
  * measuring. Once level, the well fills with primaryContainer and the phone gives one haptic tick.
  */
@@ -112,6 +119,12 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     val roll = Math.toDegrees(atan2(gx, gy).toDouble()).toFloat()
     val edge = ((roll / 90f).roundToInt() % 4 + 4) % 4
     val edgeError = roll - (roll / 90f).roundToInt() * 90f
+
+    // On edge, the bubble rides along the edge toward its high end: the up direction on screen, projected on the edge.
+    val axisRadians = Math.toRadians((roll - edgeError).toDouble())
+    val planar = hypot(gx, gy).coerceAtLeast(0.001f)
+    val along = ((gx * cos(axisRadians) - gy * sin(axisRadians)) / planar).toFloat().coerceIn(-1f, 1f)
+    val edgeBubble = Math.toDegrees(asin(along).toDouble()).toFloat() / EDGE_FULL_SCALE
 
     val tilt = if (onEdge) abs(edgeError) else fromFlat
     val isLevel = tilt <= threshold
@@ -165,7 +178,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                 onEdge = onEdge,
                 // The bubble's place in the well, -1..1 on each axis (screen y runs down, so a high top is up).
                 bubble = Offset(xAngle / FLAT_FULL_SCALE, -yAngle / FLAT_FULL_SCALE),
-                horizonDegrees = roll,
+                edgeBubble = edgeBubble,
                 axisDegrees = roll - edgeError,
                 modifier = Modifier
                     .widthIn(max = 320.dp)
@@ -222,30 +235,39 @@ private fun edgeHighSide(edge: Int, gx: Float, gy: Float): Int {
 }
 
 /**
- * The one live object: a round well. Flat, a bubble in primary rides inside it toward the high side, with a ring at
- * the centre for level. On edge, a primary line holds the true horizon across the well and a quiet line marks the
- * phone's own axis; level is when they meet. When level the well fills with primaryContainer.
+ * The one live object, a real spirit level. Flat, it is a round bull's-eye vial: a bubble of light floats toward the
+ * high side, presses into an oval against the glass when it is far out, and rounds into a circle inside the centre
+ * ring when level. On edge, a tube vial lies along the phone's edge and the bubble slides along it between two
+ * marks. The bubble moves on a bouncy spring, so it overshoots and settles like air in liquid. Level turns the
+ * liquid primaryContainer and the target tertiary.
  */
 @Composable
 private fun LevelWell(
     isLevel: Boolean,
     onEdge: Boolean,
     bubble: Offset,
-    horizonDegrees: Float,
+    edgeBubble: Float,
     axisDegrees: Float,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
-    val well by animateColorAsState(
+    val liquid by animateColorAsState(
         if (isLevel) scheme.primaryContainer else scheme.surfaceContainerHigh,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "well"
+        label = "liquid"
     )
-    val mark = if (isLevel) scheme.onPrimaryContainer.copy(alpha = 0.5f) else scheme.outlineVariant
-    val live = scheme.primary
-    val bubbleX by animateFloatAsState(bubble.x, TrailSenseAnimation.standardSpring, label = "bubbleX")
-    val bubbleY by animateFloatAsState(bubble.y, TrailSenseAnimation.standardSpring, label = "bubbleY")
-    val horizon by animateFloatAsState(horizonDegrees, TrailSenseAnimation.standardSpring, label = "horizon")
+    val target by animateColorAsState(
+        if (isLevel) scheme.tertiary else scheme.outline,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "target"
+    )
+    val glass = scheme.outlineVariant
+    val air = scheme.primary
+    val shine = scheme.onPrimary
+    val wobble = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+    val bubbleX by animateFloatAsState(bubble.x, wobble, label = "bubbleX")
+    val bubbleY by animateFloatAsState(bubble.y, wobble, label = "bubbleY")
+    val tube by animateFloatAsState(edgeBubble, wobble, label = "tube")
     val edgeShown by animateFloatAsState(
         if (onEdge) 1f else 0f,
         MaterialTheme.motionScheme.defaultEffectsSpec(),
@@ -256,65 +278,91 @@ private fun LevelWell(
         Canvas(Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = size.minDimension / 2f
-            drawCircle(well, radius, center)
-
             val thin = 2.dp.toPx()
-            val bubbleRadius = radius * 0.17f
-            val ringRadius = bubbleRadius + 8.dp.toPx()
 
-            // Flat: a crosshair, the level ring and the bubble.
+            // Flat: the bull's-eye vial.
             val flatAlpha = 1f - edgeShown
             if (flatAlpha > 0f) {
-                drawLine(
-                    mark.copy(alpha = mark.alpha * flatAlpha),
-                    Offset(center.x - radius, center.y),
-                    Offset(center.x + radius, center.y),
-                    thin
-                )
-                drawLine(
-                    mark.copy(alpha = mark.alpha * flatAlpha),
-                    Offset(center.x, center.y - radius),
-                    Offset(center.x, center.y + radius),
-                    thin
-                )
-                // The bubble's travel ends at the rim; its direction is kept when it gets there.
+                drawCircle(liquid.copy(alpha = flatAlpha), radius, center)
+                drawCircle(glass.copy(alpha = flatAlpha), radius - thin, center, style = Stroke(thin))
+                val bubbleRadius = radius * 0.2f
+                val ringRadius = bubbleRadius + 10.dp.toPx()
+                drawCircle(target.copy(alpha = flatAlpha), ringRadius, center, style = Stroke(3.dp.toPx()))
+                drawCircle(glass.copy(alpha = flatAlpha * 0.6f), radius * 0.62f, center, style = Stroke(thin))
+
+                // The bubble's travel ends at the glass; its direction is kept when it gets there.
                 var offset = Offset(bubbleX, bubbleY)
                 val length = hypot(offset.x, offset.y)
                 if (length > 1f) offset /= length
-                val travel = radius - bubbleRadius - 6.dp.toPx()
+                val reach = min(length, 1f)
+                val travel = radius - bubbleRadius - 8.dp.toPx()
+                val at = center + offset * travel
+                // Far out it presses against the glass into an oval; centred it is a perfect circle.
+                val along = bubbleRadius * (1f + 0.18f * reach)
+                val across = bubbleRadius * (1f - 0.14f * reach)
+                val angle = if (length > 0.001f) Math.toDegrees(atan2(offset.y, offset.x).toDouble()).toFloat() else 0f
+                rotate(angle, at) {
+                    drawOval(
+                        air.copy(alpha = flatAlpha),
+                        topLeft = Offset(at.x - along, at.y - across),
+                        size = Size(along * 2f, across * 2f)
+                    )
+                }
                 drawCircle(
-                    live.copy(alpha = flatAlpha),
-                    bubbleRadius,
-                    center + offset * travel
-                )
-                drawCircle(
-                    (if (isLevel) scheme.onPrimaryContainer else scheme.outline).copy(alpha = flatAlpha),
-                    ringRadius,
-                    center,
-                    style = Stroke(thin)
+                    shine.copy(alpha = 0.35f * flatAlpha),
+                    bubbleRadius * 0.28f,
+                    at + Offset(-bubbleRadius * 0.38f, -bubbleRadius * 0.38f)
                 )
             }
 
-            // On edge: the phone's axis and the horizon.
+            // On edge: a tube vial along the edge the phone stands on.
             if (edgeShown > 0f) {
                 rotate(axisDegrees, center) {
-                    drawLine(
-                        mark.copy(alpha = mark.alpha * edgeShown),
-                        Offset(center.x - radius, center.y),
-                        Offset(center.x + radius, center.y),
-                        thin
+                    val length = radius * 1.9f
+                    val height = radius * 0.42f
+                    val left = center.x - length / 2f
+                    val top = center.y - height / 2f
+                    drawRoundRect(
+                        liquid.copy(alpha = edgeShown),
+                        topLeft = Offset(left, top),
+                        size = Size(length, height),
+                        cornerRadius = CornerRadius(height / 2f)
+                    )
+                    drawRoundRect(
+                        glass.copy(alpha = edgeShown),
+                        topLeft = Offset(left + thin / 2f, top + thin / 2f),
+                        size = Size(length - thin, height - thin),
+                        cornerRadius = CornerRadius(height / 2f),
+                        style = Stroke(thin)
+                    )
+                    val bubbleLength = height * 1.5f
+                    val bubbleHeight = height - 14.dp.toPx()
+                    // The two marks the bubble sits between when the edge is level.
+                    val gap = bubbleLength / 2f + 6.dp.toPx()
+                    listOf(-gap, gap).forEach { dx ->
+                        drawLine(
+                            target.copy(alpha = edgeShown),
+                            Offset(center.x + dx, top + 4.dp.toPx()),
+                            Offset(center.x + dx, top + height - 4.dp.toPx()),
+                            3.dp.toPx(),
+                            StrokeCap.Round
+                        )
+                    }
+                    val travel = (length - bubbleLength) / 2f - 7.dp.toPx()
+                    val bx = center.x + tube.coerceIn(-1f, 1f) * travel
+                    drawRoundRect(
+                        air.copy(alpha = edgeShown),
+                        topLeft = Offset(bx - bubbleLength / 2f, center.y - bubbleHeight / 2f),
+                        size = Size(bubbleLength, bubbleHeight),
+                        cornerRadius = CornerRadius(bubbleHeight / 2f)
+                    )
+                    drawRoundRect(
+                        shine.copy(alpha = 0.35f * edgeShown),
+                        topLeft = Offset(bx - bubbleLength * 0.3f, center.y - bubbleHeight * 0.32f),
+                        size = Size(bubbleLength * 0.4f, bubbleHeight * 0.16f),
+                        cornerRadius = CornerRadius(bubbleHeight * 0.08f)
                     )
                 }
-                rotate(horizon, center) {
-                    drawLine(
-                        live.copy(alpha = edgeShown),
-                        Offset(center.x - radius * 0.86f, center.y),
-                        Offset(center.x + radius * 0.86f, center.y),
-                        6.dp.toPx(),
-                        StrokeCap.Round
-                    )
-                }
-                drawCircle(live.copy(alpha = edgeShown), 7.dp.toPx(), center)
             }
         }
     }
@@ -322,5 +370,6 @@ private fun LevelWell(
 
 /** A bubble reaches the rim at this tilt, so the last few degrees still move it plainly. */
 private const val FLAT_FULL_SCALE = 15f
+private const val EDGE_FULL_SCALE = 10f
 private const val EDGE_ENTER_DEGREES = 55f
 private const val EDGE_EXIT_DEGREES = 45f
