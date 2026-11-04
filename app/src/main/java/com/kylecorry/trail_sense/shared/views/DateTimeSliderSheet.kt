@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -197,7 +198,7 @@ private fun DatePickerRow(
                 .testTag("prev_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                imageVector = TrailIcons.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
@@ -228,7 +229,7 @@ private fun DatePickerRow(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_date),
+                imageVector = TrailIcons.Date,
                 contentDescription = stringResource(R.string.date),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -241,7 +242,7 @@ private fun DatePickerRow(
                 .testTag("next_date")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                imageVector = TrailIcons.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

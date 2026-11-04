@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import androidx.compose.foundation.shape.CircleShape
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -104,14 +107,14 @@ class SensorStatusBadgeView(
         ) {
             val gps = gpsBadge
             val compass = compassBadge
-            if (showGpsBadge && gps != null && !gps.isHealthy) {
+            if (showGpsBadge && gps != null && !gps.isGood()) {
                 SensorBadgeContent(
                     badge = gps,
                     label = context.getString(R.string.gps),
                     icon = TrailSenseIcons.Filled.LocationOn
                 )
             }
-            if (showCompassBadge && compass != null && !compass.isHealthy) {
+            if (showCompassBadge && compass != null && !compass.isGood()) {
                 SensorBadgeContent(
                     badge = compass,
                     label = context.getString(R.string.pref_compass_sensor_title),
@@ -160,14 +163,18 @@ private fun SensorBadgeContent(
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
+    // The badge only appears when something needs attention: amber while searching or for a fair signal, the
+    // error tone when it's poor or unavailable.
+    val status = trailSenseStatusColors()
+    val caution = badge.color == AppColor.Yellow.color || badge.color == AppColor.Orange.color
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.errorContainer,
-        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        shape = MaterialTheme.shapes.large
+        color = if (caution) status.cautionContainer else MaterialTheme.colorScheme.errorContainer,
+        contentColor = if (caution) status.onCautionContainer else MaterialTheme.colorScheme.onErrorContainer,
+        shape = CircleShape
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -177,9 +184,12 @@ private fun SensorBadgeContent(
                 modifier = Modifier.size(16.dp)
             )
             Text(
-                text = "$label: ${badge.name}",
+                text = "$label · ${badge.name}",
                 style = MaterialTheme.typography.labelMedium
             )
         }
     }
 }
+
+/** A good reading needs no badge: healthy, or reported in the quality scale's green. */
+private fun StatusBadge.isGood(): Boolean = isHealthy || color == AppColor.Green.color

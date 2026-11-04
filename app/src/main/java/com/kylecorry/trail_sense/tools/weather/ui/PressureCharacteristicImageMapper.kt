@@ -1,17 +1,16 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
-import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
 
 class PressureCharacteristicImageMapper {
 
-    @DrawableRes
-    fun getImageResource(characteristic: PressureCharacteristic): Int {
+    fun getImageResource(characteristic: PressureCharacteristic): ImageVector {
         return when (characteristic) {
-            PressureCharacteristic.Falling, PressureCharacteristic.FallingFast -> R.drawable.ic_arrow_down
-            PressureCharacteristic.Rising, PressureCharacteristic.RisingFast -> R.drawable.ic_arrow_up
-            else -> R.drawable.ic_steady_arrow
+            PressureCharacteristic.Falling, PressureCharacteristic.FallingFast -> TrailIcons.ArrowDown
+            PressureCharacteristic.Rising, PressureCharacteristic.RisingFast -> TrailIcons.ArrowUp
+            else -> TrailIcons.SteadyArrow
         }
     }
 

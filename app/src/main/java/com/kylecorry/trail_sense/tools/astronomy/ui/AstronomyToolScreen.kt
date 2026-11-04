@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import android.content.Context
 import android.os.Bundle
 import androidx.compose.foundation.clickable
@@ -751,7 +757,7 @@ private fun AstronomyTitle(
 ) {
     TrailSenseCard(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = RoundedCornerShape(32.dp),
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         contentPadding = PaddingValues(
@@ -773,10 +779,10 @@ private fun AstronomyTitle(
             ) {
                 Text(
                     text = state.title,
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = MaterialTheme.typography.displaySmall.copy(
                         fontFeatureSettings = "tnum"
                     ),
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center
                 )
@@ -800,69 +806,64 @@ private fun AstronomyDetailList(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.testTag("astronomy_detail_list")) {
-        Text(
-            text = stringResource(R.string.astronomy),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(
-                start = TrailSenseSpacing.xs,
-                bottom = TrailSenseSpacing.sm
-            )
-        )
-        TrailSenseCard {
-            items.forEach { item ->
-                AstronomyDetailRow(item)
+        TrailSenseGroupHeader(stringResource(R.string.astronomy))
+        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+            items.forEachIndexed { index, item ->
+                AstronomyDetailRow(item, TrailSenseGroupPosition.at(index, items.size))
             }
         }
     }
 }
 
+/**
+ * One body (the sun, the moon, a meteor shower…): its icon, name and state, then its times as an even strip across
+ * the row, so a long phase name never squeezes the times and the times always line up from row to row.
+ */
 @Composable
-private fun AstronomyDetailRow(item: AstronomyListItem) {
-    val rowModifier = Modifier
-        .fillMaxWidth()
-        .then(
-            item.onClick?.let { onClick ->
-                Modifier.clickable(onClick = onClick)
-            } ?: Modifier
-        )
-        .padding(vertical = TrailSenseSpacing.md)
-        .testTag("astronomy_detail_title")
-
-    Row(
-        modifier = rowModifier,
-        verticalAlignment = Alignment.CenterVertically
+private fun AstronomyDetailRow(item: AstronomyListItem, position: TrailSenseGroupPosition) {
+    Surface(
+        shape = trailSenseGroupShape(position),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        item.icon?.let { icon ->
-            AstronomyIconChip(
-                icon = rememberAstronomyIconPainter(icon),
-                tint = icon.tint?.let { Color(it) }
-                    ?: Color.Unspecified,
-                rotation = icon.rotation
-            )
-            Spacer(Modifier.size(TrailSenseSpacing.md))
-        }
-
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(item.onClick?.let { Modifier.clickable(onClick = it) } ?: Modifier)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.lg)
+                .testTag("astronomy_detail_title"),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            item.subtitle?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                item.icon?.let { icon ->
+                    AstronomyIconChip(
+                        icon = rememberAstronomyIconPainter(icon),
+                        tint = icon.tint?.let { Color(it) } ?: Color.Unspecified,
+                        rotation = icon.rotation
+                    )
+                    Spacer(Modifier.size(TrailSenseSpacing.md))
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+                ) {
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    item.subtitle?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
+            if (item.data.isNotEmpty()) AstronomyDataRow(item.data)
         }
-
-        Spacer(Modifier.size(TrailSenseSpacing.md))
-        AstronomyDataRow(item.data)
     }
 }
 
@@ -903,23 +904,33 @@ private fun AstronomyIconChip(
 @Composable
 private fun AstronomyDataRow(data: List<AstronomyListItemData>) {
     Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 56.dp),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         data.forEach {
-            Text(
-                text = if (it.label == null) {
-                    it.value
-                } else {
-                    "${it.value}\n${it.label}"
-                },
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.testTag("astronomy_detail_data")
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("astronomy_detail_data")
+            ) {
+                Text(
+                    text = it.value,
+                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+                it.label?.let { label ->
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+            }
         }
     }
 }
@@ -938,17 +949,14 @@ private fun AstronomyScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(TrailSenseSpacing.screen),
+                .padding(TrailSenseSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
             AstronomyTitle(views.astronomyTitle)
 
             views.displayDate.Content()
 
-            TrailSenseCard(
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-            ) {
+            TrailSenseGroupCard(TrailSenseGroupPosition.Single) {
                 views.sunMoonChart.Content(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1026,7 +1034,7 @@ private class AstronomyTimeSeekerDetailsState {
                         .size(TrailSenseSize.minimumTouchTarget)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_cancel),
+                        imageVector = TrailIcons.Cancel,
                         contentDescription = stringResource(android.R.string.cancel),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
@@ -1088,11 +1096,21 @@ private class AstronomyTextButtonState(
 
     @Composable
     fun Content() {
-        TrailSenseButton(
-            text = text,
+        // A way in, not the point of the page: tonal, with the AR icon.
+        androidx.compose.material3.FilledTonalButton(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth()
-        )
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+        ) {
+            Icon(
+                imageVector = TrailIcons.Camera,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.size(TrailSenseSpacing.sm))
+            Text(text, style = MaterialTheme.typography.titleSmall)
+        }
     }
 }
 

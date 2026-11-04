@@ -1,5 +1,35 @@
 package com.kylecorry.trail_sense.onboarding
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseIconWell
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,13 +77,10 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-private val onboardingHeroShape = RoundedCornerShape(
-    topStart = 32.dp,
-    topEnd = 12.dp,
-    bottomEnd = 32.dp,
-    bottomStart = 12.dp
-)
-
+/**
+ * The first screen: a small landscape drawn in the app's own colors, the app's promise, the unit system (with a live
+ * preview of what it changes) and the privacy promise. Next sits at the bottom on every onboarding page.
+ */
 @Composable
 fun UnitSystemOnboardingScreen(
     useMetric: Boolean,
@@ -61,214 +88,113 @@ fun UnitSystemOnboardingScreen(
     onNext: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-        Box(
+    OnboardingFrame(
+        nextText = stringResource(R.string.next),
+        onNext = onNext,
+        modifier = modifier
+    ) {
+        TrailHero(
             modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Column(
-                modifier = Modifier
-                    .widthIn(max = 560.dp)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .padding(top = TrailSenseSpacing.xl, bottom = TrailSenseSpacing.screen)
-            ) {
-            Surface(
-                color = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                shape = onboardingHeroShape,
-                modifier = Modifier.size(width = 88.dp, height = 76.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = TrailSenseIcons.Filled.Hiking,
-                        contentDescription = null,
-                        modifier = Modifier.size(38.dp)
+                .fillMaxWidth()
+                .height(196.dp)
+        )
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = TrailSenseSpacing.xl)
+        )
+        Text(
+            text = stringResource(R.string.onboarding_setup_intro),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = TrailSenseSpacing.sm)
+        )
+
+        TrailSenseGroupHeader(
+            stringResource(R.string.units),
+            modifier = Modifier.padding(top = TrailSenseSpacing.lg)
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+            TrailSenseGroupCard(TrailSenseGroupPosition(isFirst = true, isLast = false)) {
+                TrailSenseConnectedChoice(
+                    options = listOf(
+                        TrailSenseChoice(true, stringResource(R.string.metric)),
+                        TrailSenseChoice(false, stringResource(R.string.us_customary))
+                    ),
+                    selected = useMetric,
+                    onSelect = onUnitSystemChanged,
+                    label = stringResource(R.string.units)
+                )
+            }
+            // What the choice changes, as three readings that roll over to the other system.
+            Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                val cells = listOf(
+                    Triple(if (useMetric) "12.4" else "7.7", if (useMetric) "km" else "mi", stringResource(R.string.distance)),
+                    Triple(if (useMetric) "21°" else "70°", if (useMetric) "C" else "F", stringResource(R.string.temperature)),
+                    Triple(if (useMetric) "1013" else "29.9", if (useMetric) "hPa" else "inHg", stringResource(R.string.pressure))
+                )
+                cells.forEachIndexed { index, (value, unit, label) ->
+                    UnitPreviewValue(
+                        value = value,
+                        unit = unit,
+                        label = label,
+                        metric = useMetric,
+                        shape = trailSenseGridCellShape(index, cells.size, 1, 2),
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
+        }
+        Text(
+            text = stringResource(R.string.units_setup_description),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.lg, top = TrailSenseSpacing.sm)
+        )
 
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(top = TrailSenseSpacing.lg)
-            )
-            Text(
-                text = stringResource(R.string.onboarding_setup_intro),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = TrailSenseSpacing.sm)
-            )
-
-            Text(
-                text = stringResource(R.string.units),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.xl)
-            )
-            Text(
-                text = stringResource(R.string.units_setup_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = TrailSenseSpacing.xs)
-            )
-
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.xl),
+            shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.md),
-                horizontalArrangement = Arrangement.spacedBy(
-                    ButtonGroupDefaults.ConnectedSpaceBetween
-                )
+                modifier = Modifier.padding(TrailSenseSpacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
             ) {
-                UnitSystemSegment(
-                    title = stringResource(R.string.metric),
-                    selected = useMetric,
-                    onClick = { onUnitSystemChanged(true) },
-                    index = 0
-                )
-                UnitSystemSegment(
-                    title = stringResource(R.string.us_customary),
-                    selected = !useMetric,
-                    onClick = { onUnitSystemChanged(false) },
-                    index = 1
-                )
-            }
-
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = TrailSenseSpacing.lg),
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerLow
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(TrailSenseSpacing.lg),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    UnitPreviewValue(if (useMetric) "12.4" else "7.7", if (useMetric) "km" else "mi")
-                    UnitPreviewValue(if (useMetric) "21" else "70", if (useMetric) "C" else "F")
-                    UnitPreviewValue(if (useMetric) "1013" else "29.9", if (useMetric) "hPa" else "inHg")
+                TrailSenseIconWell(trailSenseWellColors(TrailSenseAccents.Leaf)) {
+                    Icon(TrailSenseIcons.Filled.PrivacyTip, contentDescription = null, modifier = Modifier.size(22.dp))
                 }
-            }
-
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceContainerLow
-            ) {
-                Row(
-                    modifier = Modifier.padding(TrailSenseSpacing.lg),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.large,
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = TrailSenseIcons.Filled.PrivacyTip,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                    Column(modifier = Modifier.padding(start = TrailSenseSpacing.md)) {
-                        Text(
-                            text = stringResource(R.string.privacy_and_location),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = stringResource(R.string.onboarding_private_by_design),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = TrailSenseSpacing.xs)
-                        )
-                    }
+                Column {
+                    Text(
+                        text = stringResource(R.string.privacy_and_location),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.onboarding_private_by_design),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-            }
-
-            TrailSenseButton(
-                text = stringResource(R.string.next),
-                onClick = onNext,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.lg)
-                    .testTag("next_button")
-            )
             }
         }
     }
 }
 
+/** Scrolling content with the page's action pinned at the bottom, centered at a readable width. */
 @Composable
-private fun UnitPreviewValue(value: String, unit: String) {
-    Column {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.tertiary
-        )
-        Text(
-            text = unit,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun androidx.compose.foundation.layout.RowScope.UnitSystemSegment(
-    title: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    index: Int
-) {
-    val buttonHeight = ButtonDefaults.MediumContainerHeight
-    ToggleButton(
-        checked = selected,
-        onCheckedChange = { onClick() },
-        shapes = if (index == 0) {
-            ButtonGroupDefaults.connectedLeadingButtonShapes()
-        } else {
-            ButtonGroupDefaults.connectedTrailingButtonShapes()
-        },
-        colors = ToggleButtonDefaults.toggleButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            checkedContainerColor = MaterialTheme.colorScheme.primary,
-            checkedContentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        contentPadding = ButtonDefaults.contentPaddingFor(buttonHeight),
-        modifier = Modifier
-            .weight(1f)
-            .height(buttonHeight)
-            .semantics { role = Role.RadioButton }
-    ) {
-        Text(text = title)
-    }
-}
-
-@Composable
-fun OnboardingScreen(
-    page: OnboardingPage,
+private fun OnboardingFrame(
+    nextText: String,
     onNext: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
-    ) {
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -282,59 +208,169 @@ fun OnboardingScreen(
                     .widthIn(max = 560.dp)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .padding(top = TrailSenseSpacing.xl, bottom = TrailSenseSpacing.lg),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    shape = onboardingHeroShape,
-                    modifier = Modifier.size(width = 88.dp, height = 76.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = page.image,
-                            contentDescription = null,
-                            modifier = Modifier.size(38.dp).testTag("page_image")
-                        )
-                    }
-                }
-                Text(
-                    text = page.title,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.xl)
-                        .testTag("page_name"),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Start
-                )
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.lg),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surfaceContainerLow
-                ) {
-                    OnboardingPageContents(
-                        contents = page.contents,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(TrailSenseSpacing.screen)
-                    )
-                }
-            }
-
-            TrailSenseButton(
-                text = page.nextButtonText ?: stringResource(R.string.next),
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(top = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.lg),
+                content = content
+            )
+            Button(
                 onClick = onNext,
                 modifier = Modifier
                     .widthIn(max = 560.dp)
                     .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.screen)
-                    .padding(bottom = TrailSenseSpacing.screen)
+                    .padding(horizontal = TrailSenseSpacing.lg)
+                    .padding(bottom = TrailSenseSpacing.lg)
+                    .height(56.dp)
                     .testTag("next_button")
+            ) {
+                Text(nextText, style = MaterialTheme.typography.titleMedium)
+            }
+        }
+    }
+}
+
+/**
+ * A landscape in the theme's colors: a low sun, three ridges fading into the distance and a trail winding up the
+ * nearest one. Recolors with the palette, so it always belongs.
+ */
+@Composable
+private fun TrailHero(modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val sky = scheme.primaryContainer
+    val sun = scheme.tertiaryContainer
+    val glow = scheme.surfaceBright
+    val far = scheme.secondary.copy(alpha = 0.35f)
+    val mid = scheme.secondary.copy(alpha = 0.6f)
+    val near = scheme.primary
+    val trail = scheme.onPrimary.copy(alpha = 0.85f)
+    Canvas(
+        modifier = modifier.clip(RoundedCornerShape(32.dp))
+    ) {
+        val w = size.width
+        val h = size.height
+        drawRect(Brush.verticalGradient(listOf(sky, sky.copy(alpha = 0.55f))))
+        drawCircle(glow.copy(alpha = 0.45f), radius = h * 0.2f, center = Offset(w * 0.74f, h * 0.34f))
+        drawCircle(sun, radius = h * 0.13f, center = Offset(w * 0.74f, h * 0.34f))
+        fun ridge(color: Color, points: List<Pair<Float, Float>>) {
+            val path = Path().apply {
+                moveTo(0f, h)
+                points.forEach { (x, y) -> lineTo(w * x, h * y) }
+                lineTo(w, h)
+                close()
+            }
+            drawPath(path, color)
+        }
+        ridge(far, listOf(0f to 0.55f, 0.18f to 0.38f, 0.34f to 0.5f, 0.52f to 0.3f, 0.7f to 0.48f, 0.86f to 0.36f, 1f to 0.46f))
+        ridge(mid, listOf(0f to 0.7f, 0.22f to 0.52f, 0.4f to 0.66f, 0.6f to 0.5f, 0.8f to 0.64f, 1f to 0.56f))
+        ridge(near, listOf(0f to 0.86f, 0.3f to 0.68f, 0.55f to 0.8f, 0.78f to 0.7f, 1f to 0.82f))
+        val path = Path().apply {
+            moveTo(w * 0.18f, h)
+            cubicTo(w * 0.32f, h * 0.94f, w * 0.2f, h * 0.86f, w * 0.34f, h * 0.8f)
+            cubicTo(w * 0.42f, h * 0.76f, w * 0.38f, h * 0.72f, w * 0.3f, h * 0.69f)
+        }
+        drawPath(
+            path,
+            trail,
+            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 12f)))
+        )
+    }
+}
+
+@Composable
+private fun UnitPreviewValue(
+    value: String,
+    unit: String,
+    label: String,
+    metric: Boolean,
+    shape: androidx.compose.ui.graphics.Shape,
+    modifier: Modifier = Modifier
+) {
+    Surface(modifier = modifier, shape = shape, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Column(
+            modifier = Modifier.padding(vertical = TrailSenseSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AnimatedContent(
+                targetState = metric,
+                transitionSpec = {
+                    (slideInVertically { it } + fadeIn()) togetherWith (slideOutVertically { -it } + fadeOut())
+                },
+                label = "unitPreview"
+            ) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = " $unit",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                }
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/** A following page (the disclaimer, a missing sensor): its icon in a cookie well, the title, the text in a card. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun OnboardingScreen(
+    page: OnboardingPage,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OnboardingFrame(
+        nextText = page.nextButtonText ?: stringResource(R.string.next),
+        onNext = onNext,
+        modifier = modifier
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            shape = MaterialShapes.Cookie6Sided.toShape(),
+            modifier = Modifier
+                .padding(top = TrailSenseSpacing.xl)
+                .size(88.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = page.image,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .testTag("page_image")
+                )
+            }
+        }
+        Text(
+            text = page.title,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.xl)
+                .testTag("page_name"),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TrailSenseSpacing.lg),
+            shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            OnboardingPageContents(
+                contents = page.contents,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(TrailSenseSpacing.xl)
             )
         }
     }
@@ -356,9 +392,7 @@ private fun OnboardingPageContents(
     TrailSenseLinkedText(
         text = parsed,
         modifier = modifier.testTag("page_contents"),
-        style = MaterialTheme.typography.bodyMedium.copy(
-            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.5f
-        ),
+        style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
         textAlign = TextAlign.Start
     )
 }

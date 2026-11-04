@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import android.content.Context
 import android.os.Bundle
 import android.view.View
@@ -831,8 +833,10 @@ private fun MapEmptyState(
         title = stringResource(R.string.no_offline_maps),
         description = stringResource(R.string.map_empty_description),
         action = {
-            Button(onClick = onAddMap) {
-                Text(stringResource(R.string.add_offline_map))
+            Button(onClick = onAddMap, modifier = Modifier.height(52.dp)) {
+                Icon(TrailSenseIcons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.size(TrailSenseSpacing.sm))
+                Text(stringResource(R.string.add_offline_map), style = MaterialTheme.typography.titleSmall)
             }
         },
         modifier = modifier

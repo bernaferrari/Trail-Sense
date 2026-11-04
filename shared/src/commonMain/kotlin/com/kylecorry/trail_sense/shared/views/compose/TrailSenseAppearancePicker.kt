@@ -16,6 +16,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ripple
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -121,10 +124,10 @@ fun <M> TrailSenseAppearancePicker(
                         bottomEnd = colorsBottom
                     )
                 )
-                .padding(TrailSenseSpacing.md)
+                .padding(TrailSenseSpacing.lg)
                 .selectableGroup(),
-            horizontalArrangement = Arrangement.Center,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             palettes.forEach { palette ->
                 Swatch(
@@ -159,7 +162,10 @@ fun <M> TrailSenseAppearancePicker(
     }
 }
 
-/** A color: a softly lit swatch that rounds off and turns when chosen, with a check that grows in. */
+/**
+ * QuietGuard's swatch: a softly lit rounded square that, when chosen, rounds into a circle, grows, turns a little
+ * and glows in its own color, with a check. The wallpaper swatch shows a palette glyph.
+ */
 @Composable
 private fun Swatch(
     color: Color,
@@ -169,38 +175,40 @@ private fun Swatch(
     onClick: () -> Unit
 ) {
     val haptics = LocalHapticFeedback.current
-    val brush = remember(color) {
-        Brush.linearGradient(listOf(lerp(color, Color.White, 0.16f), color, lerp(color, Color.Black, 0.10f)))
-    }
-    val checkColor = when {
-        isWallpaper -> MaterialTheme.colorScheme.onPrimary
-        color.luminance() > 0.24f -> Color.Black.copy(alpha = 0.78f)
-        else -> Color.White
-    }
-    val bouncy = spring<Dp>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
-    val bouncyFloat = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
-    val corner by animateDpAsState(if (isSelected) 8.dp else 18.dp, bouncy, label = "swatchCorner")
-    val ring by animateFloatAsState(if (isSelected) 1f else 0f, bouncyFloat, label = "swatchRing")
-    val ringColor by animateColorAsState(
-        if (isSelected) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent,
-        label = "swatchRingColor"
+    val corner by animateFloatAsState(
+        if (isSelected) 0.5f else 0.26f,
+        spring(dampingRatio = 0.7f, stiffness = 520f),
+        label = "swatchCorner"
+    )
+    val scale by animateFloatAsState(
+        if (isSelected) 1.02f else 0.86f,
+        spring(dampingRatio = 0.56f, stiffness = 600f),
+        label = "swatchScale"
     )
     val rotation by animateFloatAsState(
-        if (isSelected) 0f else 45f,
-        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        if (isSelected) 8f else 0f,
+        spring(dampingRatio = 0.66f, stiffness = 420f),
         label = "swatchRotation"
     )
-    val check by animateFloatAsState(if (isSelected) 1f else 0f, bouncyFloat, label = "swatchCheck")
-    val ringWidth = (2.dp * ring).coerceAtLeast(0.dp)
-    val inner = (corner - ringWidth - 2.dp).coerceAtLeast(0.dp)
-
+    val glow by animateFloatAsState(
+        if (isSelected) 1f else 0f,
+        MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "swatchGlow"
+    )
+    val iconAlpha by animateFloatAsState(
+        if (isSelected || isWallpaper) 1f else 0f,
+        MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "swatchIcon"
+    )
+    val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
-            .size(48.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+            .size(50.dp)
+            .selectable(
+                selected = isSelected,
+                interactionSource = interaction,
                 indication = null,
+                role = Role.RadioButton,
                 onClick = {
                     if (!isSelected) {
                         haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
@@ -208,51 +216,52 @@ private fun Swatch(
                     }
                 }
             )
-            .semantics {
-                role = Role.RadioButton
-                selected = isSelected
-                contentDescription = label
-            },
+            .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
+                .size(56.dp)
+                .graphicsLayer { alpha = glow }
+                .drawBehind { drawCircle(color.copy(alpha = 0.44f), radius = size.minDimension * 0.5f) }
+        )
+        Box(
+            modifier = Modifier
                 .size(40.dp)
-                .rotate(rotation)
-                .clip(RoundedCornerShape(corner))
-                .background(brush)
-                .padding(ringWidth)
-                .clip(RoundedCornerShape((corner - ringWidth).coerceAtLeast(0.dp)))
-                .background(ringColor)
-                .padding(2.dp)
-                .clip(RoundedCornerShape(inner))
-                .background(brush),
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    rotationZ = rotation
+                }
+                .clip(RoundedCornerShape(percent = (corner * 100).toInt()))
+                .indication(interaction, ripple(bounded = true, radius = 18.dp, color = Color.White.copy(alpha = 0.32f)))
+                .background(color),
             contentAlignment = Alignment.Center
         ) {
-            if (isWallpaper && !isSelected) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color.White.copy(alpha = 0.28f), Color.Transparent),
+                            start = Offset.Zero,
+                            end = Offset(60f, 60f)
+                        )
+                    )
+            )
+            if (isSelected || isWallpaper) {
                 Icon(
-                    Icons.Rounded.Palette,
+                    if (isSelected) Icons.Rounded.Check else Icons.Rounded.Palette,
                     contentDescription = null,
                     modifier = Modifier
-                        .size(16.dp)
-                        .rotate(-rotation),
-                    tint = MaterialTheme.colorScheme.onPrimary
+                        .size(if (isSelected) 18.dp else 16.dp)
+                        .graphicsLayer {
+                            alpha = iconAlpha
+                            rotationZ = -rotation
+                        },
+                    tint = Color.White.copy(alpha = if (isSelected) 1f else 0.9f)
                 )
             }
-            Icon(
-                Icons.Rounded.Check,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(18.dp)
-                    .rotate(-rotation)
-                    .graphicsLayer {
-                        val progress = check.coerceAtLeast(0f)
-                        scaleX = progress
-                        scaleY = progress
-                        alpha = check.coerceIn(0f, 1f)
-                    },
-                tint = checkColor
-            )
         }
     }
 }

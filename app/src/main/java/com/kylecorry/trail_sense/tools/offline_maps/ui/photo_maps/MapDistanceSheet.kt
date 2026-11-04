@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.view.View
 import androidx.compose.foundation.layout.Arrangement
@@ -156,7 +157,7 @@ private fun MapDistanceSheetContent(
                 }
                 IconButton(onClick = onCancel) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_cancel),
+                        imageVector = TrailIcons.Cancel,
                         contentDescription = stringResource(android.R.string.cancel)
                     )
                 }
@@ -179,13 +180,13 @@ private fun MapDistanceSheetContent(
             ) {
                 IconButton(onClick = onUndo, enabled = canUndo) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_undo),
+                        imageVector = TrailIcons.Undo,
                         contentDescription = stringResource(R.string.undo)
                     )
                 }
                 IconButton(onClick = onRedo, enabled = canRedo) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_redo),
+                        imageVector = TrailIcons.Redo,
                         contentDescription = stringResource(R.string.redo)
                     )
                 }

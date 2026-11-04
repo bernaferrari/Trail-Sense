@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.camera
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Paint
@@ -321,7 +322,7 @@ private fun SightingCompassStrip(
 
     Box(modifier = modifier) {
         Icon(
-            painter = painterResource(R.drawable.ic_arrow_target),
+            imageVector = TrailIcons.ArrowTarget,
             contentDescription = null,
             modifier = Modifier
                 .size(25.dp)

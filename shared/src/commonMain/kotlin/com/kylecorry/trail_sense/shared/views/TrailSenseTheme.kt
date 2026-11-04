@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.material3.dynamicColorScheme
@@ -58,24 +57,18 @@ enum class TrailSenseColorStyle(val id: String, val palette: PaletteStyle) {
 /** Material 3 Expressive's own shape scheme. */
 val TrailSenseExpressiveShapes = Shapes()
 
-/**
- * Material's sizes with a heavier hierarchy, like the rest of the family: semibold display, headline and title styles
- * (large titles a touch tighter), medium labels. Material's tracking elsewhere keeps long translations readable.
- */
+/** QuietGuard's type scale: Material's sizes, semibold headlines and large titles, medium titles and labels. */
 val TrailSenseExpressiveTypography: Typography = with(Typography()) {
     copy(
-        displayLarge = displayLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp),
-        displayMedium = displayMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.4).sp),
-        displaySmall = displaySmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.2).sp),
-        headlineLarge = headlineLarge.copy(fontWeight = FontWeight.SemiBold, letterSpacing = (-0.2).sp),
+        headlineLarge = headlineLarge.copy(fontWeight = FontWeight.SemiBold),
         headlineMedium = headlineMedium.copy(fontWeight = FontWeight.SemiBold),
         headlineSmall = headlineSmall.copy(fontWeight = FontWeight.SemiBold),
         titleLarge = titleLarge.copy(fontWeight = FontWeight.SemiBold),
-        titleMedium = titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        titleSmall = titleSmall.copy(fontWeight = FontWeight.SemiBold),
-        bodyLarge = bodyLarge.copy(letterSpacing = 0.2.sp),
+        titleMedium = titleMedium.copy(fontWeight = FontWeight.Medium),
+        titleSmall = titleSmall.copy(fontWeight = FontWeight.Medium),
+        bodyMedium = bodyMedium.copy(fontWeight = FontWeight.Normal),
         labelLarge = labelLarge.copy(fontWeight = FontWeight.Medium),
-        labelMedium = labelMedium.copy(fontWeight = FontWeight.SemiBold),
+        labelMedium = labelMedium.copy(fontWeight = FontWeight.Medium),
         labelSmall = labelSmall.copy(fontWeight = FontWeight.Medium)
     )
 }
