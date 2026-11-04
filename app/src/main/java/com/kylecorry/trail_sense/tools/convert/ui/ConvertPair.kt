@@ -165,7 +165,7 @@ internal fun ConvertPair(
                                     emptyValue,
                                     style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
                                     fontWeight = FontWeight.SemiBold,
-                                    color = scheme.onPrimaryContainer.copy(alpha = 0.38f)
+                                    color = scheme.onPrimaryContainer.copy(alpha = 0.62f)
                                 )
                                 Text(
                                     placeholder,

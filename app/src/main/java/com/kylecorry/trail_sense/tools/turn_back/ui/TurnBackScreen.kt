@@ -386,6 +386,17 @@ private fun TurnBackScreen(
                     trackColor = colors.content.copy(alpha = 0.16f),
                     markerRing = colors.container
                 )
+                Row(Modifier.fillMaxWidth()) {
+                    val stop = MaterialTheme.typography.labelMedium
+                    Text(stringResource(R.string.places_turn_back_now), style = stop, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.tool_turn_back), style = stop)
+                    Text(
+                        stringResource(R.string.places_turn_back_home),
+                        style = stop,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                     JourneyTile(
                         label = stringResource(R.string.tool_turn_back),
@@ -527,7 +538,8 @@ private fun JourneyTile(
             Text(
                 value,
                 style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                color = contentColor
             )
         }
     }

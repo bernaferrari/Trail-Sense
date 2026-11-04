@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -105,23 +106,9 @@ fun ConverterTabs(
         modifier = modifier
     ) {
         item("categories") {
-            val fade = MaterialTheme.colorScheme.surface
-            Row(
-                modifier = Modifier
-                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                    .drawWithContent {
-                        drawContent()
-                        // Fade the far edge so it's clear more categories scroll in.
-                        drawRect(
-                            Brush.horizontalGradient(
-                                0.88f to Color.Black,
-                                1f to Color.Transparent
-                            ),
-                            blendMode = BlendMode.DstIn
-                        )
-                    }
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
                 names.forEachIndexed { index, name ->
                     val selected = selectedIndex == index
@@ -138,12 +125,8 @@ fun ConverterTabs(
                                 )
                             }
                         },
-                        modifier = Modifier.heightIn(min = 52.dp),
-                        shape = when (index) {
-                            0 -> RoundedCornerShape(topStart = 26.dp, bottomStart = 26.dp, topEnd = 8.dp, bottomEnd = 8.dp)
-                            names.lastIndex -> RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 26.dp, bottomEnd = 26.dp)
-                            else -> RoundedCornerShape(8.dp)
-                        },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(20.dp),
                         border = null,
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,

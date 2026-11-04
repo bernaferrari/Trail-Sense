@@ -788,7 +788,7 @@ private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
         R.string.places_maps_camera_hint,
         R.string.places_maps_blank_hint
     )
-    val shapes = listOf(MaterialShapes.Cookie6Sided, MaterialShapes.Sunny, MaterialShapes.Clover4Leaf)
+    val shapes = listOf(MaterialShapes.Cookie9Sided, MaterialShapes.Cookie9Sided, MaterialShapes.Cookie9Sided)
     Spacer(Modifier.height(TrailSenseSpacing.xl))
     Column(
         modifier = Modifier.fillMaxWidth(),

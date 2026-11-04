@@ -307,13 +307,17 @@ private fun CoordinateInput(
         },
         trailingIcon = {
             androidx.compose.material3.FilledTonalIconButton(
+                colors = androidx.compose.material3.IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
                 onClick = { showHelp = true },
                 modifier = Modifier.testTag("coordinate_input_help_btn")
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.Help),
                     contentDescription = stringResource(R.string.location_input_help_title),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
