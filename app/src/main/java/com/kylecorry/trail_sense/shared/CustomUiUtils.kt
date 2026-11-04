@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
@@ -362,7 +363,7 @@ object CustomUiUtils {
                     )
                 } else {
                     Icon(
-                        painter = painterResource(R.drawable.ic_altitude),
+                        imageVector = TrailIcons.Altitude,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)

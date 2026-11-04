@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -317,7 +319,7 @@ private fun CalibrateBarometerContent(controller: CalibrateBarometerController) 
     val noData = stringResource(R.string.no_data)
     val chartLegend = stringResource(R.string.calibration_chart_legend)
     val offsetFooter = stringResource(R.string.barometer_offset_explanation)
-    val barometerIcon = painterResource(R.drawable.ic_barometer)
+    val barometerIcon = rememberVectorPainter(TrailIcons.Barometer)
 
     TrailSensePage(
         title = stringResource(R.string.barometer),

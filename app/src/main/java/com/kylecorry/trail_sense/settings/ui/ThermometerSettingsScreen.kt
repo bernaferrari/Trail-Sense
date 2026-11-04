@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -130,7 +132,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
         val chartLegend = stringResource(R.string.calibration_chart_legend)
         val sourceFooter = stringResource(R.string.thermometer_source_explanation)
         val calibrationFooter = stringResource(R.string.thermometer_calibration_explanation)
-        val thermometerIcon = painterResource(R.drawable.thermometer)
+        val thermometerIcon = rememberVectorPainter(TrailIcons.Thermometer)
         val sourceChoices = sourceOptions.map { TrailSenseChoice(it.value, it.label) }
         val entries = calibrationEntries(calibration)
 

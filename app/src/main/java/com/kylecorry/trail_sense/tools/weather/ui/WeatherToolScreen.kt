@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -850,7 +851,7 @@ private fun UpdatingWeather(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.Center
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_update),
+            imageVector = TrailIcons.Update,
             contentDescription = null,
             modifier = Modifier.size(12.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -898,7 +899,7 @@ private fun WeatherMonitorPlayBar(
         ) {
             TrailSenseIconWell(trailSenseWellColors(TrailSenseAccents.Periwinkle)) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_weather),
+                    imageVector = TrailIcons.Weather,
                     contentDescription = null,
                     modifier = Modifier.size(22.dp)
                 )

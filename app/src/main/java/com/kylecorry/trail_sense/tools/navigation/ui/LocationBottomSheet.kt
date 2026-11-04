@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -159,7 +160,7 @@ private fun LocationSheetContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_datum),
+                    imageVector = TrailIcons.Datum,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)

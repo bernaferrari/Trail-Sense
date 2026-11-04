@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
@@ -442,7 +444,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
     val overrideFooter = stringResource(R.string.gps_override_explanation)
     val gpsFooter = stringResource(R.string.gps_accuracy_tip)
     val powerTitle = stringResource(R.string.pref_gps_power_usage_title)
-    val satelliteIcon = painterResource(R.drawable.satellite)
+    val satelliteIcon = rememberVectorPainter(TrailIcons.Satellite)
     val usingGps = autoLocation && autoLocationEnabled
 
     TrailSensePage(
@@ -649,7 +651,7 @@ private fun GPSOverrideCoordinateInput(
                     .testTag("gps_btn")
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_location),
+                    imageVector = TrailIcons.Location,
                     contentDescription = stringResource(R.string.gps)
                 )
             }
@@ -683,7 +685,7 @@ private fun GPSOverrideCoordinateInput(
                 .testTag("coordinate_input_help_btn")
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_help),
+                imageVector = TrailIcons.Help,
                 contentDescription = stringResource(R.string.location_input_help_title)
             )
         }

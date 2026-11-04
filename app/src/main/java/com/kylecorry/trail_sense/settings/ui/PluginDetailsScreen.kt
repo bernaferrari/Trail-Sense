@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -83,7 +85,7 @@ internal fun PluginDetailsScreen(
     )
     val mapLayersTitle = stringResource(R.string.map_layers)
     val unavailableText = stringResource(R.string.plugin_unavailable)
-    val appsIcon = painterResource(R.drawable.apps)
+    val appsIcon = rememberVectorPainter(TrailIcons.Apps)
 
     TrailSensePage(
         title = plugin?.name ?: stringResource(R.string.plugins),

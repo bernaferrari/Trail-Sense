@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.text.util.Linkify.WEB_URLS
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -158,7 +160,7 @@ private class CalibrateAltimeterController(private val host: TrailSenseDestinati
         val gpsTitle = stringResource(R.string.gps)
         val overrideFooter = stringResource(R.string.altimeter_override_explanation)
         val calibrationFooter = stringResource(R.string.altimeter_calibration_explanation)
-        val altitudeIcon = painterResource(R.drawable.ic_altitude)
+        val altitudeIcon = rememberVectorPainter(TrailIcons.Altitude)
 
         TrailSensePage(
             title = stringResource(R.string.pref_altimeter_calibration_title),

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
@@ -1033,7 +1034,7 @@ private class AstronomyTimeSeekerDetailsState {
                         .size(TrailSenseSize.minimumTouchTarget)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_cancel),
+                        imageVector = TrailIcons.Cancel,
                         contentDescription = stringResource(android.R.string.cancel),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
@@ -1103,7 +1104,7 @@ private class AstronomyTextButtonState(
                 .height(56.dp)
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_camera),
+                imageVector = TrailIcons.Camera,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp)
             )

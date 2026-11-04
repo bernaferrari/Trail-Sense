@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -332,7 +334,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
     val declinationTitle = stringResource(R.string.compass_declination)
     val declinationFooter = stringResource(R.string.compass_declination_explanation)
     val calibrateFooter = stringResource(R.string.compass_calibration_explanation)
-    val compassIcon = painterResource(R.drawable.ic_compass_icon)
+    val compassIcon = rememberVectorPainter(TrailIcons.CompassIcon)
 
     TrailSensePage(
         title = stringResource(R.string.pref_compass_sensor_title),
