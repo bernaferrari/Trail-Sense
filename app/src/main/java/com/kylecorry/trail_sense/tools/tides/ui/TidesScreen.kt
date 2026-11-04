@@ -1,7 +1,23 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.sol.science.oceanography.TideType
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -119,6 +135,7 @@ fun TidesToolScreen(host: TrailSenseDestinationHost) {
         title = controller.getCurrentTideTitle(),
         subtitle = controller.getTableSubtitle(),
         isRising = controller.current?.rising,
+        currentType = controller.current?.type,
         nextTide = controller.getNextTideText(),
         icon = controller.getCurrentTideIcon(),
         isLoading = controller.isLoading,
@@ -317,6 +334,7 @@ private fun TidesScreen(
     subtitle: String,
     isRising: Boolean?,
     nextTide: String?,
+    currentType: TideType? = null,
     icon: ImageVector,
     isLoading: Boolean,
     displayDate: LocalDate,
@@ -347,28 +365,85 @@ private fun TidesScreen(
         }
     ) {
         item(key = "hero") {
-            TrailSenseHeroCard(
+            val tone = when (currentType) {
+                TideType.High -> TrailSenseTone.Primary
+                TideType.Low -> TrailSenseTone.Tertiary
+                else -> TrailSenseTone.Secondary
+            }
+            val colors = trailSenseToneColors(tone)
+            TrailSenseSpotlight(
                 modifier = Modifier
                     .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
                     .testTag("tide_title"),
                 eyebrow = subtitle.ifBlank { null },
                 title = title,
-                supportingText = supporting,
-                icon = rememberVectorPainter(icon),
-                action = if (isLoading) {
+                titleStyle = MaterialTheme.typography.displaySmall,
+                supportingText = isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) },
+                tone = tone,
+                badge = {
+                    // The tide's mark on a wavy cookie, with an arrow for which way the water is going.
+                    Box {
+                        TrailSenseShapeBadge(
+                            icon = icon,
+                            shape = MaterialShapes.Cookie12Sided.toShape(),
+                            size = 72.dp,
+                            containerColor = colors.accent,
+                            contentColor = colors.onAccent
+                        )
+                        if (isRising != null) {
+                            TrailSenseShapeBadge(
+                                icon = if (isRising) TrailIcons.ArrowUp else TrailIcons.ArrowDown,
+                                shape = MaterialShapes.Circle.toShape(),
+                                size = 28.dp,
+                                containerColor = colors.container,
+                                contentColor = colors.accent,
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                            )
+                        }
+                    }
+                },
+                trailing = if (isLoading) {
                     {
                         CircularProgressIndicator(
                             modifier = Modifier
                                 .size(24.dp)
                                 .testTag("loading"),
                             strokeWidth = 3.dp,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            color = colors.content
                         )
                     }
                 } else {
                     null
                 }
-            )
+            ) {
+                if (nextTide != null) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
+                        contentColor = colors.content
+                    ) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                rememberVectorPainter(TrailIcons.ToolClock),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = colors.accent
+                            )
+                            Spacer(Modifier.width(TrailSenseSpacing.md))
+                            Text(
+                                nextTide,
+                                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         trailSenseSection(key = "day") {
@@ -406,8 +481,10 @@ private fun TidesScreen(
                         }
                     }
                 }
+                val now = Instant.now()
+                val next = tides.firstOrNull { it.time.toInstant().isAfter(now) }
                 tides.forEach { tide ->
-                    row { position -> TideRow(tide = tide, position = position) }
+                    row { position -> TideRow(tide = tide, position = position, isNext = tide == next) }
                 }
             }
         }
@@ -515,12 +592,10 @@ private fun TideChartView(
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
     val dailyData = daily
-    val levelColor = if (UserPreferences(context).useDynamicColors) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        Color(AppColor.Blue.color)
-    }
-    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+    val levelColor = MaterialTheme.colorScheme.primary
+    val lowColor = MaterialTheme.colorScheme.tertiary
+    val markRing = MaterialTheme.colorScheme.surfaceContainerLow
+    val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
     val highlightColor = MaterialTheme.colorScheme.onSurface
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     val axisLabels = remember(formatter) {
@@ -569,21 +644,18 @@ private fun TideChartView(
                     return size.height - normalized * size.height
                 }
 
+                val dash = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 5.dp.toPx()))
                 chartAxisHours.forEach { hour ->
                     val x = hour / 24f * size.width
                     drawLine(
                         color = grid,
                         start = Offset(x, 0f),
                         end = Offset(x, size.height),
-                        strokeWidth = 1.dp.toPx()
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = dash,
+                        cap = StrokeCap.Round
                     )
                 }
-                drawLine(
-                    color = grid,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1.dp.toPx()
-                )
 
                 val path = Path()
                 dailyData.waterLevels.forEachIndexed { index, reading ->
@@ -600,16 +672,33 @@ private fun TideChartView(
                 path.lineTo(x(last.time), size.height)
                 path.close()
 
-                drawPath(path, levelColor.copy(alpha = 0.2f))
-
-                dailyData.waterLevels.zipWithNext().forEach { (start, end) ->
-                    drawLine(
-                        color = levelColor,
-                        start = Offset(x(start.time), y(start.value)),
-                        end = Offset(x(end.time), y(end.value)),
-                        strokeWidth = 2.dp.toPx(),
-                        cap = StrokeCap.Round
+                drawPath(
+                    path,
+                    Brush.verticalGradient(
+                        0f to levelColor.copy(alpha = 0.42f),
+                        1f to levelColor.copy(alpha = 0.04f)
                     )
+                )
+
+                val line = Path()
+                dailyData.waterLevels.forEachIndexed { index, reading ->
+                    if (index == 0) line.moveTo(x(reading.time), y(reading.value))
+                    else line.lineTo(x(reading.time), y(reading.value))
+                }
+                drawPath(
+                    line,
+                    levelColor,
+                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
+
+                // Highs and lows as dots on the curve, in their own colours.
+                dailyData.tides.forEach { tide ->
+                    val reading = dailyData.waterLevels.minByOrNull {
+                        Duration.between(tide.time.toInstant(), it.time).abs()
+                    } ?: return@forEach
+                    val center = Offset(x(reading.time), y(reading.value))
+                    drawCircle(color = markRing, radius = 7.dp.toPx(), center = center)
+                    drawCircle(color = if (tide.isHigh) levelColor else lowColor, radius = 4.5.dp.toPx(), center = center)
                 }
 
                 val currentLevel = dailyData.waterLevels.minByOrNull {
@@ -642,14 +731,21 @@ private fun TideChartView(
 }
 
 @Composable
-private fun TideRow(tide: Tide, position: TrailSenseGroupPosition) {
+private fun TideRow(tide: Tide, position: TrailSenseGroupPosition, isNext: Boolean = false) {
     val context = LocalContext.current
     val formatter = remember(context) { FormatService.getInstance(context) }
     val units = remember(context) { UserPreferences(context).baseDistanceUnits }
     val height = tide.height
+    val scheme = MaterialTheme.colorScheme
+    val accent = if (tide.isHigh) scheme.primary else scheme.tertiary
 
     TidesGroupRow(
         position = position,
+        containerColor = if (isNext) {
+            if (tide.isHigh) scheme.primaryContainer else scheme.tertiaryContainer
+        } else {
+            scheme.surfaceContainerLow
+        },
         onClick = if (height == null) {
             {
                 Alerts.dialog(
@@ -663,8 +759,16 @@ private fun TideRow(tide: Tide, position: TrailSenseGroupPosition) {
             null
         },
         leading = {
-            TidesIconWell(
-                rememberVectorPainter(if (tide.isHigh) TrailIcons.TideHigh else TrailIcons.TideLow)
+            PlacesBadge(
+                containerColor = if (isNext) accent else if (tide.isHigh) scheme.primaryContainer else scheme.tertiaryContainer,
+                contentColor = if (isNext) {
+                    if (tide.isHigh) scheme.onPrimary else scheme.onTertiary
+                } else {
+                    if (tide.isHigh) scheme.onPrimaryContainer else scheme.onTertiaryContainer
+                },
+                icon = if (tide.isHigh) TrailIcons.ArrowUp else TrailIcons.ArrowDown,
+                shape = if (tide.isHigh) MaterialShapes.Sunny.toShape() else MaterialShapes.Cookie6Sided.toShape(),
+                modifier = Modifier.padding(start = TrailSenseSpacing.sm)
             )
         },
         trailing = {
@@ -672,24 +776,28 @@ private fun TideRow(tide: Tide, position: TrailSenseGroupPosition) {
                 text = formatter.formatTime(tide.time.toLocalTime(), includeSeconds = false),
                 modifier = Modifier.padding(end = TrailSenseSpacing.md),
                 style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                color = MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.SemiBold,
+                color = accent
             )
         }
     ) {
         Text(
             text = stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
             modifier = Modifier.testTag("tide_event_title"),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.titleMedium,
+            color = scheme.onSurface
         )
         Text(
-            text = if (height == null) {
-                stringResource(R.string.estimated)
-            } else {
-                formatter.formatDistance(Distance.meters(height).convertTo(units), 2, true)
-            },
+            text = listOfNotNull(
+                if (isNext) stringResource(R.string.next) else null,
+                if (height == null) {
+                    stringResource(R.string.estimated)
+                } else {
+                    formatter.formatDistance(Distance.meters(height).convertTo(units), 2, true)
+                }
+            ).joinToString(" · "),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = scheme.onSurfaceVariant
         )
     }
 }
