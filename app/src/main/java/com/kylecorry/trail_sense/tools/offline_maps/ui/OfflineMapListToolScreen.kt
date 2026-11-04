@@ -849,10 +849,13 @@ private fun OfflineMapCreateSheet(
     onDismiss: () -> Unit,
     onAction: (OfflineMapCreateAction) -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
         Text(
             text = stringResource(R.string.add_offline_map),
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(
                 horizontal = TrailSenseSpacing.xl,
                 vertical = TrailSenseSpacing.md
@@ -872,14 +875,15 @@ private fun OfflineMapCreateSheet(
                 PlacesRow(
                     title = stringResource(label),
                     position = TrailSenseGroupPosition.at(index, entries.size),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     leading = {
                         PlacesBadge(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            contentColor = MaterialTheme.colorScheme.primary,
                             icon = icon,
                             shape = MaterialShapes.Cookie6Sided.toShape(),
-                            size = 44.dp
+                            size = 40.dp,
+                            iconScale = 0.55f
                         )
                     },
                     onClick = { onAction(action) }
@@ -930,7 +934,8 @@ private fun PhotoMapRow(
         position = position,
         modifier = modifier,
         dimmed = !map.visible,
-        leading = { MapBadge(icon = TrailIcons.PhotoMaps, onMap = onMap, photo = true) },
+        leading = { MapBadge(icon = TrailIcons.PhotoMaps, onMap = onMap) },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         value = if (onMap) stringResource(R.string.on_map) else formatter.formatFileSize(map.fileSizeBytes),
         valueColor = if (onMap) trailSenseStatusColors().good else MaterialTheme.colorScheme.onSurfaceVariant,
         onClick = { onAction(MapAction.View) },
@@ -950,17 +955,20 @@ private fun PhotoMapRow(
     )
 }
 
-/** A map's leading mark: photo maps on a soft cookie, trail maps on a sharper one; green while you're on it. */
+/** A map's leading mark: the family well with the map type's icon; green while you're on it. */
 @Composable
-private fun MapBadge(icon: ImageVector, onMap: Boolean, photo: Boolean) {
+private fun MapBadge(icon: ImageVector, onMap: Boolean) {
     val scheme = MaterialTheme.colorScheme
     val status = trailSenseStatusColors()
     PlacesBadge(
-        // One quiet colour for every map; only "you're on it" changes the mark, so it means something.
-        containerColor = if (onMap) status.goodContainer else scheme.secondaryContainer,
-        contentColor = if (onMap) status.onGoodContainer else scheme.onSecondaryContainer,
+        // The family's well (40 dp Cookie6, 12% primary) for every map; only "you're on it" changes the mark, so it
+        // means something. The icon already says photo or trail map.
+        containerColor = if (onMap) status.goodContainer else scheme.primary.copy(alpha = 0.12f),
+        contentColor = if (onMap) status.onGoodContainer else scheme.primary,
         icon = icon,
-        shape = if (photo) MaterialShapes.Cookie6Sided.toShape() else MaterialShapes.Cookie9Sided.toShape()
+        shape = MaterialShapes.Cookie6Sided.toShape(),
+        size = 40.dp,
+        iconScale = 0.55f
     )
 }
 
@@ -1040,7 +1048,8 @@ private fun VectorMapRow(
         position = position,
         modifier = modifier,
         dimmed = !map.visible || !map.isAvailable,
-        leading = { MapBadge(icon = TrailIcons.Maps, onMap = onMap, photo = false) },
+        leading = { MapBadge(icon = TrailIcons.Maps, onMap = onMap) },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         value = when {
             !map.isAvailable -> stringResource(R.string.map_file_missing)
             onMap -> stringResource(R.string.on_map)
@@ -1163,14 +1172,17 @@ private fun MapGroupRow(
         modifier = modifier,
         leading = {
             PlacesBadge(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                contentColor = MaterialTheme.colorScheme.primary,
                 // The count is in the subtitle, so the mark is a folder rather than the number again.
                 icon = TrailSenseIcons.Filled.Folder,
-                shape = MaterialShapes.Cookie6Sided.toShape()
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                iconScale = 0.55f
             )
         },
         onClick = { onAction(MapGroupAction.View) },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         actions = {
             Box {
                 IconButton(

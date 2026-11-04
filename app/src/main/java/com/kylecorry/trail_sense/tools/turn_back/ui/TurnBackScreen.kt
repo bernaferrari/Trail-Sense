@@ -53,6 +53,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -264,9 +265,9 @@ private class TurnBackController(private val host: TrailSenseDestinationHost) {
 }
 
 /**
- * Turn back: a calm page. The countdown to the turn-around point is the one emphasised value, with the plan as one
- * sentence under it; the return time choices are one group, and cancelling is a quiet button that names what it
- * cancels.
+ * Turn back. Until there is a return time, the page is the family's empty state: the question, one medium button to
+ * pick a time and a quiet "before dark" choice. Once set, the countdown to the turn-around is the display value with
+ * when to turn as the verdict; changing either choice and cancelling sit below it.
  */
 @Composable
 private fun TurnBackScreen(
@@ -300,6 +301,7 @@ private fun TurnBackScreen(
 
     val formattedTurnBackTime = turnBackTime?.let { formatter.formatTime(it, includeSeconds = false) }
     val formattedReturnTime = returnTime?.let { formatter.formatTime(it, includeSeconds = false) }
+    val formattedSunset = sunset?.let { formatter.formatTime(it, includeSeconds = false) }
     var remaining = turnBackTime?.let { Duration.between(now, it) }
     if (remaining?.isNegative == true) {
         remaining = Duration.ZERO
@@ -319,138 +321,112 @@ private fun TurnBackScreen(
         onBack = rememberTrailSenseBack(),
         modifier = modifier
     ) {
-        item("answer") {
-            PlacesKeyValue(
-                modifier = Modifier
-                    .testTag("instructions")
-                    .semantics(mergeDescendants = true) {},
-                // The display size is kept for the real countdown; before there is one, the question in headline size.
-                value = if (isActive) {
-                    formattedRemainingTime.orEmpty()
-                } else {
-                    stringResource(R.string.places_turn_back_idle_title)
-                },
-                valueStyle = if (isActive) {
-                    MaterialTheme.typography.displaySmall
-                } else {
-                    MaterialTheme.typography.headlineMedium
-                },
-                // Each time appears once: the countdown above, the two clock times in the sentence.
-                verdict = if (isActive && formattedTurnBackTime != null && formattedReturnTime != null) {
-                    stringResource(R.string.places_turn_back_verdict, formattedTurnBackTime, formattedReturnTime)
-                } else {
-                    stringResource(R.string.turn_back_empty_description)
-                },
-                valueColor = if (isDue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-            )
-        }
-
         if (!isActive) {
-            // Until there is a time, picking one is the screen's one main action.
-            item("set") {
-                Button(
-                    onClick = { onPickReturnTime(returnTime) },
-                    shapes = ButtonDefaults.shapes(),
+            item("empty") {
+                TrailSenseEmptyState(
+                    icon = TrailIcons.ToolClock,
+                    title = stringResource(R.string.places_turn_back_idle_title),
+                    description = stringResource(R.string.turn_back_empty_description),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 52.dp)
-                        .testTag("edittext")
-                ) {
-                    Icon(TrailIcons.ToolClock, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(TrailSenseSpacing.sm))
-                    Text(stringResource(R.string.places_turn_back_set_return_time))
-                }
-            }
-        }
-
-        // The choices as one headerless group: the chosen return time (once there is one, tap to change it) and
-        // tonight's sunset, each showing the time it stands for.
-        trailSenseSection(key = "return") {
-            if (isActive) {
-                row { position ->
-                    PlacesRow(
-                        title = stringResource(R.string.return_time),
-                        subtitle = stringResource(R.string.places_turn_back_pick_hint),
-                        position = position,
-                        modifier = Modifier.testTag("edittext"),
-                        leading = {
-                            PlacesBadge(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                icon = TrailIcons.ToolClock,
-                                shape = MaterialShapes.Cookie9Sided.toShape()
-                            )
-                        },
-                        onClick = { onPickReturnTime(returnTime) },
-                        // The time itself is already in the sentence above.
-                        actions = {
-                            Icon(
-                                TrailIcons.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(end = TrailSenseSpacing.md)
-                            )
-                        }
-                    )
-                }
-            }
-            row { position ->
-                PlacesRow(
-                    title = stringResource(R.string.return_before_dark),
-                    subtitle = stringResource(R.string.places_turn_back_sunset_hint),
-                    position = position,
-                    modifier = Modifier.testTag("sunset_button"),
-                    leading = {
-                        PlacesBadge(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            icon = TrailIcons.SunsetNotification,
-                            shape = MaterialShapes.Cookie9Sided.toShape()
-                        )
-                    },
-                    onClick = onUseSunset,
-                    actions = {
-                        // Sunset's time while choosing; once a time is set the sentence above carries the times.
-                        val sunsetTime = sunset?.takeIf { !isActive }
-                            ?.let { formatter.formatTime(it, includeSeconds = false) }
-                        if (sunsetTime != null) {
+                        .fillParentMaxHeight(0.85f)
+                        .testTag("instructions"),
+                    actionLabel = stringResource(R.string.places_turn_back_set_return_time),
+                    onAction = { onPickReturnTime(returnTime) },
+                    actionModifier = Modifier.testTag("edittext"),
+                    action = {
+                        TextButton(
+                            onClick = onUseSunset,
+                            shapes = ButtonDefaults.shapes(),
+                            modifier = Modifier
+                                .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                                .testTag("sunset_button")
+                        ) {
                             Text(
-                                sunsetTime,
-                                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(end = TrailSenseSpacing.md)
-                            )
-                        } else {
-                            Icon(
-                                TrailIcons.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(end = TrailSenseSpacing.md)
+                                if (formattedSunset != null) {
+                                    stringResource(R.string.places_turn_back_before_dark_at, formattedSunset)
+                                } else {
+                                    stringResource(R.string.return_before_dark)
+                                },
+                                style = MaterialTheme.typography.titleSmall
                             )
                         }
                     }
                 )
             }
+            return@TrailSensePage
+        }
+
+        item("answer") {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("instructions")
+                    .semantics(mergeDescendants = true) {}
+                    .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+            ) {
+                Text(
+                    formattedRemainingTime.orEmpty(),
+                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isDue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    if (isDue || formattedTurnBackTime == null) {
+                        stringResource(R.string.places_turn_back_turn_around_now)
+                    } else {
+                        stringResource(R.string.places_turn_back_turn_around_at, formattedTurnBackTime)
+                    },
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (isDue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // The two ways to set the return time, each showing the time it stands for; tapping one changes it.
+        trailSenseSection(key = "return") {
+            row { position ->
+                TrailSenseListItem(
+                    title = stringResource(R.string.return_time),
+                    subtitle = stringResource(R.string.places_turn_back_pick_hint),
+                    icon = rememberVectorPainter(TrailIcons.ToolClock),
+                    trailingText = formattedReturnTime,
+                    position = position,
+                    modifier = Modifier.testTag("edittext"),
+                    onClick = { onPickReturnTime(returnTime) }
+                )
+            }
+            row { position ->
+                TrailSenseListItem(
+                    title = stringResource(R.string.return_before_dark),
+                    subtitle = stringResource(R.string.places_turn_back_sunset_hint),
+                    icon = rememberVectorPainter(TrailIcons.SunsetNotification),
+                    trailingText = formattedSunset,
+                    position = position,
+                    modifier = Modifier.testTag("sunset_button"),
+                    onClick = onUseSunset
+                )
+            }
         }
 
         item("cancel") {
-            AnimatedVisibility(
-                visible = isActive,
-                enter = expandVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeIn(),
-                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
+            val height = ButtonDefaults.MediumContainerHeight
+            FilledTonalButton(
+                onClick = onCancel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = height)
+                    .testTag("cancel_button"),
+                shapes = ButtonDefaults.shapesFor(height),
+                contentPadding = ButtonDefaults.contentPaddingFor(height)
             ) {
-                FilledTonalButton(
-                    onClick = onCancel,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 52.dp)
-                        .testTag("cancel_button"),
-                    shapes = ButtonDefaults.shapes()
-                ) {
-                    Icon(TrailIcons.Cancel, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(TrailSenseSpacing.sm))
-                    Text(stringResource(R.string.turn_back_cancel))
-                }
+                Icon(
+                    TrailIcons.Cancel,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.iconSizeFor(height))
+                )
+                Spacer(Modifier.width(ButtonDefaults.iconSpacingFor(height)))
+                Text(stringResource(R.string.turn_back_cancel), style = ButtonDefaults.textStyleFor(height))
             }
         }
     }
