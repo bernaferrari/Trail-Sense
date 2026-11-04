@@ -307,12 +307,13 @@ fun TrailSenseGroupCard(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(TrailSenseSpacing.lg),
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainerLow,
     content: @Composable ColumnScope.() -> Unit
 ) {
     androidx.compose.material3.Surface(
         modifier = modifier.fillMaxWidth(),
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = color
     ) {
         Column(modifier = Modifier.padding(contentPadding), content = content)
     }

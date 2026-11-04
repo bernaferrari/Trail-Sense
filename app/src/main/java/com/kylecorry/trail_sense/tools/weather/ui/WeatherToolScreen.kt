@@ -1089,8 +1089,11 @@ private fun weatherPressureChartPoints(
     val maxX = allPoints.maxOfOrNull { it.x } ?: 1f
     val minYValue = allPoints.minOfOrNull { it.pressure } ?: 0f
     val maxYValue = allPoints.maxOfOrNull { it.pressure } ?: 1f
-    val yMinimum = minYValue - margin
-    val yMaximum = max(maxYValue + margin, yMinimum + minRange)
+    // At least the minimum range, centered on the readings so a steady pressure sits mid-chart, not on the floor.
+    val span = max(maxYValue - minYValue + 2 * margin, minRange)
+    val mid = (minYValue + maxYValue) / 2
+    val yMinimum = mid - span / 2
+    val yMaximum = mid + span / 2
     return WeatherPressureChartPoints(
         startTime = startTime,
         data = points,

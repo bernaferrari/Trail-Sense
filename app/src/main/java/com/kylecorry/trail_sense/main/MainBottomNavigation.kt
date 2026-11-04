@@ -111,7 +111,16 @@ fun MainAdaptiveNavigation(
                     }
                     true
                 }
-                if (released == null) onItemLongClick(item.id)
+                if (released == null) {
+                    onItemLongClick(item.id)
+                    // The press is spent: swallow the rest of it so the tab's own click doesn't also navigate
+                    // (which would close the sheet that just opened).
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        event.changes.forEach { it.consume() }
+                        if (event.changes.none { it.pressed }) break
+                    }
+                }
             }
         }
         .semantics {
