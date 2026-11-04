@@ -64,6 +64,17 @@
     <string name="battery_full_in">Full in %1$s</string>
     <string name="battery_lasts_about">Lasts about %1$s</string>
 
+    <!-- Light meter -->
+    <string name="light_meter_peak_label">Peak</string>
+    <string name="light_meter_tap_to_reset">Tap to reset</string>
+    <string name="light_scale_indoor">Indoor</string>
+    <string name="light_verdict_dark">Pitch dark · your eyes need about 20 minutes to adjust</string>
+    <string name="light_verdict_dim">Dim · enough to walk by, not to read</string>
+    <string name="light_verdict_indoor">Indoor light · easy to read by</string>
+    <string name="light_verdict_overcast">Overcast daylight</string>
+    <string name="light_verdict_daylight">Bright daylight</string>
+    <string name="light_verdict_sun">Direct sun · find some shade</string>
+
     <!-- Signal finder -->
     <string name="signal_finder_empty_hint">Nothing in range right now. Try again from higher ground or a clearing.</string>
 
