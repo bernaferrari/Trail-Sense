@@ -99,8 +99,8 @@ class RadarCompassView(
         textColor = MaterialTheme.colorScheme.onSurface.toArgb()
         turnColor = MaterialTheme.colorScheme.tertiary.toArgb()
         sunBackColor = MaterialTheme.colorScheme.tertiaryContainer.toArgb()
-        moonBackColor = MaterialTheme.colorScheme.secondaryContainer.toArgb()
-        moonInkColor = MaterialTheme.colorScheme.onSecondaryContainer.toArgb()
+        moonBackColor = MaterialTheme.colorScheme.surfaceContainerHighest.toArgb()
+        moonInkColor = MaterialTheme.colorScheme.outline.toArgb()
         surfaceColor = MaterialTheme.colorScheme.surface.toArgb()
         Canvas(
             modifier = modifier
