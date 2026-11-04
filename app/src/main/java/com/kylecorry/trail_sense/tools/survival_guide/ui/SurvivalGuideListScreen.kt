@@ -2,49 +2,36 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TextBadge
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
 
@@ -57,6 +44,10 @@ data class SurvivalGuideListItem(
     val onClick: () -> Unit
 )
 
+/**
+ * Survival guide: a search bar, the best answer to the search as a card when there is a confident one, then the
+ * chapters (or the matching sections) as one group of rows.
+ */
 @Composable
 fun SurvivalGuideListScreen(
     query: String,
@@ -67,215 +58,141 @@ fun SurvivalGuideListScreen(
     onQueryChange: (String) -> Unit,
     onSummaryClick: (SurvivalGuideSearchResult) -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    TrailSensePage(
+        title = stringResource(R.string.survival_guide),
+        onBack = { dispatcher?.onBackPressed() },
+        backLabel = stringResource(R.string.back)
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .widthIn(max = TrailSenseSize.maximumContentWidth)
-                .padding(horizontal = TrailSenseSpacing.screen)
-        ) {
-            SurvivalGuideSearchBox(
-                query = query,
-                onQueryChange = onQueryChange
+        item(key = "search") {
+            TrailSenseSearchBar(
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = stringResource(R.string.search),
+                clearContentDescription = stringResource(R.string.survival_guide_clear_search),
+                modifier = Modifier.testTag("search")
             )
-            if (summary.isNotBlank()) {
+        }
+
+        if (summary.isNotBlank() && firstResult != null) {
+            item(key = "summary") {
                 SurvivalGuideSummary(
                     summary = summary,
                     result = firstResult,
                     markdown = markdown,
                     onSummaryClick = onSummaryClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .padding(top = TrailSenseSpacing.sm)
+                    modifier = Modifier.animateItem()
                 )
             }
-            SurvivalGuideChapterList(
-                listItems = listItems,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = if (summary.isBlank()) TrailSenseSpacing.lg else TrailSenseSpacing.sm)
-            )
         }
+
+        // The chapters load in the background; until then nothing is shown rather than an empty list.
+        if (listItems.isNotEmpty()) {
+            item(key = "list") {
+                TrailSenseRowGroup(modifier = Modifier.testTag("list")) {
+                    listItems.forEach { item ->
+                        row { position -> SurvivalGuideRow(item, position) }
+                    }
+                }
+            }
         }
     }
-}
-
-@Composable
-private fun SurvivalGuideSearchBox(
-    query: String,
-    onQueryChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        singleLine = true,
-        placeholder = { Text(text = stringResource(R.string.search)) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = TrailSenseSpacing.lg)
-            .testTag("search")
-    )
 }
 
 @Composable
 private fun SurvivalGuideSummary(
     summary: String,
-    result: SurvivalGuideSearchResult?,
+    result: SurvivalGuideSearchResult,
     markdown: MarkdownService,
     onSummaryClick: (SurvivalGuideSearchResult) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (result == null) {
-        return
-    }
-
-    TrailSenseCard(
-        modifier = modifier.testTag("summary_holder"),
-        onClick = { onSummaryClick(result) }
+    val title = getSummaryTitle(result)
+    SurvivalGuidePressableSurface(
+        onClick = { onSummaryClick(result) },
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = modifier.testTag("summary_holder")
     ) {
-        TextBadge(
-            text = result.chapter.title,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            textStyle = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.testTag("summary_chapter_title")
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(
+                start = TrailSenseSpacing.xl,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.lg,
+                bottom = TrailSenseSpacing.xl
+            ),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
-            Text(
-                text = getSummaryTitle(result),
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("summary_title"),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold
-            )
-            Box(
-                modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                    contentDescription = getSummaryTitle(result),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
+                ) {
+                    Text(
+                        text = result.chapter.title,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                        modifier = Modifier.testTag("summary_chapter_title")
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.testTag("summary_title")
+                    )
+                }
+                Box(
+                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_keyboard_arrow_right),
+                        contentDescription = null
+                    )
+                }
             }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .testTag("summary_scroll")
-        ) {
-            TrailSenseLinkedText(
-                text = markdown.toMarkdown(summary),
+            // The summary can run long: it scrolls inside the card so the chapters stay close below it.
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("summary"),
-                style = MaterialTheme.typography.bodyMedium
-            )
+                    .heightIn(max = 200.dp)
+                    .verticalScroll(rememberScrollState())
+                    .testTag("summary_scroll")
+            ) {
+                TrailSenseLinkedText(
+                    text = markdown.toMarkdown(summary),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("summary"),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun SurvivalGuideChapterList(
-    listItems: List<SurvivalGuideListItem>,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier.testTag("list"),
-        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-    ) {
-        items(listItems, key = { it.id }) { item ->
-            SurvivalGuideChapterRow(item)
-        }
-    }
-}
-
-@Composable
-private fun SurvivalGuideChapterRow(item: SurvivalGuideListItem) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(TrailSenseShape.groupInner),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
-    ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .testTag("guide_item")
-            .clickable { item.onClick() }
-            .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(TrailSenseSize.leadingIconContainer)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(item.icon),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(TrailSenseSize.leadingIcon)
-                )
-            }
-        }
-        androidx.compose.foundation.layout.Spacer(Modifier.size(TrailSenseSpacing.md))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.title,
-                modifier = Modifier.testTag("guide_item_title"),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (item.subtitle != null) {
-                Text(
-                    text = item.subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            if (item.tag != null) {
-                Text(
-                    text = item.tag,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-        Box(
-            modifier = Modifier.size(TrailSenseSize.minimumTouchTarget),
-            contentAlignment = Alignment.Center
-        ) {
+private fun SurvivalGuideRow(item: SurvivalGuideListItem, position: TrailSenseGroupPosition) {
+    // In search results the chapter leads the line so a heading like "Overview" still says where it lives.
+    val subtitle = listOfNotNull(item.tag, item.subtitle?.takeIf { it.isNotBlank() })
+        .joinToString(" · ")
+        .takeIf { it.isNotEmpty() }
+    SurvivalGuideGroupRow(
+        title = item.title,
+        subtitle = subtitle,
+        icon = painterResource(item.icon),
+        position = position,
+        onClick = item.onClick,
+        modifier = Modifier.testTag("guide_item"),
+        titleModifier = Modifier.testTag("guide_item_title"),
+        trailing = {
             Icon(
                 painter = painterResource(R.drawable.ic_keyboard_arrow_right),
-                contentDescription = item.title,
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    }
-    }
+    )
 }
 
 private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
@@ -286,5 +203,5 @@ private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
         } else {
             null
         }
-    ).joinToString(" > ")
+    ).joinToString(" › ")
 }

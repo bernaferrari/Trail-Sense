@@ -2173,4 +2173,20 @@
     <string name="tides_more_options">More options</string>
     <string name="tides_hidden">Hidden</string>
     <string name="tides_empty_description">Enter tides from an official tide table to estimate the tides for your trip.</string>
+    <!-- Family redesign: survival guide, user guide, diagnostics, sensors, pedometer -->
+    <string name="survival_guide_clear_search">Clear search</string>
+    <string name="survival_guide_section_open">Expanded</string>
+    <string name="survival_guide_section_closed">Collapsed</string>
+    <string name="guide_clear_search">Clear search</string>
+    <string name="diagnostics_warnings">Warnings</string>
+    <string name="diagnostics_checking">Checking your device</string>
+    <string name="diagnostics_issues_summary">Tap an issue to see what it affects and how to fix it.</string>
+    <string name="diagnostics_no_issues_summary">Every tool has what it needs to work.</string>
+    <string name="diagnostics_sensor_details_summary">Live readings and status of each sensor</string>
+    <string name="diagnostics_export_logs_summary">Save a log file to share when reporting a problem</string>
+    <string name="pedometer_reset_steps">Reset steps</string>
+    <plurals name="diagnostics_issue_count">
+        <item quantity="one">%d issue found</item>
+        <item quantity="other">%d issues found</item>
+    </plurals>
 </resources>
