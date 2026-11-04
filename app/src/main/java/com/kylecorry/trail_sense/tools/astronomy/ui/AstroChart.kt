@@ -120,8 +120,8 @@ class AstroChart(
         val limitColor = scheme.outlineVariant
         val horizonColor = scheme.outline
         val ringColor = scheme.background
-        val moonOutline = scheme.onSurface
-        val moonShadow = scheme.outlineVariant
+        val moonOutline = scheme.outlineVariant
+        val moonShadow = scheme.surfaceContainerHighest
         val moonPaint = androidx.compose.runtime.remember(moonShadow) {
             android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                 colorFilter = android.graphics.ColorMatrixColorFilter(moonPhaseColorMatrix(moonShadow, MoonLit))
@@ -184,8 +184,8 @@ class AstroChart(
                     drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx(), smooth = true)
 
                     moonPosition?.let {
-                        // A clean phase disc: the lit part pale, the shadow in outlineVariant (not a black blob),
-                        // inside a thin onSurface outline. The sun's "now" dot stays the one primary accent.
+                        // A clean phase disc: the lit part pale, the shadow a quiet raised tone, a hairline rim so a
+                        // thin crescent still reads as the whole moon. The sun's "now" dot stays the one primary accent.
                         val point = toScreen(it, left, right, top, bottom)
                         drawCircle(ringColor, imageSize / 2f + 3.dp.toPx(), point)
                         val canvas = drawContext.canvas.nativeCanvas
@@ -199,7 +199,7 @@ class AstroChart(
                             moonPaint
                         )
                         canvas.restore()
-                        drawCircle(moonOutline, imageSize / 2f, point, style = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx()))
+                        drawCircle(moonOutline, imageSize / 2f, point, style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
                     }
                     sunPosition?.let {
                         drawTrailSenseNowDot(toScreen(it, left, right, top, bottom), sunColor, ringColor)

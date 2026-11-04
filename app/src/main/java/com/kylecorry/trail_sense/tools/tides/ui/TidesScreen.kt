@@ -4,7 +4,13 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
+import kotlin.math.PI
+import kotlin.math.sin
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.material3.MaterialShapes
@@ -143,9 +149,10 @@ fun TidesToolScreen(host: TrailSenseDestinationHost) {
         title = controller.getCurrentTideTitle(),
         subtitle = controller.getTableSubtitle(),
         isRising = controller.current?.rising,
-        currentType = controller.current?.type,
         nextTide = controller.getNextTideText(),
-        icon = controller.getCurrentTideIcon(),
+        timeUntilNextTide = controller.getTimeUntilNextTide(),
+        nextTideIsHigh = controller.nextTide?.isHigh,
+        levelFraction = controller.levelFraction,
         isLoading = controller.isLoading,
         displayDate = controller.displayDate,
         daily = controller.daily,
@@ -177,6 +184,10 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         private set
     var nextTide by mutableStateOf<Tide?>(null)
         private set
+    /** How far the water is between today's lowest (0) and highest (1) levels right now. */
+    var levelFraction by mutableStateOf<Float?>(null)
+        private set
+    private var timeUntilNextTide by mutableStateOf<Duration?>(null)
 
     private var currentTideJob: Job? = null
     private var dailyTideJob: Job? = null
@@ -214,6 +225,8 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         daily = null
         current = null
         nextTide = null
+        levelFraction = null
+        timeUntilNextTide = null
 
         host.lifecycleScope.launch {
             val updatedTable = newTable ?: loadTideCommand.execute()
@@ -259,7 +272,10 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         currentTideJob?.cancel()
         currentTideJob = host.lifecycleScope.launch {
             current = currentTideCommand.execute(currentTable)
-            nextTide = getNextTide(currentTable)
+            val next = getNextTide(currentTable)
+            nextTide = next
+            timeUntilNextTide = next?.let { Duration.between(ZonedDateTime.now(), it.time) }
+            levelFraction = getLevelFraction(currentTable)
         }
     }
 
@@ -294,6 +310,22 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         }
     }
 
+    /** Where the water is now within today's range, from the day's estimated levels. */
+    private suspend fun getLevelFraction(table: TideTable): Float? {
+        val today = dailyTideCommand.execute(table, LocalDate.now())
+        val now = Instant.now()
+        val reading = today.waterLevels.minByOrNull { Duration.between(now, it.time).abs() } ?: return null
+        val range = today.waterLevelRange.end - today.waterLevelRange.start
+        if (range <= 0f) return null
+        return ((reading.value - today.waterLevelRange.start) / range).coerceIn(0f, 1f)
+    }
+
+    /** The time until the water turns, like "2h 14m". */
+    fun getTimeUntilNextTide(): String? {
+        val duration = timeUntilNextTide?.takeIf { !it.isNegative } ?: return null
+        return formatService.formatDuration(duration)
+    }
+
     /**
      * The verdict: which way the water is going and until when ("Falling until 12:45 PM"). The next turn is implied
      * by the direction, so a "Low" tide that is still falling never reads as "Next: Low".
@@ -310,11 +342,6 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
                 time
             )
         }
-    }
-
-    fun getCurrentTideIcon(): ImageVector {
-        val current = current ?: return TrailIcons.TideHalf
-        return TideFormatter(host.requireContext()).getTideTypeIcon(current.type)
     }
 
     @SuppressLint("SetTextI18n")
@@ -339,10 +366,10 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
 }
 
 /**
- * Tides: the hero says the tide now (high, low or half, with the water level), whether it is rising, and when the
- * next tide turns; the table's name sits above it and the tide tables button in the top bar. Below, the day: a date
- * row (previous, pick or long-press for today, next) and the water level chart with a time axis, then that day's
- * highs and lows as grouped rows, and the estimate disclaimer as a quiet footer.
+ * Tides answers one question: what is the water doing now? The hero is the tide well (the water at its level in
+ * today's range, an arrow for its way) beside how long until it turns, and which tide comes next. Under it, the day:
+ * the date with its arrows, the water level chart, and that day's highs and lows as grouped rows, with the estimate
+ * disclaimer as the group's footer.
  */
 @Composable
 private fun TidesScreen(
@@ -350,8 +377,9 @@ private fun TidesScreen(
     subtitle: String,
     isRising: Boolean?,
     nextTide: String?,
-    currentType: TideType? = null,
-    icon: ImageVector,
+    timeUntilNextTide: String?,
+    nextTideIsHigh: Boolean?,
+    levelFraction: Float?,
     isLoading: Boolean,
     displayDate: LocalDate,
     daily: DailyTideData?,
@@ -361,11 +389,6 @@ private fun TidesScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
-    // One question: what is the tide doing now? The tide now answers it, with which way it is going and when it
-    // turns as the one verdict line. The day's chart and its highs and lows sit below as a quiet list.
-    val verdict = nextTide
-        ?: isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) }
-
     TrailSensePage(
         title = stringResource(R.string.tides),
         onBack = onBack,
@@ -381,54 +404,21 @@ private fun TidesScreen(
         }
     ) {
         item(key = "hero") {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg)
-                    .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
-                    .testTag("tide_title")
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Before the first estimate the page says what it is doing rather than showing a dash.
-                    Text(
-                        text = if (title == "--") stringResource(R.string.sky_tides_loading) else title,
-                        style = (if (title == "--") MaterialTheme.typography.headlineSmall else MaterialTheme.typography.displaySmall)
-                            .copy(fontFeatureSettings = "tnum"),
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    if (isLoading) {
-                        Spacer(Modifier.width(TrailSenseSpacing.md))
-                        androidx.compose.material3.CircularWavyProgressIndicator(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .testTag("loading")
-                        )
-                    }
-                }
-                if (verdict != null) {
-                    Text(
-                        text = verdict,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
-                    )
-                }
-                if (subtitle.isNotBlank()) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            TideHero(
+                title = title,
+                subtitle = subtitle,
+                isRising = isRising,
+                nextTide = nextTide,
+                timeUntilNextTide = timeUntilNextTide,
+                nextTideIsHigh = nextTideIsHigh,
+                levelFraction = levelFraction,
+                isLoading = isLoading
+            )
         }
 
-        // The day and its water: the date heads the chart, straight on the page.
         item(key = "day") {
             Column {
-                DatePickerInput(
+                TideDayHeader(
                     date = displayDate,
                     onDateChange = onDateChange,
                     modifier = Modifier.padding(bottom = TrailSenseSpacing.sm)
@@ -438,46 +428,202 @@ private fun TidesScreen(
         }
 
         item(key = "tides") {
-            TrailSenseRowGroup(
-                modifier = Modifier.testTag("tide_list"),
-                title = stringResource(R.string.tides)
-            ) {
-                if (tides.isEmpty() && daily != null) {
-                    row { position ->
-                        TidesGroupRow(position = position) {
-                            Text(
-                                text = stringResource(R.string.no_tides),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+            Column {
+                // No header: the page title already says "Tides", and the date heads the chart above.
+                TrailSenseRowGroup(modifier = Modifier.testTag("tide_list")) {
+                    if (tides.isEmpty() && daily != null) {
+                        row { position ->
+                            TidesGroupRow(position = position) {
+                                Text(
+                                    text = stringResource(R.string.no_tides),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
+                    tides.forEach { tide ->
+                        row { position -> TideRow(tide = tide, position = position) }
+                    }
                 }
-                // The next turn is already the verdict above, so the day's table stays plain.
-                tides.forEach { tide ->
-                    row { position -> TideRow(tide = tide, position = position) }
+                Text(
+                    text = stringResource(R.string.disclaimer_estimated_tide),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = TrailSenseSpacing.lg,
+                            end = TrailSenseSpacing.lg,
+                            top = TrailSenseSpacing.sm
+                        )
+                        .testTag("tide_disclaimer"),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The tide now: the well beside the time until the water turns (display type) and which tide that is (the verdict),
+ * then when it turns and the table it comes from. Before the first estimate the well waits and the page says what it
+ * is doing.
+ */
+@Composable
+private fun TideHero(
+    title: String,
+    subtitle: String,
+    isRising: Boolean?,
+    nextTide: String?,
+    timeUntilNextTide: String?,
+    nextTideIsHigh: Boolean?,
+    levelFraction: Float?,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val waiting = title == "--" && timeUntilNextTide == null
+    Column(
+        modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.lg)
+            .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
+            .testTag("tide_title")
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TideWell(
+                fraction = levelFraction,
+                isRising = isRising,
+                isLoading = isLoading || waiting,
+                modifier = Modifier.size(104.dp)
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.xl))
+            Column(Modifier.weight(1f)) {
+                when {
+                    waiting -> Text(
+                        text = stringResource(R.string.sky_tides_loading),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = scheme.onSurface
+                    )
+
+                    timeUntilNextTide != null -> {
+                        Text(
+                            text = timeUntilNextTide,
+                            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                            fontWeight = FontWeight.SemiBold,
+                            color = scheme.onSurface,
+                            maxLines = 1,
+                            autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(
+                                minFontSize = 24.sp,
+                                maxFontSize = MaterialTheme.typography.displaySmall.fontSize
+                            )
+                        )
+                        Text(
+                            text = stringResource(
+                                if (nextTideIsHigh == true) R.string.tides_until_high else R.string.tides_until_low
+                            ),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = scheme.onSurface
+                        )
+                    }
+
+                    // No turn within two days: the tide now is the answer.
+                    else -> Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = scheme.onSurface
+                    )
                 }
             }
         }
-
-        item(key = "disclaimer") {
+        val details = listOfNotNull(nextTide, subtitle.takeIf { it.isNotBlank() })
+        if (details.isNotEmpty()) {
             Text(
-                text = stringResource(R.string.disclaimer_estimated_tide),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.lg)
-                    .testTag("tide_disclaimer"),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = details.joinToString(" · "),
+                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = TrailSenseSpacing.lg)
             )
         }
     }
 }
 
+/**
+ * The screen's one live object: a round well holding the water at its level in today's range (low at the bottom,
+ * high at the top), with a soft crest, and an arrow for the way it is going. The level moves on a spring.
+ */
+@Composable
+private fun TideWell(
+    fraction: Float?,
+    isRising: Boolean?,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val level by animateFloatAsState(
+        targetValue = (fraction ?: 0f).coerceIn(0.06f, 0.94f),
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "tideLevel"
+    )
+    val direction = isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) }
+    val water = scheme.primary
+    val empty = scheme.primary.copy(alpha = 0.12f)
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .then(
+                if (direction != null) {
+                    Modifier.semantics { contentDescription = direction }
+                } else {
+                    Modifier
+                }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            drawRect(empty)
+            if (fraction != null && !isLoading) {
+                val surfaceY = size.height * (1f - level)
+                val amplitude = 3.dp.toPx()
+                val steps = 48
+                val wave = Path().apply {
+                    moveTo(0f, surfaceY)
+                    for (i in 0..steps) {
+                        val x = size.width * i / steps
+                        val y = surfaceY + amplitude * sin(i / steps.toFloat() * 3f * PI.toFloat())
+                        lineTo(x, y)
+                    }
+                    lineTo(size.width, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                }
+                drawPath(wave, water)
+            }
+        }
+        when {
+            isLoading -> androidx.compose.material3.CircularWavyProgressIndicator(
+                modifier = Modifier
+                    .size(40.dp)
+                    .testTag("loading")
+            )
+
+            isRising != null && fraction != null -> Icon(
+                painter = rememberVectorPainter(if (isRising) TrailIcons.ArrowUp else TrailIcons.ArrowDown),
+                contentDescription = null,
+                // The arrow sits at the middle: on the water when it is high, on the empty well when it is low.
+                tint = if (level > 0.5f) scheme.onPrimary else scheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+    }
+}
+
+/** The day being shown, with its arrows: tap the date to pick one, long-press it for today. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DatePickerInput(
+private fun TideDayHeader(
     date: LocalDate,
     onDateChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
@@ -491,22 +637,11 @@ private fun DatePickerInput(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = { onDateChange(date.minusDays(1)) },
-            modifier = Modifier.testTag("prev_date")
-        ) {
-            Icon(
-                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
-                contentDescription = stringResource(R.string.previous),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.rotate(180f)
-            )
-        }
         Row(
             modifier = Modifier
                 .weight(1f)
                 .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                .clip(RoundedCornerShape(TrailSenseShape.iconContainer))
+                .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
                 .combinedClickable(
                     onClickLabel = dateLabel,
                     onLongClickLabel = todayLabel,
@@ -520,8 +655,8 @@ private fun DatePickerInput(
                     },
                     onLongClick = { onDateChange(LocalDate.now()) }
                 )
+                .padding(horizontal = TrailSenseSpacing.lg)
                 .testTag("date_btn"),
-            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -529,6 +664,26 @@ private fun DatePickerInput(
                 modifier = Modifier.testTag("tide_list_date"),
                 style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurface
+            )
+            Icon(
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(start = TrailSenseSpacing.xs)
+                    .size(20.dp)
+                    .rotate(90f)
+            )
+        }
+        IconButton(
+            onClick = { onDateChange(date.minusDays(1)) },
+            modifier = Modifier.testTag("prev_date")
+        ) {
+            Icon(
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
+                contentDescription = stringResource(R.string.previous),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.rotate(180f)
             )
         }
         IconButton(
@@ -549,7 +704,7 @@ private val chartAxisHours = listOf(0, 6, 12, 18, 24)
 
 /**
  * The day's water in the chart frame: High / Low in the gutter, the level as one smooth primary line, the day's
- * highs and lows as small dots (their times are in the list below), and now as the "now" dot.
+ * highs and lows as small hollow marks (their times are in the list below), and now as the "now" dot.
  */
 @Composable
 private fun TideChartView(
@@ -578,7 +733,7 @@ private fun TideChartView(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.chart_height))
+                .height(176.dp)
                 .testTag("chart"),
             contentAlignment = Alignment.Center
         ) {
@@ -630,8 +785,7 @@ private fun TideChartView(
                     }?.takeIf { displayDate == LocalDate.now() }
                     val nowCenter = currentLevel?.let { Offset(x(it.time), y(it.value)) }
 
-                    // Highs and lows are small hollow marks; one that sits under the now dot is left out, so now
-                    // never looks like two dots stuck together.
+                    // A high or low that sits under the now dot is left out, so now never looks like two dots.
                     val clearance = 16.dp.toPx()
                     dailyData.tides.forEach { tide ->
                         val reading = dailyData.waterLevels.minByOrNull {
@@ -677,6 +831,10 @@ private fun TideChartView(
     }
 }
 
+/**
+ * One high or low: the family's 40 dp Cookie6 well (12 % primary) with its arrow, the tide and its measured height,
+ * and the time as the one trailing element. A tide that has already passed steps back in colour.
+ */
 @Composable
 private fun TideRow(
     tide: Tide,
@@ -687,6 +845,8 @@ private fun TideRow(
     val units = remember(context) { UserPreferences(context).baseDistanceUnits }
     val height = tide.height
     val scheme = MaterialTheme.colorScheme
+    val isPast = tide.time.isBefore(ZonedDateTime.now())
+    val accent = if (isPast) scheme.onSurfaceVariant else scheme.primary
 
     TidesGroupRow(
         position = position,
@@ -703,13 +863,22 @@ private fun TideRow(
             null
         },
         leading = {
-            PlacesBadge(
-                containerColor = scheme.secondaryContainer,
-                contentColor = scheme.onSecondaryContainer,
-                icon = if (tide.isHigh) TrailIcons.ArrowUp else TrailIcons.ArrowDown,
+            Surface(
                 shape = MaterialShapes.Cookie6Sided.toShape(),
-                modifier = Modifier.padding(start = TrailSenseSpacing.sm)
-            )
+                color = accent.copy(alpha = 0.12f),
+                contentColor = accent,
+                modifier = Modifier
+                    .padding(start = TrailSenseSpacing.sm)
+                    .size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = rememberVectorPainter(if (tide.isHigh) TrailIcons.ArrowUp else TrailIcons.ArrowDown),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
         },
         trailing = {
             Text(
@@ -717,7 +886,7 @@ private fun TideRow(
                 modifier = Modifier.padding(end = TrailSenseSpacing.md),
                 style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold,
-                color = scheme.onSurface
+                color = if (isPast) scheme.onSurfaceVariant else scheme.onSurface
             )
         }
     ) {
@@ -725,7 +894,7 @@ private fun TideRow(
             text = stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
             modifier = Modifier.testTag("tide_event_title"),
             style = MaterialTheme.typography.titleMedium,
-            color = scheme.onSurface
+            color = if (isPast) scheme.onSurfaceVariant else scheme.onSurface
         )
         // A measured height when the table has one; estimated tides say so once, in the footer below.
         if (height != null) {
@@ -747,7 +916,9 @@ private fun TidesScreenPreview() {
             subtitle = "Harbor",
             isRising = true,
             nextTide = "Rising until 3:42 PM",
-            icon = TrailIcons.TideHigh,
+            timeUntilNextTide = "2h 14m",
+            nextTideIsHigh = true,
+            levelFraction = 0.6f,
             isLoading = false,
             displayDate = LocalDate.now(),
             daily = null,

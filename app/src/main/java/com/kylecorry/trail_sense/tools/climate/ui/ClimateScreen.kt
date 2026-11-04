@@ -78,6 +78,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseHeroCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -587,35 +589,45 @@ private fun ClimateScreen(
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("climate_scroll")
     ) {
-        // One question: what is this day usually like here? The typical high is the one display value, the low its
-        // quieter neighbour, each with its caption; the month's precipitation sits with its own chart below.
+        // One question: what is this day usually like here? The day heads the page (tap it to pick another), then the
+        // typical high is the one display value, the low its quieter neighbour, and the month's precipitation the one
+        // line under them. The year's charts and the inputs follow as quiet sections.
+        item(key = "date") {
+            DatePickerInput(date = date, onDateChange = onDateChange)
+        }
+
         item(key = "hero") {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = TrailSenseSpacing.lg)
-                    .testTag("climate_title"),
-                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)
+                    .testTag("climate_title")
             ) {
-                ClimateHeroValue(
-                    caption = stringResource(R.string.high),
-                    modifier = Modifier.alignByBaseline(),
-                    value = highLow?.first ?: "--",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                ClimateHeroValue(
-                    caption = stringResource(R.string.low),
-                    modifier = Modifier.alignByBaseline(),
-                    value = highLow?.second ?: "--",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl)) {
+                    ClimateHeroValue(
+                        caption = stringResource(R.string.high),
+                        modifier = Modifier.alignByBaseline(),
+                        value = highLow?.first ?: "--",
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    ClimateHeroValue(
+                        caption = stringResource(R.string.low),
+                        modifier = Modifier.alignByBaseline(),
+                        value = highLow?.second ?: "--",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (precipitationValue != null) {
+                    Text(
+                        text = precipitationTitle,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = TrailSenseSpacing.md)
+                    )
+                }
             }
-        }
-
-        item(key = "date") {
-            DatePickerInput(date = date, onDateChange = onDateChange)
         }
 
         // The year around the day, in the chart frame, with its source under it.
@@ -640,8 +652,7 @@ private fun ClimateScreen(
         trailSenseSection(
             key = "precipitation",
             title = precipitationLabel,
-            // The month's total belongs to its chart, not the headline.
-            footer = if (precipitationValue != null) "$precipitationTitle\n$precipitationSource" else precipitationSource
+            footer = precipitationSource
         ) {
             row { _ ->
                 Column {
@@ -757,11 +768,11 @@ private fun ClimateEcologyRow(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Row(
             modifier = Modifier
-                .heightIn(min = 56.dp)
+                .heightIn(min = 72.dp)
                 .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -769,8 +780,8 @@ private fun ClimateEcologyRow(
                 icon = TrailIcons.Ant,
                 shape = MaterialShapes.Cookie6Sided.toShape(),
                 size = 40.dp,
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                contentColor = MaterialTheme.colorScheme.primary
             )
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Text(
@@ -823,26 +834,16 @@ private fun DatePickerInput(
     val dateLabel = stringResource(R.string.date)
     val todayLabel = stringResource(R.string.today)
 
+    // Like Tides: the date on the left (tap to pick one, long-press for today), its arrows on the right.
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = { onDateChange(date.minusDays(1)) },
-            modifier = Modifier.testTag("prev_date")
-        ) {
-            Icon(
-                imageVector = TrailIcons.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.previous),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.rotate(180f)
-            )
-        }
-        Box(
+        Row(
             modifier = Modifier
                 .weight(1f)
-                .height(40.dp)
-                .clip(androidx.compose.foundation.shape.CircleShape)
+                .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
                 .combinedClickable(
                     onClickLabel = dateLabel,
                     onLongClickLabel = todayLabel,
@@ -856,8 +857,9 @@ private fun DatePickerInput(
                     },
                     onLongClick = { onDateChange(LocalDate.now()) }
                 )
+                .padding(horizontal = TrailSenseSpacing.lg)
                 .testTag("date_btn"),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = formatter.formatRelativeDate(date),
@@ -865,9 +867,28 @@ private fun DatePickerInput(
                 style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurface
             )
+            Icon(
+                imageVector = TrailIcons.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(start = TrailSenseSpacing.xs)
+                    .size(20.dp)
+                    .rotate(90f)
+            )
         }
         IconButton(
-
+            onClick = { onDateChange(date.minusDays(1)) },
+            modifier = Modifier.testTag("prev_date")
+        ) {
+            Icon(
+                imageVector = TrailIcons.KeyboardArrowRight,
+                contentDescription = stringResource(R.string.previous),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.rotate(180f)
+            )
+        }
+        IconButton(
             onClick = { onDateChange(date.plusDays(1)) },
             modifier = Modifier.testTag("next_date")
         ) {

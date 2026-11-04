@@ -2208,6 +2208,12 @@
     <string name="tides_rising_until">Rising until %1$s</string>
     <string name="tides_falling_until">Falling until %1$s</string>
     <string name="tides_next_tide">Next: %1$s at %2$s</string>
+    <string name="weather_empty_title">No forecast yet</string>
+    <string name="weather_empty_description">Start the weather monitor. It reads the air pressure in the background, and the forecast appears here after a few readings.</string>
+    <string name="weather_empty_recording">The weather monitor is reading the air pressure. The forecast appears here after a few readings.</string>
+    <string name="weather_empty_action">Start weather monitor</string>
+    <string name="tides_until_high">Until high tide</string>
+    <string name="tides_until_low">Until low tide</string>
     <string name="tides_more_options">More options</string>
     <string name="tides_hidden">Hidden</string>
     <string name="tides_empty_description">Enter tides from an official tide table to estimate the tides for your trip.</string>

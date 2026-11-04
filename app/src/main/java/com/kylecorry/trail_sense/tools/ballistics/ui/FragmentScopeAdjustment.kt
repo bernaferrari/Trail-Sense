@@ -247,7 +247,8 @@ private fun TrailSenseRowGroupScope.missRows(
     row { position ->
         TrailSenseGroupCard(
             position = position,
-            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+            // As in every family settings card: the choice sits 16 dp in on every side.
+            contentPadding = PaddingValues(TrailSenseSpacing.lg)
         ) {
             TrailSenseConnectedChoice(
                 options = options,
@@ -272,7 +273,7 @@ internal fun BallisticsHero(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.sm)
+            .padding(horizontal = TrailSenseSpacing.lg)
             .testTag(valueTag)
             .semantics(mergeDescendants = true) {},
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
@@ -309,7 +310,7 @@ private fun ScopeHero(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.sm)
+            .padding(horizontal = TrailSenseSpacing.lg)
             .testTag("adjustment_amount")
             .semantics(mergeDescendants = true) { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically
@@ -400,7 +401,7 @@ private fun Reticle(missX: Float, missY: Float, ink: androidx.compose.ui.graphic
     val scheme = MaterialTheme.colorScheme
     val hit = scheme.tertiary
     val path = scheme.primary
-    val face = scheme.surfaceContainerLow
+    val face = scheme.surfaceContainer
     val x by animateFloatAsState(missX, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missX")
     val y by animateFloatAsState(missY, MaterialTheme.motionScheme.defaultSpatialSpec(), label = "missY")
     Canvas(modifier = modifier) {
@@ -593,7 +594,7 @@ internal fun <T> UnitPickerField(
 
     TrailSenseListItem(
         title = label,
-        subtitle = selectedName,
+        trailingText = selectedName,
         position = position,
         onClick = { isOpen = true },
         modifier = modifier

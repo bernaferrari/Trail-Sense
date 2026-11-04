@@ -201,7 +201,8 @@ fun DeclinationScreen(
 /**
  * The instrument is a compass face on the plain page: a scalloped primaryContainer bezel, a bright dial with N, E,
  * S and W, true north as a small tertiary dot on the rim above N, and magnetic north as the one primary needle that
- * swings in with a spring, the wedge between them in primaryContainer. Under it, the reading and the verdict.
+ * swings in with a spring, the wedge between them a soft wash of primary. Under it, the reading (display type) and
+ * the verdict (headline small).
  */
 @Composable
 private fun DeclinationHeroCard(
@@ -216,37 +217,36 @@ private fun DeclinationHeroCard(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(272.dp)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(256.dp)) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = MaterialShapes.Cookie12Sided.toShape(),
                 color = scheme.primaryContainer
             ) {}
             Surface(
-                modifier = Modifier.size(226.dp),
+                modifier = Modifier.size(216.dp),
                 shape = CircleShape,
                 color = scheme.surfaceContainerLowest
             ) {}
             DeclinationArrow(
                 declination = declination,
                 modifier = Modifier
-                    .size(226.dp)
+                    .size(216.dp)
                     .testTag("declination")
             )
         }
         Spacer(Modifier.size(TrailSenseSpacing.sm))
         Text(
             text = title,
-            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
         Text(
             text = verdict,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = scheme.onSurface,
+            style = MaterialTheme.typography.headlineSmall,
+            color = scheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -379,7 +379,8 @@ private fun DeclinationArrow(
     val trueColor = scheme.tertiary
     val magneticColor = scheme.primary
     val tick = scheme.onSurfaceVariant.copy(alpha = 0.55f)
-    val wedge = scheme.primaryContainer
+    // The wedge between the norths is a soft wash of the needle's colour, so it never blends into the bezel.
+    val wedge = scheme.primary.copy(alpha = 0.22f)
     val letterColor = scheme.onSurface
     val letters = listOf(
         stringResource(R.string.direction_north),
