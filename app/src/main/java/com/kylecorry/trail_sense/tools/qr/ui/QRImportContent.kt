@@ -1,22 +1,25 @@
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -25,8 +28,13 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
+/**
+ * QR import, shown inside a bottom sheet: the instructions with a close button, then a square viewfinder. Drawn on
+ * the sheet's own surface rather than a second background.
+ */
 @Composable
 fun QRImportContent(
     title: String,
@@ -34,52 +42,44 @@ fun QRImportContent(
     onCameraReady: (CameraState) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+    Column(
+        modifier = modifier.padding(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.lg,
+            bottom = TrailSenseSpacing.xl
+        ),
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
     ) {
-        Column {
-            Row(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("tool_title"),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TrailSenseSpacing.screen,
-                        end = TrailSenseSpacing.md,
-                        top = TrailSenseSpacing.sm,
-                        bottom = TrailSenseSpacing.sm
-                    )
-                    .testTag("tool_title"),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = onClose) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(android.R.string.cancel)
-                    )
-                }
-            }
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TrailSenseSpacing.screen),
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
-            ) {
-                CameraPreview(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .testTag("camera"),
-                    state = rememberQrCameraState(onCameraReady)
+                    .weight(1f)
+                    .padding(start = TrailSenseSpacing.xs)
+            )
+            IconButton(onClick = onClose) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = stringResource(android.R.string.cancel)
                 )
             }
         }
+        CameraPreview(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                .testTag("camera"),
+            state = rememberQrCameraState(onCameraReady)
+        )
     }
 }
 

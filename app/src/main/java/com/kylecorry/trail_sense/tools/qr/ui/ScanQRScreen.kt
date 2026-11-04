@@ -1,4 +1,5 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.qr.ui
 
@@ -6,22 +7,28 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.NoPhotography
+import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,22 +44,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
@@ -63,12 +67,22 @@ import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
@@ -101,6 +115,8 @@ fun ScanQRToolScreen(host: TrailSenseDestinationHost) {
     QrScannerScreen(
         history = controller.history,
         scrollRequest = controller.historyScrollRequest,
+        isCameraDenied = controller.isCameraDenied,
+        onOpenAppSettings = controller::openAppSettings,
         onCameraReady = controller::onCameraReady,
         onCopy = controller::copy,
         onCreateNote = controller::createNote,
@@ -118,6 +134,8 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
     var history by mutableStateOf<List<String>>(emptyList())
         private set
     var historyScrollRequest by mutableIntStateOf(0)
+        private set
+    var isCameraDenied by mutableStateOf(false)
         private set
     private var cameraView: CameraState? = null
     private var shouldStartCamera = false
@@ -259,12 +277,13 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
     fun onResume() {
         updateHistoryList()
         host.requestCamera { hasPermission ->
+            isCameraDenied = !hasPermission
             if (hasPermission) {
                 shouldStartCamera = true
                 startCamera()
             } else {
+                // The scanner shows why the camera is missing in place of the viewfinder.
                 shouldStartCamera = false
-                host.alertNoCameraPermission()
             }
         }
     }
@@ -335,6 +354,10 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
         }
     }
 
+    fun openAppSettings() {
+        host.startActivity(Intents.appSettings(host.requireContext()))
+    }
+
     fun onPause() {
         shouldStartCamera = false
         cameraView?.stop()
@@ -352,10 +375,16 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
     }
 }
 
+/**
+ * The scanner: the viewfinder is the instrument, the gallery is the fallback, and the last ten codes sit below as
+ * one group, newest first, each with the actions its content allows.
+ */
 @Composable
 private fun QrScannerScreen(
     history: List<String>,
     scrollRequest: Int,
+    isCameraDenied: Boolean,
+    onOpenAppSettings: () -> Unit,
     onCameraReady: (CameraState) -> Unit,
     onCopy: (String) -> Unit,
     onCreateNote: (String) -> Unit,
@@ -369,82 +398,124 @@ private fun QrScannerScreen(
     val listState = rememberLazyListState()
     val results = history.ifEmpty { listOf("") }
     val scannerDescription = stringResource(R.string.qr_code_scanner)
+    val context = LocalContext.current
+    val cameraState = remember {
+        CameraState(context).apply {
+            setBackgroundResource(R.drawable.rounded_rectangle)
+        }
+    }
+
+    LaunchedEffect(cameraState) {
+        onCameraReady(cameraState)
+    }
 
     LaunchedEffect(scrollRequest) {
         listState.animateScrollToItem(0)
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    TrailSenseInstrumentScaffold(
+        title = stringResource(R.string.qr_code_scanner),
+        modifier = modifier
     ) {
-        val context = androidx.compose.ui.platform.LocalContext.current
-        val cameraState = remember {
-            CameraState(context).apply {
-                setBackgroundResource(R.drawable.rounded_rectangle)
-            }
-        }
-        LaunchedEffect(cameraState) {
-            onCameraReady(cameraState)
-        }
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .widthIn(max = TrailSenseSize.maximumContentWidth)
                     .fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = TrailSenseSpacing.screen,
-                    vertical = TrailSenseSpacing.xl
+                contentPadding = PaddingValues(
+                    start = TrailSenseSpacing.lg,
+                    end = TrailSenseSpacing.lg,
+                    top = TrailSenseSpacing.sm,
+                    bottom = TrailSenseSpacing.xxxl
                 ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                // Results touch as one group (2 dp); the other items add their own room above.
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
-            // Camera viewfinder framed by a tonal card. The AndroidView canvas
-            // itself is left untouched — only the surrounding chrome is styled.
-            item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.surfaceContainer
-                ) {
-                    CameraPreview(
-                        state = cameraState,
+                item(key = "camera") {
+                    Box(
                         modifier = Modifier
-                            .padding(TrailSenseSpacing.lg)
                             .fillMaxWidth()
                             .aspectRatio(1f)
-                            .testTag("camera")
-                            .semantics { contentDescription = scannerDescription }
+                            .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLow),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Keep the camera view attached so it can start the moment permission arrives.
+                        CameraPreview(
+                            state = cameraState,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("camera")
+                                .semantics { contentDescription = scannerDescription }
+                        )
+                        if (isCameraDenied) {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                color = MaterialTheme.colorScheme.surfaceContainerLow
+                            ) {
+                                TrailSenseEmptyState(
+                                    icon = Icons.Rounded.NoPhotography,
+                                    title = stringResource(R.string.no_camera_access),
+                                    description = stringResource(R.string.qr_camera_denied_description),
+                                    action = {
+                                        FilledTonalButton(
+                                            onClick = onOpenAppSettings,
+                                            modifier = Modifier.heightIn(min = TrailSenseSize.minimumTouchTarget)
+                                        ) {
+                                            Text(stringResource(R.string.open_settings))
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                item(key = "gallery") {
+                    FilledTonalButton(
+                        onClick = onScanFromGallery,
+                        modifier = Modifier
+                            .padding(top = TrailSenseSpacing.lg)
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                            .testTag("gallery")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PhotoLibrary,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(stringResource(R.string.select_from_gallery))
+                    }
+                }
+
+                item(key = "results_header") {
+                    TrailSenseGroupHeader(
+                        title = stringResource(R.string.history),
+                        modifier = Modifier.animateItem()
+                    )
+                }
+
+                itemsIndexed(results, key = { _, text -> "result:$text" }) { index, text ->
+                    QrResultCard(
+                        text = text,
+                        position = TrailSenseGroupPosition.at(index, results.size),
+                        onCopy = onCopy,
+                        onCreateNote = onCreateNote,
+                        onOpenMap = onOpenMap,
+                        onCreateBeacon = onCreateBeacon,
+                        onOpenUrl = onOpenUrl,
+                        onDelete = onDelete,
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                            fadeOutSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+                        )
                     )
                 }
             }
-
-            item {
-                FilledTonalButton(
-                    onClick = onScanFromGallery,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("gallery")
-                ) {
-                    Text(stringResource(R.string.select_from_gallery))
-                }
-            }
-
-            items(results) { text ->
-                QrResultCard(
-                    text = text,
-                    onCopy = onCopy,
-                    onCreateNote = onCreateNote,
-                    onOpenMap = onOpenMap,
-                    onCreateBeacon = onCreateBeacon,
-                    onOpenUrl = onOpenUrl,
-                    onDelete = onDelete
-                )
-            }
-        }
         }
     }
 }
@@ -452,6 +523,7 @@ private fun QrScannerScreen(
 @Composable
 private fun QrResultCard(
     text: String,
+    position: TrailSenseGroupPosition,
     onCopy: (String) -> Unit,
     onCreateNote: (String) -> Unit,
     onOpenMap: (String) -> Unit,
@@ -462,47 +534,48 @@ private fun QrResultCard(
 ) {
     val type = getScanType(text)
     val isEmpty = text.isEmpty()
-    TrailSenseCard(
+    TrailSenseGroupCard(
+        position = position,
         modifier = modifier
-            .fillMaxWidth()
             .testTag("qr_result")
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Tonal circular icon chip indicating the detected content type.
             Surface(
-                shape = CircleShape,
+                shape = RoundedCornerShape(TrailSenseShape.iconContainer),
                 color = if (isEmpty) {
                     MaterialTheme.colorScheme.surfaceContainerHighest
                 } else {
-                    MaterialTheme.colorScheme.primaryContainer
+                    MaterialTheme.colorScheme.secondaryContainer
                 },
-                modifier = Modifier.size(40.dp)
+                contentColor = if (isEmpty) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                modifier = Modifier.size(TrailSenseSize.compactIconContainer)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         painter = painterResource(type.icon),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(20.dp)
-                            .testTag("qr_message_type"),
-                        tint = if (isEmpty) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        }
+                            .size(TrailSenseSize.compactIcon)
+                            .testTag("qr_message_type")
                     )
                 }
             }
-            Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
+            Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
             Text(
                 text = text.ifEmpty { stringResource(R.string.no_qr_code_detected) },
                 modifier = Modifier
                     .weight(1f)
                     .testTag("qr_text"),
                 style = MaterialTheme.typography.bodyLarge,
+                maxLines = 6,
+                overflow = TextOverflow.Ellipsis,
                 color = if (isEmpty) {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
@@ -512,7 +585,7 @@ private fun QrResultCard(
         }
 
         if (!isEmpty) {
-            Spacer(modifier = Modifier.size(TrailSenseSpacing.lg))
+            Spacer(modifier = Modifier.size(TrailSenseSpacing.md))
             FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -581,19 +654,19 @@ private fun QrActionChip(
     FilledTonalButton(
         onClick = onClick,
         modifier = modifier
-            .height(TrailSenseSize.minimumTouchTarget)
-            .testTag(tag)
+            .heightIn(min = TrailSenseSize.minimumTouchTarget)
+            .testTag(tag),
+        contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg)
     ) {
         Icon(
             painter = painterResource(icon),
-            contentDescription = text,
+            contentDescription = null,
             modifier = Modifier.size(18.dp)
         )
-        Spacer(modifier = Modifier.size(TrailSenseSpacing.sm))
+        Spacer(modifier = Modifier.width(TrailSenseSpacing.sm))
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Normal
+            style = MaterialTheme.typography.labelLarge
         )
     }
 }
