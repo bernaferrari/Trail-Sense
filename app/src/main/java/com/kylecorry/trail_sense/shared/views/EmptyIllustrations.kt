@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -44,7 +45,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.sin
 
 /*
@@ -114,72 +114,81 @@ fun NotesEmptyIllustration() {
     }
 }
 
-/** A folded map that unfolds, with a "you are here" dot that pulses once it lies open. */
+/**
+ * A map tile that rises gently into place, a route that draws itself across it, and a "you are here" dot that
+ * settles at the route's end and pulses once.
+ */
 @Composable
 fun OfflineMapsEmptyIllustration() {
     val scheme = MaterialTheme.colorScheme
     val backdrop = MaterialShapes.Cookie9Sided.toShape()
-    val loop = rememberLoop(6000, still = 0.6f)
+    val loop = rememberLoop(6400, still = 0.74f)
     val paper = scheme.surfaceContainerLowest
-    val paperShade = scheme.surfaceContainerHigh
-    val land = scheme.secondary.copy(alpha = 0.18f)
+    val land = scheme.secondary.copy(alpha = 0.16f)
+    val grid = scheme.onSurface.copy(alpha = 0.06f)
     val route = scheme.tertiary
-    val fold = scheme.onSurface
     val dot = scheme.primary
     val dotRing = scheme.surfaceContainerLowest
     IllustrationCanvas {
         val p = loop.value
         val u = gridUnit
         drawBackdrop(backdrop, scheme.primaryContainer)
-        val open = segment(p, 0.06f, 0.36f) * (1f - segment(p, 0.88f, 1f))
-        val left = 32f
-        val top = 46f
-        val panel = 32f
-        val height = 68f
-        val routePath = Path().apply {
-            moveTo(38 * u, 104 * u)
-            cubicTo(56 * u, 102 * u, 58 * u, 70 * u, 78 * u, 74 * u)
-            cubicTo(98 * u, 78 * u, 104 * u, 56 * u, 122 * u, 54 * u)
-        }
-
-        fun DrawScope.panelContent(index: Int) {
-            val x = (left + index * panel) * u
-            drawRect(if (index == 1) paper else paperShade, Offset(x, top * u), Size(panel * u, height * u))
-            drawCircle(land, 16 * u, Offset(48 * u, 62 * u))
-            drawCircle(land, 22 * u, Offset(112 * u, 100 * u))
-            drawPath(routePath, route, style = Stroke(3 * u, cap = StrokeCap.Round))
-        }
-
-        // The middle panel stays put; the outer ones swing open from its edges.
-        val outerScale = 0.02f + 0.98f * open
-        for (index in listOf(0, 2)) {
-            val pivotX = if (index == 0) (left + panel) * u else (left + 2 * panel) * u
-            val x = (left + index * panel) * u
-            withTransform({ scale(outerScale, 1f, Offset(pivotX, 0f)) }) {
-                clipRect(x, top * u, x + panel * u, (top + height) * u) { panelContent(index) }
-                // A folded panel is in shadow; it brightens as it opens.
-                drawRect(fold.copy(alpha = 0.14f * (1f - open)), Offset(x, top * u), Size(panel * u, height * u))
+        // The whole tile rises and fades in, holds, then fades away before the loop starts again.
+        val rise = segment(p, 0f, 0.2f)
+        val alpha = rise * (1f - segment(p, 0.88f, 0.98f))
+        val left = 36f
+        val top = 42f
+        val width = 88f
+        val height = 76f
+        withTransform({ translate(0f, 10f * u * (1f - rise)) }) {
+            val tile = Path().apply {
+                addRoundRect(
+                    RoundRect(
+                        left * u, top * u, (left + width) * u, (top + height) * u, CornerRadius(14 * u)
+                    )
+                )
             }
-        }
-        val mid = (left + panel) * u
-        clipRect(mid, top * u, mid + panel * u, (top + height) * u) { panelContent(1) }
-        // The creases.
-        val crease = fold.copy(alpha = 0.10f * open)
-        drawLine(crease, Offset(mid, top * u), Offset(mid, (top + height) * u), 1.5f * u)
-        drawLine(crease, Offset(mid + panel * u, top * u), Offset(mid + panel * u, (top + height) * u), 1.5f * u)
-
-        // You are here.
-        val here = Offset(80 * u, 75 * u)
-        val pop = popIn(segment(p, 0.36f, 0.48f, LinearEasing)) * (1f - segment(p, 0.84f, 0.9f))
-        if (pop > 0f) {
-            for (ring in 0..1) {
-                val t = ((p - 0.48f - ring * 0.16f) / 0.32f)
-                if (t in 0f..1f && p < 0.84f) {
-                    drawCircle(dot.copy(alpha = 0.45f * (1f - t)), (7f + 17f * t) * u, here)
+            drawPath(tile, paper, alpha = alpha)
+            clipPath(tile) {
+                drawCircle(land, 20 * u, Offset(48 * u, 56 * u), alpha = alpha)
+                drawCircle(land, 26 * u, Offset(118 * u, 112 * u), alpha = alpha)
+                for (i in 1..2) {
+                    val x = (left + width * i / 3f) * u
+                    val y = (top + height * i / 3f) * u
+                    drawLine(grid, Offset(x, top * u), Offset(x, (top + height) * u), 1.5f * u, alpha = alpha)
+                    drawLine(grid, Offset(left * u, y), Offset((left + width) * u, y), 1.5f * u, alpha = alpha)
                 }
             }
-            drawCircle(dotRing, 8.5f * u * pop, here)
-            drawCircle(dot, 5.5f * u * pop, here)
+
+            // The route draws itself from the lower left to where you are.
+            val routePath = Path().apply {
+                moveTo(50 * u, 104 * u)
+                cubicTo(70 * u, 104 * u, 66 * u, 76 * u, 84 * u, 74 * u)
+                cubicTo(100 * u, 72 * u, 98 * u, 60 * u, 108 * u, 58 * u)
+            }
+            val measure = PathMeasure().apply { setPath(routePath, false) }
+            val drawn = segment(p, 0.18f, 0.52f)
+            if (drawn > 0f) {
+                val partial = Path()
+                measure.getSegment(0f, measure.length * drawn, partial, true)
+                drawPath(
+                    partial, route.copy(alpha = route.alpha * alpha),
+                    style = Stroke(3.5f * u, cap = StrokeCap.Round)
+                )
+            }
+            drawCircle(route, 3.5f * u, Offset(50 * u, 104 * u), alpha = alpha * segment(p, 0.14f, 0.2f))
+
+            // You are here: settles at the end of the route, then pulses once.
+            val here = Offset(108 * u, 58 * u)
+            val settle = popIn(segment(p, 0.5f, 0.6f, LinearEasing))
+            if (settle > 0f) {
+                val t = segment(p, 0.6f, 0.82f, LinearOutSlowInEasing)
+                if (t in 0.001f..0.999f) {
+                    drawCircle(dot, (8f + 14f * t) * u, here, alpha = 0.4f * (1f - t) * alpha)
+                }
+                drawCircle(dotRing, 8.5f * u * settle, here, alpha = alpha)
+                drawCircle(dot, 5.5f * u * settle, here, alpha = alpha)
+            }
         }
     }
 }
@@ -238,61 +247,61 @@ fun PackEmptyIllustration() {
     }
 }
 
-/** A dotted trail drawing itself behind a hiker dot, toward a flag. */
+/**
+ * A dotted trail that draws itself along one smooth curve from a start dot to a flag, holds, then fades away and
+ * starts again. Each dot grows in softly as the trail reaches it.
+ */
 @Composable
 fun PathsEmptyIllustration() {
     val scheme = MaterialTheme.colorScheme
     val backdrop = MaterialShapes.Cookie12Sided.toShape()
-    val loop = rememberLoop(6400, still = 0.8f)
-    val trail = scheme.onPrimaryContainer.copy(alpha = 0.55f)
-    val hiker = scheme.primary
+    val loop = rememberLoop(6000, still = 0.76f)
+    val trail = scheme.primary
+    val start = scheme.primary
     val halo = scheme.surfaceContainerLowest
     val flag = scheme.tertiary
     IllustrationCanvas {
         val p = loop.value
         val u = gridUnit
         drawBackdrop(backdrop, scheme.primaryContainer)
+        val from = Offset(40 * u, 114 * u)
+        val to = Offset(114 * u, 56 * u)
         val path = Path().apply {
-            moveTo(36 * u, 118 * u)
-            cubicTo(72 * u, 126 * u, 40 * u, 78 * u, 80 * u, 78 * u)
-            cubicTo(120 * u, 78 * u, 92 * u, 42 * u, 116 * u, 44 * u)
+            moveTo(from.x, from.y)
+            cubicTo(92 * u, 122 * u, 62 * u, 52 * u, to.x, to.y)
         }
         val measure = PathMeasure().apply { setPath(path, false) }
         val length = measure.length
-        val walk = segment(p, 0.04f, 0.78f, FastOutSlowInEasing)
-        val fade = 1f - segment(p, 0.86f, 0.96f)
+        val head = length * segment(p, 0.06f, 0.62f)
+        val fade = 1f - segment(p, 0.84f, 0.96f)
 
-        // The destination.
-        val pole = Offset(116 * u, 44 * u)
-        drawLine(flag, pole, pole - Offset(0f, 22 * u), 2.5f * u, cap = StrokeCap.Round)
+        // The dots, between the start and the flag; each grows in over one gap as the trail reaches it.
+        val gap = 9 * u
+        var d = gap * 1.4f
+        while (d < length - gap * 0.6f) {
+            val grow = ((head - d) / gap).coerceIn(0f, 1f)
+            if (grow > 0f) {
+                drawCircle(trail, 2.8f * u * FastOutSlowInEasing.transform(grow), measure.getPosition(d), alpha = 0.7f * fade)
+            }
+            d += gap
+        }
+
+        // The start.
+        drawCircle(halo, 9 * u, from)
+        drawCircle(start, 6 * u, from)
+
+        // The destination: a flag whose pole stands on the trail's end.
+        drawLine(flag, to, to - Offset(0f, 26 * u), 3f * u, cap = StrokeCap.Round)
         drawPath(
             Path().apply {
-                moveTo(pole.x, pole.y - 22 * u)
-                lineTo(pole.x + 14 * u, pole.y - 17 * u)
-                lineTo(pole.x, pole.y - 12 * u)
+                moveTo(to.x, to.y - 26 * u)
+                lineTo(to.x + 16 * u, to.y - 20 * u)
+                lineTo(to.x, to.y - 14 * u)
                 close()
             },
             flag
         )
-        // The start.
-        drawCircle(trail, 4 * u, Offset(36 * u, 118 * u), style = Stroke(2 * u))
-
-        val gap = 9 * u
-        var d = gap
-        while (d < length * walk - 6 * u) {
-            drawCircle(trail.copy(alpha = trail.alpha * fade), 2.6f * u, measure.getPosition(d))
-            d += gap
-        }
-        val (at, alpha) = when {
-            p < 0.86f -> measure.getPosition(length * walk) to 1f
-            p < 0.92f -> measure.getPosition(length) to 1f - segment(p, 0.86f, 0.92f)
-            else -> measure.getPosition(0f) to segment(p, 0.94f, 1f)
-        }
-        val moving = p in 0.04f..0.78f
-        val bob = if (moving) -1.5f * u * abs(sin(p * 44f * PI).toFloat()) else 0f
-        val c = at + Offset(0f, bob)
-        drawCircle(halo.copy(alpha = alpha), 10 * u, c)
-        drawCircle(hiker.copy(alpha = alpha), 7 * u, c)
+        drawCircle(flag, 3.5f * u, to)
     }
 }
 
