@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.IconButton
@@ -69,6 +70,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBearingField
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -736,6 +738,7 @@ private fun TriangulateScreen(
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Where do my two sightings meet? The result at the top answers it; the map and the two sightings support it.
     // The map is held here, outside the lazy list, so scrolling it off screen never trades it for a fresh, empty one.
     val mapView = rememberTriangulateMap(onMapReady)
     val modeTitle = stringResource(R.string.location_to_triangulate)
@@ -769,7 +772,6 @@ private fun TriangulateScreen(
                 updateGpsOverrideVisible = updateGpsOverrideVisible,
                 shouldCalculateMyLocation = shouldCalculateMyLocation,
                 completed = listOf(location1Complete, location2Complete).count { it },
-                sightings = listOf(location1Complete, location2Complete),
                 onCreateBeacon = onCreateBeacon,
                 onNavigate = onNavigate,
                 onShareLocation = onShareLocation,
@@ -865,8 +867,9 @@ private fun TriangulateScreen(
 }
 
 /**
- * The answer as the screen's Spotlight: while sightings are missing, a secondary card counting them (two cookies
- * that fill in); once solved, the coordinate large on primary with what you can do with it.
+ * The answer as plain type: until there is one, the next step as a headline with how many sightings are in; once
+ * solved, the coordinate in display type with one filled main action (navigate to a destination, or save it as a
+ * beacon) and the rest as tonal buttons.
  */
 @Composable
 private fun TriangulateResultCard(
@@ -876,77 +879,71 @@ private fun TriangulateResultCard(
     updateGpsOverrideVisible: Boolean,
     shouldCalculateMyLocation: Boolean,
     completed: Int,
-    sightings: List<Boolean>,
     onCreateBeacon: () -> Unit,
     onNavigate: () -> Unit,
     onShareLocation: () -> Unit,
     onUpdateGpsOverride: () -> Unit
 ) {
-    // Calm while sightings are missing, green once the point is found, caution when two sightings don't meet.
-    val tone = when {
-        actionsVisible -> TrailSenseTone.Good
-        completed == 2 -> TrailSenseTone.Caution
-        else -> TrailSenseTone.Secondary
-    }
-    val colors = trailSenseToneColors(tone)
-    TrailSenseSpotlight(
+    Column(
         modifier = Modifier.testTag("triangulate_title"),
-        eyebrow = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination),
-        // Until there's an answer the headline says what to do next; a failure is only the subtitle.
-        title = when {
-            actionsVisible -> title
-            completed == 0 -> stringResource(R.string.places_triangulate_take_first)
-            completed == 1 -> stringResource(R.string.places_triangulate_take_second)
-            else -> stringResource(R.string.places_triangulate_check)
-        },
-        titleStyle = MaterialTheme.typography.headlineSmall,
-        supportingText = when {
-            actionsVisible -> null
-            completed == 2 -> title
-            else -> null
-        },
-        tone = tone,
-        badge = {
-            TrailSenseShapeBadge(
-                icon = if (actionsVisible) TrailIcons.Location else TrailIcons.ToolTriangulate,
-                shape = if (actionsVisible) MaterialShapes.Sunny.toShape() else MaterialShapes.Cookie9Sided.toShape(),
-                size = 64.dp,
-                containerColor = colors.accent,
-                contentColor = colors.onAccent
-            )
-        },
-        actions = if (actionsVisible) {
-            listOfNotNull(
-                TrailSenseSpotlightAction(stringResource(R.string.beacon), TrailIcons.Location, onClick = onCreateBeacon),
-                if (navigateVisible) {
-                    TrailSenseSpotlightAction(stringResource(R.string.navigate), TrailIcons.NavigationArrow, onClick = onNavigate)
-                } else {
-                    null
-                },
-                TrailSenseSpotlightAction(stringResource(R.string.share_ellipsis), TrailIcons.Share, onClick = onShareLocation)
+        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
+    ) {
+        if (actionsVisible) {
+            PlacesKeyValue(
+                value = title,
+                verdict = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination)
             )
         } else {
-            emptyList()
+            // Until there's an answer the headline says what to do next; a failure is the line under it.
+            PlacesKeyValue(
+                value = when (completed) {
+                    0 -> stringResource(R.string.places_triangulate_take_first)
+                    1 -> stringResource(R.string.places_triangulate_take_second)
+                    else -> stringResource(R.string.places_triangulate_check)
+                },
+                valueStyle = MaterialTheme.typography.headlineSmall,
+                verdict = if (completed == 2) title else stringResource(R.string.places_triangulate_sightings, completed)
+            )
         }
-    ) {
-        if (!actionsVisible) {
-            SightingSteps(sightings = sightings, colors = colors)
-        }
-        if (actionsVisible && updateGpsOverrideVisible) {
-            FilledTonalButton(
-                onClick = onUpdateGpsOverride,
-                shapes = ButtonDefaults.shapes(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp),
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.72f),
-                    contentColor = colors.content
-                )
+        if (actionsVisible) {
+            val buttonModifier = Modifier.heightIn(min = 48.dp)
+            androidx.compose.foundation.layout.FlowRow(
+                modifier = Modifier.padding(horizontal = TrailSenseSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
-                Icon(TrailIcons.Satellite, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(TrailSenseSpacing.sm))
-                Text(stringResource(R.string.update_gps_override))
+                if (navigateVisible) {
+                    Button(onClick = onNavigate, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
+                        Icon(TrailIcons.NavigationArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(stringResource(R.string.navigate))
+                    }
+                    FilledTonalButton(onClick = onCreateBeacon, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
+                        Text(stringResource(R.string.beacon))
+                    }
+                } else {
+                    Button(onClick = onCreateBeacon, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
+                        Icon(TrailIcons.Location, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(TrailSenseSpacing.sm))
+                        Text(stringResource(R.string.beacon))
+                    }
+                }
+                FilledTonalButton(onClick = onShareLocation, shapes = ButtonDefaults.shapes(), modifier = buttonModifier) {
+                    Text(stringResource(R.string.share_ellipsis))
+                }
+            }
+            if (updateGpsOverrideVisible) {
+                FilledTonalButton(
+                    onClick = onUpdateGpsOverride,
+                    shapes = ButtonDefaults.shapes(),
+                    modifier = Modifier
+                        .padding(horizontal = TrailSenseSpacing.sm)
+                        .heightIn(min = 48.dp)
+                ) {
+                    Icon(TrailIcons.Satellite, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(TrailSenseSpacing.sm))
+                    Text(stringResource(R.string.update_gps_override))
+                }
             }
         }
     }
@@ -1007,22 +1004,13 @@ private fun TriangulateLocationCard(
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "triangulateChevron"
     )
-    val badgeColor by animateColorAsState(
-        targetValue = if (isComplete) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerHighest
-        },
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "triangulateBadge"
-    )
-
     val scheme = MaterialTheme.colorScheme
+    // Every step sits on the same quiet surface; the number turning into a check says which ones are done.
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
         Surface(
             shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = true, isLast = !isExpanded)),
-            color = if (isActive) scheme.primaryContainer else scheme.surfaceContainerLow,
-            contentColor = if (isActive) scheme.onPrimaryContainer else scheme.onSurface
+            color = scheme.surfaceContainerLow,
+            contentColor = scheme.onSurface
         ) {
             Row(
                 modifier = Modifier
@@ -1036,8 +1024,8 @@ private fun TriangulateLocationCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PlacesBadge(
-                    containerColor = if (isComplete || isActive) scheme.primary else scheme.primaryContainer,
-                    contentColor = if (isComplete || isActive) scheme.onPrimary else scheme.onPrimaryContainer,
+                    containerColor = if (isActive) scheme.secondaryContainer else scheme.surfaceContainerHighest,
+                    contentColor = if (isActive) scheme.onSecondaryContainer else scheme.onSurfaceVariant,
                     icon = if (isComplete) Icons.Rounded.Check else null,
                     text = if (isComplete) null else number.toString(),
                     shape = MaterialShapes.Cookie4Sided.toShape(),
@@ -1052,13 +1040,13 @@ private fun TriangulateLocationCard(
                     Text(
                         text = headline,
                         style = MaterialTheme.typography.titleMedium,
-                        color = if (isActive) scheme.onPrimaryContainer else scheme.onSurface
+                        color = scheme.onSurface
                     )
                     if (distance != null) {
                         Text(
                             text = distance,
                             style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                            color = scheme.primary
+                            color = scheme.onSurfaceVariant
                         )
                     }
                     // The instruction lives in the step's own header, so an open step is one card, not four.
@@ -1066,7 +1054,7 @@ private fun TriangulateLocationCard(
                         Text(
                             text = instructions,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (isActive) scheme.onPrimaryContainer.copy(alpha = 0.8f) else scheme.onSurfaceVariant
+                            color = scheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1313,58 +1301,3 @@ private fun TriangulateScreenPreview() {
     }
 }
 
-/**
- * Progress as the survey itself: sighting 1, sighting 2, then the point. Each step is a numbered cookie that
- * turns into a filled check once taken, and the line to the next step fills in behind it.
- */
-@Composable
-private fun SightingSteps(
-    sightings: List<Boolean>,
-    colors: com.kylecorry.trail_sense.shared.views.compose.TrailSenseToneColors
-) {
-    val done = sightings.count { it }
-    Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            sightings.forEachIndexed { index, taken ->
-                val fill by animateColorAsState(
-                    if (taken) colors.accent else colors.content.copy(alpha = 0.12f),
-                    MaterialTheme.motionScheme.defaultEffectsSpec(),
-                    label = "step$index"
-                )
-                PlacesBadge(
-                    containerColor = fill,
-                    contentColor = if (taken) colors.onAccent else colors.content,
-                    icon = if (taken) Icons.Rounded.Check else null,
-                    text = if (taken) null else (index + 1).toString(),
-                    shape = (if (taken) MaterialShapes.Cookie9Sided else MaterialShapes.Cookie4Sided).toShape(),
-                    size = 40.dp
-                )
-                val lineColor by animateColorAsState(
-                    if (taken) colors.accent else colors.content.copy(alpha = 0.16f),
-                    MaterialTheme.motionScheme.defaultEffectsSpec(),
-                    label = "line$index"
-                )
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .padding(horizontal = TrailSenseSpacing.xs)
-                        .height(4.dp)
-                        .clip(MaterialTheme.shapes.extraSmall)
-                        .background(lineColor)
-                )
-            }
-            PlacesBadge(
-                containerColor = colors.content.copy(alpha = 0.12f),
-                contentColor = colors.content,
-                icon = TrailIcons.Location,
-                shape = MaterialShapes.Sunny.toShape(),
-                size = 40.dp
-            )
-        }
-        Text(
-            stringResource(R.string.places_triangulate_sightings, done),
-            style = MaterialTheme.typography.labelLarge,
-            color = colors.content.copy(alpha = 0.82f)
-        )
-    }
-}

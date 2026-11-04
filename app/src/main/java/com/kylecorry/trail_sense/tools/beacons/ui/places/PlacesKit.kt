@@ -120,6 +120,8 @@ fun PlacesKeyValue(
     modifier: Modifier = Modifier,
     verdict: String? = null,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
+    /** displaySmall for a value; a sentence (the next step, before there is a value) reads better at headlineSmall. */
+    valueStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.displaySmall,
     below: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     Column(
@@ -130,7 +132,7 @@ fun PlacesKeyValue(
     ) {
         Text(
             value,
-            style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+            style = valueStyle.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
             color = valueColor
         )
