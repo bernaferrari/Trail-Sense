@@ -672,6 +672,7 @@ private class ClinometerTitleState {
 @Composable
 private fun ClinometerReading(
     state: ClinometerTitleState,
+    instruction: ImageVector?,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -744,6 +745,9 @@ private fun ClinometerReading(
                 }
             }
         }
+        if (instruction != null) {
+            ClinometerInstruction(icon = instruction)
+        }
     }
     }
 }
@@ -778,7 +782,14 @@ private fun ClinometerHost(
                 ),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
         ) {
-            ClinometerReading(views.clinometerTitle)
+            ClinometerReading(
+                views.clinometerTitle,
+                instruction = when {
+                    views.clinometerInstructions.isVisible -> TrailIcons.RotateFlatToPortrait
+                    views.cameraClinometerInstructions.isVisible -> TrailIcons.RotateLandscapeToPortrait
+                    else -> null
+                }
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -829,10 +840,6 @@ private fun ClinometerHost(
                 }
                 if (views.clinometerInstructions.isVisible) {
                     views.clinometer.Preview(Modifier.fillMaxSize().alpha(0.35f))
-                    ClinometerInstruction(icon = TrailIcons.RotateFlatToPortrait)
-                }
-                if (views.cameraClinometerInstructions.isVisible) {
-                    ClinometerInstruction(icon = TrailIcons.RotateLandscapeToPortrait)
                 }
             }
 
