@@ -224,11 +224,11 @@ private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
             contentColor = MaterialTheme.colorScheme.onErrorContainer,
             modifier = Modifier.testTag("guide_item")
         ) {
-            Row(Modifier.padding(TrailSenseSpacing.lg), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md), verticalAlignment = Alignment.CenterVertically) {
                 TrailSenseShapeBadge(
                     icon = medical.icon,
                     shape = MaterialShapes.SoftBurst.toShape(),
-                    size = 60.dp,
+                    size = 48.dp,
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError
                 )
@@ -245,7 +245,7 @@ private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
                             it,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f),
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
@@ -311,7 +311,7 @@ private fun SurvivalGuideTileGrid(allItems: List<SurvivalGuideListItem>) {
                                     it,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
+                                    maxLines = 3,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }

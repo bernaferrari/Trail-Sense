@@ -780,12 +780,6 @@ private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>)
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            Text(
-                                category.subtitle,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1
-                            )
                         }
                     }
                 }

@@ -182,7 +182,7 @@ internal fun DiagnosticsScreen(
                         tone = when {
                             !loaded -> TrailSenseTone.Secondary
                             errors.isEmpty() -> TrailSenseTone.Good
-                            else -> TrailSenseTone.Neutral
+                            else -> TrailSenseTone.Primary
                         },
                         icon = Icons.Default.CheckCircle
                     )

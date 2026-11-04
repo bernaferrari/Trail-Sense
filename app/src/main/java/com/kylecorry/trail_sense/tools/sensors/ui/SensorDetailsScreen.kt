@@ -714,9 +714,9 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
     val tone = if (poor == 0 && moderate == 0) TrailSenseTone.Good else TrailSenseTone.Secondary
     val colors = trailSenseToneColors(tone)
     val status = trailSenseStatusColors()
-    val goodColor = status.good
-    val moderateColor = status.caution
-    val poorColor = MaterialTheme.colorScheme.error
+    val goodColor = trailSenseToneColors(TrailSenseTone.Good).container
+    val moderateColor = trailSenseToneColors(TrailSenseTone.Caution).container
+    val poorColor = trailSenseToneColors(TrailSenseTone.Error).container
     val track = colors.content.copy(alpha = 0.12f)
     TrailSenseSpotlight(
         title = stringResource(R.string.sky_sensors_good, good, total),

@@ -33,4 +33,5 @@
     <string name="sky_field_guide_kinds">Plants, animals and fungi across %d kinds</string>
     <string name="sky_pressure_chart_waiting">The history fills in as readings arrive</string>
     <string name="sky_clouds_log">Log a cloud</string>
+    <string name="sky_experimentation_slot">A plugin will appear here</string>
 </resources>
