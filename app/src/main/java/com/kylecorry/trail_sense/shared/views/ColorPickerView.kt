@@ -29,6 +29,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
 fun ColorPickerDialog(
@@ -39,32 +40,20 @@ fun ColorPickerDialog(
 ) {
     var color by remember(selectedColor) { mutableStateOf(selectedColor) }
 
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(text = title)
-        },
-        text = {
-            ColorPickerContent(
-                selectedColor = color,
-                onColorSelected = {
-                    color = it
-                }
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onColorPicked(color) }) {
-                Text(text = androidx.compose.ui.res.stringResource(android.R.string.ok))
+        title = title,
+        confirmText = androidx.compose.ui.res.stringResource(android.R.string.ok),
+        onConfirm = { onColorPicked(color) },
+        dismissText = androidx.compose.ui.res.stringResource(android.R.string.cancel)
+    ) {
+        ColorPickerContent(
+            selectedColor = color,
+            onColorSelected = {
+                color = it
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = androidx.compose.ui.res.stringResource(android.R.string.cancel))
-            }
-        },
-        shape = MaterialTheme.shapes.extraLarge,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-    )
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

@@ -53,6 +53,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
 fun CalibrateCompassToolScreen(host: TrailSenseDestinationHost) {
@@ -449,40 +450,34 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
     }
 
     if (showCalibrationDialog) {
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = {},
-            shape = RoundedCornerShape(28.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text(text = stringResource(R.string.calibrate_compass_dialog_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+            title = stringResource(R.string.calibrate_compass_dialog_title),
+            confirmText = stringResource(android.R.string.ok),
+            onConfirm = { showCalibrationDialog = false }
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+                Text(
+                    text = stringResource(
+                        R.string.calibrate_compass_dialog_content,
+                        stringResource(android.R.string.ok)
+                    )
+                )
+                CompassCalibrationContent(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                )
+                val currentAccuracy = accuracy
+                if (currentAccuracy != null) {
                     Text(
-                        text = stringResource(
-                            R.string.calibrate_compass_dialog_content,
-                            stringResource(android.R.string.ok)
-                        )
+                        text = stringResource(R.string.compass_reported_accuracy, currentAccuracy),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    CompassCalibrationContent(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
-                    )
-                    val currentAccuracy = accuracy
-                    if (currentAccuracy != null) {
-                        Text(
-                            text = stringResource(R.string.compass_reported_accuracy, currentAccuracy),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showCalibrationDialog = false }) {
-                    Text(text = stringResource(android.R.string.ok))
                 }
             }
-        )
+        }
     }
 }

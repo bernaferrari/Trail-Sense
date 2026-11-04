@@ -19,6 +19,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import androidx.compose.ui.draw.clip
 
 /** A reference photo of a cloud type, edge to edge inside the dialog so the picture is the content. */
 @Composable
@@ -31,32 +33,21 @@ internal fun CloudImageDialog(
         drawable?.toBitmap()?.asImageBitmap()
     }
 
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        title = { Text(title) },
-        text = {
-            if (bitmap != null) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(bitmap.width.toFloat() / bitmap.height.coerceAtLeast(1)),
-                    shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow
-                ) {
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = title,
-                        contentScale = ContentScale.Crop
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.ok), fontWeight = FontWeight.SemiBold)
-            }
+        title = title,
+        confirmText = stringResource(android.R.string.ok)
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(bitmap.width.toFloat() / bitmap.height.coerceAtLeast(1))
+                    .clip(MaterialTheme.shapes.large)
+            )
         }
-    )
+    }
 }

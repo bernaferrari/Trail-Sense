@@ -98,6 +98,9 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
 fun CalibrateGPSToolScreen(host: TrailSenseDestinationHost) {
@@ -657,7 +660,7 @@ private fun GPSOverrideCoordinateInput(
             }
         }
         Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
+        TrailSenseInputField(
             value = coordinateText,
             onValueChange = {
                 coordinateText = it
@@ -666,14 +669,10 @@ private fun GPSOverrideCoordinateInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("coordinate_input"),
-            label = { Text(stringResource(R.string.location)) },
+            label = stringResource(R.string.location),
+            keyboardType = KeyboardType.Text,
             isError = coordinateText.isNotBlank() && parsedCoordinate == null,
-            supportingText = {
-                if (coordinateText.isNotBlank() && parsedCoordinate == null) {
-                    Text(stringResource(R.string.coordinate_input_invalid_location))
-                }
-            },
-            singleLine = true,
+            errorText = stringResource(R.string.coordinate_input_invalid_location),
             enabled = enabled && !isLoading
         )
         Spacer(modifier = Modifier.size(8.dp))
@@ -692,15 +691,12 @@ private fun GPSOverrideCoordinateInput(
     }
 
     if (showHelp) {
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            confirmButton = {
-                TextButton(onClick = { showHelp = false }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            title = { Text(stringResource(R.string.location_input_help_title)) },
-            text = { Text(stringResource(R.string.location_input_help)) }
-        )
+            title = stringResource(R.string.location_input_help_title),
+            confirmText = stringResource(android.R.string.ok)
+        ) {
+            Text(stringResource(R.string.location_input_help))
+        }
     }
 }

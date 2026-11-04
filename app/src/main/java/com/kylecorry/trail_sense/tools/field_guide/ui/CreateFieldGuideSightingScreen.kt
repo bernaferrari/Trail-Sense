@@ -79,6 +79,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
 fun CreateFieldGuideSightingToolScreen(host: TrailSenseDestinationHost) {
@@ -530,18 +531,13 @@ private fun CoordinateInput(
     )
 
     if (showHelp) {
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shape = RoundedCornerShape(28.dp),
-            confirmButton = {
-                TextButton(onClick = { showHelp = false }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            title = { Text(stringResource(R.string.location_input_help_title)) },
-            text = { Text(stringResource(R.string.location_input_help)) }
-        )
+            title = stringResource(R.string.location_input_help_title),
+            confirmText = stringResource(android.R.string.ok)
+        ) {
+            Text(stringResource(R.string.location_input_help))
+        }
     }
 }
 

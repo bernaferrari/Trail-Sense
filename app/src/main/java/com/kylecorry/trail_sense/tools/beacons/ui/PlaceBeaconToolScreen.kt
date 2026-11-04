@@ -108,6 +108,8 @@ import com.kylecorry.trail_sense.tools.beacons.ui.form.IsBeaconFormDataComplete
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 
 @Composable
 fun PlaceBeaconToolScreen(
@@ -577,12 +579,15 @@ private fun PlaceBeaconScreen(
             item(key = "notes") {
                 TrailSenseRowGroup {
                     row { position ->
-                        BeaconFormField(
+                        TrailSenseInputField(
                             value = data.notes,
                             onValueChange = onNotesChange,
                             label = stringResource(R.string.beacon_comment),
                             position = position,
+                            keyboardType = KeyboardType.Text,
+                            capitalization = KeyboardCapitalization.Sentences,
                             singleLine = false,
+                            minLines = 4,
                             modifier = Modifier.testTag("comment")
                         )
                     }
@@ -590,64 +595,6 @@ private fun PlaceBeaconScreen(
             }
         }
     }
-}
-
-/**
- * One field of the form as a row of its group: the group's tone and silhouette, no outline or underline, the label
- * inside. Errors still read in the error color with a supporting line.
- */
-@Composable
-private fun BeaconFormField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    position: TrailSenseGroupPosition,
-    modifier: Modifier = Modifier,
-    singleLine: Boolean = true,
-    enabled: Boolean = true,
-    isError: Boolean = false,
-    errorText: String? = null,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null
-) {
-    val container = MaterialTheme.colorScheme.surfaceContainer
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        label = { Text(label) },
-        isError = isError,
-        supportingText = if (isError && errorText != null) {
-            { Text(errorText) }
-        } else {
-            null
-        },
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        singleLine = singleLine,
-        minLines = if (singleLine) 1 else 4,
-        enabled = enabled,
-        shape = trailSenseGroupShape(position),
-        keyboardOptions = KeyboardOptions(
-            capitalization = if (keyboardType == KeyboardType.Text) {
-                KeyboardCapitalization.Sentences
-            } else {
-                KeyboardCapitalization.None
-            },
-            keyboardType = keyboardType
-        ),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = container,
-            unfocusedContainerColor = container,
-            disabledContainerColor = container,
-            errorContainerColor = container,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
-            errorIndicatorColor = Color.Transparent
-        )
-    )
 }
 
 @Composable
@@ -658,7 +605,7 @@ private fun BeaconNameField(
 ) {
     var hasError by remember { mutableStateOf(false) }
     var wasFocused by remember { mutableStateOf(false) }
-    BeaconFormField(
+    TrailSenseInputField(
         value = name,
         onValueChange = {
             onNameChange(it)
@@ -668,6 +615,8 @@ private fun BeaconNameField(
         },
         label = stringResource(R.string.name),
         position = position,
+        keyboardType = KeyboardType.Text,
+        capitalization = KeyboardCapitalization.Sentences,
         isError = hasError,
         errorText = stringResource(R.string.beacon_invalid_name),
         modifier = Modifier
@@ -794,7 +743,7 @@ private fun CoordinateInput(
 
     val isInvalid = coordinateText.isNotBlank() && parsedCoordinate == null
 
-    BeaconFormField(
+    TrailSenseInputField(
         value = coordinateText,
         onValueChange = {
             coordinateText = it
@@ -802,6 +751,8 @@ private fun CoordinateInput(
         },
         label = stringResource(R.string.location),
         position = position,
+        keyboardType = KeyboardType.Text,
+        capitalization = KeyboardCapitalization.Sentences,
         enabled = !isLoadingLocation,
         isError = isInvalid,
         errorText = stringResource(R.string.coordinate_input_invalid_location),
@@ -859,16 +810,13 @@ private fun CoordinateInput(
     )
 
     if (showHelp) {
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            confirmButton = {
-                TextButton(onClick = { showHelp = false }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            title = { Text(stringResource(R.string.location_input_help_title)) },
-            text = { Text(stringResource(R.string.location_input_help)) }
-        )
+            title = stringResource(R.string.location_input_help_title),
+            confirmText = stringResource(android.R.string.ok)
+        ) {
+            Text(stringResource(R.string.location_input_help))
+        }
     }
 }
 
@@ -926,7 +874,7 @@ private fun ElevationInput(
         }
     }
 
-    BeaconFormField(
+    TrailSenseInputField(
         value = elevationText,
         onValueChange = {
             elevationText = it
@@ -1020,7 +968,7 @@ private fun DistanceInput(
         }
     }
 
-    BeaconFormField(
+    TrailSenseInputField(
         value = distanceText,
         onValueChange = {
             distanceText = it

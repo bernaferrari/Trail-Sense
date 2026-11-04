@@ -80,6 +80,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 /**
  * Declination: the angle and its arrow are the hero; the place it's for is one field under it, with the GPS
@@ -355,18 +356,13 @@ private fun CoordinateInput(
     )
 
     if (showHelp) {
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            shape = RoundedCornerShape(28.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text(stringResource(R.string.location_input_help_title)) },
-            text = { Text(stringResource(R.string.location_input_help)) },
-            confirmButton = {
-                TextButton(onClick = { showHelp = false }) {
-                    Text(stringResource(R.string.done))
-                }
-            }
-        )
+            title = stringResource(R.string.location_input_help_title),
+            confirmText = stringResource(R.string.done)
+        ) {
+            Text(stringResource(R.string.location_input_help))
+        }
     }
 }
 

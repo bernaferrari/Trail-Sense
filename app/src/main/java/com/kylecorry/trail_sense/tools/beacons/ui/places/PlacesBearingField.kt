@@ -61,6 +61,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 
 /**
  * A bearing as one row of a group: the direction in a cookie whose arrow points that way, the value large with its
@@ -242,54 +245,43 @@ internal fun PlacesBearingDialog(
     var trueNorth by remember(initialTrueNorth) { mutableStateOf(initialTrueNorth) }
     val parsedBearing = bearingText.toFloatOrNull()?.let { Bearing.getBearing(it) }
 
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        title = { Text(stringResource(R.string.direction)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
-                TrailSenseInputField(
-                    value = bearingText,
-                    onValueChange = { bearingText = it },
-                    label = stringResource(R.string.bearing),
-                    keyboardType = KeyboardType.Number,
-                    unit = "°",
-                    position = TrailSenseGroupPosition(isFirst = true, isLast = false),
-                    modifier = Modifier.testTag("bearing")
+        title = stringResource(R.string.direction),
+        confirmText = stringResource(android.R.string.ok),
+        onConfirm = { onConfirm(parsedBearing, trueNorth) },
+        dismissText = stringResource(android.R.string.cancel)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+            TrailSenseInputField(
+                value = bearingText,
+                onValueChange = { bearingText = it },
+                label = stringResource(R.string.bearing),
+                keyboardType = KeyboardType.Number,
+                unit = "°",
+                modifier = Modifier.testTag("bearing")
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .toggleable(
+                        value = trueNorth,
+                        role = Role.Switch,
+                        onValueChange = { trueNorth = it }
+                    )
+                    .testTag("true_north"),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.true_north),
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyLarge
                 )
-                Surface(
-                    shape = trailSenseGroupShape(TrailSenseGroupPosition(isFirst = false, isLast = true)),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 56.dp)
-                            .padding(horizontal = TrailSenseSpacing.lg)
-                            .testTag("true_north"),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.true_north),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Switch(checked = trueNorth, onCheckedChange = { trueNorth = it })
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = { onConfirm(parsedBearing, trueNorth) }, shapes = ButtonDefaults.shapes()) {
-                Text(stringResource(android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
+                Switch(checked = trueNorth, onCheckedChange = null)
             }
         }
-    )
+    }
 }
 
 /** A compass with no direction yet: a tinted disc, a dashed ring and a dot where the needle will pivot. */

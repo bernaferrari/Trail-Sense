@@ -80,6 +80,8 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 class CreateBlankMapCommand(
     private val context: Context,
@@ -309,21 +311,17 @@ private fun BlankMapCoordinateInput(
             }
         }
         Spacer(modifier = Modifier.size(8.dp))
-        OutlinedTextField(
+        TrailSenseInputField(
             value = coordinateText,
             onValueChange = {
                 coordinateText = it
                 onCoordinateChange(Coordinate.parse(it))
             },
             modifier = Modifier.weight(1f),
-            label = { Text(stringResource(R.string.location)) },
+            label = stringResource(R.string.location),
+            keyboardType = KeyboardType.Text,
             isError = coordinateText.isNotBlank() && parsedCoordinate == null,
-            supportingText = {
-                if (coordinateText.isNotBlank() && parsedCoordinate == null) {
-                    Text(stringResource(R.string.coordinate_input_invalid_location))
-                }
-            },
-            singleLine = true,
+            errorText = stringResource(R.string.coordinate_input_invalid_location),
             enabled = !isLoadingLocation
         )
         Spacer(modifier = Modifier.size(8.dp))
@@ -336,16 +334,13 @@ private fun BlankMapCoordinateInput(
     }
 
     if (showHelp) {
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            confirmButton = {
-                TextButton(onClick = { showHelp = false }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            title = { Text(stringResource(R.string.location_input_help_title)) },
-            text = { Text(stringResource(R.string.location_input_help)) }
-        )
+            title = stringResource(R.string.location_input_help_title),
+            confirmText = stringResource(android.R.string.ok)
+        ) {
+            Text(stringResource(R.string.location_input_help))
+        }
     }
 }
 
@@ -383,16 +378,15 @@ private fun BlankMapDistanceInput(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top
     ) {
-        OutlinedTextField(
+        TrailSenseInputField(
             value = distanceText,
             onValueChange = {
                 distanceText = it
                 publish(text = it)
             },
             modifier = Modifier.weight(1f),
-            label = { Text(stringResource(R.string.distance)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true
+            label = stringResource(R.string.distance),
+            keyboardType = KeyboardType.Decimal
         )
         Spacer(modifier = Modifier.size(8.dp))
         Box(modifier = Modifier.weight(1f)) {

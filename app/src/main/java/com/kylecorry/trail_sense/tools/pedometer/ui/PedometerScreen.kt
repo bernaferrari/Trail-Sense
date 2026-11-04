@@ -130,6 +130,7 @@ import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 /**
  * Pedometer, a calm page. One question: how far have I walked? The steps answer it as the page's display number, with
@@ -755,35 +756,30 @@ private fun PedometerSessionsDialog(
     onDismiss: () -> Unit,
     onDelete: (StepTrackingPeriod, String) -> Unit
 ) {
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.history)) },
-        text = {
-            if (sessions.isEmpty()) {
-                Text(stringResource(R.string.no_pedometer_sessions))
-            } else {
-                Column(
-                    modifier = Modifier
-                        .height(360.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
-                ) {
-                    sessions.forEach { period ->
-                        PedometerSessionRow(
-                            period = period,
-                            formatter = formatter,
-                            onDelete = onDelete
-                        )
-                    }
+        title = stringResource(R.string.history),
+        confirmText = stringResource(android.R.string.ok)
+    ) {
+        if (sessions.isEmpty()) {
+            Text(stringResource(R.string.no_pedometer_sessions))
+        } else {
+            Column(
+                modifier = Modifier
+                    .height(360.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+            ) {
+                sessions.forEach { period ->
+                    PedometerSessionRow(
+                        period = period,
+                        formatter = formatter,
+                        onDelete = onDelete
+                    )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.ok))
-            }
         }
-    )
+    }
 }
 
 @Composable

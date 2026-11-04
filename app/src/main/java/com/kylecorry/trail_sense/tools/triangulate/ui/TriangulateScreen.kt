@@ -171,6 +171,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
 fun TriangulateToolScreen(
@@ -1224,40 +1225,22 @@ private fun CoordinateInput(
     }
 
     val isInvalid = coordinateText.isNotBlank() && parsedCoordinate == null
-    val container = MaterialTheme.colorScheme.surfaceContainer
     val autofillLabel = stringResource(R.string.autofill_source)
-    TextField(
+    TrailSenseInputField(
         value = coordinateText,
         onValueChange = {
             coordinateText = it
             onCoordinateChange(Coordinate.parse(it))
         },
-        label = { Text(stringResource(R.string.location)) },
+        label = stringResource(R.string.location),
         modifier = modifier
-            .fillMaxWidth()
             .heightIn(min = 72.dp)
             .testTag(tag),
+        position = position,
+        keyboardType = KeyboardType.Text,
         enabled = !isLoadingLocation,
         isError = isInvalid,
-        singleLine = true,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-        supportingText = if (isInvalid) {
-            { Text(stringResource(R.string.coordinate_input_invalid_location)) }
-        } else {
-            null
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-        shape = trailSenseGroupShape(position),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = container,
-            unfocusedContainerColor = container,
-            disabledContainerColor = container,
-            errorContainerColor = container,
-            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-            errorIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
-        ),
+        errorText = stringResource(R.string.coordinate_input_invalid_location),
         leadingIcon = {
             if (isLoadingLocation) {
                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
@@ -1321,17 +1304,13 @@ private fun CoordinateInput(
     )
 
     if (showHelp) {
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            confirmButton = {
-                TextButton(onClick = { showHelp = false }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            title = { Text(stringResource(R.string.location_input_help_title)) },
-            text = { Text(stringResource(R.string.location_input_help)) }
-        )
+            title = stringResource(R.string.location_input_help_title),
+            confirmText = stringResource(android.R.string.ok)
+        ) {
+            Text(stringResource(R.string.location_input_help))
+        }
     }
 }
 

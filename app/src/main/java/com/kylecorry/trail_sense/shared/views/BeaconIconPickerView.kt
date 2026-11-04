@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
 fun BeaconIconPickerDialog(
@@ -42,33 +43,21 @@ fun BeaconIconPickerDialog(
 ) {
     var icon by remember(selectedIcon) { mutableStateOf(selectedIcon) }
 
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(text = title)
-        },
-        text = {
-            BeaconIconPickerContent(
-                selectedIcon = icon,
-                icons = icons,
-                onIconSelected = {
-                    icon = it
-                }
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onIconPicked(icon) }) {
-                Text(text = androidx.compose.ui.res.stringResource(android.R.string.ok))
+        title = title,
+        confirmText = androidx.compose.ui.res.stringResource(android.R.string.ok),
+        onConfirm = { onIconPicked(icon) },
+        dismissText = androidx.compose.ui.res.stringResource(android.R.string.cancel)
+    ) {
+        BeaconIconPickerContent(
+            selectedIcon = icon,
+            icons = icons,
+            onIconSelected = {
+                icon = it
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = androidx.compose.ui.res.stringResource(android.R.string.cancel))
-            }
-        },
-        shape = MaterialTheme.shapes.extraLarge,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-    )
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -116,7 +105,8 @@ private fun BeaconIconButton(
         color = if (selected) {
             MaterialTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceContainerHigh
+            // One step above the dialog's own surfaceContainerHigh, so an unpicked icon still reads as a button
+            MaterialTheme.colorScheme.surfaceContainerHighest
         }
     ) {
         Box(contentAlignment = Alignment.Center) {

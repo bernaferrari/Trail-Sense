@@ -97,6 +97,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
 fun CreateFieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
@@ -706,57 +707,47 @@ private fun TagSelectionDialog(
     onConfirm: (List<FieldGuidePageTag>) -> Unit
 ) {
     var current by remember(selected) { mutableStateOf(selected.toSet()) }
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(28.dp),
-        title = { Text(title) },
-        text = {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = 400.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                options.forEach { tag ->
-                    val checked = tag in current
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                            .toggleable(
-                                value = checked,
-                                role = Role.Checkbox,
-                                onValueChange = { isChecked ->
-                                    current = if (isChecked) current + tag else current - tag
-                                }
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = checked,
-                            onCheckedChange = null
-                        )
-                        Text(
-                            text = tagNames[tag] ?: tag.name,
-                            modifier = Modifier.padding(start = TrailSenseSpacing.md),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+        title = title,
+        confirmText = stringResource(android.R.string.ok),
+        onConfirm = { onConfirm(options.filter { it in current }) },
+        dismissText = stringResource(android.R.string.cancel)
+) {
+        Column(
+            modifier = Modifier
+                .heightIn(max = 400.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            options.forEach { tag ->
+                val checked = tag in current
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                        .toggleable(
+                            value = checked,
+                            role = Role.Checkbox,
+                            onValueChange = { isChecked ->
+                                current = if (isChecked) current + tag else current - tag
+                            }
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = checked,
+                        onCheckedChange = null
+                    )
+                    Text(
+                        text = tagNames[tag] ?: tag.name,
+                        modifier = Modifier.padding(start = TrailSenseSpacing.md),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(options.filter { it in current }) }) {
-                Text(stringResource(android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
         }
-    )
+    }
 }
 
 @Preview(showBackground = true)

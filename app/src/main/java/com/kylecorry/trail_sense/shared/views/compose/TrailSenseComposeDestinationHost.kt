@@ -2453,47 +2453,29 @@ class TrailSenseComposeDestinationHost(
         onConfirm: (Float) -> Unit
     ) {
         var value by remember(current) { mutableStateOf(formatScale(current)) }
-        AlertDialog(
+        TrailSenseDialog(
             onDismissRequest = onDismiss,
-            shape = RoundedCornerShape(28.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = {
-                Text(text = title)
-            },
-            text = {
-                androidx.compose.foundation.layout.Column(
-                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-                ) {
-                    Text(
-                        text = stringResource(R.string.pref_ruler_calibration_summary),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    OutlinedTextField(
-                        value = value,
-                        onValueChange = { value = it },
-                        label = { Text(text = title) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onConfirm((value.toFloatCompat() ?: 1f).coerceAtLeast(0f))
-                    }
-                ) {
-                    Text(text = stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(text = stringResource(android.R.string.cancel))
-                }
+            title = title,
+            confirmText = stringResource(android.R.string.ok),
+            onConfirm = { onConfirm((value.toFloatCompat() ?: 1f).coerceAtLeast(0f)) },
+            dismissText = stringResource(android.R.string.cancel)
+        ) {
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+            ) {
+                Text(
+                    text = stringResource(R.string.pref_ruler_calibration_summary),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                TrailSenseInputField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = title,
+                    keyboardType = KeyboardType.Decimal
+                )
             }
-        )
+        }
     }
 
     /** Every settings page of the host: the family's page with its large title and a way back. */

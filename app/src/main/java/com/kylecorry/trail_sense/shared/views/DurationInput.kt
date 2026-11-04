@@ -30,6 +30,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import java.time.Duration
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 
 @Composable
 fun DurationPickerDialog(
@@ -44,41 +46,31 @@ fun DurationPickerDialog(
 ) {
     var selectedDuration by remember(duration) { mutableStateOf(duration) }
 
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(text = title)
-        },
-        text = {
-            Column(modifier = modifier.fillMaxWidth()) {
-                if (!message.isNullOrBlank()) {
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                }
-                DurationInput(
-                    duration = duration,
-                    onDurationChange = {
-                        selectedDuration = it
-                    },
-                    hint = hint,
-                    showSeconds = showSeconds,
-                    modifier = Modifier.fillMaxWidth()
+        title = title,
+        confirmText = stringResource(android.R.string.ok),
+        onConfirm = { onDurationPicked(selectedDuration) },
+        dismissText = stringResource(android.R.string.cancel)
+    ) {
+        Column(modifier = modifier.fillMaxWidth()) {
+            if (!message.isNullOrBlank()) {
+                Text(
+                    text = message,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
-        },
-        confirmButton = {
-            TextButton(onClick = { onDurationPicked(selectedDuration) }) {
-                Text(text = stringResource(android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(android.R.string.cancel))
-            }
+            DurationInput(
+                duration = duration,
+                onDurationChange = {
+                    selectedDuration = it
+                },
+                hint = hint,
+                showSeconds = showSeconds,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-    )
+    }
 }
 
 @Composable
@@ -123,7 +115,7 @@ fun DurationInput(
             }
         }
 
-        OutlinedTextField(
+        TrailSenseInputField(
             value = fieldValue,
             onValueChange = { newValue ->
                 val oldDigits = fieldValue.text.filter(Char::isDigit)
@@ -152,8 +144,8 @@ fun DurationInput(
                 onDurationChange(durationText.toDuration(isNegative))
             },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text(hint) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            label = hint,
+            keyboardType = KeyboardType.Number,
             trailingIcon = {
                 IconButton(
                     onClick = {

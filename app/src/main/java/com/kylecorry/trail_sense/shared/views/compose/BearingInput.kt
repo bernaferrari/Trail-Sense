@@ -37,6 +37,10 @@ import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 
 @Composable
 fun BearingInput(
@@ -210,52 +214,44 @@ private fun ManualBearingDialog(
     var trueNorth by remember(initialTrueNorth) { mutableStateOf(initialTrueNorth) }
     val parsedBearing = bearingText.toFloatOrNull()?.let { Bearing.getBearing(it) }
 
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.direction)) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = bearingText,
-                    onValueChange = { bearingText = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("bearing"),
-                    label = { Text(stringResource(R.string.bearing)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
+        title = stringResource(R.string.direction),
+        confirmText = stringResource(android.R.string.ok),
+        onConfirm = { onConfirm(parsedBearing, trueNorth) },
+        dismissText = stringResource(android.R.string.cancel)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
+            TrailSenseInputField(
+                value = bearingText,
+                onValueChange = { bearingText = it },
+                label = stringResource(R.string.bearing),
+                keyboardType = KeyboardType.Number,
+                unit = "°",
+                modifier = Modifier.testTag("bearing")
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .toggleable(
+                        value = trueNorth,
+                        role = Role.Switch,
+                        onValueChange = { trueNorth = it }
+                    )
+                    .testTag("true_north"),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.true_north),
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = TrailSenseSpacing.lg)
-                        .testTag("true_north"),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.true_north),
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Switch(
-                        checked = trueNorth,
-                        onCheckedChange = { trueNorth = it }
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(parsedBearing, trueNorth) }) {
-                Text(stringResource(android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
+                Switch(checked = trueNorth, onCheckedChange = null)
             }
         }
-    )
+    }
 }
 
 @Preview(showBackground = true)

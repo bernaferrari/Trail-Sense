@@ -40,6 +40,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.ui.text.input.TextFieldValue
 
 /*
  * Form inputs for the utility tools (convert, ballistics, temperature estimation, declination). They take a group
@@ -67,10 +70,12 @@ fun TrailSenseInputField(
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     /** Makes the field a read-only picker: tapping it calls this (to open a choice) instead of typing. */
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    /** False for free text that wraps (a note); [minLines] then sets its resting height. */
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None
 ) {
-    // The same tone as the list rows, so a field and a row in one group read as one object.
-    val container = MaterialTheme.colorScheme.surfaceContainer
     val interactionSource = remember { MutableInteractionSource() }
     if (onClick != null) {
         val currentOnClick by rememberUpdatedState(onClick)
@@ -89,25 +94,17 @@ fun TrailSenseInputField(
         readOnly = onClick != null,
         interactionSource = interactionSource,
         isError = isError,
-        singleLine = true,
+        singleLine = singleLine,
+        minLines = minLines,
         leadingIcon = leadingIcon,
         supportingText = if (isError && errorText != null) {
             { Text(errorText) }
         } else {
             null
         },
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(capitalization = capitalization, keyboardType = keyboardType),
         shape = trailSenseGroupShape(position),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = container,
-            unfocusedContainerColor = container,
-            disabledContainerColor = container,
-            errorContainerColor = container,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
-            errorIndicatorColor = Color.Transparent
-        ),
+        colors = trailSenseInputColors(),
         trailingIcon = when {
             unit != null && onUnitClick != null -> {
                 {
@@ -136,6 +133,61 @@ fun TrailSenseInputField(
 
             else -> trailingIcon
         }
+    )
+}
+
+/**
+ * [TrailSenseInputField] for a caller that owns the cursor (a [TextFieldValue]), such as a field that reformats
+ * what is typed and keeps the cursor at the end.
+ */
+@Composable
+fun TrailSenseInputField(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    position: TrailSenseGroupPosition = TrailSenseGroupPosition.Single,
+    keyboardType: KeyboardType = KeyboardType.Decimal,
+    isError: Boolean = false,
+    errorText: String? = null,
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        label = { Text(label) },
+        enabled = enabled,
+        isError = isError,
+        singleLine = true,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        supportingText = if (isError && errorText != null) {
+            { Text(errorText) }
+        } else {
+            null
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        shape = trailSenseGroupShape(position),
+        colors = trailSenseInputColors()
+    )
+}
+
+/** The same tone as the list rows, so a field and a row in one group read as one object; no indicator line. */
+@Composable
+private fun trailSenseInputColors(): TextFieldColors {
+    val container = MaterialTheme.colorScheme.surfaceContainer
+    return TextFieldDefaults.colors(
+        focusedContainerColor = container,
+        unfocusedContainerColor = container,
+        disabledContainerColor = container,
+        errorContainerColor = container,
+        focusedIndicatorColor = Color.Transparent,
+        unfocusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent,
+        errorIndicatorColor = Color.Transparent
     )
 }
 
@@ -172,42 +224,35 @@ fun <T> TrailSenseOptionsDialog(
     onSelect: (T) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    TrailSenseDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        title = { Text(title) },
-        text = {
-            Column(
-                modifier = Modifier
-                    .selectableGroup()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-            ) {
-                options.forEach { (name, value) ->
-                    val isSelected = value == selected
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                            .selectable(
-                                selected = isSelected,
-                                role = Role.RadioButton,
-                                onClick = { onSelect(value) }
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = isSelected, onClick = null)
-                        Spacer(Modifier.width(TrailSenseSpacing.md))
-                        Text(name, style = MaterialTheme.typography.bodyLarge)
-                    }
+        title = title,
+        dismissText = stringResource(android.R.string.cancel)
+    ) {
+        Column(
+            modifier = Modifier
+                .selectableGroup()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
+        ) {
+            options.forEach { (name, value) ->
+                val isSelected = value == selected
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                        .selectable(
+                            selected = isSelected,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(value) }
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(selected = isSelected, onClick = null)
+                    Spacer(Modifier.width(TrailSenseSpacing.md))
+                    Text(name, style = MaterialTheme.typography.bodyLarge)
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
         }
-    )
+    }
 }
