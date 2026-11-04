@@ -1342,20 +1342,7 @@ private fun PathNavigateButton(
 private fun PathStat(state: PathDataPointState, modifier: Modifier = Modifier) {
     if (!state.isVisible) return
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            shape = RoundedCornerShape(TrailSenseShape.iconContainer),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.size(TrailSenseSize.compactIconContainer)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = rememberVectorPainter(state.icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(TrailSenseSize.compactIcon)
-                )
-            }
-        }
+        com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(rememberVectorPainter(state.icon))
         Spacer(Modifier.width(TrailSenseSpacing.md))
         Column {
             Text(
