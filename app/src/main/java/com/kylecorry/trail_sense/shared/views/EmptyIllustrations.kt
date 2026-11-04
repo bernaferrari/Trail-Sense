@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.sin
 
 /*
@@ -248,61 +247,61 @@ fun PackEmptyIllustration() {
     }
 }
 
-/** A dotted trail drawing itself behind a hiker dot, toward a flag. */
+/**
+ * A dotted trail that draws itself along one smooth curve from a start dot to a flag, holds, then fades away and
+ * starts again. Each dot grows in softly as the trail reaches it.
+ */
 @Composable
 fun PathsEmptyIllustration() {
     val scheme = MaterialTheme.colorScheme
     val backdrop = MaterialShapes.Cookie12Sided.toShape()
-    val loop = rememberLoop(6400, still = 0.8f)
-    val trail = scheme.onPrimaryContainer.copy(alpha = 0.55f)
-    val hiker = scheme.primary
+    val loop = rememberLoop(6000, still = 0.76f)
+    val trail = scheme.primary
+    val start = scheme.primary
     val halo = scheme.surfaceContainerLowest
     val flag = scheme.tertiary
     IllustrationCanvas {
         val p = loop.value
         val u = gridUnit
         drawBackdrop(backdrop, scheme.primaryContainer)
+        val from = Offset(40 * u, 114 * u)
+        val to = Offset(114 * u, 56 * u)
         val path = Path().apply {
-            moveTo(36 * u, 118 * u)
-            cubicTo(72 * u, 126 * u, 40 * u, 78 * u, 80 * u, 78 * u)
-            cubicTo(120 * u, 78 * u, 92 * u, 42 * u, 116 * u, 44 * u)
+            moveTo(from.x, from.y)
+            cubicTo(92 * u, 122 * u, 62 * u, 52 * u, to.x, to.y)
         }
         val measure = PathMeasure().apply { setPath(path, false) }
         val length = measure.length
-        val walk = segment(p, 0.04f, 0.78f, FastOutSlowInEasing)
-        val fade = 1f - segment(p, 0.86f, 0.96f)
+        val head = length * segment(p, 0.06f, 0.62f)
+        val fade = 1f - segment(p, 0.84f, 0.96f)
 
-        // The destination.
-        val pole = Offset(116 * u, 44 * u)
-        drawLine(flag, pole, pole - Offset(0f, 22 * u), 2.5f * u, cap = StrokeCap.Round)
+        // The dots, between the start and the flag; each grows in over one gap as the trail reaches it.
+        val gap = 9 * u
+        var d = gap * 1.4f
+        while (d < length - gap * 0.6f) {
+            val grow = ((head - d) / gap).coerceIn(0f, 1f)
+            if (grow > 0f) {
+                drawCircle(trail, 2.8f * u * FastOutSlowInEasing.transform(grow), measure.getPosition(d), alpha = 0.7f * fade)
+            }
+            d += gap
+        }
+
+        // The start.
+        drawCircle(halo, 9 * u, from)
+        drawCircle(start, 6 * u, from)
+
+        // The destination: a flag whose pole stands on the trail's end.
+        drawLine(flag, to, to - Offset(0f, 26 * u), 3f * u, cap = StrokeCap.Round)
         drawPath(
             Path().apply {
-                moveTo(pole.x, pole.y - 22 * u)
-                lineTo(pole.x + 14 * u, pole.y - 17 * u)
-                lineTo(pole.x, pole.y - 12 * u)
+                moveTo(to.x, to.y - 26 * u)
+                lineTo(to.x + 16 * u, to.y - 20 * u)
+                lineTo(to.x, to.y - 14 * u)
                 close()
             },
             flag
         )
-        // The start.
-        drawCircle(trail, 4 * u, Offset(36 * u, 118 * u), style = Stroke(2 * u))
-
-        val gap = 9 * u
-        var d = gap
-        while (d < length * walk - 6 * u) {
-            drawCircle(trail.copy(alpha = trail.alpha * fade), 2.6f * u, measure.getPosition(d))
-            d += gap
-        }
-        val (at, alpha) = when {
-            p < 0.86f -> measure.getPosition(length * walk) to 1f
-            p < 0.92f -> measure.getPosition(length) to 1f - segment(p, 0.86f, 0.92f)
-            else -> measure.getPosition(0f) to segment(p, 0.94f, 1f)
-        }
-        val moving = p in 0.04f..0.78f
-        val bob = if (moving) -1.5f * u * abs(sin(p * 44f * PI).toFloat()) else 0f
-        val c = at + Offset(0f, bob)
-        drawCircle(halo.copy(alpha = alpha), 10 * u, c)
-        drawCircle(hiker.copy(alpha = alpha), 7 * u, c)
+        drawCircle(flag, 3.5f * u, to)
     }
 }
 
