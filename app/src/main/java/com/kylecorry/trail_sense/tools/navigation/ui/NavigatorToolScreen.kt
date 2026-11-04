@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -856,6 +857,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         // Azimuth
         if (hasCompass) {
             views.navigationTitle.title = formatService.formatDegrees(bearing, replace360 = true)
+            views.navigationTitle.shortDirection = formatService.formatDirection(CompassDirection.nearest(bearing))
             // Spelled out: the dial already shows the letters, the readout says it the way a person would.
             views.navigationTitle.direction = host.requireContext().getString(
                 when (CompassDirection.nearest(bearing)) {
@@ -1048,6 +1050,7 @@ private class NavigationTitleState {
     val rightButton = ComposeQuickActionButtonView()
     var title by mutableStateOf("")
     var direction by mutableStateOf("")
+    var shortDirection by mutableStateOf("")
     var subtitle by mutableStateOf("")
     var isTitleVisible by mutableStateOf(true)
     var onSubtitleClick by mutableStateOf<(() -> Unit)?>(null)
@@ -1087,7 +1090,7 @@ private fun NavigationTitle(
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = state.title,
-            style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
             color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
             maxLines = 1
@@ -1101,6 +1104,28 @@ private fun NavigationTitle(
     }
 }
 
+/** The classic readout under the dial: "336° NW", the degrees large, the direction letters beside them. */
+@Composable
+private fun NavigationClassicHeading(state: NavigationTitleState, modifier: Modifier = Modifier) {
+    if (!state.isTitleVisible) return
+    Text(
+        text = androidx.compose.ui.text.buildAnnotatedString {
+            append(state.title)
+            if (state.shortDirection.isNotEmpty()) {
+                pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurfaceVariant))
+                append(" ")
+                append(state.shortDirection)
+                pop()
+            }
+        },
+        modifier = modifier,
+        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1
+    )
+}
+
 /** Where you are: the coordinates, then altitude and speed in one quiet line. Each part opens its own detail. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -1110,7 +1135,8 @@ private fun NavigationWhereabouts(
     speed: NavigatorDataPointState,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    // One quiet line: coordinates · altitude (· speed while moving).
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = state.subtitle,
             modifier = Modifier
@@ -1120,19 +1146,17 @@ private fun NavigationWhereabouts(
                     onLongClick = { state.onSubtitleLongClick?.invoke() }
                 )
                 .padding(horizontal = TrailSenseSpacing.xs, vertical = TrailSenseSpacing.xxs),
-            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-            maxLines = 2
+            style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (altitude.title.isNotEmpty()) {
-                altitude.Content()
-            }
-            if (speed.title.isNotEmpty()) {
-                NavigationDot()
-                speed.Content()
-            }
+        if (altitude.title.isNotEmpty()) {
+            NavigationDot()
+            altitude.Content()
+        }
+        if (speed.title.isNotEmpty()) {
+            NavigationDot()
+            speed.Content()
         }
     }
 }
@@ -1175,37 +1199,48 @@ private fun NavigatorHost(
                 views.navigationTitle.leftButton.Content(offContainerColor = androidx.compose.ui.graphics.Color.Transparent)
                 views.navigationTitle.rightButton.Content(offContainerColor = androidx.compose.ui.graphics.Color.Transparent)
             }
+            // The dial and where-you-are are one group, centred in all the room between the top bar and the actions;
+            // the dial takes nearly the full width.
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                val compassSize = minOf(maxWidth, maxHeight)
-                val radarModifier = Modifier
-                    .align(Alignment.Center)
-                    .size(compassSize)
-                views.radarCompassMap.Content(radarModifier)
-                views.radarCompass.Content(radarModifier)
-                NavigationTitle(views.navigationTitle, Modifier.align(Alignment.Center))
+                // The dial is the screen's one object: it runs past the page margins to nearly the full width.
+                val compassSize = minOf(maxWidth + TrailSenseSpacing.lg * 2 - TrailSenseSpacing.sm * 2, maxHeight - 72.dp)
+                Column(
+                    Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(Modifier.requiredSize(compassSize)) {
+                        val radarModifier = Modifier.fillMaxSize()
+                        views.radarCompassMap.Content(radarModifier)
+                        views.radarCompass.Content(radarModifier)
+                        if (DialVariant.bezel != 5 || DialVariant.hub != 0) {
+                            NavigationTitle(views.navigationTitle, Modifier.align(Alignment.Center))
+                        }
+                        views.mapAttribution.Content(
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                        )
+                    }
+                    if (DialVariant.bezel == 5 && DialVariant.hub == 0) {
+                        NavigationClassicHeading(views.navigationTitle, Modifier.padding(top = TrailSenseSpacing.md))
+                    }
+                    NavigationWhereabouts(
+                        views.navigationTitle,
+                        views.altitude,
+                        views.speed,
+                        Modifier.padding(top = TrailSenseSpacing.xs)
+                    )
+                }
                 views.linearCompass.Content(
                     Modifier
                         .align(Alignment.Center)
                         .fillMaxWidth()
                 )
-                views.mapAttribution.Content(
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                )
             }
-            NavigationWhereabouts(
-                views.navigationTitle,
-                views.altitude,
-                views.speed,
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(vertical = TrailSenseSpacing.md)
-            )
             views.navigationSheet.Content()
             // The two things most people come here for: go back to a place they saved, or save where they stand
             // (the car, the camp). Two plain, labelled buttons; no hidden long press.

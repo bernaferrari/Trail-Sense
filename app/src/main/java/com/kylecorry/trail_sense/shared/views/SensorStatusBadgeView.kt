@@ -158,10 +158,10 @@ class SensorStatusBadgeView(
             Surface(
                 onClick = { open = true },
                 shape = CircleShape,
-                color = scheme.surfaceContainerHigh,
+                color = androidx.compose.ui.graphics.Color.Transparent,
                 contentColor = scheme.onSurface,
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(52.dp)
                     .semantics { contentDescription = items.joinToString { "${it.second} ${it.first.name}" } }
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -169,9 +169,9 @@ class SensorStatusBadgeView(
                     Box(
                         Modifier
                             .align(Alignment.TopEnd)
-                            .padding(top = 10.dp, end = 10.dp)
-                            .size(10.dp)
-                            .background(scheme.surfaceContainerHigh, CircleShape)
+                            .padding(top = 12.dp, end = 12.dp)
+                            .size(11.dp)
+                            .background(scheme.background, CircleShape)
                             .padding(1.5.dp)
                             .background(dot, CircleShape)
                     )

@@ -124,14 +124,9 @@ class NavigatorUserErrors(
             // Do not reset isCompassErrorShown
         }
 
-        // Compass poor
-        if (!isPoorCompassShown && diagnosticResultIds.contains(MagnetometerDiagnosticScanner.MAGNETOMETER_POOR)) {
-            show(MagnetometerDiagnosticScanner.MAGNETOMETER_POOR)
-            isPoorCompassShown = true
-        } else if (!diagnosticResultIds.contains(MagnetometerDiagnosticScanner.MAGNETOMETER_POOR)) {
-            banner.dismiss(ErrorBannerReason.CompassPoor)
-            isPoorCompassShown = false
-        }
+        // Compass poor: no banner. The status icon in the top bar already shows it (with a dot and a popover that
+        // leads to the tips), and a red banner over the compass for a routine calibration nag is too loud.
+        banner.dismiss(ErrorBannerReason.CompassPoor)
 
     }
 
