@@ -1,0 +1,255 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
+package com.kylecorry.trail_sense.tools.weather.ui
+
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
+
+/*
+ * Small pieces shared by the sky tools (weather, astronomy, climate, clouds, lightning and their neighbours), so the
+ * charts, rows and focal shapes read as one family across them.
+ */
+
+/** Light dashed horizontal grid lines for a chart: quiet enough to read through, never a hard rule. */
+internal fun DrawScope.drawSkyGrid(
+    color: Color,
+    lines: Int = 4,
+    top: Float = 0f,
+    bottom: Float = size.height
+) {
+    if (lines < 2) return
+    val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 6.dp.toPx()))
+    repeat(lines) { index ->
+        val y = top + index / (lines - 1f) * (bottom - top)
+        drawLine(
+            color = color,
+            start = Offset(0f, y),
+            end = Offset(size.width, y),
+            strokeWidth = 1.dp.toPx(),
+            pathEffect = dash
+        )
+    }
+}
+
+/**
+ * A focal shape that turns very slowly behind its icon (or text), like a sun badge: the screen's one expressive mark.
+ * The icon itself stays upright.
+ */
+@Composable
+internal fun SkyFocalShape(
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    text: String? = null,
+    shape: Shape = MaterialShapes.Cookie12Sided.toShape(),
+    size: Dp = 96.dp,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
+    iconRotation: Float = 0f,
+    spin: Boolean = true
+) {
+    val rotation = if (spin) {
+        val transition = rememberInfiniteTransition(label = "skyShape")
+        val angle by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(tween(60_000, easing = LinearEasing), RepeatMode.Restart),
+            label = "skyShapeAngle"
+        )
+        angle
+    } else {
+        0f
+    }
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .size(size)
+                .graphicsLayer { rotationZ = rotation }
+                .background(containerColor, shape)
+        )
+        if (icon != null) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier
+                    .size(size * 0.44f)
+                    .graphicsLayer { rotationZ = iconRotation }
+            )
+        } else if (text != null) {
+            Text(
+                text,
+                color = contentColor,
+                style = (if (text.length <= 3) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge)
+                    .copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * A row in a group with an expressive badge in its own accent, a title, and a SemiBold trailing value: the family's
+ * list row for readings (Keepout's "259 blocked", WiFi Weakspot's network rows).
+ */
+@Composable
+internal fun SkyValueRow(
+    title: String,
+    position: TrailSenseGroupPosition,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    value: String? = null,
+    icon: ImageVector? = null,
+    accent: Color = Color.Unspecified,
+    badgeShape: Shape = MaterialShapes.Cookie6Sided.toShape(),
+    iconRotation: Float = 0f,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    onClick: (() -> Unit)? = null,
+    trailing: (@Composable RowScope.() -> Unit)? = null
+) {
+    val wells = trailSenseWellColors(accent)
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = trailSenseGroupShape(position),
+        color = containerColor
+    ) {
+        Row(
+            modifier = Modifier
+                .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+                .heightIn(min = 72.dp)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                TrailSenseShapeBadge(
+                    icon = icon,
+                    shape = badgeShape,
+                    size = 44.dp,
+                    containerColor = wells.container,
+                    contentColor = wells.content,
+                    iconRotation = iconRotation
+                )
+                Spacer(Modifier.width(TrailSenseSpacing.lg))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (subtitle != null) {
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            if (value != null) {
+                Spacer(Modifier.width(TrailSenseSpacing.md))
+                Text(
+                    value,
+                    style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    color = valueColor,
+                    textAlign = TextAlign.End,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 200.dp)
+                )
+            }
+            trailing?.invoke(this)
+        }
+    }
+}
+
+/** A small pill of status (a tendency, a phase, a count) on any surface. */
+@Composable
+internal fun SkyPill(
+    text: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    iconRotation: Float = 0f
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(50),
+        color = containerColor,
+        contentColor = contentColor
+    ) {
+        Row(
+            Modifier.padding(start = if (icon != null) 10.dp else 12.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .graphicsLayer { rotationZ = iconRotation }
+                )
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(
+                text,
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
+        }
+    }
+}
