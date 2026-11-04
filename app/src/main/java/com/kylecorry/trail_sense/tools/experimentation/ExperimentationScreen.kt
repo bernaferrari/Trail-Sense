@@ -16,7 +16,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.weather.ui.SkyEmptyState
-import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -58,6 +57,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -106,7 +106,8 @@ internal fun ExperimentationContent() {
                             context.findComponentActivity()?.findNavController()
                                 ?.navigate(R.id.pluginsSettingsFragment)
                         },
-                        modifier = Modifier.heightIn(min = 340.dp)
+                        // The same optical centre as the other empty screens.
+                        modifier = Modifier.fillParentMaxHeight(0.78f)
                     )
                 }
             }
@@ -135,7 +136,7 @@ internal fun ExperimentationContent() {
                         Text(
                             "$features ${stringResource(R.string.sky_experimentation_features)}",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -156,10 +157,10 @@ private fun ExperimentationPluginRow(
 ) {
     var expanded by rememberSaveable(plugin.packageId) { mutableStateOf(false) }
     Column {
-        SkyValueRow(
+        TrailSenseListItem(
             title = plugin.name,
             subtitle = listOfNotNull(plugin.packageId, plugin.version).joinToString(" · "),
-            icon = Icons.Rounded.Extension,
+            icon = androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Rounded.Extension),
             position = if (expanded) position.copy(isLast = false) else position,
             onClick = { expanded = !expanded }
         )
