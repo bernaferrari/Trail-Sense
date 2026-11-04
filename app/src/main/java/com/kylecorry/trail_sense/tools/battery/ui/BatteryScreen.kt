@@ -3,6 +3,28 @@
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.text.font.FontWeight
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.icons.trail.ToolBattery
+import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.Help
 import com.kylecorry.trail_sense.shared.icons.trail.CheckOutline
@@ -372,27 +394,31 @@ private fun BatteryScreen(
     val metrics = buildList {
         if (time != null) {
             add(
-                TrailSenseMetricItem(
+                TrailSenseStat(
                     label = stringResource(
                         if (isCharging) R.string.battery_time_to_full else R.string.battery_time_left
                     ),
-                    value = formatter.formatDuration(time)
+                    value = formatter.formatDuration(time),
+                    icon = TrailIcons.ToolClock
                 )
             )
         }
         if (capacity != 0f) {
             add(
-                TrailSenseMetricItem(
+                TrailSenseStat(
                     label = stringResource(R.string.battery_capacity_label),
-                    value = formatter.formatElectricalCapacity(capacity)
+                    value = formatter.formatElectricalCapacity(capacity),
+                    icon = TrailIcons.ToolBattery
                 )
             )
         }
         if (health != BatteryHealth.Good) {
             add(
-                TrailSenseMetricItem(
+                TrailSenseStat(
                     label = stringResource(R.string.battery_health_label),
-                    value = formatter.formatBatteryHealth(health)
+                    value = formatter.formatBatteryHealth(health),
+                    tone = TrailSenseTone.Caution,
+                    icon = TrailIcons.Alert
                 )
             )
         }
@@ -445,13 +471,11 @@ private fun BatteryScreen(
                     statusText = currentText,
                     formatter = formatter,
                     deepSleepText = deepSleepText,
-                    position = TrailSenseGroupPosition(isFirst = true, isLast = metrics.isEmpty())
+                    position = TrailSenseGroupPosition.Single
                 )
                 if (metrics.isNotEmpty()) {
-                    TrailSenseMetricRow(
-                        items = metrics,
-                        position = TrailSenseGroupPosition(isFirst = false, isLast = true)
-                    )
+                    // A lone tile spans the row; two or three share it.
+                    TrailSenseStatGrid(stats = metrics, columns = metrics.size.coerceIn(1, 3))
                 }
             }
         }
@@ -504,9 +528,11 @@ private fun BatteryScreen(
 }
 
 /**
- * The hero: the charge as a big tabular percentage, what the battery is doing right now under it, and a level bar
- * tinted by state (accent normally, tertiary while charging, error when low).
+ * The hero: the charge as a huge tabular percentage on a saturated card that is itself the gauge — a tide of the
+ * accent colour fills it from the bottom up to the charge, rolling while it charges. Primary normally, good while
+ * charging, error when low.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BatteryHeroCard(
     percent: Float,
@@ -517,92 +543,114 @@ private fun BatteryHeroCard(
     deepSleepText: String?,
     position: TrailSenseGroupPosition
 ) {
-    val accent = when {
-        isCharging -> MaterialTheme.colorScheme.tertiary
-        isLow -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.primary
+    val tone = when {
+        isCharging -> TrailSenseTone.Good
+        isLow -> TrailSenseTone.Error
+        else -> TrailSenseTone.Primary
     }
-    val animatedAccent by animateColorAsState(
-        targetValue = accent,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "batteryAccent"
-    )
+    val colors = trailSenseToneColors(tone)
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
+    val container by animateColorAsState(colors.container, effects, label = "batteryContainer")
+    val content by animateColorAsState(colors.content, effects, label = "batteryContent")
+    val accent by animateColorAsState(colors.accent, effects, label = "batteryAccent")
     val animatedProgress by animateFloatAsState(
         targetValue = (percent / 100f).coerceIn(0f, 1f),
-        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "batteryProgress"
+    )
+    val phase by rememberInfiniteTransition(label = "tide").animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(if (isCharging) 2200 else 7000, easing = LinearEasing), RepeatMode.Restart),
+        label = "tidePhase"
     )
     val supporting = statusText.ifEmpty {
         if (isLow) stringResource(R.string.low) else ""
     }
 
-    TrailSenseGroupCard(
-        position = position,
-        contentPadding = PaddingValues(TrailSenseSpacing.xl)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = trailSenseGroupShape(position),
+        color = container,
+        contentColor = content
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = formatter.formatPercentage(percent),
+        Box {
+            Canvas(
                 modifier = Modifier
-                    .weight(1f)
-                    .testTag("battery_percentage"),
-                style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
-            if (isCharging) {
-                Surface(
-                    shape = CircleShape,
-                    color = animatedAccent,
-                    contentColor = MaterialTheme.colorScheme.onTertiary,
-                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = rememberVectorPainter(TrailIcons.Power),
-                            contentDescription = null,
-                            modifier = Modifier.size(TrailSenseSize.leadingIcon)
-                        )
+                    .matchParentSize()
+                    .testTag("battery_level_progress")
+            ) {
+                val level = size.height * (1f - animatedProgress)
+                val amplitude = if (animatedProgress >= 0.999f) 0f else if (isCharging) 6.dp.toPx() else 3.dp.toPx()
+                val wavelength = size.width / 2f
+                val path = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(0f, size.height)
+                    lineTo(0f, level)
+                    var x = 0f
+                    while (x <= size.width) {
+                        lineTo(x, level + amplitude * kotlin.math.sin((x / wavelength + phase) * 2 * Math.PI).toFloat())
+                        x += 6f
                     }
+                    lineTo(size.width, size.height)
+                    close()
+                }
+                drawPath(path, accent.copy(alpha = 0.22f))
+            }
+            Column(
+                modifier = Modifier.padding(TrailSenseSpacing.xl),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TrailSenseShapeBadge(
+                        icon = if (isCharging) TrailIcons.Power else TrailIcons.ToolBattery,
+                        shape = if (isCharging) MaterialShapes.SoftBurst.toShape() else MaterialShapes.Cookie9Sided.toShape(),
+                        size = 56.dp,
+                        containerColor = accent,
+                        contentColor = colors.onAccent
+                    )
+                    Spacer(Modifier.width(TrailSenseSpacing.lg))
+                    Text(
+                        text = stringResource(
+                            when {
+                                isCharging -> R.string.battery_charging
+                                isLow -> R.string.battery_low
+                                else -> R.string.battery_on_battery
+                            }
+                        ),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    text = formatter.formatPercentage(percent),
+                    modifier = Modifier.testTag("battery_percentage"),
+                    style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+                if (supporting.isNotEmpty()) {
+                    Text(
+                        text = supporting,
+                        modifier = Modifier.testTag("battery_current"),
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        color = content.copy(alpha = 0.85f)
+                    )
+                }
+                if (deepSleepText != null) {
+                    Text(
+                        text = deepSleepText,
+                        modifier = Modifier.testTag("battery_deep_sleep"),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = content.copy(alpha = 0.75f)
+                    )
                 }
             }
-        }
-        if (supporting.isNotEmpty()) {
-            Text(
-                text = supporting,
-                modifier = Modifier
-                    .padding(top = TrailSenseSpacing.xs)
-                    .testTag("battery_current"),
-                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Spacer(Modifier.height(TrailSenseSpacing.lg))
-        LinearProgressIndicator(
-            progress = { animatedProgress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(12.dp)
-                .clip(CircleShape)
-                .testTag("battery_level_progress"),
-            color = animatedAccent,
-            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            gapSize = 0.dp,
-            drawStopIndicator = {}
-        )
-        if (deepSleepText != null) {
-            Text(
-                text = deepSleepText,
-                modifier = Modifier
-                    .padding(top = TrailSenseSpacing.md)
-                    .testTag("battery_deep_sleep"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
 
+/** A running service: its battery cost as a toned shape badge, and a clear Stop button instead of a bare cross. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RunningServiceRow(
     service: RunningService,
@@ -611,31 +659,27 @@ private fun RunningServiceRow(
     onDisable: () -> Unit
 ) {
     val usage = getBatteryUsage(service)
-    TrailSenseListItem(
+    UsageRow(
         title = service.name,
         subtitle = formatter.join(
             formatFrequency(service.frequency, formatter),
             formatBatteryUsage(usage),
             separator = FormatService.Separator.Dot
         ),
-        icon = rememberVectorPainter(getUsageIcon(usage)),
-        iconTint = Color(getUsageColor(usage)),
+        usage = usage,
         position = position,
-        trailing = {
-            IconButton(
-                onClick = onDisable,
-                modifier = Modifier
-                    .size(TrailSenseSize.minimumTouchTarget)
-                    .testTag("battery_service_stop_btn")
-            ) {
-                Icon(
-                    painter = rememberVectorPainter(TrailIcons.Cancel),
-                    contentDescription = stringResource(R.string.stop),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        onClick = null
+    ) {
+        FilledTonalButton(
+            onClick = onDisable,
+            modifier = Modifier
+                .heightIn(min = TrailSenseSize.minimumTouchTarget)
+                .testTag("battery_service_stop_btn"),
+            contentPadding = PaddingValues(horizontal = TrailSenseSpacing.lg)
+        ) {
+            Text(stringResource(R.string.stop))
         }
-    )
+    }
 }
 
 @Composable
@@ -644,25 +688,74 @@ private fun SystemTipRow(
     position: TrailSenseGroupPosition,
     onOpen: () -> Unit
 ) {
-    TrailSenseListItem(
+    UsageRow(
         title = tip.name,
         subtitle = tip.description,
-        icon = rememberVectorPainter(getUsageIcon(tip.batteryUsage)),
-        iconTint = Color(getUsageColor(tip.batteryUsage)),
+        usage = tip.batteryUsage,
         position = position,
-        trailing = if (tip.manage != null) {
-            {
-                Icon(
-                    painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+        onClick = if (tip.manage != null) onOpen else null
+    ) {
+        if (tip.manage != null) {
+            Icon(
+                painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun UsageRow(
+    title: String,
+    subtitle: String,
+    usage: BatteryUsage,
+    position: TrailSenseGroupPosition,
+    onClick: (() -> Unit)?,
+    trailing: @Composable () -> Unit
+) {
+    val colors = trailSenseToneColors(getUsageTone(usage))
+    val body: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TrailSenseShapeBadge(
+                icon = getUsageIcon(usage),
+                shape = getUsageShape(usage).toShape(),
+                size = 44.dp,
+                containerColor = colors.container,
+                contentColor = colors.content
+            )
+            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        } else {
-            null
-        },
-        onClick = if (tip.manage != null) onOpen else null
-    )
+            Spacer(Modifier.width(TrailSenseSpacing.sm))
+            trailing()
+        }
+    }
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            shape = trailSenseGroupShape(position),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
+        ) { body() }
+    } else {
+        Surface(
+            shape = trailSenseGroupShape(position),
+            color = MaterialTheme.colorScheme.surfaceContainerLow
+        ) { body() }
+    }
 }
 
 @Composable
@@ -730,17 +823,28 @@ private fun getBatteryUsage(service: RunningService): BatteryUsage {
 private fun getUsageIcon(usage: BatteryUsage): ImageVector {
     return when (usage) {
         BatteryUsage.Unknown -> TrailIcons.Help
-        BatteryUsage.Low -> TrailIcons.CheckOutline
+        BatteryUsage.Low -> TrailIcons.Check
         BatteryUsage.Moderate -> TrailIcons.Alert
         BatteryUsage.High -> TrailIcons.Alert
     }
 }
 
-private fun getUsageColor(usage: BatteryUsage): Int {
+private fun getUsageTone(usage: BatteryUsage): TrailSenseTone {
     return when (usage) {
-        BatteryUsage.Unknown -> AppColor.Gray.color
-        BatteryUsage.Low -> AppColor.Green.color
-        BatteryUsage.Moderate -> AppColor.Yellow.color
-        BatteryUsage.High -> AppColor.Red.color
+        BatteryUsage.Unknown -> TrailSenseTone.Secondary
+        BatteryUsage.Low -> TrailSenseTone.Good
+        BatteryUsage.Moderate -> TrailSenseTone.Caution
+        BatteryUsage.High -> TrailSenseTone.Error
+    }
+}
+
+/** Calm shapes for low cost, spikier ones as the cost rises. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+private fun getUsageShape(usage: BatteryUsage): androidx.graphics.shapes.RoundedPolygon {
+    return when (usage) {
+        BatteryUsage.Unknown -> MaterialShapes.Cookie6Sided
+        BatteryUsage.Low -> MaterialShapes.Cookie9Sided
+        BatteryUsage.Moderate -> MaterialShapes.SoftBurst
+        BatteryUsage.High -> MaterialShapes.Burst
     }
 }
