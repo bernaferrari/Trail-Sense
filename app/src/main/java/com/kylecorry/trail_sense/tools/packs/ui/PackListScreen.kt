@@ -402,11 +402,14 @@ private fun PackListItem(
         modifier = modifier.testTag("pack_list_item"),
         onClick = { onOpenPack(pack) },
         leading = {
+            // The family's 40 dp well; a packed list turns it to the good colour with a check.
             PlacesBadge(
-                containerColor = if (done) status.goodContainer else scheme.secondaryContainer,
-                contentColor = if (done) status.onGoodContainer else scheme.onSecondaryContainer,
+                containerColor = if (done) status.goodContainer else scheme.primary.copy(alpha = 0.12f),
+                contentColor = if (done) status.onGoodContainer else scheme.primary,
                 icon = if (done) TrailIcons.Check else TrailIcons.ToolPack,
-                shape = MaterialShapes.Cookie9Sided.toShape(),
+                shape = MaterialShapes.Cookie6Sided.toShape(),
+                size = 40.dp,
+                iconScale = 0.55f,
                 modifier = Modifier.padding(start = TrailSenseSpacing.sm)
             )
         },
