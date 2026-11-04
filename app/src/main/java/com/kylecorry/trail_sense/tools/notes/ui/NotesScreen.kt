@@ -204,7 +204,7 @@ private fun NoteRow(
                 scaleY = scale
             },
         shape = trailSenseGroupShape(position),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) {
         Row(
             modifier = Modifier
@@ -224,15 +224,15 @@ private fun NoteRow(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // The day it was written, on a soft cookie, with the month under it: notes read like a dated notebook.
+            // The day it was written in the family's 40 dp well, with the month under it: a dated notebook.
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 PlacesBadge(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    contentColor = MaterialTheme.colorScheme.primary,
                     text = date?.dayOfMonth?.toString(),
                     icon = if (date == null) TrailIcons.ToolNotes else null,
-                    shape = MaterialShapes.Cookie4Sided.toShape(),
-                    size = 44.dp
+                    shape = MaterialShapes.Cookie6Sided.toShape(),
+                    size = 40.dp
                 )
                 if (date != null) {
                     Text(
@@ -242,7 +242,7 @@ private fun NoteRow(
                     )
                 }
             }
-            Spacer(Modifier.width(TrailSenseSpacing.lg))
+            Spacer(Modifier.width(TrailSenseSpacing.md))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
