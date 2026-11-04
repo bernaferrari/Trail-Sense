@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -87,7 +88,7 @@ class SensorStatusBadgeView(
     }
 
     @Composable
-    fun Content(modifier: Modifier = Modifier) {
+    fun Content(modifier: Modifier = Modifier, quiet: Boolean = false) {
         val lifecycleOwner = LocalLifecycleOwner.current
         DisposableEffect(lifecycleOwner) {
             lifecycleOwner.lifecycle.addObserver(lifecycleListener)
@@ -97,6 +98,10 @@ class SensorStatusBadgeView(
             }
         }
         if (!badgeVisible) {
+            return
+        }
+        if (quiet) {
+            QuietContent(modifier)
             return
         }
         Column(
@@ -121,6 +126,33 @@ class SensorStatusBadgeView(
                     label = context.getString(R.string.pref_compass_sensor_title),
                     icon = TrailSenseIcons.Filled.Explore
                 )
+            }
+        }
+    }
+
+    /** Sensor trouble as one line of coloured text (no pills): each sensor that needs attention, tappable for tips. */
+    @Composable
+    private fun QuietContent(modifier: Modifier) {
+        val items = listOfNotNull(
+            gpsBadge?.takeIf { showGpsBadge && !it.isGood() }?.let { Triple(it, context.getString(R.string.gps), TrailSenseIcons.Filled.LocationOn) },
+            compassBadge?.takeIf { showCompassBadge && !it.isGood() }?.let { Triple(it, context.getString(R.string.pref_compass_sensor_title), TrailSenseIcons.Filled.Explore) }
+        )
+        if (items.isEmpty()) return
+        Row(
+            modifier = modifier
+                .clip(CircleShape)
+                .clickable(enabled = clickListener != null) { clickListener?.invoke() }
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items.forEach { (badge, label, icon) ->
+                val caution = badge.color == AppColor.Yellow.color || badge.color == AppColor.Orange.color
+                val color = if (caution) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+                    Text("$label ${badge.name.lowercase()}", style = MaterialTheme.typography.labelLarge, color = color)
+                }
             }
         }
     }

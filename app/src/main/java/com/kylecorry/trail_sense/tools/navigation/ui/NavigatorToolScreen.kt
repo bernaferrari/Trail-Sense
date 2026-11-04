@@ -1068,61 +1068,74 @@ private class NavigatorDataPointState(
 @Composable
 private fun NavigationTitle(
     state: NavigationTitleState,
+    altitude: NavigatorDataPointState,
+    speed: NavigatorDataPointState,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = TrailSenseSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        state.leftButton.Content()
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = TrailSenseSpacing.sm),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
-        ) {
-            if (state.isTitleVisible) {
-                // The one heading readout: degrees and direction as a single line in tabular figures (so it doesn't
-                // jitter as it changes). The direction is the same reading in words, so it stays quiet beside it.
+        if (state.isTitleVisible) {
+            // The one heading readout. The degrees sit exactly on the dial's lubber line; the direction word hangs to
+            // their right without pulling them off centre.
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                Box(Modifier.weight(1f))
                 Text(
-                    text = androidx.compose.ui.text.buildAnnotatedString {
-                        append(state.title)
-                        if (state.direction.isNotEmpty()) {
-                            pushStyle(
-                                androidx.compose.ui.text.SpanStyle(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = FontWeight.Normal
-                                )
-                            )
-                            append(" ")
-                            append(state.direction)
-                            pop()
-                        }
-                    },
-                    style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+                    text = state.title,
+                    style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1
                 )
+                Box(Modifier.weight(1f)) {
+                    Text(
+                        text = state.direction,
+                        modifier = Modifier.padding(start = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.sm),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
             }
+        }
+        // Where you are, in one quiet line: coordinates, altitude, speed. Each part opens its own detail.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = state.subtitle,
                 modifier = Modifier
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(TrailSenseSpacing.sm))
                     .combinedClickable(
-                    onClick = { state.onSubtitleClick?.invoke() },
-                    onLongClick = { state.onSubtitleLongClick?.invoke() }
-                )
-                    .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.xs),
+                        onClick = { state.onSubtitleClick?.invoke() },
+                        onLongClick = { state.onSubtitleLongClick?.invoke() }
+                    )
+                    .padding(horizontal = TrailSenseSpacing.xs, vertical = TrailSenseSpacing.xxs),
                 style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                maxLines = 1
             )
+            if (altitude.title.isNotEmpty()) {
+                NavigationDot()
+                altitude.Content()
+            }
+            if (speed.title.isNotEmpty()) {
+                NavigationDot()
+                speed.Content()
+            }
         }
-        state.rightButton.Content()
     }
+}
+
+@Composable
+private fun NavigationDot() {
+    Text(
+        text = "·",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable
@@ -1130,8 +1143,9 @@ private fun NavigatorHost(
     views: NavigatorViews,
     modifier: Modifier = Modifier
 ) {
-    // Which way is my destination? The compass answers it (its turn arc closes as you face it); one heading readout,
-    // two quiet chips and the destination card support it.
+    // Which way is my destination? Three bands, top to bottom: the reading (heading, then where you are), the dial
+    // (centred in all the room that's left), and the actions on one bottom line (quick actions at the start, the
+    // beacon button at the end). Sensor trouble is one quiet line, only while there is trouble.
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.background
@@ -1141,28 +1155,23 @@ private fun NavigatorHost(
                 .fillMaxSize()
                 .padding(horizontal = TrailSenseSpacing.lg)
         ) {
-            NavigationTitle(views.navigationTitle)
-            // Altitude and speed as one quiet line under the coordinates, so the heading stays the one star number.
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = -TrailSenseSpacing.sm),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                views.altitude.Content()
-                Text(
-                    text = "·",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                views.speed.Content()
-            }
+            NavigationTitle(
+                views.navigationTitle,
+                views.altitude,
+                views.speed,
+                Modifier.padding(top = TrailSenseSpacing.md)
+            )
+            views.accuracyView.Content(
+                Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = TrailSenseSpacing.xs),
+                quiet = true
+            )
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.sm)
+                    .padding(vertical = TrailSenseSpacing.md)
             ) {
                 val compassSize = minOf(maxWidth, maxHeight)
                 val radarModifier = Modifier
@@ -1180,27 +1189,25 @@ private fun NavigatorHost(
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                 )
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(TrailSenseSpacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    views.accuracyView.Content()
-                    views.northReferenceIndicator.Content()
-                }
+            }
+            views.navigationSheet.Content()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = TrailSenseSpacing.sm, bottom = TrailSenseSpacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+            ) {
+                views.navigationTitle.leftButton.Content()
+                views.navigationTitle.rightButton.Content()
+                Box(Modifier.weight(1f))
                 NavigatorIconButton(
                     icon = TrailSenseIcons.Filled.LocationOn,
                     contentDescription = stringResource(R.string.location),
                     onClick = { views.onBeaconClick?.invoke() },
-                    onLongClick = { views.onBeaconLongClick?.invoke() },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(TrailSenseSpacing.sm)
+                    onLongClick = { views.onBeaconLongClick?.invoke() }
                 )
             }
-            views.navigationSheet.Content()
         }
     }
 }
