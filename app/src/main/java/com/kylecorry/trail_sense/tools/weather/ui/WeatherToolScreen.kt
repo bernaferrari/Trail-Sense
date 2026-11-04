@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.rounded.WbSunny
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.animation.AnimatedVisibility
@@ -618,55 +621,29 @@ private fun WeatherHost(
                     }
                 }
 
-                if (stats.isNotEmpty()) {
-                    item(key = "weather_stats") {
-                        TrailSenseStatGrid(
-                            stats = stats.map { it.toStat(tendencyDirection) },
-                            columns = 2
-                        )
-                    }
+                // Pressure leads as one full-width card holding its value, where it is heading and its history;
+                // the other readings sit two-up under it.
+                item(key = "weather_chart") {
+                    val pressure = weatherItems.firstOrNull { it.id == 1L }
+                    val tendency = weatherItems.firstOrNull { it.id == 2L }
+                    WeatherPressureCard(
+                        pressure = pressure,
+                        tendency = tendency,
+                        tendencyDirection = tendencyDirection,
+                        data = pressureChartData,
+                        markerText = pressureMarkerText,
+                        formatService = formatService,
+                        onMarkerSelected = onPressureMarkerSelected
+                    )
                 }
 
-                item(key = "weather_chart") {
-                    Column {
-                        TrailSenseGroupHeader(stringResource(R.string.pressure_chart))
-                        TrailSenseGroupCard(TrailSenseGroupPosition.Single) {
-                            val hasPressureHistory = pressureChartData.data.isNotEmpty() ||
-                                    pressureChartData.raw.isNotEmpty() ||
-                                    pressureChartData.forecast.isNotEmpty()
-                            if (hasPressureHistory) {
-                                WeatherPressureChart(
-                                    data = pressureChartData.data,
-                                    raw = pressureChartData.raw,
-                                    forecast = pressureChartData.forecast,
-                                    onMarkerSelected = onPressureMarkerSelected,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(184.dp)
-                                        .testTag("chart")
-                                )
-                                WeatherChartAxis(pressureChartData, formatService)
-                            } else {
-                                WeatherChartEmpty(Modifier.testTag("chart"))
-                            }
-
-                            AnimatedVisibility(
-                                visible = pressureMarkerText != null,
-                                enter = fadeIn() + expandVertically(),
-                                exit = fadeOut() + shrinkVertically(),
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            ) {
-                                SkyPill(
-                                    text = pressureMarkerText ?: "",
-                                    icon = TrailIcons.Barometer,
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier
-                                        .padding(top = TrailSenseSpacing.md)
-                                        .testTag("pressure_marker")
-                                )
-                            }
-                        }
+                val others = stats.filter { it.id != 1L && it.id != 2L }
+                if (others.isNotEmpty()) {
+                    item(key = "weather_stats") {
+                        TrailSenseStatGrid(
+                            stats = others.map { it.toStat(tendencyDirection) },
+                            columns = 2
+                        )
                     }
                 }
 
@@ -771,6 +748,130 @@ private fun WeatherAlertBanner(item: WeatherListItem) {
     }
 }
 
+/**
+ * Pressure as the screen's second anchor: a full-width primary card with the reading at display size, the tendency
+ * as a toned chip, and the history chart inside it. With fewer than two readings it says plainly that the chart
+ * fills in as the monitor records.
+ */
+@Composable
+private fun WeatherPressureCard(
+    pressure: WeatherListItem?,
+    tendency: WeatherListItem?,
+    tendencyDirection: Int,
+    data: WeatherPressureChartData,
+    markerText: String?,
+    formatService: FormatService,
+    onMarkerSelected: (Duration?, Float?) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        shape = RoundedCornerShape(TrailSenseShape.groupOuter),
+        color = scheme.primaryContainer,
+        contentColor = scheme.onPrimaryContainer,
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (pressure != null) Modifier.testTag("weather_item_1") else Modifier)
+    ) {
+        Column(Modifier.padding(TrailSenseSpacing.lg)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(TrailIcons.Barometer, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(TrailSenseSpacing.xs))
+                Text(
+                    stringResource(R.string.pressure),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = TrailSenseSpacing.xs)
+            ) {
+                Text(
+                    pressure?.trailingText ?: "--",
+                    style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
+                )
+                if (tendency?.trailingText != null) {
+                    TrailSenseValueChip(
+                        text = tendency.trailingText,
+                        icon = tendency.icon,
+                        tone = when {
+                            tendencyDirection >= 1 -> TrailSenseTone.Good
+                            tendencyDirection <= -2 -> TrailSenseTone.Caution
+                            else -> TrailSenseTone.Secondary
+                        },
+                        strong = tendencyDirection != 0,
+                        modifier = Modifier.testTag("weather_item_2")
+                    )
+                }
+            }
+            Spacer(Modifier.height(TrailSenseSpacing.md))
+            if (data.data.size >= 2) {
+                WeatherPressureChart(
+                    data = data.data,
+                    raw = data.raw,
+                    forecast = data.forecast,
+                    onMarkerSelected = onMarkerSelected,
+                    ringColor = scheme.primaryContainer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(168.dp)
+                        .testTag("chart")
+                )
+                WeatherChartAxis(data, formatService)
+            } else {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(scheme.surfaceContainerLowest.copy(alpha = 0.6f), RoundedCornerShape(18.dp))
+                        .padding(TrailSenseSpacing.md)
+                        .testTag("chart"),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SkyFocalShape(
+                        icon = TrailIcons.Chart,
+                        shape = MaterialShapes.Cookie9Sided.toShape(),
+                        size = 48.dp,
+                        containerColor = scheme.primary,
+                        contentColor = scheme.onPrimary,
+                        spin = false
+                    )
+                    Spacer(Modifier.width(TrailSenseSpacing.md))
+                    Column {
+                        Text(
+                            stringResource(R.string.sky_pressure_chart_waiting),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                        )
+                        Text(
+                            stringResource(R.string.weather_chart_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = scheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
+            AnimatedVisibility(
+                visible = markerText != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                SkyPill(
+                    text = markerText ?: "",
+                    icon = TrailIcons.Barometer,
+                    containerColor = scheme.primary,
+                    contentColor = scheme.onPrimary,
+                    modifier = Modifier
+                        .padding(top = TrailSenseSpacing.md)
+                        .testTag("pressure_marker")
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun WeatherChartEmpty(modifier: Modifier = Modifier) {
     Column(
@@ -833,13 +934,14 @@ private fun WeatherPressureChart(
     raw: List<Reading<Pressure>>,
     forecast: List<Reading<Pressure>>,
     onMarkerSelected: (Duration?, Float?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ringColor: Color = MaterialTheme.colorScheme.surfaceContainerLow
 ) {
     val primary = MaterialTheme.colorScheme.primary
     val forecastColor = MaterialTheme.colorScheme.tertiary
     val rawColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
     val grid = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
-    val surface = MaterialTheme.colorScheme.surfaceContainerLow
+    val surface = ringColor
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     var selected by remember { mutableStateOf<WeatherPressureChartPoint?>(null) }
     var chartSize by remember { mutableStateOf(IntSize.Zero) }
@@ -1158,7 +1260,12 @@ private fun WeatherHeroCard(
             ) {
                 state.leftButton.Content()
                 SkyFocalShape(
-                    icon = state.icon ?: TrailIcons.Weather,
+                    // The clear-sky glyph is a bare disc; a sun with rays reads as the sun inside the shape.
+                    icon = if (state.condition == WeatherCondition.Clear) {
+                        androidx.compose.material.icons.Icons.Rounded.WbSunny
+                    } else {
+                        state.icon ?: TrailIcons.Weather
+                    },
                     shape = when (state.condition) {
                         WeatherCondition.Clear -> MaterialShapes.Sunny.toShape()
                         WeatherCondition.Storm, WeatherCondition.Thunderstorm -> MaterialShapes.Burst.toShape()
