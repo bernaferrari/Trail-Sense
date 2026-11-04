@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialShapes
@@ -448,6 +451,7 @@ private fun FieldGuideScreen(
                 FieldGuideNotebookHero(
                     pages = items.totalPages,
                     kinds = categories.count { it.count > 0 },
+                    categories = categories,
                     onCreate = onCreate
                 )
             }
@@ -702,7 +706,12 @@ private fun categoryShape(index: Int): androidx.compose.ui.graphics.Shape = when
 
 /** The notebook's cover: a leaf in a turning clover, how many pages it holds and across how many kinds. */
 @Composable
-private fun FieldGuideNotebookHero(pages: Int, kinds: Int, onCreate: () -> Unit) {
+private fun FieldGuideNotebookHero(
+    pages: Int,
+    kinds: Int,
+    categories: List<FieldGuideListItem.TagItem>,
+    onCreate: () -> Unit
+) {
     TrailSenseSpotlight(
         actions = listOf(
             TrailSenseSpotlightAction(
@@ -726,7 +735,28 @@ private fun FieldGuideNotebookHero(pages: Int, kinds: Int, onCreate: () -> Unit)
                 contentColor = trailSenseToneColors(TrailSenseTone.Good).onAccent
             )
         }
-    )
+    ) {
+        // The notebook's make-up: one rounded segment per kind, as wide as its share of the pages, in its hue.
+        val filled = categories.withIndex().filter { it.value.count > 0 }
+        if (filled.isNotEmpty()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                filled.forEach { (index, category) ->
+                    val accent = trailSenseWellColors(categoryAccents[index % categoryAccents.size]).container
+                    androidx.compose.foundation.layout.Box(
+                        Modifier
+                            .weight(category.count.toFloat())
+                            .fillMaxHeight()
+                            .background(accent, androidx.compose.foundation.shape.CircleShape)
+                    )
+                }
+            }
+        }
+    }
 }
 
 /** The kinds as connected tiles, two to a row: a shaped icon in the kind's hue, its name, and its page count. */
@@ -740,17 +770,25 @@ private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>)
                     val index = rowIndex * 2 + columnIndex
                     val wells = trailSenseWellColors(categoryAccents[index % categoryAccents.size])
                     val empty = category.count == 0
+                    // Pressing a tile wobbles its badge a petal-step before the kind opens.
+                    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                    val pressed by interaction.collectIsPressedAsState()
+                    val wobble by androidx.compose.animation.core.animateFloatAsState(
+                        if (pressed) 24f else 0f,
+                        MaterialTheme.motionScheme.fastSpatialSpec(),
+                        label = "kindWobble"
+                    )
+                    // An empty kind keeps a muted version of its own hue and offers "+" rather than a grey "0".
                     Surface(
                         onClick = category.onClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .graphicsLayer { alpha = if (empty) 0.55f else 1f },
+                        interactionSource = interaction,
+                        modifier = Modifier.weight(1f),
                         shape = trailSenseGridCellShape(columnIndex, row.size, rowIndex, rows.size),
-                        color = if (empty) {
-                            MaterialTheme.colorScheme.surfaceContainerLow
-                        } else {
-                            androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surfaceContainerLow, wells.container, 0.35f)
-                        }
+                        color = androidx.compose.ui.graphics.lerp(
+                            MaterialTheme.colorScheme.surfaceContainerLow,
+                            wells.container,
+                            if (empty) 0.14f else 0.35f
+                        )
                     ) {
                         Column(
                             Modifier.padding(TrailSenseSpacing.lg),
@@ -761,16 +799,30 @@ private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>)
                                     icon = category.icon,
                                     shape = categoryShape(index),
                                     size = 48.dp,
-                                    containerColor = if (empty) MaterialTheme.colorScheme.surfaceContainerHighest else wells.container,
-                                    contentColor = if (empty) MaterialTheme.colorScheme.onSurfaceVariant else wells.content
+                                    containerColor = androidx.compose.ui.graphics.lerp(
+                                        MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        wells.container,
+                                        if (empty) 0.45f else 1f
+                                    ),
+                                    contentColor = wells.content.copy(alpha = if (empty) 0.7f else 1f),
+                                    modifier = Modifier.graphicsLayer { rotationZ = wobble }
                                 )
                                 Spacer(Modifier.weight(1f))
-                                Text(
-                                    category.count.toString(),
-                                    style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (empty) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface
-                                )
+                                if (empty) {
+                                    Icon(
+                                        Icons.Rounded.Add,
+                                        contentDescription = null,
+                                        tint = wells.content.copy(alpha = 0.7f)
+                                    )
+                                } else {
+                                    Text(
+                                        category.count.toString(),
+                                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+
                             }
                             Spacer(Modifier.height(TrailSenseSpacing.xs))
                             Text(
