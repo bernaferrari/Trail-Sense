@@ -104,11 +104,14 @@ class AstroChart(
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        val textColor = Color(Resources.androidTextColorSecondary(context))
-        val lineColor = Color(Resources.color(context, R.color.colorSecondary).withAlpha(100))
-        val sunColor = Color(Resources.color(context, R.color.sun))
-        val moonColor = textColor.copy(alpha = 0.45f)
-        val nightColor = Color(ColorUtils.backgroundColor(context))
+        // Theme colours: the sun warm (tertiary), the moon cool (primary), night as a primary wash, light dashed guides.
+        val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+        val textColor = scheme.onSurfaceVariant
+        val lineColor = scheme.outlineVariant
+        val sunColor = scheme.tertiary
+        val moonColor = scheme.primary.copy(alpha = 0.7f)
+        val nightColor = scheme.primary.copy(alpha = 0.55f)
+        val horizonColor = scheme.outline
         val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = textColor.copy(alpha = 0.7f).toArgb()
             textSize = Resources.sp(context, 10f)
@@ -151,13 +154,13 @@ class AstroChart(
                     AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL,
                     AstronomyService.SUN_MIN_ALTITUDE_CIVIL
                 ).forEach {
-                    drawHorizontal(it, lineColor, left, right, top, bottom)
+                    drawHorizontal(it, lineColor, left, right, top, bottom, dashed = true)
                 }
             } else {
-                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.7f), left, right, top, bottom)
+                drawBand(0f, MIN_Y, nightColor.copy(alpha = 0.18f), left, right, top, bottom)
             }
 
-            drawHorizontal(0f, lineColor, left, right, top, bottom, strokeWidth = 2.dp.toPx())
+            drawHorizontal(0f, horizonColor, left, right, top, bottom, strokeWidth = 1.5.dp.toPx(), dashed = true)
             drawContext.canvas.nativeCanvas.drawText(
                 context.getString(R.string.horizon),
                 right - 24.dp.toPx(),
@@ -165,10 +168,10 @@ class AstroChart(
                 textPaint
             )
 
-            drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.2f), left, right, top, bottom)
-            drawArea(moonLine, moonPosition, moonColor.copy(alpha = 0.12f), left, right, top, bottom)
-            drawLineChart(moonLine, moonColor, left, right, top, bottom, 1.dp.toPx())
-            drawLineChart(sunLine, sunColor, left, right, top, bottom, 2.5.dp.toPx())
+            drawArea(sunLine, sunPosition, sunColor.copy(alpha = 0.28f), left, right, top, bottom)
+            drawArea(moonLine, moonPosition, moonColor.copy(alpha = 0.16f), left, right, top, bottom)
+            drawLineChart(moonLine, moonColor, left, right, top, bottom, 2.dp.toPx())
+            drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx())
 
             sunPosition?.let {
                 val point = toScreen(it, left, right, top, bottom)
@@ -279,10 +282,21 @@ class AstroChart(
         right: Float,
         top: Float,
         bottom: Float,
-        strokeWidth: Float = 1.dp.toPx()
+        strokeWidth: Float = 1.dp.toPx(),
+        dashed: Boolean = false
     ) {
         val y = toScreen(Vector2(0f, value), left, right, top, bottom).y
-        drawLine(color, Offset(left, y), Offset(right, y), strokeWidth = strokeWidth)
+        drawLine(
+            color,
+            Offset(left, y),
+            Offset(right, y),
+            strokeWidth = strokeWidth,
+            pathEffect = if (dashed) {
+                androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 6.dp.toPx()))
+            } else {
+                null
+            }
+        )
     }
 
     private fun updateSunArea() {
