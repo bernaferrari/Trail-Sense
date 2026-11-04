@@ -135,4 +135,6 @@
     <item name="viewQrFragment" type="id" />
     <item name="waterPurificationFragment" type="id" />
     <item name="weatherSettingsFragment" type="id" />
+    <item name="aboutFragment" type="id" />
+    <item name="action_settings_to_about" type="id" />
 </resources>

@@ -123,6 +123,7 @@ fun DestinationContent(
             DESTINATION_TURN_BACK_SETTINGS -> TurnBackSettings()
             DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
             DESTINATION_LICENSES -> LicensesScreen()
+            DESTINATION_ABOUT -> com.kylecorry.trail_sense.settings.ui.AboutToolScreen(this)
             DESTINATION_BEACON_SETTINGS -> BeaconSettings()
             DESTINATION_BUBBLE_LEVEL_SETTINGS -> BubbleLevelSettings()
             DESTINATION_CAMERA_SETTINGS -> CameraSettings()

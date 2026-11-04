@@ -203,6 +203,15 @@ object TrailSenseNavGraph {
                     .build())
             )
             putAction(
+                R.id.action_settings_to_about,
+                NavAction(R.id.aboutFragment, NavOptions.Builder()
+                    .setEnterAnim(R.anim.slide_in_right)
+                    .setExitAnim(R.anim.slide_out_left)
+                    .setPopEnterAnim(R.anim.slide_in_left)
+                    .setPopExitAnim(R.anim.slide_out_right)
+                    .build())
+            )
+            putAction(
                 R.id.action_action_settings_to_licenseFragment,
                 NavAction(R.id.licenseFragment, NavOptions.Builder()
                     .setEnterAnim(R.anim.slide_in_right)
@@ -428,6 +437,16 @@ object TrailSenseNavGraph {
             addArgument(ARG_DESTINATION, NavArgument.Builder()
                 .setType(NavType.StringType)
                 .setDefaultValue(DESTINATION_CALIBRATE_GPS)
+                .build())
+            graph.addDestination(this)
+        }
+
+        composeNavigator.createDestination().apply {
+            id = R.id.aboutFragment
+            label = "AboutScreen"
+            addArgument(ARG_DESTINATION, NavArgument.Builder()
+                .setType(NavType.StringType)
+                .setDefaultValue(DESTINATION_ABOUT)
                 .build())
             graph.addDestination(this)
         }

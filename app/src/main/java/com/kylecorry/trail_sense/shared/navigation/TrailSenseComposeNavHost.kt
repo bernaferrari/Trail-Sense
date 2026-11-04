@@ -26,6 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -56,6 +58,17 @@ fun TrailSenseComposeNavHost(
     } else {
         null
     }
+    // Each entry keeps its saved state (scroll position, collapsed bar, typed text) while it is on the back stack, so
+    // coming back from a sub-page returns to where you were instead of the top; popped entries drop theirs.
+    val saveableStateHolder = rememberSaveableStateHolder()
+    val savedEntries = remember { mutableSetOf<String>() }
+    LaunchedEffect(backStack) {
+        val ids = backStack.map { it.id }.toSet()
+        savedEntries.filter { it !in ids }.forEach {
+            saveableStateHolder.removeState(it)
+            savedEntries.remove(it)
+        }
+    }
     var lastDepth by remember { mutableIntStateOf(depth) }
     val forward = depth >= lastDepth
     SideEffect { lastDepth = depth }
@@ -81,6 +94,8 @@ fun TrailSenseComposeNavHost(
     ) { entry ->
     CompositionLocalProvider(LocalTrailSenseBack provides back) {
     key(entry.id) {
+    SideEffect { savedEntries.add(entry.id) }
+    saveableStateHolder.SaveableStateProvider(entry.id) {
         val context = LocalContext.current
         val activity = context.findMainActivity()
         if (activity != null) {
@@ -144,6 +159,7 @@ fun TrailSenseComposeNavHost(
                 )
             }
         }
+    }
     }
     }
     }
