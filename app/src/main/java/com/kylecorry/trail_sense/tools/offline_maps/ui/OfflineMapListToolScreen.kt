@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTopBar
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
@@ -686,43 +687,36 @@ private fun OfflineMapListHeader(
     modifier: Modifier = Modifier
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
-    Row(
-        modifier = modifier
-            .padding(start = TrailSenseSpacing.screen, end = TrailSenseSpacing.md)
-            .padding(vertical = TrailSenseSpacing.sm)
-            .testTag("map_list_title"),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        if (showSort) Box {
-            IconButton(
-                onClick = { isMenuOpen = true },
-                modifier = Modifier.testTag("map_list_menu_btn")
-            ) {
-                Icon(
-                    imageVector = TrailSenseIcons.Filled.MoreVert,
-                    contentDescription = stringResource(R.string.sort)
-                )
-            }
-            DropdownMenu(
-                expanded = isMenuOpen,
-                onDismissRequest = { isMenuOpen = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(sortMenuText) },
-                    onClick = {
-                        isMenuOpen = false
-                        onToolbarAction(OfflineMapToolbarAction.Sort)
-                    }
-                )
+    TrailSenseTopBar(
+        title = title,
+        modifier = modifier.testTag("map_list_title"),
+        backLabel = stringResource(R.string.back),
+        actions = {
+            if (showSort) Box {
+                IconButton(
+                    onClick = { isMenuOpen = true },
+                    modifier = Modifier.testTag("map_list_menu_btn")
+                ) {
+                    Icon(
+                        imageVector = TrailSenseIcons.Filled.MoreVert,
+                        contentDescription = stringResource(R.string.sort)
+                    )
+                }
+                DropdownMenu(
+                    expanded = isMenuOpen,
+                    onDismissRequest = { isMenuOpen = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(sortMenuText) },
+                        onClick = {
+                            isMenuOpen = false
+                            onToolbarAction(OfflineMapToolbarAction.Sort)
+                        }
+                    )
+                }
             }
         }
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
