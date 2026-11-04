@@ -13,4 +13,6 @@
     <string name="places_backtrack_every">Every %1$s</string>
     <!-- Triangulate -->
     <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
+    <!-- Offline maps -->
+    <string name="places_maps_you_are_on">You are on this map</string>
 </resources>
