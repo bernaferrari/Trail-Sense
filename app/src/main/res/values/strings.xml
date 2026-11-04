@@ -2157,4 +2157,8 @@
     <string name="flashlight_unavailable_description">You can still use the screen as a light.</string>
     <string name="screen_flashlight_white">White</string>
     <string name="screen_flashlight_red">Red</string>
+    <string name="battery_time_left">Time left</string>
+    <string name="battery_time_to_full">Time to full</string>
+    <string name="battery_capacity_label">Capacity</string>
+    <string name="battery_health_label">Health</string>
 </resources>

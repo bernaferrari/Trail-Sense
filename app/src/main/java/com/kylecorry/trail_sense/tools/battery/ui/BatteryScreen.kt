@@ -1,4 +1,5 @@
 @file:Suppress("FunctionNaming")
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
@@ -8,30 +9,22 @@ import android.os.Looper
 import android.os.SystemClock
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,22 +32,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
@@ -65,10 +55,18 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricItem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricRow
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryUsage
 import com.kylecorry.trail_sense.tools.battery.domain.RunningService
@@ -361,120 +359,153 @@ private fun BatteryScreen(
         )
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            BatteryHeader(
-                showHistory = readings.size >= 2,
-                canOpenSystemBatterySettings = canOpenSystemBatterySettings,
-                onShowHistory = onShowHistory,
-                onOpenBatterySettings = onOpenBatterySettings
+    val metrics = buildList {
+        if (time != null) {
+            add(
+                TrailSenseMetricItem(
+                    label = stringResource(
+                        if (isCharging) R.string.battery_time_to_full else R.string.battery_time_left
+                    ),
+                    value = formatter.formatDuration(time)
+                )
             )
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("running_services"),
-                contentPadding = PaddingValues(
-                    start = TrailSenseSpacing.screen,
-                    end = TrailSenseSpacing.screen,
-                    top = TrailSenseSpacing.sm,
-                    bottom = TrailSenseSpacing.xxl
-                ),
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-            ) {
-                item {
-                    BatteryHeroCard(
-                        percent = percent,
-                        isCharging = isCharging,
-                        isLow = isLow,
+        }
+        if (capacity != 0f) {
+            add(
+                TrailSenseMetricItem(
+                    label = stringResource(R.string.battery_capacity_label),
+                    value = formatter.formatElectricalCapacity(capacity)
+                )
+            )
+        }
+        if (health != BatteryHealth.Good) {
+            add(
+                TrailSenseMetricItem(
+                    label = stringResource(R.string.battery_health_label),
+                    value = formatter.formatBatteryHealth(health)
+                )
+            )
+        }
+    }
+
+    val servicesTitle = stringResource(R.string.app_name)
+    val servicesFooter = stringResource(R.string.battery_tip_disable_services)
+    val systemTitle = stringResource(R.string.system)
+    val systemFooter = stringResource(R.string.battery_tip_system)
+
+    TrailSensePage(
+        title = stringResource(R.string.tool_battery_title),
+        onBack = rememberTrailSenseBack(),
+        backLabel = stringResource(R.string.back),
+        modifier = modifier.testTag("battery_title"),
+        actions = {
+            if (readings.size >= 2) {
+                IconButton(
+                    onClick = onShowHistory,
+                    modifier = Modifier.testTag("battery_history_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_chart),
+                        contentDescription = stringResource(
+                            R.string.battery_usage,
+                            stringResource(R.string.app_name)
+                        )
+                    )
+                }
+            }
+            if (canOpenSystemBatterySettings) {
+                IconButton(
+                    onClick = onOpenBatterySettings,
+                    modifier = Modifier.testTag("battery_settings_btn")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_settings),
+                        contentDescription = stringResource(R.string.settings)
+                    )
+                }
+            }
+        }
+    ) {
+        item(key = "hero") {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
+                BatteryHeroCard(
+                    percent = percent,
+                    isCharging = isCharging,
+                    isLow = isLow,
+                    statusText = currentText,
+                    formatter = formatter,
+                    deepSleepText = deepSleepText,
+                    position = TrailSenseGroupPosition(isFirst = true, isLast = metrics.isEmpty())
+                )
+                if (metrics.isNotEmpty()) {
+                    TrailSenseMetricRow(
+                        items = metrics,
+                        position = TrailSenseGroupPosition(isFirst = false, isLast = true)
+                    )
+                }
+            }
+        }
+
+        trailSenseSection(key = "low_power") {
+            row { position ->
+                TrailSenseSwitchRow(
+                    label = stringResource(R.string.pref_low_power_mode_title),
+                    checked = isLowPowerEnabled,
+                    onCheckedChange = { onToggleLowPower() },
+                    position = position,
+                    modifier = Modifier.testTag("low_power_mode_switch")
+                )
+            }
+        }
+
+        trailSenseSection(
+            key = "running_services",
+            title = servicesTitle,
+            footer = servicesFooter
+        ) {
+            services.forEach { service ->
+                row { position ->
+                    RunningServiceRow(
+                        service = service,
                         formatter = formatter,
-                        deepSleepText = deepSleepText
+                        position = position,
+                        onDisable = { onDisableService(service) }
                     )
                 }
+            }
+        }
 
-                val timeText = time?.let { formatter.formatDuration(it) }
-                val hasCapacity = capacity != 0f
-                val hasHealth = health != BatteryHealth.Good
-                if (hasCapacity || hasHealth || timeText != null || currentText.isNotEmpty()) {
-                    item {
-                        BatteryReadoutsCard(
-                            capacity = capacity,
-                            hasCapacity = hasCapacity,
-                            health = health,
-                            hasHealth = hasHealth,
-                            timeText = timeText,
-                            isCharging = isCharging,
-                            currentText = currentText,
-                            formatter = formatter
-                        )
-                    }
-                }
-
-                item {
-                    LowPowerCard(
-                        isLowPowerEnabled = isLowPowerEnabled,
-                        onToggleLowPower = onToggleLowPower
+        trailSenseSection(
+            key = "system_tips",
+            title = systemTitle,
+            footer = systemFooter
+        ) {
+            tips.forEach { tip ->
+                row { position ->
+                    SystemTipRow(
+                        tip = tip,
+                        position = position,
+                        onOpen = { onOpenTip(tip) }
                     )
-                }
-
-                if (services.isNotEmpty()) {
-                    item {
-                        BatterySectionHeader(
-                            title = stringResource(R.string.app_name),
-                            subtitle = stringResource(R.string.battery_tip_disable_services)
-                        )
-                    }
-                    item {
-                        BatteryGroupCard {
-                            services.forEachIndexed { index, service ->
-                                RunningServiceRow(
-                                    service = service,
-                                    formatter = formatter,
-                                    onDisable = { onDisableService(service) }
-                                )
-                                if (index < services.lastIndex) {
-                                    BatteryRowDivider()
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    BatterySectionHeader(
-                        title = stringResource(R.string.system),
-                        subtitle = stringResource(R.string.battery_tip_system)
-                    )
-                }
-                if (tips.isNotEmpty()) {
-                    item {
-                        BatteryGroupCard {
-                            tips.forEachIndexed { index, tip ->
-                                SystemTipRow(
-                                    tip = tip,
-                                    onOpen = { onOpenTip(tip) }
-                                )
-                                if (index < tips.lastIndex) {
-                                    BatteryRowDivider()
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
     }
 }
 
+/**
+ * The hero: the charge as a big tabular percentage, what the battery is doing right now under it, and a level bar
+ * tinted by state (accent normally, tertiary while charging, error when low).
+ */
 @Composable
 private fun BatteryHeroCard(
     percent: Float,
     isCharging: Boolean,
     isLow: Boolean,
+    statusText: String,
     formatter: FormatService,
-    deepSleepText: String?
+    deepSleepText: String?,
+    position: TrailSenseGroupPosition
 ) {
     val accent = when {
         isCharging -> MaterialTheme.colorScheme.tertiary
@@ -483,348 +514,82 @@ private fun BatteryHeroCard(
     }
     val animatedAccent by animateColorAsState(
         targetValue = accent,
-        animationSpec = tween(durationMillis = 250),
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "batteryAccent"
     )
     val animatedProgress by animateFloatAsState(
         targetValue = (percent / 100f).coerceIn(0f, 1f),
-        animationSpec = TrailSenseAnimation.standardSpring,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "batteryProgress"
     )
-    val animatedPercent by animateFloatAsState(
-        targetValue = percent,
-        animationSpec = TrailSenseAnimation.standardSpring,
-        label = "batteryPercent"
-    )
+    val supporting = statusText.ifEmpty {
+        if (isLow) stringResource(R.string.low) else ""
+    }
 
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    TrailSenseGroupCard(
+        position = position,
         contentPadding = PaddingValues(TrailSenseSpacing.xl)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = formatter.formatPercentage(animatedPercent),
-                        modifier = Modifier.testTag("battery_percentage"),
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontFeatureSettings = "tnum"
-                        ),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    val statusLabel = when {
-                        isLow -> stringResource(R.string.low)
-                        else -> stringResource(R.string.tool_battery_title)
-                    }
-                    Text(
-                        text = statusLabel,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-                if (isCharging) {
-                    Surface(
-                        shape = CircleShape,
-                        color = animatedAccent,
-                        modifier = Modifier.size(56.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_power),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onTertiary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            LinearProgressIndicator(
-                progress = { animatedProgress },
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = formatter.formatPercentage(percent),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(14.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .testTag("battery_level_progress"),
-                color = animatedAccent,
-                trackColor = MaterialTheme.colorScheme.surface
+                    .weight(1f)
+                    .testTag("battery_percentage"),
+                style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
-            if (deepSleepText != null) {
-                Text(
-                    text = deepSleepText,
-                    modifier = Modifier.testTag("battery_deep_sleep"),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            if (isCharging) {
+                Surface(
+                    shape = CircleShape,
+                    color = animatedAccent,
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                    modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_power),
+                            contentDescription = null,
+                            modifier = Modifier.size(TrailSenseSize.leadingIcon)
+                        )
+                    }
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun BatteryReadoutsCard(
-    capacity: Float,
-    hasCapacity: Boolean,
-    health: BatteryHealth,
-    hasHealth: Boolean,
-    timeText: String?,
-    isCharging: Boolean,
-    currentText: String,
-    formatter: FormatService
-) {
-    TrailSenseCard {
-        Text(
-            text = stringResource(R.string.tool_battery_title),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
-        Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)) {
-            if (timeText != null) {
-                BatteryReadoutRow(
-                    icon = R.drawable.ic_tool_clock,
-                    title = timeText,
-                    subtitle = stringResource(
-                        if (isCharging) R.string.time_until_full else R.string.time_until_empty
-                    )
-                )
-            }
-            if (currentText.isNotEmpty()) {
-                BatteryReadoutRow(
-                    icon = R.drawable.ic_power,
-                    title = currentText,
-                    titleModifier = Modifier.testTag("battery_current")
-                )
-            }
-            if (hasCapacity) {
-                BatteryReadoutRow(
-                    icon = R.drawable.ic_tool_battery,
-                    title = formatter.formatElectricalCapacity(capacity),
-                    titleModifier = Modifier.testTag("battery_capacity")
-                )
-            }
-            if (hasHealth) {
-                BatteryReadoutRow(
-                    icon = R.drawable.ic_info,
-                    title = stringResource(
-                        R.string.battery_health,
-                        formatter.formatBatteryHealth(health)
-                    ),
-                    titleModifier = Modifier.testTag("battery_health")
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BatteryReadoutRow(
-    icon: Int,
-    title: String,
-    subtitle: String? = null,
-    titleModifier: Modifier = Modifier
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
-        Column(modifier = Modifier.weight(1f)) {
+        if (supporting.isNotEmpty()) {
             Text(
-                text = title,
-                modifier = titleModifier,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LowPowerCard(
-    isLowPowerEnabled: Boolean,
-    onToggleLowPower: () -> Unit
-) {
-    TrailSenseCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .toggleable(
-                value = isLowPowerEnabled,
-                role = Role.Switch,
-                onValueChange = { onToggleLowPower() }
-            ),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentPadding = PaddingValues(
-            horizontal = TrailSenseSpacing.lg,
-            vertical = TrailSenseSpacing.md
-        )
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.pref_low_power_mode_title),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
-            Switch(
-                checked = isLowPowerEnabled,
-                onCheckedChange = null,
-                modifier = Modifier.testTag("low_power_mode_switch")
+                text = supporting,
+                modifier = Modifier
+                    .padding(top = TrailSenseSpacing.xs)
+                    .testTag("battery_current"),
+                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-    }
-}
-
-@Composable
-private fun BatteryGroupCard(
-    content: @Composable () -> Unit
-) {
-    TrailSenseCard(
-        modifier = Modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Column(content = { content() })
-    }
-}
-
-@Composable
-private fun BatteryRowDivider() {
-    androidx.compose.material3.HorizontalDivider(
-        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest
-    )
-}
-
-@Composable
-private fun BatteryHeader(
-    showHistory: Boolean,
-    canOpenSystemBatterySettings: Boolean,
-    onShowHistory: () -> Unit,
-    onOpenBatterySettings: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("battery_title"),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Row(
+        Spacer(Modifier.height(TrailSenseSpacing.lg))
+        LinearProgressIndicator(
+            progress = { animatedProgress },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = TrailSenseSpacing.screen,
-                    vertical = TrailSenseSpacing.sm
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (showHistory) {
-                IconButton(
-                    onClick = onShowHistory,
-                    modifier = Modifier
-                        .size(TrailSenseSize.minimumTouchTarget)
-                        .testTag("battery_history_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_chart),
-                        contentDescription = stringResource(
-                            R.string.battery_usage,
-                            stringResource(R.string.app_name)
-                        ),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.size(48.dp))
-            }
+                .height(12.dp)
+                .clip(CircleShape)
+                .testTag("battery_level_progress"),
+            color = animatedAccent,
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            gapSize = 0.dp,
+            drawStopIndicator = {}
+        )
+        if (deepSleepText != null) {
             Text(
-                text = stringResource(R.string.tool_battery_title),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                text = deepSleepText,
+                modifier = Modifier
+                    .padding(top = TrailSenseSpacing.md)
+                    .testTag("battery_deep_sleep"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            if (canOpenSystemBatterySettings) {
-                IconButton(
-                    onClick = onOpenBatterySettings,
-                    modifier = Modifier
-                        .size(TrailSenseSize.minimumTouchTarget)
-                        .testTag("battery_settings_btn")
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_settings),
-                        contentDescription = stringResource(R.string.settings),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.size(48.dp))
-            }
         }
-    }
-}
-
-@Composable
-private fun BatterySectionHeader(
-    title: String,
-    subtitle: String
-) {
-    Column(
-        modifier = Modifier.padding(
-            horizontal = TrailSenseSpacing.xs,
-            vertical = TrailSenseSpacing.xs
-        )
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
 
@@ -832,18 +597,20 @@ private fun BatterySectionHeader(
 private fun RunningServiceRow(
     service: RunningService,
     formatter: FormatService,
+    position: TrailSenseGroupPosition,
     onDisable: () -> Unit
 ) {
     val usage = getBatteryUsage(service)
-    BatteryListRow(
+    TrailSenseListItem(
         title = service.name,
         subtitle = formatter.join(
             formatFrequency(service.frequency, formatter),
             formatBatteryUsage(usage),
-            separator = FormatService.Separator.Dash
+            separator = FormatService.Separator.Dot
         ),
-        icon = getUsageIcon(usage),
+        icon = painterResource(getUsageIcon(usage)),
         iconTint = Color(getUsageColor(usage)),
+        position = position,
         trailing = {
             IconButton(
                 onClick = onDisable,
@@ -864,13 +631,15 @@ private fun RunningServiceRow(
 @Composable
 private fun SystemTipRow(
     tip: SystemBatteryTip,
+    position: TrailSenseGroupPosition,
     onOpen: () -> Unit
 ) {
-    BatteryListRow(
+    TrailSenseListItem(
         title = tip.name,
         subtitle = tip.description,
-        icon = getUsageIcon(tip.batteryUsage),
+        icon = painterResource(getUsageIcon(tip.batteryUsage)),
         iconTint = Color(getUsageColor(tip.batteryUsage)),
+        position = position,
         trailing = if (tip.manage != null) {
             {
                 Icon(
@@ -884,58 +653,6 @@ private fun SystemTipRow(
         },
         onClick = if (tip.manage != null) onOpen else null
     )
-}
-
-@Composable
-private fun BatteryListRow(
-    title: String,
-    subtitle: String,
-    icon: Int,
-    iconTint: Color,
-    trailing: (@Composable () -> Unit)? = null,
-    onClick: (() -> Unit)? = null
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-            .padding(
-                horizontal = TrailSenseSpacing.lg,
-                vertical = TrailSenseSpacing.md
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = iconTint.copy(alpha = 0.18f),
-            modifier = Modifier.size(40.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = iconTint
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(TrailSenseSpacing.md))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFeatureSettings = "tnum"
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        trailing?.invoke()
-    }
 }
 
 @Composable
