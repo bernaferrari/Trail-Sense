@@ -15,4 +15,7 @@
     <string name="whistle_repeats_short">Repeats</string>
     <string name="whistle_once">Once</string>
     <string name="whistle_whistling">Whistling</string>
+
+    <!-- Flashlight -->
+    <string name="flashlight_turns_off_in">Off in %1$s</string>
 </resources>

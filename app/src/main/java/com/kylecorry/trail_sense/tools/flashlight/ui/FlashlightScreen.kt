@@ -86,6 +86,30 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.Duration
 import java.time.Instant
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.graphics.shapes.Morph
+import androidx.graphics.shapes.toPath
+import com.kylecorry.trail_sense.shared.icons.trail.TorchOff
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 
 @Composable
 fun FlashlightScreen(
@@ -256,22 +280,7 @@ fun FlashlightScreen(
         modifier = modifier
     ) {
         if (!hasFlashlight) {
-            // No torch on this phone: the screen is the light.
-            TrailSenseEmptyState(
-                icon = Icons.Rounded.FlashlightOff,
-                title = stringResource(R.string.flashlight_unavailable_title),
-                description = stringResource(R.string.flashlight_unavailable_description),
-                action = {
-                    FilledTonalButton(
-                        onClick = onOpenScreenFlashlight,
-                        modifier = Modifier
-                            .heightIn(min = TrailSenseSize.minimumTouchTarget)
-                            .testTag("screen_flashlight_btn")
-                    ) {
-                        Text(stringResource(R.string.flashlight_use_screen))
-                    }
-                }
-            )
+            NoFlashlight(onOpenScreenFlashlight)
             return@TrailSenseInstrumentScaffold
         }
 
@@ -298,13 +307,20 @@ fun FlashlightScreen(
                     modifier = Modifier.testTag("flashlight_on_btn")
                 )
                 // Always laid out so the controls below don't jump when the timer appears.
-                Text(
-                    text = timerText ?: " ",
+                Surface(
                     modifier = Modifier.alpha(if (timerText.isNullOrBlank()) 0f else 1f),
-                    style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ) {
+                    Text(
+                        text = timerText?.let { stringResource(R.string.flashlight_turns_off_in, it) } ?: " ",
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.sm)
+                    )
+                }
             }
 
             Column(
@@ -468,9 +484,10 @@ private fun FlashlightControls(
 }
 
 /**
- * The switch: a large circle that fills with the accent color and gains a soft halo when the light is on, and
- * shrinks slightly under the finger.
+ * The switch: a large cookie that blooms into a sun when the light comes on — the shape morphs, fills with the warm
+ * tertiary tone, turns slowly and throws a soft glow behind it — and shrinks slightly under the finger.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PowerToggle(
     on: Boolean,
@@ -478,53 +495,155 @@ private fun PowerToggle(
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val scheme = MaterialTheme.colorScheme
     val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
     val container by animateColorAsState(
-        targetValue = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+        targetValue = if (on) scheme.tertiary else scheme.surfaceContainerHigh,
         animationSpec = effects,
         label = "powerContainer"
     )
     val content by animateColorAsState(
-        targetValue = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (on) scheme.onTertiary else scheme.onSurfaceVariant,
         animationSpec = effects,
         label = "powerContent"
     )
-    val halo by animateColorAsState(
-        targetValue = MaterialTheme.colorScheme.primary.copy(alpha = if (on) 0.18f else 0f),
-        animationSpec = effects,
-        label = "powerHalo"
+    val glow by animateFloatAsState(
+        targetValue = if (on) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.slowEffectsSpec(),
+        label = "powerGlow"
     )
+    val bloom by animateFloatAsState(
+        targetValue = if (on) 1f else 0f,
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
+        label = "powerBloom"
+    )
+    val spin by rememberInfiniteTransition(label = "sun").animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(24_000, easing = LinearEasing), RepeatMode.Restart),
+        label = "sunSpin"
+    )
+    val morph = remember { Morph(MaterialShapes.Cookie12Sided, MaterialShapes.VerySunny) }
+    val shape = remember(bloom) { MorphShape(morph, bloom) }
     val stateText = stringResource(if (on) R.string.on else R.string.off)
+    val glowColor = scheme.tertiary
 
     Box(
         modifier = modifier
-            .size(232.dp)
+            .size(300.dp)
             .trailSensePressScale(interactionSource),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(232.dp)
-                .background(halo, CircleShape)
-        )
+        Canvas(Modifier.fillMaxSize()) {
+            if (glow > 0f) {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(glowColor.copy(alpha = 0.38f * glow), glowColor.copy(alpha = 0f)),
+                        center = center,
+                        radius = size.minDimension / 2f
+                    )
+                )
+            }
+        }
         Surface(
             onClick = onClick,
             modifier = Modifier
-                .size(196.dp)
+                .size(232.dp)
+                .graphicsLayer { rotationZ = spin * bloom }
                 .semantics { stateDescription = stateText },
-            shape = CircleShape,
+            shape = shape,
             color = container,
             contentColor = content,
             interactionSource = interactionSource
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = rememberVectorPainter(TrailIcons.Power),
-                    contentDescription = stringResource(R.string.flashlight_title),
-                    modifier = Modifier.size(88.dp),
-                    tint = content
+        ) {}
+        Icon(
+            painter = rememberVectorPainter(if (on) TrailIcons.TorchOn else TrailIcons.TorchOff),
+            contentDescription = stringResource(R.string.flashlight_title),
+            modifier = Modifier.size(88.dp),
+            tint = content
+        )
+    }
+}
+
+/** A shape that is part way between two Material shapes, for the switch's cookie-to-sun bloom. */
+private class MorphShape(private val morph: Morph, private val progress: Float) : Shape {
+    override fun createOutline(
+        size: androidx.compose.ui.geometry.Size,
+        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+        density: androidx.compose.ui.unit.Density
+    ): Outline {
+        val path = morph.toPath(progress)
+        val matrix = android.graphics.Matrix().apply { setScale(size.width, size.height) }
+        path.transform(matrix)
+        return Outline.Generic(path.asComposePath())
+    }
+}
+
+/**
+ * No torch on this phone: the screen is the light. A big warm sun-shaped mark with a glow, warm copy, and one
+ * full-width action down where the thumb is.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun NoFlashlight(onOpenScreenFlashlight: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = TrailSenseSpacing.xl)
+            .padding(bottom = TrailSenseSpacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.weight(0.6f))
+        Box(Modifier.size(260.dp), contentAlignment = Alignment.Center) {
+            val glow = scheme.tertiary
+            Canvas(Modifier.fillMaxSize()) {
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(glow.copy(alpha = 0.3f), glow.copy(alpha = 0f)),
+                        center = center,
+                        radius = size.minDimension / 2f
+                    )
                 )
             }
+            TrailSenseShapeBadge(
+                icon = TrailIcons.ScreenFlashlight,
+                shape = MaterialShapes.VerySunny.toShape(),
+                size = 176.dp,
+                containerColor = scheme.tertiaryContainer,
+                contentColor = scheme.onTertiaryContainer
+            )
+        }
+        Spacer(Modifier.height(TrailSenseSpacing.xl))
+        Text(
+            text = stringResource(R.string.flashlight_unavailable_title),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(TrailSenseSpacing.sm))
+        Text(
+            text = stringResource(R.string.flashlight_unavailable_description),
+            style = MaterialTheme.typography.bodyLarge,
+            color = scheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.weight(1f))
+        Button(
+            onClick = onOpenScreenFlashlight,
+            shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 64.dp)
+                .testTag("screen_flashlight_btn")
+        ) {
+            Icon(TrailIcons.ScreenFlashlight, contentDescription = null, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(TrailSenseSpacing.sm))
+            Text(
+                stringResource(R.string.flashlight_use_screen),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
