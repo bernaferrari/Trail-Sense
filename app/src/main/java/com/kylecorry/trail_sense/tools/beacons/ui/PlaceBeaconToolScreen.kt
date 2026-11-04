@@ -252,18 +252,13 @@ private class PlaceBeaconController(private val host: TrailSenseDestinationHost)
         )
 
         if (showColorPicker) {
-            ColorPickerDialog(
-                title = colorTitle,
-                selectedColor = data.color,
-                onColorPicked = {
-                    if (it != null) {
-                        updateData(data.copy(color = it))
-                    }
-                    showColorPicker = false
-                },
-                onDismiss = {
-                    showColorPicker = false
-                }
+            BeaconShapeSheet(
+                icon = data.icon?.icon ?: TrailIcons.Location,
+                color = data.color,
+                shape = data.shape,
+                onShape = { updateData(data.copy(shape = it)) },
+                onColor = { updateData(data.copy(color = it)) },
+                onDismiss = { showColorPicker = false }
             )
         }
 
@@ -549,12 +544,12 @@ private fun PlaceBeaconScreen(
                 row { position ->
                     val color = Color(data.color.color)
                     PlacesRow(
-                        title = stringResource(R.string.color),
+                        title = stringResource(R.string.places_shape_and_color),
                         leading = {
-                            PlacesBadge(
-                                containerColor = color,
-                                contentColor = color,
-                                shape = MaterialShapes.Cookie9Sided.toShape(),
+                            BeaconShapeMark(
+                                shape = data.shape,
+                                color = color,
+                                icon = data.icon?.icon ?: TrailIcons.Location,
                                 size = 44.dp
                             )
                         },

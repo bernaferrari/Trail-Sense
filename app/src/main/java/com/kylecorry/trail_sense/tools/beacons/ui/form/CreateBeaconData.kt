@@ -11,6 +11,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.colors.fromColor
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape
 
 data class CreateBeaconData(
     val id: Long = 0,
@@ -25,7 +26,8 @@ data class CreateBeaconData(
     val color: AppColor = AppColor.Orange,
     val notes: String = "",
     val isVisible: Boolean = true,
-    val icon: BeaconIcon? = null
+    val icon: BeaconIcon? = null,
+    val shape: BeaconShape = BeaconShape.Cookie
 ) {
 
     fun toBeacon(
@@ -54,7 +56,8 @@ data class CreateBeaconData(
             groupId,
             elevation?.meters()?.value,
             color = color.color,
-            icon = icon
+            icon = icon,
+            shape = shape
         )
     }
 
@@ -90,7 +93,8 @@ data class CreateBeaconData(
                 AppColor.entries.toTypedArray().fromColor(beacon.color) ?: AppColor.Orange,
                 beacon.comment ?: "",
                 beacon.visible,
-                beacon.icon
+                beacon.icon,
+                beacon.shape
             )
         }
 

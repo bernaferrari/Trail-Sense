@@ -9,6 +9,7 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape
 
 @Entity(
     tableName = "beacons",
@@ -28,7 +29,8 @@ data class BeaconEntity(
     @ColumnInfo(name = "temporary") val temporary: Boolean,
     @ColumnInfo(name = "owner") val owner: BeaconOwner,
     @ColumnInfo(name = "color") val color: AppColor,
-    @ColumnInfo(name = "icon") val icon: BeaconIcon?
+    @ColumnInfo(name = "icon") val icon: BeaconIcon?,
+    @ColumnInfo(name = "shape", defaultValue = "0") val shape: Int = 0
 ) {
 
     @PrimaryKey(autoGenerate = true)
@@ -50,7 +52,8 @@ data class BeaconEntity(
             temporary = temporary,
             color = color.color,
             owner = owner,
-            icon = icon
+            icon = icon,
+            shape = BeaconShape.from(shape)
         )
     }
 
@@ -68,7 +71,8 @@ data class BeaconEntity(
                 beacon.temporary,
                 beacon.owner,
                 AppColor.values().firstOrNull { it.color == beacon.color } ?: AppColor.Orange,
-                beacon.icon
+                beacon.icon,
+                beacon.shape.id
             ).also {
                 it.id = beacon.id
             }

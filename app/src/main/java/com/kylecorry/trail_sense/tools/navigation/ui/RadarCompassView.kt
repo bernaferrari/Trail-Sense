@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.graphics.shapes.toPath
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Canvas as AndroidCanvas
@@ -379,12 +380,32 @@ class RadarCompassView(
         // and arc already point at it, so it doesn't need an arrow of its own. Its icon, if any, rides on top.
         if (reference.icon == TrailIcons.ArrowTarget) {
             val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha = (255 * reference.opacity).toInt() }
-            dot.color = surfaceColor
-            dot.alpha = (255 * reference.opacity).toInt()
-            nativeCanvas.drawCircle(0f, 0f, sizeDp * 0.46f, dot)
+            if (reference.shape == null) {
+                dot.color = surfaceColor
+                dot.alpha = (255 * reference.opacity).toInt()
+                nativeCanvas.drawCircle(0f, 0f, sizeDp * 0.46f, dot)
+            }
             dot.color = reference.tint ?: primaryColor
             dot.alpha = (255 * reference.opacity).toInt()
-            nativeCanvas.drawCircle(0f, 0f, sizeDp * 0.36f, dot)
+            val polygon = reference.shape
+            if (polygon != null) {
+                // The beacon's own shape, ringed in the dial's surface: the same mark as its list row and card.
+                fun shapePath(side: Float): android.graphics.Path = polygon.toPath().apply {
+                    transform(android.graphics.Matrix().apply {
+                        setScale(side, side)
+                        postTranslate(-side / 2f, -side / 2f)
+                    })
+                }
+                val ring = dot.color
+                dot.color = surfaceColor
+                dot.alpha = (255 * reference.opacity).toInt()
+                nativeCanvas.drawPath(shapePath(sizeDp * 1.0f), dot)
+                dot.color = ring
+                dot.alpha = (255 * reference.opacity).toInt()
+                nativeCanvas.drawPath(shapePath(sizeDp * 0.8f), dot)
+            } else {
+                nativeCanvas.drawCircle(0f, 0f, sizeDp * 0.36f, dot)
+            }
             nativeCanvas.restore()
             paint.alpha = 255
             paint.colorFilter = null

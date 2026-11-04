@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.graphicsLayer
@@ -202,7 +203,7 @@ class NavigationSheetView(private val context: Context) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (state.showDirection) {
                         Surface(
-                            shape = (if (facing) MaterialShapes.Cookie12Sided else MaterialShapes.Cookie9Sided).toShape(),
+                            shape = (if (facing) MaterialShapes.Cookie12Sided else (state.badgeShape?.polygon() ?: MaterialShapes.Cookie9Sided)).toShape(),
                             color = badgeContainer,
                             contentColor = badgeContent,
                             modifier = Modifier
@@ -462,7 +463,8 @@ class NavigationSheetView(private val context: Context) {
             distance = guidance.remainingDistance?.let {
                 SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
             },
-            details = details
+            details = details,
+            badgeShape = beacon.shape
         )
     }
 
@@ -631,9 +633,11 @@ class NavigationSheetView(private val context: Context) {
             showProgress: Boolean = false,
             progress: Float = 0f,
             distance: SheetStat?,
-            details: List<SheetDetail>
+            details: List<SheetDetail>,
+            badgeShape: com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape? = null
         ): SheetModel {
             return SheetModel(
+                badgeShape = badgeShape,
                 title = title,
                 titleDescription = titleDescription,
                 showCancel = showCancel,
@@ -667,7 +671,9 @@ class NavigationSheetView(private val context: Context) {
         val showProgress: Boolean = false,
         val progress: Float = 0f,
         val distance: SheetStat? = null,
-        val details: List<SheetDetail> = emptyList()
+        val details: List<SheetDetail> = emptyList(),
+        /** The beacon's own shape for the badge (null: the default cookie). */
+        val badgeShape: com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape? = null
     )
 
     companion object {

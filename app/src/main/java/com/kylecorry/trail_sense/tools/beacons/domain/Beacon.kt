@@ -17,7 +17,8 @@ data class Beacon(
     val temporary: Boolean = false,
     val owner: BeaconOwner = BeaconOwner.User,
     @ColorInt override val color: Int = Color.BLACK,
-    override val icon: BeaconIcon? = null
+    override val icon: BeaconIcon? = null,
+    val shape: BeaconShape = BeaconShape.Cookie
 ) : IBeacon, IMappableLocation {
     override val isGroup = false
     override val count: Int? = null

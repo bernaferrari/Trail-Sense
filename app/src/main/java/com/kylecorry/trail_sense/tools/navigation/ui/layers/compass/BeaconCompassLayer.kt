@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
 
+import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
 import com.kylecorry.andromeda.core.ui.Colors
@@ -105,7 +106,8 @@ class BeaconCompassLayer(
                     TrailIcons.ArrowTarget,
                     bearing,
                     it.color,
-                    opacity = opacity
+                    opacity = opacity,
+                    shape = it.shape.polygon()
                 ) to null
             )
 

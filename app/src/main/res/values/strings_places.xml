@@ -62,4 +62,13 @@
     <string name="places_declination_with_true_north">with true north</string>
     <string name="places_declination_aligned">Aligned</string>
     <string name="places_declination_of_true_north">of true north</string>
+    <string name="places_shape_and_color">Shape and color</string>
+    <string name="places_shape_cookie">Cookie</string>
+    <string name="places_shape_circle">Circle</string>
+    <string name="places_shape_square">Square</string>
+    <string name="places_shape_clover">Clover</string>
+    <string name="places_shape_sun">Sun</string>
+    <string name="places_shape_flower">Flower</string>
+    <string name="places_shape_gem">Gem</string>
+    <string name="places_shape_puffy">Puffy</string>
 </resources>

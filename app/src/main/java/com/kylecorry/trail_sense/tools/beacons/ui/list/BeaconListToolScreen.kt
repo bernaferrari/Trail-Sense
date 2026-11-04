@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
@@ -1106,7 +1107,7 @@ private fun BeaconRow(
                 contentColor = badgeContent,
                 icon = getBeaconIcon(beacon, formatService),
                 shape = if (beacon.owner == BeaconOwner.User) {
-                    MaterialShapes.Cookie9Sided.toShape()
+                    beacon.shape.polygon().toShape()
                 } else {
                     MaterialShapes.Pentagon.toShape()
                 }
