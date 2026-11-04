@@ -223,7 +223,7 @@ private fun TideListScreen(
         backLabel = stringResource(R.string.back),
         modifier = Modifier.testTag("tide_list_title"),
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (loaded && tides.isNotEmpty()) ExtendedFloatingActionButton(
                 onClick = onCreate,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.tide_table)) },
@@ -241,7 +241,13 @@ private fun TideListScreen(
                     icon = TrailIcons.TideTable,
                     title = stringResource(R.string.no_tides),
                     description = stringResource(R.string.tides_empty_description),
-                    modifier = Modifier.testTag("tide_empty_text")
+                    actionLabel = stringResource(R.string.tide_table),
+                    actionIcon = TrailIcons.Add,
+                    onAction = onCreate,
+                    actionModifier = Modifier.testTag("add_btn"),
+                    modifier = Modifier
+                        .fillParentMaxHeight(0.8f)
+                        .testTag("tide_empty_text")
                 )
             }
             return@TrailSensePage

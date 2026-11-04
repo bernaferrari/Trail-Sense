@@ -137,7 +137,9 @@ fun NotesScreen(
                     actionIcon = TrailIcons.Add,
                     onAction = onAdd,
                     actionModifier = Modifier.testTag("add_btn"),
-                    modifier = Modifier.testTag("notes_empty_text")
+                    modifier = Modifier
+                        .fillParentMaxHeight(0.8f)
+                        .testTag("notes_empty_text")
                 )
             }
         } else {

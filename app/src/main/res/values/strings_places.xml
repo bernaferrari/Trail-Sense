@@ -18,6 +18,10 @@
     <string name="places_triangulate_check">Check your sightings</string>
     <string name="places_triangulate_sightings">%1$d of 2 sightings taken</string>
     <!-- Offline maps -->
+    <string name="places_maps_file">File</string>
+    <string name="places_maps_file_formats">JPG, PNG, PDF or Mapsforge</string>
+    <string name="places_maps_camera_hint">Photograph a paper map or sign</string>
+    <string name="places_maps_blank_hint">Draw on an empty map</string>
     <string name="places_maps_you_are_on">You are on this map</string>
     <!-- Packing lists -->
     <string name="places_packs_all">All lists</string>

@@ -662,7 +662,7 @@ private fun OfflineMapListScreen(
                 )
             },
             floatingActionButton = {
-                OfflineMapCreateButton(
+                if (!isEmpty) OfflineMapCreateButton(
                     isOpen = isCreateMenuOpen,
                     enabled = isCreateEnabled,
                     onOpenChange = onCreateMenuOpenChange,
@@ -779,9 +779,14 @@ private fun OfflineMapListScreen(
 private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val entries = listOf(
-        Triple(R.string.map_file, TrailSenseIcons.Filled.FileOpen, OfflineMapCreateAction.ImportFile),
+        Triple(R.string.places_maps_file, TrailSenseIcons.Filled.FileOpen, OfflineMapCreateAction.ImportFile),
         Triple(R.string.camera, TrailSenseIcons.Filled.PhotoCamera, OfflineMapCreateAction.ImportCamera),
         Triple(R.string.blank, TrailSenseIcons.Filled.Draw, OfflineMapCreateAction.CreateBlank)
+    )
+    val subtitles = listOf(
+        R.string.places_maps_file_formats,
+        R.string.places_maps_camera_hint,
+        R.string.places_maps_blank_hint
     )
     val shapes = listOf(MaterialShapes.Cookie6Sided, MaterialShapes.Sunny, MaterialShapes.Clover4Leaf)
     Spacer(Modifier.height(TrailSenseSpacing.xl))
@@ -792,19 +797,13 @@ private fun MapSourceHints(onAction: (OfflineMapCreateAction) -> Unit) {
         entries.forEachIndexed { index, (label, icon, action) ->
             PlacesRow(
                 title = stringResource(label),
+                subtitle = stringResource(subtitles[index]),
                 position = TrailSenseGroupPosition.at(index, entries.size),
+                modifier = if (index == 0) Modifier.testTag("add_btn") else Modifier,
                 leading = {
                     PlacesBadge(
-                        containerColor = when (index) {
-                            0 -> scheme.secondaryContainer
-                            1 -> scheme.tertiaryContainer
-                            else -> scheme.primaryContainer
-                        },
-                        contentColor = when (index) {
-                            0 -> scheme.onSecondaryContainer
-                            1 -> scheme.onTertiaryContainer
-                            else -> scheme.onPrimaryContainer
-                        },
+                        containerColor = scheme.primaryContainer,
+                        contentColor = scheme.onPrimaryContainer,
                         icon = icon,
                         shape = shapes[index].toShape(),
                         size = 44.dp

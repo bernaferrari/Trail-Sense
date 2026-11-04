@@ -472,7 +472,7 @@ private fun PackItemScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (loaded && items.isNotEmpty()) ExtendedFloatingActionButton(
                 onClick = onAddItem,
                 modifier = Modifier.testTag("add_btn"),
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -490,7 +490,13 @@ private fun PackItemScreen(
                     icon = TrailIcons.ToolPack,
                     title = stringResource(R.string.inventory_empty_text),
                     description = stringResource(R.string.packs_items_empty_description),
-                    modifier = Modifier.testTag("inventory_empty_text")
+                    actionLabel = stringResource(R.string.create_item_title),
+                    actionIcon = TrailIcons.Add,
+                    onAction = onAddItem,
+                    actionModifier = Modifier.testTag("add_btn"),
+                    modifier = Modifier
+                        .fillParentMaxHeight(0.8f)
+                        .testTag("inventory_empty_text")
                 )
             }
             return@TrailSensePage
