@@ -2335,4 +2335,22 @@
     <string name="no_places">No places yet</string>
     <string name="places_empty_description">Save a spot to find your way back.</string>
     <string name="save_a_place">Save a place</string>
+    <string name="experimentation_what_is_a_plugin">A plugin is a separate app that adds weather data or map layers to Trail Sense.</string>
+    <string name="experimentation_adds">Adds %s</string>
+    <string name="experimentation_and">" and "</string>
+    <string name="experimentation_adds_nothing">Connected, nothing added yet</string>
+    <string name="experimentation_map_layer">Map layer: %s</string>
+    <string name="experimentation_weather_feature">Weather: %s</string>
+    <plurals name="experimentation_plugin_count">
+        <item quantity="one">%d plugin</item>
+        <item quantity="other">%d plugins</item>
+    </plurals>
+    <plurals name="experimentation_weather_count">
+        <item quantity="one">%d weather source</item>
+        <item quantity="other">%d weather sources</item>
+    </plurals>
+    <plurals name="experimentation_layer_count">
+        <item quantity="one">%d map layer</item>
+        <item quantity="other">%d map layers</item>
+    </plurals>
 </resources>
