@@ -270,36 +270,42 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "diagnosticsProgress"
     )
-    // The answer on the plain page: how many issues, and one line saying how they split.
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.lg)
+    // The answer as the family's status card (WiFi Weakspot's "Good signal", Keepout's "Protected"): its colour is the
+    // verdict, a cookie holds the count or a check, and the title stays smaller than the page title above it.
+    val tone = when {
+        !loaded && issueCount == 0 -> TrailSenseTone.Neutral
+        errorCount > 0 -> TrailSenseTone.Error
+        warningCount > 0 -> TrailSenseTone.Caution
+        else -> TrailSenseTone.Good
+    }
+    val colors = trailSenseToneColors(tone)
+    TrailSenseSpotlight(
+        title = title,
+        supportingText = supporting,
+        tone = tone,
+        titleStyle = MaterialTheme.typography.headlineSmall,
+        modifier = Modifier
             .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
-            .then(if (issueCount == 0 && loaded) Modifier.testTag("empty_text") else Modifier)
-    ) {
-        Text(
-            title,
-            // A verdict, not a hero: smaller than the title bar above it.
-            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
-            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        if (supporting != null) {
-            Text(
-                supporting,
-                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+            .then(if (issueCount == 0 && loaded) Modifier.testTag("empty_text") else Modifier),
+        badge = {
+            TrailSenseShapeBadge(
+                text = if (issueCount > 0) issueCount.toString() else null,
+                icon = when {
+                    issueCount > 0 -> null
+                    loaded -> Icons.Default.CheckCircle
+                    else -> Icons.Default.HourglassEmpty
+                },
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                containerColor = colors.accent,
+                contentColor = colors.onAccent
             )
         }
+    ) {
         if (!loaded) {
             // While the checks run, the bar fills as they report: the motion carries the progress.
             androidx.compose.material3.LinearWavyProgressIndicator(
                 progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = TrailSenseSpacing.md)
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

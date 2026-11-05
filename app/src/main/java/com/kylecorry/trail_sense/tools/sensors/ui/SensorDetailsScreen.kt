@@ -4,6 +4,8 @@ package com.kylecorry.trail_sense.tools.sensors.ui
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.foundation.layout.Arrangement
@@ -714,31 +716,37 @@ private fun SensorDetailsScreen(
     }
 }
 
-/** The answer on the plain page: how many sensors are good and the verdict; the group below names the rest. */
+/**
+ * The answer as the family's status card, like Diagnostics': its colour is the verdict and a cookie holds a check or
+ * a warning. The Needs attention group right below names the rest, so the line only speaks when all is well.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = TrailSenseSpacing.lg)
-    ) {
-        Text(
-            stringResource(R.string.sky_sensors_good, good, total),
-            // A verdict, like Diagnostics': smaller than the title bar above it.
-            style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
-            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        // The Needs attention group right below already counts the rest, so the line only speaks when all is well.
-        if (poor + moderate == 0) {
-            Text(
-                stringResource(R.string.sky_sensors_all_good),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
+    val tone = when {
+        poor > 0 -> TrailSenseTone.Error
+        moderate > 0 -> TrailSenseTone.Caution
+        else -> TrailSenseTone.Good
+    }
+    val colors = trailSenseToneColors(tone)
+    TrailSenseSpotlight(
+        title = stringResource(R.string.sky_sensors_good, good, total),
+        supportingText = if (poor + moderate == 0) stringResource(R.string.sky_sensors_all_good) else null,
+        tone = tone,
+        titleStyle = MaterialTheme.typography.headlineSmall,
+        badge = {
+            TrailSenseShapeBadge(
+                icon = if (tone == TrailSenseTone.Good) {
+                    androidx.compose.material.icons.Icons.Default.CheckCircle
+                } else {
+                    androidx.compose.material.icons.Icons.Default.WarningAmber
+                },
+                shape = MaterialShapes.Cookie9Sided.toShape(),
+                containerColor = colors.accent,
+                contentColor = colors.onAccent
             )
         }
-    }
+    )
 }
 
 @Composable
