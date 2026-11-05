@@ -5,14 +5,11 @@ import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
-import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -72,13 +69,15 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
                 onCancel = { job.cancel() }) {
                 job.join()
                 if (wasSuccessful) {
-                    CustomUiUtils.snackbar(
-                        host,
-                        host.context.getString(R.string.beacon_created),
-                        duration = Snackbar.LENGTH_LONG,
-                        action = host.context.getString(R.string.view)
-                    ) {
-                        host.navigator.navigate(Route.BeaconDetails(beaconId = id))
+                    host.lifecycleOwner.lifecycleScope.launch {
+                        if (host.showSnackbar(
+                                host.context.getString(R.string.beacon_created),
+                                host.context.getString(R.string.view),
+                                long = true
+                            )
+                        ) {
+                            host.navigator.navigate(Route.BeaconDetails(beaconId = id))
+                        }
                     }
 
                     host.screenControllerAs<BeaconListControllerHost>()?.refreshBeaconList()
