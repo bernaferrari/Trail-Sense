@@ -2,9 +2,21 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+
 import com.kylecorry.trail_sense.shared.navigation.toGeoUri
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -20,7 +32,6 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
@@ -93,7 +104,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
@@ -101,7 +111,6 @@ import com.kylecorry.trail_sense.shared.views.BeaconIconPickerDialog
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
@@ -119,284 +128,259 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 
 @Composable
 fun PlaceBeaconToolScreen(
-    host: TrailSenseDestinationHost,
+    route: Route.PlaceBeacon,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host) { PlaceBeaconController(host) }
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
-        }
-    }
-
-    controller.Content(modifier = modifier.fillMaxSize())
-}
-
-private class PlaceBeaconController(private val host: TrailSenseDestinationHost) {
-
-    private val beaconService by lazy { BeaconService(host.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val units by lazy { prefs.baseDistanceUnits }
-
-    private val isComplete = IsBeaconFormDataComplete()
-    private var hasChanges = DoesBeaconFormDataHaveChanges(CreateBeaconData.empty)
-
-    private var editingBeaconId by mutableStateOf<Long?>(null)
-    private var initialLocation: GeoUri? = null
-    private var backCallback: OnBackPressedCallback? = null
-
-    private var data by mutableStateOf(CreateBeaconData.empty)
-    private var groupName by mutableStateOf("")
-    private var locationAutofillRequest by mutableStateOf(0)
-    private var elevationAutofillRequest by mutableStateOf(0)
-    private var compassBearingText by mutableStateOf("")
-
-    private val compass by lazy { SensorService(host.requireContext()).getCompass() }
-    private val hasCompass by lazy { SensorService(host.requireContext()).hasCompass() }
-    private var cameraSheet: SightingCompassDialog? = null
-    private var isInitialized = false
-
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-
-        val route = host.routeAs<Route.PlaceBeacon>()
-        val beaconId = route.editBeaconId
-        val groupId = route.initialGroupId
-        initialLocation = route.initialLocation?.toGeoUri()
-
-        editingBeaconId = if (beaconId == 0L) null else beaconId
-        data = data.copy(groupId = if (groupId == 0L) null else groupId)
-        backCallback = host.promptIfUnsavedChanges { hasChanges.isSatisfiedBy(data) }
-
-        updateBeaconGroupName()
-
-        editingBeaconId?.let {
-            loadExistingBeacon(it)
-        } ?: run {
-            val defaultColor = prefs.beacons.defaultBeaconColor
-            updateData(data.copy(color = defaultColor))
-            hasChanges = DoesBeaconFormDataHaveChanges(
-                CreateBeaconData.empty.copy(color = defaultColor)
-            )
-        }
-
-        initialLocation?.let {
-            updateData(CreateBeaconData.from(it).copy(groupId = data.groupId, color = data.color))
-        }
-    }
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        var showColorPicker by remember { mutableStateOf(false) }
-        var showIconPicker by remember { mutableStateOf(false) }
-        val colorTitle = stringResource(R.string.color)
-        val iconTitle = stringResource(R.string.icon)
-
-        PlaceBeaconScreen(
-            data = data,
-            isEditing = editingBeaconId != null,
-            groupName = groupName.ifBlank { stringResource(R.string.no_group) },
-            canSave = isComplete.isSatisfiedBy(data),
-            hikingDistanceUnits = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
-            onNameChange = { updateData(data.copy(name = it)) },
-            onCoordinateChange = { updateData(data.copy(coordinate = it)) },
-            onElevationChange = { updateData(data.copy(elevation = it)) },
-            onCreateAtDistanceChange = {
-                updateData(data.copy(createAtDistance = it))
-            },
-            onDistanceChange = { updateData(data.copy(distanceTo = it)) },
-            onBearingChange = { bearing, isTrueNorth ->
-                updateData(
-                    data.copy(
-                        bearingTo = bearing,
-                        bearingIsTrueNorth = isTrueNorth
-                    )
-                )
-            },
-            onNotesChange = { updateData(data.copy(notes = it)) },
-            onGroupClick = ::pickGroup,
-            onColorClick = { showColorPicker = true },
-            onIconClick = { showIconPicker = true },
-            onSave = ::onSubmit,
-            locationAutofillRequest = locationAutofillRequest,
-            onAutoLocationClick = {
-                if (data.elevation == null) {
-                    elevationAutofillRequest++
-                }
-            },
-            onCoordinateBeaconSelected = {
-                if (data.elevation == null) {
-                    elevationAutofillRequest++
-                }
-            },
-            elevationAutofillRequest = elevationAutofillRequest,
-            compassBearingText = compassBearingText,
-            hasCompass = hasCompass,
-            onCompassBearingClick = ::setBearingFromCompass,
-            onCameraBearingClick = ::setBearingFromCamera,
-            modifier = modifier
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        PlaceBeaconViewModel(
+            route = route,
+            beaconService = BeaconService(appContext),
+            defaultColor = UserPreferences(appContext).beacons.defaultBeaconColor
         )
+    }
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+    val sensors = remember(appContext) { SensorService(appContext) }
+    val compass = remember(sensors) { sensors.getCompass() }
+    val hasCompass = remember(sensors) { sensors.hasCompass() }
+    var compassBearingText by remember { mutableStateOf("") }
+    var cameraSheet by remember { mutableStateOf<SightingCompassDialog?>(null) }
+    var showColorPicker by remember { mutableStateOf(false) }
+    var showIconPicker by remember { mutableStateOf(false) }
+    val iconTitle = stringResource(R.string.icon)
+    val data = viewModel.data
 
-        if (showColorPicker) {
-            BeaconShapeSheet(
-                icon = data.icon?.icon ?: TrailIcons.Location,
-                color = data.color,
-                shape = data.shape,
-                onShape = { updateData(data.copy(shape = it)) },
-                onColor = { updateData(data.copy(color = it)) },
-                onDismiss = { showColorPicker = false }
-            )
-        }
-
-        if (showIconPicker) {
-            BeaconIconPickerDialog(
-                title = iconTitle,
-                selectedIcon = data.icon,
-                icons = BeaconIcon.values().filter { it.isUserSelectable },
-                onIconPicked = {
-                    updateData(data.copy(icon = it))
-                    showIconPicker = false
-                },
-                onDismiss = {
-                    updateData(data.copy(icon = null))
-                    showIconPicker = false
-                }
-            )
-        }
-
-        cameraSheet?.Content()
+    UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { navigator.popBackStack() }
     }
 
-    fun onResume() {
-        if (!isInitialized) {
-            return
-        }
+    // The compass only runs while the editor is shown, for the bearing field and the camera sight.
+    LifecycleResumeEffect(compass) {
         compass.start {
             val bearing = compass.rawBearing
             compassBearingText = formatter.formatDegrees(bearing, replace360 = true)
             cameraSheet?.bearing = bearing
             true
         }
+        onPauseOrDispose {
+            compass.stop(null)
+        }
     }
 
-    fun onPause() {
-        compass.stop(null)
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraSheet?.dismiss()
+            cameraSheet = null
+        }
     }
 
-    fun onDestroy() {
-        onPause()
-        backCallback?.remove()
-        backCallback = null
-        cameraSheet?.dismiss()
-        cameraSheet = null
-        isInitialized = false
+    PlaceBeaconScreen(
+        data = data,
+        isEditing = viewModel.isEditing,
+        groupName = viewModel.groupName.ifBlank { stringResource(R.string.no_group) },
+        canSave = viewModel.canSave,
+        hikingDistanceUnits = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
+        onNameChange = { viewModel.update(viewModel.data.copy(name = it)) },
+        onCoordinateChange = { viewModel.update(viewModel.data.copy(coordinate = it)) },
+        onElevationChange = { viewModel.update(viewModel.data.copy(elevation = it)) },
+        onCreateAtDistanceChange = {
+            viewModel.update(viewModel.data.copy(createAtDistance = it))
+        },
+        onDistanceChange = { viewModel.update(viewModel.data.copy(distanceTo = it)) },
+        onBearingChange = { bearing, isTrueNorth ->
+            viewModel.update(
+                viewModel.data.copy(
+                    bearingTo = bearing,
+                    bearingIsTrueNorth = isTrueNorth
+                )
+            )
+        },
+        onNotesChange = { viewModel.update(viewModel.data.copy(notes = it)) },
+        onGroupClick = {
+            scope.launch {
+                val result = BeaconPickers.pickGroup(
+                    context,
+                    initialGroup = viewModel.data.groupId
+                )
+                if (!result.first) {
+                    viewModel.update(viewModel.data.copy(groupId = result.second?.id))
+                }
+            }
+        },
+        onColorClick = { showColorPicker = true },
+        onIconClick = { showIconPicker = true },
+        onSave = viewModel::save,
+        locationAutofillRequest = viewModel.locationAutofillRequest,
+        onAutoLocationClick = { viewModel.requestElevationAutofillIfMissing() },
+        onCoordinateBeaconSelected = { viewModel.requestElevationAutofillIfMissing() },
+        elevationAutofillRequest = viewModel.elevationAutofillRequest,
+        compassBearingText = compassBearingText,
+        hasCompass = hasCompass,
+        onCompassBearingClick = { viewModel.setBearing(compass.rawBearing) },
+        onCameraBearingClick = {
+            scope.launch {
+                if (effects.requestPermission(AppPermission.Camera)) {
+                    if (cameraSheet == null) {
+                        cameraSheet = SightingCompassDialog(
+                            context,
+                            lifecycleOwner,
+                            lifecycleOwner.lifecycleScope
+                        ) {
+                            viewModel.setBearing(it)
+                        }
+                    }
+                    cameraSheet?.show()
+                } else {
+                    effects.explainPermissionDenied(AppPermission.Camera)
+                }
+            }
+        },
+        modifier = modifier.fillMaxSize()
+    )
+
+    if (showColorPicker) {
+        BeaconShapeSheet(
+            icon = data.icon?.icon ?: TrailIcons.Location,
+            color = data.color,
+            shape = data.shape,
+            onShape = { viewModel.update(viewModel.data.copy(shape = it)) },
+            onColor = { viewModel.update(viewModel.data.copy(color = it)) },
+            onDismiss = { showColorPicker = false }
+        )
+    }
+
+    if (showIconPicker) {
+        BeaconIconPickerDialog(
+            title = iconTitle,
+            selectedIcon = data.icon,
+            icons = BeaconIcon.values().filter { it.isUserSelectable },
+            onIconPicked = {
+                viewModel.update(viewModel.data.copy(icon = it))
+                showIconPicker = false
+            },
+            onDismiss = {
+                viewModel.update(viewModel.data.copy(icon = null))
+                showIconPicker = false
+            }
+        )
+    }
+
+    cameraSheet?.Content()
+}
+
+/**
+ * The beacon form's state: plain Kotlin over the beacon service. It starts from the route (a beacon to edit, a group,
+ * a location), tracks whether the form differs from what it started with, and reports [saved] once the beacon is
+ * stored.
+ */
+internal class PlaceBeaconViewModel(
+    route: Route.PlaceBeacon,
+    private val beaconService: BeaconService,
+    defaultColor: AppColor
+) : ViewModel() {
+
+    private val isComplete = IsBeaconFormDataComplete()
+    private var original by mutableStateOf(DoesBeaconFormDataHaveChanges(CreateBeaconData.empty))
+
+    /** The beacon being edited, or null when placing a new one. */
+    val editingBeaconId: Long? = route.editBeaconId.takeIf { it != 0L }
+    val isEditing: Boolean
+        get() = editingBeaconId != null
+
+    var data by mutableStateOf(CreateBeaconData.empty)
+        private set
+
+    /** The group's name; blank for no group. */
+    var groupName by mutableStateOf("")
+        private set
+    var locationAutofillRequest by mutableStateOf(0)
+        private set
+    var elevationAutofillRequest by mutableStateOf(0)
+        private set
+
+    val hasChanges: Boolean
+        get() = original.isSatisfiedBy(data)
+    val canSave: Boolean
+        get() = isComplete.isSatisfiedBy(data)
+
+    private val _saved = Channel<Unit>(Channel.CONFLATED)
+
+    /** One event per save, after the beacon is stored. */
+    val saved: Flow<Unit> = _saved.receiveAsFlow()
+
+    init {
+        val groupId = route.initialGroupId
+        val initialLocation = route.initialLocation?.toGeoUri()
+        data = data.copy(groupId = if (groupId == 0L) null else groupId)
+        updateGroupName()
+
+        if (editingBeaconId != null) {
+            loadExistingBeacon(editingBeaconId)
+        } else {
+            update(data.copy(color = defaultColor))
+            original = DoesBeaconFormDataHaveChanges(CreateBeaconData.empty.copy(color = defaultColor))
+        }
+
+        initialLocation?.let {
+            update(CreateBeaconData.from(it).copy(groupId = data.groupId, color = data.color))
+        }
+    }
+
+    fun update(newData: CreateBeaconData) {
+        data = newData
+        updateGroupName()
+    }
+
+    fun setBearing(bearing: Float?) {
+        update(data.copy(bearingTo = bearing, bearingIsTrueNorth = false))
+    }
+
+    /** Filling in the location fills in the elevation too, unless one was typed. */
+    fun requestElevationAutofillIfMissing() {
+        if (data.elevation == null) {
+            elevationAutofillRequest++
+        }
+    }
+
+    fun save() {
+        val beacon = data.toBeacon() ?: return
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                beaconService.add(beacon)
+            }
+            _saved.trySend(Unit)
+        }
     }
 
     private fun loadExistingBeacon(beaconId: Long) {
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             val beacon = withContext(Dispatchers.IO) {
                 beaconService.getBeacon(beaconId)
             }
             beacon?.let {
                 val loadedData = CreateBeaconData.from(it)
-                hasChanges = DoesBeaconFormDataHaveChanges(loadedData)
-                updateData(loadedData)
+                original = DoesBeaconFormDataHaveChanges(loadedData)
+                update(loadedData)
             }
         }
     }
 
-    private fun updateData(newData: CreateBeaconData) {
-        data = newData
-        updateBeaconGroupName()
-    }
-
-    private fun pickGroup() {
-        host.lifecycleScope.launch {
-            val result = BeaconPickers.pickGroup(
-                host.requireContext(),
-                initialGroup = data.groupId
-            )
-            if (result.first) {
-                return@launch
-            }
-            updateData(data.copy(groupId = result.second?.id))
-        }
-    }
-
-    private fun setBearingFromCompass() {
-        updateData(
-            data.copy(
-                bearingTo = compass.rawBearing,
-                bearingIsTrueNorth = false
-            )
-        )
-    }
-
-    private fun setBearingFromCamera() {
-        host.requestCamera { hasPermission ->
-            if (hasPermission) {
-                if (cameraSheet == null) {
-                    cameraSheet = SightingCompassDialog(
-                        host.requireContext(),
-                        host.lifecycleOwner,
-                        host.lifecycleScope
-                    ) {
-                        updateData(
-                            data.copy(
-                                bearingTo = it,
-                                bearingIsTrueNorth = false
-                            )
-                        )
-                    }
-                }
-                cameraSheet?.show()
-            } else {
-                host.alertNoCameraPermission()
-            }
-        }
-    }
-
-    private fun updateBeaconGroupName() {
+    private fun updateGroupName() {
         val parent = data.groupId
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             groupName = withContext(Dispatchers.IO) {
                 if (parent == null) {
-                    host.getString(R.string.no_group)
+                    ""
                 } else {
                     beaconService.getGroup(parent)?.name ?: ""
                 }
             }
-        }
-    }
-
-    private fun onSubmit() {
-        val beacon = data.toBeacon() ?: return
-        host.lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                beaconService.add(beacon)
-            }
-
-            backCallback?.remove()
-            host.findNavigator().navigateUp()
         }
     }
 }

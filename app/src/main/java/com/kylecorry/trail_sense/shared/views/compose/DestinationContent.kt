@@ -233,11 +233,11 @@ fun DestinationContent(
             Route.Astronomy -> AstronomyToolScreen(this)
             is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
             is Route.BeaconList -> BeaconListToolScreen(
-                host = this,
+                route = route,
                 onController = { screenController = it }
             )
-            is Route.BeaconDetails -> BeaconDetailsToolScreen(this)
-            is Route.PlaceBeacon -> PlaceBeaconToolScreen(this)
+            is Route.BeaconDetails -> BeaconDetailsToolScreen(route)
+            is Route.PlaceBeacon -> PlaceBeaconToolScreen(route)
             is Route.OfflineMapList -> OfflineMapListToolScreen(this)
             Route.ScanQr -> ScanQRToolScreen(this)
             is Route.ViewQr -> QRShareScreen(

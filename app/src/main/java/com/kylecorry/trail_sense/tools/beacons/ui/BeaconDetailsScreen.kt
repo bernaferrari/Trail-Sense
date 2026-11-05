@@ -4,7 +4,22 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.sol.math.Range
+import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
+import com.kylecorry.sol.science.astronomy.SunTimesMode
+import com.kylecorry.sol.units.Temperature
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.tools.tides.domain.TideDetails
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -77,7 +92,6 @@ import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseHeroCard
@@ -102,217 +116,195 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 @Composable
-fun BeaconDetailsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { BeaconDetailsController(host) }
-    val lifecycleOwner = LocalLifecycleOwner.current
+fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val viewModel = viewModel {
+        BeaconDetailsViewModel(
+            beaconId = route.beaconId,
+            beaconRepo = BeaconRepo.getInstance(appContext),
+            weather = WeatherSubsystem.getInstance(appContext),
+            tides = TidesSubsystem.getInstance(appContext),
+            sunTimesMode = prefs.astronomy.sunTimesMode
+        )
+    }
+    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val tideFormatter = remember(appContext) { TideFormatter(appContext) }
+    val gps = remember(appContext) { SensorService(appContext).getGPS() }
+    var location by remember { mutableStateOf(gps.location) }
 
-    LaunchedEffect(controller) {
-        controller.loadBeacon()
+    // Loads each time the page is shown, so an edit made in the editor shows on return.
+    LaunchedEffect(viewModel) {
+        viewModel.load()
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.deleted.collect { navigator.navigateUp() }
     }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
-            }
+    // The distance and direction follow you while the page is shown.
+    LifecycleResumeEffect(gps) {
+        val onGpsUpdate: () -> Boolean = {
+            location = gps.location
+            true
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onPause()
+        gps.start(onGpsUpdate)
+        onPauseOrDispose {
+            gps.stop(onGpsUpdate)
         }
     }
+
+    val beacon = viewModel.beacon
+    val loaded = viewModel.isLoaded
+    val meters = beacon?.coordinate?.distanceTo(location)
+    // Standing on it: "0 ft · 0° N" was true and useless; say it plainly and drop the direction.
+    val isHere = meters != null && meters < HERE_METERS
+    val distance = when {
+        meters == null || !loaded -> ""
+        isHere -> stringResource(R.string.place_you_are_here)
+        else -> {
+            val d = Distance.meters(meters).convertTo(prefs.baseDistanceUnits).toRelativeDistance()
+            formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
+        }
+    }
+    val direction = when {
+        beacon == null || !loaded -> null
+        isHere -> ""
+        else -> {
+            val bearing = NavigationService().navigate(location, beacon.coordinate, 0f).direction
+            stringResource(
+                R.string.beacon_direction_value,
+                formatService.formatDegrees(bearing.value, replace360 = true),
+                formatService.formatDirection(bearing.direction)
+            )
+        }
+    }
+    val altitude = beacon?.elevation?.let {
+        val d = Distance.meters(it).convertTo(prefs.baseDistanceUnits)
+        formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
+    }
+    val temperature = viewModel.temperatureRange?.let { range ->
+        val units = prefs.temperatureUnits
+        stringResource(
+            R.string.slash_separated_pair,
+            formatService.formatTemperature(range.end.convertTo(units)),
+            formatService.formatTemperature(range.start.convertTo(units))
+        )
+    } ?: ""
+    val sunTimes = viewModel.sunTimes
+    val tideDetails = viewModel.nearestTide
 
     BeaconDetailsScreen(
-        beacon = controller.beacon,
-        distance = controller.distance,
-        direction = controller.direction,
-        altitude = controller.altitude,
-        temperature = controller.temperature,
-        sunrise = controller.sunrise,
-        sunset = controller.sunset,
-        tide = controller.tide,
-        tideIcon = controller.tideIcon,
-        onShare = controller::shareBeacon,
-        onDelete = controller::confirmDelete,
-        onNavigate = controller::navigateToBeacon,
-        onEdit = controller::editBeacon,
-        onTemperatureClick = controller::showTemperatureDetails
+        beacon = beacon,
+        distance = distance,
+        direction = direction,
+        altitude = altitude,
+        temperature = temperature,
+        sunrise = sunTimes?.rise?.let { formatService.formatTime(it.toLocalTime(), includeSeconds = false) },
+        sunset = sunTimes?.set?.let { formatService.formatTime(it.toLocalTime(), includeSeconds = false) },
+        tide = tideDetails?.let { tideFormatter.getTideTypeName(it.now.type) },
+        tideIcon = if (viewModel.isTideLoaded) {
+            tideFormatter.getTideTypeIcon(tideDetails?.now?.type)
+        } else {
+            TrailIcons.TideHalf
+        },
+        onShare = {
+            viewModel.beacon?.let { BeaconSender(context, effects, navigator, scope).send(it) }
+        },
+        onDelete = {
+            val current = viewModel.beacon
+            if (current != null) {
+                Alerts.dialog(
+                    context,
+                    context.getString(R.string.delete),
+                    current.name
+                ) { cancelled ->
+                    if (!cancelled) {
+                        viewModel.delete(current)
+                    }
+                }
+            }
+        },
+        onNavigate = { navigator.navigate(Route.Navigation(destinationBeaconId = route.beaconId)) },
+        onEdit = { navigator.navigate(Route.PlaceBeacon(editBeaconId = route.beaconId)) },
+        onTemperatureClick = {
+            val current = viewModel.beacon
+            if (current != null) {
+                scope.launch {
+                    ShowHighLowTemperatureDialogCommand(
+                        context,
+                        current.coordinate,
+                        Distance.meters(current.elevation ?: 0f)
+                    ).execute()
+                }
+            }
+        }
     )
 }
 
-private class BeaconDetailsController(private val host: TrailSenseDestinationHost) {
+/**
+ * A beacon's details: the beacon and the conditions at it (temperature range, sun times, the nearest tide), loaded
+ * from the repositories. Plain Kotlin; the screen turns the values into text and reports [deleted] once it is gone.
+ */
+internal class BeaconDetailsViewModel(
+    private val beaconId: Long,
+    private val beaconRepo: BeaconRepo,
+    private val weather: WeatherSubsystem,
+    private val tides: TidesSubsystem,
+    private val sunTimesMode: SunTimesMode
+) : ViewModel() {
 
-    private val beaconRepo by lazy { BeaconRepo.getInstance(host.requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val gps by lazy { SensorService(host.requireContext()).getGPS() }
-    private val weather by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
-    private val tides by lazy { TidesSubsystem.getInstance(host.requireContext()) }
-    private val tideFormatter by lazy { TideFormatter(host.requireContext()) }
     private val astronomy = AstronomyService()
 
-    private val beaconId: Long by lazy {
-        host.routeAs<Route.BeaconDetails>().beaconId
-    }
     var beacon by mutableStateOf<Beacon?>(null)
         private set
-    var distance by mutableStateOf("")
+
+    /** Whether [load] has finished at least once. */
+    var isLoaded by mutableStateOf(false)
         private set
-    var direction by mutableStateOf<String?>(null)
+    var temperatureRange by mutableStateOf<Range<Temperature>?>(null)
         private set
-    var altitude by mutableStateOf<String?>(null)
+    var sunTimes by mutableStateOf<RiseSetTransitTimes?>(null)
         private set
-    var temperature by mutableStateOf("")
+    var nearestTide by mutableStateOf<TideDetails?>(null)
         private set
-    var sunrise by mutableStateOf<String?>(null)
-        private set
-    var sunset by mutableStateOf<String?>(null)
-        private set
-    var tide by mutableStateOf<String?>(null)
-        private set
-    var tideIcon by mutableStateOf(TrailIcons.TideHalf)
+    var isTideLoaded by mutableStateOf(false)
         private set
 
-    fun onResume() {
-        gps.start(this::onGpsUpdate)
-    }
+    private val _deleted = Channel<Unit>(Channel.CONFLATED)
 
-    fun onPause() {
-        gps.stop(this::onGpsUpdate)
-    }
+    /** One event once the beacon is deleted. */
+    val deleted: Flow<Unit> = _deleted.receiveAsFlow()
 
-    fun loadBeacon() {
-        host.lifecycleScope.launch {
-            val loaded = withContext(Dispatchers.IO) {
-                beaconRepo.getBeacon(beaconId)?.toBeacon()
-            }
-            beacon = loaded
-            loaded ?: return@launch
-
-            altitude = loaded.elevation?.let {
-                val d = Distance.meters(it).convertTo(prefs.baseDistanceUnits)
-                formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
-            }
-
-            updateDistance()
-            updateBeaconTemperature(loaded)
-            updateBeaconSunTimes(loaded)
-            updateBeaconTides(loaded)
+    suspend fun load() {
+        val loaded = withContext(Dispatchers.IO) {
+            beaconRepo.getBeacon(beaconId)?.toBeacon()
         }
-    }
+        beacon = loaded
+        loaded ?: return
+        isLoaded = true
 
-    private fun onGpsUpdate(): Boolean {
-        updateDistance()
-        return true
-    }
-
-    private fun updateDistance() {
-        val currentBeacon = beacon ?: return
-        val meters = currentBeacon.coordinate.distanceTo(gps.location)
-        // Standing on it: "0 ft · 0° N" was true and useless; say it plainly and drop the direction.
-        if (meters < HERE_METERS) {
-            distance = host.getString(R.string.place_you_are_here)
-            direction = ""
-            return
-        }
-        val d = Distance.meters(meters)
-            .convertTo(prefs.baseDistanceUnits)
-            .toRelativeDistance()
-        distance = formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
-        val bearing = NavigationService().navigate(gps.location, currentBeacon.coordinate, 0f).direction
-        direction = host.getString(
-            R.string.beacon_direction_value,
-            formatService.formatDegrees(bearing.value, replace360 = true),
-            formatService.formatDirection(bearing.direction)
-        )
-    }
-
-    private suspend fun updateBeaconSunTimes(beacon: Beacon) {
-        val times = withContext(Dispatchers.Default) {
-            astronomy.getSunTimes(
-                beacon.coordinate,
-                prefs.astronomy.sunTimesMode,
-                LocalDate.now()
-            )
-        }
-
-        sunrise = times.rise?.let {
-            formatService.formatTime(it.toLocalTime(), includeSeconds = false)
-        }
-        sunset = times.set?.let {
-            formatService.formatTime(it.toLocalTime(), includeSeconds = false)
-        }
-    }
-
-    private suspend fun updateBeaconTides(beacon: Beacon) {
-        val nearestTide = tides.getNearestTide(beacon.coordinate)
-        tide = nearestTide?.let { tideFormatter.getTideTypeName(it.now.type) }
-        tideIcon = tideFormatter.getTideTypeIcon(nearestTide?.now?.type)
-    }
-
-    private suspend fun updateBeaconTemperature(beacon: Beacon) {
-        val temperatureRange = weather.getTemperatureRange(
+        temperatureRange = weather.getTemperatureRange(
             LocalDate.now(),
-            beacon.coordinate,
-            Distance.meters(beacon.elevation ?: 0f)
+            loaded.coordinate,
+            Distance.meters(loaded.elevation ?: 0f)
         )
-
-        val units = prefs.temperatureUnits
-        val lowValue = formatService.formatTemperature(
-            temperatureRange.start.convertTo(units)
-        )
-        val highValue = formatService.formatTemperature(
-            temperatureRange.end.convertTo(units)
-        )
-
-        temperature = host.getString(R.string.slash_separated_pair, highValue, lowValue)
-    }
-
-    fun showTemperatureDetails() {
-        val currentBeacon = beacon ?: return
-        host.lifecycleScope.launch {
-            ShowHighLowTemperatureDialogCommand(
-                host.requireContext(),
-                currentBeacon.coordinate,
-                Distance.meters(currentBeacon.elevation ?: 0f)
-            ).execute()
+        sunTimes = withContext(Dispatchers.Default) {
+            astronomy.getSunTimes(loaded.coordinate, sunTimesMode, LocalDate.now())
         }
+        nearestTide = tides.getNearestTide(loaded.coordinate)
+        isTideLoaded = true
     }
 
-    fun navigateToBeacon() {
-        host.findNavigator().navigate(Route.Navigation(destinationBeaconId = beaconId))
-    }
-
-    fun editBeacon() {
-        host.findNavigator().navigate(Route.PlaceBeacon(editBeaconId = beaconId))
-    }
-
-    fun shareBeacon() {
-        val currentBeacon = beacon ?: return
-        BeaconSender(host).send(currentBeacon)
-    }
-
-    fun confirmDelete() {
-        val beacon = beacon ?: return
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete),
-            beacon.name
-        ) { cancelled ->
-            if (!cancelled) {
-                host.lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        beaconRepo.deleteBeacon(BeaconEntity.from(beacon))
-                    }
-                    host.findNavigator().navigateUp()
-                }
+    fun delete(beacon: Beacon) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                beaconRepo.deleteBeacon(BeaconEntity.from(beacon))
             }
+            _deleted.trySend(Unit)
         }
     }
 }
