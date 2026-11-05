@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.tiles
 
 import android.service.quicksettings.Tile
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.widgets.tiles.AndromedaTileService
@@ -9,9 +10,15 @@ import com.kylecorry.trail_sense.shared.FeatureState
 abstract class TopicTile : AndromedaTileService() {
     abstract val stateTopic: ITopic<FeatureState>
     abstract val subtitleTopic: ITopic<String>
+    abstract val icon: ImageVector
 
     abstract fun stop()
     abstract fun start()
+
+    override fun onTileAdded() {
+        super.onTileAdded()
+        showIcon(icon)
+    }
 
     override fun onClick() {
         super.onClick()
@@ -26,6 +33,7 @@ abstract class TopicTile : AndromedaTileService() {
     }
 
     override fun onStartListening() {
+        showIcon(icon)
         subtitleTopic.subscribe(this::onSubtitleChanged)
         stateTopic.subscribe(this::onStateChanged)
     }

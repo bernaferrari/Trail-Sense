@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.tools.pedometer.tiles
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.luna.topics.generic.ITopic
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.luna.topics.generic.map
 import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
@@ -16,6 +18,9 @@ class PedometerTile : TopicTile() {
     private val pedometer by lazy { PedometerSubsystem.getInstance(this) }
     private val formatter by lazy { FormatService.getInstance(this) }
     private val prefs by lazy { UserPreferences(this) }
+
+    override val icon: ImageVector
+        get() = TrailIcons.Steps
 
     override val stateTopic: ITopic<FeatureState>
         get() = pedometer.state.replay()
