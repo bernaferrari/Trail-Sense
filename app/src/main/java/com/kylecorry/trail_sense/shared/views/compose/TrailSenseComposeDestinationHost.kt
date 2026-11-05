@@ -46,7 +46,7 @@ class TrailSenseComposeDestinationHost(
     override val route: Route,
     override val lifecycleOwner: LifecycleOwner,
     private val requestRuntimePermissions: (Array<String>, () -> Unit) -> Unit
-) : TrailSenseReactiveDestinationHost {
+) : TrailSenseReactiveDestinationHost, ScreenEffects {
 
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
     private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
@@ -418,6 +418,65 @@ class TrailSenseComposeDestinationHost(
     override fun removeOverlayView(view: View) {
         requireMainActivity().removeOverlayView(view)
     }
+
+
+    // ScreenEffects: the platform side of what screens ask for, on top of the host's callback APIs.
+
+    override suspend fun requestPermission(permission: AppPermission): Boolean =
+        kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+            val resume: (Boolean) -> Unit = { if (continuation.isActive) continuation.resume(it) { } }
+            when (permission) {
+                AppPermission.Camera -> requestCamera(resume)
+                AppPermission.ActivityRecognition -> requestActivityRecognition(resume)
+                AppPermission.ExactAlarms -> requestScheduleExactAlarms(resume)
+                AppPermission.Backtrack -> requestBacktrackPermission(resume)
+                AppPermission.BackgroundLocation -> requestBackgroundLocation(resume)
+                AppPermission.IgnoreBatteryOptimizations -> requestIgnoreBatteryOptimizations(resume)
+            }
+        }
+
+    override fun explainPermissionDenied(permission: AppPermission) {
+        when (permission) {
+            AppPermission.Camera -> alertNoCameraPermission()
+            AppPermission.ActivityRecognition -> alertNoActivityRecognitionPermission()
+            else -> Unit
+        }
+    }
+
+    override fun showMessage(message: String, long: Boolean) {
+        toast(message, short = !long)
+    }
+
+    override suspend fun showSnackbar(message: String, actionLabel: String?, long: Boolean): Boolean =
+        kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+            var acted = false
+            val snackbar = showSnackbar(
+                message,
+                if (long) com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                else com.google.android.material.snackbar.Snackbar.LENGTH_SHORT,
+                actionLabel
+            ) { acted = true }
+            snackbar.addCallback(object : com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback<com.google.android.material.snackbar.Snackbar>() {
+                override fun onDismissed(transientBottomBar: com.google.android.material.snackbar.Snackbar?, event: Int) {
+                    if (continuation.isActive) continuation.resume(acted) { }
+                }
+            })
+            continuation.invokeOnCancellation { snackbar.dismiss() }
+        }
+
+    override suspend fun chooseAction(
+        title: String,
+        subtitle: String?,
+        actions: List<ActionItem>
+    ): ActionItem? = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+        showActionSheet(title, subtitle, actions) { if (continuation.isActive) continuation.resume(it) { } }
+    }
+
+    override suspend fun capturePhoto(maxWidth: Int?, maxHeight: Int?, zeroShutterLag: Boolean): String? =
+        kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+            val size = if (maxWidth != null && maxHeight != null) android.util.Size(maxWidth, maxHeight) else null
+            showPhotoImport(size, zeroShutterLag) { if (continuation.isActive) continuation.resume(it?.toString()) { } }
+        }
 
 }
 

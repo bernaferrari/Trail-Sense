@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 
 /**
  * Draws the [TrailSenseNavigator]'s back stack with Navigation 3. Each entry keeps its saved state (scroll position,
@@ -142,7 +143,7 @@ private fun TrailSenseRouteContent(route: Route) {
         }
     }
 
-    CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner) {
+    CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner, LocalScreenEffects provides host) {
         host.Content(modifier = Modifier.fillMaxSize())
     }
 }
