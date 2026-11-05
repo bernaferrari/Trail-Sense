@@ -24,8 +24,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorManager
-import android.os.Handler
-import android.os.Looper
 import androidx.annotation.ColorInt
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
@@ -42,6 +40,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -105,127 +110,131 @@ import java.util.Locale
 @Composable
 fun SensorDetailsToolScreen() {
     val context = LocalContext.current
-    // A live readout of every sensor while the page is shown; it formats its own rows, so it stays a plain holder.
-    val controller = remember(context) { SensorDetailsController(context) }
+    val appContext = context.applicationContext
+    // The sensors run in the ViewModel while the page is resumed; their rows are formatted here, in the
+    // composition, every time a reading changes (or every half second).
+    val viewModel = viewModel { SensorDetailsViewModel(SensorService(appContext), appContext) }
+    val formatter = remember(context, viewModel) { SensorDetailsFormatter(context, viewModel) }
 
-    LifecycleResumeEffect(controller) {
-        controller.onResume()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
         onPauseOrDispose {
-            controller.onPause()
+            viewModel.onPause()
         }
     }
 
+    val version = viewModel.version
+    val reported = remember(formatter, version) { formatter.format() }
+
     SensorDetailsScreen(
-        reported = controller.sensorDetails,
-        onShowSensorList = controller::showSensorList
+        reported = reported,
+        onShowSensorList = { showSensorList(context) }
     )
 }
 
-private class SensorDetailsController(private val context: Context) {
-
-    private val sensorService by lazy { SensorService(context) }
-    private val prefs by lazy { UserPreferences(context) }
-
-    private val formatService by lazy { FormatService.getInstance(context) }
-    private val sensorDetailsMap = mutableMapOf<String, SensorDetails?>()
-    var sensorDetails by mutableStateOf<List<SensorDetails>>(emptyList())
-        private set
-    private val handler = Handler(Looper.getMainLooper())
-    private val sensorListener = { updateAllSensorDetails() }
-    private val updateRunnable = object : Runnable {
-        override fun run() {
-            updateAllSensorDetails()
-            handler.postDelayed(this, 500)
-        }
-    }
+/**
+ * The sensors the page reads, started while it is resumed. [version] changes whenever any of them reports and every
+ * half second, so the composition formats the rows again.
+ */
+internal class SensorDetailsViewModel(
+    sensorService: SensorService,
+    // Battery and the cached sensors take a Context; this is the application context, never an Activity.
+    appContext: Context
+) : ViewModel() {
 
     // Hardware sensors
-    private val accelerometer by lazy { sensorService.getAccelerometer() }
-    private val magnetometer by lazy { sensorService.getMagnetometer() }
-    private val barometer by lazy { sensorService.getBarometer() }
-    private val hygrometer by lazy { sensorService.getHygrometer() }
-    private val battery by lazy { Battery(context) }
-    private val gyroscope by lazy { sensorService.getGyroscope() }
-    private val thermometer by lazy { sensorService.getThermometer() }
-    private val cellSignal by lazy { sensorService.getCellSignal() }
-    private val gps by lazy { sensorService.getGPS() }
+    val accelerometer = sensorService.getAccelerometer()
+    val magnetometer = sensorService.getMagnetometer()
+    val barometer = sensorService.getBarometer()
+    val hygrometer = sensorService.getHygrometer()
+    val battery = Battery(appContext)
+    val gyroscope = sensorService.getGyroscope()
+    val thermometer = sensorService.getThermometer()
+    val cellSignal = sensorService.getCellSignal()
+    val gps = sensorService.getGPS()
 
     // Virtual sensors
-    private val gravity by lazy { sensorService.getGravity() }
-    private val compass by lazy { sensorService.getCompass() }
-    private val altimeter by lazy { sensorService.getAltimeter() }
+    val gravity = sensorService.getGravity()
+    val compass = sensorService.getCompass()
+    val altimeter = sensorService.getAltimeter()
 
     // Cache
-    private val cachedGPS by lazy { CachedGPS(context, 500) }
-    private val cachedAltimeter by lazy { CachedAltimeter(context, 500) }
+    val cachedGPS = CachedGPS(appContext, 500)
+    val cachedAltimeter = CachedAltimeter(appContext, 500)
 
-    private val unavailableText by lazy { context.getString(R.string.unavailable) }
-    private val observedSensors: List<ISensor> by lazy {
-        listOf(
-            cachedGPS,
-            cachedAltimeter,
-            gps,
-            compass,
-            barometer,
-            altimeter,
-            thermometer,
-            hygrometer,
-            gravity,
-            accelerometer,
-            cellSignal,
-            magnetometer,
-            battery,
-            gyroscope
-        )
+    var version by mutableIntStateOf(0)
+        private set
+
+    private val observedSensors: List<ISensor> = listOf(
+        cachedGPS,
+        cachedAltimeter,
+        gps,
+        compass,
+        barometer,
+        altimeter,
+        thermometer,
+        hygrometer,
+        gravity,
+        accelerometer,
+        cellSignal,
+        magnetometer,
+        battery,
+        gyroscope
+    )
+    private val sensorListener: () -> Boolean = {
+        viewModelScope.launch { version++ }
+        true
     }
+    private var ticker: Job? = null
 
     fun onResume() {
-        initializeUnavailableSensors()
         observedSensors.forEach { it.start(sensorListener) }
-        updateAllSensorDetails()
-        handler.removeCallbacks(updateRunnable)
-        handler.postDelayed(updateRunnable, 500)
+        version++
+        ticker?.cancel()
+        ticker = viewModelScope.launch {
+            while (true) {
+                delay(500)
+                version++
+            }
+        }
     }
 
     fun onPause() {
-        handler.removeCallbacks(updateRunnable)
+        ticker?.cancel()
+        ticker = null
         observedSensors.forEach { it.stop(sensorListener) }
     }
 
-    private fun initializeUnavailableSensors() {
-        if (!Sensors.hasCompass(context)) {
-            sensorDetailsMap["compass"] = SensorDetails(
-                context.getString(R.string.pref_compass_sensor_title),
-                "",
-                context.getString(R.string.unavailable),
-                CustomUiUtils.getQualityColor(Quality.Poor),
-                TrailIcons.CompassIcon
-            )
-        }
+    override fun onCleared() {
+        onPause()
     }
+}
 
-    fun showSensorList() {
-        val sensorManager = context.getSystemService<SensorManager>()
-        val sensors = sensorManager?.getSensorList(Sensor.TYPE_ALL)
+/** Every sensor's row: its name, reading, status and status colour, from the readings in [sensors]. */
+private class SensorDetailsFormatter(private val context: Context, private val sensors: SensorDetailsViewModel) {
 
-        val description = sensors?.joinToString("\n\n") { sensor ->
-            "${sensor.name}\n${sensor.stringType} (${sensor.type})"
-        } ?: ""
+    private val prefs = UserPreferences(context)
+    private val formatService = FormatService.getInstance(context)
+    private val sensorDetailsMap = mutableMapOf<String, SensorDetails?>()
 
-        Alerts.dialog(
-            context,
-            context.getString(R.string.sensors),
-            description,
-            cancelText = null
-        )
-    }
+    private val accelerometer get() = sensors.accelerometer
+    private val magnetometer get() = sensors.magnetometer
+    private val barometer get() = sensors.barometer
+    private val hygrometer get() = sensors.hygrometer
+    private val battery get() = sensors.battery
+    private val gyroscope get() = sensors.gyroscope
+    private val thermometer get() = sensors.thermometer
+    private val cellSignal get() = sensors.cellSignal
+    private val gps get() = sensors.gps
+    private val gravity get() = sensors.gravity
+    private val compass get() = sensors.compass
+    private val altimeter get() = sensors.altimeter
+    private val cachedGPS get() = sensors.cachedGPS
+    private val cachedAltimeter get() = sensors.cachedAltimeter
 
-    private fun updateAllSensorDetails(): Boolean {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            handler.post { updateAllSensorDetails() }
-            return true
-        }
+    private val unavailableText = context.getString(R.string.unavailable)
 
+    fun format(): List<SensorDetails> {
         updateGPSCache()
         updateAltimeterCache()
         updateGPS()
@@ -241,12 +250,9 @@ private class SensorDetailsController(private val context: Context) {
         updateBattery()
         updateGyro()
         updateClock()
-        synchronized(this) {
-            sensorDetails = sensorDetailsMap.toList()
-                .mapNotNull { (key, details) -> details?.copy(category = sensorCategory(key)) }
-                .sortedBy { it.name }
-        }
-        return true
+        return sensorDetailsMap.toList()
+            .mapNotNull { (key, details) -> details?.copy(category = sensorCategory(key)) }
+            .sortedBy { it.name }
     }
 
     private fun updateGyro() {
@@ -571,6 +577,22 @@ private class SensorDetailsController(private val context: Context) {
         return formatService.formatQuality(gps.quality)
     }
 
+}
+
+private fun showSensorList(context: Context) {
+    val sensorManager = context.getSystemService<SensorManager>()
+    val sensors = sensorManager?.getSensorList(Sensor.TYPE_ALL)
+
+    val description = sensors?.joinToString("\n\n") { sensor ->
+        "${sensor.name}\n${sensor.stringType} (${sensor.type})"
+    } ?: ""
+
+    Alerts.dialog(
+        context,
+        context.getString(R.string.sensors),
+        description,
+        cancelText = null
+    )
 }
 
 /** The cell signal bars for a quality; mirrors CellSignalUtils.getCellQualityImage. */
