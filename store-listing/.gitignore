@@ -1,3 +1,5 @@
 # Captures are design-round output: the tour retakes them, so they stay out of git.
 node_modules/
 /*/raw/
+/*/assets.json
+export-report.json
