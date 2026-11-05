@@ -269,7 +269,6 @@ fun DestinationContent(
             is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(this)
             is Route.PhotoMaps -> PhotoMapsToolScreen(this)
             Route.Clinometer -> ClinometerToolScreen(
-                host = this,
                 onController = { screenController = it }
             )
             Route.Weather -> WeatherToolScreen(this)
