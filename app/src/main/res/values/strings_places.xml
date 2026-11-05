@@ -79,4 +79,5 @@
     <string name="places_shape_flower">Flower</string>
     <string name="places_shape_gem">Gem</string>
     <string name="places_shape_puffy">Puffy</string>
+    <string name="place_you_are_here">You\'re here</string>
 </resources>

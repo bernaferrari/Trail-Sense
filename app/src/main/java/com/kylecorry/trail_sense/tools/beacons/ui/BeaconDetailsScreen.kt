@@ -210,7 +210,14 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateDistance() {
         val currentBeacon = beacon ?: return
-        val d = Distance.meters(currentBeacon.coordinate.distanceTo(gps.location))
+        val meters = currentBeacon.coordinate.distanceTo(gps.location)
+        // Standing on it: "0 ft · 0° N" was true and useless; say it plainly and drop the direction.
+        if (meters < HERE_METERS) {
+            distance = host.getString(R.string.place_you_are_here)
+            direction = ""
+            return
+        }
+        val d = Distance.meters(meters)
             .convertTo(prefs.baseDistanceUnits)
             .toRelativeDistance()
         distance = formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
@@ -597,3 +604,6 @@ private fun BeaconDetailsScreenPreview() {
 }
 
 private const val VALUE_PLACEHOLDER = "--"
+
+/** Closer than this, GPS can't tell you from the place: you are there. */
+private const val HERE_METERS = 10f

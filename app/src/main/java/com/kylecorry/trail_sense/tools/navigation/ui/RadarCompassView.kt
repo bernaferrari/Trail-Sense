@@ -198,6 +198,10 @@ class RadarCompassView(
         val clipRadius = if (DialVariant.bezel == 6) outerRadius * WAVY_RADIUS - dp(30f) else compassSize / 2f
         compassPath = Path().apply {
             addCircle(centerPixel.x, centerPixel.y, clipRadius, Path.Direction.CW)
+            // The centre holds the heading; a place you are standing on (or a path under your feet) drew a dot right
+            // on the number. Map layers keep out of it, the way the rim keeps out of the letters.
+            addCircle(centerPixel.x, centerPixel.y, compassSize * HEADING_CLEAR_FRACTION, Path.Direction.CW)
+            fillType = Path.FillType.EVEN_ODD
         }
         distanceSize = sp(10f)
         cardinalSize = sp(18f)
@@ -857,3 +861,6 @@ class RadarCompassView(
         const val HUB = 0.47f
     }
 }
+
+/** How much of the dial's middle (as a fraction of its size) stays clear of map layers for the heading. */
+private const val HEADING_CLEAR_FRACTION = 0.2f

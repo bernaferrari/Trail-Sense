@@ -953,6 +953,14 @@ private fun NearestBeacon(
     val directionText = "${formatService.formatDirection(bearing.direction)} ${
         formatService.formatDegrees(bearing.value, replace360 = true)
     }"
+    // At the place itself, "0 ft · Camp is N 0° from here" says nothing; name it instead.
+    if (currentLocation.distanceTo(beacon.coordinate) < 10f) {
+        PlacesKeyValue(
+            value = stringResource(R.string.place_you_are_here),
+            verdict = beacon.name
+        )
+        return
+    }
     // The answer as plain emphasised type; navigating and details stay on the beacon's row.
     PlacesKeyValue(
         value = distanceText,
@@ -1088,19 +1096,23 @@ private fun BeaconRow(
     }
     val bearing = remember(beacon.coordinate, currentLocation) { currentLocation.bearingTo(beacon.coordinate) }
     val hasLocation = currentLocation != Coordinate.zero
+    val isHere = hasLocation && currentLocation.distanceTo(beacon.coordinate) < 10f
     val badgeColor = Color(getBeaconBadgeColor(beacon, formatService))
     val badgeContent = if (badgeColor.luminance() > 0.5f) Color.Black else Color.White
     val subtitle = listOfNotNull(
         // "SE 131° · 2.87 km": which way and how far share the line under the name, so the name is the row's one
         // focal point and the trailing edge only holds the row's controls.
-        if (hasLocation) {
+        // At the place, "N 0° · 0 ft" becomes "You're here".
+        if (isHere) {
+            stringResource(R.string.place_you_are_here)
+        } else if (hasLocation) {
             "${formatService.formatDirection(bearing.direction)} ${
                 formatService.formatDegrees(bearing.value, replace360 = true)
             }"
         } else {
             null
         },
-        formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false),
+        if (isHere) null else formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false),
         beacon.elevation?.let {
             formatService.formatElevation(Distance.meters(it).convertTo(baseDistanceUnits))
         },

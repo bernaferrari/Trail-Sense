@@ -478,9 +478,12 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                         if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
                     ))
                 }
-                host.findNavController().openTool(Tools.BEACONS, bundle)
+                // Straight to the editor, as the map and the field guide do: Save and Back return here. Going
+                // through the Places list left the location in its arguments, so saving reopened a blank editor
+                // and every Save made another copy.
+                host.findNavController().navigateWithAnimation(R.id.placeBeaconFragment, bundle)
             } else {
-                host.findNavController().openTool(Tools.BEACONS)
+                host.findNavController().navigateWithAnimation(R.id.placeBeaconFragment)
             }
         }
 
