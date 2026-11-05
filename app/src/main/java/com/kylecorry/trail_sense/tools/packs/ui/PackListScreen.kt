@@ -34,7 +34,6 @@ import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,13 +62,29 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.observe
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -83,44 +98,86 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PackListToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { PackListController(host) }
+fun PackListToolScreen() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    // The activity is the app's IntentResultRetriever, which the CSV file picker needs.
+    val resultRetriever = LocalActivity.current as IntentResultRetriever
+    val viewModel = viewModel { PackListViewModel(PackRepo.getInstance(appContext)) }
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {}
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshSummaries()
+        onPauseOrDispose {}
     }
 
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) controller.refreshSummaries()
+    LaunchedEffect(viewModel) {
+        viewModel.openPack.collect { packId ->
+            tryOrNothing { navigator.navigate(Route.PackItemList(packId)) }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     PackListScreen(
-        packs = controller.packs,
-        loaded = controller.loaded,
-        summaries = controller.summaries,
-        onImportPack = controller::importPack,
-        onCreatePack = controller::createPack,
-        onOpenPack = { controller.openPack(it.id) },
-        onRenamePack = controller::renamePack,
-        onCopyPack = controller::copyPack,
-        onExportPack = controller::exportPack,
-        onDeletePack = controller::deletePack,
+        packs = viewModel.packs,
+        loaded = viewModel.loaded,
+        summaries = viewModel.summaries,
+        onImportPack = {
+            ImportPackingListCommand(context, resultRetriever, scope, effects, navigator).execute()
+        },
+        onCreatePack = {
+            Pickers.text(
+                context,
+                context.getString(R.string.new_packing_list),
+                null,
+                null,
+                hint = context.getString(R.string.name)
+            ) {
+                if (it != null) viewModel.createPack(it)
+            }
+        },
+        onOpenPack = { tryOrNothing { navigator.navigate(Route.PackItemList(it.id)) } },
+        onRenamePack = { pack ->
+            Pickers.text(
+                context,
+                context.getString(R.string.rename),
+                null,
+                pack.name,
+                hint = context.getString(R.string.name)
+            ) {
+                if (it != null) viewModel.renamePack(pack, it)
+            }
+        },
+        onCopyPack = { pack ->
+            Pickers.text(
+                context,
+                context.getString(R.string.new_packing_list),
+                null,
+                null,
+                hint = context.getString(R.string.name)
+            ) {
+                if (it != null) viewModel.copyPack(pack, it)
+            }
+        },
+        onExportPack = { ExportPackingListCommand(context, resultRetriever, scope, effects).execute(it) },
+        onDeletePack = { pack ->
+            Alerts.dialog(
+                context,
+                context.getString(R.string.delete_pack),
+                pack.name
+            ) { cancelled ->
+                if (!cancelled) viewModel.deletePack(pack)
+            }
+        },
         modifier = Modifier.fillMaxSize(),
         onBack = { dispatcher?.onBackPressed() }
     )
 }
 
-private class PackListController(private val host: TrailSenseDestinationHost) {
-
-    private val packRepo by lazy { PackRepo.getInstance(host.requireContext()) }
-    private var isInitialized = false
+/** The packing lists and how far along each is, over the pack repository. */
+internal class PackListViewModel(private val packRepo: IPackRepo) : ViewModel() {
 
     var packs by mutableStateOf(emptyList<Pack>())
         private set
@@ -129,19 +186,19 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
     var summaries by mutableStateOf(emptyMap<Long, PackSummary>())
         private set
 
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        loadPacks()
-    }
+    private val _openPack = Channel<Long>(Channel.BUFFERED)
+    /** A pack to open, after it is created or copied. */
+    val openPack: Flow<Long> = _openPack.receiveAsFlow()
 
-    private fun loadPacks() {
-        packRepo.getPacks().observe(host.lifecycleOwner) {
-            packs = it.sortedWith(compareBy { pack -> -pack.id })
-            loaded = true
-            loadSummaries(packs)
+    private var summaryJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            packRepo.getPacks().asFlow().collect {
+                packs = it.sortedWith(compareBy { pack -> -pack.id })
+                loaded = true
+                loadSummaries(packs)
+            }
         }
     }
 
@@ -150,7 +207,8 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun loadSummaries(packs: List<Pack>) {
-        host.inBackground {
+        summaryJob?.cancel()
+        summaryJob = viewModelScope.launch {
             val service = PackService()
             val result = withContext(Dispatchers.IO) {
                 packs.associate { pack ->
@@ -166,98 +224,31 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
         }
     }
 
-    fun renamePack(pack: Pack) {
-        Pickers.text(
-            host.requireContext(),
-            host.getString(R.string.rename),
-            null,
-            pack.name,
-            hint = host.getString(R.string.name)
-        ) {
-            if (it != null) {
-                host.inBackground {
-                    withContext(Dispatchers.IO) {
-                        packRepo.addPack(pack.copy(name = it))
-                    }
-                }
-            }
+    fun renamePack(pack: Pack, name: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { packRepo.addPack(pack.copy(name = name)) }
         }
-    }
-
-    fun exportPack(pack: Pack) {
-        ExportPackingListCommand(host).execute(pack)
     }
 
     fun deletePack(pack: Pack) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete_pack),
-            pack.name
-        ) { cancelled ->
-            if (!cancelled) {
-                host.inBackground {
-                    withContext(Dispatchers.IO) {
-                        packRepo.deletePack(pack)
-                    }
-                }
-            }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { packRepo.deletePack(pack) }
         }
     }
 
-    fun openPack(packId: Long) {
-        tryOrNothing {
-            host.findNavigator().navigate(Route.PackItemList(packId))
+    fun createPack(name: String) {
+        viewModelScope.launch {
+            val packId = withContext(Dispatchers.IO) { packRepo.addPack(Pack(0, name)) }
+            _openPack.send(packId)
         }
     }
 
-    fun importPack() {
-        ImportPackingListCommand(host).execute()
-    }
-
-    fun createPack() {
-        Pickers.text(
-            host.requireContext(),
-            host.getString(R.string.new_packing_list),
-            null,
-            null,
-            hint = host.getString(R.string.name)
-        ) {
-            if (it != null) {
-                host.inBackground {
-                    val packId = withContext(Dispatchers.IO) {
-                        packRepo.addPack(Pack(0, it))
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        openPack(packId)
-                    }
-                }
-            }
+    fun copyPack(oldPack: Pack, name: String) {
+        viewModelScope.launch {
+            val packId = withContext(Dispatchers.IO) { packRepo.copyPack(oldPack, Pack(0, name)) }
+            _openPack.send(packId)
         }
     }
-
-    fun copyPack(oldPack: Pack) {
-        Pickers.text(
-            host.requireContext(),
-            host.getString(R.string.new_packing_list),
-            null,
-            null,
-            hint = host.getString(R.string.name)
-        ) {
-            if (it != null) {
-                host.inBackground {
-                    val packId = withContext(Dispatchers.IO) {
-                        packRepo.copyPack(oldPack, Pack(0, it))
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        openPack(packId)
-                    }
-                }
-            }
-        }
-    }
-
 }
 
 /** How far along a packing list is, for its row and the Spotlight. */

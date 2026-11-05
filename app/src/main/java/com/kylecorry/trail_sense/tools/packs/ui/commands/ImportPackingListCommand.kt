@@ -1,51 +1,56 @@
 package com.kylecorry.trail_sense.tools.packs.ui.commands
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import android.os.Bundle
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
+import android.content.Context
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
-class ImportPackingListCommand(private val host: TrailSenseDestinationHost) : Command {
+/** Imports a LighterPack CSV as a new pack and opens it; [context] is the screen's (it shows dialogs). */
+class ImportPackingListCommand(
+    private val context: Context,
+    resultRetriever: IntentResultRetriever,
+    private val scope: CoroutineScope,
+    private val effects: ScreenEffects,
+    private val navigator: TrailSenseNavigator
+) : Command {
 
-    private val importService = LighterPackIOService.create(
-        host.requireContext(),
-        host.intentResultRetriever
-    )
-    private val repo = PackRepo.getInstance(host.requireContext())
+    private val importService = LighterPackIOService.create(context, resultRetriever)
+    private val repo = PackRepo.getInstance(context)
 
     override fun execute() {
-        host.inBackground(BackgroundMinimumState.Created) {
+        scope.launch {
             var items: List<PackItem>? = null
-            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
+            Alerts.withLoading(context, context.getString(R.string.loading)) {
                 items = importService.import()
             }
 
             // If items are null or empty, show a toast and return
             if (items.isNullOrEmpty()) {
-                host.toast(host.getString(R.string.no_items_found))
-                return@inBackground
+                effects.showMessage(context.getString(R.string.no_items_found))
+                return@launch
             }
 
             // Ask the user for the pack name
             // TODO: Default to the file name
             val name = CoroutinePickers.text(
-                host.requireContext(),
-                host.getString(R.string.name)
-            ) ?: return@inBackground
+                context,
+                context.getString(R.string.name)
+            ) ?: return@launch
 
             // Create the pack
             var packId = 0L
-            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
+            Alerts.withLoading(context, context.getString(R.string.loading)) {
                 packId = repo.addPack(Pack(0, name))
                 for (item in items) {
                     val newItem = item.copy(packId = packId)
@@ -54,7 +59,7 @@ class ImportPackingListCommand(private val host: TrailSenseDestinationHost) : Co
             }
 
             // Open the pack
-            host.findNavigator().navigate(Route.PackItemList(packId))
+            navigator.navigate(Route.PackItemList(packId))
         }
     }
 }

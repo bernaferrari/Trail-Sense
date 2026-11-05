@@ -4,7 +4,6 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -27,7 +26,6 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.placesJoinNext
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.shared.icons.trail.*
 
-import android.os.Bundle
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -67,7 +65,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.observe
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -76,7 +73,24 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
+import com.kylecorry.trail_sense.settings.infrastructure.PackPreferences
+import com.kylecorry.sol.units.Weight
+import com.kylecorry.sol.units.WeightUnits
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -98,172 +112,223 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PackItemListToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { PackItemListController(host) }
+fun PackItemListToolScreen(route: Route.PackItemList) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    // The activity is the app's IntentResultRetriever, which the CSV file picker needs.
+    val resultRetriever = LocalActivity.current as IntentResultRetriever
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val viewModel = viewModel {
+        PackItemListViewModel(
+            packId = route.packId,
+            itemRepo = PackRepo.getInstance(appContext),
+            prefs = prefs.packs,
+            weightUnits = { prefs.weightUnits }
+        )
+    }
+    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {}
+    LaunchedEffect(viewModel) {
+        viewModel.packDeleted.collect { navigator.popBackStack() }
     }
 
+    val totalWeight = viewModel.totalWeight
+    val packedPercent = viewModel.packedPercent
+
     PackItemScreen(
-        title = controller.title,
-        items = controller.sortedItems,
-        totalPercentPacked = controller.totalPercentPacked,
-        totalPackedWeight = controller.totalPackedWeight,
-        showWeightOverview = controller.showWeightOverview,
-        packedFraction = controller.packedFraction,
-        packedCount = controller.packedCount,
-        loaded = controller.loaded,
-        onSort = controller::changeSort,
-        onRename = { controller.pack?.let { current -> controller.renamePack(current) } },
-        onExport = { controller.pack?.let { current -> controller.exportPack(current) } },
-        onDeletePack = { controller.pack?.let { current -> controller.deletePack(current) } },
-        onClearAmounts = controller::clearAmounts,
-        onAddItem = controller::addItem,
-        onItemClick = controller::editItem,
-        onItemCheckedChange = controller::onItemCheckboxClicked,
-        onAddAmount = controller::add,
-        onSubtractAmount = controller::subtract,
-        onEditItem = controller::editItem,
-        onDeleteItem = controller::deleteItem,
+        title = viewModel.pack?.name.orEmpty(),
+        items = viewModel.sortedItems,
+        totalPercentPacked = stringResource(R.string.percent_packed, formatService.formatPercentage(packedPercent)),
+        totalPackedWeight = if (totalWeight != null) {
+            formatService.formatWeight(totalWeight, Units.getDecimalPlaces(totalWeight.units), false)
+        } else {
+            ""
+        },
+        showWeightOverview = totalWeight != null,
+        packedFraction = (packedPercent / 100f).coerceIn(0f, 1f),
+        packedCount = viewModel.packedCount,
+        loaded = viewModel.loaded,
+        onSort = {
+            val options = PackItemListViewModel.SORTS
+            Pickers.item(
+                context,
+                context.getString(R.string.sort),
+                options.map { context.getString(sortTitle(it)) },
+                options.indexOf(viewModel.sort)
+            ) {
+                if (it != null) viewModel.changeSort(options[it])
+            }
+        },
+        onRename = {
+            viewModel.pack?.let { pack ->
+                Pickers.text(
+                    context,
+                    context.getString(R.string.rename),
+                    null,
+                    pack.name,
+                    hint = context.getString(R.string.name)
+                ) {
+                    if (it != null) viewModel.renamePack(pack, it)
+                }
+            }
+        },
+        onExport = {
+            viewModel.pack?.let {
+                ExportPackingListCommand(context, resultRetriever, scope, effects).execute(it)
+            }
+        },
+        onDeletePack = {
+            viewModel.pack?.let { pack ->
+                Alerts.dialog(
+                    context,
+                    context.getString(R.string.delete_pack),
+                    pack.name
+                ) { cancelled ->
+                    if (!cancelled) viewModel.deletePack(pack)
+                }
+            }
+        },
+        onClearAmounts = {
+            Alerts.dialog(
+                context,
+                context.getString(R.string.clear_amounts),
+                context.getString(R.string.action_inventory_clear_confirm)
+            ) { cancelled ->
+                if (!cancelled) viewModel.clearAmounts()
+            }
+        },
+        onAddItem = { navigator.navigate(Route.CreatePackItem(packId = route.packId)) },
+        onItemClick = { navigator.navigate(Route.CreatePackItem(packId = route.packId, editItemId = it.id)) },
+        onItemCheckedChange = viewModel::toggleItem,
+        onAddAmount = { item ->
+            Pickers.number(
+                context,
+                context.getString(R.string.add),
+                null,
+                null,
+                allowNegative = false,
+                hint = context.getString(R.string.dialog_item_amount)
+            ) {
+                if (it != null) viewModel.addAmount(item, it.toDouble())
+            }
+        },
+        onSubtractAmount = { item ->
+            Pickers.number(
+                context,
+                context.getString(R.string.subtract),
+                null,
+                null,
+                allowNegative = false,
+                hint = context.getString(R.string.dialog_item_amount)
+            ) {
+                if (it != null) viewModel.addAmount(item, -it.toDouble())
+            }
+        },
+        onEditItem = { navigator.navigate(Route.CreatePackItem(packId = route.packId, editItemId = it.id)) },
+        onDeleteItem = { item ->
+            Alerts.dialog(
+                context,
+                context.getString(R.string.delete_packing_list_item),
+                item.name
+            ) { cancelled ->
+                if (!cancelled) viewModel.deleteItem(item)
+            }
+        },
         modifier = Modifier.fillMaxSize(),
         onBack = { dispatcher?.onBackPressed() }
     )
 }
 
-private class PackItemListController(private val host: TrailSenseDestinationHost) {
+private fun sortTitle(sort: String): Int {
+    return when (sort) {
+        "category" -> R.string.category
+        "percent_asc" -> R.string.pack_sort_percent_low_to_high
+        "percent_desc" -> R.string.pack_sort_percent_high_to_low
+        "weight_asc" -> R.string.pack_sort_weight_low_to_high
+        else -> R.string.pack_sort_weight_high_to_low
+    }
+}
 
-    private val itemRepo by lazy { PackRepo.getInstance(host.requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+/**
+ * One packing list's items, sorted by the saved sort, and how packed it is. Plain Kotlin over the pack repository and
+ * the packing list preferences; reports [packDeleted] once the pack is gone.
+ */
+internal class PackItemListViewModel(
+    private val packId: Long,
+    private val itemRepo: IPackRepo,
+    private val prefs: PackPreferences,
+    private val weightUnits: () -> WeightUnits
+) : ViewModel() {
+
     private val packService = PackService()
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private var isInitialized = false
-
     private var items = emptyList<PackItem>()
+
     var sortedItems by mutableStateOf(emptyList<PackItem>())
         private set
-    var pack: Pack? = null
+    var pack by mutableStateOf<Pack?>(null)
         private set
-    private var packId: Long = 0L
-    var title by mutableStateOf("")
+    var sort by mutableStateOf(prefs.packSort)
         private set
-    var totalPercentPacked by mutableStateOf("")
+    var totalWeight by mutableStateOf<Weight?>(null)
         private set
-    var totalPackedWeight by mutableStateOf("")
-        private set
-    var showWeightOverview by mutableStateOf(false)
-        private set
-    var packedFraction by mutableFloatStateOf(0f)
+    /** The packed share, 0 to 100, rounded down. */
+    var packedPercent by mutableFloatStateOf(0f)
         private set
     var packedCount by mutableStateOf(0 to 0)
         private set
     var loaded by mutableStateOf(false)
         private set
 
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        packId = host.routeAs<Route.PackItemList>().packId
-        setupUI()
-        host.inBackground {
-            loadPack(packId)
-        }
-    }
+    private val _packDeleted = Channel<Unit>(Channel.CONFLATED)
+    /** One event once the pack is deleted. */
+    val packDeleted: Flow<Unit> = _packDeleted.receiveAsFlow()
 
-    private suspend fun loadPack(packId: Long) {
-        val loaded = withContext(Dispatchers.IO) {
-            itemRepo.getPack(packId)
+    init {
+        viewModelScope.launch {
+            pack = withContext(Dispatchers.IO) { itemRepo.getPack(packId) }
         }
-        withContext(Dispatchers.Main) {
-            pack = loaded
-            title = loaded?.name.orEmpty()
-        }
-    }
-
-    private fun setupUI() {
-        itemRepo.getItemsFromPack(packId).observe(host.lifecycleOwner) {
-            items = it
-            updateItems()
-            loaded = true
-        }
-    }
-
-    fun addItem() {
-        host.findNavigator().navigate(Route.CreatePackItem(packId = packId))
-    }
-
-    fun clearAmounts() {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.clear_amounts),
-            host.getString(R.string.action_inventory_clear_confirm)
-        ) { cancelled ->
-            if (!cancelled) {
-                host.inBackground {
-                    withContext(Dispatchers.IO) {
-                        itemRepo.clearPackedAmounts(packId)
-                    }
-                }
+        viewModelScope.launch {
+            itemRepo.getItemsFromPack(packId).asFlow().collect {
+                items = it
+                updateItems()
+                loaded = true
             }
         }
     }
 
-    private fun onSortChange(newSort: String) {
-        sortedItems = sorts[newSort]?.sort(items) ?: items
-        prefs.packs.packSort = newSort
+    fun changeSort(newSort: String) {
+        sort = newSort
+        sortedItems = SORTERS[newSort]?.sort(items) ?: items
+        prefs.packSort = newSort
     }
 
-    fun renamePack(pack: Pack) {
-        Pickers.text(
-            host.requireContext(),
-            host.getString(R.string.rename),
-            null,
-            pack.name,
-            hint = host.getString(R.string.name)
-        ) {
-            if (it != null) {
-                host.inBackground {
-                    val renamed = pack.copy(name = it)
-                    withContext(Dispatchers.IO) {
-                        itemRepo.addPack(renamed)
-                    }
-                    withContext(Dispatchers.Main) {
-                        this@PackItemListController.pack = renamed
-                        title = renamed.name
-                    }
-                }
-            }
+    fun renamePack(pack: Pack, name: String) {
+        viewModelScope.launch {
+            val renamed = pack.copy(name = name)
+            withContext(Dispatchers.IO) { itemRepo.addPack(renamed) }
+            this@PackItemListViewModel.pack = renamed
         }
-    }
-
-    fun exportPack(pack: Pack) {
-        ExportPackingListCommand(host).execute(pack)
     }
 
     fun deletePack(pack: Pack) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete_pack),
-            pack.name
-        ) { cancelled ->
-            if (!cancelled) {
-                host.inBackground {
-                    withContext(Dispatchers.IO) {
-                        itemRepo.deletePack(pack)
-                    }
-                    withContext(Dispatchers.Main) {
-                        host.findNavigator().popBackStack()
-                    }
-                }
-            }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { itemRepo.deletePack(pack) }
+            _packDeleted.send(Unit)
         }
     }
 
-    fun onItemCheckboxClicked(item: PackItem) {
+    fun clearAmounts() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { itemRepo.clearPackedAmounts(packId) }
+        }
+    }
+
+    /** Packs all of [item] (one when it has no desired amount), or unpacks it when it is already fully packed. */
+    fun toggleItem(item: PackItem) {
         if (!item.isFullyPacked) {
             if (item.desiredAmount == 0.0) {
                 setAmount(item, 1.0)
@@ -276,126 +341,39 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
     }
 
     fun deleteItem(item: PackItem) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete_packing_list_item),
-            item.name
-        ) { cancelled ->
-            if (!cancelled) {
-                host.inBackground {
-                    withContext(Dispatchers.IO) {
-                        itemRepo.deleteItem(item)
-                    }
-                }
-            }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { itemRepo.deleteItem(item) }
         }
     }
 
-    fun editItem(item: PackItem) {
-        host.findNavigator().navigate(Route.CreatePackItem(packId = packId, editItemId = item.id))
-    }
-
-    fun add(item: PackItem) {
-        Pickers.number(
-            host.requireContext(),
-            host.getString(R.string.add),
-            null,
-            null,
-            allowNegative = false,
-            hint = host.getString(R.string.dialog_item_amount)
-        ) {
-            if (it != null) {
-                addAmount(item, it.toDouble())
-            }
-        }
-    }
-
-    fun subtract(item: PackItem) {
-        Pickers.number(
-            host.requireContext(),
-            host.getString(R.string.subtract),
-            null,
-            null,
-            allowNegative = false,
-            hint = host.getString(R.string.dialog_item_amount)
-        ) {
-            if (it != null) {
-                addAmount(item, -it.toDouble())
-            }
-        }
-    }
-
-    private fun addAmount(item: PackItem, amount: Double) {
-        host.inBackground {
-            withContext(Dispatchers.IO) {
-                itemRepo.addItem(
-                    item.copy(amount = max(0.0, item.amount + amount))
-                )
-            }
-        }
+    /** Adds [amount] (negative to subtract) to what is packed of [item], never below zero. */
+    fun addAmount(item: PackItem, amount: Double) {
+        setAmount(item, max(0.0, item.amount + amount))
     }
 
     private fun setAmount(item: PackItem, amount: Double) {
-        host.inBackground {
-            withContext(Dispatchers.IO) {
-                itemRepo.addItem(
-                    item.copy(amount = amount)
-                )
-            }
-        }
-    }
-
-    fun changeSort() {
-        val options = listOf("category", "percent_asc", "percent_desc", "weight_asc", "weight_desc")
-        Pickers.item(
-            host.requireContext(),
-            host.getString(R.string.sort),
-            options.map { getSortTitle(it) },
-            options.indexOf(prefs.packs.packSort)
-        ) {
-            if (it != null) {
-                onSortChange(options[it])
-            }
-        }
-    }
-
-    private val sorts = mapOf(
-        "category" to CategoryPackItemSort(),
-        "percent_asc" to PackedPercentPackItemSort(true),
-        "percent_desc" to PackedPercentPackItemSort(false),
-        "weight_asc" to WeightPackItemSort(true),
-        "weight_desc" to WeightPackItemSort(false),
-    )
-
-    private fun getSortTitle(sort: String): String {
-        return when (sort) {
-            "category" -> host.getString(R.string.category)
-            "percent_asc" -> host.getString(R.string.pack_sort_percent_low_to_high)
-            "percent_desc" -> host.getString(R.string.pack_sort_percent_high_to_low)
-            "weight_asc" -> host.getString(R.string.pack_sort_weight_low_to_high)
-            "weight_desc" -> host.getString(R.string.pack_sort_weight_high_to_low)
-            else -> ""
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { itemRepo.addItem(item.copy(amount = amount)) }
         }
     }
 
     private fun updateItems() {
-        val totalWeight = packService.getPackWeight(items, prefs.weightUnits)
-        val packedPercent = floor(packService.getPercentPacked(items))
-        showWeightOverview = totalWeight != null
-        totalPackedWeight = if (totalWeight != null) {
-            formatService.formatWeight(
-                totalWeight,
-                Units.getDecimalPlaces(totalWeight.units),
-                false
-            )
-        } else {
-            ""
-        }
-        totalPercentPacked =
-            host.getString(R.string.percent_packed, formatService.formatPercentage(packedPercent))
-        packedFraction = (packedPercent / 100f).coerceIn(0f, 1f)
+        totalWeight = packService.getPackWeight(items, weightUnits())
+        packedPercent = floor(packService.getPercentPacked(items))
         packedCount = items.count { it.isFullyPacked } to items.size
-        sortedItems = sorts[prefs.packs.packSort]?.sort(items) ?: items
+        sortedItems = SORTERS[prefs.packSort]?.sort(items) ?: items
+    }
+
+    companion object {
+        val SORTS = listOf("category", "percent_asc", "percent_desc", "weight_asc", "weight_desc")
+
+        private val SORTERS = mapOf(
+            "category" to CategoryPackItemSort(),
+            "percent_asc" to PackedPercentPackItemSort(true),
+            "percent_desc" to PackedPercentPackItemSort(false),
+            "weight_asc" to WeightPackItemSort(true),
+            "weight_desc" to WeightPackItemSort(false),
+        )
     }
 }
 
