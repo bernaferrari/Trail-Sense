@@ -1337,11 +1337,6 @@ private fun SightingPlot(
                 drawCircle(faint, radius = radiusPx * 0.62f, center = center, style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
                 drawLine(faint, Offset(center.x, 0f), Offset(center.x, size.height), 1.dp.toPx())
                 drawLine(faint, Offset(0f, center.y), Offset(size.width, center.y), 1.dp.toPx())
-                val northLabel = measurer.measure(north, labelStyle.copy(color = scheme.onSurfaceVariant))
-                drawText(
-                    northLabel,
-                    topLeft = Offset(center.x - northLabel.size.width / 2f, 10.dp.toPx())
-                )
 
                 fun start(point: Coordinate?) = screen(point?.let { plot.project(it) } ?: Offset.Zero)
 
@@ -1388,6 +1383,16 @@ private fun SightingPlot(
                     val label = measurer.measure(number, labelStyle.copy(color = ink))
                     drawText(label, topLeft = Offset(at.x + 10.dp.toPx(), at.y - label.size.height - 4.dp.toPx()))
                 }
+
+                // North last, on a small disc of the face, so a sighting line pointing north passes under it
+                // instead of striking through the letter.
+                val northLabel = measurer.measure(north, labelStyle.copy(color = scheme.onSurfaceVariant))
+                val northCenter = Offset(center.x, 10.dp.toPx() + northLabel.size.height / 2f)
+                drawCircle(face, radius = maxOf(northLabel.size.width, northLabel.size.height) / 2f + 3.dp.toPx(), center = northCenter)
+                drawText(
+                    northLabel,
+                    topLeft = Offset(center.x - northLabel.size.width / 2f, 10.dp.toPx())
+                )
             }
 
             // The answer, where the lines meet.

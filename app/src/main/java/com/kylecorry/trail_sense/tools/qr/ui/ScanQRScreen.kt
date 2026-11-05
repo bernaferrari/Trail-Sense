@@ -507,11 +507,15 @@ private fun QrScannerScreen(
                     )
                 }
 
-                item(key = "results_header") {
-                    TrailSenseGroupHeader(
-                        title = stringResource(R.string.history),
-                        modifier = Modifier.animateItem()
-                    )
+                // "History" heads real scans only; over the lone "No QR code detected" row it promised a list
+                // that isn't there.
+                if (history.isNotEmpty()) {
+                    item(key = "results_header") {
+                        TrailSenseGroupHeader(
+                            title = stringResource(R.string.history),
+                            modifier = Modifier.animateItem()
+                        )
+                    }
                 }
 
                 itemsIndexed(results, key = { _, text -> "result:$text" }) { index, text ->

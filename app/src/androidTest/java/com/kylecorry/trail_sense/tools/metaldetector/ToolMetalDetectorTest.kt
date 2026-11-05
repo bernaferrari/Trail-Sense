@@ -22,7 +22,7 @@ class ToolMetalDetectorTest : ToolTestBase(Tools.METAL_DETECTOR) {
         }
 
         // Verify the title
-        hasText(Regex("\\d+ uT"))
+        hasText(Regex("\\d+ µT"))
 
         // Make sure the chart is visible
         isVisible(id("metal_chart"))
@@ -34,7 +34,7 @@ class ToolMetalDetectorTest : ToolTestBase(Tools.METAL_DETECTOR) {
 
         // Can adjust threshold (just verify it is set)
         isVisible(id("threshold"))
-        hasText("5.0 uT")
+        hasText("5.0 µT")
 
         // Can play sound
         val originalVolume = mute()

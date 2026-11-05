@@ -458,9 +458,11 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     var toolPinnedIds: List<Long>
         get() {
+            // Navigation and Weather already have bottom-bar tabs, so the pins start with the next most loved
+            // tools instead of repeating them.
             return cache.getLongArray(context.getString(R.string.pref_pinned_tools)) ?: listOf(
-                Tools.NAVIGATION,
-                Tools.WEATHER,
+                Tools.BEACONS,
+                Tools.PATHS,
                 Tools.ASTRONOMY,
                 Tools.USER_GUIDE
             )

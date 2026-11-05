@@ -845,6 +845,9 @@ private fun MapEmptyState(
             TrailSenseEmptyState(
                 // A map with a "you are here" dot: this tab answers where you are, not which maps you keep.
                 icon = MapHereIcon,
+                // The same living map as the Offline Maps list (a tile rising, a route, a "you are here" pulse), so
+                // the tab and the tool tell one story.
+                illustration = { com.kylecorry.trail_sense.shared.views.OfflineMapsEmptyIllustration() },
                 title = stringResource(R.string.no_offline_maps),
                 description = stringResource(R.string.map_empty_description),
                 actionLabel = stringResource(R.string.add_offline_map),

@@ -317,7 +317,13 @@ private fun StormSky(
         effects,
         label = "zone"
     )
-    val face = scheme.surfaceContainerLow
+    // Waiting for a flash, the sky is faintly tinted with the accent so it reads as something to press, not an
+    // empty disc; once counting it steps back so the sound and the zone carry the colour.
+    val face by animateColorAsState(
+        if (stage == StrikeStage.Ready) lerp(scheme.surfaceContainerLow, scheme.primaryContainer, 0.55f) else scheme.surfaceContainerLow,
+        effects,
+        label = "face"
+    )
     val zoneLine = if (danger) scheme.error else scheme.outline
     val ghostColor = scheme.onSurfaceVariant
     val ink = if (danger) scheme.onErrorContainer else scheme.onSurface
@@ -494,7 +500,7 @@ private fun StormSky(
             Icon(
                 Icons.Rounded.Bolt,
                 contentDescription = null,
-                tint = lerp(if (stage == StrikeStage.Ready) scheme.onSurfaceVariant else accent, scheme.primary, flash),
+                tint = lerp(accent, scheme.primary, flash),
                 modifier = Modifier
                     .size(
                         when (stage) {

@@ -517,7 +517,7 @@
     <string name="clock_sync_notification">Clock sync - %s</string>
     <string name="clock_sync_instructions">Set the time to %s when the notification arrives</string>
     <string name="clock_sync_time_settings">Open time settings?</string>
-    <string name="magnetic_field_format_precise">%s uT</string>
+    <string name="magnetic_field_format_precise">%s µT</string>
     <string name="threshold">Threshold</string>
     <string name="tool_metal_detector_title">Metal Detector</string>
     <string name="metal_detector_disclaimer">Only detects magnetic metals (ex. iron)</string>
@@ -1277,6 +1277,7 @@
     <string name="for_historic_temperatures">For historic temperatures</string>
     <string name="hot">Hot</string>
     <string name="cold">Cold</string>
+    <string name="weather_alerts_tap_for_advice">Tap for what to do</string>
     <string name="weather_alert_storm_description">Prepare for high winds and heavy precipitation.</string>
     <string name="weather_alert_hot_description">Prepare for hot temperatures. Take extra precautions against heat exhaustion and heat stroke.</string>
     <string name="weather_alert_cold_description">Prepare for cold temperatures. Take extra precautions against hypothermia and frostbite.</string>

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
+import androidx.compose.material.icons.outlined.WbTwilight
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -30,7 +31,8 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, host: TrailSenseDestina
 
     override fun onCreate() {
         super.onCreate()
-        setIcon(TrailIcons.SunsetNotification)
+        // The sun on the horizon, outlined like the other app-bar actions (the solid disc read as "download").
+        setIcon(androidx.compose.material.icons.Icons.Outlined.WbTwilight)
     }
 
     override fun onLongClick(): Boolean {

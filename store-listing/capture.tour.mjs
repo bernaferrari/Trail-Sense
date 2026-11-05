@@ -6,14 +6,15 @@
 // Alone:      npx screenshot-studio tour [--tools ruler,clock]   (tool names as below; both themes)
 
 // Tool ids from tools/tools/infrastructure/Tools.kt. Local Messaging (39) and Local Talk (40) are left out: they
-// need the separate Trail Sense Comms app, so the app never shows them.
+// need the separate Trail Sense Comms app, so the app never shows them. Experimentation (36) is a debug-only
+// scratch screen, not part of the app.
 const TOOLS = {
   flashlight: 1, whistle: 2, ruler: 3, pedometer: 4, 'cliff-height': 5, navigation: 6, beacons: 7,
   'offline-maps': 8, paths: 9, 'triangulate-location': 10, clinometer: 11, 'bubble-level': 12, clock: 13,
   astronomy: 14, 'water-boil-timer': 15, tides: 16, battery: 17, 'solar-panel-aligner': 18, 'light-meter': 19,
   weather: 20, climate: 21, 'temperature-estimation': 22, clouds: 23, 'lightning-strike-distance': 24,
   'augmented-reality': 25, convert: 26, 'packing-lists': 27, 'metal-detector': 28, 'white-noise': 29, notes: 30,
-  'qr-code-scanner': 31, sensors: 32, diagnostics: 33, settings: 34, 'user-guide': 35, experimentation: 36,
+  'qr-code-scanner': 31, sensors: 32, diagnostics: 33, settings: 34, 'user-guide': 35,
   'mirror-camera': 37, 'turn-back': 38, 'survival-guide': 41, 'field-guide': 42, 'signal-finder': 43,
   ballistics: 44, declination: 46, map: 47, magnifier: 48,
 };
@@ -53,8 +54,19 @@ const wanted = (d, name) => {
   return !only || String(only).split(',').map(s => s.trim()).includes(name);
 };
 
-const scenes = suffix => Object.fromEntries(Object.entries(TOOLS).map(([name, id]) =>
-  [name + suffix, d => wanted(d, name) ? open(d, id) : false]));
+/** The Tools tab itself, the app's hub: a cold start, then its bottom-bar item. */
+async function toolsTab(d) {
+  await d.launch();
+  await dismiss(d);
+  await d.tap('Tools');
+  await d.settle(3000);
+}
+
+const scenes = suffix => ({
+  ['tools-tab' + suffix]: d => wanted(d, 'tools-tab') ? toolsTab(d) : false,
+  ...Object.fromEntries(Object.entries(TOOLS).map(([name, id]) =>
+    [name + suffix, d => wanted(d, name) ? open(d, id) : false])),
+});
 
 /** @type {import('screenshot-studio').Tour} */
 export default {

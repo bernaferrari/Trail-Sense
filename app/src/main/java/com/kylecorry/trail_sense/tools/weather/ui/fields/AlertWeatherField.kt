@@ -14,13 +14,20 @@ class AlertWeatherField(private val alerts: List<WeatherAlert>) : WeatherField {
         }
 
         val title = context.getString(R.string.alerts)
-        val description = alerts.joinToString("\n") { formatWeatherAlert(context, it) }
+        // The row names the alert itself ("Cold"), and under it the first thing to do; "Alerts" over "Cold" said
+        // nothing. The dialog keeps the full advice.
+        val rowTitle = alerts.joinToString(" · ") { formatWeatherAlert(context, it) }
+        val description = if (alerts.size == 1) {
+            formatWeatherAlertDescription(context, alerts.first()).substringBefore(". ").trimEnd('.') + "."
+        } else {
+            context.getString(R.string.weather_alerts_tap_for_advice)
+        }
         val moreDescription =
             alerts.joinToString("\n\n") { formatWeatherAlertDescription(context, it) }
 
         return WeatherListItem(
             id = 6293,
-            title = title,
+            title = rowTitle,
             icon = TrailIcons.Alert,
             iconTint = AppColor.Yellow.color,
             trailingText = description

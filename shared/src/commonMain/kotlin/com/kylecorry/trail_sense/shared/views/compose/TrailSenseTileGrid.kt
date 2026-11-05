@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.toShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -107,11 +108,12 @@ fun trailSenseAccentScheme(accent: Color): androidx.compose.material3.ColorSchem
     }
 }
 
-/** The 40 dp rounded icon well every tile and row uses. */
+/** The 40 dp icon well every tile uses: the same Cookie6 as the list rows' wells, so a tool looks the same everywhere. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TrailSenseIconWell(colors: TrailSenseWellColors, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = androidx.compose.material3.MaterialShapes.Cookie6Sided.toShape(),
         color = colors.container,
         contentColor = colors.content,
         modifier = modifier.size(40.dp)
