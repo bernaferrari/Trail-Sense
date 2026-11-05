@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.pointerInput
@@ -122,8 +123,6 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMarker
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.CanvasCircle
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARLineLayer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARMarkerLayer
-import java.time.Duration
-import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -136,8 +135,13 @@ fun ClinometerToolScreen(
     val context = LocalContext.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(context, effects, lifecycleOwner) {
-        ClinometerController(context, effects, lifecycleOwner)
+    val viewModel = viewModel {
+        val prefs = UserPreferences(context.applicationContext)
+        ClinometerViewModel(baselineDistance = { prefs.clinometer.baselineDistance })
+    }
+    // The sensors, dialogs and drawings (dial, sight, AR markers, camera) stay with the composition.
+    val controller = remember(context, effects, lifecycleOwner, viewModel) {
+        ClinometerController(context, effects, lifecycleOwner, viewModel)
     }
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -164,7 +168,8 @@ fun ClinometerToolScreen(
 private class ClinometerController(
     private val context: Context,
     private val effects: ScreenEffects,
-    private val lifecycleOwner: LifecycleOwner
+    private val lifecycleOwner: LifecycleOwner,
+    private val viewModel: ClinometerViewModel
 ) : ClinometerLockController {
 
     private var clinometerViews: ClinometerViews? =
@@ -190,22 +195,13 @@ private class ClinometerController(
         DeviceOrientation.Orientation.FlatInverse,
     )
 
-    // Lock
-    private val minimumHoldDuration = Duration.ofMillis(200)
-    private val minimumHoldAngle = 0.5f
-    private var lockedAngle1: Float? = null
-    private var lockedIncline1: Float? = null
-    private var lockedAngle2: Float? = null
-    private var lockedIncline2: Float? = null
-    private var lockStartTime: Instant? = null
-    private var hadLock = false
-    private var isHolding = false
     private val lockState = TrackedState(false)
 
-    private var distanceAway: Distance? = null
-    private var knownHeight: Distance? = null
-
-    private var useCamera = true
+    private var useCamera: Boolean
+        get() = viewModel.useCamera
+        set(value) {
+            viewModel.useCamera = value
+        }
 
     // Augmented reality
     private val markerLayer = ARMarkerLayer()
@@ -299,8 +295,8 @@ private class ClinometerController(
             context, context.getString(R.string.measure), listOf(
                 context.getString(R.string.height), context.getString(R.string.distance)
             ), when {
-                distanceAway != null -> 0
-                knownHeight != null -> 1
+                viewModel.distanceAway != null -> 0
+                viewModel.knownHeight != null -> 1
                 else -> -1
             }
         ) {
@@ -318,12 +314,11 @@ private class ClinometerController(
         CustomUiUtils.pickDistance(
             context,
             units,
-            distanceAway,
+            viewModel.distanceAway,
             context.getString(R.string.clinometer_measure_height_title)
         ) { distance, _ ->
             if (distance != null) {
-                distanceAway = distance
-                knownHeight = null
+                viewModel.measureHeight(distance)
                 views.clinometerTitle.isRightButtonSelected = true
                 CustomUiUtils.disclaimer(
                     context,
@@ -345,14 +340,13 @@ private class ClinometerController(
         CustomUiUtils.pickDistance(
             context,
             units,
-            knownHeight,
+            viewModel.knownHeight,
             context.getString(R.string.clinometer_measure_distance_title),
             hint = context.getString(R.string.height),
             showFeetAndInches = true
         ) { distance, _ ->
             if (distance != null) {
-                knownHeight = distance
-                distanceAway = null
+                viewModel.measureDistance(distance)
                 views.clinometerTitle.isRightButtonSelected = true
 
                 CustomUiUtils.disclaimer(
@@ -374,9 +368,9 @@ private class ClinometerController(
     }
 
     fun onResume() {
-        if (distanceAway == null && knownHeight == null) {
-            distanceAway = prefs.clinometer.baselineDistance
-            views.clinometerTitle.isRightButtonSelected = distanceAway != null
+        if (viewModel.distanceAway == null && viewModel.knownHeight == null) {
+            viewModel.onResume()
+            views.clinometerTitle.isRightButtonSelected = viewModel.distanceAway != null
         }
 
         if (useCamera) {
@@ -405,7 +399,7 @@ private class ClinometerController(
         }
 
         // Update the lock state
-        lockState.write(lockedAngle1 != null)
+        lockState.write(viewModel.isLocked)
 
         if (lockState.hasChanges) {
             views.clinometerTitle.isLocked = lockState.read()
@@ -424,9 +418,8 @@ private class ClinometerController(
         views.cameraViewHolder.isVisible = useCamera
         views.clinometer.isInvisible = useCamera
 
-        val angle = lockedAngle2 ?: (if (!isHolding) lockedAngle1 else null) ?: getCurrentAngle()
-        val incline =
-            lockedIncline2 ?: (if (!isHolding) lockedIncline1 else null) ?: clinometer.incline
+        val angle = viewModel.displayedAngle(getCurrentAngle())
+        val incline = viewModel.displayedIncline(clinometer.incline)
 
         views.clinometer.angle = angle
         views.cameraClinometer.inclination = incline
@@ -453,15 +446,15 @@ private class ClinometerController(
     }
 
     private fun updateMeasurement() {
-        val distanceAway = distanceAway
-        val knownHeight = knownHeight
+        val distanceAway = viewModel.distanceAway
+        val knownHeight = viewModel.knownHeight
 
         when {
             distanceAway != null -> {
                 views.estimatedHeight.isSet = true
                 views.estimatedHeight.description = context.getString(R.string.height)
                 views.estimatedHeight.title = formatter.formatDistance(
-                    getHeight(distanceAway).toRelativeDistance(), 1, false
+                    viewModel.getHeight(distanceAway, clinometer.incline).toRelativeDistance(), 1, false
                 )
             }
 
@@ -469,7 +462,7 @@ private class ClinometerController(
                 views.estimatedHeight.isSet = true
                 views.estimatedHeight.description = context.getString(R.string.distance)
                 views.estimatedHeight.title = formatter.formatDistance(
-                    getDistance(knownHeight).toRelativeDistance(), 1, false
+                    viewModel.getDistance(knownHeight, clinometer.incline).toRelativeDistance(), 1, false
                 )
             }
 
@@ -481,7 +474,7 @@ private class ClinometerController(
     }
 
     private fun updateARLine() {
-        if (startMarker != null && (isHolding || endMarker != null)) {
+        if (startMarker != null && (viewModel.isHolding || endMarker != null)) {
             lineLayer.setLines(
                 listOf(
                     ARLine(
@@ -490,7 +483,7 @@ private class ClinometerController(
                                 views.arView.azimuth,
                                 views.arView.inclination,
                                 isTrueNorth = prefs.compass.useTrueNorth,
-                                distance = distanceAway?.meters()?.value ?: 10f
+                                distance = viewModel.distanceAway?.meters()?.value ?: 10f
                             )
                         ), Color.WHITE, 1f
                     )
@@ -523,88 +516,37 @@ private class ClinometerController(
         return !invalidOrientations.contains(deviceOrientation.orientation)
     }
 
-    private fun getBottomIncline(): Float {
-        val locked1 = lockedIncline1 ?: 0f
-        val locked2 = lockedIncline2 ?: clinometer.incline
-        return min(locked1, locked2)
-    }
-
-    private fun getTopIncline(): Float {
-        val locked1 = lockedIncline1 ?: 0f
-        val locked2 = lockedIncline2 ?: clinometer.incline
-        return max(locked1, locked2)
-    }
-
-    private fun getHeight(distanceAway: Distance): Distance {
-        return Geology.getHeightFromInclination(
-            distanceAway, getBottomIncline(), getTopIncline()
-        )
-    }
-
-    private fun getDistance(height: Distance): Distance {
-        return Geology.getDistanceFromInclination(
-            height, getBottomIncline(), getTopIncline()
-        )
-    }
-
     override fun onTouchDown() {
-        if (!isOrientationValid() || isHolding) {
+        if (!isOrientationValid()) {
             return
         }
-
-        isHolding = true
-        hadLock = lockedAngle1 != null
-        clearLock()
-        lockedAngle1 = getCurrentAngle()
-        lockedIncline1 = clinometer.incline
-        lockStartTime = Instant.now()
-
-        // Update the UI
-        views.cameraClinometer.startInclination = lockedIncline1
-        views.clinometer.startAngle = lockedAngle1
+        if (!viewModel.startHold(getCurrentAngle(), clinometer.incline)) {
+            return
+        }
+        clearLockDrawings()
+        views.cameraClinometer.startInclination = viewModel.lockedIncline1
+        views.clinometer.startAngle = viewModel.lockedAngle1
         startMarker = addMarker()
     }
 
     override fun onTouchUp() {
-        if (!isOrientationValid() || !isHolding) {
+        if (!isOrientationValid()) {
             return
         }
-
-        // Determine if the user did a sweep or single angle
-        val deltaAngle = abs(clinometer.incline - (lockedIncline1 ?: 0f))
-        val deltaTime = Duration.between(lockStartTime, Instant.now())
-        if (deltaAngle < minimumHoldAngle || deltaTime < minimumHoldDuration) {
-
-            // These aren't needed for a single angle mode
-            views.cameraClinometer.startInclination = null
-            views.clinometer.startAngle = null
-
-            // If there was a lock, clear it instead of setting a new one
-            if (hadLock) {
-                clearLock()
+        when (viewModel.endHold(getCurrentAngle(), clinometer.incline)) {
+            ClinometerHoldResult.None -> Unit
+            ClinometerHoldResult.Sweep -> endMarker = addMarker()
+            ClinometerHoldResult.SingleAngle -> {
+                // These aren't needed for a single angle
+                views.cameraClinometer.startInclination = null
+                views.clinometer.startAngle = null
             }
 
-            isHolding = false
-            return
+            ClinometerHoldResult.Cleared -> clearLockDrawings()
         }
-
-        lockedAngle2 = getCurrentAngle()
-        lockedIncline2 = clinometer.incline
-
-        // Update UI
-        endMarker = addMarker()
-
-        isHolding = false
     }
 
-    private fun clearLock() {
-        lockedAngle1 = null
-        lockedIncline1 = null
-        lockedAngle2 = null
-        lockedIncline2 = null
-        lockStartTime = null
-
-        // Update UI
+    private fun clearLockDrawings() {
         startMarker = null
         endMarker = null
         lineLayer.clearLines()
@@ -616,7 +558,7 @@ private class ClinometerController(
     private fun addMarker(): ARPoint {
         // Distance away is distance from device to the object at 0 inclination
         // Calculate the distance away using the hypotenuse of the triangle
-        val adjacent = distanceAway?.meters()?.value ?: 10f
+        val adjacent = viewModel.distanceAway?.meters()?.value ?: 10f
         val hypotenuse = adjacent / cosDegrees(clinometer.incline)
         val point = SphericalARPoint(
             views.arView.azimuth,
