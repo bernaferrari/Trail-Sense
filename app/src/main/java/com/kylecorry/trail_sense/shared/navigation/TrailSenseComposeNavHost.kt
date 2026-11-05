@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationHost
@@ -54,12 +55,17 @@ fun TrailSenseNavDisplay(
     } else {
         null
     }
-    CompositionLocalProvider(LocalTrailSenseBack provides back) {
+    CompositionLocalProvider(LocalTrailSenseBack provides back, LocalNavigator provides navigator) {
         NavDisplay(
             backStack = backStack,
             modifier = modifier,
             onBack = { navigator.popBackStack() },
-            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+            // Each entry keeps its saved state and owns its ViewModels: they live while the screen is on the stack and
+            // are cleared when it is popped.
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
             // The family's shared-axis motion: forward slides in from the right over a fade, back slides from the
             // left; switching tabs (a new root) fades through.
             transitionSpec = { if (navigator.lastChangeWasTabSwitch) fadeThrough() else slide(1) },

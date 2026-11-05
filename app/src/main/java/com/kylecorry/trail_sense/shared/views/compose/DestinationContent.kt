@@ -259,7 +259,7 @@ fun DestinationContent(
             Route.Climate -> ClimateToolScreen(this)
             Route.PackList -> PackListToolScreen(this)
             is Route.PackItemList -> PackItemListToolScreen(this)
-            is Route.CreatePackItem -> CreateItemToolScreen(this)
+            is Route.CreatePackItem -> CreateItemToolScreen(route)
             Route.FieldGuide -> FieldGuideToolScreen(this)
             is Route.FieldGuidePage -> FieldGuidePageToolScreen(this)
             Route.FieldGuideSettings -> FieldGuideSettingsToolScreen(this)

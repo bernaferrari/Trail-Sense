@@ -2,7 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -10,7 +9,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
 import android.text.InputType
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -28,7 +26,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.Channel
+import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.andromeda.preferences.IPreferences
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,10 +55,8 @@ import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -71,185 +75,139 @@ import kotlinx.coroutines.withContext
 import kotlin.math.floor
 
 @Composable
-fun CreateItemToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CreateItemController(host) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+fun CreateItemToolScreen(route: Route.CreatePackItem) {
+    val context = LocalContext.current.applicationContext
+    val navigator = LocalNavigator.current
+    val viewModel = viewModel {
+        CreateItemViewModel(
+            route = route,
+            repo = PackRepo.getInstance(context),
+            preferences = DependencyRegistry.get<PreferencesSubsystem>().preferences
+        )
+    }
+    val nameMapper = remember(context) { ItemCategoryStringMapper(context) }
+    val formatService = remember(context) { FormatService.getInstance(context) }
+    val categories = remember(nameMapper) {
+        ItemCategory.entries.map { it to nameMapper.getString(it) }.sortedBy { it.second }
+    }
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {
-            controller.onDestroy()
-        }
+    UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { navigator.popBackStack() }
     }
 
     CreateItemScreen(
-        title = stringResource(
-            if (controller.itemId == 0L) R.string.create_item_title else R.string.edit_item_title
-        ),
-        name = controller.name,
-        amount = controller.amountText,
-        desiredAmount = controller.desiredAmountText,
-        category = controller.selectedCategory,
-        categories = controller.sortedCategories.map { it to controller.nameMapper.getString(it) },
-        weight = controller.weight,
-        weightUnit = controller.selectedWeightUnit,
-        weightUnits = controller.formatService.sortWeightUnits(WeightUnits.entries),
-        isOptional = controller.isOptional,
-        onNameChange = { controller.name = it },
-        onAmountChange = { controller.amountText = it },
-        onDesiredAmountChange = { controller.desiredAmountText = it },
-        onCategoryChange = { controller.category = it },
+        title = stringResource(if (route.editItemId == 0L) R.string.create_item_title else R.string.edit_item_title),
+        name = viewModel.name,
+        amount = viewModel.amountText,
+        desiredAmount = viewModel.desiredAmountText,
+        category = viewModel.category,
+        categories = categories,
+        weight = viewModel.weight,
+        weightUnit = viewModel.weightUnit,
+        weightUnits = formatService.sortWeightUnits(WeightUnits.entries),
+        isOptional = viewModel.isOptional,
+        onNameChange = { viewModel.name = it },
+        onAmountChange = { viewModel.amountText = it },
+        onDesiredAmountChange = { viewModel.desiredAmountText = it },
+        onCategoryChange = { viewModel.category = it },
         onWeightChange = { newWeight, unit ->
-            controller.weight = newWeight
-            controller.selectedWeightUnit = unit
+            viewModel.weight = newWeight
+            viewModel.weightUnit = unit
         },
-        onOptionalChange = { controller.isOptional = it },
-        onSave = controller::saveItem,
-        onBack = { dispatcher?.onBackPressed() }
+        onOptionalChange = { viewModel.isOptional = it },
+        onSave = viewModel::save,
+        onBack = { navigator.popBackStack() }
     )
 }
 
-private class CreateItemController(private val host: TrailSenseDestinationHost) {
+/**
+ * The item form's state: plain Kotlin over the pack repository and preferences, no Android UI types. It loads the
+ * item being edited, remembers the last category and weight unit, and reports [saved] once the item is stored.
+ */
+internal class CreateItemViewModel(
+    private val route: Route.CreatePackItem,
+    private val repo: PackRepo,
+    private val preferences: IPreferences
+) : ViewModel() {
 
-    private val itemRepo by lazy { PackRepo.getInstance(host.requireContext()) }
-    val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val prefs by lazy { DependencyRegistry.get<PreferencesSubsystem>() }
-    private var backCallback: androidx.activity.OnBackPressedCallback? = null
-    private var isInitialized = false
-
-    private val defaultCategory by lazy {
-        val lastCategoryId = prefs.preferences.getInt(KEY_LAST_CATEGORY)
-        ItemCategory.entries.firstOrNull { it.id == lastCategoryId } ?: ItemCategory.Other
-    }
-
-    private val defaultWeightUnit by lazy {
-        val lastUnitId = prefs.preferences.getInt(KEY_LAST_WEIGHT_UNIT)
-        WeightUnits.entries.firstOrNull { it.id == lastUnitId }
-    }
-
-    val nameMapper by lazy { ItemCategoryStringMapper(host.requireContext()) }
-
-    val sortedCategories by lazy {
-        ItemCategory.entries.sortedBy { nameMapper.getString(it) }
-    }
+    private val defaultCategory =
+        ItemCategory.entries.firstOrNull { it.id == preferences.getInt(KEY_LAST_CATEGORY) } ?: ItemCategory.Other
+    private val defaultWeightUnit =
+        WeightUnits.entries.firstOrNull { it.id == preferences.getInt(KEY_LAST_WEIGHT_UNIT) }
 
     private var editingItem by mutableStateOf<PackItem?>(null)
     var name by mutableStateOf("")
     var amountText by mutableStateOf("")
     var desiredAmountText by mutableStateOf("")
-    var category by mutableStateOf<ItemCategory?>(null)
+    var category by mutableStateOf(defaultCategory)
     var weight by mutableStateOf<Weight?>(null)
-    var selectedWeightUnit by mutableStateOf<WeightUnits?>(null)
+    var weightUnit by mutableStateOf(defaultWeightUnit)
     var isOptional by mutableStateOf(false)
 
-    private var packId: Long = 0
-    var itemId: Long = 0
-        private set
+    private val _saved = Channel<Unit>(Channel.CONFLATED)
+    /** One event per save, after the item is stored. */
+    val saved: Flow<Unit> = _saved.receiveAsFlow()
 
-    val selectedCategory: ItemCategory
-        get() = category ?: defaultCategory
-
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        itemId = host.routeAs<Route.CreatePackItem>().editItemId
-        packId = host.routeAs<Route.CreatePackItem>().packId
-        category = defaultCategory
-        selectedWeightUnit = defaultWeightUnit
-        backCallback = host.promptIfUnsavedChanges(::hasChanges)
-
-        if (itemId != 0L) {
-            loadEditingItem(itemId)
-        }
-    }
-
-    fun onDestroy() {
-        backCallback?.remove()
-        backCallback = null
-    }
-
-    private fun loadEditingItem(id: Long) {
-        host.lifecycleScope.launch {
-            val item = withContext(Dispatchers.IO) {
-                itemRepo.getItem(id)
-            } ?: return@launch
-
-            editingItem = item
-            name = item.name
-            amountText = DecimalFormatter.format(item.amount, 4, false)
-            desiredAmountText = DecimalFormatter.format(item.desiredAmount, 4, false)
-            category = item.category
-            weight = item.weight
-            selectedWeightUnit = item.weight?.units ?: defaultWeightUnit
-            isOptional = item.isOptional
-        }
-    }
-
-    fun saveItem() {
-        val selectedUnit = selectedWeightUnit
-        val itemCategory = selectedCategory
-        val currentWeight = weight
-        val currentName = name
-        val amount = amountText.toDoubleCompat() ?: 0.0
-        val desiredAmount = desiredAmountText.toDoubleCompat() ?: 0.0
-        val optional = isOptional
-
-        host.lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                prefs.preferences.putInt(KEY_LAST_CATEGORY, itemCategory.id)
-                selectedUnit?.let { prefs.preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
-
-                itemRepo.addItem(
-                    PackItem(
-                        editingItem?.id ?: 0,
-                        packId,
-                        currentName,
-                        itemCategory,
-                        amount,
-                        desiredAmount,
-                        currentWeight,
-                        optional
-                    )
-                )
+    init {
+        if (route.editItemId != 0L) {
+            viewModelScope.launch {
+                val item = withContext(Dispatchers.IO) { repo.getItem(route.editItemId) } ?: return@launch
+                editingItem = item
+                name = item.name
+                amountText = DecimalFormatter.format(item.amount, 4, false)
+                desiredAmountText = DecimalFormatter.format(item.desiredAmount, 4, false)
+                category = item.category
+                weight = item.weight
+                weightUnit = item.weight?.units ?: defaultWeightUnit
+                isOptional = item.isOptional
             }
-
-            backCallback?.remove()
-            host.findNavigator().popBackStack()
         }
     }
 
-    private fun hasChanges(): Boolean {
-        val itemCategory = selectedCategory
-        val amount = amountText.toDoubleCompat() ?: 0.0
-        val desiredAmount = desiredAmountText.toDoubleCompat() ?: 0.0
-
-        return !nothingEntered() && (
-            name != editingItem?.name ||
-                amount != editingItem?.amount ||
-                desiredAmount != editingItem?.desiredAmount ||
-                itemCategory != editingItem?.category ||
-                weight != editingItem?.weight ||
-                isOptional != editingItem?.isOptional
-            )
-    }
-
-    private fun nothingEntered(): Boolean {
-        if (editingItem != null) {
-            return false
+    val hasChanges: Boolean
+        get() {
+            val item = editingItem
+            if (item == null) {
+                return name.isNotBlank() || amountText.isNotBlank() || desiredAmountText.isNotBlank() ||
+                    category != defaultCategory || weight != null
+            }
+            return name != item.name ||
+                amount() != item.amount ||
+                desiredAmount() != item.desiredAmount ||
+                category != item.category ||
+                weight != item.weight ||
+                isOptional != item.isOptional
         }
 
-        return name.isBlank() &&
-            amountText.isBlank() &&
-            desiredAmountText.isBlank() &&
-            selectedCategory == defaultCategory &&
-            weight == null
+    fun save() {
+        val item = PackItem(
+            editingItem?.id ?: 0,
+            route.packId,
+            name,
+            category,
+            amount(),
+            desiredAmount(),
+            weight,
+            isOptional
+        )
+        val unit = weightUnit
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                preferences.putInt(KEY_LAST_CATEGORY, item.category.id)
+                unit?.let { preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
+                repo.addItem(item)
+            }
+            _saved.send(Unit)
+        }
     }
 
-    companion object {
-        private const val KEY_LAST_CATEGORY = "cache_packing_lists_last_category"
-        private const val KEY_LAST_WEIGHT_UNIT = "cache_packing_lists_last_weight_unit"
+    private fun amount() = amountText.toDoubleCompat() ?: 0.0
+    private fun desiredAmount() = desiredAmountText.toDoubleCompat() ?: 0.0
+
+    private companion object {
+        const val KEY_LAST_CATEGORY = "cache_packing_lists_last_category"
+        const val KEY_LAST_WEIGHT_UNIT = "cache_packing_lists_last_weight_unit"
     }
 }
 
@@ -498,11 +456,8 @@ private fun WeightInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("item_weight_input"),
-            label = if (unit == WeightUnits.Pounds) {
-                stringResource(R.string.pounds)
-            } else {
-                stringResource(R.string.weight)
-            },
+            // The unit picker beside the fields names the unit, so this field is always just "Weight".
+            label = stringResource(R.string.weight),
             keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
             inCard = true
         )
