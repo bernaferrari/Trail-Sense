@@ -225,7 +225,7 @@ fun DestinationContent(
             // --- Tool screens that receive the host for callbacks / services ---
             Route.Triangulate -> TriangulateToolScreen(this)
             Route.Clock -> ClockToolScreen(this)
-            Route.SignalFinder -> SignalFinderToolScreen(this)
+            Route.SignalFinder -> SignalFinderToolScreen()
             Route.TurnBack -> TurnBackToolScreen(this)
             Route.Settings -> SettingsToolScreen(this)
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen(this)
