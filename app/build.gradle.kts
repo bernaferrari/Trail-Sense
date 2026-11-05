@@ -162,7 +162,6 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.documentfile)
     implementation(libs.gridlayout)
-    implementation(libs.preference.ktx)
     implementation(libs.work.runtime.ktx)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
@@ -192,6 +191,11 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+    constraints {
+        // Instrumented tests run against the debug app's classpath, and androidx.test:core needs the newer futures.
+        debugImplementation("androidx.concurrent:concurrent-futures:1.2.0")
+        debugImplementation("androidx.concurrent:concurrent-futures-ktx:1.2.0")
+    }
     androidTestImplementation(libs.compose.ui.test.junit4)
 
     // Material
@@ -200,7 +204,6 @@ dependencies {
 
     // Andromeda
     implementation(libs.andromeda.core)
-    implementation(libs.andromeda.fragments)
     implementation(libs.andromeda.forms)
     implementation(libs.andromeda.csv)
     implementation(libs.andromeda.background)
@@ -254,10 +257,8 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.uiautomator)
-    androidTestImplementation(libs.androidx.fragment.testing)
     androidTestImplementation(libs.androidx.test.arch.core)
     androidTestImplementation(libs.work.testing)
-    debugImplementation(libs.androidx.fragment.testing.manifest)
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.jupiter.engine)

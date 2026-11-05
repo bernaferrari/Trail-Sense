@@ -431,7 +431,7 @@ private fun PackListItem(
                 modifier = Modifier.testTag("pack_list_item_menu"),
                 actions = listOf(
                     PacksMenuAction(stringResource(R.string.rename)) { onRenamePack(pack) },
-                    PacksMenuAction(stringResource(androidx.preference.R.string.copy)) { onCopyPack(pack) },
+                    PacksMenuAction(stringResource(android.R.string.copy)) { onCopyPack(pack) },
                     PacksMenuAction(stringResource(R.string.export)) { onExportPack(pack) },
                     PacksMenuAction(stringResource(R.string.delete)) { onDeletePack(pack) }
                 )

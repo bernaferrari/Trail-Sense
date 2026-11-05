@@ -46,7 +46,7 @@ object Share {
     ) {
 
         val titles = mapOf(
-            ShareAction.Copy to host.getString(androidx.preference.R.string.copy),
+            ShareAction.Copy to host.getString(android.R.string.copy),
             ShareAction.QR to host.getString(R.string.qr_code),
             ShareAction.Send to host.getString(R.string.share_action_send),
             ShareAction.Maps to host.getString(R.string.maps),
