@@ -2,6 +2,17 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import android.content.Context
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -11,12 +22,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
@@ -29,7 +38,6 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.io.IOFactory
-import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
@@ -38,11 +46,9 @@ import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsInfoRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
-import com.kylecorry.trail_sense.settings.ui.goBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.tools.infrastructure.observe
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherCsvConverter
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherPreferences
@@ -56,12 +62,22 @@ import java.time.Instant
 import java.time.LocalTime
 
 @Composable
-fun WeatherSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { WeatherSettingsController(host) }
+fun WeatherSettingsToolScreen() {
+    val context = LocalContext.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    // MainActivity is the app's IntentResultRetriever, which the CSV export's file picker needs.
+    val intentResultRetriever = LocalActivity.current as IntentResultRetriever
+    val controller = remember(context) {
+        WeatherSettingsController(context, scope, effects, intentResultRetriever)
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    ToolBroadcastEffect(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
+        controller.onMonitorStateChanged()
+    }
+
     DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 controller.onResume()
@@ -77,16 +93,21 @@ fun WeatherSettingsToolScreen(host: TrailSenseDestinationHost) {
     controller.Content()
 }
 
-private class WeatherSettingsController(private val host: TrailSenseDestinationHost) {
+private class WeatherSettingsController(
+    private val context: Context,
+    private val scope: CoroutineScope,
+    private val effects: ScreenEffects,
+    private val intentResultRetriever: IntentResultRetriever
+) {
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    private val userPrefs by lazy { UserPreferences(host.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
+    private val userPrefs by lazy { UserPreferences(context) }
     private val prefs by lazy { userPrefs.weather }
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
 
     private val weatherMonitorService by lazy {
         Tools.getService(
-            host.requireContext(),
+            context,
             WeatherToolRegistration.SERVICE_WEATHER_MONITOR
         )!!
     }
@@ -96,8 +117,9 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
 
     @Composable
     fun Content() {
+        val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
         val quickActionOptions = remember {
-            Tools.getQuickActions(host.requireContext()).map { WeatherOption(it.id.toString(), it.name) }
+            Tools.getQuickActions(context).map { WeatherOption(it.id.toString(), it.name) }
         }
         val pressureHistoryOptions = remember {
             options(R.array.pressure_history_entries, R.array.pressure_history_values)
@@ -176,7 +198,7 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
 
         TrailSensePage(
             title = stringResource(R.string.weather),
-            onBack = host::goBack,
+            onBack = { dispatcher?.onBackPressed() },
             backLabel = stringResource(R.string.back)
         ) {
             trailSenseSection("general", title = generalTitle) {
@@ -266,9 +288,9 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
                         label = notificationChannelTitle,
                         selected = notificationSummary,
                         onClick = {
-                            host.startActivity(
+                            context.startActivity(
                                 Intents.notificationSettings(
-                                    host.requireContext(),
+                                    context,
                                     CurrentWeatherAlerter.WEATHER_CHANNEL_ID
                                 )
                             )
@@ -320,7 +342,7 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
                                 selected = formatService.formatTime(dailyWeatherTime, false),
                                 onClick = {
                                     Pickers.time(
-                                        host.requireContext(),
+                                        context,
                                         userPrefs.use24HourTime,
                                         dailyWeatherTime
                                     ) { time ->
@@ -448,7 +470,7 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
                 hint = stringResource(R.string.frequency),
                 onDurationPicked = {
                     if (it != null) {
-                        ChangeWeatherFrequencyCommand(host.requireContext()) { frequency ->
+                        ChangeWeatherFrequencyCommand(context) { frequency ->
                             updateFrequency = frequency
                         }.execute(it)
                     }
@@ -459,14 +481,11 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
         }
     }
 
-    fun onCreate() {
-        Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
-            setMonitorWeatherState?.invoke(
-                weatherMonitorService.isEnabled(),
-                !weatherMonitorService.isBlocked()
-            )
-            true
-        }
+    fun onMonitorStateChanged() {
+        setMonitorWeatherState?.invoke(
+            weatherMonitorService.isEnabled(),
+            !weatherMonitorService.isBlocked()
+        )
     }
 
     fun onResume() {
@@ -479,12 +498,12 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
     }
 
     private fun onMonitorWeatherChanged(enabled: Boolean) {
-        host.inBackground {
+        scope.launch {
             if (enabled && prefs.shouldMonitorWeather) {
                 weatherMonitorService.enable()
                 RequestRemoveBatteryRestrictionCommand(
-                    host.requireContext(),
-                    RemoveBatteryRestrictionsAlerter(host)
+                    context,
+                    WeatherBatteryRestrictionsAlerter(context, effects, scope)
                 ).execute()
             } else {
                 weatherMonitorService.disable()
@@ -493,7 +512,7 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
     }
 
     private fun restartWeatherMonitor() {
-        host.inBackground {
+        scope.launch {
             weatherMonitorService.restart()
         }
     }
@@ -505,7 +524,7 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            host.requireContext(),
+            context,
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -517,11 +536,11 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<WeatherOption> {
-        return options(host.getResources().getStringArray(entriesId).toList(), valuesId)
+        return options(context.resources.getStringArray(entriesId).toList(), valuesId)
     }
 
     private fun options(entries: List<CharSequence>, valuesId: Int): List<WeatherOption> {
-        val values = host.getResources().getStringArray(valuesId)
+        val values = context.resources.getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             WeatherOption(value, entries.getOrElse(index) { value }.toString())
         }
@@ -583,7 +602,7 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
 
     private suspend fun getDebugTimingSummary(): String? {
         return withContext(Dispatchers.Default) {
-            val readings = WeatherRepo.getInstance(host.requireContext()).getAll()
+            val readings = WeatherRepo.getInstance(context).getAll()
                 .zipWithNext { a, b -> Duration.between(a.time, b.time).seconds / 60f }
 
             if (readings.isEmpty()) {
@@ -608,11 +627,11 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
 
     private fun exportWeatherData() {
         val exporter = IOFactory().createCsvService(
-            host.requireContext(),
-            host.intentResultRetriever
+            context,
+            intentResultRetriever
         )
-        val repo = WeatherRepo.getInstance(host.requireContext())
-        host.inBackground(BackgroundMinimumState.Created) {
+        val repo = WeatherRepo.getInstance(context)
+        scope.launch {
             val exported = withContext(Dispatchers.IO) {
                 val readings = repo.getAll().sortedByDescending { it.time }
                 val csv = WeatherCsvConverter().toCSV(readings)
@@ -620,7 +639,7 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
             }
             if (exported) {
                 withContext(Dispatchers.Main) {
-                    Alerts.toast(host.requireContext(), getString(R.string.weather_exported))
+                    Alerts.toast(context, getString(R.string.weather_exported))
                 }
             }
         }
@@ -628,14 +647,14 @@ private class WeatherSettingsController(private val host: TrailSenseDestinationH
 
     private fun notificationSummary(): String {
         val isBlocked = Notify.isChannelBlocked(
-            host.requireContext(),
+            context,
             CurrentWeatherAlerter.WEATHER_CHANNEL_ID
         )
         return if (isBlocked) getString(R.string.off) else getString(R.string.on)
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return host.getString(id, *args)
+        return context.getString(id, *args)
     }
 
     private fun getStringPreference(key: Int, default: String): String {

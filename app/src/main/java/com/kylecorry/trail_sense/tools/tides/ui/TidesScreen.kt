@@ -4,6 +4,15 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -32,7 +41,6 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
-import android.annotation.SuppressLint
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
@@ -110,7 +118,6 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseHeroCard
@@ -136,57 +143,150 @@ import java.time.LocalTime
 import java.time.ZonedDateTime
 
 @Composable
-fun TidesToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { TidesController(host) }
+fun TidesToolScreen() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val viewModel = viewModel {
+        TidesViewModel(
+            tideService = TideService(appContext),
+            loadTable = LoadTideTableCommand(appContext)::execute,
+            locationSubsystem = LocationSubsystem.getInstance(appContext)
+        )
+    }
+    val formatService = remember(context) { FormatService.getInstance(context) }
+    val units = remember(context) { UserPreferences(context).baseDistanceUnits }
+    val tideFormatter = remember(context) { TideFormatter(context) }
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    DisposableEffect(controller, lifecycleOwner) {
+    DisposableEffect(viewModel, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                Lifecycle.Event.ON_DESTROY -> controller.onPause()
+                Lifecycle.Event.ON_RESUME -> {
+                    if (viewModel.needsTable) {
+                        viewModel.resetDisplayDate()
+                        ShowTideDisclaimerCommand(context, navigator) {
+                            viewModel.loadTideTable()
+                        }.execute()
+                    } else {
+                        viewModel.startCurrentRefresh()
+                    }
+                }
+
+                Lifecycle.Event.ON_PAUSE -> viewModel.stop()
+                Lifecycle.Event.ON_DESTROY -> viewModel.stop()
                 else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onPause()
+            viewModel.stop()
         }
     }
 
+    LaunchedEffect(viewModel) {
+        viewModel.noTides.collect {
+            val cancelled = CoroutineAlerts.dialog(
+                context,
+                context.getString(R.string.no_tides),
+                context.getString(R.string.calibrate_new_tide)
+            )
+            if (!cancelled) {
+                navigator.navigate(Route.TideList)
+            }
+        }
+    }
+
+    val current = viewModel.current
+    val nextTide = viewModel.nextTide
+    val table = viewModel.table
+
+    val title = if (current == null) {
+        "--"
+    } else {
+        val name = tideFormatter.getTideTypeName(current.type)
+        val waterLevel = if (current.waterLevel != null) {
+            val height = Distance.meters(current.waterLevel).convertTo(units)
+            " (${formatService.formatDistance(height, 2, true)})"
+        } else {
+            ""
+        }
+        name + waterLevel
+    }
+
+    // Where the estimate comes from, said plainly: the built-in model for where you are ("Nearby" in the tide table
+    // list), or the table you picked by name. Empty until the tide is known, so loading never shows a bare "Nearby".
+    val subtitle = when {
+        table == null || current == null -> ""
+        table.isAutomaticNearbyTide -> stringResource(R.string.tides_source_nearby)
+        else -> stringResource(
+            R.string.tides_source_table,
+            table.name
+                ?: table.location?.let { formatService.formatLocation(it) }
+                ?: stringResource(android.R.string.untitled)
+        )
+    }
+
+    // The verdict: which way the water is going and until when ("Falling until 12:45 PM"). The next turn is implied
+    // by the direction, so a "Low" tide that is still falling never reads as "Next: Low".
+    val nextTideText = nextTide?.let { tide ->
+        val time = formatService.formatTime(tide.time.toLocalTime(), includeSeconds = false)
+        when (current?.rising) {
+            true -> stringResource(R.string.tides_rising_until, time)
+            false -> stringResource(R.string.tides_falling_until, time)
+            null -> stringResource(
+                R.string.tides_next_tide,
+                stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
+                time
+            )
+        }
+    }
+
+    // The time until the water turns, like "2h 14m".
+    val timeUntilNextTide = viewModel.timeUntilNextTide?.takeIf { !it.isNegative }?.let {
+        formatService.formatDuration(it)
+    }
+
     TidesScreen(
-        title = controller.getCurrentTideTitle(),
-        subtitle = controller.getTableSubtitle(),
-        isRising = controller.current?.rising,
-        nextTide = controller.getNextTideText(),
-        timeUntilNextTide = controller.getTimeUntilNextTide(),
-        nextTideIsHigh = controller.nextTide?.isHigh,
-        levelFraction = controller.levelFraction,
-        turnRemaining = controller.turnRemaining,
-        isLoading = controller.isLoading,
-        displayDate = controller.displayDate,
-        daily = controller.daily,
-        tides = controller.getDisplayTides(),
-        onDateChange = controller::onDisplayDateSelected,
-        onOpenTideList = controller::openTideList,
+        title = title,
+        subtitle = subtitle,
+        isRising = current?.rising,
+        nextTide = nextTideText,
+        timeUntilNextTide = timeUntilNextTide,
+        nextTideIsHigh = nextTide?.isHigh,
+        levelFraction = viewModel.levelFraction,
+        turnRemaining = viewModel.turnRemaining,
+        isLoading = viewModel.isLoading,
+        displayDate = viewModel.displayDate,
+        daily = viewModel.daily,
+        tides = viewModel.getDisplayTides(),
+        onDateChange = viewModel::onDisplayDateSelected,
+        onOpenTideList = {
+            viewModel.clearTable()
+            navigator.navigate(Route.TideList)
+        },
         onBack = { dispatcher?.onBackPressed() }
     )
 }
 
-private class TidesController(private val host: TrailSenseDestinationHost) {
+/**
+ * The tide estimate's state: plain Kotlin over the tide service, the table loader and the location subsystem. It
+ * loads the chosen table, keeps the current tide fresh each minute while shown, and reports [noTides] when there is
+ * no table to estimate from.
+ */
+internal class TidesViewModel(
+    private val tideService: TideService,
+    private val loadTable: suspend () -> TideTable?,
+    private val locationSubsystem: LocationSubsystem
+) : ViewModel() {
 
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val tideService by lazy { TideService(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val units by lazy { prefs.baseDistanceUnits }
-    private val currentTideCommand by lazy { CurrentTideCommand(tideService) }
-    private val dailyTideCommand by lazy { DailyTideCommand(tideService) }
-    private val loadTideCommand by lazy { LoadTideTableCommand(host.requireContext()) }
+    private val currentTideCommand = CurrentTideCommand(tideService)
+    private val dailyTideCommand = DailyTideCommand(tideService)
 
-    private var table by mutableStateOf<TideTable?>(null)
+    var table by mutableStateOf<TideTable?>(null)
+        private set
     var current by mutableStateOf<CurrentTideData?>(null)
         private set
     var daily by mutableStateOf<DailyTideData?>(null)
@@ -200,35 +300,36 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
     /** How far the water is between today's lowest (0) and highest (1) levels right now. */
     var levelFraction by mutableStateOf<Float?>(null)
         private set
-    private var timeUntilNextTide by mutableStateOf<Duration?>(null)
+    var timeUntilNextTide by mutableStateOf<Duration?>(null)
+        private set
     /** How much of the way from the last turn to the next one is still to go (1 just after a turn, 0 at it). */
     var turnRemaining by mutableStateOf<Float?>(null)
         private set
+
+    private val _noTides = Channel<Unit>(Channel.CONFLATED)
+    /** One event each time a load finds no tide table. */
+    val noTides: Flow<Unit> = _noTides.receiveAsFlow()
 
     private var currentTideJob: Job? = null
     private var dailyTideJob: Job? = null
     private var currentRefreshJob: Job? = null
 
-    fun onResume() {
-        if (table == null) {
-            displayDate = LocalDate.now()
-            ShowTideDisclaimerCommand(host.requireContext(), host.findNavigator()) {
-                loadTideTable()
-            }.execute()
-        } else {
-            startCurrentRefresh()
-        }
+    /** True until a table is loaded, and again after the person leaves to pick another. */
+    val needsTable: Boolean
+        get() = table == null
+
+    fun resetDisplayDate() {
+        displayDate = LocalDate.now()
     }
 
-    fun onPause() {
+    fun stop() {
         currentTideJob?.cancel()
         dailyTideJob?.cancel()
         currentRefreshJob?.cancel()
     }
 
-    fun openTideList() {
+    fun clearTable() {
         table = null
-        host.findNavigator().navigate(Route.TideList)
     }
 
     fun onDisplayDateSelected(date: LocalDate) {
@@ -236,7 +337,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         updateDailyTide()
     }
 
-    private fun loadTideTable(newTable: TideTable? = null) {
+    fun loadTideTable() {
         isLoading = true
         daily = null
         current = null
@@ -245,9 +346,8 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         timeUntilNextTide = null
         turnRemaining = null
 
-        host.lifecycleScope.launch {
-            val updatedTable = newTable ?: loadTideCommand.execute()
-            val locationSubsystem = LocationSubsystem.getInstance(host.requireContext())
+        viewModelScope.launch {
+            val updatedTable = loadTable()
             if (updatedTable?.isAutomaticNearbyTide == true &&
                 locationSubsystem.locationAge > Duration.ofMinutes(30)
             ) {
@@ -258,14 +358,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
             isLoading = false
 
             if (updatedTable == null) {
-                val cancelled = CoroutineAlerts.dialog(
-                    host.requireContext(),
-                    host.getString(R.string.no_tides),
-                    host.getString(R.string.calibrate_new_tide)
-                )
-                if (!cancelled) {
-                    host.findNavigator().navigate(Route.TideList)
-                }
+                _noTides.send(Unit)
                 return@launch
             }
 
@@ -279,7 +372,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         val currentTable = table ?: return
         val date = displayDate
         dailyTideJob?.cancel()
-        dailyTideJob = host.lifecycleScope.launch {
+        dailyTideJob = viewModelScope.launch {
             daily = dailyTideCommand.execute(currentTable, date)
         }
     }
@@ -287,7 +380,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
     private fun updateCurrentTide() {
         val currentTable = table ?: return
         currentTideJob?.cancel()
-        currentTideJob = host.lifecycleScope.launch {
+        currentTideJob = viewModelScope.launch {
             current = currentTideCommand.execute(currentTable)
             val next = getNextTide(currentTable)
             val previous = getPreviousTide(currentTable)
@@ -305,9 +398,9 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         }
     }
 
-    private fun startCurrentRefresh() {
+    fun startCurrentRefresh() {
         currentRefreshJob?.cancel()
-        currentRefreshJob = host.lifecycleScope.launch {
+        currentRefreshJob = viewModelScope.launch {
             while (isActive) {
                 updateCurrentTide()
                 delay(Duration.ofMinutes(1).toMillis())
@@ -353,59 +446,6 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
         val range = today.waterLevelRange.end - today.waterLevelRange.start
         if (range <= 0f) return null
         return ((reading.value - today.waterLevelRange.start) / range).coerceIn(0f, 1f)
-    }
-
-    /** The time until the water turns, like "2h 14m". */
-    fun getTimeUntilNextTide(): String? {
-        val duration = timeUntilNextTide?.takeIf { !it.isNegative } ?: return null
-        return formatService.formatDuration(duration)
-    }
-
-    /**
-     * The verdict: which way the water is going and until when ("Falling until 12:45 PM"). The next turn is implied
-     * by the direction, so a "Low" tide that is still falling never reads as "Next: Low".
-     */
-    fun getNextTideText(): String? {
-        val tide = nextTide ?: return null
-        val time = formatService.formatTime(tide.time.toLocalTime(), includeSeconds = false)
-        return when (current?.rising) {
-            true -> host.getString(R.string.tides_rising_until, time)
-            false -> host.getString(R.string.tides_falling_until, time)
-            null -> host.getString(
-                R.string.tides_next_tide,
-                host.getString(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
-                time
-            )
-        }
-    }
-
-    @SuppressLint("SetTextI18n")
-    fun getCurrentTideTitle(): String {
-        val current = current ?: return "--"
-        val name = TideFormatter(host.requireContext()).getTideTypeName(current.type)
-        val waterLevel = if (current.waterLevel != null) {
-            val height = Distance.meters(current.waterLevel).convertTo(units)
-            " (${formatService.formatDistance(height, 2, true)})"
-        } else {
-            ""
-        }
-        return name + waterLevel
-    }
-
-    /**
-     * Where the estimate comes from, said plainly: the built-in model for where you are ("Nearby" in the tide table
-     * list), or the table you picked by name. Empty until the tide is known, so loading never shows a bare "Nearby".
-     */
-    fun getTableSubtitle(): String {
-        val table = table ?: return ""
-        if (current == null) return ""
-        if (table.isAutomaticNearbyTide) {
-            return host.getString(R.string.tides_source_nearby)
-        }
-        val name = table.name
-            ?: table.location?.let { formatService.formatLocation(it) }
-            ?: host.getString(android.R.string.untitled)
-        return host.getString(R.string.tides_source_table, name)
     }
 }
 

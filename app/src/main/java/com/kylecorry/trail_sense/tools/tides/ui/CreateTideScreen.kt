@@ -2,13 +2,22 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import com.kylecorry.sol.units.DistanceUnits
+
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -40,7 +49,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,11 +81,9 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -103,61 +109,131 @@ import java.time.ZonedDateTime
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
-fun CreateTideToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CreateTideController(host) }
+fun CreateTideToolScreen(route: Route.CreateTide) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val viewModel = viewModel {
+        CreateTideViewModel(
+            editTideId = route.editTideId,
+            tideRepo = TideTableRepo.getInstance(appContext),
+            units = prefs.baseDistanceUnits,
+            includeHarmonic = isDebug()
+        )
+    }
+    val formatService = remember(context) { FormatService.getInstance(context) }
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {
-            controller.onDestroy()
-        }
+    val estimateTypeNames = mapOf(
+        EstimateType.Clock to stringResource(R.string.tide_clock),
+        EstimateType.LunitidalIntervalAuto to stringResource(R.string.lunitidal_interval_auto),
+        EstimateType.LunitidalIntervalManualLocal to stringResource(R.string.lunitidal_interval_local),
+        EstimateType.LunitidalIntervalManualUTC to stringResource(R.string.lunitidal_interval_utc),
+        EstimateType.TideModel to stringResource(R.string.tide_model_auto),
+        EstimateType.Harmonic to stringResource(R.string.harmonic)
+    )
+    val estimateTypeDescriptions = mapOf(
+        EstimateType.Clock to stringResource(R.string.tide_estimation_description_tide_clock),
+        EstimateType.LunitidalIntervalAuto to stringResource(R.string.tide_estimation_description_lunitidal_interval_auto),
+        EstimateType.LunitidalIntervalManualLocal to stringResource(R.string.tide_estimation_description_lunitidal_interval_local),
+        EstimateType.LunitidalIntervalManualUTC to stringResource(R.string.tide_estimation_description_lunitidal_interval_utc),
+        EstimateType.TideModel to stringResource(R.string.tide_estimation_description_tide_model),
+        EstimateType.Harmonic to "!! NEED TO MANUALLY INSERT INTO DB !!"
+    )
+
+    UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { navigator.navigateUp() }
     }
 
     CreateTideScreen(
-        name = controller.name,
-        location = controller.location,
-        isSemidiurnal = controller.isSemidiurnal,
-        estimateType = controller.estimateType,
-        estimateTypes = controller.estimateTypes,
-        estimateTypeNames = controller.estimateTypeNameMap,
-        estimateTypeDescriptions = controller.estimateTypeDescriptionMap,
-        lunitidalInterval = controller.lunitidalInterval,
-        tideEntries = controller.tideEntries,
-        canSave = controller.formIsValid(),
-        isLocationRequired = controller.estimateType == EstimateType.LunitidalIntervalManualLocal,
-        isDurationVisible = controller.isLunitidalIntervalManual(),
-        isTideTableRequired = controller.isTideTableRequired(),
-        formatService = controller.formatService,
-        onNameChange = { controller.name = it },
-        onLocationChange = { controller.location = it },
-        onFrequencyChange = { controller.isSemidiurnal = it },
-        onEstimateTypeChange = { controller.estimateType = it },
-        onLunitidalIntervalChange = { controller.lunitidalInterval = it },
-        onAddTideEntry = controller::addTideEntry,
-        onTideEntryChange = controller::updateTideEntry,
-        onTideEntryDelete = controller::deleteTideEntry,
-        onTideTimeClick = controller::pickTideTime,
-        onTideHeightClick = controller::pickTideHeight,
-        onHelp = controller::showHelp,
-        onSave = controller::saveTide,
+        name = viewModel.name,
+        location = viewModel.location,
+        isSemidiurnal = viewModel.isSemidiurnal,
+        estimateType = viewModel.estimateType,
+        estimateTypes = viewModel.estimateTypes,
+        estimateTypeNames = estimateTypeNames,
+        estimateTypeDescriptions = estimateTypeDescriptions,
+        lunitidalInterval = viewModel.lunitidalInterval,
+        tideEntries = viewModel.tideEntries,
+        canSave = viewModel.formIsValid(),
+        isLocationRequired = viewModel.estimateType == EstimateType.LunitidalIntervalManualLocal,
+        isDurationVisible = viewModel.isLunitidalIntervalManual(),
+        isTideTableRequired = viewModel.isTideTableRequired(),
+        formatService = formatService,
+        onNameChange = { viewModel.name = it },
+        onLocationChange = { viewModel.location = it },
+        onFrequencyChange = { viewModel.isSemidiurnal = it },
+        onEstimateTypeChange = { viewModel.estimateType = it },
+        onLunitidalIntervalChange = { viewModel.lunitidalInterval = it },
+        onAddTideEntry = viewModel::addTideEntry,
+        onTideEntryChange = viewModel::updateTideEntry,
+        onTideEntryDelete = { entry ->
+            viewModel.deleteTideEntry(entry)
+            scope.launch {
+                val undo = effects.showSnackbar(
+                    context.getString(R.string.tide_deleted),
+                    actionLabel = context.getString(R.string.undo)
+                )
+                if (undo) {
+                    viewModel.restoreTideEntry(entry)
+                }
+            }
+        },
+        onTideTimeClick = { entry ->
+            CustomUiUtils.pickDatetime(
+                context,
+                prefs.use24HourTime,
+                entry.time?.toLocalDateTime() ?: LocalDateTime.now()
+            ) {
+                if (it != null) {
+                    viewModel.updateTideEntry(entry.copy(time = it.toZonedDateTime()))
+                }
+            }
+        },
+        onTideHeightClick = { entry ->
+            val distanceUnits = formatService.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
+            CustomUiUtils.pickDistance(
+                context,
+                distanceUnits,
+                entry.height,
+                context.getString(R.string.height)
+            ) { distance, cancelled ->
+                if (!cancelled) {
+                    viewModel.updateTideEntry(entry.copy(height = distance))
+                }
+            }
+        },
+        onHelp = {
+            UserGuideUtils.showGuide(
+                context,
+                navigator,
+                R.raw.guide_tool_tides
+            )
+        },
+        onSave = viewModel::saveTide,
         onBack = { dispatcher?.onBackPressed() }
     )
 }
 
-private class CreateTideController(private val host: TrailSenseDestinationHost) {
+/**
+ * The tide table form's state: plain Kotlin over the tide table repository. It loads the table being edited, builds
+ * the table from the form (null while the form is incomplete), and reports [saved] once the table is stored.
+ */
+internal class CreateTideViewModel(
+    editTideId: Long,
+    private val tideRepo: TideTableRepo,
+    private val units: DistanceUnits,
+    includeHarmonic: Boolean
+) : ViewModel() {
 
-    val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val tideRepo by lazy { TideTableRepo.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val units by lazy { prefs.baseDistanceUnits }
+    private var editingId: Long = editTideId
+    private var editingTide by mutableStateOf<TideTable?>(null)
 
-    private var editingId: Long = 0
-    private var editingTide: TideTable? = null
-
-    private var backCallback: OnBackPressedCallback? = null
     private var nextTideEntryId = 1L
-    private var isInitialized = false
 
     var name by mutableStateOf("")
     var location by mutableStateOf<Coordinate?>(null)
@@ -166,66 +242,34 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
     var lunitidalInterval by mutableStateOf<Duration?>(null)
     var tideEntries by mutableStateOf<List<TideEntry>>(emptyList())
 
-    val estimateTypeNameMap by lazy {
-        mapOf(
-            EstimateType.Clock to host.getString(R.string.tide_clock),
-            EstimateType.LunitidalIntervalAuto to host.getString(R.string.lunitidal_interval_auto),
-            EstimateType.LunitidalIntervalManualLocal to host.getString(R.string.lunitidal_interval_local),
-            EstimateType.LunitidalIntervalManualUTC to host.getString(R.string.lunitidal_interval_utc),
-            EstimateType.TideModel to host.getString(R.string.tide_model_auto),
-            EstimateType.Harmonic to host.getString(R.string.harmonic)
-        )
-    }
+    val estimateTypes = listOfNotNull(
+        EstimateType.Clock,
+        EstimateType.LunitidalIntervalAuto,
+        EstimateType.LunitidalIntervalManualLocal,
+        EstimateType.LunitidalIntervalManualUTC,
+        EstimateType.TideModel,
+        if (includeHarmonic) EstimateType.Harmonic else null
+    )
 
-    val estimateTypeDescriptionMap by lazy {
-        mapOf(
-            EstimateType.Clock to host.getString(R.string.tide_estimation_description_tide_clock),
-            EstimateType.LunitidalIntervalAuto to host.getString(R.string.tide_estimation_description_lunitidal_interval_auto),
-            EstimateType.LunitidalIntervalManualLocal to host.getString(R.string.tide_estimation_description_lunitidal_interval_local),
-            EstimateType.LunitidalIntervalManualUTC to host.getString(R.string.tide_estimation_description_lunitidal_interval_utc),
-            EstimateType.TideModel to host.getString(R.string.tide_estimation_description_tide_model),
-            EstimateType.Harmonic to "!! NEED TO MANUALLY INSERT INTO DB !!"
-        )
-    }
+    private val _saved = Channel<Unit>(Channel.CONFLATED)
+    /** One event per save, after the table is stored. */
+    val saved: Flow<Unit> = _saved.receiveAsFlow()
 
-    val estimateTypes by lazy {
-        listOfNotNull(
-            EstimateType.Clock,
-            EstimateType.LunitidalIntervalAuto,
-            EstimateType.LunitidalIntervalManualLocal,
-            EstimateType.LunitidalIntervalManualUTC,
-            EstimateType.TideModel,
-            if (isDebug()) EstimateType.Harmonic else null
-        )
-    }
-
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        editingId = host.routeAs<Route.CreateTide>().editTideId
-        backCallback = host.promptIfUnsavedChanges(this::hasChanges)
-
+    init {
         if (editingId != 0L) {
             loadEditingTide()
-        } else if (tideEntries.isEmpty()) {
+        } else {
             tideEntries = listOf(newTideEntry())
         }
     }
 
-    fun onDestroy() {
-        backCallback?.remove()
-        backCallback = null
-    }
-
     private fun loadEditingTide() {
-        host.lifecycleScope.launch {
-            editingTide = withContext(Dispatchers.IO) {
+        viewModelScope.launch {
+            val tide = withContext(Dispatchers.IO) {
                 tideRepo.getTideTable(editingId)
             }
+            editingTide = tide
 
-            val tide = editingTide
             if (tide != null) {
                 fillExistingTideValues(tide)
             } else {
@@ -286,58 +330,20 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
 
     fun deleteTideEntry(entry: TideEntry) {
         tideEntries = tideEntries.filterNot { it.id == entry.id }
-        CustomUiUtils.snackbar(
-            host,
-            host.getString(R.string.tide_deleted),
-            action = host.getString(R.string.undo)
-        ) {
-            tideEntries = tideEntries + entry
-        }
     }
 
-    fun pickTideTime(entry: TideEntry) {
-        CustomUiUtils.pickDatetime(
-            host.requireContext(),
-            prefs.use24HourTime,
-            entry.time?.toLocalDateTime() ?: LocalDateTime.now()
-        ) {
-            if (it != null) {
-                updateTideEntry(entry.copy(time = it.toZonedDateTime()))
-            }
-        }
-    }
-
-    fun pickTideHeight(entry: TideEntry) {
-        val distanceUnits = formatService.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
-        CustomUiUtils.pickDistance(
-            host.requireContext(),
-            distanceUnits,
-            entry.height,
-            host.getString(R.string.height)
-        ) { distance, cancelled ->
-            if (!cancelled) {
-                updateTideEntry(entry.copy(height = distance))
-            }
-        }
-    }
-
-    fun showHelp() {
-        UserGuideUtils.showGuide(
-            host.requireContext(),
-            host.findNavigator(),
-            R.raw.guide_tool_tides
-        )
+    /** Puts back an entry removed with [deleteTideEntry] (the snackbar's Undo). */
+    fun restoreTideEntry(entry: TideEntry) {
+        tideEntries = tideEntries + entry
     }
 
     fun saveTide() {
         val tide = getTide() ?: return
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 tideRepo.addTideTable(tide)
             }
-
-            backCallback?.remove()
-            host.findNavigator().navigateUp()
+            _saved.send(Unit)
         }
     }
 
@@ -354,6 +360,9 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
         return getTide() != null
     }
 
+    val hasChanges: Boolean
+        get() = TideTableIsDirtySpecification(editingTide).isSatisfiedBy(getTide())
+
     private fun getEstimateAlgorithm(): TideEstimator {
         return when (estimateType) {
             EstimateType.Clock -> TideEstimator.Clock
@@ -365,7 +374,7 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
         }
     }
 
-    private fun getTide(): TideTable? {
+    internal fun getTide(): TideTable? {
         val tides = tideEntries.mapNotNull {
             val time = it.time ?: return@mapNotNull null
             Tide(
@@ -415,22 +424,16 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
             lunitidalIntervalIsUtc = lunitidalIntervalIsUtc
         )
     }
-
-    private fun hasChanges(): Boolean {
-        val specification = TideTableIsDirtySpecification(editingTide)
-        return specification.isSatisfiedBy(getTide())
-    }
-
 }
 
-private data class TideEntry(
+internal data class TideEntry(
     val id: Long,
     val isHigh: Boolean,
     val time: ZonedDateTime?,
     val height: Distance?
 )
 
-private enum class EstimateType {
+internal enum class EstimateType {
     Clock,
     LunitidalIntervalAuto,
     LunitidalIntervalManualLocal,
