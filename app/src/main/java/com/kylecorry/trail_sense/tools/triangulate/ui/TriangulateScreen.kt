@@ -119,17 +119,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.text.buildSpannedString
-import androidx.core.text.scale
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.preferences.putOrRemoveCoordinate
 import com.kylecorry.andromeda.preferences.putOrRemoveFloat
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.geology.Geofence
@@ -157,8 +152,11 @@ import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import android.content.Context
-import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.sol.units.DistanceUnits
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -176,82 +174,47 @@ fun TriangulateToolScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val appContext = context.applicationContext
     val appNavigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(context, appNavigator, effects, lifecycleOwner) {
-        TriangulateController(context, appNavigator, effects, lifecycleOwner)
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        TriangulateViewModel(
+            preferences = PreferencesSubsystem.getInstance(appContext).preferences,
+            sensorService = SensorService(appContext)
+        )
+    }
+    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val hasCompass = remember(appContext) { SensorService(appContext).hasCompass() }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { viewModel.onPause() }
     }
 
-    DisposableEffect(lifecycleOwner, controller) {
-        controller.onViewCreated()
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
-            }
+    // The camera sighting is a rendering object, so it lives in the composition; its bearing follows the compass.
+    var cameraBearingIndex by remember { mutableStateOf<Int?>(null) }
+    val cameraSheet = remember(context, lifecycleOwner) {
+        SightingCompassDialog(context, lifecycleOwner, lifecycleOwner.lifecycleScope) { bearing ->
+            cameraBearingIndex?.let { viewModel.updateBearing(it, bearing, false) }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onPause()
-            controller.onDestroyView()
+    }
+    DisposableEffect(cameraSheet) {
+        onDispose { cameraSheet.dismiss() }
+    }
+    val compassBearing = viewModel.compassBearing
+    LaunchedEffect(compassBearing) {
+        if (compassBearing != null) {
+            cameraSheet.bearing = compassBearing
         }
     }
 
-    controller.Content(modifier)
-}
-
-private class TriangulateController(
-    private val context: Context,
-    private val appNavigator: TrailSenseNavigator,
-    private val effects: ScreenEffects,
-    private val lifecycleOwner: LifecycleOwner
-) {
-
-    private val formatService by lazy { FormatService.getInstance(context) }
-    private val prefs by lazy { UserPreferences(context) }
-    private val appNavigation by lazy { TrailSenseAppNavigation(appNavigator) }
-    private val navigator by lazy { Navigator.getInstance(context) }
-
-    private var location: Coordinate? = null
-
-    private var shouldCalculateMyLocation by mutableStateOf(false)
-    private var title by mutableStateOf("")
-    private var actionsVisible by mutableStateOf(false)
-    private var navigateVisible by mutableStateOf(true)
-    private var updateGpsOverrideVisible by mutableStateOf(false)
-    private var location1Title by mutableStateOf("")
-    private var location2Title by mutableStateOf("")
-    private var location1Instructions by mutableStateOf("")
-    private var location2Instructions by mutableStateOf("")
-    private var location1Complete by mutableStateOf(false)
-    private var location2Complete by mutableStateOf(false)
-    private var location1Coordinate by mutableStateOf<Coordinate?>(null)
-    private var location2Coordinate by mutableStateOf<Coordinate?>(null)
-    private var bearing1Value by mutableStateOf<Float?>(null)
-    private var bearing2Value by mutableStateOf<Float?>(null)
-    private var bearing1TrueNorth by mutableStateOf(false)
-    private var bearing2TrueNorth by mutableStateOf(false)
-    private var compassBearingText by mutableStateOf("")
-    private var compassBearing by mutableStateOf<Float?>(null)
-    private var result by mutableStateOf<Coordinate?>(null)
-
-    private var isViewCreated = false
-
-    private val isBound: Boolean
-        get() = isViewCreated
-
-    private val compass by lazy { SensorService(context).getCompass() }
-    private val hasCompass by lazy { SensorService(context).hasCompass() }
-    private var cameraSheet: SightingCompassDialog? = null
-    private var cameraBearingIndex: Int? = null
-
-    private val recommendedMinDistance by lazy {
+    val shouldCalculateMyLocation = viewModel.shouldCalculateMyLocation
+    val location = viewModel.result
+    val hasLocation = location != null && !location.latitude.isNaN() && !location.longitude.isNaN()
+    val recommendedMinDistance = remember(prefs) {
         if (prefs.distanceUnits == UserPreferences.DistanceUnits.Feet) {
             Distance.feet(100f)
         } else {
@@ -259,328 +222,223 @@ private class TriangulateController(
         }
     }
 
-    private val updateTimer = CoroutineTimer {
-        update()
-    }
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        TriangulateScreen(
-            title = title,
-            actionsVisible = actionsVisible,
-            navigateVisible = navigateVisible,
-            updateGpsOverrideVisible = updateGpsOverrideVisible,
-            shouldCalculateMyLocation = shouldCalculateMyLocation,
-            location1Title = location1Title,
-            location2Title = location2Title,
-            location1Instructions = location1Instructions,
-            location2Instructions = location2Instructions,
-            location1Complete = location1Complete,
-            location2Complete = location2Complete,
-            location1 = location1Coordinate,
-            location2 = location2Coordinate,
-            bearing1 = bearing1Value,
-            bearing2 = bearing2Value,
-            bearing1TrueNorth = bearing1TrueNorth,
-            bearing2TrueNorth = bearing2TrueNorth,
-            compassBearingText = compassBearingText,
-            compassBearing = compassBearing,
-            result = result,
-            hasCompass = hasCompass,
-            onModeChanged = {
-                shouldCalculateMyLocation = it
-                update()
-            },
-            onCreateBeacon = ::createBeacon,
-            onNavigate = ::navigateToLocation,
-            onShareLocation = ::shareLocation,
-            onUpdateGpsOverride = ::updateGpsOverride,
-            onLocation1Change = ::updateLocation1Coordinate,
-            onLocation2Change = ::updateLocation2Coordinate,
-            onBearing1Change = { bearing, trueNorth -> updateBearing(1, bearing, trueNorth) },
-            onBearing2Change = { bearing, trueNorth -> updateBearing(2, bearing, trueNorth) },
-            onCompassBearing1Click = { setBearingFromCompass(1) },
-            onCompassBearing2Click = { setBearingFromCompass(2) },
-            onCameraBearing1Click = { setBearingFromCamera(1) },
-            onCameraBearing2Click = { setBearingFromCamera(2) },
-            onReset = ::reset,
-            modifier = modifier.fillMaxSize()
-        )
-        cameraSheet?.Content()
-    }
-
-    fun onViewCreated() {
-        isViewCreated = true
-        update()
-    }
-
-    private fun createBeacon() {
-        location?.let {
-            AppUtils.placeBeacon(context, GeoUri(it))
-        }
-    }
-
-    private fun navigateToLocation() {
-        location?.let {
-            navigator.navigateTo(it, context.getString(R.string.location), BeaconOwner.Triangulate)
-            appNavigation.navigate(Route.Navigation())
-        }
-    }
-
-    private fun shareLocation() {
-        location?.let {
-            lifecycleOwner.lifecycleScope.launch {
-                shareLocation(context, appNavigator, effects, it)
-            }
-        }
-    }
-
-    private fun updateGpsOverride() {
-        location?.let { coord ->
-            prefs.gps.locationOverride = coord
-            Alerts.toast(context, context.getString(R.string.location_override_updated))
-        }
-    }
-
-    private fun updateLocation1Coordinate(coordinate: Coordinate?) {
-        location1Coordinate = coordinate
-        update()
-    }
-
-    private fun updateLocation2Coordinate(coordinate: Coordinate?) {
-        location2Coordinate = coordinate
-        update()
-    }
-
-    private fun updateBearing(index: Int, bearing: Float?, trueNorth: Boolean) {
-        if (index == 1) {
-            bearing1Value = bearing
-            bearing1TrueNorth = trueNorth
-        } else {
-            bearing2Value = bearing
-            bearing2TrueNorth = trueNorth
-        }
-        update()
-    }
-
-    private fun setBearingFromCompass(index: Int) {
-        updateBearing(index, compass.rawBearing, false)
-    }
-
-    private fun setBearingFromCamera(index: Int) {
-        lifecycleOwner.lifecycleScope.launch {
-            val hasPermission = effects.requestPermission(AppPermission.Camera)
-            if (hasPermission) {
-                cameraBearingIndex = index
-                if (cameraSheet == null) {
-                    cameraSheet = SightingCompassDialog(
-                        context,
-                        lifecycleOwner,
-                        lifecycleOwner.lifecycleScope
-                    ) {
-                        cameraBearingIndex?.let { selectedIndex ->
-                            updateBearing(selectedIndex, it, false)
-                        }
-                    }
-                }
-                cameraSheet?.show()
-            } else {
-                effects.explainPermissionDenied(AppPermission.Camera)
-            }
-        }
-    }
-
-    private fun updateDistances() {
-        if (!isBound) {
-            return
-        }
-
-        location1Title = getLocationTitle(1).toString()
-        location2Title = getLocationTitle(2).toString()
-    }
-
-    private fun getLocationTitle(locationIdx: Int): CharSequence {
-        val distance = getDistanceToDestination(locationIdx)
+    fun locationTitle(index: Int): String {
+        val distance = viewModel.distanceToResult(index, prefs.baseDistanceUnits)
         val formattedDistance = distance?.let {
             formatService.formatDistance(it, Units.getDecimalPlaces(it.units))
         }
-        return buildSpannedString {
-            append(context.getString(R.string.location_number, locationIdx))
+        return buildString {
+            append(context.getString(R.string.location_number, index))
             if (distance != null) {
                 appendLine()
-                scale(0.75f) {
-                    append(
-                        if (shouldCalculateMyLocation) {
-                            context.getString(R.string.distance_away_from_self, formattedDistance)
-                        } else {
-                            context.getString(R.string.distance_away_from_destination, formattedDistance)
-                        }
-                    )
-                }
+                append(
+                    if (shouldCalculateMyLocation) {
+                        context.getString(R.string.distance_away_from_self, formattedDistance)
+                    } else {
+                        context.getString(R.string.distance_away_from_destination, formattedDistance)
+                    }
+                )
             }
         }
     }
 
-    private fun updateInstructions() {
-        if (!isBound) {
-            return
-        }
-
-        if (shouldCalculateMyLocation) {
-            location1Instructions = context.getString(R.string.triangulate_self_location_1_instructions)
-            location2Instructions = context.getString(R.string.triangulate_self_location_2_instructions)
+    TriangulateScreen(
+        title = if (hasLocation) {
+            formatService.formatLocation(location!!)
         } else {
-            location1Instructions = context.getString(R.string.triangulate_destination_location_1_instructions)
-            location2Instructions = context.getString(
+            stringResource(R.string.could_not_triangulate)
+        },
+        actionsVisible = hasLocation,
+        navigateVisible = !shouldCalculateMyLocation,
+        updateGpsOverrideVisible = prefs.gps.locationSource == GPSLocationSource.Manual && shouldCalculateMyLocation,
+        shouldCalculateMyLocation = shouldCalculateMyLocation,
+        location1Title = locationTitle(1),
+        location2Title = locationTitle(2),
+        location1Instructions = if (shouldCalculateMyLocation) {
+            stringResource(R.string.triangulate_self_location_1_instructions)
+        } else {
+            stringResource(R.string.triangulate_destination_location_1_instructions)
+        },
+        location2Instructions = if (shouldCalculateMyLocation) {
+            stringResource(R.string.triangulate_self_location_2_instructions)
+        } else {
+            stringResource(
                 R.string.triangulate_destination_location_2_instructions,
                 formatService.formatDistance(
                     recommendedMinDistance,
                     Units.getDecimalPlaces(recommendedMinDistance.units)
                 )
             )
-        }
+        },
+        location1Complete = viewModel.isComplete(1),
+        location2Complete = viewModel.isComplete(2),
+        location1 = viewModel.location1,
+        location2 = viewModel.location2,
+        bearing1 = viewModel.bearing1,
+        bearing2 = viewModel.bearing2,
+        bearing1TrueNorth = viewModel.bearing1TrueNorth,
+        bearing2TrueNorth = viewModel.bearing2TrueNorth,
+        compassBearingText = compassBearing?.let { formatService.formatDegrees(it, replace360 = true) } ?: "",
+        compassBearing = compassBearing,
+        result = location,
+        hasCompass = hasCompass,
+        onModeChanged = viewModel::changeMode,
+        onCreateBeacon = {
+            viewModel.result?.let { AppUtils.placeBeacon(context, GeoUri(it)) }
+        },
+        onNavigate = {
+            viewModel.result?.let {
+                Navigator.getInstance(context).navigateTo(
+                    it,
+                    context.getString(R.string.location),
+                    BeaconOwner.Triangulate
+                )
+                TrailSenseAppNavigation(appNavigator).navigate(Route.Navigation())
+            }
+        },
+        onShareLocation = {
+            viewModel.result?.let {
+                scope.launch { shareLocation(context, appNavigator, effects, it) }
+            }
+        },
+        onUpdateGpsOverride = {
+            viewModel.result?.let { coord ->
+                prefs.gps.locationOverride = coord
+                Alerts.toast(context, context.getString(R.string.location_override_updated))
+            }
+        },
+        onLocation1Change = { viewModel.updateLocation(1, it) },
+        onLocation2Change = { viewModel.updateLocation(2, it) },
+        onBearing1Change = { bearing, trueNorth -> viewModel.updateBearing(1, bearing, trueNorth) },
+        onBearing2Change = { bearing, trueNorth -> viewModel.updateBearing(2, bearing, trueNorth) },
+        onCompassBearing1Click = { viewModel.setBearingFromCompass(1) },
+        onCompassBearing2Click = { viewModel.setBearingFromCompass(2) },
+        onCameraBearing1Click = {
+            scope.launch {
+                if (effects.requestPermission(AppPermission.Camera)) {
+                    cameraBearingIndex = 1
+                    cameraSheet.show()
+                } else {
+                    effects.explainPermissionDenied(AppPermission.Camera)
+                }
+            }
+        },
+        onCameraBearing2Click = {
+            scope.launch {
+                if (effects.requestPermission(AppPermission.Camera)) {
+                    cameraBearingIndex = 2
+                    cameraSheet.show()
+                } else {
+                    effects.explainPermissionDenied(AppPermission.Camera)
+                }
+            }
+        },
+        onReset = viewModel::reset,
+        modifier = modifier.fillMaxSize()
+    )
+    cameraSheet.Content()
+}
+
+/**
+ * Triangulation's state: the mode (my location or a destination), the two sightings (where and which way), the
+ * live compass bearing while the page is resumed, and the answer. The sightings are kept in preferences when the
+ * page pauses, so they survive leaving the tool.
+ */
+internal class TriangulateViewModel(
+    private val preferences: IPreferences,
+    sensorService: SensorService
+) : ViewModel() {
+
+    private val compass = sensorService.getCompass()
+
+    var shouldCalculateMyLocation by mutableStateOf(false)
+        private set
+    var location1 by mutableStateOf<Coordinate?>(null)
+        private set
+    var location2 by mutableStateOf<Coordinate?>(null)
+        private set
+    var bearing1 by mutableStateOf<Float?>(null)
+        private set
+    var bearing2 by mutableStateOf<Float?>(null)
+        private set
+    var bearing1TrueNorth by mutableStateOf(false)
+        private set
+    var bearing2TrueNorth by mutableStateOf(false)
+        private set
+    var compassBearing by mutableStateOf<Float?>(null)
+        private set
+    var result by mutableStateOf<Coordinate?>(null)
+        private set
+
+    private val onCompass: () -> Boolean = {
+        compassBearing = compass.rawBearing
+        true
     }
 
-    private fun updateCompletionState() {
-        if (!isBound) {
-            return
-        }
-
-        location1Complete = isComplete(1)
-        location2Complete = isComplete(2)
-    }
-
-    private fun getDistanceToDestination(locationIdx: Int): Distance? {
-        val start =
-            (if (locationIdx == 1) location1Coordinate else location2Coordinate)
-                ?: return null
-        val destination = location ?: return null
-        return Distance.meters(start.distanceTo(destination)).convertTo(prefs.baseDistanceUnits)
-            .toRelativeDistance()
+    init {
+        restoreState()
     }
 
     fun onResume() {
-        compass.start {
-            val bearing = compass.rawBearing
-            compassBearingText = formatService.formatDegrees(bearing, replace360 = true)
-            compassBearing = bearing
-            cameraSheet?.bearing = bearing
-            true
-        }
+        compass.start(onCompass)
         restoreState()
-        updateTimer.once(500)
     }
 
     fun onPause() {
-        updateTimer.stop()
-        compass.stop(null)
+        compass.stop(onCompass)
         saveState()
     }
 
-    fun onDestroyView() {
-        cameraSheet?.dismiss()
-        cameraSheet = null
-        cameraBearingIndex = null
-        isViewCreated = false
+    override fun onCleared() {
+        compass.stop(onCompass)
     }
 
-    private fun update() {
-        if (!isBound) {
-            return
-        }
-
-        updateInstructions()
-        updateCompletionState()
-
-        val location1 = location1Coordinate
-        val location2 = location2Coordinate
-        val direction1 = bearing1Value
-        val direction2 = bearing2Value
-
-        if (location1 == null || location2 == null || direction1 == null || direction2 == null) {
-            setLocation(null)
-            return
-        }
-
-        val declination1 =
-            if (bearing1TrueNorth) 0f else Geophysics.getGeomagneticDeclination(location1)
-        val declination2 =
-            if (bearing2TrueNorth) 0f else Geophysics.getGeomagneticDeclination(location2)
-        val bearing1 = Bearing.from(direction1).withDeclination(declination1)
-        val bearing2 = Bearing.from(direction2).withDeclination(declination2)
-
-        val location = if (shouldCalculateMyLocation) {
-            Geography.triangulateSelf(location1, bearing1, location2, bearing2)
-        } else {
-            Geography.triangulateDestination(location1, bearing1, location2, bearing2)
-        }
-        setLocation(location)
-    }
-
-    private fun setLocation(location: Coordinate?) {
-        this.location = location
-        result = location
-        if (location == null || location.latitude.isNaN() || location.longitude.isNaN()) {
-            title = context.getString(R.string.could_not_triangulate)
-            actionsVisible = false
-        } else {
-            title = formatService.formatLocation(location)
-            actionsVisible = true
-        }
-
-        navigateVisible = !shouldCalculateMyLocation
-        updateGpsOverrideVisible =
-            prefs.gps.locationSource == GPSLocationSource.Manual && shouldCalculateMyLocation
-
-        updateDistances()
-    }
-
-    private fun saveState() {
-        if (!isBound) {
-            return
-        }
-
-        val preferences = PreferencesSubsystem.getInstance(context).preferences
-        preferences.putBoolean("state_triangulate_self", shouldCalculateMyLocation)
-        preferences.putOrRemoveFloat("state_triangulate_bearing1", bearing1Value)
-        preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2Value)
-        preferences.putOrRemoveCoordinate(
-            "state_triangulate_location1",
-            location1Coordinate
-        )
-        preferences.putOrRemoveCoordinate(
-            "state_triangulate_location2",
-            location2Coordinate
-        )
-        preferences.putBoolean("state_triangulate_true_north1", bearing1TrueNorth)
-        preferences.putBoolean("state_triangulate_true_north2", bearing2TrueNorth)
-    }
-
-    private fun restoreState() {
-        if (!isBound) {
-            return
-        }
-
-        val preferences = PreferencesSubsystem.getInstance(context).preferences
-        shouldCalculateMyLocation = preferences.getBoolean("state_triangulate_self") ?: false
-        bearing1Value = preferences.getFloat("state_triangulate_bearing1")
-        bearing2Value = preferences.getFloat("state_triangulate_bearing2")
-        bearing1TrueNorth = preferences.getBoolean("state_triangulate_true_north1") ?: false
-        bearing2TrueNorth = preferences.getBoolean("state_triangulate_true_north2") ?: false
-        location1Coordinate = preferences.getCoordinate("state_triangulate_location1")
-        location2Coordinate = preferences.getCoordinate("state_triangulate_location2")
+    fun changeMode(calculateMyLocation: Boolean) {
+        shouldCalculateMyLocation = calculateMyLocation
         update()
     }
 
-    private fun reset() {
-        location1Coordinate = null
-        location2Coordinate = null
-        bearing1Value = null
-        bearing2Value = null
+    fun updateLocation(index: Int, coordinate: Coordinate?) {
+        if (index == 1) location1 = coordinate else location2 = coordinate
+        update()
+    }
+
+    fun updateBearing(index: Int, bearing: Float?, trueNorth: Boolean) {
+        if (index == 1) {
+            bearing1 = bearing
+            bearing1TrueNorth = trueNorth
+        } else {
+            bearing2 = bearing
+            bearing2TrueNorth = trueNorth
+        }
+        update()
+    }
+
+    fun setBearingFromCompass(index: Int) {
+        updateBearing(index, compass.rawBearing, false)
+    }
+
+    fun isComplete(index: Int): Boolean {
+        val location = if (index == 1) location1 else location2
+        val bearing = if (index == 1) bearing1 else bearing2
+        return location != null && bearing != null
+    }
+
+    /** How far sighting [index] was taken from the answer, in [units] (or a more readable relative unit). */
+    fun distanceToResult(index: Int, units: DistanceUnits): Distance? {
+        val start = (if (index == 1) location1 else location2) ?: return null
+        val destination = result ?: return null
+        return Distance.meters(start.distanceTo(destination)).convertTo(units).toRelativeDistance()
+    }
+
+    fun reset() {
+        location1 = null
+        location2 = null
+        bearing1 = null
+        bearing2 = null
         bearing1TrueNorth = false
         bearing2TrueNorth = false
 
-        val preferences = PreferencesSubsystem.getInstance(context).preferences
         preferences.remove("state_triangulate_self")
         preferences.remove("state_triangulate_bearing1")
         preferences.remove("state_triangulate_bearing2")
@@ -592,13 +450,51 @@ private class TriangulateController(
         update()
     }
 
-    private fun isComplete(locationIdx: Int): Boolean {
-        val location =
-            if (locationIdx == 1) location1Coordinate else location2Coordinate
-        val bearing = if (locationIdx == 1) bearing1Value else bearing2Value
-        return location != null && bearing != null
+    private fun update() {
+        val location1 = location1
+        val location2 = location2
+        val direction1 = bearing1
+        val direction2 = bearing2
+
+        if (location1 == null || location2 == null || direction1 == null || direction2 == null) {
+            result = null
+            return
+        }
+
+        val declination1 =
+            if (bearing1TrueNorth) 0f else Geophysics.getGeomagneticDeclination(location1)
+        val declination2 =
+            if (bearing2TrueNorth) 0f else Geophysics.getGeomagneticDeclination(location2)
+        val bearing1 = Bearing.from(direction1).withDeclination(declination1)
+        val bearing2 = Bearing.from(direction2).withDeclination(declination2)
+
+        result = if (shouldCalculateMyLocation) {
+            Geography.triangulateSelf(location1, bearing1, location2, bearing2)
+        } else {
+            Geography.triangulateDestination(location1, bearing1, location2, bearing2)
+        }
     }
 
+    private fun saveState() {
+        preferences.putBoolean("state_triangulate_self", shouldCalculateMyLocation)
+        preferences.putOrRemoveFloat("state_triangulate_bearing1", bearing1)
+        preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2)
+        preferences.putOrRemoveCoordinate("state_triangulate_location1", location1)
+        preferences.putOrRemoveCoordinate("state_triangulate_location2", location2)
+        preferences.putBoolean("state_triangulate_true_north1", bearing1TrueNorth)
+        preferences.putBoolean("state_triangulate_true_north2", bearing2TrueNorth)
+    }
+
+    private fun restoreState() {
+        shouldCalculateMyLocation = preferences.getBoolean("state_triangulate_self") ?: false
+        bearing1 = preferences.getFloat("state_triangulate_bearing1")
+        bearing2 = preferences.getFloat("state_triangulate_bearing2")
+        bearing1TrueNorth = preferences.getBoolean("state_triangulate_true_north1") ?: false
+        bearing2TrueNorth = preferences.getBoolean("state_triangulate_true_north2") ?: false
+        location1 = preferences.getCoordinate("state_triangulate_location1")
+        location2 = preferences.getCoordinate("state_triangulate_location2")
+        update()
+    }
 }
 
 /**
