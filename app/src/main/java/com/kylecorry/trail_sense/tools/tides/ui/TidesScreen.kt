@@ -636,36 +636,17 @@ private fun TideWell(
             ),
         contentAlignment = Alignment.Center
     ) {
-        if (waiting) {
-            androidx.compose.material3.CircularWavyProgressIndicator(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag("loading"),
-                color = ringColor,
-                trackColor = scheme.surfaceVariant,
-                stroke = Stroke(width = stroke, cap = StrokeCap.Round),
-                trackStroke = Stroke(width = stroke, cap = StrokeCap.Round),
-                wavelength = 36.dp
-            )
-        } else {
-            androidx.compose.material3.CircularWavyProgressIndicator(
-                progress = { ring },
-                modifier = Modifier.fillMaxSize(),
-                color = ringColor,
-                trackColor = scheme.surfaceVariant,
-                stroke = Stroke(width = stroke, cap = StrokeCap.Round),
-                trackStroke = Stroke(width = stroke, cap = StrokeCap.Round),
-                wavelength = 36.dp
-            )
-        }
+        // One wavy outline for everything: the water fills it, the track follows it and the turn countdown is a
+        // thick stroke along the same line, so the ring hugs the water with no gaps between them.
+        val face = scheme.surfaceContainerLow
+        val track = scheme.surfaceVariant
+        Canvas(Modifier.fillMaxSize()) { drawPath(tideOutline(size.width, stroke / 2f), face) }
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
-                .clip(CircleShape),
+                .clip(TideOutlineShape(stroke)),
             contentAlignment = Alignment.Center
         ) {
-            Surface(color = scheme.surfaceContainerLow, modifier = Modifier.fillMaxSize()) {}
             Canvas(Modifier.fillMaxSize()) {
                 val surfaceY = size.height * (1f - level)
                 val amplitude = 4.dp.toPx()
@@ -710,11 +691,74 @@ private fun TideWell(
                 }
             }
         }
+        // Drawn over the water, so the countdown stroke is whole where they meet.
+        Canvas(
+            Modifier
+                .fillMaxSize()
+                .then(if (waiting) Modifier.testTag("loading") else Modifier)
+        ) {
+            val outline = tideOutline(size.width, stroke / 2f)
+            drawPath(outline, track, style = Stroke(width = stroke * 0.5f))
+            val measure = androidx.compose.ui.graphics.PathMeasure().apply { setPath(outline, true) }
+            val length = measure.length
+            val (from, to) = if (waiting) {
+                // Waiting: a quarter of the ring travels around it.
+                val head = (drift * length)
+                head to head + length * 0.25f
+            } else {
+                0f to length * ring.coerceIn(0f, 1f)
+            }
+            val active = Path()
+            if (to <= length) {
+                measure.getSegment(from, to, active, true)
+            } else {
+                measure.getSegment(from, length, active, true)
+                measure.getSegment(0f, to - length, active, true)
+            }
+            if (to - from > 0.5f) {
+                drawPath(active, ringColor, style = Stroke(width = stroke, cap = StrokeCap.Round))
+            }
+        }
     }
 }
 
 /** The day being shown, with its arrows: tap the date to pick one, long-press it for today. */
 @OptIn(ExperimentalFoundationApi::class)
+/** Waves around the tide well's outline, and how far they reach in and out. */
+private const val TIDE_OUTLINE_WAVES = 14
+private val TideOutlineAmplitude = 4.dp
+
+/**
+ * The tide well's outline: a circle whose edge rises and falls [TIDE_OUTLINE_WAVES] times, starting at the top and
+ * running clockwise, inset by [inset] so a stroke along it stays inside the box.
+ */
+private fun androidx.compose.ui.unit.Density.tideOutline(side: Float, inset: Float): Path {
+    val amplitude = TideOutlineAmplitude.toPx()
+    val center = side / 2f
+    val radius = center - inset - amplitude
+    val steps = 720
+    return Path().apply {
+        for (i in 0..steps) {
+            val t = i.toFloat() / steps
+            val angle = (t * 2 * PI - PI / 2).toFloat()
+            val r = radius + amplitude * kotlin.math.cos(t * 2 * PI * TIDE_OUTLINE_WAVES).toFloat()
+            val x = center + r * kotlin.math.cos(angle)
+            val y = center + r * kotlin.math.sin(angle)
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
+}
+
+/** Clips the water to the inside of the tide well's outline. */
+private class TideOutlineShape(private val strokePx: Float) : androidx.compose.ui.graphics.Shape {
+    override fun createOutline(
+        size: androidx.compose.ui.geometry.Size,
+        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+        density: androidx.compose.ui.unit.Density
+    ) = androidx.compose.ui.graphics.Outline.Generic(density.tideOutline(size.width, strokePx / 2f))
+}
+
 @Composable
 private fun TideDayHeader(
     date: LocalDate,
