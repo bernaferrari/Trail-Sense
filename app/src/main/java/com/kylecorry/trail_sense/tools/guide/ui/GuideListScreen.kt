@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.guide.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
@@ -40,7 +44,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
 
 
@@ -176,12 +179,14 @@ private fun filterGuides(
 
 /** Every user guide, by category; tapping one opens it. */
 @Composable
-fun GuideListToolScreen(host: TrailSenseDestinationHost) {
+fun GuideListToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
     GuideListScreen(
-        guides = Guides.guides(host.requireContext()),
+        guides = Guides.guides(context),
         onOpenGuide = {
             tryOrNothing {
-                host.findNavigator().navigate(Route.Guide(name = it.name, contents = it.contents))
+                navigator.navigate(Route.Guide(name = it.name, contents = it.contents))
             }
         }
     )
