@@ -63,7 +63,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,7 +83,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -141,7 +140,6 @@ fun MetalDetectorToolScreen(
 ) {
     val context = LocalContext.current
     val appContext = context.applicationContext
-    val view = LocalView.current
     val viewModel = viewModel {
         MetalDetectorViewModel(
             sensors = SensorService(appContext),
@@ -150,14 +148,6 @@ fun MetalDetectorToolScreen(
         )
     }
     val formatService = remember(appContext) { FormatService.getInstance(appContext) }
-
-    DisposableEffect(view) {
-        val previousKeepScreenOn = view.keepScreenOn
-        view.keepScreenOn = true
-        onDispose {
-            view.keepScreenOn = previousKeepScreenOn
-        }
-    }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
@@ -190,7 +180,8 @@ fun MetalDetectorToolScreen(
         metalDirectionSensitivity = viewModel.metalDirectionSensitivity,
         magnetometer = viewModel.magnetometer,
         onAccuracyClick = { ImproveAccuracyAlerter(context).alert(listOf(viewModel.magnetometer)) },
-        modifier = modifier
+        // The screen stays on while detecting.
+        modifier = modifier.keepScreenOn()
     )
 }
 
