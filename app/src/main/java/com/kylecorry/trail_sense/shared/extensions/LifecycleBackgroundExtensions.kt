@@ -10,9 +10,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
+/**
+ * Runs [block] once the lifecycle reaches [state], cancelling it when the lifecycle drops below that state and
+ * starting it again when it comes back, until it completes. A block that completes is done: it does not run again on
+ * the next resume (a one-off action such as a tap's save would otherwise repeat every time the screen comes back).
+ * A block that never completes, such as collecting a flow, keeps being restarted on every resume. Pass
+ * [restartWhenResumed] = true to rerun even completed blocks on each resume.
+ */
 fun LifecycleOwner.inBackground(
     state: BackgroundMinimumState = BackgroundMinimumState.Resumed,
-    restartWhenResumed: Boolean = true,
+    restartWhenResumed: Boolean = false,
     cancelWhenRerun: Boolean = true,
     block: suspend CoroutineScope.() -> Unit
 ): Job {

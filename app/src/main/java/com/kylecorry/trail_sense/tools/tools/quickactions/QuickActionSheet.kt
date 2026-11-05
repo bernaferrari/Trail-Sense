@@ -122,7 +122,7 @@ class QuickActionSheetState(private val context: Context) {
             return
         }
         widgetBinder = ToolWidgetViewBinder(
-            host.requireContext(),
+            host.context,
             host.lifecycleOwner
         ) {
             widgets = it

@@ -29,10 +29,6 @@ import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.math.roundToInt
 
-fun TrailSenseDestinationHost.requireMainActivity(): MainActivity {
-    return mainActivity
-}
-
 fun <T : Identifiable> Array<T>.withId(id: Long): T? {
     return firstOrNull { it.id == id }
 }

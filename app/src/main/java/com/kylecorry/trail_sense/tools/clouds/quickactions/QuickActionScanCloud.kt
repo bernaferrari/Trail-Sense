@@ -19,12 +19,12 @@ class QuickActionScanCloud(button: QuickActionButtonView, host: TrailSenseDestin
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(Route.Clouds(openScanner = true))
+        host.navigator.navigate(Route.Clouds(openScanner = true))
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(
+        host.navigator.navigate(
             Route.Clouds()
         )
         return true

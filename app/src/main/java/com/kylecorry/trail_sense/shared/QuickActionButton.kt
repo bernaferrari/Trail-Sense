@@ -12,7 +12,7 @@ abstract class QuickActionButton(
     protected val button: QuickActionButtonView,
     protected val host: TrailSenseDestinationHost
 ) {
-    protected val context: Context by lazy { host.requireContext() }
+    protected val context: Context by lazy { host.context }
     private var wasStateSet = false
 
     private val observer = LifecycleEventObserver { _, event ->

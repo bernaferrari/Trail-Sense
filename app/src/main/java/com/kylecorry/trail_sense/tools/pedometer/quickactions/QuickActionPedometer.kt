@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.pedometer.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+
+import kotlinx.coroutines.launch
+
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -25,7 +31,7 @@ class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Pedometer)
+        host.navigator.navigate(Route.Pedometer)
         return true
     }
 
@@ -43,12 +49,12 @@ class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinati
     }
 
     private fun startStepCounter() {
-        host.requestActivityRecognition { hasPermission ->
-            if (hasPermission) {
+        host.lifecycleOwner.lifecycleScope.launch {
+            if (host.requestPermission(AppPermission.ActivityRecognition)) {
                 pedometer.enable()
             } else {
                 pedometer.disable()
-                host.alertNoActivityRecognitionPermission()
+                host.explainPermissionDenied(AppPermission.ActivityRecognition)
             }
         }
     }

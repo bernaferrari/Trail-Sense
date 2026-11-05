@@ -19,12 +19,12 @@ class QuickActionScreenFlashlight(btn: QuickActionButtonView, host: TrailSenseDe
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(Route.ScreenFlashlight)
+        host.navigator.navigate(Route.ScreenFlashlight)
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Flashlight)
+        host.navigator.navigate(Route.Flashlight)
         return true
     }
 }

@@ -12,7 +12,7 @@ class QuickActionFactory {
         button: QuickActionButtonView,
         host: TrailSenseDestinationHost
     ): QuickActionButton {
-        val quickActions = Tools.getQuickActions(host.requireContext())
+        val quickActions = Tools.getQuickActions(host.context)
         button.contentDescription = "quick_action_$id"
         return quickActions.firstOrNull { it.id == id }?.create?.invoke(button, host)
             ?: QuickActionNone(button, host)

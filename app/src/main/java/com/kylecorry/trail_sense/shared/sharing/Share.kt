@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.shared.sharing
 
+import kotlinx.coroutines.launch
+
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.sol.units.Coordinate
@@ -16,14 +20,14 @@ object Share {
     fun shareLocation(
         host: TrailSenseDestinationHost,
         location: Coordinate,
-        format: BuiltInCoordinateFormat = UserPreferences(host.requireContext()).coordinateFormat,
-        title: String = host.getString(R.string.location)
+        format: BuiltInCoordinateFormat = UserPreferences(host.context).coordinateFormat,
+        title: String = host.context.getString(R.string.location)
     ) {
         val locationSenders = mapOf(
-            ShareAction.Copy to LocationCopy(host.requireContext()),
-            ShareAction.QR to LocationQRSender(host.requireContext(), host.findNavigator()),
-            ShareAction.Maps to LocationGeoSender(host.requireContext()),
-            ShareAction.Send to LocationSharesheet(host.requireContext())
+            ShareAction.Copy to LocationCopy(host.context),
+            ShareAction.QR to LocationQRSender(host.context, host.navigator),
+            ShareAction.Maps to LocationGeoSender(host.context),
+            ShareAction.Send to LocationSharesheet(host.context)
         )
 
         share(
@@ -46,13 +50,13 @@ object Share {
     ) {
 
         val titles = mapOf(
-            ShareAction.Copy to host.getString(android.R.string.copy),
-            ShareAction.QR to host.getString(R.string.qr_code),
-            ShareAction.Send to host.getString(R.string.share_action_send),
-            ShareAction.Maps to host.getString(R.string.maps),
-            ShareAction.File to host.getString(R.string.file),
-            ShareAction.Navigate to host.getString(R.string.navigate),
-            ShareAction.Open to host.getString(R.string.open)
+            ShareAction.Copy to host.context.getString(android.R.string.copy),
+            ShareAction.QR to host.context.getString(R.string.qr_code),
+            ShareAction.Send to host.context.getString(R.string.share_action_send),
+            ShareAction.Maps to host.context.getString(R.string.maps),
+            ShareAction.File to host.context.getString(R.string.file),
+            ShareAction.Navigate to host.context.getString(R.string.navigate),
+            ShareAction.Open to host.context.getString(R.string.open)
         )
 
         val icons = mapOf(
@@ -96,7 +100,9 @@ object Share {
             }
         }
 
-        host.showActionSheet(title, subtitle, actions, customOnAction)
+        host.lifecycleOwner.lifecycleScope.launch {
+            customOnAction(host.chooseAction(title, subtitle, actions))
+        }
     }
 
 }

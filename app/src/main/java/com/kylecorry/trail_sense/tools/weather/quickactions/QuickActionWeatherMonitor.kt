@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.quickactions
 
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -32,24 +34,24 @@ class QuickActionWeatherMonitor(
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Weather)
+        host.navigator.navigate(Route.Weather)
         return true
     }
 
     override fun onClick() {
         super.onClick()
-        host.lifecycleScope.launch {
+        host.lifecycleOwner.lifecycleScope.launch {
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
                     service?.enable()
                     RequestRemoveBatteryRestrictionCommand(
-                        host.requireContext(),
+                        host.context,
                         RemoveBatteryRestrictionsAlerter(host)
                     ).execute()
                 }
 
-                else -> host.toast(context.getString(R.string.weather_monitoring_disabled))
+                else -> host.showMessage(context.getString(R.string.weather_monitoring_disabled).toString())
             }
         }
     }

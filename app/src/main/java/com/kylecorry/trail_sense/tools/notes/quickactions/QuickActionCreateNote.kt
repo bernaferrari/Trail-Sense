@@ -18,12 +18,12 @@ class QuickActionCreateNote(btn: QuickActionButtonView, host: TrailSenseDestinat
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(Route.NoteEditor())
+        host.navigator.navigate(Route.NoteEditor())
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Notes)
+        host.navigator.navigate(Route.Notes)
         return true
     }
 

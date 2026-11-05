@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
+import androidx.lifecycle.lifecycleScope
+
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
@@ -28,7 +30,7 @@ fun Tools.observe(
     onReceiveBroadcast: suspend (data: Bundle) -> Unit
 ) {
     val callback: (Bundle) -> Unit = { data ->
-        host.lifecycleScope.launch {
+        host.lifecycleOwner.lifecycleScope.launch {
             onReceiveBroadcast(data)
         }
     }

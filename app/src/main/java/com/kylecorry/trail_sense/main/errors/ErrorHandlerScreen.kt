@@ -166,38 +166,38 @@ private fun ErrorTextAction(
 fun ErrorHandlerToolScreen(host: TrailSenseDestinationHost, route: Route.ErrorHandler) {
     val toolId = route.toolId
     val errorDetails = route.error
-    val appNavigator = host.findNavigator()
+    val appNavigator = host.navigator
     ErrorHandlerScreen(
         toolId = toolId,
         onEmail = {
-            host.startActivity(
+            host.context.startActivity(
                 Intents.email(
-                    host.getString(R.string.email),
-                    "Error in ${host.getString(R.string.app_name)}",
+                    host.context.getString(R.string.email),
+                    "Error in ${host.context.getString(R.string.app_name)}",
                     errorDetails
                 )
             )
         },
         onCopyError = {
             Clipboard.copy(
-                host.requireContext(),
+                host.context,
                 errorDetails,
-                host.getString(R.string.copied_to_clipboard_toast)
+                host.context.getString(R.string.copied_to_clipboard_toast)
             )
         },
         onViewDetails = {
             Alerts.dialog(
-                host.requireContext(),
-                host.getString(R.string.error_occurred),
+                host.context,
+                host.context.getString(R.string.error_occurred),
                 errorDetails,
                 cancelText = null
             )
         },
         onReopenTool = {
-            Tools.getTool(host.requireContext(), toolId)?.let { appNavigator.navigate(it.route) }
+            Tools.getTool(host.context, toolId)?.let { appNavigator.navigate(it.route) }
         },
         onRestartApp = {
-            CurrentApp.restart(host.requireContext())
+            CurrentApp.restart(host.context)
         },
         onOpenSettings = {
             appNavigator.navigate(Route.Settings)

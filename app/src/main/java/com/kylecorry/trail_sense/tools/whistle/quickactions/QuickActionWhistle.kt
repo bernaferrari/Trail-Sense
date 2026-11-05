@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.whistle.quickactions
 
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.view.MotionEvent
@@ -22,7 +24,7 @@ class QuickActionWhistle(btn: QuickActionButtonView, host: TrailSenseDestination
     override fun onCreate() {
         super.onCreate()
 
-        host.lifecycleScope.launch {
+        host.lifecycleOwner.lifecycleScope.launch {
             onDefault {
                 try {
                     whistle = Whistle()

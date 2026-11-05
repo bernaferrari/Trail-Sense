@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.sensors.quickactions
 
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -25,7 +27,7 @@ import kotlinx.coroutines.launch
 class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
     QuickActionButton(btn, host) {
 
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.context) }
 
     override fun onCreate() {
         super.onCreate()
@@ -40,13 +42,13 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
             UserPreferences.AltimeterMode.Override -> {
                 val distanceUnits = prefs.baseDistanceUnits
                 CustomUiUtils.pickElevation(
-                    host.requireContext(),
+                    host.context,
                     Distance.meters(prefs.altitudeOverride).convertTo(distanceUnits),
-                    host.getString(R.string.quick_action_recalibrate_altimeter)
+                    host.context.getString(R.string.quick_action_recalibrate_altimeter)
                 ) { elevation, cancelled ->
                     if (!cancelled && elevation != null) {
-                        host.inBackground {
-                            val sensorService = SensorService(host.requireContext())
+                        host.lifecycleOwner.lifecycleScope.launch {
+                            val sensorService = SensorService(host.context)
                             if (mode == UserPreferences.AltimeterMode.Barometer) {
                                 val barometer = sensorService.getBarometer()
                                 barometer.read()
@@ -59,7 +61,7 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
                             } else {
                                 prefs.altitudeOverride = elevation.meters().value
                             }
-                            host.toast(host.getString(R.string.elevation_override_updated_toast))
+                            host.showMessage(host.context.getString(R.string.elevation_override_updated_toast).toString())
                         }
                     }
                 }
@@ -67,8 +69,8 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
 
             UserPreferences.AltimeterMode.GPSBarometer,
             UserPreferences.AltimeterMode.DigitalElevationModelBarometer -> {
-                host.inBackground {
-                    val sensorService = SensorService(host.requireContext())
+                host.lifecycleOwner.lifecycleScope.launch {
+                    val sensorService = SensorService(host.context)
                     val altimeter = sensorService.getAltimeter(tag = "QuickActionRecalibrateAltimeter")
 
                     val job = launch {
@@ -79,25 +81,25 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
                     }
 
                     Alerts.withCancelableLoading(
-                        host.requireContext(),
-                        host.getString(R.string.recalibrating),
+                        host.context,
+                        host.context.getString(R.string.recalibrating),
                         onCancel = { job.cancel() }
                     ) {
                         job.join()
-                        host.toast(host.getString(R.string.done))
+                        host.showMessage(host.context.getString(R.string.done).toString())
                     }
                 }
             }
 
             else -> {
-                host.findNavigator().navigate(Route.CalibrateAltimeter)
+                host.navigator.navigate(Route.CalibrateAltimeter)
             }
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.CalibrateAltimeter)
+        host.navigator.navigate(Route.CalibrateAltimeter)
         return true
     }
 }

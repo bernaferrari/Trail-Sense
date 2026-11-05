@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.whitenoise.quickactions
 
+import kotlinx.coroutines.launch
+
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
@@ -15,7 +19,7 @@ class QuickActionWhiteNoise(btn: QuickActionButtonView, host: TrailSenseDestinat
     QuickActionButton(btn, host) {
 
     private val stateListener: (Bundle) -> Unit = {
-        host.inBackground(BackgroundMinimumState.Any) {
+        host.lifecycleOwner.lifecycleScope.launch {
             setState(isOn())
         }
     }

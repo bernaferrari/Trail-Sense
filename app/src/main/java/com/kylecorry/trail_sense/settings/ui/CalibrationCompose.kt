@@ -65,11 +65,6 @@ fun Quality.toCalibrationTone(): CalibrationTone = when (this) {
     else -> CalibrationTone.Neutral
 }
 
-/** Back from a calibration or tool settings page, the same way the system back gesture goes. */
-fun TrailSenseDestinationHost.goBack() {
-    mainActivity.onBackPressedDispatcher.onBackPressed()
-}
-
 /**
  * Back from a calibration or tool settings page, the same way the system back gesture goes (so an
  * [androidx.activity.compose.BackHandler] on the page still gets a say).

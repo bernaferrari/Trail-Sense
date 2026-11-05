@@ -13,7 +13,7 @@ class MainActivityQuickActionBinder(
     private val state: MainActivityQuickActionState
 ) : IQuickActionBinder {
 
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(host.context) }
 
     private fun createButton(recommended: Boolean): ComposeQuickActionButtonView {
         val button = ComposeQuickActionButtonView()
@@ -31,8 +31,8 @@ class MainActivityQuickActionBinder(
 
         val selected = prefs.toolQuickActions.sorted()
 
-        val appNavigator = host.findNavigator()
-        val tools = Tools.getTools(host.requireContext())
+        val appNavigator = host.navigator
+        val tools = Tools.getTools(host.context)
         val currentRoute = appNavigator.currentRoute
         val activeTools = tools
             .filter { it.isOpen(currentRoute) || it.settingsRoute == currentRoute }

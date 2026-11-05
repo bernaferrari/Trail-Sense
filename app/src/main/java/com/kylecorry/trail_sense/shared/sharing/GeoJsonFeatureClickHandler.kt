@@ -34,9 +34,9 @@ object GeoJsonFeatureClickHandler {
         val formatter = DependencyRegistry.get<FormatService>()
         val location = getFeatureLocation(feature) ?: return
         val name = feature.getName()
-        val title = name ?: host.getString(R.string.location)
+        val title = name ?: host.context.getString(R.string.location)
         val layer = if (layerId != null) {
-            Tools.getTools(host.requireContext())
+            Tools.getTools(host.context)
                 .flatMap { it.mapLayers }
                 .firstOrNull { it.id == layerId }
         } else {
@@ -70,8 +70,8 @@ object GeoJsonFeatureClickHandler {
                 ShareAction.Open -> {
                     layer?.openFeature?.invoke(
                         feature,
-                        host.requireContext(),
-                        host.findNavigator()
+                        host.context,
+                        host.navigator
                     )
                 }
 

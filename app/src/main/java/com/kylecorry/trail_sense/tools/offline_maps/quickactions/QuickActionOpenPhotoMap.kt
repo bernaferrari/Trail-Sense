@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.quickactions
 
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -21,8 +23,8 @@ import kotlinx.coroutines.launch
 class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDestinationHost) : QuickActionButton(
     button, host
 ) {
-    private val mapService = MapService.getInstance(host.requireContext())
-    private val navigator = Navigator.getInstance(host.requireContext())
+    private val mapService = MapService.getInstance(host.context)
+    private val navigator = Navigator.getInstance(host.context)
     private val selector = ActiveMapSelector()
 
     override fun onCreate() {
@@ -32,13 +34,13 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.OfflineMapList())
+        host.navigator.navigate(Route.OfflineMapList())
         return true
     }
 
     override fun onClick() {
         super.onClick()
-        host.inBackground {
+        host.lifecycleOwner.lifecycleScope.launch {
             var wasSuccessful = false
             var id = 0L
             val job = launch {
@@ -48,16 +50,16 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
 
 
             Alerts.withCancelableLoading(
-                host.requireContext(),
+                host.context,
                 context.getString(R.string.loading),
                 onCancel = { job.cancel() }) {
                 job.join()
                 if (wasSuccessful) {
                     if (id != 0L) {
-                        host.findNavigator()
+                        host.navigator
                             .navigate(Route.PhotoMaps(mapId = id, autoLockLocation = true))
                     } else {
-                        host.findNavigator().navigate(Route.OfflineMapList())
+                        host.navigator.navigate(Route.OfflineMapList())
                     }
                 }
             }
@@ -65,7 +67,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
     }
 
     private suspend fun getActiveMap(): PhotoMap? {
-        val sensors = SensorSubsystem.getInstance(host.requireContext())
+        val sensors = SensorSubsystem.getInstance(host.context)
         val location = sensors.getLocation()
 
         val destination = (navigator.getDestination() as? Destination.Beacon)?.beacon?.coordinate

@@ -33,7 +33,7 @@ class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinat
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Flashlight)
+        host.navigator.navigate(Route.Flashlight)
         return true
     }
 

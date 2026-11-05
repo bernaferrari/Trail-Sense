@@ -20,18 +20,18 @@ class QuickActionSettings(btn: QuickActionButtonView, host: TrailSenseDestinatio
     override fun onClick() {
         super.onClick()
         val activeTool = Tools.getTools(context).firstOrNull {
-            it.isOpen(host.findNavigator().currentRoute)
+            it.isOpen(host.navigator.currentRoute)
         }
         if (activeTool?.settingsRoute != null) {
-            host.findNavigator().navigate(activeTool.settingsRoute)
+            host.navigator.navigate(activeTool.settingsRoute)
         } else {
-            host.findNavigator().navigate(Route.Settings)
+            host.navigator.navigate(Route.Settings)
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Settings)
+        host.navigator.navigate(Route.Settings)
         return true
     }
 }

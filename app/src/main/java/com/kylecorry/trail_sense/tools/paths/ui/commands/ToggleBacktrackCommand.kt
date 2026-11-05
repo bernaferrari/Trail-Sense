@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
+import androidx.lifecycle.lifecycleScope
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -31,9 +33,9 @@ class ToggleBacktrackCommand(
      * it one) and Paths settings. The Compose destination host is also the screen's [ScreenEffects].
      */
     constructor(host: TrailSenseDestinationHost, onPermissionDenied: () -> Unit = {}) : this(
-        host.requireContext(),
+        host.context,
         host as ScreenEffects,
-        host.lifecycleScope,
+        host.lifecycleOwner.lifecycleScope,
         onPermissionDenied
     )
 

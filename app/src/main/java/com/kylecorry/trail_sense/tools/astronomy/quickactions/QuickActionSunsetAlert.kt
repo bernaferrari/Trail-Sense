@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.material.icons.outlined.WbTwilight
@@ -39,21 +41,21 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, host: TrailSenseDestina
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Astronomy)
+        host.navigator.navigate(Route.Astronomy)
         return true
     }
 
     override fun onClick() {
         super.onClick()
-        host.lifecycleScope.launch {
+        host.lifecycleOwner.lifecycleScope.launch {
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
                     // The quick action bar's host is also the screen's ScreenEffects; QuickActionButton only hands out the host.
-                    SunsetAlarmReceiver.enable(context, host as? ScreenEffects, host.lifecycleScope)
+                    SunsetAlarmReceiver.enable(context, host, host.lifecycleOwner.lifecycleScope)
                     val alertTime = Duration.ofMinutes(prefs.astronomy.sunsetAlertMinutesBefore)
                     val formattedAlertTime = formatter.formatDuration(alertTime)
-                    host.toast(
+                    host.showMessage(
                         context.getString(
                             R.string.sunset_alert_scheduled,
                             formattedAlertTime

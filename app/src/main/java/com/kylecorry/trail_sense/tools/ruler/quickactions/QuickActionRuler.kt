@@ -89,7 +89,7 @@ class QuickActionRuler(
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Ruler)
+        host.navigator.navigate(Route.Ruler)
         return true
     }
 

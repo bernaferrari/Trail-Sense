@@ -21,7 +21,7 @@ class QuickActionOpenTool(
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(route)
+        host.navigator.navigate(route)
     }
 
 }

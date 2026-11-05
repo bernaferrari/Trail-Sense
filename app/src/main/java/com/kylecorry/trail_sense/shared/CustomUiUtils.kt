@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.shared
 
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+
+import androidx.lifecycle.lifecycleScope
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -507,14 +511,19 @@ object CustomUiUtils {
         }
     }
 
+    /** A snackbar on [host]'s screen; [onAction] runs when its action is pressed. */
     fun snackbar(
         host: TrailSenseDestinationHost,
         text: String,
         duration: Int = Snackbar.LENGTH_SHORT,
         action: String? = null,
         onAction: () -> Unit = {}
-    ): Snackbar {
-        return host.showSnackbar(text, duration, action, onAction)
+    ) {
+        host.lifecycleOwner.lifecycleScope.launch {
+            if (host.showSnackbar(text, action, long = duration == Snackbar.LENGTH_LONG)) {
+                onAction()
+            }
+        }
     }
 
     fun showQR(
@@ -522,7 +531,7 @@ object CustomUiUtils {
         title: String,
         qr: String
     ) {
-        showQR(host.requireContext(), host.findNavigator(), title, qr)
+        showQR(host.context, host.navigator, title, qr)
     }
 
     fun showQR(
@@ -537,32 +546,14 @@ object CustomUiUtils {
         appNavigator.navigate(Route.ViewQr(title = title, text = qr.take(QR_SHARE_MAX_LENGTH)))
     }
 
+    /** Asks for the camera, then takes or picks a photo; null when refused or cancelled. */
     suspend fun takePhoto(
         host: TrailSenseDestinationHost,
         size: Size? = null
-    ): Uri? =
-        suspendCoroutine { cont ->
-            takePhoto(host, size) {
-                cont.resume(it)
-            }
-        }
-
-    private fun takePhoto(
-        host: TrailSenseDestinationHost,
-        size: Size? = null,
-        onCapture: (uri: Uri?) -> Unit
-    ) {
-        host.requestCamera {
-            if (!it) {
-                onCapture(null)
-                return@requestCamera
-            }
-
-            val prefs = UserPreferences(host.requireContext()).camera
-            host.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
-                onCapture(uri)
-            }
-        }
+    ): Uri? {
+        if (!host.requestPermission(AppPermission.Camera)) return null
+        val zeroShutterLag = UserPreferences(host.context).camera.useZeroShutterLag
+        return host.capturePhoto(size?.width, size?.height, zeroShutterLag)?.let(Uri::parse)
     }
 
     fun pickDatetime(

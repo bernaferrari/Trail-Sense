@@ -22,53 +22,17 @@ import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
-interface TrailSenseDestinationHost {
+/**
+ * The shown screen's link to the app: its context, the navigator, its lifecycle and route, and the platform
+ * [ScreenEffects]. Screens themselves read these from the composition (LocalContext, LocalNavigator,
+ * LocalLifecycleOwner, LocalScreenEffects); the host is what quick actions, volume actions and the activity reach.
+ */
+interface TrailSenseDestinationHost : ScreenEffects {
+    val context: Context
+    val navigator: TrailSenseNavigator
     val lifecycleOwner: LifecycleOwner
-    val lifecycleScope: CoroutineScope
-    val mainActivity: MainActivity
-    val intentResultRetriever: IntentResultRetriever
     /** The screen this host shows, with its arguments. */
     val route: Route
-
-    fun requireContext(): Context
-    fun getResources(): Resources
-    fun getString(@StringRes resId: Int): String
-    fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String
-    fun startActivity(intent: Intent)
-    fun findNavigator(): TrailSenseNavigator
-    fun toast(message: CharSequence, short: Boolean = true)
-    fun inBackground(
-        state: BackgroundMinimumState = BackgroundMinimumState.Resumed,
-        cancelWhenRerun: Boolean = true,
-        block: suspend CoroutineScope.() -> Unit
-    ): Job
-    fun requestCamera(action: (hasPermission: Boolean) -> Unit)
-    fun requestActivityRecognition(action: (hasPermission: Boolean) -> Unit)
-    fun requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit)
-    fun requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit)
-    fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit)
-    fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit)
-    fun alertNoCameraPermission()
-    fun alertNoActivityRecognitionPermission()
-    fun showPhotoImport(
-        resolution: Size?,
-        useZeroShutterLag: Boolean,
-        onCapture: (Uri?) -> Unit
-    )
-
-    fun showActionSheet(
-        title: String,
-        subtitle: String?,
-        actions: List<ActionItem>,
-        onAction: (ActionItem?) -> Unit
-    )
-
-    fun showSnackbar(
-        text: String,
-        duration: Int = Snackbar.LENGTH_SHORT,
-        action: String? = null,
-        onAction: () -> Unit = {}
-    ): Snackbar
 
     /**
      * What the shown screen offers the activity while it is on top, such as a FlashlightController for the volume

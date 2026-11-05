@@ -32,7 +32,6 @@ import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForgroundService
-import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.ActionSheetContent
 import com.kylecorry.trail_sense.tools.map.ui.MapControllerHost
@@ -40,13 +39,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
 class TrailSenseComposeDestinationHost(
-    private val context: Context,
+    override val context: Context,
     private val activity: MainActivity,
     private val rootView: View,
     override val route: Route,
     override val lifecycleOwner: LifecycleOwner,
     private val requestRuntimePermissions: (Array<String>, () -> Unit) -> Unit
 ) : TrailSenseReactiveDestinationHost, ScreenEffects {
+
+    override val navigator: TrailSenseNavigator
+        get() = findNavigator()
 
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
     private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
@@ -73,33 +75,33 @@ class TrailSenseComposeDestinationHost(
         return rootView
     }
 
-    override val lifecycleScope: CoroutineScope
+    val lifecycleScope: CoroutineScope
         get() = lifecycleOwner.lifecycleScope
 
-    override val mainActivity: MainActivity
+    val mainActivity: MainActivity
         get() = activity
 
-    override val intentResultRetriever: IntentResultRetriever
+    val intentResultRetriever: IntentResultRetriever
         get() = activity
 
 
-    override fun requireContext(): Context {
+    fun requireContext(): Context {
         return context
     }
 
-    override fun getResources(): android.content.res.Resources {
+    fun getResources(): android.content.res.Resources {
         return context.resources
     }
 
-    override fun getString(resId: Int): String {
+    fun getString(resId: Int): String {
         return context.getString(resId)
     }
 
-    override fun getString(resId: Int, vararg formatArgs: Any?): String {
+    fun getString(resId: Int, vararg formatArgs: Any?): String {
         return context.getString(resId, *formatArgs)
     }
 
-    override fun startActivity(intent: Intent) {
+    fun startActivity(intent: Intent) {
         context.startActivity(intent)
     }
 
@@ -110,7 +112,7 @@ class TrailSenseComposeDestinationHost(
         reactiveComponent.cleanupEffects()
     }
 
-    override fun showActionSheet(
+    fun showActionSheet(
         title: String,
         subtitle: String?,
         actions: List<ActionItem>,
@@ -119,7 +121,7 @@ class TrailSenseComposeDestinationHost(
         actionSheet = ActionSheetState(title, subtitle, actions, onAction)
     }
 
-    override fun showSnackbar(
+    fun showSnackbar(
         text: String,
         duration: Int,
         action: String?,
@@ -134,7 +136,7 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    override fun showPhotoImport(
+    fun showPhotoImport(
         resolution: android.util.Size?,
         useZeroShutterLag: Boolean,
         onCapture: (android.net.Uri?) -> Unit
@@ -153,13 +155,13 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    override fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
+    fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
         requestPermissions(listOf(Manifest.permission.CAMERA)) {
             action(Camera.isAvailable(requireContext()))
         }
     }
 
-    override fun requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
+    fun requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             requestPermissions(listOf(Manifest.permission.ACTIVITY_RECOGNITION)) {
                 action(Permissions.canRecognizeActivity(requireContext()))
@@ -169,7 +171,7 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    override fun requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
+    fun requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
         requestPermission(
             SpecialPermission.SCHEDULE_EXACT_ALARMS,
             PermissionRationale(
@@ -199,7 +201,7 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    override fun requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
+    fun requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
         if (Permissions.canStartLocationForgroundService(requireContext())) {
             action(true)
             return
@@ -219,13 +221,13 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    override fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit) {
+    fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit) {
         requestPermissions(listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
             action(Permissions.isBackgroundLocationEnabled(requireContext()))
         }
     }
 
-    override fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit) {
+    fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit) {
         requestPermission(
             SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS,
             PermissionRationale(
@@ -253,24 +255,24 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    override fun findNavigator(): TrailSenseNavigator {
-        return requireMainActivity().navigator
+    fun findNavigator(): TrailSenseNavigator {
+        return activity.navigator
             ?: error("Root TrailSenseNavigator is not available")
     }
 
-    override fun toast(message: CharSequence, short: Boolean) {
+    fun toast(message: CharSequence, short: Boolean) {
         Alerts.toast(requireContext(), message, short)
     }
 
-    override fun inBackground(
+    fun inBackground(
         state: BackgroundMinimumState,
         cancelWhenRerun: Boolean,
         block: suspend CoroutineScope.() -> Unit
     ): Job {
-        return lifecycleOwner.inBackground(state, true, cancelWhenRerun, block)
+        return lifecycleOwner.inBackground(state, cancelWhenRerun = cancelWhenRerun, block = block)
     }
 
-    override fun alertNoActivityRecognitionPermission() {
+    fun alertNoActivityRecognitionPermission() {
         Alerts.toast(
             requireContext(),
             getString(R.string.activity_recognition_permission_denied),
@@ -278,7 +280,7 @@ class TrailSenseComposeDestinationHost(
         )
     }
 
-    override fun alertNoCameraPermission() {
+    fun alertNoCameraPermission() {
         Alerts.toast(
             requireContext(),
             getString(R.string.camera_permission_denied),
@@ -287,11 +289,11 @@ class TrailSenseComposeDestinationHost(
     }
 
     override fun openWidgets() {
-        requireMainActivity().openWidgets()
+        activity.openWidgets()
     }
 
     override fun reloadTheme() {
-        requireMainActivity().reloadTheme()
+        activity.reloadTheme()
     }
 
     private fun requestPermissions(permissions: List<String>, action: () -> Unit) {
@@ -333,11 +335,11 @@ class TrailSenseComposeDestinationHost(
     }
 
     fun onStart() {
-        requireMainActivity().registerDestinationHost(this)
+        activity.registerDestinationHost(this)
     }
 
     fun onStop() {
-        requireMainActivity().unregisterDestinationHost(this)
+        activity.unregisterDestinationHost(this)
     }
 
     fun onResume() {
@@ -408,15 +410,15 @@ class TrailSenseComposeDestinationHost(
     }
 
     override fun getBottomNavigationHeight(): Int {
-        return requireMainActivity().getBottomNavigationHeight()
+        return activity.getBottomNavigationHeight()
     }
 
     override fun addOverlayView(view: View) {
-        requireMainActivity().addOverlayView(view)
+        activity.addOverlayView(view)
     }
 
     override fun removeOverlayView(view: View) {
-        requireMainActivity().removeOverlayView(view)
+        activity.removeOverlayView(view)
     }
 
 

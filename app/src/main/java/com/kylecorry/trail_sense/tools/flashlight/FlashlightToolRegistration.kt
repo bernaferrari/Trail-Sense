@@ -72,7 +72,7 @@ object FlashlightToolRegistration : ToolRegistration {
                     { context, _, _ -> UserPreferences(context).flashlight.toggleWithVolumeButtons },
                     {
                         FlashlightToggleVolumeAction(
-                            it.requireContext(),
+                            it.context,
                             it.screenControllerAs<FlashlightController>()
                         )
                     }
@@ -80,7 +80,7 @@ object FlashlightToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
                     { context, _, host ->
-                        host.findNavigator().currentRoute == Route.ScreenFlashlight &&
+                        host.navigator.currentRoute == Route.ScreenFlashlight &&
                             UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
                     },
                     { ScreenFlashlightBrightnessVolumeAction(it.screenControllerAs<ScreenFlashlightController>()) }

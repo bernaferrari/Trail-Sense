@@ -26,7 +26,7 @@ class QuickActionBacktrack(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(Route.Paths)
+        host.navigator.navigate(Route.Paths)
         return true
     }
 
