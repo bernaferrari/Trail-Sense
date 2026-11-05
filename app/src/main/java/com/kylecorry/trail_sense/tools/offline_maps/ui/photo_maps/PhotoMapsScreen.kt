@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.view.View
@@ -82,9 +86,8 @@ private class PhotoMapsController(
     private val service = getAppService<MapService>()
     private val formatter = getAppService<FormatService>()
 
-    private var mapId = host.destinationArguments?.getLong("mapId") ?: error("Missing map id")
-    private var autoLockLocation =
-        host.destinationArguments?.getBoolean("autoLockLocation", false) == true
+    private var mapId = host.routeAs<Route.PhotoMaps>().mapId
+    private var autoLockLocation = host.routeAs<Route.PhotoMaps>().autoLockLocation
     private var map: PhotoMap? = null
     private var currentViewController: ViewPhotoMapController? = null
     private var currentCalibrationController: PhotoMapCalibrationController? = null

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -24,10 +26,10 @@ object NavigationToolRegistration : ToolRegistration {
             Tools.NAVIGATION,
             context.getString(R.string.navigation),
             TrailIcons.CompassIcon,
-            R.id.action_navigation,
+            Route.Navigation(),
             ToolCategory.Location,
             guideId = R.raw.guide_tool_navigation,
-            settingsNavAction = R.id.navigationSettingsFragment,
+            settingsRoute = Route.NavigationSettings,
             diagnostics = listOf(
                 *ToolDiagnosticFactory.sightingCompass(context),
                 ToolDiagnosticFactory.gps(context),

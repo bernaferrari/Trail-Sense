@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Bundle
@@ -39,10 +41,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
         }
 
         val intentUri = intent.clipData?.getItemAt(0)?.uri ?: return@ToolIntentHandler false
-        val bundle = Bundle().apply {
-            putParcelable("map_intent_uri", intentUri)
-        }
-        activity.findNavigator()?.navigate(R.id.mapListFragment, bundle)
+        activity.findNavigator()?.navigate(Route.OfflineMapList(importUri = intentUri.toString()))
         true
     }
 
@@ -51,11 +50,11 @@ object OfflineMapsToolRegistration : ToolRegistration {
             Tools.OFFLINE_MAPS,
             context.getString(R.string.offline_maps),
             TrailIcons.PhotoMaps,
-            R.id.mapListFragment,
+            Route.OfflineMapList(),
             ToolCategory.Location,
             context.getString(R.string.offline_maps_summary),
             guideId = R.raw.guide_tool_offline_maps,
-            settingsNavAction = R.id.photoMapSettingsFragment,
+            settingsRoute = Route.PhotoMapSettings,
             quickActions = listOf(
                 ToolQuickAction(
                     Tools.QUICK_ACTION_OPEN_PHOTO_MAP,
@@ -63,9 +62,9 @@ object OfflineMapsToolRegistration : ToolRegistration {
                     ::QuickActionOpenPhotoMap
                 )
             ),
-            additionalNavigationIds = listOf(
-                R.id.photoMapsFragment,
-                R.id.offlineMapViewFragment
+            additionalRoutes = listOf(
+                Route.PhotoMaps::class,
+                Route.VectorMapView::class
             ),
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context),
@@ -113,7 +112,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
                             id = "offline_maps",
                             title = context.getString(R.string.manage_maps),
                             type = MapLayerPreferenceType.Label,
-                            navActionOnClick = R.id.mapListFragment
+                            routeOnClick = Route.OfflineMapList()
                         )
                     ),
                     tileSource = ::TrailMapsTileSource,

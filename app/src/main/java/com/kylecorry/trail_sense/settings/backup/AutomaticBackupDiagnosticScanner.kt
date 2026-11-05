@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.backup
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import com.kylecorry.andromeda.files.ContentFileSystem
 import com.kylecorry.trail_sense.R
@@ -31,7 +33,7 @@ class AutomaticBackupDiagnosticScanner : ToolDiagnosticScanner {
                     context.getString(R.string.automatic_backup_invalid_directory),
                     context.getString(R.string.automatic_backup_invalid_directory_resolution),
                     ToolDiagnosticAction.navigate(
-                        R.id.action_settings,
+                        Route.Settings,
                         context.getString(R.string.open)
                     )
                 )

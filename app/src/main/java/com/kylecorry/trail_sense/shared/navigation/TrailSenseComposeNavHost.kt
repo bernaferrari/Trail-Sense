@@ -42,14 +42,14 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinati
 fun TrailSenseNavDisplay(
     navigator: TrailSenseNavigator,
     modifier: Modifier = Modifier,
-    isTabRoot: (Int) -> Boolean = { false }
+    isTabRoot: (Route) -> Boolean = { false }
 ) {
     val backStack = navigator.backStack
     if (backStack.isEmpty()) return
     val current = backStack.last()
     val activityForBack = LocalContext.current.findMainActivity()
     // Screens opened from another one get a back arrow (TrailSensePage reads it); a tab's first screen doesn't.
-    val back: (() -> Unit)? = if (!isTabRoot(current.destinationId) && backStack.size > 1 && activityForBack != null) {
+    val back: (() -> Unit)? = if (!isTabRoot(current) && backStack.size > 1 && activityForBack != null) {
         { activityForBack.onBackPressedDispatcher.onBackPressed() }
     } else {
         null
@@ -65,9 +65,8 @@ fun TrailSenseNavDisplay(
             transitionSpec = { if (navigator.lastChangeWasTabSwitch) fadeThrough() else slide(1) },
             popTransitionSpec = { slide(-1) },
             predictivePopTransitionSpec = { slide(-1) },
-            entryProvider = { route ->
-                NavEntry(route, contentKey = route.key) { TrailSenseRouteContent(it) }
-            }
+            // A route appears on the stack at most once (TrailSenseNavigator.navigate), so the route is the entry's key.
+            entryProvider = { route -> NavEntry(route) { TrailSenseRouteContent(it) } }
         )
     }
 }
@@ -83,14 +82,14 @@ private fun slide(direction: Int): ContentTransform =
 
 /** One screen: its own lifecycle, permission launcher and destination host, then the screen itself. */
 @Composable
-private fun TrailSenseRouteContent(route: TrailSenseRoute) {
+private fun TrailSenseRouteContent(route: Route) {
     val context = LocalContext.current
     val activity = context.findMainActivity() ?: return
     val rootView = LocalView.current
     // Each screen lives on its own lifecycle: it follows the activity's, and ends when the screen leaves, so
     // observers a screen registers (LiveData, sensors) stop with it instead of firing into a dead screen.
     val parentLifecycleOwner = LocalLifecycleOwner.current
-    val lifecycleOwner = remember(route.key) { DestinationLifecycleOwner(parentLifecycleOwner) }
+    val lifecycleOwner = remember { DestinationLifecycleOwner(parentLifecycleOwner) }
     DisposableEffect(lifecycleOwner) {
         onDispose { lifecycleOwner.destroy() }
     }
@@ -102,12 +101,12 @@ private fun TrailSenseRouteContent(route: TrailSenseRoute) {
         permissionAction.value = null
         action?.invoke()
     }
-    val host = remember(route.key, activity, rootView, lifecycleOwner) {
+    val host = remember(activity, rootView, lifecycleOwner) {
         TrailSenseComposeDestinationHost(
             context = context,
             activity = activity,
             rootView = rootView,
-            arguments = route.arguments,
+            route = route,
             lifecycleOwner = lifecycleOwner
         ) { permissions, action ->
             permissionAction.value = action

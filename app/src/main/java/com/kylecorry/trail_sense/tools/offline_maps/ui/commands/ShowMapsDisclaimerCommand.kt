@@ -27,7 +27,7 @@ class ShowMapsDisclaimerCommand(
             cancelText = context.getString(R.string.tool_user_guide_title),
             shownValue = true
         ) { showUserGuide, _ ->
-            if (showUserGuide && appNavigator.currentDestination != null) {
+            if (showUserGuide && appNavigator.currentRoute != null) {
                 UserGuideUtils.showGuide(
                     context,
                     appNavigator,

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -112,7 +114,7 @@ class MapLayersSheetState(
     @Composable
     fun Content(
         context: Context,
-        onNavigate: (Int) -> Unit,
+        onNavigate: (Route) -> Unit,
         modifier: Modifier = Modifier
     ) {
         if (!isVisible) {
@@ -334,7 +336,7 @@ private fun MapLayersContent(
     onMoveLayerUp: (MapLayerDefinition) -> Unit,
     onMoveLayerDown: (MapLayerDefinition) -> Unit,
     onPreferenceChanged: () -> Unit,
-    onNavigate: (Int) -> Unit,
+    onNavigate: (Route) -> Unit,
     onCopySettings: (MapLayerDefinition) -> Unit,
     onRemoveLayer: (MapLayerDefinition) -> Unit,
     onAddLayers: () -> Unit,
@@ -582,7 +584,7 @@ private fun MapLayerPreferenceRow(
     enabled: Boolean,
     refreshKey: Int,
     onPreferenceChanged: () -> Unit,
-    onNavigate: (Int) -> Unit,
+    onNavigate: (Route) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (preference.type) {
@@ -633,14 +635,14 @@ private fun MapLayerLabelPreferenceRow(
     layerId: String,
     preference: MapLayerPreference,
     enabled: Boolean,
-    onNavigate: (Int) -> Unit,
+    onNavigate: (Route) -> Unit,
     modifier: Modifier = Modifier
 ) {
     SettingsActionRow(
         label = preference.title?.toString().orEmpty(),
         summary = preference.summary?.toString(),
         onClick = {
-            preference.navActionOnClick?.let(onNavigate)
+            preference.routeOnClick?.let(onNavigate)
         },
         enabled = enabled,
         modifier = modifier

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.flashlight
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -40,13 +42,13 @@ object FlashlightToolRegistration : ToolRegistration {
             Tools.FLASHLIGHT,
             context.getString(R.string.flashlight_title),
             TrailIcons.Flashlight,
-            R.id.fragmentToolFlashlight,
+            Route.Flashlight,
             ToolCategory.Signaling,
             initialize = {
                 DependencyRegistry.addSingleton(FlashlightSubsystem.getInstance(it))
             },
             guideId = R.raw.guide_tool_flashlight,
-            settingsNavAction = R.id.flashlightSettingsFragment,
+            settingsRoute = Route.FlashlightSettings,
             quickActions = listOfNotNull(
                 if (hasFlashlight)
                     ToolQuickAction(
@@ -60,8 +62,8 @@ object FlashlightToolRegistration : ToolRegistration {
                     ::QuickActionScreenFlashlight
                 )
             ),
-            additionalNavigationIds = listOf(
-                R.id.fragmentToolScreenFlashlight
+            additionalRoutes = listOf(
+                Route.ScreenFlashlight::class
             ),
             volumeActions = listOf(
                 ToolVolumeAction(
@@ -77,7 +79,7 @@ object FlashlightToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
                     { context, _, host ->
-                        host.findNavigator().currentDestination?.id == R.id.fragmentToolScreenFlashlight &&
+                        host.findNavigator().currentRoute == Route.ScreenFlashlight &&
                             UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
                     },
                     { ScreenFlashlightBrightnessVolumeAction(it as? ScreenFlashlightController) }

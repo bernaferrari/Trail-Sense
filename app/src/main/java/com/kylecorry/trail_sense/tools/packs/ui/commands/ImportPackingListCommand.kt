@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.packs.ui.commands
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.toast
@@ -52,10 +54,7 @@ class ImportPackingListCommand(private val host: TrailSenseDestinationHost) : Co
             }
 
             // Open the pack
-            val bundle = Bundle().apply {
-                putLong("pack_id", packId)
-            }
-            host.findNavigator().navigate(R.id.packItemListFragment, bundle)
+            host.findNavigator().navigate(Route.PackItemList(packId))
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.survival_guide
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -16,10 +18,10 @@ object SurvivalGuideToolRegistration : ToolRegistration {
             Tools.SURVIVAL_GUIDE,
             context.getString(R.string.survival_guide),
             TrailIcons.SurvivalGuide,
-            R.id.fragmentToolSurvivalGuideList,
+            Route.SurvivalGuideList(),
             ToolCategory.Books,
             guideId = R.raw.guide_tool_survival_guide,
-            additionalNavigationIds = listOf(R.id.fragmentToolSurvivalGuideReader),
+            additionalRoutes = listOf(Route.SurvivalGuideReader::class),
             quickActions = listOf(
                 ToolQuickAction(
                     Tools.QUICK_ACTION_SURVIVAL_GUIDE,

@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
@@ -78,16 +80,16 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 
 private val navigationMap = mapOf(
-    R.string.pref_unit_settings to R.id.action_settings_to_unit_settings,
-    R.string.pref_privacy_settings to R.id.action_settings_to_privacy_settings,
-    R.string.pref_experimental_settings to R.id.action_settings_to_experimental_settings,
-    R.string.pref_plugins_settings to R.id.action_settings_to_plugins_settings,
-    R.string.pref_error_settings to R.id.action_settings_to_error_settings,
-    R.string.pref_sensor_settings to R.id.action_settings_to_sensor_settings,
-    R.string.pref_backup_settings to R.id.action_settings_to_backup_settings,
-    R.string.pref_tool_settings_header_key to R.id.toolsSettingsFragment,
-    R.string.pref_open_source_licenses to R.id.action_action_settings_to_licenseFragment,
-    R.string.pref_diagnostics to R.id.action_settings_to_diagnostics
+    R.string.pref_unit_settings to Route.UnitSettings,
+    R.string.pref_privacy_settings to Route.PrivacySettings,
+    R.string.pref_experimental_settings to Route.ExperimentalSettings,
+    R.string.pref_plugins_settings to Route.PluginsSettings,
+    R.string.pref_error_settings to Route.ErrorSettings,
+    R.string.pref_sensor_settings to Route.SensorSettings,
+    R.string.pref_backup_settings to Route.BackupSettings,
+    R.string.pref_tool_settings_header_key to Route.ToolsSettings,
+    R.string.pref_open_source_licenses to Route.Licenses,
+    R.string.pref_diagnostics to Route.Diagnostics
 )
 
 @Composable
@@ -138,7 +140,7 @@ private fun SettingsScreen(
     version: String,
     pluginsEnabled: Boolean,
     onBack: () -> Unit,
-    onNavigate: (Int) -> Unit,
+    onNavigate: (Route) -> Unit,
     appearance: @Composable () -> Unit = {},
     onCompactModeChanged: (Boolean) -> Unit = {},
     onShowAllLabelsChanged: (Boolean) -> Unit = {}
@@ -146,7 +148,7 @@ private fun SettingsScreen(
     val context = LocalContext.current
     val toolGroups = remember {
         val categories = com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort(context)
-            .sort(Tools.getTools(context).filter { it.settingsNavAction != null })
+            .sort(Tools.getTools(context).filter { it.settingsRoute != null })
             .filter { it.tools.isNotEmpty() }
         groupSettingsTools(categories.map { SettingsToolGroup(it.categoryName, it.tools) }, context.getString(R.string.other))
     }
@@ -228,7 +230,7 @@ private fun SettingsScreen(
                             title = tool.name,
                             icon = rememberVectorPainter(tool.icon),
                             position = position,
-                            onClick = { tool.settingsNavAction?.let(onNavigate) }
+                            onClick = { tool.settingsRoute?.let(onNavigate) }
                         )
                     }
                 }
@@ -272,7 +274,7 @@ private fun SettingsScreen(
                     subtitle = stringResource(R.string.about_version, version),
                     icon = rememberVectorPainter(Icons.Rounded.Info),
                     position = position,
-                    onClick = { onNavigate(R.id.action_settings_to_about) }
+                    onClick = { onNavigate(Route.About) }
                 )
             }
         }

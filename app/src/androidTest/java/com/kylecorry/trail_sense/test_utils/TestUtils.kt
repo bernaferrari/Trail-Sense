@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.Manifest
 import android.content.ComponentName
 import android.content.Context
@@ -221,11 +223,11 @@ object TestUtils {
         scenario.onActivity { activity ->
             onActivityCallback(activity)
             if (toolId == 0L) {
-                activity.findNavigator()!!.navigate(R.id.action_experimental_tools)
+                activity.findNavigator()!!.navigate(Route.Tools)
             } else {
                 val tool = Tools.getTool(context, toolId)
                 tool?.let {
-                    activity.findNavigator()!!.navigate(tool.navAction)
+                    activity.findNavigator()!!.navigate(tool.route)
                 }
             }
         }

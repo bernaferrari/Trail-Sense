@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.climate
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -16,7 +18,7 @@ object ClimateToolRegistration : ToolRegistration {
             Tools.CLIMATE,
             context.getString(R.string.tool_climate),
             TrailIcons.TemperatureRange,
-            R.id.climateFragment,
+            Route.Climate,
             ToolCategory.Weather,
             context.getString(R.string.tool_climate_summary),
             guideId = R.raw.guide_tool_climate,

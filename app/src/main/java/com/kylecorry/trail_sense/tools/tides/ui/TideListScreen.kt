@@ -4,6 +4,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
@@ -145,16 +147,11 @@ private class TideListController(private val host: TrailSenseDestinationHost) {
     }
 
     fun editTide(tide: TideTable) {
-        host.findNavigator().navigate(
-            R.id.action_tideList_to_createTide,
-            Bundle().apply {
-                putLong("edit_tide_id", tide.id)
-            }
-        )
+        host.findNavigator().navigate(Route.CreateTide(editTideId = tide.id))
     }
 
     fun createTide() {
-        host.findNavigator().navigate(R.id.action_tideList_to_createTide)
+        host.findNavigator().navigate(Route.CreateTide())
     }
 
     fun selectTide(tide: TideTable) {

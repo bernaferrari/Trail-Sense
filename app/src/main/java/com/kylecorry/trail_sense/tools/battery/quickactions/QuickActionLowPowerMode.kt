@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.battery.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -44,7 +45,7 @@ class QuickActionLowPowerMode(button: QuickActionButtonView, host: TrailSenseDes
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().openTool(Tools.BATTERY)
+        host.findNavigator().navigate(Route.Battery)
         return true
     }
 }

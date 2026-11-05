@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.ruler.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +17,6 @@ import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerCanvas
@@ -88,7 +89,7 @@ class QuickActionRuler(
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().openTool(Tools.RULER)
+        host.findNavigator().navigate(Route.Ruler)
         return true
     }
 

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -19,7 +21,7 @@ class AltimeterDiagnosticScanner : ToolDiagnosticScanner {
                     context.getString(R.string.overridden),
                     resolution = context.getString(R.string.elevation_override_resolution),
                     action = ToolDiagnosticAction.navigate(
-                        R.id.calibrateAltimeterFragment,
+                        Route.CalibrateAltimeter,
                         context.getString(R.string.settings)
                     )
                 )

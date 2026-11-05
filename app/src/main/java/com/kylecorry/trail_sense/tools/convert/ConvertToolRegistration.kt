@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.convert
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -16,7 +18,7 @@ object ConvertToolRegistration : ToolRegistration {
             Tools.CONVERT,
             context.getString(R.string.convert),
             TrailIcons.ToolDistanceConvert,
-            R.id.toolConvertFragment,
+            Route.Convert,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_convert,
             quickActions = listOf(

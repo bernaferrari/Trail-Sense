@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.clouds.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -17,18 +19,13 @@ class QuickActionScanCloud(button: QuickActionButtonView, host: TrailSenseDestin
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(
-            R.id.cloudFragment,
-            Bundle().apply {
-                putBoolean("open_scanner", true)
-            },
-        )
+        host.findNavigator().navigate(Route.Clouds(openScanner = true))
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
         host.findNavigator().navigate(
-            R.id.cloudFragment
+            Route.Clouds()
         )
         return true
     }

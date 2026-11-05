@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.annotation.StringRes
@@ -557,7 +559,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
             getString(R.string.set)
         ) {
             activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
-            appNavigator.navigate(R.id.calibrateGPSFragment)
+            appNavigator.navigate(Route.CalibrateGps)
         }
         activity.errorBanner.report(error)
     }

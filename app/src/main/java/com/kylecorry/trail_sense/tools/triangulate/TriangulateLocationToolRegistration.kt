@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.triangulate
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -15,7 +17,7 @@ object TriangulateLocationToolRegistration : ToolRegistration {
             Tools.TRIANGULATE_LOCATION,
             context.getString(R.string.tool_triangulate_title),
             TrailIcons.ToolTriangulate,
-            R.id.fragmentToolTriangulate,
+            Route.Triangulate,
             ToolCategory.Location,
             guideId = R.raw.guide_tool_triangulate_location,
             diagnostics = listOf(

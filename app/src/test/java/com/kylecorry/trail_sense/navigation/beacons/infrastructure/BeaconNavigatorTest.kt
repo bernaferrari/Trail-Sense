@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure
 
-import android.os.Bundle
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.IAppNavigation
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
@@ -22,15 +22,13 @@ internal class BeaconNavigatorTest {
     private lateinit var navigation: IAppNavigation
     private lateinit var service: IBeaconService
     private lateinit var appNavigator: Navigator
-    private lateinit var bundle: Bundle
 
     @BeforeEach
     fun setup() {
         navigation = mock()
         service = mock()
         appNavigator = mock()
-        bundle = mock()
-        navigator = BeaconNavigator(service, navigation, appNavigator, Dispatchers.Default) { bundle }
+        navigator = BeaconNavigator(service, navigation, appNavigator, Dispatchers.Default)
     }
 
     @Test
@@ -40,8 +38,7 @@ internal class BeaconNavigatorTest {
         navigator.navigateTo(beacon)
 
         verify(appNavigator).navigateTo(2L)
-        verify(bundle).putBoolean(BeaconNavigator.ARG_NAVIGATION_STARTED, true)
-        verify(navigation).navigate(eq(R.id.action_navigation), eq(bundle))
+        verify(navigation).navigate(eq(Route.Navigation(navigationStarted = true)))
     }
 
     @Test
@@ -55,8 +52,7 @@ internal class BeaconNavigatorTest {
 
         verify(service).add(beacon)
         verify(appNavigator).navigateTo(1L)
-        verify(bundle).putBoolean(BeaconNavigator.ARG_NAVIGATION_STARTED, true)
-        verify(navigation).navigate(eq(R.id.action_navigation), eq(bundle))
+        verify(navigation).navigate(eq(Route.Navigation(navigationStarted = true)))
 
     }
 }

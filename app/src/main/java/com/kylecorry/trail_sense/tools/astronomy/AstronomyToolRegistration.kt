@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
@@ -46,10 +48,10 @@ object AstronomyToolRegistration : ToolRegistration {
             Tools.ASTRONOMY,
             context.getString(R.string.astronomy),
             TrailIcons.Astronomy,
-            R.id.action_astronomy,
+            Route.Astronomy,
             ToolCategory.Time,
             guideId = R.raw.guide_tool_astronomy,
-            settingsNavAction = R.id.astronomySettingsFragment,
+            settingsRoute = Route.AstronomySettings,
             quickActions = listOf(
                 ToolQuickAction(
                     Tools.QUICK_ACTION_SUNSET_ALERT,

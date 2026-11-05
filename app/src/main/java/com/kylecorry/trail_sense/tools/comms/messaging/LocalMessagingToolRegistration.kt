@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.comms.messaging
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Package
@@ -16,7 +18,7 @@ object LocalMessagingToolRegistration : ToolRegistration {
             Tools.LOCAL_MESSAGING,
             context.getString(R.string.local_messaging),
             TrailIcons.Send,
-            R.id.fragmentLocalMessaging,
+            Route.LocalMessaging,
             ToolCategory.Communication,
             isExperimental = true,
             isAvailable = {

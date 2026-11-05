@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -30,7 +32,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(R.id.mapListFragment)
+        host.findNavigator().navigate(Route.OfflineMapList())
         return true
     }
 
@@ -53,15 +55,9 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
                 if (wasSuccessful) {
                     if (id != 0L) {
                         host.findNavigator()
-                            .navigate(
-                                R.id.photoMapsFragment,
-                                Bundle().apply {
-                                    putLong("mapId", id)
-                                    putBoolean("autoLockLocation", true)
-                                }
-                            )
+                            .navigate(Route.PhotoMaps(mapId = id, autoLockLocation = true))
                     } else {
-                        host.findNavigator().navigate(R.id.mapListFragment)
+                        host.findNavigator().navigate(Route.OfflineMapList())
                     }
                 }
             }

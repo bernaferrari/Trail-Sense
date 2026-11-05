@@ -4,6 +4,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.semantics.contentDescription
@@ -226,7 +228,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
 
     fun openTideList() {
         table = null
-        host.findNavigator().navigate(R.id.action_tides_to_tideList)
+        host.findNavigator().navigate(Route.TideList)
     }
 
     fun onDisplayDateSelected(date: LocalDate) {
@@ -262,7 +264,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
                     host.getString(R.string.calibrate_new_tide)
                 )
                 if (!cancelled) {
-                    host.findNavigator().navigate(R.id.action_tides_to_tideList)
+                    host.findNavigator().navigate(Route.TideList)
                 }
                 return@launch
             }

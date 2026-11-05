@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.OnBackPressedCallback
@@ -151,8 +155,8 @@ private class CreateFieldGuideSightingController(private val host: TrailSenseDes
             return
         }
         isInitialized = true
-        pageId = host.destinationArguments?.getLong("page_id") ?: 0L
-        sightingId = host.destinationArguments?.getLong("sighting_id") ?: 0L
+        pageId = host.routeAs<Route.CreateFieldGuideSighting>().pageId
+        sightingId = host.routeAs<Route.CreateFieldGuideSighting>().sightingId
         backCallback = host.promptIfUnsavedChanges(this::hasChanges)
         if (sightingId != 0L) {
             loadSighting()

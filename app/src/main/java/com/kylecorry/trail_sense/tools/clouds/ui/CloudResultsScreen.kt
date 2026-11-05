@@ -3,6 +3,12 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import androidx.core.net.toUri
+
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.foundation.layout.height
@@ -143,7 +149,7 @@ private class CloudResultsController(private val host: TrailSenseDestinationHost
     val formatter by lazy { FormatService.getInstance(host.requireContext()) }
 
     private val uri: Uri? by lazy {
-        BundleCompat.getParcelable(host.destinationArguments ?: Bundle(), "image", Uri::class.java)
+        host.routeAs<Route.CloudResults>().imageUri?.toUri()
     }
 
     fun onResume() {

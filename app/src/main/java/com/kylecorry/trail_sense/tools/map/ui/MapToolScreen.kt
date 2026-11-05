@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.map.ui
 
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.layout.heightIn
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.layout.Spacer
@@ -154,7 +158,7 @@ private class MapController(
             }
             false -> MapEmptyState(
                 onAddMap = {
-                    host.findNavigator().navigate(R.id.mapListFragment)
+                    host.findNavigator().navigate(Route.OfflineMapList())
                 },
                 modifier = modifier
             )
@@ -162,8 +166,8 @@ private class MapController(
         }
     }
 
-    private fun navigateFromLayerSheet(action: Int) {
-        host.findNavigator().navigate(action)
+    private fun navigateFromLayerSheet(route: Route) {
+        host.findNavigator().navigate(route)
     }
 
     override fun onPause() {
@@ -352,12 +356,7 @@ private class MapController(
 
                         onMain {
                             stopDistanceMeasurement()
-                            appNavigator.navigate(
-                                R.id.pathDetailsFragment,
-                                Bundle().apply {
-                                    putLong("path_id", id)
-                                }
-                            )
+                            appNavigator.navigate(Route.PathOverview(pathId = id))
                         }
                     }
                 }
@@ -469,12 +468,8 @@ private class MapController(
                             formatter.formatLocation(location),
                             listOf(
                                 ActionItem(host.getString(R.string.beacon), TrailIcons.Location) {
-                                    val bundle = Bundle().apply {
-                                        putParcelable("initial_location", GeoUri(location))
-                                    }
                                     appNavigator.navigate(
-                                        R.id.placeBeaconFragment,
-                                        bundle
+                                        Route.PlaceBeacon(initialLocation = location.toRouteLocation())
                                     )
                                     manager.setSelectedLocation(null)
                                 },

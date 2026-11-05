@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
@@ -27,25 +29,25 @@ object SettingsToolRegistration : ToolRegistration {
             Tools.SETTINGS,
             context.getString(R.string.settings),
             TrailIcons.Settings,
-            R.id.action_settings,
+            Route.Settings,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_settings,
-            additionalNavigationIds = listOf(
-                R.id.unitSettingsFragment,
-                R.id.privacySettingsFragment,
-                R.id.experimentalSettingsFragment,
-                R.id.errorSettingsFragment,
-                R.id.sensorSettingsFragment,
-                R.id.licenseFragment,
-                R.id.cellSignalSettingsFragment,
-                R.id.calibrateCompassFragment,
-                R.id.calibrateAltimeterFragment,
-                R.id.calibrateGPSFragment,
-                R.id.calibrateBarometerFragment,
-                R.id.thermometerSettingsFragment,
-                R.id.cameraSettingsFragment,
-                R.id.toolsSettingsFragment,
-                R.id.backupSettingsFragment
+            additionalRoutes = listOf(
+                Route.UnitSettings::class,
+                Route.PrivacySettings::class,
+                Route.ExperimentalSettings::class,
+                Route.ErrorSettings::class,
+                Route.SensorSettings::class,
+                Route.Licenses::class,
+                Route.CellSignalSettings::class,
+                Route.CalibrateCompass::class,
+                Route.CalibrateAltimeter::class,
+                Route.CalibrateGps::class,
+                Route.CalibrateBarometer::class,
+                Route.ThermometerSettings::class,
+                Route.CameraSettings::class,
+                Route.ToolsSettings::class,
+                Route.BackupSettings::class
                 // TODO: Add all the tool settings
             ),
             notificationChannels = listOf(

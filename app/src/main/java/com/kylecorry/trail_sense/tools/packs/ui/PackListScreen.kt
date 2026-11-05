@@ -4,6 +4,8 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.animation.core.animateFloatAsState
 import com.kylecorry.trail_sense.shared.views.PackEmptyIllustration
 import androidx.compose.foundation.layout.Arrangement
@@ -204,10 +206,7 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
 
     fun openPack(packId: Long) {
         tryOrNothing {
-            val bundle = Bundle().apply {
-                putLong("pack_id", packId)
-            }
-            host.findNavigator().navigate(R.id.action_pack_to_pack_items, bundle)
+            host.findNavigator().navigate(Route.PackItemList(packId))
         }
     }
 

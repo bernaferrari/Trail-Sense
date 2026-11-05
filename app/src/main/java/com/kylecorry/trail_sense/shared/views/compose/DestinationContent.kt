@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
@@ -75,7 +76,7 @@ import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 
 /**
  * Extracted destination dispatch logic.
- * Renders the appropriate screen composable based on the destination string argument.
+ * Renders the screen for a [Route]. The `when` is exhaustive, so a new route without a screen doesn't compile.
  * This keeps TrailSenseComposeDestinationHost.Content() small and the routing centralized.
  *
  * Behavior is 100% identical to the previous inlined when-expression (including how
@@ -84,73 +85,73 @@ import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
  */
 @Composable
 fun DestinationContent(
-    destination: String?,
+    route: Route,
     host: TrailSenseComposeDestinationHost,
     modifier: Modifier = Modifier
 ) {
     with(host) {
-        when (destination) {
+        when (route) {
             // --- Simple / no-arg screens (tools and misc) ---
-            DESTINATION_LEVEL -> LevelScreen()
-            DESTINATION_WHISTLE -> WhistleScreen(
+            Route.Level -> LevelScreen()
+            Route.Whistle -> WhistleScreen(
                 onAudioUnavailable = { findNavigator().navigateUp() }
             )
-            DESTINATION_LIGHT_METER -> LightMeterScreen()
-            DESTINATION_CONVERT -> ConvertScreen()
-            DESTINATION_BALLISTICS -> BallisticsScreen()
-            DESTINATION_SOLAR_PANEL -> SolarPanelScreen()
-            DESTINATION_LIGHTNING -> LightningScreen()
-            DESTINATION_WHITE_NOISE -> WhiteNoiseScreen()
-            DESTINATION_METAL_DETECTOR -> MetalDetectorToolScreen()
-            DESTINATION_DECLINATION -> DeclinationScreen()
-            DESTINATION_RULER -> RulerScreen()
-            DESTINATION_TEMPERATURE_ESTIMATION -> TemperatureEstimationToolScreen()
+            Route.LightMeter -> LightMeterScreen()
+            Route.Convert -> ConvertScreen()
+            Route.Ballistics -> BallisticsScreen()
+            Route.SolarPanel -> SolarPanelScreen()
+            Route.Lightning -> LightningScreen()
+            Route.WhiteNoise -> WhiteNoiseScreen()
+            Route.MetalDetector -> MetalDetectorToolScreen()
+            Route.Declination -> DeclinationScreen()
+            Route.Ruler -> RulerScreen()
+            Route.TemperatureEstimation -> TemperatureEstimationToolScreen()
 
             // --- Guide / diagnostics / error ---
-            DESTINATION_GUIDE -> GuideScreen(
-                name = requireArguments().getString("guide_name", ""),
-                resource = requireArguments().getInt("guide_contents")
+            is Route.Guide -> GuideScreen(
+                name = route.name,
+                resource = route.contents
             )
-            DESTINATION_EXPERIMENTATION -> ExperimentationContent()
-            DESTINATION_ERROR_HANDLER -> ErrorHandler()
-            DESTINATION_GUIDE_LIST -> GuideList()
-            DESTINATION_DIAGNOSTICS -> Diagnostics()
+            Route.Experimentation -> ExperimentationContent()
+            is Route.ErrorHandler -> ErrorHandler(route)
+            Route.GuideList -> GuideList()
+            Route.Diagnostics -> Diagnostics()
 
             // --- Settings screens (many defined as internal composables on host) ---
-            DESTINATION_CELL_SIGNAL_SETTINGS -> CellSignalSettings()
-            DESTINATION_CLOCK_SETTINGS -> ClockSettings()
-            DESTINATION_TIDE_SETTINGS -> TideSettings()
-            DESTINATION_TURN_BACK_SETTINGS -> TurnBackSettings()
-            DESTINATION_WATER_BOIL_SETTINGS -> WaterBoilSettings()
-            DESTINATION_LICENSES -> LicensesScreen()
-            DESTINATION_ABOUT -> com.kylecorry.trail_sense.settings.ui.AboutToolScreen(this)
-            DESTINATION_BEACON_SETTINGS -> BeaconSettings()
-            DESTINATION_BUBBLE_LEVEL_SETTINGS -> BubbleLevelSettings()
-            DESTINATION_CAMERA_SETTINGS -> CameraSettings()
-            DESTINATION_ERROR_SETTINGS -> ErrorSettings()
-            DESTINATION_CLINOMETER_SETTINGS -> ClinometerSettings()
-            DESTINATION_PRIVACY_SETTINGS -> PrivacySettings()
-            DESTINATION_SENSOR_SETTINGS -> SensorSettings()
-            DESTINATION_RULER_SETTINGS -> RulerSettings()
-            DESTINATION_FLASHLIGHT_SETTINGS -> FlashlightSettings()
-            DESTINATION_POWER_SETTINGS -> PowerSettings()
-            DESTINATION_TOOLS_SETTINGS -> ToolsSettings()
-            DESTINATION_PLUGINS_SETTINGS -> PluginsSettings()
-            DESTINATION_MAP_SETTINGS -> MapSettings()
-            DESTINATION_PHOTO_MAP_SETTINGS -> PhotoMapSettings()
-            DESTINATION_BACKUP_SETTINGS -> BackupSettings()
-            DESTINATION_EXPERIMENTAL_SETTINGS -> ExperimentalSettings()
-            DESTINATION_UNIT_SETTINGS -> UnitSettings()
-            DESTINATION_AUGMENTED_REALITY_SETTINGS -> AugmentedRealitySettings()
-            DESTINATION_THERMOMETER_SETTINGS -> ThermometerSettingsToolScreen(this)
-            DESTINATION_WEATHER_SETTINGS -> WeatherSettingsToolScreen(this)
-            DESTINATION_PEDOMETER_SETTINGS -> PedometerSettingsToolScreen(this)
-            DESTINATION_NAVIGATION_SETTINGS -> NavigationSettingsToolScreen(this)
-            DESTINATION_PATHS_SETTINGS -> PathsSettingsToolScreen(this)
-            DESTINATION_ASTRONOMY_SETTINGS -> AstronomySettingsToolScreen(this)
+            Route.CellSignalSettings -> CellSignalSettings()
+            Route.ClockSettings -> ClockSettings()
+            Route.TideSettings -> TideSettings()
+            Route.TurnBackSettings -> TurnBackSettings()
+            Route.WaterBoilSettings -> WaterBoilSettings()
+            Route.Licenses -> LicensesScreen()
+            Route.About -> com.kylecorry.trail_sense.settings.ui.AboutToolScreen(this)
+            Route.BeaconSettings -> BeaconSettings()
+            Route.BubbleLevelSettings -> BubbleLevelSettings()
+            Route.CameraSettings -> CameraSettings()
+            Route.ErrorSettings -> ErrorSettings()
+            Route.ClinometerSettings -> ClinometerSettings()
+            Route.PrivacySettings -> PrivacySettings()
+            Route.SensorSettings -> SensorSettings()
+            Route.RulerSettings -> RulerSettings()
+            Route.FlashlightSettings -> FlashlightSettings()
+            Route.PowerSettings -> PowerSettings()
+            Route.ToolsSettings -> ToolsSettings()
+            Route.PluginsSettings -> PluginsSettings()
+            Route.MapSettings -> MapSettings()
+            Route.PhotoMapSettings -> PhotoMapSettings()
+            Route.BackupSettings -> BackupSettings()
+            Route.ExperimentalSettings -> ExperimentalSettings()
+            Route.UnitSettings -> UnitSettings()
+            Route.AugmentedRealitySettings -> AugmentedRealitySettings()
+            Route.ThermometerSettings -> ThermometerSettingsToolScreen(this)
+            Route.WeatherSettings -> WeatherSettingsToolScreen(this)
+            Route.PedometerSettings -> PedometerSettingsToolScreen(this)
+            Route.NavigationSettings -> NavigationSettingsToolScreen(this)
+            Route.PathsSettings -> PathsSettingsToolScreen(this)
+            Route.AstronomySettings -> AstronomySettingsToolScreen(this)
 
             // --- Map (special: controller callback + reactive) ---
-            DESTINATION_MAP -> MapToolScreen(
+            Route.Map -> MapToolScreen(
                 component = reactiveComponent,
                 host = this,
                 onController = {
@@ -162,7 +163,7 @@ fun DestinationContent(
             )
 
             // --- Special init destinations with lambdas (still dispatch here for visual) ---
-            DESTINATION_CLIFF_HEIGHT -> CliffHeightScreen(
+            Route.CliffHeight -> CliffHeightScreen(
                 onOpenGuide = {
                     UserGuideUtils.showGuide(
                         requireContext(),
@@ -171,13 +172,13 @@ fun DestinationContent(
                     )
                 }
             )
-            DESTINATION_MAGNIFIER -> MagnifierScreen(
+            Route.Magnifier -> MagnifierScreen(
                 onRequestCamera = ::requestCameraForMagnifier
             )
-            DESTINATION_MIRROR_CAMERA -> MirrorCamera()
-            DESTINATION_WATER_PURIFICATION -> WaterPurification()
-            DESTINATION_PLUGIN_DETAILS -> PluginDetailsScreen(
-                packageId = requireArguments().getString("package_id").orEmpty(),
+            Route.MirrorCamera -> MirrorCamera()
+            Route.WaterPurification -> WaterPurification()
+            is Route.PluginDetails -> PluginDetailsScreen(
+                packageId = route.packageId,
                 pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
                 onNavigateUp = {
                     tryOrNothing {
@@ -187,68 +188,69 @@ fun DestinationContent(
             )
 
             // --- Thin host wrappers (stateful, stay in host file) ---
-            DESTINATION_TOOLS -> ToolsHome()
-            DESTINATION_SCREEN_FLASHLIGHT -> ScreenFlashlight()
-            DESTINATION_NOTES -> Notes()
-            DESTINATION_NOTE_EDITOR -> NoteEditor()
-            DESTINATION_SURVIVAL_GUIDE_READER -> SurvivalGuideReader()
-            DESTINATION_SURVIVAL_GUIDE_LIST -> SurvivalGuideList()
-            DESTINATION_PEDOMETER -> Pedometer()
-            DESTINATION_FLASHLIGHT -> Flashlight()
-            DESTINATION_BATTERY -> BatteryTool()
+            Route.Tools -> ToolsHome()
+            Route.ScreenFlashlight -> ScreenFlashlight()
+            Route.Notes -> Notes()
+            is Route.NoteEditor -> NoteEditor(route)
+            is Route.SurvivalGuideReader -> SurvivalGuideReader(route)
+            is Route.SurvivalGuideList -> SurvivalGuideList()
+            Route.Pedometer -> Pedometer()
+            Route.Flashlight -> Flashlight()
+            Route.Battery -> BatteryTool()
 
             // --- Tool screens that receive the host for callbacks / services ---
-            DESTINATION_TRIANGULATE -> TriangulateToolScreen(this)
-            DESTINATION_CLOCK -> ClockToolScreen(this)
-            DESTINATION_SIGNAL_FINDER -> SignalFinderToolScreen(this)
-            DESTINATION_TURN_BACK -> TurnBackToolScreen(this)
-            DESTINATION_SETTINGS -> SettingsToolScreen(this)
-            DESTINATION_STRIDE_LENGTH_ESTIMATION -> StrideLengthEstimationToolScreen(this)
-            DESTINATION_CLOUDS -> CloudToolScreen(this)
-            DESTINATION_CLOUD_RESULTS -> CloudResultsToolScreen(this)
-            DESTINATION_ASTRONOMY -> AstronomyToolScreen(this)
-            DESTINATION_AUGMENTED_REALITY -> AugmentedRealityToolScreen(this)
-            DESTINATION_BEACON_LIST -> BeaconListToolScreen(
+            Route.Triangulate -> TriangulateToolScreen(this)
+            Route.Clock -> ClockToolScreen(this)
+            Route.SignalFinder -> SignalFinderToolScreen(this)
+            Route.TurnBack -> TurnBackToolScreen(this)
+            Route.Settings -> SettingsToolScreen(this)
+            Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen(this)
+            is Route.Clouds -> CloudToolScreen(this)
+            is Route.CloudResults -> CloudResultsToolScreen(this)
+            Route.Astronomy -> AstronomyToolScreen(this)
+            is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
+            is Route.BeaconList -> BeaconListToolScreen(
                 host = this,
                 onController = { beaconListController = it }
             )
-            DESTINATION_BEACON_DETAILS -> BeaconDetailsToolScreen(this)
-            DESTINATION_PLACE_BEACON -> PlaceBeaconToolScreen(this)
-            DESTINATION_OFFLINE_MAP_LIST -> OfflineMapListToolScreen(this)
-            DESTINATION_SCAN_QR -> ScanQRToolScreen(this)
-            DESTINATION_VIEW_QR -> QRShareScreen(
-                title = requireArguments().getString("qr_title").orEmpty(),
-                text = requireArguments().getString("qr_text").orEmpty()
+            is Route.BeaconDetails -> BeaconDetailsToolScreen(this)
+            is Route.PlaceBeacon -> PlaceBeaconToolScreen(this)
+            is Route.OfflineMapList -> OfflineMapListToolScreen(this)
+            Route.ScanQr -> ScanQRToolScreen(this)
+            is Route.ViewQr -> QRShareScreen(
+                title = route.title,
+                text = route.text
             )
-            DESTINATION_VECTOR_MAP_VIEW -> ViewVectorMapToolScreen(this)
-            DESTINATION_NAVIGATION -> NavigatorToolScreen(this)
-            DESTINATION_PATH_OVERVIEW -> PathOverviewToolScreen(this)
-            DESTINATION_PATHS -> PathsToolScreen(this)
-            DESTINATION_CALIBRATE_ALTIMETER -> CalibrateAltimeterToolScreen(this)
-            DESTINATION_CALIBRATE_BAROMETER -> CalibrateBarometerToolScreen(this)
-            DESTINATION_CALIBRATE_COMPASS -> CalibrateCompassToolScreen(this)
-            DESTINATION_CALIBRATE_GPS -> CalibrateGPSToolScreen(this)
-            DESTINATION_SENSOR_DETAILS -> SensorDetailsToolScreen(this)
-            DESTINATION_TIDES -> TidesToolScreen(this)
-            DESTINATION_TIDE_LIST -> TideListToolScreen(this)
-            DESTINATION_CREATE_TIDE -> CreateTideToolScreen(this)
-            DESTINATION_CLIMATE -> ClimateToolScreen(this)
-            DESTINATION_PACK_LIST -> PackListToolScreen(this)
-            DESTINATION_PACK_ITEM_LIST -> PackItemListToolScreen(this)
-            DESTINATION_CREATE_PACK_ITEM -> CreateItemToolScreen(this)
-            DESTINATION_FIELD_GUIDE -> FieldGuideToolScreen(this)
-            DESTINATION_FIELD_GUIDE_PAGE -> FieldGuidePageToolScreen(this)
-            DESTINATION_FIELD_GUIDE_SETTINGS -> FieldGuideSettingsToolScreen(this)
-            DESTINATION_SIGHTING_LIST -> SightingListToolScreen(this)
-            DESTINATION_CREATE_FIELD_GUIDE_PAGE -> CreateFieldGuidePageToolScreen(this)
-            DESTINATION_CREATE_FIELD_GUIDE_SIGHTING -> CreateFieldGuideSightingToolScreen(this)
-            DESTINATION_PHOTO_MAPS -> PhotoMapsToolScreen(this)
-            DESTINATION_CLINOMETER -> ClinometerToolScreen(
+            is Route.VectorMapView -> ViewVectorMapToolScreen(this)
+            is Route.Navigation -> NavigatorToolScreen(this)
+            is Route.PathOverview -> PathOverviewToolScreen(this)
+            Route.Paths -> PathsToolScreen(this)
+            Route.CalibrateAltimeter -> CalibrateAltimeterToolScreen(this)
+            Route.CalibrateBarometer -> CalibrateBarometerToolScreen(this)
+            Route.CalibrateCompass -> CalibrateCompassToolScreen(this)
+            Route.CalibrateGps -> CalibrateGPSToolScreen(this)
+            Route.SensorDetails -> SensorDetailsToolScreen(this)
+            Route.Tides -> TidesToolScreen(this)
+            Route.TideList -> TideListToolScreen(this)
+            is Route.CreateTide -> CreateTideToolScreen(this)
+            Route.Climate -> ClimateToolScreen(this)
+            Route.PackList -> PackListToolScreen(this)
+            is Route.PackItemList -> PackItemListToolScreen(this)
+            is Route.CreatePackItem -> CreateItemToolScreen(this)
+            Route.FieldGuide -> FieldGuideToolScreen(this)
+            is Route.FieldGuidePage -> FieldGuidePageToolScreen(this)
+            Route.FieldGuideSettings -> FieldGuideSettingsToolScreen(this)
+            is Route.SightingList -> SightingListToolScreen(this)
+            is Route.CreateFieldGuidePage -> CreateFieldGuidePageToolScreen(this)
+            is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(this)
+            is Route.PhotoMaps -> PhotoMapsToolScreen(this)
+            Route.Clinometer -> ClinometerToolScreen(
                 host = this,
                 onController = { clinometerLockController = it }
             )
-            DESTINATION_WEATHER -> WeatherToolScreen(this)
-            // Unknown destination: emit nothing (matches prior behavior; no else branch)
+            Route.Weather -> WeatherToolScreen(this)
+            // These open the companion app (TrailSenseComposeDestinationHost.onStart) and draw nothing here.
+            Route.LocalMessaging, Route.LocalTalk -> Unit
         }
     }
 }

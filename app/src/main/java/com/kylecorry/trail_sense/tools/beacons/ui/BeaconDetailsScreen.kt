@@ -4,6 +4,10 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -154,7 +158,7 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
     private val astronomy = AstronomyService()
 
     private val beaconId: Long by lazy {
-        host.destinationArguments?.getLong("beacon_id") ?: error("Missing beacon id")
+        host.routeAs<Route.BeaconDetails>().beaconId
     }
     var beacon by mutableStateOf<Beacon?>(null)
         private set
@@ -282,17 +286,11 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
     }
 
     fun navigateToBeacon() {
-        val bundle = Bundle().apply {
-            putLong("destination", beaconId)
-        }
-        host.findNavigator().openTool(Tools.NAVIGATION, bundle)
+        host.findNavigator().navigate(Route.Navigation(destinationBeaconId = beaconId))
     }
 
     fun editBeacon() {
-        val bundle = Bundle().apply {
-            putLong("edit_beacon", beaconId)
-        }
-        host.findNavigator().navigate(R.id.action_beacon_details_to_beacon_edit, bundle)
+        host.findNavigator().navigate(Route.PlaceBeacon(editBeaconId = beaconId))
     }
 
     fun shareBeacon() {

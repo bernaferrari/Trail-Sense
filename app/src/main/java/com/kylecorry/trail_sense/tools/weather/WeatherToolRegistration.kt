@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
@@ -41,10 +43,10 @@ object WeatherToolRegistration : ToolRegistration {
             Tools.WEATHER,
             context.getString(R.string.weather),
             TrailIcons.Cloud,
-            R.id.action_weather,
+            Route.Weather,
             ToolCategory.Weather,
             guideId = R.raw.guide_tool_weather,
-            settingsNavAction = R.id.weatherSettingsFragment,
+            settingsRoute = Route.WeatherSettings,
             initialize = { WeatherSubsystem.getInstance(it) },
             quickActions = listOf(
                 ToolQuickAction(

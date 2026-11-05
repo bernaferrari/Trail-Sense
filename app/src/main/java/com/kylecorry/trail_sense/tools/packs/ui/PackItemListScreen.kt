@@ -4,6 +4,10 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.layout.Spacer
 import com.kylecorry.trail_sense.shared.views.PackEmptyIllustration
 import androidx.compose.foundation.layout.size
@@ -163,7 +167,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
             return
         }
         isInitialized = true
-        packId = host.destinationArguments?.getLong("pack_id") ?: 0L
+        packId = host.routeAs<Route.PackItemList>().packId
         setupUI()
         host.inBackground {
             loadPack(packId)
@@ -189,12 +193,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
     }
 
     fun addItem() {
-        host.findNavigator().navigate(
-            R.id.action_action_inventory_to_createItemFragment,
-            Bundle().apply {
-                putLong("pack_id", packId)
-            }
-        )
+        host.findNavigator().navigate(Route.CreatePackItem(packId = packId))
     }
 
     fun clearAmounts() {
@@ -293,11 +292,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
     }
 
     fun editItem(item: PackItem) {
-        val bundle = Bundle().apply {
-            putLong("edit_item_id", item.id)
-            putLong("pack_id", packId)
-        }
-        host.findNavigator().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
+        host.findNavigator().navigate(Route.CreatePackItem(packId = packId, editItemId = item.id))
     }
 
     fun add(item: PackItem) {

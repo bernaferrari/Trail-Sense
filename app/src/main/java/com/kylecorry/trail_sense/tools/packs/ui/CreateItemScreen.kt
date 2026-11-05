@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
@@ -150,8 +154,8 @@ private class CreateItemController(private val host: TrailSenseDestinationHost) 
             return
         }
         isInitialized = true
-        itemId = host.destinationArguments?.getLong("edit_item_id") ?: 0L
-        packId = host.destinationArguments?.getLong("pack_id") ?: 0L
+        itemId = host.routeAs<Route.CreatePackItem>().editItemId
+        packId = host.routeAs<Route.CreatePackItem>().packId
         category = defaultCategory
         selectedWeightUnit = defaultWeightUnit
         backCallback = host.promptIfUnsavedChanges(::hasChanges)

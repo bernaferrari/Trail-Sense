@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
@@ -48,7 +50,7 @@ class GPSDiagnosticScanner(private val gps: IGPS? = null) : ToolDiagnosticScanne
                     context.getString(R.string.overridden),
                     resolution = context.getString(R.string.location_override_resolution),
                     action = ToolDiagnosticAction.navigate(
-                        R.id.calibrateGPSFragment,
+                        Route.CalibrateGps,
                         context.getString(R.string.settings)
                     )
                 )
@@ -62,7 +64,7 @@ class GPSDiagnosticScanner(private val gps: IGPS? = null) : ToolDiagnosticScanne
                         context.getString(R.string.location_not_set),
                         resolution = context.getString(R.string.location_override_not_set_resolution),
                         action = ToolDiagnosticAction.navigate(
-                            R.id.calibrateGPSFragment,
+                            Route.CalibrateGps,
                             context.getString(R.string.settings)
                         )
                     )

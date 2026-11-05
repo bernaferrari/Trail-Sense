@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
@@ -154,7 +156,7 @@ class StepCounterService : AndromedaService() {
     }
 
     private fun getNotification(text: String): Notification {
-        val openIntent = NavigationUtils.pendingIntent(this, R.id.fragmentToolPedometer)
+        val openIntent = NavigationUtils.pendingIntent(this, Route.Pedometer)
         val stopIntent = Intent(this, StopPedometerReceiver::class.java)
         val stopPendingIntent =
             PendingIntent.getBroadcast(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)

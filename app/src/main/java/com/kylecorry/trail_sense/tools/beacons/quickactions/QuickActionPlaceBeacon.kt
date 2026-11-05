@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -72,12 +74,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
                         duration = Snackbar.LENGTH_LONG,
                         action = host.getString(R.string.view)
                     ) {
-                        host.findNavigator().navigate(
-                            R.id.beaconDetailsFragment,
-                            Bundle().apply {
-                                putLong("beacon_id", id)
-                            }
-                        )
+                        host.findNavigator().navigate(Route.BeaconDetails(beaconId = id))
                     }
 
                     host.refreshBeaconList()
@@ -89,7 +86,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(R.id.beacon_list)
+        host.findNavigator().navigate(Route.BeaconList())
         return true
     }
 

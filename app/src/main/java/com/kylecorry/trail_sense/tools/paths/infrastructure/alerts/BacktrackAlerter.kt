@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.alerts
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
@@ -35,13 +37,9 @@ class BacktrackAlerter(private val context: Context) : IValueAlerter<Path> {
         fun getNotification(context: Context, distance: Distance, pathId: Long? = null): Notification {
             val formatter = FormatService.getInstance(context)
             val openAction = if (pathId == null) {
-                NavigationUtils.pendingIntent(context, R.id.fragmentBacktrack)
+                NavigationUtils.pendingIntent(context, Route.Paths)
             } else {
-                NavigationUtils.pendingIntent(
-                    context,
-                    R.id.pathDetailsFragment,
-                    Bundle().apply { putLong("path_id", pathId) }
-                )
+                NavigationUtils.pendingIntent(context, Route.PathOverview(pathId))
             }
 
             val stopAction = Notify.action(

@@ -1,6 +1,8 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.offset
@@ -259,9 +261,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                 host.findNavigator(),
                 ARMode.Astronomy,
                 enableCamera = prefs.astronomy.startCameraIn3DView,
-                Bundle().apply {
-                    putString("time", time.toString())
-                }
+                time = time
             )
         }
 
@@ -642,7 +642,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                 host.getString(R.string.set)
             ) {
                 activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
-                appNavigator.navigate(R.id.calibrateGPSFragment)
+                appNavigator.navigate(Route.CalibrateGps)
             }
             activity.errorBanner.report(error)
             gpsErrorShown = true

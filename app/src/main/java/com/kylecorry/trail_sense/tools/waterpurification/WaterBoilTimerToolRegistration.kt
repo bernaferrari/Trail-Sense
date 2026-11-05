@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.waterpurification
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
@@ -19,11 +21,11 @@ object WaterBoilTimerToolRegistration : ToolRegistration {
             Tools.WATER_BOIL_TIMER,
             context.getString(R.string.water_boil_timer),
             TrailIcons.ToolBoilDone,
-            R.id.waterPurificationFragment,
+            Route.WaterPurification,
             ToolCategory.Time,
             context.getString(R.string.tool_boil_summary),
             guideId = R.raw.guide_tool_water_boil_timer,
-            settingsNavAction = R.id.fragmentWaterBoilTimerSettings,
+            settingsRoute = Route.WaterBoilSettings,
             notificationChannelGroups = listOf(
                 ToolNotificationChannelGroup(
                     NOTIFICATION_CHANNEL_GROUP_WATER_BOIL_TIMER,

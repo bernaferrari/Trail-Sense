@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -19,7 +21,7 @@ class PowerSaverDiagnosticScanner : ToolDiagnosticScanner {
                     context.getString(R.string.on),
                     context.getString(R.string.power_saving_mode_resolution),
                     ToolDiagnosticAction.navigate(
-                        R.id.powerSettingsFragment,
+                        Route.PowerSettings,
                         context.getString(R.string.settings)
                     )
                 )

@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -63,7 +65,7 @@ fun AboutToolScreen(host: TrailSenseDestinationHost) {
             val intent = Intents.email(host.getString(R.string.email), host.getString(R.string.app_name))
             host.startActivity(Intent.createChooser(intent, host.getString(R.string.pref_email_title)))
         },
-        onLicenses = { host.findNavigator().navigate(R.id.licenseFragment) }
+        onLicenses = { host.findNavigator().navigate(Route.Licenses) }
     )
 }
 

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.foundation.layout.heightIn
@@ -164,7 +166,6 @@ import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
@@ -305,7 +306,7 @@ class TrailSenseComposeDestinationHost(
     private val context: Context,
     private val activity: MainActivity,
     private val rootView: View,
-    private val arguments: Bundle?,
+    override val route: Route,
     override val lifecycleOwner: LifecycleOwner,
     private val requestRuntimePermissions: (Array<String>, () -> Unit) -> Unit
 ) : ToolSearchFocusable,
@@ -349,7 +350,6 @@ class TrailSenseComposeDestinationHost(
         rootViewProvider = ::requireView,
         lifecycleOwnerProvider = { lifecycleOwner },
         viewLifecycleOwnerProvider = { lifecycleOwner },
-        argumentsProvider = ::requireArguments,
         onStateChanged = ::onReactiveUpdate
     )
 
@@ -361,10 +361,6 @@ class TrailSenseComposeDestinationHost(
         return rootView
     }
 
-    fun requireArguments(): Bundle {
-        return arguments ?: Bundle.EMPTY
-    }
-
     override val lifecycleScope: CoroutineScope
         get() = lifecycleOwner.lifecycleScope
 
@@ -374,8 +370,6 @@ class TrailSenseComposeDestinationHost(
     override val intentResultRetriever: IntentResultRetriever
         get() = activity
 
-    override val destinationArguments: Bundle?
-        get() = arguments
 
     override fun requireContext(): Context {
         return context
@@ -628,18 +622,18 @@ class TrailSenseComposeDestinationHost(
 
     fun onStart() {
         requireMainActivity().registerDestinationHost(this)
-        when (requireArguments().getString(ARG_DESTINATION)) {
-            DESTINATION_LOCAL_MESSAGING -> openApp(
+        when (route) {
+            Route.LocalMessaging -> openApp(
                 requireContext(),
                 "com.kylecorry.trail_sense_comms",
                 "4c285dfe-1c8b-45eb-bb79-3f1d2eb6ae48"
             )
-            DESTINATION_LOCAL_TALK -> openApp(
+            Route.LocalTalk -> openApp(
                 requireContext(),
                 "com.kylecorry.trail_sense_comms",
                 "b76f32bf-6a72-4992-a741-0c9bf19ebd11"
             )
-            DESTINATION_CLIFF_HEIGHT -> CustomUiUtils.disclaimer(
+            Route.CliffHeight -> CustomUiUtils.disclaimer(
                 requireContext(),
                 getString(R.string.disclaimer_message_title),
                 getString(R.string.tool_cliff_height_disclaimer),
@@ -647,10 +641,11 @@ class TrailSenseComposeDestinationHost(
                 considerShownIfCancelled = true,
                 cancelText = null
             )
-            DESTINATION_SCREEN_FLASHLIGHT -> initializeScreenFlashlight()
-            DESTINATION_NOTE_EDITOR -> promptIfUnsavedChanges(::hasNoteChanges)
-            DESTINATION_SURVIVAL_GUIDE_READER -> loadSurvivalGuideChapter()
-            DESTINATION_SURVIVAL_GUIDE_LIST -> initializeSurvivalGuideList()
+            Route.ScreenFlashlight -> initializeScreenFlashlight()
+            is Route.NoteEditor -> promptIfUnsavedChanges(::hasNoteChanges)
+            is Route.SurvivalGuideReader -> loadSurvivalGuideChapter(route.chapterResourceId)
+            is Route.SurvivalGuideList -> initializeSurvivalGuideList(route.searchQuery)
+            else -> Unit
         }
     }
 
@@ -664,20 +659,20 @@ class TrailSenseComposeDestinationHost(
         mapUpdatesEnabled = true
         specialPermissionAction?.invoke()
         specialPermissionAction = null
-        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
+        if (route == Route.ScreenFlashlight) {
             turnOnScreenFlashlight()
         }
-        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
+        if (route == Route.Map) {
             onReactiveUpdate()
         }
     }
 
     fun onPause() {
         mapUpdatesEnabled = false
-        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_SCREEN_FLASHLIGHT) {
+        if (route == Route.ScreenFlashlight) {
             turnOffScreenFlashlight()
         }
-        if (requireArguments().getString(ARG_DESTINATION) == DESTINATION_MAP) {
+        if (route == Route.Map) {
             mapController?.onPause()
         }
         layerSheet?.dismissAndUpdateWidgets(requireContext())
@@ -687,7 +682,7 @@ class TrailSenseComposeDestinationHost(
         if (
             !mapUpdatesEnabled ||
             reactiveUpdateScheduled ||
-            requireArguments().getString(ARG_DESTINATION) != DESTINATION_MAP
+            route != Route.Map
         ) {
             return
         }
@@ -708,7 +703,7 @@ class TrailSenseComposeDestinationHost(
     fun Content(modifier: Modifier = Modifier) {
         val destinationHost = this
         Box(modifier.fillMaxSize()) {
-            DestinationContent(requireArguments().getString(ARG_DESTINATION), destinationHost, modifier)
+            DestinationContent(route, destinationHost, modifier)
             layerSheet?.Content(
                 requireContext(),
                 { findNavigator().navigate(it) },
@@ -803,7 +798,7 @@ class TrailSenseComposeDestinationHost(
             notes = notesRepo.getNotes(),
             lifecycleOwner = lifecycleOwner,
             onAdd = {
-                findNavigator().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
+                findNavigator().navigate(Route.NoteEditor())
             },
             onEdit = ::editNote,
             onDelete = ::deleteNote,
@@ -812,9 +807,9 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    internal fun NoteEditor() {
+    internal fun NoteEditor(route: Route.NoteEditor) {
         NoteEditorScreen(
-            noteId = requireArguments().getLong("edit_note_id"),
+            noteId = route.editNoteId,
             loadNote = { notesRepo.getNote(it) },
             onStateChanged = { newTitle, newContent, note ->
                 noteTitle = newTitle
@@ -828,12 +823,12 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    internal fun SurvivalGuideReader() {
-        val chapter = getSurvivalGuideChapter()
+    internal fun SurvivalGuideReader(route: Route.SurvivalGuideReader) {
+        val chapter = getSurvivalGuideChapter(route.chapterResourceId)
         SurvivalGuideReaderScreen(
             chapter = chapter,
             content = survivalGuideContent,
-            headerIndex = requireArguments().getInt("header_index", 0),
+            headerIndex = route.headerIndex,
             canPrint = isDebug(),
             onPrint = ::printSurvivalGuideChapter
         )
@@ -873,7 +868,7 @@ class TrailSenseComposeDestinationHost(
             initialSelectedMode = selectedFlashlightMode,
             onSelectedModeChanged = { selectedFlashlightMode = it },
             onOpenScreenFlashlight = {
-                findNavigator().navigate(R.id.action_flashlight_to_screen_flashlight)
+                findNavigator().navigate(Route.ScreenFlashlight)
             }
         )
     }
@@ -883,7 +878,7 @@ class TrailSenseComposeDestinationHost(
         BatteryToolScreen(
             onShowHistory = ::showBatteryHistory,
             onOpenPowerSettings = {
-                findNavigator().navigate(R.id.action_settings_to_power_settings)
+                findNavigator().navigate(Route.PowerSettings)
             }
         )
     }
@@ -893,13 +888,13 @@ class TrailSenseComposeDestinationHost(
         ToolsScreen(
             pinnedToolIds = pinnedToolManager.pinnedIds.value,
             onToolClick = { tool ->
-                findNavigator().navigate(tool.navAction)
+                findNavigator().navigate(tool.route)
             },
             onToolLongClick = { tool ->
                 showToolActions(tool)
             },
             onSettingsClick = {
-                findNavigator().navigate(R.id.action_settings)
+                findNavigator().navigate(Route.Settings)
             },
             onSearchFocusRequestChanged = {
                 focusSearchRequest = it
@@ -1868,13 +1863,7 @@ class TrailSenseComposeDestinationHost(
             guides = Guides.guides(requireContext()),
             onOpenGuide = {
                 tryOrNothing {
-                    findNavigator().navigate(
-                        R.id.action_guideListFragment_to_guideFragment,
-                        Bundle().apply {
-                            putString("guide_name", it.name)
-                            putInt("guide_contents", it.contents)
-                        }
-                    )
+                    findNavigator().navigate(Route.Guide(name = it.name, contents = it.contents))
                 }
             }
         )
@@ -1884,7 +1873,7 @@ class TrailSenseComposeDestinationHost(
     internal fun Diagnostics() {
         DiagnosticsScreen(
             onShowSensorDetails = {
-                findNavigator().navigate(R.id.action_diagnostics_to_sensor_details)
+                findNavigator().navigate(Route.SensorDetails)
             },
             onShowDiagnostic = {
                 DiagnosticAlerter(requireContext()).alert(it) { action ->
@@ -1898,9 +1887,9 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    internal fun ErrorHandler() {
-        val toolId = requireArguments().getLong("tool_id", 0L)
-        val errorDetails = requireArguments().getString("error").orEmpty()
+    internal fun ErrorHandler(route: Route.ErrorHandler) {
+        val toolId = route.toolId
+        val errorDetails = route.error
         val appNavigator = findNavigator()
         ErrorHandlerScreen(
             toolId = toolId,
@@ -1929,13 +1918,13 @@ class TrailSenseComposeDestinationHost(
                 )
             },
             onReopenTool = {
-                appNavigator.openTool(toolId)
+                Tools.getTool(requireContext(), toolId)?.let { appNavigator.navigate(it.route) }
             },
             onRestartApp = {
                 CurrentApp.restart(requireContext())
             },
             onOpenSettings = {
-                appNavigator.openTool(Tools.SETTINGS)
+                appNavigator.navigate(Route.Settings)
             }
         )
     }
@@ -2158,7 +2147,7 @@ class TrailSenseComposeDestinationHost(
                         },
                         onClick = {
                             findNavigator().navigate(
-                                R.id.action_privacy_settings_to_gps_calibration
+                                Route.CalibrateGps
                             )
                         },
                         position = position
@@ -3207,12 +3196,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun openPluginDetails(plugin: Plugin) {
-        findNavigator().navigate(
-            R.id.pluginDetailsFragment,
-            Bundle().apply {
-                putString("package_id", plugin.packageId)
-            }
-        )
+        findNavigator().navigate(Route.PluginDetails(packageId = plugin.packageId))
     }
 
     private fun showToolActions(tool: Tool) {
@@ -3221,7 +3205,7 @@ class TrailSenseComposeDestinationHost(
             if (tool.description != null) getString(R.string.pref_category_about) else null,
             if (pinnedToolManager.isPinned(tool.id)) getString(R.string.unpin) else getString(R.string.pin),
             if (tool.guideId != null) getString(R.string.tool_user_guide_title) else null,
-            if (tool.settingsNavAction != null) getString(R.string.settings) else null,
+            if (tool.settingsRoute != null) getString(R.string.settings) else null,
             getString(R.string.add_to_homescreen)
         )
 
@@ -3241,7 +3225,7 @@ class TrailSenseComposeDestinationHost(
                     findNavigator(),
                     tool.guideId!!
                 )
-                getString(R.string.settings) -> findNavigator().navigate(tool.settingsNavAction!!)
+                getString(R.string.settings) -> findNavigator().navigate(tool.settingsRoute!!)
                 getString(R.string.add_to_homescreen) -> addToHomescreen(tool)
             }
         }
@@ -3343,12 +3327,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun editNote(note: Note) {
-        findNavigator().navigate(
-            R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate,
-            Bundle().apply {
-                putLong("edit_note_id", note.id)
-            }
-        )
+        findNavigator().navigate(Route.NoteEditor(editNoteId = note.id))
     }
 
     private suspend fun saveNote(title: String, content: String) {
@@ -3378,13 +3357,11 @@ class TrailSenseComposeDestinationHost(
         return noteTitle.isBlank() && noteContent.isBlank()
     }
 
-    private fun getSurvivalGuideChapter(): Chapter {
-        val chapterResourceId = requireArguments().getInt("chapter_resource_id")
+    private fun getSurvivalGuideChapter(chapterResourceId: Int): Chapter {
         return Chapters.getChapters(requireContext()).first { it.resource == chapterResourceId }
     }
 
-    private fun loadSurvivalGuideChapter() {
-        val chapterResourceId = requireArguments().getInt("chapter_resource_id")
+    private fun loadSurvivalGuideChapter(chapterResourceId: Int) {
         lifecycleOwner.lifecycleScope.launch {
             survivalGuideContent = withContext(Dispatchers.IO) {
                 TextUtils.loadTextFromResources(requireContext(), chapterResourceId)
@@ -3434,8 +3411,8 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    private fun initializeSurvivalGuideList() {
-        survivalGuideQuery = destinationArguments?.getString("search_query").orEmpty()
+    private fun initializeSurvivalGuideList(searchQuery: String) {
+        survivalGuideQuery = searchQuery
         CustomUiUtils.disclaimer(
             requireContext(),
             getString(R.string.survival_guide),
@@ -3527,22 +3504,11 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun openSurvivalGuideChapter(chapterResource: Int) {
-        findNavigator().navigate(
-            R.id.fragmentToolSurvivalGuideReader,
-            Bundle().apply {
-                putInt("chapter_resource_id", chapterResource)
-            }
-        )
+        findNavigator().navigate(Route.SurvivalGuideReader(chapterResourceId = chapterResource))
     }
 
     private fun openSurvivalGuideSearchResult(result: SurvivalGuideSearchResult) {
-        findNavigator().navigate(
-            R.id.fragmentToolSurvivalGuideReader,
-            Bundle().apply {
-                putInt("chapter_resource_id", result.chapter.resource)
-                putInt("header_index", result.headingIndex)
-            }
-        )
+        findNavigator().navigate(Route.SurvivalGuideReader(chapterResourceId = result.chapter.resource, headerIndex = result.headingIndex))
     }
 
     private fun resetPedometer() {
@@ -3665,26 +3631,26 @@ class TrailSenseComposeDestinationHost(
                 key = "compass",
                 title = R.string.pref_compass_sensor_title,
                 icon = TrailIcons.CompassIcon,
-                destination = R.id.calibrateCompassFragment
+                destination = Route.CalibrateCompass
             ),
             SensorSettingsItem(
                 key = "gps",
                 title = R.string.gps,
                 icon = TrailIcons.Satellite,
-                destination = R.id.calibrateGPSFragment
+                destination = Route.CalibrateGps
             ),
             SensorSettingsItem(
                 key = "altimeter",
                 title = R.string.pref_altimeter_calibration_title,
                 icon = TrailIcons.Altitude,
-                destination = R.id.calibrateAltimeterFragment
+                destination = Route.CalibrateAltimeter
             ),
             if (hasBarometer) {
                 SensorSettingsItem(
                     key = "barometer",
                     title = R.string.barometer,
                     icon = TrailIcons.Barometer,
-                    destination = R.id.calibrateBarometerFragment
+                    destination = Route.CalibrateBarometer
                 )
             } else {
                 null
@@ -3693,25 +3659,25 @@ class TrailSenseComposeDestinationHost(
                 key = "temperature",
                 title = R.string.tool_thermometer_title,
                 icon = TrailIcons.Thermometer,
-                destination = R.id.thermometerSettingsFragment
+                destination = Route.ThermometerSettings
             ),
             SensorSettingsItem(
                 key = "camera",
                 title = R.string.camera,
                 icon = TrailIcons.Camera,
-                destination = R.id.cameraSettingsFragment
+                destination = Route.CameraSettings
             ),
             SensorSettingsItem(
                 key = "cell_signal",
                 title = R.string.cell_signal,
                 icon = TrailIcons.SignalCellular3,
-                destination = R.id.cellSignalSettingsFragment
+                destination = Route.CellSignalSettings
             ),
             SensorSettingsItem(
                 key = "details",
                 title = R.string.pref_sensor_details_title,
                 icon = TrailIcons.Sensors,
-                destination = R.id.sensorDetailsFragment
+                destination = Route.SensorDetails
             )
         )
     }
@@ -3720,7 +3686,7 @@ class TrailSenseComposeDestinationHost(
         val key: String,
         val title: Int,
         val icon: androidx.compose.ui.graphics.vector.ImageVector,
-        @IdRes val destination: Int
+        val destination: Route
     )
 
     @Composable

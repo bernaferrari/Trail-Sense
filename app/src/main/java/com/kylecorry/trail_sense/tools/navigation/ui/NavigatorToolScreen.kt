@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
@@ -90,7 +96,6 @@ import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -167,17 +172,12 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     private val views = createNavigatorViews(
         host.requireContext(),
         onNorthReferenceSettingsClick = {
-            host.findNavigator().navigate(R.id.calibrateCompassFragment)
+            host.findNavigator().navigate(Route.CalibrateCompass)
         },
         requestCameraPermission = { callback -> host.requestCamera(callback) },
         onCameraPermissionDenied = { host.alertNoCameraPermission() },
         onOpenBeacon = { beaconId ->
-            host.findNavigator().navigate(
-                R.id.beaconDetailsFragment,
-                Bundle().apply {
-                    putLong("beacon_id", beaconId)
-                }
-            )
+            host.findNavigator().navigate(Route.BeaconDetails(beaconId = beaconId))
         }
     )
     private val isViewReady: Boolean
@@ -360,9 +360,9 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             return
         }
         isCreated = true
-        val beaconId = host.destinationArguments?.getLong("destination") ?: 0L
-        checkCalibrationOnNextReading =
-            host.destinationArguments?.getBoolean(BeaconNavigator.ARG_NAVIGATION_STARTED) == true
+        val route = host.routeAs<Route.Navigation>()
+        val beaconId = route.destinationBeaconId
+        checkCalibrationOnNextReading = route.navigationStarted
 
         // Load the destination and start navigation
         if (beaconId != 0L) {
@@ -466,23 +466,18 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         }
 
         views.onBeaconClick = {
-            host.findNavigator().openTool(Tools.BEACONS)
+            host.findNavigator().navigate(Route.BeaconList())
         }
 
         views.onBeaconLongClick = {
             if (gps.hasValidReading) {
-                val bundle = Bundle().apply {
-                    putParcelable("initial_location", GeoUri(
-                        gps.location,
-                        if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
-                    ))
-                }
-                // Straight to the editor, as the map and the field guide do: Save and Back return here. Going
-                // through the Places list left the location in its arguments, so saving reopened a blank editor
-                // and every Save made another copy.
-                host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
+                val altitude = if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
+                // Straight to the editor, as the map and the field guide do: Save and Back return here.
+                host.findNavigator().navigate(
+                    Route.PlaceBeacon(initialLocation = gps.location.toRouteLocation(altitude))
+                )
             } else {
-                host.findNavigator().navigate(R.id.placeBeaconFragment)
+                host.findNavigator().navigate(Route.PlaceBeacon())
             }
         }
 
@@ -561,7 +556,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     fun displayAccuracyTips() {
-        host.findNavigator().navigate(R.id.calibrateCompassFragment)
+        host.findNavigator().navigate(Route.CalibrateCompass)
     }
 
     private fun pickLocationFormat(

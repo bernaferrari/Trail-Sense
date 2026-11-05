@@ -57,9 +57,9 @@ class TrailSenseExceptionHandler(
                 return false
             }
 
-            val currentNavId = activity.findNavigator()?.currentDestination?.id ?: return false
+            val currentRoute = activity.findNavigator()?.currentRoute ?: return false
             val tools = Tools.getTools(activity)
-            val selectedTool = tools.firstOrNull { it.isOpen(currentNavId) } ?: return false
+            val selectedTool = tools.firstOrNull { it.isOpen(currentRoute) } ?: return false
 
             val intent = Intent(context, MainActivity::class.java).apply {
                 action = ACTION_TOOL_ERROR

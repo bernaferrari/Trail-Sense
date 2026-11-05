@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.R
@@ -14,8 +16,6 @@ class ViewPathCommand(
     }
 
     fun execute(id: Long) {
-        appNavigator.navigate(R.id.action_backtrack_to_path, Bundle().apply {
-            putLong("path_id", id)
-        })
+        appNavigator.navigate(Route.PathOverview(pathId = id))
     }
 }

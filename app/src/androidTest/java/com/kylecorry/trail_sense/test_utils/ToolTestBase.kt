@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.Manifest
 import android.os.Build
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -125,7 +127,7 @@ open class ToolTestBase(
             grantBasicPermissions(packageName)
             TestUtils.launchApp(packageName)
             completeOnboarding()
-            click(R.id.action_experimental_tools)
+            click(Route.Tools)
             openTool(toolId)
         }
     }

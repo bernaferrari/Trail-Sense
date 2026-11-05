@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Color
@@ -143,14 +147,10 @@ fun openAugmentedReality(
     appNavigator: TrailSenseNavigator,
     mode: ARMode = ARMode.Normal,
     enableCamera: Boolean = true,
-    extras: Bundle? = null
+    time: ZonedDateTime? = null
 ) {
     appNavigator.navigate(
-        R.id.augmentedRealityFragment, Bundle().apply {
-            putLong("mode", mode.id)
-            putBoolean("camera_enabled", enableCamera)
-            putBundle("extras", extras)
-        }
+        Route.AugmentedReality(modeId = mode.id, cameraEnabled = enableCamera, time = time?.toString())
     )
 }
 
@@ -376,11 +376,10 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
         views.arView.infiniteFocusWhenPointedUp = true
         views.arView.bind(views.camera, host.lifecycleOwner)
 
-        val arguments = host.destinationArguments ?: Bundle()
-        val modeId = arguments.getLong("mode", ARMode.Normal.id)
-        val desiredMode = ARMode.entries.withId(modeId) ?: ARMode.Normal
+        val route = host.routeAs<Route.AugmentedReality>()
+        val desiredMode = ARMode.entries.withId(route.modeId) ?: ARMode.Normal
 
-        isCameraEnabled = arguments.getBoolean("camera_enabled", true)
+        isCameraEnabled = route.cameraEnabled
 
         views.cameraToggle.onClick = {
             if (isCameraEnabled) {
@@ -419,7 +418,7 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
             refreshGuidance()
         }
 
-        setMode(desiredMode, arguments.getBundle("extras"))
+        setMode(desiredMode, route.time?.let { ZonedDateTime.parse(it) })
 
         views.calibrateBtn.onLongClick = {
             Alerts.dialog(
@@ -626,7 +625,7 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
         return true
     }
 
-    private fun setMode(mode: ARMode, extras: Bundle? = null) {
+    private fun setMode(mode: ARMode, overrideTime: ZonedDateTime? = null) {
         val previousMode = this.mode
         this.mode = mode
         when (mode) {
@@ -642,9 +641,6 @@ private class AugmentedRealityController(private val host: TrailSenseDestination
             ARMode.Astronomy -> {
                 replaceActiveGuidanceTarget(null)
                 visibleLayersOverride = listOf(gridLayer, astronomyLayer)
-                val overrideTime = extras?.getString("time")?.let {
-                    ZonedDateTime.parse(it)
-                }
                 overrideTime?.let {
                     setTimeOverride(it.toInstant())
                     views.timeSheet.setTime(timeOverride)

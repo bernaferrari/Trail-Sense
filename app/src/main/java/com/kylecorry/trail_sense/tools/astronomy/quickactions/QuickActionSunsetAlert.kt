@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.material.icons.outlined.WbTwilight
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -9,7 +11,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.quickactions.ToolServiceQuickAction
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunsetAlarmReceiver
@@ -37,7 +38,7 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, host: TrailSenseDestina
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().openTool(Tools.ASTRONOMY)
+        host.findNavigator().navigate(Route.Astronomy)
         return true
     }
 

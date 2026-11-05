@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.backup
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
@@ -12,7 +14,7 @@ import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 
 class BackupFailedAlerter(private val context: Context) : IDismissibleAlerter {
     override fun alert() {
-        val intent = NavigationUtils.pendingIntent(context, R.id.diagnosticsFragment)
+        val intent = NavigationUtils.pendingIntent(context, Route.Diagnostics)
 
         val notification = Notify.status(
             context,

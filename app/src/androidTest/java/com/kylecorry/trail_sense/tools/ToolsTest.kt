@@ -46,7 +46,7 @@ class ToolsTest : ToolTestBase(0L) {
         // Verify navigation tool is open
         isTrue {
             Tools.getTool(TestUtils.context, Tools.NAVIGATION)!!
-                .isOpen(appNavigator.currentDestination?.id ?: 0)
+                .isOpen(appNavigator.currentRoute)
         }
     }
 

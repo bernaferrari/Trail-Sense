@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
@@ -38,10 +40,10 @@ object PathsToolRegistration : ToolRegistration {
             Tools.PATHS,
             context.getString(R.string.paths),
             TrailIcons.ToolBacktrack,
-            R.id.fragmentBacktrack,
+            Route.Paths,
             ToolCategory.Location,
             guideId = R.raw.guide_tool_paths,
-            settingsNavAction = R.id.pathsSettingsFragment,
+            settingsRoute = Route.PathsSettings,
             quickActions = listOf(
                 ToolQuickAction(
                     Tools.QUICK_ACTION_BACKTRACK,
@@ -49,8 +51,8 @@ object PathsToolRegistration : ToolRegistration {
                     ::QuickActionBacktrack
                 )
             ),
-            additionalNavigationIds = listOf(
-                R.id.pathDetailsFragment
+            additionalRoutes = listOf(
+                Route.PathOverview::class
             ),
             tiles = listOf(
                 "com.kylecorry.trail_sense.tools.paths.tiles.BacktrackTile"

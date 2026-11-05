@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.waterpurification.infrastructure
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
@@ -41,7 +43,7 @@ class WaterPurificationTimerService : AndromedaService() {
     private val openIntent by lazy {
         NavigationUtils.pendingIntent(
             this@WaterPurificationTimerService,
-            R.id.waterPurificationFragment
+            Route.WaterPurification
         )
     }
 

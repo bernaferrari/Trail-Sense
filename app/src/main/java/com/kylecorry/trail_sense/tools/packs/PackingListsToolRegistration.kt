@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.packs
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -14,12 +16,12 @@ object PackingListsToolRegistration : ToolRegistration {
             Tools.PACKING_LISTS,
             context.getString(R.string.packing_lists),
             TrailIcons.ToolPack,
-            R.id.packListFragment,
+            Route.PackList,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_packing_lists,
-            additionalNavigationIds = listOf(
-                R.id.createItemFragment,
-                R.id.packItemListFragment
+            additionalRoutes = listOf(
+                Route.CreatePackItem::class,
+                Route.PackItemList::class
             )
         )
     }

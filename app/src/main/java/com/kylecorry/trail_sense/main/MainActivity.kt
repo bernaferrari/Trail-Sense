@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
@@ -46,7 +48,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavOptions
+import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import androidx.compose.ui.graphics.toArgb
@@ -206,7 +208,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     private fun setupNavController() {
-        rootNavigator = TrailSenseNavigator(this)
+        rootNavigator = TrailSenseNavigator()
     }
 
     /**
@@ -214,16 +216,13 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
      */
     private fun updateBottomNavSelection() {
         val nav = navigator ?: return
-        val currentNavId = nav.currentDestination?.id ?: 0
         val tools = Tools.getTools(this)
-        val selectedTool = tools.firstOrNull { it.isOpen(currentNavId) }
+        val selectedTool = tools.firstOrNull { it.isOpen(nav.currentRoute) }
         // A tool pinned to the bar lights its own tab. Any other screen keeps the tab it was opened from lit (the
         // nearest bar destination below it on the stack), and Tools when there is none.
-        val idToSelect = selectedTool?.navAction?.takeIf { bottomNavigation.contains(it) }
-            ?: nav.backStack.lastOrNull { bottomNavigation.contains(it.destinationId) }?.destinationId
-            ?: R.id.action_experimental_tools
-
-        bottomNavigation.selectedItemId = idToSelect
+        bottomNavigation.selectedRoute = selectedTool?.route?.takeIf { bottomNavigation.contains(it) }
+            ?: nav.backStack.lastOrNull { bottomNavigation.contains(it) }
+            ?: Route.Tools
 
         lastKnownDestinationHost = activeDestinationHost?.javaClass?.simpleName
     }
@@ -337,7 +336,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             appInitialized = true
             updateBottomNavigation()
 
-            navigator?.addOnDestinationChangedListener { _, _, _ ->
+            navigator?.addOnRouteChangedListener { _, _ ->
                 quickActionsSheet.close()
                 updateBottomNavSelection()
             }
@@ -391,14 +390,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         errorBanner.dismissAll()
 
         if (shouldReloadNavigation) {
-            navigator?.navigate(
-                bottomNavigation.selectedItemId,
-                null,
-                TrailSenseNavOptions(
-                    popUpTo = navigator?.currentDestination?.id ?: R.id.action_experimental_tools,
-                    popUpToInclusive = true
-                )
-            )
+            navigator?.replace(bottomNavigation.selectedRoute ?: Route.Tools)
         }
 
         ComposedCommand(
@@ -409,7 +401,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         if (!Tools.isToolAvailable(this, Tools.WEATHER)) {
             bottomNavigation.items.replaceAll {
-                if (it.id == R.id.action_weather) {
+                if (it.route == Route.Weather) {
                     it.copy(visible = false)
                 } else {
                     it
@@ -432,13 +424,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         if (intent.action == TrailSenseExceptionHandler.ACTION_TOOL_ERROR) {
             val toolId = intent.getLongExtra(TrailSenseExceptionHandler.EXTRA_TOOL_ID, 0L)
             val error = intent.getStringExtra(TrailSenseExceptionHandler.EXTRA_ERROR) ?: ""
-            navigator?.navigate(
-                R.id.fragmentToolErrorHandler,
-                Bundle().apply {
-                    putLong("tool_id", toolId)
-                    putString("error", error)
-                }
-            )
+            navigator?.navigate(Route.ErrorHandler(toolId = toolId, error = error))
             return
         }
 
@@ -446,20 +432,14 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             val toolId = intent.getLongExtra("tool_id", -1)
             val tool = Tools.getTool(this, toolId)
             if (tool != null) {
-                if (navigator?.currentDestination?.id != tool.navAction) {
-                    navigator?.navigate(tool.navAction)
-                }
+                navigator?.navigate(tool.route)
                 updateBottomNavSelection()
             }
             return
         }
 
-        if (intent.action == "com.kylecorry.trail_sense.NAVIGATE") {
-            val destination = intent.getIntExtra("destination", 0)
-            val args = intent.getBundleExtra("arguments")
-            if (destination != 0) {
-                navigator?.navigate(destination, args)
-            }
+        if (intent.action == NavigationUtils.ACTION_NAVIGATE) {
+            NavigationUtils.routeFrom(intent)?.let { navigator?.navigate(it) }
             return
         }
 
@@ -481,12 +461,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        bottomNavigation.selectedItemId = savedInstanceState.getInt(
-            "page",
-            bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
-        )
         tryOrNothing {
-            if (navigator?.restoreState(savedInstanceState.getBundle("navigation")) == true) {
+            if (navigator?.restoreState(savedInstanceState.getString(STATE_NAVIGATION)) == true) {
                 navGraphInitialized = true
             }
         }
@@ -495,9 +471,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         tryOrLog {
-            outState.putInt("page", bottomNavigation.selectedItemId)
             navigator?.saveState()?.let {
-                outState.putBundle("navigation", it)
+                outState.putString(STATE_NAVIGATION, it)
             }
         }
     }
@@ -521,7 +496,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     private fun getVolumeAction(): VolumeAction? {
-        val navigationId = navigator?.currentDestination?.id
+        val currentRoute = navigator?.currentRoute
         val host = activeDestinationHost ?: return null
         val tools = Tools.getTools(this)
 
@@ -531,7 +506,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             tool.volumeActions.filter {
                 it.priority == ToolVolumeActionPriority.High && it.isActive(
                     this,
-                    tool.isOpen(navigationId ?: 0),
+                    tool.isOpen(currentRoute),
                     host
                 )
             }
@@ -542,7 +517,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         }
 
         val activeAction =
-            tools.firstOrNull { it.isOpen(navigationId ?: 0) }?.volumeActions?.firstOrNull {
+            tools.firstOrNull { it.isOpen(currentRoute) }?.volumeActions?.firstOrNull {
                 it.isActive(this, true, host)
             }
 
@@ -554,7 +529,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             tool.volumeActions.filter {
                 it.priority == ToolVolumeActionPriority.Normal && it.isActive(
                     this,
-                    tool.isOpen(navigationId ?: 0),
+                    tool.isOpen(currentRoute),
                     host
                 )
             }
@@ -588,7 +563,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             val toolItem = tools.firstOrNull { it.id == toolId } ?: return@forEachIndexed
             bottomNavigation.items.add(
                 MainBottomNavigationItem(
-                    id = toolItem.navAction,
+                    route = toolItem.route,
                     title = toolItem.name,
                     icon = toolItem.icon,
                     selectedIcon = getPrimaryNavigationIcons(toolId)?.first,
@@ -599,7 +574,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         bottomNavigation.items.add(
             MainBottomNavigationItem(
-                id = R.id.action_experimental_tools,
+                route = Route.Tools,
                 title = getString(R.string.tools),
                 icon = TrailIcons.Apps,
                 selectedIcon = TrailSenseIcons.Filled.Apps,
@@ -609,9 +584,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         // Open the left most item by default (and clear the back stack)
         val initialItem = if (SafeMode.isEnabled()) {
-            tools.first { it.id == Tools.SETTINGS }.navAction
+            tools.first { it.id == Tools.SETTINGS }.route
         } else {
-            bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
+            bottomNavigation.items.firstOrNull()?.route ?: Route.Tools
         }
 
         if (!navGraphInitialized) {
@@ -632,9 +607,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         }
     }
 
-    fun onBottomNavigationItemSelected(itemId: Int) {
-        if (itemId == R.id.action_experimental_tools &&
-            navigator?.currentDestination?.id == R.id.action_experimental_tools &&
+    fun onBottomNavigationItemSelected(route: Route) {
+        if (route == Route.Tools &&
+            navigator?.currentRoute == Route.Tools &&
             !quickActionsSheet.isOpen()
         ) {
             val toolsHost = activeDestinationHost as? ToolSearchFocusable
@@ -644,23 +619,16 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         }
 
         val nav = navigator ?: return
-        if (nav.currentDestination?.id != itemId) {
-            nav.navigate(
-                itemId,
-                null,
-                TrailSenseNavOptions(
-                    popUpTo = nav.startDestinationId,
-                    launchSingleTop = true
-                )
-            )
+        if (nav.currentRoute != route) {
+            nav.switchTab(route)
         }
-        bottomNavigation.selectedItemId = itemId
+        bottomNavigation.selectedRoute = route
     }
 
-    private fun initializeNavGraph(startDestination: Int) {
+    private fun initializeNavGraph(start: Route) {
         val nav = navigator ?: return
         if (nav.backStack.isEmpty()) {
-            nav.setStartDestination(startDestination)
+            nav.setStartRoute(start)
         }
     }
 
@@ -726,6 +694,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     companion object {
+        private const val STATE_NAVIGATION = "navigation"
 
         var deviceSurfaceRotation: Int = Surface.ROTATION_90
             private set
@@ -764,8 +733,8 @@ private fun MainActivityContent(
     quickActionsSheet: QuickActionSheetState,
     bottomNavigation: MainBottomNavigationState,
     nightColorFilter: Boolean,
-    onBottomNavigationItemSelected: (Int) -> Unit,
-    onBottomNavigationItemLongSelected: (Int) -> Unit
+    onBottomNavigationItemSelected: (Route) -> Unit,
+    onBottomNavigationItemLongSelected: (Route) -> Unit
 ) {
     val rootInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
         .only(WindowInsetsSides.Top + WindowInsetsSides.Start + WindowInsetsSides.End)

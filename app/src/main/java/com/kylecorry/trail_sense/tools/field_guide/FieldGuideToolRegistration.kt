@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.field_guide
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Bundle
@@ -21,15 +23,15 @@ object FieldGuideToolRegistration : ToolRegistration {
             Tools.FIELD_GUIDE,
             context.getString(R.string.field_guide),
             TrailIcons.FieldGuide,
-            R.id.fieldGuideFragment,
+            Route.FieldGuide,
             ToolCategory.Books,
-            settingsNavAction = R.id.fieldGuideSettingsFragment,
-            additionalNavigationIds = listOf(
-                R.id.fieldGuidePageFragment,
-                R.id.fieldGuideSettingsFragment,
-                R.id.sightingListFragment,
-                R.id.createFieldGuideSightingFragment,
-                R.id.createFieldGuidePageFragment
+            settingsRoute = Route.FieldGuideSettings,
+            additionalRoutes = listOf(
+                Route.FieldGuidePage::class,
+                Route.FieldGuideSettings::class,
+                Route.SightingList::class,
+                Route.CreateFieldGuideSighting::class,
+                Route.CreateFieldGuidePage::class
             ),
             guideId = R.raw.guide_tool_field_guide,
             singletons = listOf(
@@ -51,14 +53,7 @@ object FieldGuideToolRegistration : ToolRegistration {
                     openFeature = { feature, _, appNavigator ->
                         val fieldGuidePageId =
                             feature.getLongProperty(FieldGuideSightingGeoJsonSource.PROPERTY_PAGE_ID)
-                        appNavigator.navigate(
-                            R.id.fieldGuidePageFragment,
-                            Bundle().apply {
-                                fieldGuidePageId?.let {
-                                    putLong("page_id", it)
-                                }
-                            }
-                        )
+                        appNavigator.navigate(Route.FieldGuidePage(pageId = fieldGuidePageId ?: 0L))
                     },
                     geoJsonSource = ::FieldGuideSightingGeoJsonSource
                 )

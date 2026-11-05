@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -26,13 +28,13 @@ object TidesToolRegistration : ToolRegistration {
             Tools.TIDES,
             context.getString(R.string.tides),
             TrailIcons.TideTable,
-            R.id.tidesFragment,
+            Route.Tides,
             ToolCategory.Time,
             guideId = R.raw.guide_tool_tides,
-            settingsNavAction = R.id.tideSettingsFragment,
-            additionalNavigationIds = listOf(
-                R.id.tideListFragment,
-                R.id.createTideFragment
+            settingsRoute = Route.TideSettings,
+            additionalRoutes = listOf(
+                Route.TideList::class,
+                Route.CreateTide::class
             ),
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context)

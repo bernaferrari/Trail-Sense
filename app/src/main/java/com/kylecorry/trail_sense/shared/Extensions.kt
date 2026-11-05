@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared
 
+import android.content.Context
+
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
@@ -127,9 +129,10 @@ fun ICanvasDrawer.textDimensions(str: String, lineSpacing: Float): Pair<Float, F
     return maxWidth to totalTextHeight + totalSpacing
 }
 
-fun TrailSenseNavigator.openTool(toolId: Long, args: Bundle? = null) {
-    val navId = Tools.getTool(context, toolId)?.navAction ?: return
-    navigate(navId, args)
+/** Opens a tool's main screen, as registered in [Tools]. */
+fun TrailSenseNavigator.openTool(context: Context, toolId: Long) {
+    val route = Tools.getTool(context, toolId)?.route ?: return
+    navigate(route)
 }
 
 inline fun List<Float>.forEachLine(action: (x1: Float, y1: Float, x2: Float, y2: Float) -> Unit) {

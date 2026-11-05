@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import android.hardware.SensorManager
 import com.kylecorry.andromeda.core.sensors.Quality
@@ -43,7 +45,7 @@ class MagnetometerDiagnosticScanner : ToolDiagnosticScanner {
                             context.getString(android.R.string.ok)
                         ),
                         ToolDiagnosticAction.navigate(
-                            R.id.calibrateCompassFragment,
+                            Route.CalibrateCompass,
                             context.getString(R.string.settings)
                         )
                     )

@@ -167,7 +167,7 @@ object Tools {
             ToolQuickAction(
                 it.id.toInt() + TOOL_QUICK_ACTION_OFFSET, // Avoid overlap
                 context.getString(R.string.tool_quick_action_name, it.name)
-            ) { button, host -> QuickActionOpenTool(button, host, it.navAction, it.icon) }
+            ) { button, host -> QuickActionOpenTool(button, host, it.route, it.icon) }
         }
 
         return listOf(none) + quickActions + toolActions

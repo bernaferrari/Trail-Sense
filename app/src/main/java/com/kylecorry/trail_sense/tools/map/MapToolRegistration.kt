@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.map
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -41,16 +43,16 @@ object MapToolRegistration : ToolRegistration {
             title = context.getString(R.string.plugin_digital_elevation_model),
             type = MapLayerPreferenceType.Label,
             summary = context.getString(R.string.open_settings),
-            navActionOnClick = R.id.calibrateAltimeterFragment
+            routeOnClick = Route.CalibrateAltimeter
         )
 
         return Tool(
             Tools.MAP,
             context.getString(R.string.map),
             TrailIcons.Maps,
-            R.id.mapFragment,
+            Route.Map,
             ToolCategory.Location,
-            settingsNavAction = R.id.mapSettingsFragment,
+            settingsRoute = Route.MapSettings,
             guideId = R.raw.guide_tool_map,
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context),

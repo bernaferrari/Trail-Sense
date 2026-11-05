@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Column
@@ -291,30 +293,15 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
     }
 
     fun createPage(tag: FieldGuidePageTag?) {
-        host.findNavigator().navigate(
-            R.id.createFieldGuidePageFragment,
-            Bundle().apply {
-                putLong("classification_id", tag?.id ?: 0L)
-            }
-        )
+        host.findNavigator().navigate(Route.CreateFieldGuidePage(classificationId = tag?.id ?: 0L))
     }
 
     fun editPage(page: FieldGuidePage) {
-        host.findNavigator().navigate(
-            R.id.createFieldGuidePageFragment,
-            Bundle().apply {
-                putLong("page_id", page.id)
-            }
-        )
+        host.findNavigator().navigate(Route.CreateFieldGuidePage(pageId = page.id))
     }
 
     fun viewPage(page: FieldGuidePage) {
-        host.findNavigator().navigate(
-            R.id.fieldGuidePageFragment,
-            Bundle().apply {
-                putLong("page_id", page.id)
-            }
-        )
+        host.findNavigator().navigate(Route.FieldGuidePage(pageId = page.id))
     }
 
     fun hidePage(page: FieldGuidePage) {

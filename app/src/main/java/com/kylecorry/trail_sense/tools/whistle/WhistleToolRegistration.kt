@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.whistle
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -19,7 +21,7 @@ object WhistleToolRegistration : ToolRegistration {
             Tools.WHISTLE,
             context.getString(R.string.tool_whistle_title),
             TrailIcons.ToolWhistle,
-            R.id.toolWhistleFragment,
+            Route.Whistle,
             ToolCategory.Signaling,
             guideId = R.raw.guide_tool_whistle,
             quickActions = listOf(

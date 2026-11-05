@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.alerts
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
@@ -32,7 +34,7 @@ class StormAlerter(private val context: Context) : IDismissibleAlerter {
             context.getString(R.string.notification_storm_alert_text),
             TrailIcons.Alert,
             group = NOTIFICATION_GROUP_STORM,
-            intent = NavigationUtils.pendingIntent(context, R.id.action_weather),
+            intent = NavigationUtils.pendingIntent(context, Route.Weather),
             autoCancel = true,
             isAlarm = useAlarm,
             category = NotificationCompat.CATEGORY_STATUS

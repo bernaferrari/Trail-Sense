@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
@@ -27,7 +29,7 @@ class WeatherMonitorDiagnosticScanner : ToolDiagnosticScanner {
                         context.getString(R.string.weather_monitoring_disabled),
                         context.getString(R.string.weather_monitor_disabled_resolution),
                         ToolDiagnosticAction.navigate(
-                            R.id.weatherSettingsFragment,
+                            Route.WeatherSettings,
                             context.getString(R.string.settings)
                         )
                     )

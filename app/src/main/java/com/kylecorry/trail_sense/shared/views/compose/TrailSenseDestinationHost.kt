@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
@@ -23,7 +25,8 @@ interface TrailSenseDestinationHost {
     val lifecycleScope: CoroutineScope
     val mainActivity: MainActivity
     val intentResultRetriever: IntentResultRetriever
-    val destinationArguments: Bundle?
+    /** The screen this host shows, with its arguments. */
+    val route: Route
 
     fun requireContext(): Context
     fun getResources(): Resources
@@ -77,3 +80,6 @@ interface TrailSenseReactiveDestinationHost : TrailSenseDestinationHost {
     val hookResetOnResume: Int
     fun cleanupReactiveEffects()
 }
+
+/** This screen's route, as the type the screen was registered for. */
+inline fun <reified T : Route> TrailSenseDestinationHost.routeAs(): T = route as T

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.alerts
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -68,7 +70,7 @@ class CurrentWeatherAlerter(
 
     private fun getNotification(text: String, icon: ImageVector): Notification {
         val stopIntent = Intent(context, WeatherStopMonitoringReceiver::class.java)
-        val openIntent = NavigationUtils.pendingIntent(context, R.id.action_weather)
+        val openIntent = NavigationUtils.pendingIntent(context, Route.Weather)
 
         val stopPendingIntent: PendingIntent =
             PendingIntent.getBroadcast(context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
@@ -117,7 +119,7 @@ class CurrentWeatherAlerter(
 
         fun getDefaultNotification(context: Context): Notification {
             val stopIntent = Intent(context, WeatherStopMonitoringReceiver::class.java)
-            val openIntent = NavigationUtils.pendingIntent(context, R.id.action_weather)
+            val openIntent = NavigationUtils.pendingIntent(context, Route.Weather)
 
             val stopPendingIntent: PendingIntent =
                 PendingIntent.getBroadcast(context, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)

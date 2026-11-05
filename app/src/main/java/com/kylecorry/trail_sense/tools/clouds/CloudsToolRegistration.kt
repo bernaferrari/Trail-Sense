@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.clouds
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -17,7 +19,7 @@ object CloudsToolRegistration : ToolRegistration {
             Tools.CLOUDS,
             context.getString(R.string.clouds),
             TrailIcons.ToolClouds,
-            R.id.cloudFragment,
+            Route.Clouds(),
             ToolCategory.Weather,
             guideId = R.raw.guide_tool_clouds,
             quickActions = listOf(
@@ -27,8 +29,8 @@ object CloudsToolRegistration : ToolRegistration {
                     ::QuickActionScanCloud
                 )
             ),
-            additionalNavigationIds = listOf(
-                R.id.cloudResultsFragment
+            additionalRoutes = listOf(
+                Route.CloudResults::class
             ),
             diagnostics = listOf(
                 ToolDiagnosticFactory.camera(context)

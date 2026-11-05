@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Bundle
@@ -326,10 +330,7 @@ class ViewPhotoMapController(
     }
 
     private fun createBeacon(location: Coordinate) {
-        val bundle = Bundle().apply {
-            putParcelable("initial_location", GeoUri(location))
-        }
-        host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
+        host.findNavigator().navigate(Route.PlaceBeacon(initialLocation = location.toRouteLocation()))
     }
 
     private fun showDistance(distance: Distance) {
@@ -372,12 +373,7 @@ class ViewPhotoMapController(
 
                     onMain {
                         stopDistanceMeasurement()
-                        host.findNavigator().navigate(
-                            R.id.action_maps_to_path,
-                            Bundle().apply {
-                                putLong("path_id", id)
-                            }
-                        )
+                        host.findNavigator().navigate(Route.PathOverview(pathId = id))
                     }
                 }
             }

@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.beacons
 
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.os.Build
@@ -35,13 +39,7 @@ object BeaconsToolRegistration : ToolRegistration {
             if (intent.scheme != "geo") return@ToolIntentHandler false
             val geo = GeoUri.from(intentData) ?: return@ToolIntentHandler false
 
-            val bundle = Bundle().apply {
-                putParcelable("initial_location", geo)
-            }
-            activity.findNavigator()?.navigate(
-                R.id.beacon_list,
-                bundle
-            )
+            activity.findNavigator()?.navigate(Route.BeaconList(initialLocation = geo.toRouteLocation()))
             true
         }
 
@@ -49,13 +47,7 @@ object BeaconsToolRegistration : ToolRegistration {
         ToolIntentHandler { activity, intent ->
             val beaconId = intent.getLongExtra("beacon_id", -1L)
             if (beaconId == -1L) return@ToolIntentHandler false
-            val bundle = Bundle().apply {
-                putLong("beacon_id", beaconId)
-            }
-            activity.findNavigator()?.navigate(
-                R.id.beaconDetailsFragment,
-                bundle
-            )
+            activity.findNavigator()?.navigate(Route.BeaconDetails(beaconId))
             true
         }
 
@@ -64,10 +56,10 @@ object BeaconsToolRegistration : ToolRegistration {
             Tools.BEACONS,
             context.getString(R.string.beacons),
             TrailIcons.Location,
-            R.id.beacon_list,
+            Route.BeaconList(),
             ToolCategory.Location,
             guideId = R.raw.guide_tool_beacons,
-            settingsNavAction = R.id.beaconsSettingsFragment,
+            settingsRoute = Route.BeaconSettings,
             quickActions = listOf(
                 ToolQuickAction(
                     Tools.QUICK_ACTION_CREATE_BEACON,
@@ -75,9 +67,9 @@ object BeaconsToolRegistration : ToolRegistration {
                     ::QuickActionPlaceBeacon
                 )
             ),
-            additionalNavigationIds = listOf(
-                R.id.beaconDetailsFragment,
-                R.id.placeBeaconFragment
+            additionalRoutes = listOf(
+                Route.BeaconDetails::class,
+                Route.PlaceBeacon::class
             ),
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context),
@@ -115,14 +107,7 @@ object BeaconsToolRegistration : ToolRegistration {
                     openFeature = { feature, _, appNavigator ->
                         val beaconId =
                             feature.getLongProperty(BeaconGeoJsonSource.PROPERTY_BEACON_ID)
-                        appNavigator.navigate(
-                            R.id.beaconDetailsFragment,
-                            Bundle().apply {
-                                beaconId?.let {
-                                    putLong("beacon_id", it)
-                                }
-                            }
-                        )
+                        beaconId?.let { appNavigator.navigate(Route.BeaconDetails(it)) }
                     },
                     geoJsonSource = ::BeaconGeoJsonSource,
                     refreshBroadcasts = listOf(

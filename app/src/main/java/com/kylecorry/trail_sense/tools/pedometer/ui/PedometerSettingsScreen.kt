@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -340,7 +342,7 @@ private fun PedometerSettingsContent(
                     label = stringResource(R.string.estimate_stride_length),
                     onClick = {
                         host.findNavigator().navigate(
-                            R.id.action_calibrate_pedometer_to_estimate_stride_length
+                            Route.StrideLengthEstimation
                         )
                     },
                     position = position

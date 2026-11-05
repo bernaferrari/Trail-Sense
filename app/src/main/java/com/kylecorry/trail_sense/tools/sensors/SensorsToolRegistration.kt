@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.sensors
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -26,7 +28,7 @@ object SensorsToolRegistration : ToolRegistration {
             Tools.SENSORS,
             context.getString(R.string.sensors),
             TrailIcons.Sensors,
-            R.id.sensorDetailsFragment,
+            Route.SensorDetails,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_sensors,
             quickActions = listOf(

@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.text.KeyboardOptions
@@ -310,7 +312,7 @@ private class TriangulateController(
     private fun navigateToLocation() {
         location?.let {
             navigator.navigateTo(it, host.getString(R.string.location), BeaconOwner.Triangulate)
-            appNavigation.navigate(R.id.action_navigation)
+            appNavigation.navigate(Route.Navigation())
         }
     }
 

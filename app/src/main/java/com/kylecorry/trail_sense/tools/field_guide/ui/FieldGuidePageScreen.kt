@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
@@ -116,7 +120,7 @@ private class FieldGuidePageController(private val host: TrailSenseDestinationHo
     val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
     val tagNameMapper by lazy { FieldGuideTagNameMapper(host.requireContext()) }
     private val pageId: Long? by lazy {
-        host.destinationArguments?.getLong("page_id")?.takeIf { it != 0L }
+        host.routeAs<Route.FieldGuidePage>().pageId.takeIf { it != 0L }
     }
 
     var page by mutableStateOf<FieldGuidePage?>(null)
@@ -132,22 +136,12 @@ private class FieldGuidePageController(private val host: TrailSenseDestinationHo
 
     fun editPage() {
         val current = page ?: return
-        host.findNavigator().navigate(
-            R.id.createFieldGuidePageFragment,
-            Bundle().apply {
-                putLong("page_id", current.id)
-            }
-        )
+        host.findNavigator().navigate(Route.CreateFieldGuidePage(pageId = current.id))
     }
 
     fun openSightings() {
         val current = page ?: return
-        host.findNavigator().navigate(
-            R.id.sightingListFragment,
-            Bundle().apply {
-                putLong("page_id", current.id)
-            }
-        )
+        host.findNavigator().navigate(Route.SightingList(pageId = current.id))
     }
 }
 

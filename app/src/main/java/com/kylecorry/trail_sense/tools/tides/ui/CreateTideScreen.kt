@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.OnBackPressedCallback
@@ -200,7 +204,7 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
             return
         }
         isInitialized = true
-        editingId = host.destinationArguments?.getLong("edit_tide_id") ?: 0L
+        editingId = host.routeAs<Route.CreateTide>().editTideId
         backCallback = host.promptIfUnsavedChanges(this::hasChanges)
 
         if (editingId != 0L) {

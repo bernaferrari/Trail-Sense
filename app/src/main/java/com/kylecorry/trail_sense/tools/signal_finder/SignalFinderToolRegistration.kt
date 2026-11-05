@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.signal_finder
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -18,7 +20,7 @@ object SignalFinderToolRegistration : ToolRegistration {
             Tools.SIGNAL_FINDER,
             context.getString(R.string.tool_signal_finder),
             TrailIcons.SignalCellular2,
-            R.id.signalFinderFragment,
+            Route.SignalFinder,
             ToolCategory.Signaling,
             description = context.getString(R.string.signal_finder_description),
             diagnostics = listOf(

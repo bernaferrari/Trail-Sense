@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure
 
-import android.os.Bundle
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.IAppNavigation
@@ -15,8 +16,7 @@ class BeaconNavigator(
     private val beaconService: IBeaconService,
     private val navigation: IAppNavigation,
     private val navigator: Navigator,
-    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    private val bundleFactory: () -> Bundle = { Bundle() }
+    private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : IBeaconNavigator {
 
     override suspend fun navigateTo(beacon: Beacon) {
@@ -30,17 +30,8 @@ class BeaconNavigator(
 
         withContext(mainDispatcher) {
             navigator.navigateTo(id)
-            navigation.navigate(
-                R.id.action_navigation,
-                bundleFactory().apply {
-                    putBoolean(ARG_NAVIGATION_STARTED, true)
-                }
-            )
+            navigation.navigate(Route.Navigation(navigationStarted = true))
         }
-    }
-
-    companion object {
-        const val ARG_NAVIGATION_STARTED = "navigation_started"
     }
 
 }

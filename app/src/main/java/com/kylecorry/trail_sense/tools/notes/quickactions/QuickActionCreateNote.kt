@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.notes.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -16,12 +18,12 @@ class QuickActionCreateNote(btn: QuickActionButtonView, host: TrailSenseDestinat
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(R.id.fragmentToolNotesCreate)
+        host.findNavigator().navigate(Route.NoteEditor())
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(R.id.fragmentToolNotes)
+        host.findNavigator().navigate(Route.Notes)
         return true
     }
 

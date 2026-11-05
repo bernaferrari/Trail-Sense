@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.settings.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionSettings(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
@@ -19,18 +20,18 @@ class QuickActionSettings(btn: QuickActionButtonView, host: TrailSenseDestinatio
     override fun onClick() {
         super.onClick()
         val activeTool = Tools.getTools(context).firstOrNull {
-            it.isOpen(host.findNavigator().currentDestination?.id ?: 0)
+            it.isOpen(host.findNavigator().currentRoute)
         }
-        if (activeTool?.settingsNavAction != null) {
-            host.findNavigator().navigate(activeTool.settingsNavAction)
+        if (activeTool?.settingsRoute != null) {
+            host.findNavigator().navigate(activeTool.settingsRoute)
         } else {
-            host.findNavigator().openTool(Tools.SETTINGS)
+            host.findNavigator().navigate(Route.Settings)
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().openTool(Tools.SETTINGS)
+        host.findNavigator().navigate(Route.Settings)
         return true
     }
 }

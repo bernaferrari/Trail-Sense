@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.repo
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 data class MapLayerPreference(
     val id: String,
     val title: CharSequence?,
@@ -10,7 +12,7 @@ data class MapLayerPreference(
     val min: Number? = null,
     val max: Number? = null,
     val values: List<Pair<String, String>>? = null,
-    val navActionOnClick: Int? = null
+    val routeOnClick: Route? = null
 )
 
 fun MapLayerPreference.getFullDependencyPreferenceKey(mapId: String, layerId: String): String? {

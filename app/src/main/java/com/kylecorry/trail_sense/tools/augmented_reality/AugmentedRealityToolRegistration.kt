@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.augmented_reality
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -19,11 +21,11 @@ object AugmentedRealityToolRegistration : ToolRegistration {
             Tools.AUGMENTED_REALITY,
             context.getString(R.string.augmented_reality),
             TrailIcons.Camera,
-            R.id.augmentedRealityFragment,
+            Route.AugmentedReality(),
             ToolCategory.Other,
             context.getString(R.string.augmented_reality_description),
             guideId = R.raw.guide_tool_augmented_reality,
-            settingsNavAction = R.id.augmentedRealitySettingsFragment,
+            settingsRoute = Route.AugmentedRealitySettings,
             isAvailable = { SensorService(it).hasCompass() },
             volumeActions = listOf(
                 ToolVolumeAction(

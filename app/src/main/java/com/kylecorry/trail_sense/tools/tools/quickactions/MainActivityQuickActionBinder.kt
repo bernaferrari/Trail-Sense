@@ -33,9 +33,9 @@ class MainActivityQuickActionBinder(
 
         val appNavigator = host.findNavigator()
         val tools = Tools.getTools(host.requireContext())
-        val currentDestination = appNavigator.currentDestination?.id ?: 0
+        val currentRoute = appNavigator.currentRoute
         val activeTools = tools
-            .filter { it.isOpen(currentDestination) || it.settingsNavAction == currentDestination }
+            .filter { it.isOpen(currentRoute) || it.settingsRoute == currentRoute }
 
         val alwaysRecommended = listOf(
             Tools.QUICK_ACTION_USER_GUIDE,

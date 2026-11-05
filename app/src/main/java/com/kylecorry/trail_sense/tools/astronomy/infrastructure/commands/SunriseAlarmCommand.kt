@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
@@ -113,7 +115,7 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
         val formatService = FormatService.getInstance(context)
         val formattedTime = formatService.formatTime(sunrise.toLocalTime(), false)
 
-        val openIntent = NavigationUtils.pendingIntent(context, R.id.action_astronomy)
+        val openIntent = NavigationUtils.pendingIntent(context, Route.Astronomy)
 
         val useAlarm = userPrefs.astronomy.useAlarmForSunriseAlert
         val notificationChannel = if (useAlarm) {

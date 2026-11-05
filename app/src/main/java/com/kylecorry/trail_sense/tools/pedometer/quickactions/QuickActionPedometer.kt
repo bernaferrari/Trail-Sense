@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -23,7 +25,7 @@ class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(R.id.fragmentToolPedometer)
+        host.findNavigator().navigate(Route.Pedometer)
         return true
     }
 

@@ -1,8 +1,9 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import android.content.Context
 import android.content.Intent
-import androidx.annotation.IdRes
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.R
@@ -14,7 +15,7 @@ data class ToolDiagnosticAction(
 ) {
     companion object {
         fun navigate(
-            @IdRes to: Int,
+            to: Route,
             title: String
         ): ToolDiagnosticAction {
             return ToolDiagnosticAction(title) { _, appNavigator ->

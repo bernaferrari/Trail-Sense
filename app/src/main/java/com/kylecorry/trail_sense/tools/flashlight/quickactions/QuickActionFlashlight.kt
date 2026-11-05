@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.flashlight.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.topics.generic.ITopic
@@ -8,7 +10,6 @@ import com.kylecorry.luna.topics.generic.map
 import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.quickactions.TopicQuickAction
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
@@ -32,7 +33,7 @@ class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinat
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().openTool(Tools.FLASHLIGHT)
+        host.findNavigator().navigate(Route.Flashlight)
         return true
     }
 

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -23,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.withTimeoutOrNull
-import androidx.annotation.IdRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -47,20 +48,23 @@ const val MAX_BOTTOM_NAVIGATION_ITEMS = 5
 
 class MainBottomNavigationState {
     val items = mutableStateListOf<MainBottomNavigationItem>()
-    var selectedItemId by mutableIntStateOf(0)
+    /** The tab that is lit. */
+    var selectedRoute by mutableStateOf<Route?>(null)
     var isEnabled by mutableStateOf(true)
     var useCompactMode by mutableStateOf(false)
     var showAllLabels by mutableStateOf(false)
     var useBlackTheme by mutableStateOf(false)
     var bottomInsetDp by mutableIntStateOf(0)
 
-    fun contains(@IdRes itemId: Int): Boolean {
-        return items.any { it.id == itemId && it.visible }
+    /** Whether [route] is one of the visible tabs. */
+    fun contains(route: Route): Boolean {
+        return items.any { it.route == route && it.visible }
     }
 }
 
 data class MainBottomNavigationItem(
-    @IdRes val id: Int,
+    /** The screen the tab opens; it is also the tab's identity. */
+    val route: Route,
     val title: String,
     val icon: ImageVector,
     val selectedIcon: ImageVector? = null,
@@ -78,8 +82,8 @@ data class MainBottomNavigationItem(
 @Composable
 fun MainAdaptiveNavigation(
     state: MainBottomNavigationState,
-    onItemClick: (Int) -> Unit,
-    onItemLongClick: (Int) -> Unit,
+    onItemClick: (Route) -> Unit,
+    onItemLongClick: (Route) -> Unit,
     modifier: Modifier = Modifier,
     showBar: Boolean = true,
     content: @Composable () -> Unit
@@ -99,7 +103,7 @@ fun MainAdaptiveNavigation(
     }
 
     fun Modifier.longPress(item: MainBottomNavigationItem): Modifier = this
-        .pointerInput(item.id) {
+        .pointerInput(item.route) {
             awaitEachGesture {
                 awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                 // Watch on the initial pass, before the tab's own click consumes the release; a release (or a drag
@@ -112,7 +116,7 @@ fun MainAdaptiveNavigation(
                     true
                 }
                 if (released == null) {
-                    onItemLongClick(item.id)
+                    onItemLongClick(item.route)
                     // The press is spent: swallow the rest of it so the tab's own click doesn't also navigate
                     // (which would close the sheet that just opened).
                     while (true) {
@@ -125,7 +129,7 @@ fun MainAdaptiveNavigation(
         }
         .semantics {
             onLongClick(label = item.title) {
-                onItemLongClick(item.id)
+                onItemLongClick(item.route)
                 true
             }
         }
@@ -143,11 +147,11 @@ fun MainAdaptiveNavigation(
                 ) {
                 ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     visibleItems.forEach { item ->
-                        val selected = item.id == state.selectedItemId
+                        val selected = item.route == state.selectedRoute
                         ShortNavigationBarItem(
                             selected = selected,
                             enabled = state.isEnabled,
-                            onClick = { onItemClick(item.id) },
+                            onClick = { onItemClick(item.route) },
                             icon = { ItemIcon(item, selected) },
                             label = if (state.showAllLabels || !state.useCompactMode || selected) {
                                 { Text(item.title, maxLines = 1) }
@@ -165,11 +169,11 @@ fun MainAdaptiveNavigation(
                 AnimatedVisibility(visible = showBar) {
                 WideNavigationRail(modifier = Modifier.fillMaxHeight()) {
                     visibleItems.forEach { item ->
-                        val selected = item.id == state.selectedItemId
+                        val selected = item.route == state.selectedRoute
                         WideNavigationRailItem(
                             selected = selected,
                             enabled = state.isEnabled,
-                            onClick = { onItemClick(item.id) },
+                            onClick = { onItemClick(item.route) },
                             icon = { ItemIcon(item, selected) },
                             label = { Text(item.title, maxLines = 1) },
                             railExpanded = false,

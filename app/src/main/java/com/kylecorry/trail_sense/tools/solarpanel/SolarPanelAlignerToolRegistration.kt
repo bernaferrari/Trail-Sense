@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.solarpanel
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -16,7 +18,7 @@ object SolarPanelAlignerToolRegistration : ToolRegistration {
             Tools.SOLAR_PANEL_ALIGNER,
             context.getString(R.string.tool_solar_panel_title),
             TrailIcons.ToolSolarPanel,
-            R.id.fragmentToolSolarPanel,
+            Route.SolarPanel,
             ToolCategory.Power,
             context.getString(R.string.tool_solar_panel_summary),
             guideId = R.raw.guide_tool_solar_panel_aligner,

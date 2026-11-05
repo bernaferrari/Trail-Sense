@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.tools.guide.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -19,7 +20,7 @@ class QuickActionUserGuide(btn: QuickActionButtonView, host: TrailSenseDestinati
     override fun onClick() {
         super.onClick()
         val activeTool = Tools.getTools(context).firstOrNull {
-            it.isOpen(host.findNavigator().currentDestination?.id ?: 0)
+            it.isOpen(host.findNavigator().currentRoute)
         }
         if (activeTool?.guideId != null) {
             UserGuideUtils.showGuide(context, host.findNavigator(), activeTool.guideId)
@@ -30,7 +31,7 @@ class QuickActionUserGuide(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().openTool(Tools.USER_GUIDE)
+        host.findNavigator().navigate(Route.GuideList)
         return true
     }
 }

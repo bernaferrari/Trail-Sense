@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.experimentation
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.material3.MaterialShapes
@@ -105,7 +107,7 @@ internal fun ExperimentationContent() {
                         actionLabel = stringResource(R.string.experimentation_find_plugins),
                         onAction = {
                             context.findComponentActivity()?.findNavigator()
-                                ?.navigate(R.id.pluginsSettingsFragment)
+                                ?.navigate(Route.PluginsSettings)
                         },
                         // The same optical centre as the other empty screens.
                         modifier = Modifier.fillParentMaxHeight(0.9f)

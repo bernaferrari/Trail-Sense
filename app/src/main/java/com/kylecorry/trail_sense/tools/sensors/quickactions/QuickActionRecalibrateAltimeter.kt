@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.sensors.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -88,14 +90,14 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
             }
 
             else -> {
-                host.findNavigator().navigate(R.id.calibrateAltimeterFragment)
+                host.findNavigator().navigate(Route.CalibrateAltimeter)
             }
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(R.id.calibrateAltimeterFragment)
+        host.findNavigator().navigate(Route.CalibrateAltimeter)
         return true
     }
 }

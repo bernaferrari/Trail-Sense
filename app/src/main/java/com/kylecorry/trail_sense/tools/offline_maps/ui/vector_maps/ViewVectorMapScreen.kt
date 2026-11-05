@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.layout.Arrangement
@@ -99,8 +103,7 @@ private class ViewVectorMapController(private val host: TrailSenseDestinationHos
     private var configuredMapId: Long? = null
 
     private val mapId: Long
-        get() = host.destinationArguments?.getLong("offline_map_file_id")
-            ?: error("Missing offline map id")
+        get() = host.routeAs<Route.VectorMapView>().offlineMapFileId
 
     fun onDestroy() {
         onPause()

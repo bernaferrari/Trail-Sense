@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.errors
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.R
@@ -42,7 +44,7 @@ class NavigatorUserErrors(
         ) {
             val appNavigator = host.findNavigator()
             banner.dismiss(ErrorBannerReason.LocationNotSet)
-            appNavigator.navigate(R.id.calibrateGPSFragment)
+            appNavigator.navigate(Route.CalibrateGps)
         },
         GPSDiagnosticScanner.GPS_TIMED_OUT to UserError(
             ErrorBannerReason.GPSTimeout,

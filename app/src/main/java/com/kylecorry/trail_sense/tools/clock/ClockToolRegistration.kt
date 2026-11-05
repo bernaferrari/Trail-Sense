@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.clock
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
@@ -19,10 +21,10 @@ object ClockToolRegistration : ToolRegistration {
             Tools.CLOCK,
             context.getString(R.string.tool_clock_title),
             TrailIcons.ToolClock,
-            R.id.toolClockFragment,
+            Route.Clock,
             ToolCategory.Time,
             guideId = R.raw.guide_tool_clock,
-            settingsNavAction = R.id.clockSettingsFragment,
+            settingsRoute = Route.ClockSettings,
             notificationChannelGroups = listOf(
                 ToolNotificationChannelGroup(
                     NOTIFICATION_CHANNEL_GROUP_CLOCK,

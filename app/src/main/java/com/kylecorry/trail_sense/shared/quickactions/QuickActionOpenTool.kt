@@ -1,14 +1,15 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.annotation.IdRes
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.QuickActionButton
 
 class QuickActionOpenTool(
     button: QuickActionButtonView,
     host: TrailSenseDestinationHost,
-    @IdRes private val navId: Int,
+    private val route: Route,
     private val icon: ImageVector
 ) :
     QuickActionButton(button, host) {
@@ -20,7 +21,7 @@ class QuickActionOpenTool(
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(navId)
+        host.findNavigator().navigate(route)
     }
 
 }

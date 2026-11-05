@@ -4,6 +4,10 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.material3.MaterialShapes
 import com.kylecorry.trail_sense.shared.views.CloudsEmptyIllustration
 import androidx.compose.material3.toShape
@@ -160,7 +164,7 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
             loaded = true
         }
 
-        val shouldOpenScanner = host.destinationArguments?.getBoolean("open_scanner", false) == true
+        val shouldOpenScanner = host.routeAs<Route.Clouds>().openScanner
         if (shouldOpenScanner) {
             addFromCamera()
         }
@@ -220,16 +224,11 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
     }
 
     fun addManual() {
-        host.findNavigator().navigate(R.id.action_cloud_to_cloud_picker)
+        host.findNavigator().navigate(Route.CloudResults())
     }
 
     private fun openCloudPicker(uri: Uri) {
-        host.findNavigator().navigate(
-            R.id.action_cloud_to_cloud_picker,
-            Bundle().apply {
-                putParcelable("image", uri)
-            }
-        )
+        host.findNavigator().navigate(Route.CloudResults(imageUri = uri.toString()))
     }
 
     fun delete(reading: Reading<CloudObservation>) {

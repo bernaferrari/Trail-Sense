@@ -154,6 +154,7 @@ dependencies {
     // Kotlin
     implementation(libs.kotlinx.coroutines.android)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // AndroidX

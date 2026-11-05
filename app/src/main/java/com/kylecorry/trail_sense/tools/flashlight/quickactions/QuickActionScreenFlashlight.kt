@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.tools.flashlight.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionScreenFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
@@ -18,12 +19,12 @@ class QuickActionScreenFlashlight(btn: QuickActionButtonView, host: TrailSenseDe
 
     override fun onClick() {
         super.onClick()
-        host.findNavigator().navigate(R.id.fragmentToolScreenFlashlight)
+        host.findNavigator().navigate(Route.ScreenFlashlight)
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().openTool(Tools.FLASHLIGHT)
+        host.findNavigator().navigate(Route.Flashlight)
         return true
     }
 }

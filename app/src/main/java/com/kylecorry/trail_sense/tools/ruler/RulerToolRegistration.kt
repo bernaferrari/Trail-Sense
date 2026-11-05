@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.ruler
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -16,10 +18,10 @@ object RulerToolRegistration : ToolRegistration {
             Tools.RULER,
             context.getString(R.string.tool_ruler_title),
             TrailIcons.Ruler,
-            R.id.rulerFragment,
+            Route.Ruler,
             ToolCategory.Distance,
             guideId = R.raw.guide_tool_ruler,
-            settingsNavAction = R.id.toolRulerSettingsFragment,
+            settingsRoute = Route.RulerSettings,
             quickActions = listOf(
                 ToolQuickAction(
                     Tools.QUICK_ACTION_RULER,

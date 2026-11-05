@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.hardware.Sensor
@@ -44,10 +46,10 @@ object PedometerToolRegistration : ToolRegistration {
             Tools.PEDOMETER,
             context.getString(R.string.pedometer),
             TrailIcons.Steps,
-            R.id.fragmentToolPedometer,
+            Route.Pedometer,
             ToolCategory.Distance,
             guideId = R.raw.guide_tool_pedometer,
-            settingsNavAction = R.id.calibrateOdometerFragment,
+            settingsRoute = Route.PedometerSettings,
             initialize = { PedometerSubsystem.getInstance(it) },
             singletons = listOf(
                 {

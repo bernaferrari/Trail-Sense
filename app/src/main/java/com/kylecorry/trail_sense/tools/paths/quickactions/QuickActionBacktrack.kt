@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -24,7 +26,7 @@ class QuickActionBacktrack(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(R.id.fragmentBacktrack)
+        host.findNavigator().navigate(Route.Paths)
         return true
     }
 

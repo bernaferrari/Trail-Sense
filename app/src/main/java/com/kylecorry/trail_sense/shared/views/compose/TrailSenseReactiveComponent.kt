@@ -16,7 +16,6 @@ class TrailSenseReactiveComponent(
     private val rootViewProvider: () -> View,
     private val lifecycleOwnerProvider: () -> LifecycleOwner,
     private val viewLifecycleOwnerProvider: () -> LifecycleOwner,
-    private val argumentsProvider: () -> Bundle,
     private val onStateChanged: () -> Unit
 ) : ReactiveComponent {
 
@@ -95,9 +94,8 @@ class TrailSenseReactiveComponent(
         }
     }
 
-    override fun useArguments(): Bundle {
-        return argumentsProvider()
-    }
+    /** Andromeda's hook for fragment arguments; screens read their typed route from the host instead. */
+    override fun useArguments(): Bundle = Bundle.EMPTY
 
     override fun useActivity(): Activity {
         return activityProvider()

@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.toShape
@@ -351,7 +355,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
             return
         }
         isCreated = true
-        pathId = host.destinationArguments?.getLong("path_id") ?: error("Missing path id")
+        pathId = host.routeAs<Route.PathOverview>().pathId
         layer.renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.paths.useFastPathRendering)
         layer.setOnClickListener {
             if (selectedPointId != null) {
@@ -880,12 +884,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
         host.lifecycleOwner.lifecycleScope.launch {
             navigator.navigateAlongPath(selectedPath, follow)
             onMain {
-                host.findNavigator().navigate(
-                    R.id.action_navigation,
-                    Bundle().apply {
-                        putBoolean(BeaconNavigator.ARG_NAVIGATION_STARTED, true)
-                    }
-                )
+                host.findNavigator().navigate(Route.Navigation(navigationStarted = true))
             }
         }
     }

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.alerts
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -45,7 +47,7 @@ class DailyWeatherAlerter(
             condition
         }
 
-        val openIntent = NavigationUtils.pendingIntent(context, R.id.action_weather)
+        val openIntent = NavigationUtils.pendingIntent(context, Route.Weather)
 
         val notification = Notify.status(
             context,

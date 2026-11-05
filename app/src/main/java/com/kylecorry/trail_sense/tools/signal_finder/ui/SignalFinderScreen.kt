@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.signal_finder.ui
 
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.CircleShape
@@ -107,7 +111,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import androidx.compose.material.icons.rounded.AddLocationAlt
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
@@ -291,14 +294,11 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
 
     fun navigateToTower(tower: ApproximateCoordinate) {
         navigator.navigateTo(tower.coordinate, host.getString(R.string.cell_tower))
-        host.findNavigator().openTool(Tools.NAVIGATION)
+        host.findNavigator().navigate(Route.Navigation())
     }
 
     fun createBeacon(tower: ApproximateCoordinate) {
-        val bundle = Bundle().apply {
-            putParcelable("initial_location", GeoUri(tower.coordinate))
-        }
-        host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
+        host.findNavigator().navigate(Route.PlaceBeacon(initialLocation = tower.coordinate.toRouteLocation()))
     }
 }
 

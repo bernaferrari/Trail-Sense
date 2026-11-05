@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -199,12 +201,7 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
                     host.getString(R.string.saved_to_note),
                     action = host.getString(R.string.view)
                 ) {
-                    host.findNavigator().navigate(
-                        R.id.fragmentToolNotesCreate,
-                        Bundle().apply {
-                            putLong("edit_note_id", id)
-                        }
-                    )
+                    host.findNavigator().navigate(Route.NoteEditor(editNoteId = id))
                 }
             }
         }
@@ -235,12 +232,7 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
                 host.getString(R.string.beacon_created),
                 action = host.getString(R.string.view)
             ) {
-                host.findNavigator().navigate(
-                    R.id.beaconDetailsFragment,
-                    Bundle().apply {
-                        putLong("beacon_id", id)
-                    }
-                )
+                host.findNavigator().navigate(Route.BeaconDetails(beaconId = id))
             }
         }
     }

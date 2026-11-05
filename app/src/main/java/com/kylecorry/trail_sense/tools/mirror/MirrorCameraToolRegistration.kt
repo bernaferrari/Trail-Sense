@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.mirror
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.camera.Camera
@@ -19,7 +21,7 @@ object MirrorCameraToolRegistration : ToolRegistration {
             Tools.MIRROR_CAMERA,
             context.getString(R.string.mirror_camera),
             TrailIcons.MirrorCamera,
-            R.id.mirrorCameraFragment,
+            Route.MirrorCamera,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_mirror_camera,
             isAvailable = { Camera.hasFrontCamera(it) },

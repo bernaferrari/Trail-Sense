@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
+import androidx.core.net.toUri
+
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.foundation.layout.Arrangement
 import com.kylecorry.trail_sense.shared.views.OfflineMapsEmptyIllustration
 import androidx.compose.foundation.layout.Column
@@ -243,14 +249,10 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
             this::sortMaps
         )
 
-        val mapIntentUri =
-            BundleCompat.getParcelable(
-                host.destinationArguments ?: Bundle(),
-                "map_intent_uri",
-                Uri::class.java
-            )
-        host.destinationArguments?.remove("map_intent_uri")
+        val mapIntentUri = host.routeAs<Route.OfflineMapList>().importUri?.toUri()
         if (mapIntentUri != null) {
+            // Imported once: without the URI, coming back to this screen doesn't import it again.
+            host.findNavigator().replace(Route.OfflineMapList())
             createMap(
                 CreateMapFromUriCommand(
                     host.requireContext(),
@@ -475,12 +477,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     private fun view(map: IMap) {
         when (map) {
             is MapGroup -> manager.open(map.id)
-            is PhotoMap -> host.findNavigator().navigate(
-                R.id.action_mapList_to_maps,
-                Bundle().apply {
-                    putLong("mapId", map.id)
-                }
-            )
+            is PhotoMap -> host.findNavigator().navigate(Route.PhotoMaps(mapId = map.id))
 
             is VectorMap -> {
                 if (!map.isAvailable) {
@@ -492,12 +489,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                     )
                     return
                 }
-                host.findNavigator().navigate(
-                    R.id.offlineMapViewFragment,
-                    Bundle().apply {
-                        putLong("offline_map_file_id", map.id)
-                    }
-                )
+                host.findNavigator().navigate(Route.VectorMapView(offlineMapFileId = map.id))
             }
         }
     }
@@ -599,12 +591,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
 
                 manager.refresh(true)
                 when (map) {
-                    is PhotoMap -> host.findNavigator().navigate(
-                        R.id.action_mapList_to_maps,
-                        Bundle().apply {
-                            putLong("mapId", map.id)
-                        }
-                    )
+                    is PhotoMap -> host.findNavigator().navigate(Route.PhotoMaps(mapId = map.id))
                 }
             } finally {
                 MapCleanupCommand.isMapImportInProgress = false

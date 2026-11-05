@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
@@ -39,7 +45,6 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -92,7 +97,7 @@ private class SightingListController(private val host: TrailSenseDestinationHost
     private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
     private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
     private val pageId by lazy {
-        host.destinationArguments?.getLong("page_id") ?: error("Missing page id")
+        host.routeAs<Route.SightingList>().pageId
     }
 
     private var page by mutableStateOf<FieldGuidePage?>(null)
@@ -134,22 +139,11 @@ private class SightingListController(private val host: TrailSenseDestinationHost
     }
 
     fun createSighting() {
-        host.findNavigator().navigate(
-            R.id.createFieldGuideSightingFragment,
-            Bundle().apply {
-                putLong("page_id", pageId)
-            }
-        )
+        host.findNavigator().navigate(Route.CreateFieldGuideSighting(pageId = pageId))
     }
 
     private fun editSighting(sighting: Sighting) {
-        host.findNavigator().navigate(
-            R.id.createFieldGuideSightingFragment,
-            Bundle().apply {
-                putLong("page_id", pageId)
-                putLong("sighting_id", sighting.id)
-            }
-        )
+        host.findNavigator().navigate(Route.CreateFieldGuideSighting(pageId = pageId, sightingId = sighting.id))
     }
 
     private fun deleteSighting(sighting: Sighting) {
@@ -181,21 +175,13 @@ private class SightingListController(private val host: TrailSenseDestinationHost
             BeaconOwner.FieldGuide,
             elevation = sighting.altitude
         )
-        host.findNavigator().openTool(Tools.NAVIGATION)
+        host.findNavigator().navigate(Route.Navigation())
     }
 
     private fun createBeacon(sighting: Sighting) {
-        val bundle = Bundle().apply {
-            putParcelable(
-                "initial_location",
-                GeoUri(
-                    sighting.location ?: Coordinate.zero,
-                    sighting.altitude,
-                    mapOf("label" to (page?.name ?: ""))
-                )
-            )
-        }
-        host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
+        val location = (sighting.location ?: Coordinate.zero).toRouteLocation(sighting.altitude)
+            .copy(parameters = mapOf("label" to (page?.name ?: "")))
+        host.findNavigator().navigate(Route.PlaceBeacon(initialLocation = location))
     }
 }
 

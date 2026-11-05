@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
+import com.kylecorry.trail_sense.shared.navigation.Route
 import android.app.Activity
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -18,10 +19,10 @@ class NavigationScreenLock(private val alwaysLock: Boolean = false) {
     private val navigator = DependencyRegistry.get<Navigator>()
 
     private var activityReference: WeakReference<Activity>? = null
-    private var selfDestinationId: Int? = null
-    private val listener = TrailSenseNavigator.OnDestinationChangedListener { _, destination, _ ->
-        if (destination.id != selfDestinationId) {
-            releaseLock(activityReference?.get() ?: return@OnDestinationChangedListener)
+    private var selfRoute: Route? = null
+    private val listener = TrailSenseNavigator.OnRouteChangedListener { _, route ->
+        if (route != selfRoute) {
+            releaseLock(activityReference?.get() ?: return@OnRouteChangedListener)
         }
     }
     private val removeListenerTimer = CoroutineTimer {
@@ -62,15 +63,15 @@ class NavigationScreenLock(private val alwaysLock: Boolean = false) {
     private fun removeNavigationListener(activity: Activity) {
         val mainActivity = activity as? MainActivity ?: return
         val appNavigator = mainActivity.findNavigator() ?: return
-        appNavigator.removeOnDestinationChangedListener(listener)
+        appNavigator.removeOnRouteChangedListener(listener)
     }
 
     private fun addNavigationListener(activity: Activity) {
         val weakActivity = WeakReference(activity)
         val mainActivity = weakActivity.get() as? MainActivity ?: return
         val appNavigator = mainActivity.findNavigator()
-        selfDestinationId = appNavigator?.currentDestination?.id
-        appNavigator?.addOnDestinationChangedListener(listener)
+        selfRoute = appNavigator?.currentRoute
+        appNavigator?.addOnRouteChangedListener(listener)
     }
 
 }

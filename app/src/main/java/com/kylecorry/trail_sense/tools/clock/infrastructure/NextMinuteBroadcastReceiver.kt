@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.clock.infrastructure
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.PendingIntent
@@ -23,7 +25,7 @@ class NextMinuteBroadcastReceiver : BroadcastReceiver() {
             null,
             TrailIcons.ToolClock,
             group = NOTIFICATION_GROUP_CLOCK,
-            intent = NavigationUtils.pendingIntent(context, R.id.toolClockFragment)
+            intent = NavigationUtils.pendingIntent(context, Route.Clock)
         )
         DependencyRegistry.get<NotificationSubsystem>().send(NOTIFICATION_ID, notification)
     }

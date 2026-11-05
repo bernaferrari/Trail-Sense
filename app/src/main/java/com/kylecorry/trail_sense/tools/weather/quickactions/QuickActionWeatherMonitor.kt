@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.quickactions
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -30,7 +32,7 @@ class QuickActionWeatherMonitor(
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavigator().navigate(R.id.action_weather)
+        host.findNavigator().navigate(Route.Weather)
         return true
     }
 

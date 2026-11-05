@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.navigation.toGeoUri
+
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.toShape
@@ -172,14 +178,10 @@ private class PlaceBeaconController(private val host: TrailSenseDestinationHost)
         }
         isInitialized = true
 
-        val args = host.destinationArguments
-        val beaconId = args?.getLong("edit_beacon") ?: 0L
-        val groupId = args?.getLong("initial_group") ?: 0L
-        initialLocation = BundleCompat.getParcelable(
-            args ?: Bundle(),
-            "initial_location",
-            GeoUri::class.java
-        )
+        val route = host.routeAs<Route.PlaceBeacon>()
+        val beaconId = route.editBeaconId
+        val groupId = route.initialGroupId
+        initialLocation = route.initialLocation?.toGeoUri()
 
         editingBeaconId = if (beaconId == 0L) null else beaconId
         data = data.copy(groupId = if (groupId == 0L) null else groupId)

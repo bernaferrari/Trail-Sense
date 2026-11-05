@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.notes
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
@@ -17,7 +19,7 @@ object NotesToolRegistration : ToolRegistration {
             Tools.NOTES,
             context.getString(R.string.tool_notes_title),
             TrailIcons.ToolNotes,
-            R.id.fragmentToolNotes,
+            Route.Notes,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_notes,
             quickActions = listOf(
@@ -27,8 +29,8 @@ object NotesToolRegistration : ToolRegistration {
                     ::QuickActionCreateNote
                 )
             ),
-            additionalNavigationIds = listOf(
-                R.id.fragmentToolNotesCreate
+            additionalRoutes = listOf(
+                Route.NoteEditor::class
             ),
             diagnostics = listOf(
                 ToolDiagnosticFactory.camera(context)

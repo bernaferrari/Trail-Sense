@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared
 
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.res.Configuration
@@ -532,13 +534,7 @@ object CustomUiUtils {
         if (qr.length > QR_SHARE_MAX_LENGTH) {
             Alerts.toast(context, context.getString(R.string.qr_text_too_long))
         }
-        appNavigator.navigate(
-            R.id.viewQrFragment,
-            Bundle().apply {
-                putString("qr_title", title)
-                putString("qr_text", qr.take(QR_SHARE_MAX_LENGTH))
-            }
-        )
+        appNavigator.navigate(Route.ViewQr(title = title, text = qr.take(QR_SHARE_MAX_LENGTH)))
     }
 
     suspend fun takePhoto(

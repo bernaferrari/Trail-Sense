@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.routeAs
+
+import com.kylecorry.trail_sense.shared.navigation.Route
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
@@ -162,8 +166,8 @@ private class CreateFieldGuidePageController(private val host: TrailSenseDestina
             return
         }
         isInitialized = true
-        host.destinationArguments?.let {
-            val pageId = it.getLong(ARG_PAGE_ID, 0L)
+        host.routeAs<Route.CreateFieldGuidePage>().let {
+            val pageId = it.pageId
             if (pageId != 0L) {
                 host.inBackground {
                     repo.getPage(pageId)?.let { loaded ->
@@ -176,7 +180,7 @@ private class CreateFieldGuidePageController(private val host: TrailSenseDestina
                 }
             }
 
-            val tag = FieldGuidePageTag.entries.withId(it.getLong(ARG_CLASSIFICATION_ID, 0L))
+            val tag = FieldGuidePageTag.entries.withId(it.classificationId)
             if (tag != null) {
                 updatePage(page.copy(directTags = page.directTags + tag))
             }
