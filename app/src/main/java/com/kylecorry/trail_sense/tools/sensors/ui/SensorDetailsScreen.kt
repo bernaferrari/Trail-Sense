@@ -717,8 +717,8 @@ private fun SensorDetailsScreen(
 }
 
 /**
- * The answer as the family's status card, like Diagnostics': its colour is the verdict and a cookie holds a check or
- * a warning. The Needs attention group right below names the rest, so the line only speaks when all is well.
+ * The answer as WiFi Weakspot's signal card, like Diagnostics': a quiet surface where only the cookie wears the
+ * verdict's colour, holding a check or a warning. The Needs attention group right below names the rest, so the line only speaks when all is well.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -732,7 +732,7 @@ private fun SensorHealthHero(good: Int, moderate: Int, poor: Int, total: Int) {
     TrailSenseSpotlight(
         title = stringResource(R.string.sky_sensors_good, good, total),
         supportingText = if (poor + moderate == 0) stringResource(R.string.sky_sensors_all_good) else null,
-        tone = tone,
+        tone = TrailSenseTone.Neutral,
         titleStyle = MaterialTheme.typography.headlineSmall,
         badge = {
             TrailSenseShapeBadge(

@@ -254,7 +254,8 @@ private fun LazyListScope.diagnosticsSection(
 private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int, checks: Int, reported: Int) {
     val issueCount = errorCount + warningCount
     val title = when {
-        issueCount > 0 -> pluralStringResource(R.plurals.diagnostics_issue_count, issueCount, issueCount)
+        // The count is in the cookie, so the title is only the words.
+        issueCount > 0 -> pluralStringResource(R.plurals.diagnostics_issues_found, issueCount)
         loaded -> stringResource(R.string.no_issues)
         else -> stringResource(R.string.diagnostics_checking)
     }
@@ -270,8 +271,8 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
         MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "diagnosticsProgress"
     )
-    // The answer as the family's status card (WiFi Weakspot's "Good signal", Keepout's "Protected"): its colour is the
-    // verdict, a cookie holds the count or a check, and the title stays smaller than the page title above it.
+    // The answer as WiFi Weakspot's signal card: a quiet surface where only the cookie wears the verdict's colour and
+    // holds the count (or a check), and the words beside it. The title stays smaller than the page title above it.
     val tone = when {
         !loaded && issueCount == 0 -> TrailSenseTone.Neutral
         errorCount > 0 -> TrailSenseTone.Error
@@ -282,7 +283,7 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
     TrailSenseSpotlight(
         title = title,
         supportingText = supporting,
-        tone = tone,
+        tone = TrailSenseTone.Neutral,
         titleStyle = MaterialTheme.typography.headlineSmall,
         modifier = Modifier
             .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())

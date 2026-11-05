@@ -2262,6 +2262,10 @@
         <item quantity="one">%d issue found</item>
         <item quantity="other">%d issues found</item>
     </plurals>
+    <plurals name="diagnostics_issues_found">
+        <item quantity="one">Issue found</item>
+        <item quantity="other">Issues found</item>
+    </plurals>
     <plurals name="diagnostics_error_count">
         <item quantity="one">%d error</item>
         <item quantity="other">%d errors</item>
