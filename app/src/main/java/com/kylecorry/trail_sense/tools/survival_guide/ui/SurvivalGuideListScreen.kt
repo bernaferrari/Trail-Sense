@@ -93,8 +93,6 @@ fun SurvivalGuideListScreen(
                 onValueChange = onQueryChange,
                 placeholder = stringResource(R.string.search),
                 clearContentDescription = stringResource(R.string.survival_guide_clear_search),
-                // A quiet field, so the chapters below are the first read.
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier.testTag("search")
             )
         }

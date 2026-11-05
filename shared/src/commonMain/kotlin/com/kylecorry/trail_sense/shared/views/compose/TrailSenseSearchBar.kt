@@ -24,7 +24,7 @@ fun TrailSenseSearchBar(
     placeholder: String,
     modifier: Modifier = Modifier,
     clearContentDescription: String? = null,
-    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh
 ) {
     TextField(
         value = value,

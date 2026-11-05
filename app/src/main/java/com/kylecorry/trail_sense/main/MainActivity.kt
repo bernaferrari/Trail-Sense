@@ -466,7 +466,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
                 if (navController?.currentDestination?.id != tool.navAction) {
                     navController?.navigate(tool.navAction)
                 }
-                bottomNavigation.selectedItemId = tool.navAction
+                // The tab that owns the tool: its own tab when pinned, otherwise Tools
+                updateBottomNavSelection()
             }
             return
         }

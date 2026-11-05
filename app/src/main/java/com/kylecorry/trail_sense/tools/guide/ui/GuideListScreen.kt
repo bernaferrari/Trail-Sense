@@ -67,9 +67,7 @@ internal fun GuideListScreen(
                 value = query,
                 onValueChange = { query = it },
                 placeholder = stringResource(R.string.search),
-                clearContentDescription = stringResource(android.R.string.cancel),
-                // The same quiet field as the Survival Guide's, so the guides lead.
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                clearContentDescription = stringResource(android.R.string.cancel)
             )
         }
 
