@@ -5,6 +5,15 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui
 import androidx.core.net.toUri
 
 import com.kylecorry.trail_sense.shared.navigation.Route
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 import androidx.compose.foundation.layout.Arrangement
 import com.kylecorry.trail_sense.shared.views.OfflineMapsEmptyIllustration
@@ -31,20 +40,13 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTopBar
 import android.net.Uri
-import android.os.Bundle
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
@@ -68,7 +70,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -85,18 +86,13 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.alerts.loading.AlertLoadingIndicator
 import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.print.Printer
 import com.kylecorry.sol.time.Time.toZonedDateTime
@@ -155,360 +151,116 @@ fun OfflineMapListToolScreen(
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(route) {
-        OfflineMapListController(
-            context,
-            navigator,
-            effects,
-            lifecycleOwner,
-            // The file picker needs the activity's result launcher (an Activity-only API).
-            requireNotNull(context.findMainActivity()),
-            route.importUri
+    val scope = rememberCoroutineScope()
+    val prefs = remember { UserPreferences(context) }
+    val gps = remember { SensorService(context).getGPS() }
+    val viewModel = viewModel {
+        val appContext = context.applicationContext
+        val appGps = SensorService(appContext).getGPS()
+        OfflineMapListViewModel(
+            MapService.getInstance(appContext),
+            UserPreferences(appContext).photoMaps,
+            locationProvider = { appGps.location }
         )
     }
+    // The file picker needs the activity's result launcher (an Activity-only API).
+    val intentResultRetriever = remember(context) { requireNotNull(context.findMainActivity()) }
+    val uriPicker = remember(context) { IntentUriPicker(intentResultRetriever, context) }
+    val mapImportingIndicator = remember(context) {
+        AlertLoadingIndicator(context, context.getString(R.string.importing_map))
+    }
+    val exportService = remember(context, effects, lifecycleOwner) {
+        PhotoMapExportService(context, intentResultRetriever, effects, lifecycleOwner)
+    }
+    var isCreateMenuOpen by remember { mutableStateOf(false) }
 
     // Back leaves the open group first, then the screen.
-    BackHandler(enabled = controller.isBackEnabled) {
-        if (!controller.up()) {
+    BackHandler {
+        if (!viewModel.up()) {
             navigator.navigateUp()
         }
     }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
-        }
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume(cleanup = { MapCleanupCommand(context.applicationContext).execute() })
+        onPauseOrDispose { }
     }
 
-    controller.Content(modifier = modifier.fillMaxSize())
-}
-
-private tailrec fun Context.findMainActivity(): MainActivity? {
-    return when (this) {
-        is MainActivity -> this
-        is ContextWrapper -> baseContext.findMainActivity()
-        else -> null
-    }
-}
-
-private class OfflineMapListController(
-    private val context: Context,
-    private val navigator: TrailSenseNavigator,
-    private val effects: ScreenEffects,
-    private val lifecycleOwner: LifecycleOwner,
-    private val intentResultRetriever: IntentResultRetriever,
-    private val importUri: String?
-) {
-
-    private val sensorService by lazy { SensorService(context) }
-    private val gps by lazy { sensorService.getGPS() }
-    private val prefs by lazy { UserPreferences(context) }
-    private val mapService by lazy { MapService.Companion.getInstance(context) }
-    private val mapLoader by lazy { MapGroupLoader(mapService.loader) }
-    private lateinit var manager: GroupListManager<IMap>
-
-    private var sort = MapSortMethod.Closest
-
-    private var lastRoot: IMap? = null
-    var isBackEnabled by mutableStateOf(false)
-        private set
-    private var mapItems by mutableStateOf<List<IMap>>(emptyList())
-    private var mapListResetKey by mutableIntStateOf(0)
-    private var title by mutableStateOf("")
-    private var searchText by mutableStateOf("")
-    private var sortMenuText by mutableStateOf("")
-    private var isCreateMenuOpen by mutableStateOf(false)
-    private var isCreateEnabled by mutableStateOf(true)
-    private var isInitialized = false
-
-    private val uriPicker by lazy {
-        IntentUriPicker(
-            intentResultRetriever,
-            context
-        )
-    }
-    private val mapImportingIndicator by lazy {
-        AlertLoadingIndicator(
-            context,
-            context.getString(R.string.importing_map)
-        )
-    }
-    private val exportService by lazy { PhotoMapExportService(context, intentResultRetriever, effects, lifecycleOwner) }
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        OfflineMapListScreen(
-            title = title.ifBlank { stringResource(R.string.offline_maps) },
-            sortMenuText = sortMenuText.ifBlank {
-                stringResource(R.string.sort_by, stringResource(R.string.closest))
-            },
-            searchText = searchText,
-            items = mapItems,
-            isEmpty = mapItems.isEmpty(),
-            resetKey = mapListResetKey,
-            isCreateMenuOpen = isCreateMenuOpen,
-            isCreateEnabled = isCreateEnabled,
-            gpsLocationOnMap = { map ->
-                when (map) {
-                    is PhotoMap -> map.boundary()?.contains(gps.location) ?: false
-                    is VectorMap -> map.bounds?.contains(gps.location) ?: false
-                    else -> false
-                }
-            },
-            onSearchChange = {
-                searchText = it
-                manager.search(it)
-            },
-            onToolbarAction = ::handleToolbarAction,
-            onCreateMenuOpenChange = { isCreateMenuOpen = it },
-            onCreateAction = ::handleCreateAction,
-            onPhotoMapAction = ::onPhotoMapAction,
-            onVectorMapAction = ::onVectorMapAction,
-            onMapGroupAction = ::onMapGroupAction,
-            modifier = modifier
-        )
-    }
-
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        manager = GroupListManager(
-            lifecycleOwner.lifecycleScope,
-            mapLoader,
-            lastRoot,
-            this::sortMaps
-        )
-
-        val mapIntentUri = importUri?.toUri()
-        if (mapIntentUri != null) {
-            // Imported once: without the URI, coming back to this screen doesn't import it again.
-            navigator.replace(Route.OfflineMapList())
-            createMap(
-                CreateMapFromUriCommand(
-                    context,
-                    mapIntentUri,
-                    mapImportingIndicator
-                )
-            )
-        }
-
-        sort = prefs.photoMaps.mapSort
-        sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
-        manager.onChange = { root, items, rootChanged ->
-            mapItems = items
-            if (rootChanged) {
-                mapListResetKey++
-            }
-            title = (root as MapGroup?)?.name ?: context.getString(R.string.offline_maps)
-        }
-
-        updateBackPressedCallback()
-        title = context.getString(R.string.offline_maps)
-    }
-
-    fun onResume() {
-        if (!isInitialized) {
-            return
-        }
-        updateBackPressedCallback()
-        manager.refresh()
-        lifecycleOwner.inBackground {
-            val mapsDeleted = MapCleanupCommand(context).execute()
-            if (mapsDeleted) {
-                manager.refresh()
-            }
-        }
-    }
-
-    fun onDestroy() {
-        onPause()
-        isInitialized = false
-        updateBackPressedCallback()
-    }
-
-    private fun changeSort() {
-        val sortOptions = MapSortMethod.values()
-        Pickers.item(
-            context,
-            context.getString(R.string.sort),
-            sortOptions.map { getSortString(it) },
-            sortOptions.indexOf(prefs.photoMaps.mapSort)
-        ) { newSort ->
-            if (newSort != null) {
-                prefs.photoMaps.mapSort = sortOptions[newSort]
-                sort = sortOptions[newSort]
-                sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
-                onSortChanged()
-            }
-        }
-    }
-
-    private fun getSortString(sortMethod: MapSortMethod): String {
-        return when (sortMethod) {
-            MapSortMethod.MostRecent -> context.getString(R.string.most_recent)
-            MapSortMethod.Closest -> context.getString(R.string.closest)
-            MapSortMethod.Name -> context.getString(R.string.name)
-        }
-    }
-
-    private fun onSortChanged() {
-        manager.refresh(true)
-    }
-
-    private suspend fun sortMaps(maps: List<IMap>): List<IMap> = onDefault {
-        val strategy = when (sort) {
-            MapSortMethod.Closest -> ClosestMapSortStrategy(gps.location, mapService.loader)
-            MapSortMethod.MostRecent -> MostRecentMapSortStrategy(mapService.loader)
-            MapSortMethod.Name -> NameMapSortStrategy()
-        }
-
-        strategy.sort(maps)
-    }
-
-    private fun onMapGroupAction(group: MapGroup, action: MapGroupAction) {
-        when (action) {
-            MapGroupAction.View -> view(group)
-            MapGroupAction.Delete -> delete(group)
-            MapGroupAction.Rename -> rename(group)
-            MapGroupAction.Move -> move(group)
-            MapGroupAction.ShowAll -> setGroupVisibility(group, true)
-            MapGroupAction.HideAll -> setGroupVisibility(group, false)
-        }
-    }
-
-    private fun setGroupVisibility(group: MapGroup, visible: Boolean) {
-        lifecycleOwner.inBackground {
-            Alerts.withLoading(context, context.getString(R.string.loading)) {
-                val maps = mapService.loader.getChildren(group.id, null)
-
-                // Photo Maps
-                maps
-                    .asSequence()
-                    .filterIsInstance<PhotoMap>()
-                    .filter { it.visible != visible }
-                    .forEach { mapService.add(it.copy(visible = visible)) }
-
-                // Vector Maps
-                maps
-                    .asSequence()
-                    .filterIsInstance<VectorMap>()
-                    .filter { it.visible != visible }
-                    .forEach { mapService.add(it.copy(visible = visible)) }
-
-                onMain {
-                    manager.refresh()
-                }
-            }
-        }
-    }
-
-    private fun onPhotoMapAction(map: PhotoMap, action: MapAction) {
-        when (action) {
-            MapAction.View -> view(map)
-            MapAction.Delete -> delete(map)
-            MapAction.Export -> export(map)
-            MapAction.Print -> print(map)
-            MapAction.Resize -> resize(map)
-            MapAction.Rename -> rename(map)
-            MapAction.Move -> move(map)
-            MapAction.ToggleVisibility -> toggleVisibility(map)
-        }
-    }
-
-    private fun onVectorMapAction(map: VectorMap, action: VectorMapAction) {
-        when (action) {
-            VectorMapAction.View -> view(map)
-            VectorMapAction.Rename -> rename(map)
-            VectorMapAction.EditAttribution -> editAttribution(map)
-            VectorMapAction.Delete -> delete(map)
-            VectorMapAction.Move -> move(map)
-            VectorMapAction.ToggleVisibility -> toggleVisibility(map)
-            VectorMapAction.CopyToAppStorage -> copyToAppStorage(map)
-        }
-    }
-
-    private fun copyToAppStorage(map: VectorMap) {
-        lifecycleOwner.inBackground {
-            mapImportingIndicator.show()
+    fun createMap(command: ICreateMapCommand, onDone: () -> Unit = {}) {
+        scope.launch {
+            MapCleanupCommand.isMapImportInProgress = true
             try {
-                mapService.copyToAppStorage(map)
+                viewModel.isCreateEnabled = false
+
+                val map = command.execute()?.let {
+                    when (it) {
+                        is PhotoMap -> it.copy(parentId = viewModel.rootId)
+                        is VectorMap -> it.copy(parentId = viewModel.rootId)
+                        else -> null
+                    }
+                }
+
+                if (map == null) {
+                    effects.showMessage(context.getString(R.string.error_importing_map))
+                    return@launch
+                }
+
+                if (map.parentId != null) {
+                    viewModel.save(map)
+                }
+
+                if (map is PhotoMap) {
+                    val isPdfMap = map.hasPdf(context)
+                    if ((isPdfMap && prefs.photoMaps.autoReducePdfMaps) || (!isPdfMap && prefs.photoMaps.autoReducePhotoMaps)) {
+                        mapImportingIndicator.show()
+                        val reducer = HighQualityMapReducer(context)
+                        reducer.reduce(map)
+                        mapImportingIndicator.hide()
+                    }
+
+                    if (map.georeference.calibrationPoints.isNotEmpty()) {
+                        effects.showMessage(context.getString(R.string.map_auto_calibrated))
+                    }
+                }
+
+                viewModel.refresh(true)
+                onDone()
+                when (map) {
+                    is PhotoMap -> navigator.navigate(Route.PhotoMaps(mapId = map.id))
+                }
             } finally {
-                mapImportingIndicator.hide()
+                MapCleanupCommand.isMapImportInProgress = false
+                viewModel.isCreateEnabled = true
             }
-            manager.refresh()
         }
     }
 
-    private fun resize(map: PhotoMap) {
-        lifecycleOwner.inBackground {
-            ResizeMapCommand(context, mapImportingIndicator).execute(map)
-            manager.refresh()
+    // A map shared to the app is imported once
+    LaunchedEffect(viewModel) {
+        val mapIntentUri = route.importUri?.toUri()
+        if (mapIntentUri != null && viewModel.claimImport()) {
+            createMap(CreateMapFromUriCommand(context, mapIntentUri, mapImportingIndicator)) {
+                // Without the URI, coming back to this screen doesn't import it again.
+                navigator.replace(Route.OfflineMapList())
+            }
         }
     }
 
-    private fun print(map: PhotoMap) {
-        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
-            PrintMapCommand(context).execute(map)
+    /** Runs a command that asks the user something, then shows the list again. */
+    fun runAndRefresh(block: suspend () -> Unit) {
+        scope.launch {
+            block()
+            viewModel.refresh()
         }
     }
 
-    private fun export(map: PhotoMap) {
-        exportService.export(map)
-    }
+    fun delete(map: IMap) = runAndRefresh { DeleteMapCommand(context, viewModel.mapService).execute(map) }
+    fun rename(map: IMap) = runAndRefresh { RenameMapCommand(context, viewModel.mapService).execute(map) }
+    fun move(map: IMap) = runAndRefresh { MoveMapCommand(context, viewModel.mapService).execute(map) }
 
-    private fun rename(map: IMap) {
-        lifecycleOwner.inBackground {
-            RenameMapCommand(context, mapService).execute(map)
-            manager.refresh()
-        }
-    }
-
-    private fun editAttribution(map: VectorMap) {
-        lifecycleOwner.inBackground {
-            EditOfflineMapAttributionCommand(context).execute(map)
-            manager.refresh()
-        }
-    }
-
-    private fun move(map: IMap) {
-        lifecycleOwner.inBackground {
-            MoveMapCommand(context, mapService).execute(map)
-            manager.refresh()
-        }
-    }
-
-    private fun toggleVisibility(map: IMap) {
-        lifecycleOwner.inBackground {
-            ToggleVisibilityMapCommand(mapService).execute(map)
-            manager.refresh()
-        }
-    }
-
-    private fun delete(map: IMap) {
-        lifecycleOwner.inBackground {
-            DeleteMapCommand(context, mapService).execute(map)
-            manager.refresh()
-        }
-    }
-
-    private fun view(map: IMap) {
+    fun view(map: IMap) {
         when (map) {
-            is MapGroup -> manager.open(map.id)
+            is MapGroup -> viewModel.open(map)
             is PhotoMap -> navigator.navigate(Route.PhotoMaps(mapId = map.id))
 
             is VectorMap -> {
@@ -526,122 +278,273 @@ private class OfflineMapListController(
         }
     }
 
-    private fun handleToolbarAction(action: OfflineMapToolbarAction) {
-        when (action) {
-            OfflineMapToolbarAction.Sort -> changeSort()
-        }
-    }
+    OfflineMapListScreen(
+        title = viewModel.rootName ?: stringResource(R.string.offline_maps),
+        sortMenuText = stringResource(R.string.sort_by, stringResource(viewModel.sort.label())),
+        searchText = viewModel.searchText,
+        items = viewModel.items,
+        isEmpty = viewModel.items.isEmpty(),
+        resetKey = viewModel.resetKey,
+        isCreateMenuOpen = isCreateMenuOpen,
+        isCreateEnabled = viewModel.isCreateEnabled,
+        gpsLocationOnMap = { map ->
+            when (map) {
+                is PhotoMap -> map.boundary()?.contains(gps.location) ?: false
+                is VectorMap -> map.bounds?.contains(gps.location) ?: false
+                else -> false
+            }
+        },
+        onSearchChange = viewModel::search,
+        onToolbarAction = { action ->
+            when (action) {
+                OfflineMapToolbarAction.Sort -> {
+                    val sortOptions = MapSortMethod.entries
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.sort),
+                        sortOptions.map { context.getString(it.label()) },
+                        sortOptions.indexOf(viewModel.sort)
+                    ) { newSort ->
+                        if (newSort != null) {
+                            viewModel.changeSort(sortOptions[newSort])
+                        }
+                    }
+                }
+            }
+        },
+        onCreateMenuOpenChange = { isCreateMenuOpen = it },
+        onCreateAction = { action ->
+            when (action) {
+                OfflineMapCreateAction.CreateGroup -> runAndRefresh {
+                    CreateMapGroupCommand(context, viewModel.mapService).execute(viewModel.rootId)
+                }
 
-    private fun handleCreateAction(action: OfflineMapCreateAction) {
-        when (action) {
-            OfflineMapCreateAction.CreateGroup -> createMapGroup()
-            OfflineMapCreateAction.ImportFile -> createMap(
-                CreateMapFromFileCommand(
-                    context,
-                    uriPicker,
-                    mapImportingIndicator
+                OfflineMapCreateAction.ImportFile -> createMap(
+                    CreateMapFromFileCommand(context, uriPicker, mapImportingIndicator)
                 )
-            )
 
-            OfflineMapCreateAction.ImportCamera -> createMap(
-                CreateMapFromCameraCommand(
-                    context,
-                    effects,
-                    mapImportingIndicator
+                OfflineMapCreateAction.ImportCamera -> createMap(
+                    CreateMapFromCameraCommand(context, effects, mapImportingIndicator)
                 )
-            )
 
-            OfflineMapCreateAction.CreateBlank -> createMap(
-                CreateBlankMapCommand(
-                    context,
-                    mapImportingIndicator
+                OfflineMapCreateAction.CreateBlank -> createMap(
+                    CreateBlankMapCommand(context, mapImportingIndicator)
                 )
-            )
+            }
+            isCreateMenuOpen = false
+        },
+        onPhotoMapAction = { map, action ->
+            when (action) {
+                MapAction.View -> view(map)
+                MapAction.Delete -> delete(map)
+                MapAction.Export -> exportService.export(map)
+                MapAction.Print -> scope.launch { PrintMapCommand(context).execute(map) }
+                MapAction.Resize -> runAndRefresh { ResizeMapCommand(context, mapImportingIndicator).execute(map) }
+                MapAction.Rename -> rename(map)
+                MapAction.Move -> move(map)
+                MapAction.ToggleVisibility -> viewModel.toggleVisibility(map)
+            }
+        },
+        onVectorMapAction = { map, action ->
+            when (action) {
+                VectorMapAction.View -> view(map)
+                VectorMapAction.Rename -> rename(map)
+                VectorMapAction.EditAttribution -> runAndRefresh {
+                    EditOfflineMapAttributionCommand(context).execute(map)
+                }
+
+                VectorMapAction.Delete -> delete(map)
+                VectorMapAction.Move -> move(map)
+                VectorMapAction.ToggleVisibility -> viewModel.toggleVisibility(map)
+                VectorMapAction.CopyToAppStorage -> scope.launch {
+                    mapImportingIndicator.show()
+                    try {
+                        viewModel.copyToAppStorage(map)
+                    } finally {
+                        mapImportingIndicator.hide()
+                    }
+                }
+            }
+        },
+        onMapGroupAction = { group, action ->
+            when (action) {
+                MapGroupAction.View -> view(group)
+                MapGroupAction.Delete -> delete(group)
+                MapGroupAction.Rename -> rename(group)
+                MapGroupAction.Move -> move(group)
+                MapGroupAction.ShowAll -> setGroupVisibility(context, scope, viewModel, group, true)
+                MapGroupAction.HideAll -> setGroupVisibility(context, scope, viewModel, group, false)
+            }
+        },
+        modifier = modifier.fillMaxSize()
+    )
+}
+
+private fun setGroupVisibility(
+    context: Context,
+    scope: CoroutineScope,
+    viewModel: OfflineMapListViewModel,
+    group: MapGroup,
+    visible: Boolean
+) {
+    scope.launch {
+        val loading = Alerts.loading(context, context.getString(R.string.loading))
+        try {
+            viewModel.setGroupVisibility(group, visible)
+        } finally {
+            loading.dismiss()
         }
-        isCreateMenuOpen = false
+    }
+}
+
+private fun MapSortMethod.label(): Int {
+    return when (this) {
+        MapSortMethod.MostRecent -> R.string.most_recent
+        MapSortMethod.Closest -> R.string.closest
+        MapSortMethod.Name -> R.string.name
+    }
+}
+
+private tailrec fun Context.findMainActivity(): MainActivity? {
+    return when (this) {
+        is MainActivity -> this
+        is ContextWrapper -> baseContext.findMainActivity()
+        else -> null
+    }
+}
+
+/** The offline map list: the open group, its maps (searched and sorted) and the map changes that need no prompt. */
+internal class OfflineMapListViewModel(
+    val mapService: MapService,
+    private val prefs: PhotoMapPreferences,
+    private val locationProvider: () -> Coordinate
+) : ViewModel() {
+
+    var items by mutableStateOf<List<IMap>>(emptyList())
+        private set
+
+    /** Changes when the open group changes, so the list scrolls back to the top. */
+    var resetKey by mutableIntStateOf(0)
+        private set
+
+    /** The open group's name, or null at the top level. */
+    var rootName by mutableStateOf<String?>(null)
+        private set
+    var searchText by mutableStateOf("")
+        private set
+    var sort by mutableStateOf(prefs.mapSort)
+        private set
+    var isCreateEnabled by mutableStateOf(true)
+
+    private var isImportClaimed = false
+
+    private val manager = GroupListManager(
+        viewModelScope,
+        MapGroupLoader(mapService.loader),
+        null,
+        this::sortMaps
+    ).apply {
+        onChange = { root, items, rootChanged ->
+            this@OfflineMapListViewModel.items = items
+            if (rootChanged) {
+                resetKey++
+            }
+            rootName = (root as MapGroup?)?.name
+        }
     }
 
-    private fun createMapGroup() {
-        lifecycleOwner.inBackground {
-            CreateMapGroupCommand(context, mapService).execute(manager.root?.id)
-            manager.refresh()
+    val rootId: Long?
+        get() = manager.root?.id
+
+    fun onResume(cleanup: suspend () -> Boolean) {
+        manager.refresh()
+        viewModelScope.launch {
+            val mapsDeleted = cleanup()
+            if (mapsDeleted) {
+                manager.refresh()
+            }
         }
     }
 
-    fun onPause() {
-        if (!isInitialized) {
-            return
-        }
-        tryOrNothing {
-            lastRoot = manager.root
-        }
+    fun refresh(resetScroll: Boolean = false) {
+        manager.refresh(resetScroll)
     }
 
-    private fun updateBackPressedCallback() {
-        isBackEnabled = isInitialized
+    fun search(text: String) {
+        searchText = text
+        manager.search(text)
     }
 
-    /** Leaves the open group; false at the root. */
+    fun open(group: MapGroup) {
+        manager.open(group.id)
+    }
+
+    /** Leaves the open group; false at the top level. */
     fun up(): Boolean {
         return manager.up()
     }
 
-    private fun createMap(command: ICreateMapCommand) {
-        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
-            MapCleanupCommand.isMapImportInProgress = true
-            try {
-                onMain {
-                    isCreateEnabled = false
-                }
+    fun changeSort(method: MapSortMethod) {
+        prefs.mapSort = method
+        sort = method
+        manager.refresh(true)
+    }
 
-                val map = command.execute()?.let {
-                    when (it) {
-                        is PhotoMap -> it.copy(parentId = manager.root?.id)
-                        is VectorMap -> it.copy(parentId = manager.root?.id)
-                        else -> null
-                    }
-                }
+    /** True the first time only: a shared map is imported once even if the screen is recreated. */
+    fun claimImport(): Boolean {
+        if (isImportClaimed) return false
+        isImportClaimed = true
+        return true
+    }
 
-                if (map == null) {
-                    effects.showMessage(context.getString(R.string.error_importing_map))
-                    return@inBackground
-                }
-
-                if (map.parentId != null) {
-                    onIO {
-                        mapService.add(map)
-                    }
-                }
-
-                if (map is PhotoMap) {
-                    val isPdfMap = map.hasPdf(context)
-                    if ((isPdfMap && prefs.photoMaps.autoReducePdfMaps) || (!isPdfMap && prefs.photoMaps.autoReducePhotoMaps)) {
-                        mapImportingIndicator.show()
-                        val reducer = HighQualityMapReducer(context)
-                        reducer.reduce(map)
-                        mapImportingIndicator.hide()
-                    }
-
-                    if (map.georeference.calibrationPoints.isNotEmpty()) {
-                        effects.showMessage(context.getString(R.string.map_auto_calibrated))
-                    }
-                }
-
-                manager.refresh(true)
-                when (map) {
-                    is PhotoMap -> navigator.navigate(Route.PhotoMaps(mapId = map.id))
-                }
-            } finally {
-                MapCleanupCommand.isMapImportInProgress = false
-                onMain {
-                    isCreateEnabled = true
-                }
-            }
-
+    suspend fun save(map: IMap) {
+        onIO {
+            mapService.add(map)
         }
     }
 
+    fun toggleVisibility(map: IMap) {
+        viewModelScope.launch {
+            ToggleVisibilityMapCommand(mapService).execute(map)
+            manager.refresh()
+        }
+    }
 
+    suspend fun copyToAppStorage(map: VectorMap) {
+        mapService.copyToAppStorage(map)
+        manager.refresh()
+    }
+
+    suspend fun setGroupVisibility(group: MapGroup, visible: Boolean) {
+        onIO {
+            val maps = mapService.loader.getChildren(group.id, null)
+
+            // Photo Maps
+            maps
+                .asSequence()
+                .filterIsInstance<PhotoMap>()
+                .filter { it.visible != visible }
+                .forEach { mapService.add(it.copy(visible = visible)) }
+
+            // Vector Maps
+            maps
+                .asSequence()
+                .filterIsInstance<VectorMap>()
+                .filter { it.visible != visible }
+                .forEach { mapService.add(it.copy(visible = visible)) }
+        }
+        manager.refresh()
+    }
+
+    private suspend fun sortMaps(maps: List<IMap>): List<IMap> = onDefault {
+        val strategy = when (sort) {
+            MapSortMethod.Closest -> ClosestMapSortStrategy(locationProvider(), mapService.loader)
+            MapSortMethod.MostRecent -> MostRecentMapSortStrategy(mapService.loader)
+            MapSortMethod.Name -> NameMapSortStrategy()
+        }
+
+        strategy.sort(maps)
+    }
 }
 
 @Composable
