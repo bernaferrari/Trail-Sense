@@ -3,8 +3,20 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.Channel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.net.toUri
+import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import androidx.activity.compose.LocalActivity
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -12,7 +24,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
@@ -52,7 +63,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,20 +82,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.exifinterface.media.ExifInterface
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.getOrNull
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -105,97 +111,124 @@ import java.util.UUID
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
-fun CreateFieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CreateFieldGuidePageController(host) }
+fun CreateFieldGuidePageToolScreen(route: Route.CreateFieldGuidePage) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    // The photo picker needs the activity's result launcher; MainActivity is the IntentResultRetriever.
+    val resultRetriever = LocalActivity.current as IntentResultRetriever
+    val scope = rememberCoroutineScope()
+    val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
+    val tagNameMapper = remember(appContext) { FieldGuideTagNameMapper(appContext) }
+    val viewModel = viewModel {
+        CreateFieldGuidePageViewModel(
+            route = route,
+            repo = FieldGuideRepo.getInstance(appContext),
+            importPhoto = { importFieldGuidePhoto(files, it.toUri()) },
+            deletePhoto = { files.delete(it) }
+        )
+    }
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {
-            controller.onDestroy()
-        }
+    UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { navigator.navigateUp() }
     }
 
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val page = viewModel.page
     CreateFieldGuidePageContent(
-        page = controller.page,
-        photoIndex = controller.photoIndex,
-        tagNames = controller.tags.associateWith { controller.getTagName(it) },
-        tags = controller.tags,
-        onNameChange = { controller.updatePage(controller.page.copy(name = it)) },
+        page = page,
+        photoIndex = viewModel.photoIndex,
+        tagNames = viewModel.tags.associateWith { tagNameMapper.getName(it) },
+        tags = viewModel.tags,
+        onNameChange = { viewModel.updatePage(viewModel.page.copy(name = it)) },
         onScientificNameChange = {
-            controller.updatePage(controller.page.copy(scientificName = it.ifBlank { null }))
+            viewModel.updatePage(viewModel.page.copy(scientificName = it.ifBlank { null }))
         },
-        onNotesChange = { controller.updatePage(controller.page.copy(notes = it)) },
-        onTagsChange = controller::updateTags,
-        onTakePhoto = controller::takePhoto,
-        onSelectPhoto = controller::selectPhoto,
-        onSetDefaultPhoto = controller::setDefaultPhoto,
-        onDeleteImage = controller::deleteImage,
-        onSave = controller::save,
+        onNotesChange = { viewModel.updatePage(viewModel.page.copy(notes = it)) },
+        onTagsChange = viewModel::updateTags,
+        onTakePhoto = {
+            scope.launch {
+                if (!effects.requestPermission(AppPermission.Camera)) {
+                    return@launch
+                }
+                val prefs = UserPreferences(appContext).camera
+                val uri = effects.capturePhoto(zeroShutterLag = prefs.useZeroShutterLag)
+                viewModel.addPhoto(uri)
+            }
+        },
+        onSelectPhoto = {
+            scope.launch {
+                val uri = IntentUriPicker(resultRetriever, context).open(listOf("image/*")).getOrNull()
+                viewModel.addPhoto(uri?.toString())
+            }
+        },
+        onSetDefaultPhoto = viewModel::setDefaultPhoto,
+        onDeleteImage = { position ->
+            if (position in viewModel.page.images.indices) {
+                Alerts.dialog(
+                    context,
+                    context.getString(R.string.delete_image_prompt)
+                ) { cancelled ->
+                    if (!cancelled) {
+                        viewModel.deleteImage(position)
+                    }
+                }
+            }
+        },
+        onSave = viewModel::save,
         modifier = Modifier.fillMaxSize(),
         onBack = { dispatcher?.onBackPressed() }
     )
 }
 
-private class CreateFieldGuidePageController(private val host: TrailSenseDestinationHost) {
-
-    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
-    private val tagNameMapper by lazy { FieldGuideTagNameMapper(host.requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
-    private val uriPicker by lazy {
-        IntentUriPicker(
-            host.intentResultRetriever,
-            host.requireContext()
-        )
-    }
-
-    private var isInitialized = false
+/**
+ * The page editor's state: the page being created or edited (prefilled with the category it was opened from), the
+ * photo shown, and whether anything changed. Photos it adds and then drops are deleted; [saved] fires once stored.
+ */
+internal class CreateFieldGuidePageViewModel(
+    route: Route.CreateFieldGuidePage,
+    private val repo: FieldGuideRepo,
+    /** Copies a picked or taken photo into the field guide's storage and returns its path, or null. */
+    private val importPhoto: suspend (uri: String) -> String?,
+    private val deletePhoto: (path: String) -> Unit
+) : ViewModel() {
 
     private var originalPage by mutableStateOf(FieldGuidePage(0))
     var page by mutableStateOf(originalPage)
         private set
     var photoIndex by mutableStateOf(0)
         private set
-    private var backCallback: OnBackPressedCallback? = null
+    private var isSaved by mutableStateOf(false)
+
+    private val _saved = Channel<Unit>(Channel.CONFLATED)
+    /** One event per save, after the page is stored. */
+    val saved: Flow<Unit> = _saved.receiveAsFlow()
 
     val tags =
         FieldGuidePageTag.entries.sortedWith(compareBy({ it.type.ordinal }, { it.ordinal }))
 
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        host.routeAs<Route.CreateFieldGuidePage>().let {
-            val pageId = it.pageId
-            if (pageId != 0L) {
-                host.inBackground {
-                    repo.getPage(pageId)?.let { loaded ->
-                        onMain {
-                            originalPage = loaded
-                            page = loaded
-                            photoIndex = 0
-                        }
-                    }
+    init {
+        val pageId = route.pageId
+        if (pageId != 0L) {
+            viewModelScope.launch {
+                repo.getPage(pageId)?.let { loaded ->
+                    originalPage = loaded
+                    page = loaded
+                    photoIndex = 0
                 }
             }
-
-            val tag = FieldGuidePageTag.entries.withId(it.classificationId)
-            if (tag != null) {
-                updatePage(page.copy(directTags = page.directTags + tag))
-            }
         }
-        backCallback = host.promptIfUnsavedChanges(this::hasChanges)
+
+        val tag = FieldGuidePageTag.entries.withId(route.classificationId)
+        if (tag != null) {
+            updatePage(page.copy(directTags = page.directTags + tag))
+        }
     }
 
-    fun onDestroy() {
-        backCallback?.remove()
-        backCallback = null
-    }
-
-    fun getTagName(tag: FieldGuidePageTag): String {
-        return tagNameMapper.getName(tag)
-    }
+    val hasChanges: Boolean
+        get() = !isSaved && originalPage != page
 
     fun updatePage(updated: FieldGuidePage) {
         page = updated
@@ -206,32 +239,19 @@ private class CreateFieldGuidePageController(private val host: TrailSenseDestina
     }
 
     fun save() {
-        host.inBackground {
+        viewModelScope.launch {
             repo.add(page)
-            onMain {
-                backCallback?.remove()
-                host.findNavigator().navigateUp()
-            }
+            isSaved = true
+            _saved.send(Unit)
         }
     }
 
-    private fun hasChanges(): Boolean {
-        return originalPage != page
-    }
-
-    fun takePhoto() {
-        host.requestCamera {
-            if (!it) {
-                return@requestCamera
-            }
-            showPhotoImport()
-        }
-    }
-
-    fun selectPhoto() {
-        host.inBackground(BackgroundMinimumState.Created) {
-            val uri = uriPicker.open(listOf("image/*")).getOrNull()
-            uploadPhoto(uri)
+    fun addPhoto(uri: String?) {
+        uri ?: return
+        viewModelScope.launch {
+            val path = importPhoto(uri) ?: return@launch
+            val images = page.images + path
+            onPhotosChanged(images, images.lastIndex)
         }
     }
 
@@ -239,15 +259,8 @@ private class CreateFieldGuidePageController(private val host: TrailSenseDestina
         if (position !in page.images.indices) {
             return
         }
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete_image_prompt)
-        ) { cancelled ->
-            if (!cancelled) {
-                val images = page.images.filterIndexed { index, _ -> index != position }
-                onPhotosChanged(images, position.coerceAtMost(maxOf(images.lastIndex, 0)))
-            }
-        }
+        val images = page.images.filterIndexed { index, _ -> index != position }
+        onPhotosChanged(images, position.coerceAtMost(maxOf(images.lastIndex, 0)))
     }
 
     fun setDefaultPhoto(position: Int) {
@@ -260,62 +273,37 @@ private class CreateFieldGuidePageController(private val host: TrailSenseDestina
     }
 
     private fun onPhotosChanged(images: List<String>, index: Int) {
-        host.inBackground {
-            onIO { deleteUnusedPhotos(images) }
-            onMain {
-                photoIndex = index
-                page = page.copy(images = images)
-            }
+        viewModelScope.launch {
+            val unused = page.images.filter { it !in images && it !in originalPage.images }
+            onIO { unused.forEach(deletePhoto) }
+            photoIndex = index
+            page = page.copy(images = images)
         }
     }
+}
 
-    private fun deleteUnusedPhotos(newImages: List<String>) {
-        page.images.filter { it !in newImages && it !in originalPage.images }
-            .forEach { files.delete(it) }
+/** Copies the photo at [uri] into the field guide's folder, upright and at most 500px, and returns its local path. */
+internal suspend fun importFieldGuidePhoto(files: FileSubsystem, uri: Uri): String? = onIO {
+    val file = files.copyToLocal(uri, "field_guide", "${UUID.randomUUID()}.webp") ?: return@onIO null
+    val path = files.getLocalPath(file)
+
+    var rotation = 0
+    tryOrLog {
+        rotation = ExifInterface(file).rotationDegrees
+    }
+    val bmp = files.bitmap(path, Size(500, 500)) ?: return@onIO null
+    val rotated = if (rotation != 0) {
+        bmp.rotate(rotation.toFloat())
+    } else {
+        bmp
     }
 
-    private fun showPhotoImport() {
-        val prefs = UserPreferences(host.requireContext()).camera
-        host.showPhotoImport(null, prefs.useZeroShutterLag) { uri ->
-            host.inBackground {
-                uploadPhoto(uri)
-            }
-        }
+    if (rotated != bmp) {
+        bmp.recycle()
     }
 
-    private suspend fun uploadPhoto(uri: Uri?) = onIO {
-        uri ?: return@onIO
-
-        val file = files.copyToLocal(uri, "field_guide", "${UUID.randomUUID()}.webp") ?: return@onIO
-        val path = files.getLocalPath(file)
-
-        var rotation = 0
-        tryOrLog {
-            rotation = ExifInterface(file).rotationDegrees
-        }
-        val bmp = files.bitmap(path, Size(500, 500)) ?: return@onIO
-        val rotated = if (rotation != 0) {
-            bmp.rotate(rotation.toFloat())
-        } else {
-            bmp
-        }
-
-        if (rotated != bmp) {
-            bmp.recycle()
-        }
-
-        files.save(path, rotated, 75, true)
-
-        onMain {
-            val images = page.images + path
-            onPhotosChanged(images, images.lastIndex)
-        }
-    }
-
-    companion object {
-        private const val ARG_PAGE_ID = "page_id"
-        private const val ARG_CLASSIFICATION_ID = "classification_id"
-    }
+    files.save(path, rotated, 75, true)
+    path
 }
 
 @Composable

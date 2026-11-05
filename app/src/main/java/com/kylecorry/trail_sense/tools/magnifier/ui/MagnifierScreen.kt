@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.magnifier.ui
 
+import androidx.compose.runtime.rememberCoroutineScope
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import kotlinx.coroutines.launch
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -66,7 +70,6 @@ import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
 internal fun MagnifierScreen(
@@ -300,12 +303,15 @@ private const val ZOOM_STEP = 0.1f
 
 /** The magnifier: the back camera, zoomed in, once the camera is allowed. */
 @Composable
-fun MagnifierToolScreen(host: TrailSenseDestinationHost) {
+fun MagnifierToolScreen() {
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
     MagnifierScreen(
         onRequestCamera = { action ->
-            host.requestCamera { isAvailable ->
+            scope.launch {
+                val isAvailable = effects.requestPermission(AppPermission.Camera)
                 if (!isAvailable) {
-                    host.alertNoCameraPermission()
+                    effects.explainPermissionDenied(AppPermission.Camera)
                 }
                 action(isAvailable)
             }

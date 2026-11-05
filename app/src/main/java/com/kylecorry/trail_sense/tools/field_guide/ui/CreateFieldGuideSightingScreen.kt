@@ -2,13 +2,16 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,7 +47,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -57,7 +58,6 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
@@ -69,7 +69,6 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -86,58 +85,75 @@ import java.time.LocalDateTime
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
-fun CreateFieldGuideSightingToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CreateFieldGuideSightingController(host) }
-
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {
-            controller.onDestroy()
-        }
+fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        CreateFieldGuideSightingViewModel(
+            route = route,
+            repo = FieldGuideRepo.getInstance(appContext),
+            baseDistanceUnits = UserPreferences(appContext).baseDistanceUnits
+        )
     }
+
+    UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
 
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     CreateFieldGuideSightingScreen(
-        datetime = controller.datetime,
-        location = controller.location,
-        elevation = controller.elevation,
-        notes = controller.notes,
-        harvested = controller.harvested,
-        showOnMap = controller.showOnMap,
-        onDatetimeChange = { controller.datetime = it },
-        onLocationChange = { controller.location = it },
-        onElevationChange = { controller.elevation = it },
-        onNotesChange = { controller.notes = it },
-        onHarvestedChange = { controller.harvested = it },
-        onShowOnMapChange = { controller.showOnMap = it },
-        onSave = controller::save,
-        locationAutofillRequest = controller.locationAutofillRequest,
-        onAutoLocationClick = {
-            if (controller.elevation == null) {
-                controller.elevationAutofillRequest++
+        datetime = viewModel.datetime,
+        location = viewModel.location,
+        elevation = viewModel.elevation,
+        notes = viewModel.notes,
+        harvested = viewModel.harvested,
+        showOnMap = viewModel.showOnMap,
+        onDatetimeChange = { viewModel.datetime = it },
+        onLocationChange = { viewModel.location = it },
+        onElevationChange = { viewModel.elevation = it },
+        onNotesChange = { viewModel.notes = it },
+        onHarvestedChange = { viewModel.harvested = it },
+        onShowOnMapChange = { viewModel.showOnMap = it },
+        onSave = {
+            scope.launch {
+                Alerts.withLoading(context, context.getString(R.string.saving)) {
+                    viewModel.save()
+                }
+                navigator.navigateUp()
             }
         },
-        onBeaconSelected = controller::onCoordinateBeaconSelected,
-        elevationAutofillRequest = controller.elevationAutofillRequest,
+        locationAutofillRequest = viewModel.locationAutofillRequest,
+        onAutoLocationClick = {
+            if (viewModel.elevation == null) {
+                viewModel.elevationAutofillRequest++
+            }
+        },
+        onBeaconSelected = viewModel::onCoordinateBeaconSelected,
+        elevationAutofillRequest = viewModel.elevationAutofillRequest,
         onAutoElevationClick = {
-            if (controller.location == null) {
-                controller.locationAutofillRequest++
+            if (viewModel.location == null) {
+                viewModel.locationAutofillRequest++
             }
         },
         onBack = { dispatcher?.onBackPressed() }
     )
 }
 
-private class CreateFieldGuideSightingController(private val host: TrailSenseDestinationHost) {
+/**
+ * The sighting form's state: when, where and how high, notes, harvested and on-the-map, loaded from the sighting
+ * being edited, and whether anything changed from it (or from a blank sighting).
+ */
+internal class CreateFieldGuideSightingViewModel(
+    route: Route.CreateFieldGuideSighting,
+    private val repo: FieldGuideRepo,
+    private val baseDistanceUnits: DistanceUnits,
+    private val initialDatetime: LocalDateTime = LocalDateTime.now()
+) : ViewModel() {
 
-    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private var isInitialized = false
-
-    private var pageId: Long = 0L
-    private var sightingId: Long = 0L
+    private val pageId = route.pageId
+    private val sightingId = route.sightingId
     private var initialSighting by mutableStateOf<Sighting?>(null)
-    private var initialDatetime = LocalDateTime.now()
+    private var isSaved by mutableStateOf(false)
 
     var datetime by mutableStateOf<LocalDateTime?>(initialDatetime)
     var location by mutableStateOf<Coordinate?>(null)
@@ -148,34 +164,21 @@ private class CreateFieldGuideSightingController(private val host: TrailSenseDes
 
     var locationAutofillRequest by mutableStateOf(0)
     var elevationAutofillRequest by mutableStateOf(0)
-    private var backCallback: OnBackPressedCallback? = null
 
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        pageId = host.routeAs<Route.CreateFieldGuideSighting>().pageId
-        sightingId = host.routeAs<Route.CreateFieldGuideSighting>().sightingId
-        backCallback = host.promptIfUnsavedChanges(this::hasChanges)
+    init {
         if (sightingId != 0L) {
             loadSighting()
         }
     }
 
-    fun onDestroy() {
-        backCallback?.remove()
-        backCallback = null
-    }
-
     private fun loadSighting() {
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             val sighting = repo.getSighting(sightingId)
             initialSighting = sighting
             sighting ?: return@launch
 
             val sightingElevation = sighting.altitude?.let {
-                Distance.meters(it).convertTo(prefs.baseDistanceUnits)
+                Distance.meters(it).convertTo(baseDistanceUnits)
             }
             sighting.time?.let {
                 datetime = it.toZonedDateTime().toLocalDateTime()
@@ -188,7 +191,8 @@ private class CreateFieldGuideSightingController(private val host: TrailSenseDes
         }
     }
 
-    fun save() {
+    /** Stores the sighting; afterwards the form no longer counts as changed. */
+    suspend fun save() {
         val sighting = Sighting(
             sightingId,
             pageId,
@@ -199,42 +203,36 @@ private class CreateFieldGuideSightingController(private val host: TrailSenseDes
             notes,
             showOnMap
         )
-
-        host.lifecycleScope.launch {
-            Alerts.withLoading(host.requireContext(), host.getString(R.string.saving)) {
-                repo.addSighting(sighting)
-                onMain {
-                    backCallback?.remove()
-                    host.findNavigator().navigateUp()
-                }
-            }
-        }
+        repo.addSighting(sighting)
+        isSaved = true
     }
 
     fun onCoordinateBeaconSelected(beacon: Beacon) {
         beacon.elevation?.let { beaconElevation ->
-            elevation = Distance.meters(beaconElevation).convertTo(prefs.baseDistanceUnits)
+            elevation = Distance.meters(beaconElevation).convertTo(baseDistanceUnits)
         }
     }
 
-    private fun hasChanges(): Boolean {
-        val sighting = initialSighting
-        return if (sighting != null) {
-            datetime?.toZonedDateTime()?.toInstant() != sighting.time ||
-                location != sighting.location ||
-                elevation?.meters()?.value != sighting.altitude ||
-                notes != sighting.notes ||
-                harvested != sighting.harvested ||
-                showOnMap != sighting.showOnMap
-        } else {
-            datetime != initialDatetime ||
-                location != null ||
-                elevation != null ||
-                !notes.isNullOrEmpty() ||
-                harvested ||
-                !showOnMap
+    val hasChanges: Boolean
+        get() {
+            if (isSaved) return false
+            val sighting = initialSighting
+            return if (sighting != null) {
+                datetime?.toZonedDateTime()?.toInstant() != sighting.time ||
+                    location != sighting.location ||
+                    elevation?.meters()?.value != sighting.altitude ||
+                    notes != sighting.notes ||
+                    harvested != sighting.harvested ||
+                    showOnMap != sighting.showOnMap
+            } else {
+                datetime != initialDatetime ||
+                    location != null ||
+                    elevation != null ||
+                    !notes.isNullOrEmpty() ||
+                    harvested ||
+                    !showOnMap
+            }
         }
-    }
 }
 
 @Composable

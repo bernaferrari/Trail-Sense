@@ -3,6 +3,13 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
@@ -34,9 +41,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseWellColors
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import android.graphics.Bitmap
-import android.os.Bundle
 import android.util.Size
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,7 +67,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,9 +79,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.R
@@ -86,7 +87,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -102,253 +102,232 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuideToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { FieldGuideController(host) }
-    val lifecycleOwner = LocalLifecycleOwner.current
+fun FieldGuideToolScreen() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val formatter = remember(appContext) { FieldGuideFormatService(UserPreferences(appContext)) }
+    val tagNameMapper = remember(appContext) { FieldGuideTagNameMapper(appContext) }
+    val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
+    val viewModel = viewModel {
+        FieldGuideListViewModel(
+            repo = FieldGuideRepo.getInstance(appContext),
+            cleanup = { FieldGuideCleanupCommand(appContext).execute() },
+            sortName = { formatter.formatName(it).lowercase() },
+            tagName = tagNameMapper::getName
+        )
+    }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                controller.reloadPages()
+    LaunchedEffect(Unit) {
+        CustomUiUtils.disclaimer(
+            context,
+            context.getString(R.string.disclaimer_message_title),
+            context.getString(R.string.field_guide_disclaimer),
+            "field_guide_disclaimer",
+            cancelText = null
+        )
+    }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.reloadPages()
+        onPauseOrDispose { }
+    }
+
+    // Back clears a search or category first, then leaves the field guide.
+    BackHandler(enabled = viewModel.isFiltering) {
+        viewModel.clearFilters()
+    }
+
+    val filteredPages = viewModel.filteredPages
+    val items = if (!viewModel.isFiltering) {
+        FieldGuideListItems(
+            FIELD_GUIDE_HEADING_TAGS.map { tag ->
+                val count = filteredPages.count { it.tags.contains(tag) }
+                FieldGuideListItem.TagItem(
+                    tag = tag,
+                    title = tagNameMapper.getName(tag),
+                    subtitle = context.resources.getQuantityString(
+                        R.plurals.page_group_summary,
+                        count,
+                        count
+                    ),
+                    icon = fieldGuideTagIcon(tag),
+                    count = count,
+                    onClick = { viewModel.tagFilter = tag }
+                )
+            },
+            totalPages = filteredPages.size
+        )
+    } else {
+        FieldGuideListItems(
+            filteredPages.map {
+                FieldGuideListItem.PageItem(
+                    page = it,
+                    title = formatter.formatNameAnnotated(it),
+                    subtitle = it.notes?.substringBefore(".")
+                        ?.plus(if (it.notes.contains(".")) "." else "")
+                        ?.take(200)
+                        ?: ""
+                )
             }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
-        }
+        )
     }
 
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     FieldGuideScreen(
-        query = controller.filter,
-        loaded = controller.loaded,
-        items = controller.getListItems(),
-        tagFilter = controller.tagFilter,
-        tagFilters = controller.getTagFilters(),
-        tagIcon = controller::getTagIcon,
-        onTagSelected = controller::toggleTag,
+        query = viewModel.filter,
+        loaded = viewModel.loaded,
+        items = items,
+        tagFilter = viewModel.tagFilter,
+        tagFilters = FIELD_GUIDE_HEADING_TAGS.map { it to tagNameMapper.getName(it) },
+        tagIcon = ::fieldGuideTagIcon,
+        onTagSelected = viewModel::toggleTag,
         onBack = { dispatcher?.onBackPressed() },
-        onQueryChange = { controller.filter = it },
-        onViewPage = controller::viewPage,
-        onEditPage = controller::editPage,
-        onDeletePage = controller::deletePage,
-        onHidePage = controller::hidePage,
-        loadThumbnail = controller::loadThumbnail,
-        onCreate = { controller.createPage(controller.tagFilter) }
+        onQueryChange = { viewModel.filter = it },
+        onViewPage = { navigator.navigate(Route.FieldGuidePage(pageId = it.id)) },
+        onEditPage = { navigator.navigate(Route.CreateFieldGuidePage(pageId = it.id)) },
+        onDeletePage = { page ->
+            Alerts.dialog(
+                context,
+                context.getString(R.string.delete),
+                formatter.formatName(page)
+            ) { cancelled ->
+                if (!cancelled) {
+                    viewModel.deletePage(page)
+                }
+            }
+        },
+        onHidePage = { page ->
+            Alerts.dialog(
+                context,
+                context.getString(R.string.hide),
+                context.getString(R.string.hide_field_guide_page_message, formatter.formatName(page))
+            ) { cancelled ->
+                if (!cancelled) {
+                    viewModel.hidePage(page)
+                }
+            }
+        },
+        loadThumbnail = { page ->
+            onIO {
+                val path = page.images.firstOrNull() ?: return@onIO null
+                val size = Resources.dp(appContext, 48f).toInt()
+                try {
+                    files.bitmap(path, Size(size, size))
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        },
+        onCreate = {
+            navigator.navigate(Route.CreateFieldGuidePage(classificationId = viewModel.tagFilter?.id ?: 0L))
+        }
     )
 }
 
-private class FieldGuideController(private val host: TrailSenseDestinationHost) {
+/**
+ * The field guide's pages (cleaned up and reread each time the list is shown), the search text and the category
+ * being browsed, and which pages they leave.
+ */
+internal class FieldGuideListViewModel(
+    private val repo: FieldGuideRepo,
+    private val cleanup: suspend () -> Unit,
+    private val sortName: (FieldGuidePage) -> String,
+    private val tagName: (FieldGuidePageTag) -> String
+) : ViewModel() {
 
-    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
-    private val formatter by lazy { FieldGuideFormatService(UserPreferences(host.requireContext())) }
-    private var pages by mutableStateOf(emptyList<FieldGuidePage>())
+    var pages by mutableStateOf(emptyList<FieldGuidePage>())
+        private set
     var loaded by mutableStateOf(false)
         private set
     var filter by mutableStateOf("")
     var tagFilter by mutableStateOf<FieldGuidePageTag?>(null)
-    private var backCallback: OnBackPressedCallback? = null
-    private var isInitialized = false
 
-    private val headingTags = listOf(
-        FieldGuidePageTag.Plant,
-        FieldGuidePageTag.Fungus,
-        FieldGuidePageTag.Animal,
-        FieldGuidePageTag.Mammal,
-        FieldGuidePageTag.Bird,
-        FieldGuidePageTag.Reptile,
-        FieldGuidePageTag.Amphibian,
-        FieldGuidePageTag.Fish,
-        FieldGuidePageTag.Invertebrate,
-        FieldGuidePageTag.Rock,
-        FieldGuidePageTag.Weather,
-        FieldGuidePageTag.Other
-    )
+    /** True while a search or a category narrows the list. */
+    val isFiltering: Boolean
+        get() = tagFilter != null || filter.isNotBlank()
 
-    private val tagImageMap = mapOf(
-        FieldGuidePageTag.Plant to TrailIcons.CategoryNatural,
-        FieldGuidePageTag.Fungus to TrailIcons.Mushroom,
-        FieldGuidePageTag.Animal to TrailIcons.Paw,
-        FieldGuidePageTag.Mammal to TrailIcons.Deer,
-        FieldGuidePageTag.Bird to TrailIcons.Bird,
-        FieldGuidePageTag.Reptile to TrailIcons.Lizard,
-        FieldGuidePageTag.Amphibian to TrailIcons.Frog,
-        FieldGuidePageTag.Fish to TrailIcons.Fish,
-        FieldGuidePageTag.Invertebrate to TrailIcons.Ant,
-        FieldGuidePageTag.Rock to TrailIcons.Gem,
-        FieldGuidePageTag.Weather to TrailIcons.Cloud,
-        FieldGuidePageTag.Other to TrailIcons.Help
-    )
-
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        CustomUiUtils.disclaimer(
-            host.requireContext(),
-            host.getString(R.string.disclaimer_message_title),
-            host.getString(R.string.field_guide_disclaimer),
-            "field_guide_disclaimer",
-            cancelText = null
-        )
-        backCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (tagFilter != null || filter.isNotBlank()) {
-                    tagFilter = null
-                    filter = ""
-                } else {
-                    isEnabled = false
-                    host.mainActivity.onBackPressedDispatcher.onBackPressed()
-                }
-            }
-        }
-        host.mainActivity.onBackPressedDispatcher.addCallback(
-            host.lifecycleOwner,
-            backCallback!!
-        )
-        reloadPages()
-    }
-
-    fun onDestroy() {
-        backCallback?.remove()
-        backCallback = null
-    }
-
-    fun reloadPages() {
-        host.lifecycleScope.launch {
-            pages = withContext(Dispatchers.IO) {
-                FieldGuideCleanupCommand(host.requireContext()).execute()
-                repo.getAllPages().sortedBy { formatter.formatName(it).lowercase() }
-            }
-            loaded = true
-        }
-    }
-
-    fun getListItems(): FieldGuideListItems {
-        val filteredPages = getFilteredPages()
-        val tagNameMapper = FieldGuideTagNameMapper(host.requireContext())
-        return if (tagFilter == null && filter.isBlank()) {
-            FieldGuideListItems(
-                headingTags.map { tag ->
-                    FieldGuideListItem.TagItem(
-                        tag = tag,
-                        title = tagNameMapper.getName(tag),
-                        subtitle = host.getResources().getQuantityString(
-                            R.plurals.page_group_summary,
-                            filteredPages.count { it.tags.contains(tag) },
-                            filteredPages.count { it.tags.contains(tag) }
-                        ),
-                        icon = tagImageMap[tag] ?: TrailIcons.Help,
-                        count = filteredPages.count { it.tags.contains(tag) },
-                        onClick = { tagFilter = tag }
-                    )
-                },
-                totalPages = filteredPages.size
+    /** The visible pages that match the search text and category. */
+    val filteredPages: List<FieldGuidePage>
+        get() = TextUtils.search(filter, pages.filter { !it.isHidden }) { page ->
+            listOf(
+                page.name,
+                page.scientificName ?: "",
+                page.notes ?: "",
+                page.tags.joinToString { tagName(it) }
             )
-        } else {
-            FieldGuideListItems(
-                filteredPages.map {
-                    FieldGuideListItem.PageItem(
-                        page = it,
-                        title = formatter.formatNameAnnotated(it),
-                        subtitle = it.notes?.substringBefore(".")
-                            ?.plus(if (it.notes.contains(".")) "." else "")
-                            ?.take(200)
-                            ?: ""
-                    )
-                }
-            )
+        }.filter {
+            tagFilter == null || it.tags.contains(tagFilter)
         }
-    }
 
-    fun getTagFilters(): List<Pair<FieldGuidePageTag, String>> {
-        val mapper = FieldGuideTagNameMapper(host.requireContext())
-        return headingTags.map { it to mapper.getName(it) }
-    }
-
-    fun getTagIcon(tag: FieldGuidePageTag): ImageVector {
-        return tagImageMap[tag] ?: TrailIcons.Help
+    fun clearFilters() {
+        tagFilter = null
+        filter = ""
     }
 
     fun toggleTag(tag: FieldGuidePageTag) {
         tagFilter = if (tagFilter == tag) null else tag
     }
 
-    private fun getFilteredPages(): List<FieldGuidePage> {
-        val mapper = FieldGuideTagNameMapper(host.requireContext())
-        return TextUtils.search(filter, pages.filter { !it.isHidden }) { page ->
-            listOf(
-                page.name,
-                page.scientificName ?: "",
-                page.notes ?: "",
-                page.tags.joinToString { mapper.getName(it) }
-            )
-        }.filter {
-            tagFilter == null || it.tags.contains(tagFilter)
+    fun reloadPages() {
+        viewModelScope.launch {
+            pages = withContext(Dispatchers.IO) {
+                cleanup()
+                repo.getAllPages().sortedBy(sortName)
+            }
+            loaded = true
         }
     }
 
-    fun createPage(tag: FieldGuidePageTag?) {
-        host.findNavigator().navigate(Route.CreateFieldGuidePage(classificationId = tag?.id ?: 0L))
-    }
-
-    fun editPage(page: FieldGuidePage) {
-        host.findNavigator().navigate(Route.CreateFieldGuidePage(pageId = page.id))
-    }
-
-    fun viewPage(page: FieldGuidePage) {
-        host.findNavigator().navigate(Route.FieldGuidePage(pageId = page.id))
-    }
-
     fun hidePage(page: FieldGuidePage) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.hide),
-            host.getString(R.string.hide_field_guide_page_message, formatter.formatName(page))
-        ) { cancelled ->
-            if (!cancelled) {
-                host.lifecycleScope.launch {
-                    val hidden = withContext(Dispatchers.IO) {
-                        repo.setPageHidden(page.id, true)
-                    }
-                    if (hidden) {
-                        reloadPages()
-                    }
-                }
+        viewModelScope.launch {
+            val hidden = withContext(Dispatchers.IO) {
+                repo.setPageHidden(page.id, true)
+            }
+            if (hidden) {
+                reloadPages()
             }
         }
     }
 
     fun deletePage(page: FieldGuidePage) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete),
-            formatter.formatName(page)
-        ) { cancelled ->
-            if (!cancelled) {
-                host.lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        repo.delete(page)
-                    }
-                    reloadPages()
-                }
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repo.delete(page)
             }
+            reloadPages()
         }
     }
+}
 
-    suspend fun loadThumbnail(page: FieldGuidePage): Bitmap? = onIO {
-        val path = page.images.firstOrNull() ?: return@onIO null
-        val size = Resources.dp(host.requireContext(), 48f).toInt()
-        try {
-            files.bitmap(path, Size(size, size))
-        } catch (e: Exception) {
-            null
-        }
-    }
+private val FIELD_GUIDE_HEADING_TAGS = listOf(
+    FieldGuidePageTag.Plant,
+    FieldGuidePageTag.Fungus,
+    FieldGuidePageTag.Animal,
+    FieldGuidePageTag.Mammal,
+    FieldGuidePageTag.Bird,
+    FieldGuidePageTag.Reptile,
+    FieldGuidePageTag.Amphibian,
+    FieldGuidePageTag.Fish,
+    FieldGuidePageTag.Invertebrate,
+    FieldGuidePageTag.Rock,
+    FieldGuidePageTag.Weather,
+    FieldGuidePageTag.Other
+)
+
+private fun fieldGuideTagIcon(tag: FieldGuidePageTag): ImageVector = when (tag) {
+    FieldGuidePageTag.Plant -> TrailIcons.CategoryNatural
+    FieldGuidePageTag.Fungus -> TrailIcons.Mushroom
+    FieldGuidePageTag.Animal -> TrailIcons.Paw
+    FieldGuidePageTag.Mammal -> TrailIcons.Deer
+    FieldGuidePageTag.Bird -> TrailIcons.Bird
+    FieldGuidePageTag.Reptile -> TrailIcons.Lizard
+    FieldGuidePageTag.Amphibian -> TrailIcons.Frog
+    FieldGuidePageTag.Fish -> TrailIcons.Fish
+    FieldGuidePageTag.Invertebrate -> TrailIcons.Ant
+    FieldGuidePageTag.Rock -> TrailIcons.Gem
+    FieldGuidePageTag.Weather -> TrailIcons.Cloud
+    else -> TrailIcons.Help
 }
 
 @Composable

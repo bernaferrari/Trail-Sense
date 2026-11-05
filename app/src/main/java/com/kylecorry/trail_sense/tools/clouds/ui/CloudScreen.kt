@@ -4,8 +4,25 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
+import com.kylecorry.trail_sense.main.persistence.IReadingRepo
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import androidx.activity.compose.LocalActivity
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.material3.MaterialShapes
@@ -18,8 +35,6 @@ import androidx.compose.ui.graphics.Color
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import android.graphics.drawable.Drawable
-import android.os.Bundle
-import android.util.Size
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -61,12 +76,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
-import androidx.lifecycle.observe
 import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.getOrNull
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Reading
@@ -76,7 +88,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -100,153 +111,123 @@ import java.time.Duration
 import java.time.Instant
 
 @Composable
-fun CloudToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CloudController(host) }
+fun CloudToolScreen(route: Route.Clouds) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    // The file picker needs the activity's result launcher; MainActivity is the IntentResultRetriever.
+    val resultRetriever = LocalActivity.current as IntentResultRetriever
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel { CloudViewModel(CloudRepo.getInstance(appContext)) }
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+    val cloudDetailsService = remember(appContext) { CloudDetailsService(appContext) }
+    val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
+    val clouds by viewModel.clouds.collectAsStateWithLifecycle()
+    val subtitle = stringResource(
+        R.string.last_duration,
+        formatter.formatDuration(Duration.ofHours(48), short = true)
+    )
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {
-            controller.onDestroy()
+    fun openCloudPicker(uri: Uri) {
+        navigator.navigate(Route.CloudResults(imageUri = uri.toString()))
+    }
+
+    fun addFromCamera() {
+        scope.launch {
+            if (!effects.requestPermission(AppPermission.Camera)) {
+                effects.explainPermissionDenied(AppPermission.Camera)
+                return@launch
+            }
+            val prefs = UserPreferences(appContext).camera
+            val uri = effects.capturePhoto(
+                SoftmaxCloudClassifier.IMAGE_SIZE,
+                SoftmaxCloudClassifier.IMAGE_SIZE,
+                prefs.useZeroShutterLag
+            )
+            uri?.let { openCloudPicker(it.toUri()) }
         }
     }
 
-    CloudScreen(
-        subtitle = controller.subtitle,
-        clouds = controller.clouds,
-        onGuideClick = controller::showGuide,
-        onCameraClick = controller::addFromCamera,
-        onFileClick = controller::addFromFile,
-        onManualClick = controller::addManual,
-        onCloudClick = controller::showCloudDetails,
-        onCloudImageClick = controller::showCloudImage,
-        onDeleteCloud = controller::delete,
-        selectedCloudImage = controller.selectedCloudImage,
-        onDismissCloudImage = { controller.selectedCloudImage = null },
-        modifier = Modifier.fillMaxSize(),
-        loaded = controller.loaded
-    )
-}
-
-private class CloudController(private val host: TrailSenseDestinationHost) {
-
-    private val repo by lazy { CloudRepo.getInstance(host.requireContext()) }
-    private val cloudDetailsService by lazy { CloudDetailsService(host.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
-    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
-    private var isInitialized = false
-
-    var clouds by mutableStateOf(emptyList<Reading<CloudObservation>>())
-        private set
-    var subtitle by mutableStateOf("")
-        private set
-    var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
-
-    /** False until the log has been read once, so "No clouds" never flashes before it has. */
-    var loaded by mutableStateOf(false)
-        private set
-
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        subtitle = host.getString(
-            R.string.last_duration, formatter.formatDuration(
-                Duration.ofHours(48),
-                short = true
-            )
-        )
-
-        repo.getAllLive().observe(host.lifecycleOwner) {
-            val since = Instant.now().minus(Duration.ofHours(48))
-            clouds = it.sortedByDescending { cloud -> cloud.time }
-                .filter { cloud -> cloud.time >= since }
-            loaded = true
-        }
-
-        val shouldOpenScanner = host.routeAs<Route.Clouds>().openScanner
-        if (shouldOpenScanner) {
+    LaunchedEffect(viewModel) {
+        if (route.openScanner && viewModel.consumeOpenScanner()) {
             addFromCamera()
         }
     }
 
-    fun onDestroy() {
-        selectedCloudImage = null
+    DisposableEffect(viewModel) {
+        onDispose {
+            viewModel.selectedCloudImage = null
+        }
     }
 
-    fun showGuide() {
-        UserGuideUtils.showGuide(
-            host.requireContext(),
-            host.findNavigator(),
-            R.raw.guide_tool_clouds
-        )
-    }
-
-    fun showCloudDetails(reading: Reading<CloudObservation>) {
-        CloudDetailsModal(host.requireContext()).show(reading.value.genus)
-    }
-
-    fun showCloudImage(reading: Reading<CloudObservation>) {
-        selectedCloudImage = reading.value.genus
-    }
-
-    fun addFromCamera() {
-        host.requestCamera {
-            if (it) {
-                host.inBackground {
-                    showPhotoImport(
-                        Size(SoftmaxCloudClassifier.IMAGE_SIZE, SoftmaxCloudClassifier.IMAGE_SIZE)
-                    )
-                }
-            } else {
-                host.alertNoCameraPermission()
+    CloudScreen(
+        subtitle = subtitle,
+        clouds = clouds ?: emptyList(),
+        onGuideClick = {
+            UserGuideUtils.showGuide(context, navigator, R.raw.guide_tool_clouds)
+        },
+        onCameraClick = ::addFromCamera,
+        onFileClick = {
+            scope.launch {
+                val uri = IntentUriPicker(resultRetriever, context).open(listOf("image/*")).getOrNull()
+                val temp = uri?.let { onIO { files.copyToTemp(it) }?.toUri() }
+                temp?.let { openCloudPicker(it) }
             }
+        },
+        onManualClick = { navigator.navigate(Route.CloudResults()) },
+        onCloudClick = { CloudDetailsModal(context).show(it.value.genus) },
+        onCloudImageClick = { viewModel.selectedCloudImage = it.value.genus },
+        onDeleteCloud = { reading ->
+            scope.launch {
+                val cancelled = CoroutineAlerts.dialog(
+                    context,
+                    context.getString(R.string.delete),
+                    cloudDetailsService.getCloudName(reading.value.genus)
+                )
+                if (!cancelled) {
+                    viewModel.delete(reading)
+                }
+            }
+        },
+        selectedCloudImage = viewModel.selectedCloudImage,
+        onDismissCloudImage = { viewModel.selectedCloudImage = null },
+        modifier = Modifier.fillMaxSize(),
+        loaded = clouds != null
+    )
+}
+
+/**
+ * The cloud log: the last 48 hours of observations, newest first (null until read once, so "No clouds" never flashes
+ * before it has), the cloud whose photo is open, and whether the scanner already opened for this visit.
+ */
+internal class CloudViewModel(
+    private val repo: IReadingRepo<CloudObservation>,
+    private val now: () -> Instant = Instant::now
+) : ViewModel() {
+
+    val clouds: StateFlow<List<Reading<CloudObservation>>?> = repo.getAllLive().asFlow()
+        .map { all ->
+            val since = now().minus(Duration.ofHours(48))
+            all.sortedByDescending { cloud -> cloud.time }.filter { cloud -> cloud.time >= since }
         }
-    }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    fun addFromFile() {
-        host.inBackground(BackgroundMinimumState.Created) {
-            val uri =
-                IntentUriPicker(
-                    host.intentResultRetriever,
-                    host.requireContext()
-                ).open(listOf("image/*")).getOrNull()
-            val temp = uri?.let { onIO { files.copyToTemp(it) }?.toUri() }
-            temp?.let { openCloudPicker(it) }
-        }
-    }
+    var selectedCloudImage by mutableStateOf<CloudGenus?>(null)
 
-    private fun showPhotoImport(size: Size) {
-        val prefs = UserPreferences(host.requireContext()).camera
-        host.showPhotoImport(size, prefs.useZeroShutterLag) { uri ->
-            uri?.let { openCloudPicker(it) }
-        }
-    }
+    private var scannerOpened = false
 
-    fun addManual() {
-        host.findNavigator().navigate(Route.CloudResults())
-    }
-
-    private fun openCloudPicker(uri: Uri) {
-        host.findNavigator().navigate(Route.CloudResults(imageUri = uri.toString()))
+    /** True only the first time, so the scanner shortcut opens the camera once, not on every return to the log. */
+    fun consumeOpenScanner(): Boolean {
+        if (scannerOpened) return false
+        scannerOpened = true
+        return true
     }
 
     fun delete(reading: Reading<CloudObservation>) {
-        host.inBackground {
-            val cancelled = onMain {
-                CoroutineAlerts.dialog(
-                    host.requireContext(),
-                    host.getString(R.string.delete),
-                    cloudDetailsService.getCloudName(reading.value.genus)
-                )
-            }
-            if (!cancelled) {
-                repo.delete(reading)
-            }
-        }
+        viewModelScope.launch { repo.delete(reading) }
     }
 }
-
 @Composable
 private fun CloudScreen(
     subtitle: String,

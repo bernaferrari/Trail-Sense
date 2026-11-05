@@ -3,9 +3,17 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.main.persistence.IReadingRepo
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.Channel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.core.net.toUri
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -38,7 +46,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +70,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
@@ -105,83 +111,91 @@ import java.time.Instant
 import kotlin.math.abs
 
 @Composable
-fun CloudResultsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CloudResultsController(host) }
-    DisposableEffect(controller) {
-        onDispose {
-            controller.onDestroy()
-        }
+fun CloudResultsToolScreen(route: Route.CloudResults) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        CloudResultsViewModel(
+            imageUri = route.imageUri,
+            repo = CloudRepo.getInstance(appContext),
+            classifier = SoftmaxCloudClassifier { DebugCloudCommand(appContext, it).execute() },
+            loadImage = { loadCloudImage(it.toUri()) },
+            clearTemp = { DeleteTempFilesCommand(appContext).execute() }
+        )
     }
-    LaunchedEffect(controller) {
-        controller.onResume()
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { navigator.navigateUp() }
     }
 
     CloudResultsScreen(
-        image = controller.image,
-        selection = controller.selection,
+        image = viewModel.image,
+        selection = viewModel.selection,
         title = stringResource(R.string.clouds),
-        subtitle = controller.formatter.formatDateTime(
-            controller.time.toZonedDateTime(),
+        subtitle = formatter.formatDateTime(
+            viewModel.time.toZonedDateTime(),
             relative = true,
             abbreviateMonth = true
         ),
-        isLoading = controller.isLoading,
-        canSave = controller.selection.any { it.isSelected },
-        onDateClick = controller::pickTime,
-        onSave = controller::save,
-        onSelectionChanged = controller::setSelection
+        isLoading = viewModel.isLoading,
+        canSave = viewModel.selection.any { it.isSelected },
+        onDateClick = {
+            scope.launch {
+                val current = viewModel.time.toZonedDateTime().toLocalDateTime()
+                val newTime = CoroutinePickers.datetime(
+                    context,
+                    UserPreferences(appContext).use24HourTime,
+                    current
+                )
+                if (newTime != null) {
+                    viewModel.time = newTime.toZonedDateTime().toInstant()
+                }
+            }
+        },
+        onSave = viewModel::save,
+        onSelectionChanged = viewModel::setSelection
     )
 }
 
-private class CloudResultsController(private val host: TrailSenseDestinationHost) {
+/**
+ * Picking the clouds in a photo (classified, best guesses preselected) or from every cloud type when there is no
+ * photo, and the time they were seen. Reports [saved] once the chosen clouds are logged.
+ */
+internal class CloudResultsViewModel(
+    private val imageUri: String?,
+    private val repo: IReadingRepo<CloudObservation>,
+    private val classifier: ICloudClassifier,
+    private val loadImage: suspend (String) -> Bitmap?,
+    private val clearTemp: suspend () -> Unit,
+    now: Instant = Instant.now()
+) : ViewModel() {
 
     var image by mutableStateOf<Bitmap?>(null)
         private set
-    private var classifier: ICloudClassifier = SoftmaxCloudClassifier(this::debugLogFeatures)
     var selection by mutableStateOf<List<CloudSelection>>(emptyList())
         private set
     var isLoading by mutableStateOf(false)
         private set
-    var time by mutableStateOf(Instant.now())
-        private set
+    var time by mutableStateOf(now)
 
-    private val repo by lazy { CloudRepo.getInstance(host.requireContext()) }
-    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    private val _saved = Channel<Unit>(Channel.CONFLATED)
+    /** One event per save, after the readings are stored. */
+    val saved: Flow<Unit> = _saved.receiveAsFlow()
 
-    private val uri: Uri? by lazy {
-        host.routeAs<Route.CloudResults>().imageUri?.toUri()
-    }
-
-    fun onResume() {
-        if (uri != null && selection.isEmpty()) {
-            analyze()
-        } else if (selection.isEmpty()) {
-            selection = CloudGenus.values().map { CloudSelection(it, null, false) } + listOf(
+    init {
+        if (imageUri != null) {
+            analyze(imageUri)
+        } else {
+            selection = CloudGenus.entries.map { CloudSelection(it, null, false) } + listOf(
                 CloudSelection(
                     null,
                     null,
                     false
                 )
             )
-        }
-    }
-
-    fun onDestroy() {
-        image?.recycle()
-        image = null
-    }
-
-    fun pickTime() {
-        host.lifecycleScope.launch {
-            val current = time.toZonedDateTime().toLocalDateTime()
-            val newTime = CoroutinePickers.datetime(
-                host.requireContext(),
-                UserPreferences(host.requireContext()).use24HourTime,
-                current
-            )
-            if (newTime != null) {
-                time = newTime.toZonedDateTime().toInstant()
-            }
         }
     }
 
@@ -196,30 +210,25 @@ private class CloudResultsController(private val host: TrailSenseDestinationHost
     }
 
     fun save() {
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             val readings =
                 selection.filter { it.isSelected }
                     .map { Reading(CloudObservation(0, it.genus), time) }
             readings.forEach {
                 repo.add(it)
             }
-            host.findNavigator().navigateUp()
+            _saved.send(Unit)
         }
     }
 
-    private fun debugLogFeatures(features: List<Float>) {
-        DebugCloudCommand(host.requireContext(), features).execute()
-    }
-
-    private fun analyze() {
-        val uri = uri ?: return
+    private fun analyze(uri: String) {
         isLoading = true
         selection = emptyList()
 
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             if (image == null) {
                 image = loadImage(uri)
-                DeleteTempFilesCommand(host.requireContext()).execute()
+                clearTemp()
             }
             val results = onDefault {
                 image?.let { classifier.classify(it) }
@@ -228,28 +237,6 @@ private class CloudResultsController(private val host: TrailSenseDestinationHost
                 isLoading = false
             }
         }
-    }
-
-    private suspend fun loadImage(uri: Uri): Bitmap? = onIO {
-        val file = uri.toFile()
-        val path = file.path
-        val rotation = tryOrDefault(0) {
-            val exif = ExifInterface(uri.toFile())
-            exif.rotationDegrees
-        }
-        val full = BitmapUtils.decodeBitmapScaled(
-            path,
-            SoftmaxCloudClassifier.IMAGE_SIZE,
-            SoftmaxCloudClassifier.IMAGE_SIZE
-        ) ?: return@onIO null
-        val bmp = full.resizeExact(
-            SoftmaxCloudClassifier.IMAGE_SIZE,
-            SoftmaxCloudClassifier.IMAGE_SIZE
-        )
-        full.recycle()
-        val rotated = bmp.rotate(rotation.toFloat())
-        bmp.recycle()
-        rotated
     }
 
     private fun setResult(result: List<ClassificationResult<CloudGenus?>>) {
@@ -264,6 +251,33 @@ private class CloudResultsController(private val host: TrailSenseDestinationHost
             )
         }
     }
+
+    override fun onCleared() {
+        image?.recycle()
+        image = null
+    }
+}
+
+private suspend fun loadCloudImage(uri: Uri): Bitmap? = onIO {
+    val file = uri.toFile()
+    val path = file.path
+    val rotation = tryOrDefault(0) {
+        val exif = ExifInterface(uri.toFile())
+        exif.rotationDegrees
+    }
+    val full = BitmapUtils.decodeBitmapScaled(
+        path,
+        SoftmaxCloudClassifier.IMAGE_SIZE,
+        SoftmaxCloudClassifier.IMAGE_SIZE
+    ) ?: return@onIO null
+    val bmp = full.resizeExact(
+        SoftmaxCloudClassifier.IMAGE_SIZE,
+        SoftmaxCloudClassifier.IMAGE_SIZE
+    )
+    full.recycle()
+    val rotated = bmp.rotate(rotation.toFloat())
+    bmp.recycle()
+    rotated
 }
 
 @Composable

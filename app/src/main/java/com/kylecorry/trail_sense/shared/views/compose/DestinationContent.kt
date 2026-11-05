@@ -197,9 +197,9 @@ fun DestinationContent(
 
             // --- Tools with a disclaimer, camera permission or plugin details ---
             Route.CliffHeight -> CliffHeightToolScreen(this)
-            Route.Magnifier -> MagnifierToolScreen(this)
-            Route.MirrorCamera -> MirrorCameraToolScreen(this)
-            Route.WaterPurification -> WaterPurificationToolScreen(this)
+            Route.Magnifier -> MagnifierToolScreen()
+            Route.MirrorCamera -> MirrorCameraToolScreen()
+            Route.WaterPurification -> WaterPurificationToolScreen()
             is Route.PluginDetails -> PluginDetailsScreen(
                 packageId = route.packageId,
                 pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
@@ -212,13 +212,13 @@ fun DestinationContent(
 
             // --- Tools with their own state holder ---
             Route.Tools -> ToolsHomeScreen(onController = { screenController = it })
-            Route.ScreenFlashlight -> ScreenFlashlightToolScreen(this)
-            Route.Notes -> NotesToolScreen(this)
+            Route.ScreenFlashlight -> ScreenFlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
+            Route.Notes -> NotesToolScreen()
             is Route.NoteEditor -> NoteEditorToolScreen(this, route)
             is Route.SurvivalGuideReader -> SurvivalGuideReaderToolScreen(this, route)
             is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(this, route)
             Route.Pedometer -> PedometerToolScreen(this)
-            Route.Flashlight -> FlashlightToolScreen(this)
+            Route.Flashlight -> FlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
             Route.Battery -> BatteryToolScreen(this)
 
             // --- Tool screens that receive the host for callbacks / services ---
@@ -228,8 +228,8 @@ fun DestinationContent(
             Route.TurnBack -> TurnBackToolScreen()
             Route.Settings -> SettingsToolScreen()
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen(this)
-            is Route.Clouds -> CloudToolScreen(this)
-            is Route.CloudResults -> CloudResultsToolScreen(this)
+            is Route.Clouds -> CloudToolScreen(route)
+            is Route.CloudResults -> CloudResultsToolScreen(route)
             Route.Astronomy -> AstronomyToolScreen(this)
             is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
             is Route.BeaconList -> BeaconListToolScreen(
@@ -257,15 +257,15 @@ fun DestinationContent(
             Route.TideList -> TideListToolScreen(this)
             is Route.CreateTide -> CreateTideToolScreen(this)
             Route.Climate -> ClimateToolScreen(this)
-            Route.PackList -> PackListToolScreen(this)
-            is Route.PackItemList -> PackItemListToolScreen(this)
+            Route.PackList -> PackListToolScreen()
+            is Route.PackItemList -> PackItemListToolScreen(route)
             is Route.CreatePackItem -> CreateItemToolScreen(route)
-            Route.FieldGuide -> FieldGuideToolScreen(this)
-            is Route.FieldGuidePage -> FieldGuidePageToolScreen(this)
-            Route.FieldGuideSettings -> FieldGuideSettingsToolScreen(this)
-            is Route.SightingList -> SightingListToolScreen(this)
-            is Route.CreateFieldGuidePage -> CreateFieldGuidePageToolScreen(this)
-            is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(this)
+            Route.FieldGuide -> FieldGuideToolScreen()
+            is Route.FieldGuidePage -> FieldGuidePageToolScreen(route)
+            Route.FieldGuideSettings -> FieldGuideSettingsToolScreen()
+            is Route.SightingList -> SightingListToolScreen(route)
+            is Route.CreateFieldGuidePage -> CreateFieldGuidePageToolScreen(route)
+            is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(route)
             is Route.PhotoMaps -> PhotoMapsToolScreen(this)
             Route.Clinometer -> ClinometerToolScreen(
                 host = this,

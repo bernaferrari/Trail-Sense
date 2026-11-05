@@ -2,6 +2,14 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,10 +43,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.compose.runtime.DisposableEffect
-import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import java.time.Instant
 
@@ -134,27 +139,31 @@ fun NoteEditorScreen(
 
 /** The note editor for [Route.NoteEditor]; back asks before dropping unsaved changes. */
 @Composable
-fun NoteEditorToolScreen(host: TrailSenseDestinationHost, route: Route.NoteEditor) {
-    val controller = remember(host) { NoteEditorController(host) }
-    DisposableEffect(controller) {
-        val callback = host.promptIfUnsavedChanges(controller::hasChanges)
-        onDispose {
-            callback.remove()
-        }
+fun NoteEditorToolScreen(route: Route.NoteEditor) {
+    val context = LocalContext.current.applicationContext
+    val navigator = LocalNavigator.current
+    val viewModel = viewModel { NoteEditorViewModel(NoteRepo.getInstance(context)) }
+    UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { navigator.navigateUp() }
     }
     NoteEditorScreen(
         noteId = route.editNoteId,
-        loadNote = controller::loadNote,
-        onStateChanged = controller::onStateChanged,
-        onSave = controller::save
+        loadNote = viewModel::loadNote,
+        onStateChanged = viewModel::onStateChanged,
+        onSave = viewModel::save
     )
 }
 
-private class NoteEditorController(private val host: TrailSenseDestinationHost) {
-    private val repo by lazy { NoteRepo.getInstance(host.requireContext()) }
-    private var editingNote: Note? = null
-    private var title = ""
-    private var content = ""
+/** What the editor has typed against the note being edited; reports [saved] once the note is stored. */
+internal class NoteEditorViewModel(private val repo: NoteRepo) : ViewModel() {
+    private var editingNote by mutableStateOf<Note?>(null)
+    private var title by mutableStateOf("")
+    private var content by mutableStateOf("")
+
+    private val _saved = Channel<Unit>(Channel.CONFLATED)
+    /** One event per save, after the note is stored. */
+    val saved: Flow<Unit> = _saved.receiveAsFlow()
 
     suspend fun loadNote(id: Long): Note? {
         return repo.getNote(id)
@@ -174,16 +183,13 @@ private class NoteEditorController(private val host: TrailSenseDestinationHost) 
         withContext(Dispatchers.IO) {
             repo.addNote(note)
         }
-        withContext(Dispatchers.Main) {
-            host.findNavigator().navigateUp()
-        }
+        _saved.send(Unit)
     }
 
-    fun hasChanges(): Boolean {
-        return !nothingEntered() &&
+    val hasChanges: Boolean
+        get() = !nothingEntered() &&
                 (title != editingNote?.title.orEmpty() ||
                         content != editingNote?.contents.orEmpty())
-    }
 
     private fun nothingEntered(): Boolean {
         if (editingNote != null) {

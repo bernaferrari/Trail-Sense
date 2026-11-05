@@ -3,8 +3,12 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.foundation.layout.Row
@@ -39,7 +43,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,15 +61,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -82,66 +81,54 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FieldGuidePageToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { FieldGuidePageController(host) }
-    val lifecycleOwner = LocalLifecycleOwner.current
+fun FieldGuidePageToolScreen(route: Route.FieldGuidePage) {
+    val context = LocalContext.current.applicationContext
+    val navigator = LocalNavigator.current
+    val viewModel = viewModel {
+        FieldGuidePageViewModel(route.pageId.takeIf { it != 0L }, FieldGuideRepo.getInstance(context))
+    }
+    val files = remember(context) { FileSubsystem.getInstance(context) }
+    val tagNameMapper = remember(context) { FieldGuideTagNameMapper(context) }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                controller.loadPage()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        controller.loadPage()
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    LifecycleResumeEffect(viewModel) {
+        viewModel.loadPage()
+        onPauseOrDispose { }
     }
 
-    val formatter = remember(host) {
-        FieldGuideFormatService(UserPreferences(host.requireContext()))
+    val formatter = remember(context) {
+        FieldGuideFormatService(UserPreferences(context))
     }
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     FieldGuidePageScreen(
-        page = controller.page,
-        files = controller.files,
-        tagNameMapper = controller.tagNameMapper,
+        page = viewModel.page,
+        files = files,
+        tagNameMapper = tagNameMapper,
         formatter = formatter,
         onBack = { dispatcher?.onBackPressed() },
-        onEdit = controller::editPage,
-        onSightings = controller::openSightings
+        onEdit = {
+            viewModel.page?.let { navigator.navigate(Route.CreateFieldGuidePage(pageId = it.id)) }
+        },
+        onSightings = {
+            viewModel.page?.let { navigator.navigate(Route.SightingList(pageId = it.id)) }
+        }
     )
 }
 
-private class FieldGuidePageController(private val host: TrailSenseDestinationHost) {
-
-    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
-    val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
-    val tagNameMapper by lazy { FieldGuideTagNameMapper(host.requireContext()) }
-    private val pageId: Long? by lazy {
-        host.routeAs<Route.FieldGuidePage>().pageId.takeIf { it != 0L }
-    }
+/** One field guide page, reread each time it's shown so edits and new sightings appear. */
+internal class FieldGuidePageViewModel(
+    private val pageId: Long?,
+    private val repo: FieldGuideRepo
+) : ViewModel() {
 
     var page by mutableStateOf<FieldGuidePage?>(null)
         private set
 
     fun loadPage() {
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             page = withContext(Dispatchers.IO) {
                 pageId?.let { repo.getPage(it) }
             }
         }
-    }
-
-    fun editPage() {
-        val current = page ?: return
-        host.findNavigator().navigate(Route.CreateFieldGuidePage(pageId = current.id))
-    }
-
-    fun openSightings() {
-        val current = page ?: return
-        host.findNavigator().navigate(Route.SightingList(pageId = current.id))
     }
 }
 

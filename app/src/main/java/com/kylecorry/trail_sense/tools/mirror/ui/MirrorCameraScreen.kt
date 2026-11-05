@@ -2,6 +2,11 @@
 
 package com.kylecorry.trail_sense.tools.mirror.ui
 
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.rememberCoroutineScope
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import android.graphics.Color
 import androidx.camera.view.PreviewView
@@ -43,7 +48,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCameraUnavailabl
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.andromeda.torch.ScreenTorch
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
 internal fun MirrorCameraScreen(
@@ -163,14 +167,20 @@ private val MirrorCorner = 56.dp
 
 /** The mirror: the front camera, with the screen lit white while it is shown. */
 @Composable
-fun MirrorCameraToolScreen(host: TrailSenseDestinationHost) {
-    val flashlight = remember(host) { ScreenTorch(host.mainActivity.window) }
+fun MirrorCameraToolScreen() {
+    val context = LocalContext.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    // The screen torch lights the activity's window.
+    val window = requireNotNull(LocalActivity.current).window
+    val flashlight = remember(window) { ScreenTorch(window) }
     MirrorCameraScreen(
         onRequestCamera = { action ->
-            host.requestCamera {
-                val isAvailable = Permissions.isCameraEnabled(host.requireContext())
+            scope.launch {
+                effects.requestPermission(AppPermission.Camera)
+                val isAvailable = Permissions.isCameraEnabled(context)
                 if (!isAvailable) {
-                    host.alertNoCameraPermission()
+                    effects.explainPermissionDenied(AppPermission.Camera)
                 }
                 action(isAvailable)
             }

@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
@@ -119,8 +120,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.TorchOff
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.ScreenControllerEffect
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
 fun FlashlightScreen(
@@ -791,14 +790,16 @@ private fun getStrobeMode(frequency: Int): FlashlightMode {
 
 /** The Flashlight tool: while it is shown, the volume buttons turn on the mode picked here. */
 @Composable
-fun FlashlightToolScreen(host: TrailSenseDestinationHost) {
-    val toggle = remember(host) { FlashlightToggle(host.requireContext()) }
-    ScreenControllerEffect(host, toggle)
+fun FlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val toggle = remember(context) { FlashlightToggle(context) }
+    offerController(toggle)
     FlashlightScreen(
         initialSelectedMode = toggle.selectedMode,
         onSelectedModeChanged = { toggle.selectedMode = it },
         onOpenScreenFlashlight = {
-            host.findNavigator().navigate(Route.ScreenFlashlight)
+            navigator.navigate(Route.ScreenFlashlight)
         }
     )
 }
