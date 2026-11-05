@@ -49,7 +49,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         optional(OPTIONAL_WAIT_FOR_TIMEOUT) {
             longClick(R.id.radar_compass)
             scrollUntil { hasText("Location") }
-            scrollUntil { hasText("Beacons") }
+            scrollUntil { hasText("Places") }
             scrollUntil { hasText("Paths") }
             scrollUntil { hasText("Tides") }
             scrollUntil { hasText("Photo maps") }
@@ -79,7 +79,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
 
         // Create a beacon
         click(id("create_btn"))
-        click("Beacon", exact = true)
+        click("Place", exact = true)
         input("Name", "Test Beacon")
         input("Location", "1.0, -1.0")
         input("Elevation", "100")

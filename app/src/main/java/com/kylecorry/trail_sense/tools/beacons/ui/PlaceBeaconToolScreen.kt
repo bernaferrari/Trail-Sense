@@ -860,11 +860,12 @@ private fun ElevationInput(
     }
 
     LaunchedEffect(elevation) {
+        // An elevation set from elsewhere (the altimeter, a GPS fill) arrives in metres; show it in the unit the
+        // field already uses (the user's) instead of flipping the field to metres.
+        val shown = elevation?.convertTo(unit)
         val current = parseDistance(elevationText, unit)
-        if (current != elevation) {
-            val newUnit = elevation?.units ?: unit
-            unit = newUnit
-            elevationText = formatDistanceAmount(elevation, newUnit)
+        if (current != shown) {
+            elevationText = formatDistanceAmount(shown, unit)
         }
     }
 

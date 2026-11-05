@@ -205,7 +205,7 @@ class SmokeTest {
 
     private fun smokeTestBeacons() {
         click({ viewWithResourceId("$packageName:id/create_btn") })
-        click("Beacon", exact = true)
+        click("Place", exact = true)
         input("Name", "Test beacon")
         input("Location", "42, -72")
         click({ viewWithResourceId("$packageName:id/toolbar_right_button") })

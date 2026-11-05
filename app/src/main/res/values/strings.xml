@@ -104,10 +104,10 @@
     <string name="sos">SOS</string>
     <!--Navigation Tab - Destination Panel-->
     <!--Navigation Tab - Beacon List-->
-    <string name="no_beacons">No beacons</string>
+    <string name="no_beacons">No places</string>
     <plurals name="beacon_group_summary">
-        <item quantity="one">%d beacon</item>
-        <item quantity="other">%d beacons</item>
+        <item quantity="one">%d place</item>
+        <item quantity="other">%d places</item>
     </plurals>
     <plurals name="page_group_summary">
         <item quantity="one">%d page</item>
@@ -291,14 +291,14 @@
     <string name="pref_adjust_for_temperature_title">Factor in temperature</string>
     <string name="pref_adjust_for_temperature_summary">Use the temperature in sea level pressure conversions</string>
     <!--Settings - Navigation-->
-    <string name="pref_display_multi_beacons_title">Show nearby beacons</string>
+    <string name="pref_display_multi_beacons_title">Show nearby places</string>
     <string name="pref_show_linear_compass_title">Show linear compass</string>
     <string name="pref_show_linear_compass_summary">When the phone is vertical</string>
-    <string name="pref_num_visible_beacons_title">Nearby beacons</string>
-    <string name="pref_display_multi_beacons_summary">Show closest beacons on the compass</string>
-    <string name="pref_nearby_linear_only_title">Only show nearby beacons on linear compass</string>
+    <string name="pref_num_visible_beacons_title">Nearby places</string>
+    <string name="pref_display_multi_beacons_summary">Show closest places on the compass</string>
+    <string name="pref_nearby_linear_only_title">Only show nearby places on linear compass</string>
     <string name="pref_show_calibrate_on_navigate_dialog_title">Calibrate before navigating</string>
-    <string name="pref_max_beacon_distance_title">Nearby beacon distance</string>
+    <string name="pref_max_beacon_distance_title">Nearby place distance</string>
     <string name="pref_navigation_draw_compass_dial_bezel_title">Show compass dial bezel</string>
     <string name="pref_navigation_draw_compass_dial_bezel_summary">Draw degree markings around the compass dial</string>
     <string name="pref_navigation_show_azimuth_indicator_title">Show azimuth indicator</string>
@@ -419,7 +419,7 @@
     <string name="error_occurred_message">Trail Sense ran into an error. Please email the developer to get this issue fixed.</string>
     <string name="tool_user_guide_title">User Guide</string>
     <string name="tool_user_guide_summary">A how-to guide for using Trail Sense</string>
-    <string name="delete_beacon_group_message">%s and all its beacons will be deleted.</string>
+    <string name="delete_beacon_group_message">%s and all its places will be deleted.</string>
     <string name="delete_path_group_message">%s and all its paths will be deleted.</string>
     <string name="delete_map_group_message">%s and all its maps will be deleted.</string>
     <string name="delete_offline_map_group_message">%s and all its maps will be deleted.</string>
@@ -555,8 +555,8 @@
     <string name="create_at_distance">Create at distance</string>
     <string name="backtrack">Backtrack</string>
     <string name="backtrack_notification_channel_description">Backtrack location updates</string>
-    <string name="create_beacon">Create beacon</string>
-    <string name="edit_beacon">Edit beacon</string>
+    <string name="create_beacon">New place</string>
+    <string name="edit_beacon">Edit place</string>
     <string name="pref_backtrack_enabled" translatable="false">pref_backtrack_enabled</string>
     <string name="waypoint_time_format">%1$s, %2$s</string>
     <string name="pref_backtrack_enabled_summary">Record location history</string>
@@ -628,15 +628,15 @@
     <!--This is in Markdown format-->
     <string name="onboarding_user_guide">Learn how to use Trail Sense\'s features with the user guide. Available on the Tools tab.</string>
     <!--This is in Markdown format-->
-    <string name="onboarding_privacy">- Trail Sense respects your privacy and location data never leaves your device\n\n- Trail Sense will never require Internet permission\n\n- View the [privacy policy](https://kylecorry.com/Trail-Sense/privacy_policy.html) (opens in your phone\'s browser)\n\n- Some features of Trail Sense require access to your location\n\n- Granting the location permission will enable the following features:\n\n\t- Navigating to beacons\n\n\t- Improved forecast accuracy (not available on all devices)\n\n\t- Backtrack\n\n\t- Sun and moon times for your current location (sunset alerts may require background location)\n\n- If you choose to not grant the location permission, you can manually enter a location in the Settings &gt; Sensors &gt; GPS calibration menu in Trail Sense.\n\n- After clicking continue, you will be prompted to grant the location permission. Denying this permission will prevent Trail Sense from accessing your location, so a manual location entry is recommended.</string>
+    <string name="onboarding_privacy">- Trail Sense respects your privacy and location data never leaves your device\n\n- Trail Sense will never require Internet permission\n\n- View the [privacy policy](https://kylecorry.com/Trail-Sense/privacy_policy.html) (opens in your phone\'s browser)\n\n- Some features of Trail Sense require access to your location\n\n- Granting the location permission will enable the following features:\n\n\t- Navigating to places\n\n\t- Improved forecast accuracy (not available on all devices)\n\n\t- Backtrack\n\n\t- Sun and moon times for your current location (sunset alerts may require background location)\n\n- If you choose to not grant the location permission, you can manually enter a location in the Settings &gt; Sensors &gt; GPS calibration menu in Trail Sense.\n\n- After clicking continue, you will be prompted to grant the location permission. Denying this permission will prevent Trail Sense from accessing your location, so a manual location entry is recommended.</string>
     <string name="export">Export</string>
     <plurals name="beacons_imported">
-        <item quantity="one">%d beacon imported</item>
-        <item quantity="other">%d beacons imported</item>
+        <item quantity="one">%d place imported</item>
+        <item quantity="other">%d places imported</item>
     </plurals>
     <plurals name="beacons_exported">
-        <item quantity="one">%d beacon exported</item>
-        <item quantity="other">%d beacons exported</item>
+        <item quantity="one">%d place exported</item>
+        <item quantity="other">%d places exported</item>
     </plurals>
     <string name="import_btn">Import</string>
     <string name="gps_user">User</string>
@@ -661,7 +661,7 @@
     <string name="acceleration_m_s2_format">%s m/s²</string>
     <string name="magnetometer">Magnetometer</string>
     <string name="help">Help</string>
-    <string name="beacon_export_error">Could not export beacons</string>
+    <string name="beacon_export_error">Could not export places</string>
     <string name="distance_from_flashlight">Distance from phone to flashlight</string>
     <string name="lux_format">%s lx</string>
     <string name="candela_format">%s cd</string>
@@ -757,7 +757,7 @@
     <string name="arrow">Arrow</string>
     <string name="pref_default_path_style_title">Default path style</string>
     <string name="pref_default_path_color_title">Default path color</string>
-    <string name="pref_default_beacon_color_title">Default beacon color</string>
+    <string name="pref_default_beacon_color_title">Default place color</string>
     <string name="battery_warning">Battery drain warning</string>
     <string name="backtrack_battery_warning">Small intervals (under 15 minutes) may cause excess battery drain</string>
     <string name="calibrate_new_tide">Calibrate to a new tide?</string>
@@ -767,8 +767,8 @@
     <string name="activity_recognition_permission_denied">Physical activity permission denied, unable to turn on pedometer features. You can enable it in settings.</string>
     <string name="last_signal_beacon_name">Last signal - %1$s (%2$s)</string>
     <string name="pref_show_last_signal_beacon" translatable="false">pref_show_last_signal_beacon</string>
-    <string name="pref_show_last_signal_beacon_title">Last signal beacon</string>
-    <string name="pref_show_last_signal_beacon_summary">Creates a beacon for the last cell signal location</string>
+    <string name="pref_show_last_signal_beacon_title">Last signal place</string>
+    <string name="pref_show_last_signal_beacon_summary">Saves a place at the last cell signal location</string>
     <string name="noon">Noon</string>
     <string name="whistle_signal_where_are_you">Where are you?</string>
     <string name="whistle_signal_acknowledged">Acknowledged</string>
@@ -1126,8 +1126,8 @@
     <!--Verb / Action-->
     <string name="open">Open</string>
     <string name="note">Note</string>
-    <string name="beacon">Beacon</string>
-    <string name="beacon_created">Beacon created</string>
+    <string name="beacon">Place</string>
+    <string name="beacon_created">Place saved</string>
     <string name="result_deleted">Result deleted</string>
     <string name="undo">Undo</string>
     <string name="share_ellipsis">Share…</string>
@@ -1151,7 +1151,7 @@
     <string name="pressure_tendency">Tendency</string>
     <string name="explore">Explore</string>
     <!--This is in Markdown format-->
-    <string name="onboarding_explore">- Designed for hiking, backpacking, camping, and geocaching\n\n- Place beacons and navigate to them\n\n- Follow paths\n\n- Retrace your steps with backtrack\n\n- Plan what to pack\n\n- Be alerted before the sun sets\n\n- Predict the weather\n\n- Use your phone as a flashlight\n\n- And much more!</string>
+    <string name="onboarding_explore">- Designed for hiking, backpacking, camping, and geocaching\n\n- Save places and navigate to them\n\n- Follow paths\n\n- Retrace your steps with backtrack\n\n- Plan what to pack\n\n- Be alerted before the sun sets\n\n- Predict the weather\n\n- Use your phone as a flashlight\n\n- And much more!</string>
     <string name="average_speed">Average speed</string>
     <string name="steps">Steps</string>
     <string name="pref_pedometer_enabled" translatable="false">pref_pedometer_enabled</string>
@@ -1385,7 +1385,7 @@
     <string name="pref_restore_action" translatable="false">pref_restore_action</string>
     <!--    %s is the app name (Trail Sense)-->
     <string name="restore_disclaimer">This action will overwrite all of your current data. Please make sure you have a backup before continuing.\n\nOnly select a backup file that you have created with %s and trust.</string>
-    <string name="backup_disclaimer">A backup file will be created containing all your current data. It will include settings, paths, beacons, maps, etc.\n\nThis file is not encrypted. Do not share it with anyone you do not trust.</string>
+    <string name="backup_disclaimer">A backup file will be created containing all your current data. It will include settings, paths, places, maps, etc.\n\nThis file is not encrypted. Do not share it with anyone you do not trust.</string>
     <string name="backing_up_loading_message">Backing up…</string>
     <string name="restoring_loading_message">Restoring…</string>
     <string name="restore_complete_message">Restore successful, restarting to apply changes</string>
@@ -1419,7 +1419,7 @@
     <!--The compass direction / bearing-->
     <string name="direction">Direction</string>
     <string name="augmented_reality">Augmented Reality</string>
-    <string name="augmented_reality_description">View nearby beacons and the sun / moon with your camera</string>
+    <string name="augmented_reality_description">View nearby places and the sun / moon with your camera</string>
     <string name="magnetic_north">Magnetic north</string>
     <string name="pinned">Pinned</string>
     <string name="unpin">Unpin</string>
@@ -1473,10 +1473,10 @@
     <string name="pref_augmented_reality_view_distance" translatable="false">pref_augmented_reality_view_distance</string>
     <string name="pref_show_dial_ticks_when_no_compass" translatable="false">pref_show_dial_ticks_when_no_compass</string>
     <string name="show_dial_ticks_on_nearby_radar">Show dial ticks</string>
-    <string name="show_dial_ticks_on_nearby_radar_summary">Your device does not have a compass, but you can still see what direction beacons are.</string>
+    <string name="show_dial_ticks_on_nearby_radar_summary">Your device does not have a compass, but you can still see what direction places are.</string>
     <string name="pref_tool_category_holder_key" translatable="false">pref_tool_category_holder_key</string>
     <string name="augmented_reality_no_gyro_message">You can still use the Augmented Reality tool, but it will not be as accurate.</string>
-    <string name="creating_beacon">Creating beacon</string>
+    <string name="creating_beacon">Saving place</string>
     <string name="pref_view_distance_paths_holder" translatable="false">pref_view_distance_paths_holder</string>
     <string name="pref_show_ar_path_layer" translatable="false">pref_show_ar_path_layer</string>
     <string name="pref_augmented_reality_view_distance_paths" translatable="false">pref_augmented_reality_view_distance_paths</string>
@@ -1572,12 +1572,12 @@
     <string name="local_talk">Local Talk</string>
     <string name="quick_actions">Quick actions</string>
     <string name="pref_bottom_navigation_tools" translatable="false">pref_bottom_navigation_tools</string>
-    <string name="tool_quick_action_summary">Long press bottom navigation or view on tools tab.</string>
-    <string name="widget_bottom_sheet_instructions">Long press bottom navigation or use the Widgets quick action.</string>
+    <string name="tool_quick_action_summary">Long press a tab, or find them on the Tools tab</string>
+    <string name="widget_bottom_sheet_instructions">Long press a tab, or use the Widgets quick action</string>
     <string name="widget_pref_title">In-app widgets</string>
     <string name="pref_tool_settings_header_key" translatable="false">pref_tool_settings_header_key</string>
     <string name="quick_actions_are_unavailable">Quick actions are unavailable</string>
-    <string name="bottom_navigation_slot">Bottom navigation slot %d</string>
+    <string name="bottom_navigation_slot">Tab %d</string>
     <string name="pref_weather_forecast_source" translatable="false">pref_weather_forecast_source</string>
     <string name="forecast_algorithm">Forecast algorithm</string>
     <string name="no_items_found">No items found</string>
@@ -1637,7 +1637,7 @@
     <string name="sun_moon_chart">Sun &amp; moon chart</string>
     <string name="pressure_chart">Pressure chart</string>
     <string name="tide_chart">Tide chart</string>
-    <string name="nearby_beacons">Nearby beacons</string>
+    <string name="nearby_beacons">Nearby places</string>
     <string name="tide_model_auto">Tide model (auto)</string>
     <string name="tide_estimation_description_tide_clock">Uses the clock to estimate tides. Requires at least one known tide.</string>
     <string name="tide_estimation_description_lunitidal_interval_auto">Uses the moon\'s position to estimate tides. Requires at least one known tide.</string>
@@ -1655,7 +1655,7 @@
     <string name="tide">Tide</string>
     <string name="field_guide">Field Guide</string>
     <string name="books">Books</string>
-    <string name="delete_all_beacons">All beacons will be deleted.</string>
+    <string name="delete_all_beacons">All places will be deleted.</string>
     <string name="africa">Africa</string>
     <string name="antarctica">Antarctica</string>
     <string name="asia">Asia</string>
@@ -1979,7 +1979,7 @@
     <string name="map_layer_contours_description">Lines showing elevation and terrain steepness</string>
     <string name="map_layer_my_location_description">Your current location, heading, and GPS accuracy</string>
     <string name="map_layer_my_elevation_description">Your current elevation</string>
-    <string name="map_layer_beacons_description">Your saved beacons</string>
+    <string name="map_layer_beacons_description">Your saved places</string>
     <string name="map_layer_paths_description">Your saved paths</string>
     <string name="map_layer_tides_description">Your saved tide tables and modeled coastal tides</string>
     <string name="map_layer_photo_maps_description">Your saved photo maps</string>
@@ -2205,8 +2205,8 @@
     <string name="units_imperial_example">mi · °F · lb</string>
     <string name="units_fine_tune">Fine-tune</string>
     <string name="settings_time_format_example">Times look like %s</string>
-    <string name="settings_bottom_navigation_slot">Slot %d</string>
-    <string name="settings_bottom_navigation_tools_slot">Slot %d always opens Tools</string>
+    <string name="settings_bottom_navigation_slot">Tab %d</string>
+    <string name="settings_bottom_navigation_tools_slot">Tab %d is always Tools</string>
     <string name="settings_error_banners_footer">Choose which problems can show a banner at the top of a tool.</string>
     <string name="settings_tools_summary">Quick actions, widgets and bottom navigation</string>
     <!-- Family redesign: beacons, notes -->

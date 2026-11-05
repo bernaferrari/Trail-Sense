@@ -18,7 +18,9 @@ class PressureTendencyWeatherField(private val tendency: PressureTendency) : Wea
         val value = context.getString(
             R.string.pressure_tendency_format_2, formatter.formatPressure(
                 Pressure.hpa(tendency.amount).convertTo(units),
-                Units.getDecimalPlaces(units) + 1
+                // One decimal more than readings only when readings have none (hPa); inHg's two are plenty
+                // ("0.000 in" was noise).
+                maxOf(1, Units.getDecimalPlaces(units))
             )
         )
         val icon = PressureCharacteristicImageMapper().getImageResource(tendency.characteristic)

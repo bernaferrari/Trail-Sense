@@ -1805,7 +1805,8 @@ class TrailSenseComposeDestinationHost(
             bottomNavSelection.size + 1
         )
 
-        SettingsList(title = stringResource(R.string.tools)) {
+        // Titled like the Settings row that opens it ("Tools" read as the tool list).
+        SettingsList(title = stringResource(R.string.sky_settings_tools_summary)) {
             trailSenseSection("shortcuts") {
                 row { position ->
                     SettingsActionRow(
