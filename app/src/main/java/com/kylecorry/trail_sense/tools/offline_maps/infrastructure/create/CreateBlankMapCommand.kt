@@ -6,7 +6,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
-import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,14 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
-import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.andromeda.alerts.loading.ILoadingIndicator
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
@@ -69,7 +66,14 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.dialogs.showComposeDialog
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
@@ -143,7 +147,7 @@ class CreateBlankMapCommand(
         var center = location.location
 
         val cancelled = onMain {
-            val view = createBlankMapCalibrationView(
+            showBlankMapCalibrationDialog(
                 center = center,
                 distance = distance,
                 units = allUnits,
@@ -153,12 +157,6 @@ class CreateBlankMapCommand(
                 onDistanceChange = {
                     distance = it ?: defaultDistance
                 }
-            )
-
-            CoroutineAlerts.dialog(
-                context,
-                context.getString(R.string.create_blank_map),
-                contentView = view
             )
         }
 
@@ -173,27 +171,78 @@ class CreateBlankMapCommand(
         )
     }
 
-    private fun createBlankMapCalibrationView(
+    /** Asks for the blank map's center and size; returns true if cancelled. */
+    private suspend fun showBlankMapCalibrationDialog(
         center: Coordinate?,
         distance: Distance?,
         units: List<DistanceUnits>,
         onCenterChange: (Coordinate?) -> Unit,
         onDistanceChange: (Distance?) -> Unit
-    ): View {
-        return TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            BlankMapCalibrationContent(
-                center = center,
-                distance = distance,
-                units = units,
-                onCenterChange = onCenterChange,
-                onDistanceChange = onDistanceChange
+    ): Boolean = suspendCancellableCoroutine { continuation ->
+        fun close(cancelled: Boolean) {
+            if (continuation.isActive) continuation.resume(cancelled)
+        }
+
+        val dialog = showComposeDialog(context, onCancel = { close(true) }) { dismiss ->
+            BlankMapDialogTitle(stringResource(R.string.create_blank_map))
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .padding(horizontal = TrailSenseSpacing.xl)
+            ) {
+                BlankMapCalibrationContent(
+                    center = center,
+                    distance = distance,
+                    units = units,
+                    onCenterChange = onCenterChange,
+                    onDistanceChange = onDistanceChange
+                )
+            }
+            BlankMapDialogButtons(
+                onOk = {
+                    dismiss()
+                    close(false)
+                },
+                onCancel = {
+                    dismiss()
+                    close(true)
+                }
             )
         }
+        continuation.invokeOnCancellation { dialog.dismiss() }
     }
 
+}
+
+@Composable
+private fun BlankMapDialogTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TrailSenseSpacing.xl)
+            .padding(bottom = TrailSenseSpacing.lg)
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun BlankMapDialogButtons(onOk: () -> Unit, onCancel: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(TrailSenseSpacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.End)
+    ) {
+        TextButton(onClick = onCancel, shapes = ButtonDefaults.shapes()) {
+            Text(stringResource(android.R.string.cancel))
+        }
+        Button(onClick = onOk, shapes = ButtonDefaults.shapes()) {
+            Text(stringResource(android.R.string.ok))
+        }
+    }
 }
 
 @Composable
