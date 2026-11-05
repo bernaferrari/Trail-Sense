@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
@@ -15,7 +14,7 @@ import kotlinx.coroutines.withContext
 
 class RenamePathCommand(
     private val context: Context,
-    private val lifecycleOwner: LifecycleOwner,
+    private val scope: CoroutineScope,
     private val pathService: IPathService = PathService.getInstance(context)
 ) : IPathCommand {
 
@@ -27,7 +26,7 @@ class RenamePathCommand(
             hint = context.getString(R.string.name)
         ) {
             if (it != null) {
-                lifecycleOwner.lifecycleScope.launch {
+                scope.launch {
                     withContext(Dispatchers.IO) {
                         pathService.addPath(path.copy(name = it.ifBlank { null }))
                     }

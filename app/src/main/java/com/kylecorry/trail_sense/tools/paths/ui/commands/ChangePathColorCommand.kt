@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
@@ -11,12 +10,12 @@ import kotlinx.coroutines.withContext
 
 
 class ChangePathColorCommand(
-    private val lifecycleOwner: LifecycleOwner,
+    private val scope: CoroutineScope,
     private val pathService: IPathService
 ) {
 
     fun execute(path: Path, color: AppColor) {
-        lifecycleOwner.lifecycleScope.launch {
+        scope.launch {
             withContext(Dispatchers.IO) {
                 pathService.addPath(path.copy(style = path.style.copy(color = color.color)))
             }

@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -24,7 +23,7 @@ import java.time.Instant
 
 class ExportPathCommand(
     private val context: Context,
-    private val lifecycleOwner: LifecycleOwner,
+    private val scope: CoroutineScope,
     private val gpxService: IOService<GPXData>,
     private val pathService: IPathService = PathService.getInstance(context)
 ) {
@@ -32,7 +31,7 @@ class ExportPathCommand(
     private val pathNameFactory = PathNameFactory(context)
 
     fun execute(path: IPath?) {
-        lifecycleOwner.lifecycleScope.launch {
+        scope.launch {
             // Load the paths and groups (without waypoints)
             val all = getPaths(path)
             val paths = all.filterIsInstance<Path>()

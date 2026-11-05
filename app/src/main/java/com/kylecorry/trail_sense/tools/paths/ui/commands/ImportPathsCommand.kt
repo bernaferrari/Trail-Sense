@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
@@ -26,7 +25,7 @@ import kotlinx.coroutines.launch
 
 class ImportPathsCommand(
     private val context: Context,
-    private val lifecycleOwner: LifecycleOwner,
+    private val scope: CoroutineScope,
     private val gpxService: ImportService<GPXData>,
     private val pathService: IPathService = PathService.getInstance(context),
     private val prefs: IPathPreferences = UserPreferences(context).paths
@@ -35,7 +34,7 @@ class ImportPathsCommand(
     private val style = prefs.defaultPathStyle
 
     fun execute(parentId: Long?) {
-        lifecycleOwner.lifecycleScope.launch {
+        scope.launch {
             val gpx = gpxService.import() ?: return@launch
 
             // Get the tracks and routes from the GPX

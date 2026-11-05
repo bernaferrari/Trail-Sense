@@ -1,27 +1,29 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.content.Context
-import android.graphics.Paint
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.tryOrNothing
+import androidx.compose.ui.unit.sp
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.units.Distance
@@ -31,198 +33,229 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.toRelativeDistance
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
-class PathElevationChart(private val context: Context) {
+/**
+ * A path's elevation profile: elevation over distance, the area under each segment tinted by how steep it is, with
+ * [highlighted] ringed. A tap near a point reports it through [onPointClick]. [path] is in walking order.
+ */
+@Composable
+fun PathElevationChart(
+    path: List<PathPoint>,
+    @ColorInt color: Int,
+    highlighted: PathPoint?,
+    baseDistanceUnits: DistanceUnits,
+    formatter: FormatService,
+    onPointClick: (PathPoint) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val plot = remember(path, color, baseDistanceUnits) { ElevationPlot.from(path, color, baseDistanceUnits) }
+    val highlight = remember(plot, highlighted) { highlighted?.let { plot.positionOf(it) } }
+    val currentOnPointClick = rememberUpdatedState(onPointClick)
 
-    private val formatter = FormatService.getInstance(context)
-    private val baseDistanceUnits = com.kylecorry.trail_sense.shared.UserPreferences(context).baseDistanceUnits
+    // Theme colors so the chart sits calmly in its group card: quiet grid, muted labels, solid highlight ring.
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
+    val highlightColor = MaterialTheme.colorScheme.onSurface
+    val highlightRing = MaterialTheme.colorScheme.surfaceContainerLow
+    val status = trailSenseStatusColors()
+    val steepColors = mapOf(
+        Steepness.Low to status.good,
+        Steepness.Medium to status.caution,
+        Steepness.High to MaterialTheme.colorScheme.error
+    )
+    val noData = stringResource(R.string.no_data)
+    val textMeasurer = rememberTextMeasurer()
+    val labelStyle = TextStyle(color = textColor, fontSize = 10.sp)
+    val noDataStyle = TextStyle(color = textColor, fontSize = 14.sp)
 
-    private var renderVersion by mutableIntStateOf(0)
-    private var path = emptyList<PathPoint>()
-    private var elevationIndex = emptyList<Int>()
-    private var elevations = emptyList<ElevationPoint>()
-    private var highlight: Vector2? = null
-    private var yRange = Range(0f, 100f)
-    private var listener: (PathPoint) -> Unit = {}
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(plot) {
+                detectTapGestures { offset ->
+                    plot.findNearestPoint(this, offset, size.width.toFloat(), size.height.toFloat())?.let {
+                        currentOnPointClick.value(it)
+                    }
+                }
+            }
+    ) {
+        val chartPoints = plot.elevations
+        if (chartPoints.isEmpty()) {
+            drawLabel(textMeasurer, noData, noDataStyle, size.width / 2f, size.height / 2f, LabelAlign.Center)
+            return@Canvas
+        }
 
-    fun setOnPointClickListener(listener: (point: PathPoint) -> Unit) {
-        this.listener = listener
+        val bounds = plot.bounds(this, size.width, size.height)
+
+        repeat(3) { idx ->
+            val fraction = idx / 2f
+            val y = bounds.bottom - (bounds.bottom - bounds.top) * fraction
+            val value = plot.yRange.start + (plot.yRange.end - plot.yRange.start) * fraction
+            drawLine(
+                gridColor,
+                Offset(bounds.left, y),
+                Offset(bounds.right, y),
+                strokeWidth = 1.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 5.dp.toPx())),
+                cap = StrokeCap.Round
+            )
+            drawLabel(
+                textMeasurer,
+                formatElevation(formatter, baseDistanceUnits, value),
+                labelStyle,
+                bounds.left - 6.dp.toPx(),
+                y + 3.dp.toPx(),
+                LabelAlign.Right
+            )
+        }
+
+        repeat(4) { idx ->
+            val fraction = idx / 3f
+            val x = bounds.left + (bounds.right - bounds.left) * fraction
+            val value = bounds.xRange.start + (bounds.xRange.end - bounds.xRange.start) * fraction
+            drawLabel(
+                textMeasurer,
+                formatDistance(formatter, baseDistanceUnits, value),
+                labelStyle,
+                x,
+                size.height - 8.dp.toPx(),
+                LabelAlign.Center
+            )
+        }
+
+        chartPoints.zipWithNext().forEach { (start, end) ->
+            val p1 = plot.toScreen(start.position, bounds)
+            val p2 = plot.toScreen(end.position, bounds)
+            val area = Path().apply {
+                moveTo(p1.x, bounds.bottom)
+                lineTo(p1.x, p1.y)
+                lineTo(p2.x, p2.y)
+                lineTo(p2.x, bounds.bottom)
+                close()
+            }
+            drawPath(
+                area,
+                (steepColors[end.steepness] ?: Color(end.steepness.color)).copy(alpha = 0.32f)
+            )
+            drawLine(
+                Color(start.lineColor),
+                p1,
+                p2,
+                strokeWidth = 3.dp.toPx(),
+                cap = StrokeCap.Round
+            )
+        }
+
+        highlight?.let {
+            val point = plot.toScreen(it, bounds)
+            drawCircle(color = highlightRing, radius = 9.dp.toPx(), center = point)
+            drawCircle(color = highlightColor, radius = 6.dp.toPx(), center = point)
+        }
     }
+}
 
-    fun plot(path: List<PathPoint>, @ColorInt color: Int) {
-        val points = getElevationPlotPoints(path)
-        val margin = Distance.meters(10f).convertTo(baseDistanceUnits).value
-        val minRange = Distance.meters(100f).convertTo(baseDistanceUnits).value
-        yRange = getRange(
-            points.minOfOrNull { it.position.y } ?: 0f,
-            points.maxOfOrNull { it.position.y } ?: 0f,
-            margin,
-            minRange
-        )
-        elevations = points.map { it.copy(lineColor = color) }
-        highlight = null
-        renderVersion++
+private enum class LabelAlign {
+    Center,
+    Right
+}
+
+/** Draws [text] with its baseline at [y], centred on or ending at [x]. */
+private fun DrawScope.drawLabel(
+    textMeasurer: TextMeasurer,
+    text: String,
+    style: TextStyle,
+    x: Float,
+    y: Float,
+    align: LabelAlign
+) {
+    val layout = textMeasurer.measure(text, style)
+    val left = when (align) {
+        LabelAlign.Center -> x - layout.size.width / 2f
+        LabelAlign.Right -> x - layout.size.width
     }
+    drawText(layout, topLeft = Offset(left, y - layout.firstBaseline))
+}
 
-    fun highlight(point: PathPoint) {
+private fun formatElevation(formatter: FormatService, units: DistanceUnits, value: Float): String {
+    val distance = Distance.from(value, DistanceUnits.Meters).convertTo(units)
+    return formatter.formatDistance(
+        distance,
+        Units.getDecimalPlaces(distance.units),
+        false
+    )
+}
+
+private fun formatDistance(formatter: FormatService, units: DistanceUnits, value: Float): String {
+    val distance = Distance.from(value, DistanceUnits.Meters)
+        .convertTo(units)
+        .toRelativeDistance()
+    return formatter.formatDistance(
+        distance,
+        Units.getDecimalPlaces(distance.units),
+        false
+    )
+}
+
+private class ChartBounds(
+    val left: Float,
+    val right: Float,
+    val top: Float,
+    val bottom: Float,
+    val xRange: Range<Float>
+)
+
+/** The plotted points of a path: distance along it against elevation, and which path point each came from. */
+private class ElevationPlot(
+    private val path: List<PathPoint>,
+    private val elevationIndex: List<Int>,
+    val elevations: List<ElevationPoint>,
+    val yRange: Range<Float>
+) {
+
+    fun positionOf(point: PathPoint): Vector2? {
         val idx = path.indexOf(point)
         if (idx == -1) {
-            return
+            return null
         }
         val pointIndex = elevationIndex.indexOf(idx)
         if (pointIndex == -1) {
-            return
-        }
-        tryOrNothing {
-            highlight = elevations[pointIndex].position
-        }
-        renderVersion++
-    }
-
-    fun removeHighlight() {
-        highlight = null
-        renderVersion++
-    }
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        // Theme colors so the chart sits calmly in its group card: quiet grid, muted labels, solid highlight ring.
-        val textColor = MaterialTheme.colorScheme.onSurfaceVariant
-        val gridColor = MaterialTheme.colorScheme.outlineVariant
-        val highlightColor = MaterialTheme.colorScheme.onSurface
-        val highlightRing = MaterialTheme.colorScheme.surfaceContainerLow
-        val status = com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors()
-        val steepColors = mapOf(
-            Steepness.Low to status.good,
-            Steepness.Medium to status.caution,
-            Steepness.High to MaterialTheme.colorScheme.error
-        )
-        val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = textColor.toArgb()
-            textSize = Resources.sp(context, 10f)
-            textAlign = Paint.Align.RIGHT
-        }
-        Canvas(
-            modifier = modifier
-                .fillMaxSize()
-                .pointerInput(renderVersion) {
-                    detectTapGestures { offset ->
-                        findNearestPoint(offset, size.width.toFloat(), size.height.toFloat())?.let {
-                            listener(it)
-                        }
-                    }
-                }
-        ) {
-            renderVersion
-            val chartPoints = elevations
-            if (chartPoints.isEmpty()) {
-                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = textColor.toArgb()
-                    textSize = Resources.sp(context, 14f)
-                    textAlign = Paint.Align.CENTER
-                }
-                drawContext.canvas.nativeCanvas.drawText(
-                    context.getString(R.string.no_data),
-                    size.width / 2f,
-                    size.height / 2f,
-                    paint
-                )
-                return@Canvas
-            }
-
-            val left = 58.dp.toPx()
-            val right = size.width - 12.dp.toPx()
-            val top = 12.dp.toPx()
-            val bottom = size.height - 28.dp.toPx()
-            val xRange = Range(0f, chartPoints.maxOfOrNull { it.position.x }?.coerceAtLeast(1f) ?: 1f)
-
-            repeat(3) { idx ->
-                val fraction = idx / 2f
-                val y = bottom - (bottom - top) * fraction
-                val value = yRange.start + (yRange.end - yRange.start) * fraction
-                drawLine(
-                    gridColor,
-                    Offset(left, y),
-                    Offset(right, y),
-                    strokeWidth = 1.dp.toPx(),
-                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
-                        floatArrayOf(3.dp.toPx(), 5.dp.toPx())
-                    ),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round
-                )
-                drawContext.canvas.nativeCanvas.drawText(
-                    formatElevation(value),
-                    left - 6.dp.toPx(),
-                    y + 3.dp.toPx(),
-                    labelPaint
-                )
-            }
-
-            labelPaint.textAlign = Paint.Align.CENTER
-            repeat(4) { idx ->
-                val fraction = idx / 3f
-                val x = left + (right - left) * fraction
-                val value = xRange.start + (xRange.end - xRange.start) * fraction
-                drawContext.canvas.nativeCanvas.drawText(
-                    formatDistance(value),
-                    x,
-                    size.height - 8.dp.toPx(),
-                    labelPaint
-                )
-            }
-
-            chartPoints.zipWithNext().forEach { (start, end) ->
-                val p1 = toScreen(start.position, xRange, left, right, top, bottom)
-                val p2 = toScreen(end.position, xRange, left, right, top, bottom)
-                val area = Path().apply {
-                    moveTo(p1.x, bottom)
-                    lineTo(p1.x, p1.y)
-                    lineTo(p2.x, p2.y)
-                    lineTo(p2.x, bottom)
-                    close()
-                }
-                drawPath(
-                    area,
-                    (steepColors[end.steepness] ?: Color(getColor(end.steepness))).copy(alpha = 0.32f)
-                )
-                drawLine(
-                    Color(start.lineColor),
-                    p1,
-                    p2,
-                    strokeWidth = 3.dp.toPx(),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round
-                )
-            }
-
-            highlight?.let {
-                val point = toScreen(it, xRange, left, right, top, bottom)
-                drawCircle(color = highlightRing, radius = 9.dp.toPx(), center = point)
-                drawCircle(color = highlightColor, radius = 6.dp.toPx(), center = point)
-            }
-        }
-    }
-
-    private fun findNearestPoint(offset: Offset, width: Float, height: Float): PathPoint? {
-        val points = elevations
-        if (points.isEmpty()) {
             return null
         }
-        val left = Resources.dp(context, 58f)
-        val right = width - Resources.dp(context, 12f)
-        val top = Resources.dp(context, 12f)
-        val bottom = height - Resources.dp(context, 28f)
-        val xRange = Range(0f, points.maxOfOrNull { it.position.x }?.coerceAtLeast(1f) ?: 1f)
-        val nearest = points
-            .mapIndexed { index, point ->
-                index to toScreen(point.position, xRange, left, right, top, bottom)
-            }
+        return elevations.getOrNull(pointIndex)?.position
+    }
+
+    fun bounds(density: Density, width: Float, height: Float): ChartBounds = with(density) {
+        ChartBounds(
+            left = 58.dp.toPx(),
+            right = width - 12.dp.toPx(),
+            top = 12.dp.toPx(),
+            bottom = height - 28.dp.toPx(),
+            xRange = Range(0f, elevations.maxOfOrNull { it.position.x }?.coerceAtLeast(1f) ?: 1f)
+        )
+    }
+
+    fun toScreen(point: Vector2, bounds: ChartBounds): Offset {
+        val xRange = bounds.xRange
+        val x = bounds.left + ((point.x - xRange.start) / (xRange.end - xRange.start)) * (bounds.right - bounds.left)
+        val y = bounds.bottom - ((point.y - yRange.start) / (yRange.end - yRange.start)) * (bounds.bottom - bounds.top)
+        return Offset(x.coerceIn(bounds.left, bounds.right), y.coerceIn(bounds.top, bounds.bottom))
+    }
+
+    fun findNearestPoint(density: Density, offset: Offset, width: Float, height: Float): PathPoint? {
+        if (elevations.isEmpty()) {
+            return null
+        }
+        val bounds = bounds(density, width, height)
+        val nearest = elevations
+            .mapIndexed { index, point -> index to toScreen(point.position, bounds) }
             .minByOrNull { (_, point) -> (point.x - offset.x).absoluteValue }
             ?: return null
 
-        if ((nearest.second.x - offset.x).absoluteValue > Resources.dp(context, 32f)) {
+        if ((nearest.second.x - offset.x).absoluteValue > with(density) { 32.dp.toPx() }) {
             return null
         }
 
@@ -230,96 +263,57 @@ class PathElevationChart(private val context: Context) {
         return path.getOrNull(pathIndex)
     }
 
-    private fun getElevationPlotPoints(path: List<PathPoint>): List<ElevationPoint> {
-        this.path = path
-        val indices = mutableListOf<Int>()
-        val points = mutableListOf<ElevationPoint>()
-        var distance = 0f
-        path.forEachIndexed { index, point ->
-            if (index != 0) {
-                distance += path[index - 1].coordinate.distanceTo(point.coordinate)
+    companion object {
+        fun from(path: List<PathPoint>, @ColorInt color: Int, units: DistanceUnits): ElevationPlot {
+            val indices = mutableListOf<Int>()
+            val points = mutableListOf<ElevationPoint>()
+            var distance = 0f
+            path.forEachIndexed { index, point ->
+                if (index != 0) {
+                    distance += path[index - 1].coordinate.distanceTo(point.coordinate)
+                }
+
+                val elevation = point.elevation
+                if (elevation != null) {
+                    points.add(ElevationPoint(Vector2(distance, elevation), getSteepness(point.slope), color))
+                    indices.add(index)
+                }
             }
+            val margin = Distance.meters(10f).convertTo(units).value
+            val minRange = Distance.meters(100f).convertTo(units).value
+            val yRange = getRange(
+                points.minOfOrNull { it.position.y } ?: 0f,
+                points.maxOfOrNull { it.position.y } ?: 0f,
+                margin,
+                minRange
+            )
+            return ElevationPlot(path, indices, points, yRange)
+        }
 
-            if (point.elevation != null) {
-                points.add(
-                    ElevationPoint(
-                        Vector2(distance, point.elevation),
-                        getSteepness(point.slope),
-                        AppColor.Blue.color
-                    )
-                )
-                indices.add(index)
+        private fun getRange(minimum: Float, maximum: Float, margin: Float, minRange: Float): Range<Float> {
+            val center = (minimum + maximum) / 2f
+            val range = max(maximum - minimum + margin * 2, minRange)
+            return Range(center - range / 2f, center + range / 2f)
+        }
+
+        private fun getSteepness(slope: Float): Steepness {
+            return when {
+                slope.absoluteValue <= 10f -> Steepness.Low
+                slope.absoluteValue <= 25f -> Steepness.Medium
+                else -> Steepness.High
             }
         }
-        elevationIndex = indices
-        return points
     }
+}
 
-    private fun toScreen(
-        point: Vector2,
-        xRange: Range<Float>,
-        left: Float,
-        right: Float,
-        top: Float,
-        bottom: Float
-    ): Offset {
-        val x = left + ((point.x - xRange.start) / (xRange.end - xRange.start)) * (right - left)
-        val y = bottom - ((point.y - yRange.start) / (yRange.end - yRange.start)) * (bottom - top)
-        return Offset(x.coerceIn(left, right), y.coerceIn(top, bottom))
-    }
+private data class ElevationPoint(
+    val position: Vector2,
+    val steepness: Steepness,
+    @ColorInt val lineColor: Int
+)
 
-    private fun formatElevation(value: Float): String {
-        val distance = Distance.from(value, DistanceUnits.Meters).convertTo(baseDistanceUnits)
-        return formatter.formatDistance(
-            distance,
-            Units.getDecimalPlaces(distance.units),
-            false
-        )
-    }
-
-    private fun formatDistance(value: Float): String {
-        val distance = Distance.from(value, DistanceUnits.Meters)
-            .convertTo(baseDistanceUnits)
-            .toRelativeDistance()
-        return formatter.formatDistance(
-            distance,
-            Units.getDecimalPlaces(distance.units),
-            false
-        )
-    }
-
-    private fun getRange(minimum: Float, maximum: Float, margin: Float, minRange: Float): Range<Float> {
-        val center = (minimum + maximum) / 2f
-        val range = max(maximum - minimum + margin * 2, minRange)
-        return Range(center - range / 2f, center + range / 2f)
-    }
-
-    @ColorInt
-    private fun getColor(steepness: Steepness): Int {
-        return when (steepness) {
-            Steepness.Low -> AppColor.Green.color
-            Steepness.Medium -> AppColor.Yellow.color
-            Steepness.High -> AppColor.Red.color
-        }
-    }
-
-    private fun getSteepness(slope: Float): Steepness {
-        return when {
-            slope.absoluteValue <= 10f -> Steepness.Low
-            slope.absoluteValue <= 25f -> Steepness.Medium
-            else -> Steepness.High
-        }
-    }
-
-    private data class ElevationPoint(
-        val position: Vector2,
-        val steepness: Steepness,
-        @ColorInt val lineColor: Int
-    )
-
-    private enum class Steepness {
-        Low,
-        Medium,
-        High
-    }
+private enum class Steepness(@ColorInt val color: Int) {
+    Low(AppColor.Green.color),
+    Medium(AppColor.Yellow.color),
+    High(AppColor.Red.color)
 }

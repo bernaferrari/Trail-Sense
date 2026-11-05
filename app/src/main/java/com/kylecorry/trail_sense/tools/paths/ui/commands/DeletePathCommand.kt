@@ -1,9 +1,8 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
@@ -15,7 +14,7 @@ import kotlinx.coroutines.withContext
 
 class DeletePathCommand(
     private val context: Context,
-    private val lifecycleOwner: LifecycleOwner,
+    private val scope: CoroutineScope,
     private val pathService: IPathService = PathService.getInstance(context)
 ) : IPathCommand {
 
@@ -30,7 +29,7 @@ class DeletePathCommand(
             )
         ) { cancelled ->
             if (!cancelled) {
-                lifecycleOwner.lifecycleScope.launch {
+                scope.launch {
                     withContext(Dispatchers.IO) {
                         pathService.deletePath(path)
                     }

@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.IBeaconNavigator
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -9,13 +8,13 @@ import com.kylecorry.trail_sense.tools.paths.domain.beacon.IPathPointBeaconConve
 import kotlinx.coroutines.launch
 
 class NavigateToPointCommand(
-    private val lifecycleOwner: LifecycleOwner,
+    private val scope: CoroutineScope,
     private val converter: IPathPointBeaconConverter,
     private val beaconNavigator: IBeaconNavigator
 ) : IPathPointCommand {
 
     override fun execute(path: Path, point: PathPoint) {
-        lifecycleOwner.lifecycleScope.launch {
+        scope.launch {
             val beacon = converter.toBeacon(path, point)
             beaconNavigator.navigateTo(beacon)
         }
