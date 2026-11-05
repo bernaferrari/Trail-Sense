@@ -5,11 +5,6 @@ import android.content.res.ColorStateList
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Matrix
 import android.graphics.Path
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
-import android.view.View
-import android.widget.OverScroller
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -18,8 +13,17 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.keepScreenOn
@@ -78,9 +82,9 @@ class MapView(private val context: Context) : IMapView {
     var clipPath: Path? = null
     var backgroundColorOverride: Int? = null
     private val density = context.resources.displayMetrics.density
-    private val scroller = OverScroller(context)
-    private var lastFlingX = 0
-    private var lastFlingY = 0
+    // A fling glides the map on after the finger lifts, slowing exponentially (pixels per second, map frame).
+    private var flingVelocity = Offset.Zero
+    private var lastFlingFrameNanos = 0L
     private lateinit var drawer: ICanvasDrawer
     private var renderVersion by mutableIntStateOf(0)
     private var contentWidth by mutableIntStateOf(0)
@@ -88,7 +92,6 @@ class MapView(private val context: Context) : IMapView {
     private var isSetup = false
 
     private val lookupMatrix = Matrix()
-    private var externalTouchListener: ((MapView, MotionEvent) -> Boolean)? = null
     private var hapticFeedback: HapticFeedback? = null
 
     override val layerManager = MapViewLayerManager {
@@ -159,20 +162,12 @@ class MapView(private val context: Context) : IMapView {
         onSingleTapCallback = callback
     }
 
-    fun setOnTouchListener(listener: ((MapView, MotionEvent) -> Boolean)?) {
-        externalTouchListener = listener
-    }
-
     fun setBackgroundColor(color: Int) {
         backgroundColorOverride = color
         invalidate()
     }
 
-    fun measure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        contentWidth = View.MeasureSpec.getSize(widthMeasureSpec)
-        contentHeight = View.MeasureSpec.getSize(heightMeasureSpec)
-    }
-
+    /** Sizes the map when it draws off screen (a home-screen widget's bitmap). */
     fun layout(left: Int, top: Int, right: Int, bottom: Int) {
         contentWidth = right - left
         contentHeight = bottom - top
@@ -406,13 +401,16 @@ class MapView(private val context: Context) : IMapView {
                 modifier = modifier
                     .fillMaxSize()
                     .then(if (keepScreenOn) Modifier.keepScreenOn() else Modifier)
-                    .pointerInteropFilter {
-                        if (externalTouchListener?.invoke(this@MapView, it) == true) {
-                            true
-                        } else {
-                            onTouchEvent(it)
-                        }
+                    // Taps first, then the drag loop inside it: a drag consumes its moves, which cancels a
+                    // pending tap or long press, as Android's gesture detector did.
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = { if (isInteractive) zoomWithFocus(2f, PixelCoordinate(it.x, it.y)) },
+                            onTap = { if (isInteractive) onSingleTap(it) },
+                            onLongPress = { if (isInteractive) onLongPress(it) }
+                        )
                     }
+                    .pointerInput(Unit) { detectMapDrags(viewConfiguration.touchSlop) }
                     .onSizeChanged {
                         contentWidth = it.width
                         contentHeight = it.height
@@ -447,14 +445,7 @@ class MapView(private val context: Context) : IMapView {
     }
 
     private fun render() {
-        if (scroller.computeScrollOffset()) {
-            val dx = lastFlingX - scroller.currX
-            val dy = lastFlingY - scroller.currY
-            lastFlingX = scroller.currX
-            lastFlingY = scroller.currY
-            translatePixels(dx.toFloat(), dy.toFloat())
-            invalidate()
-        }
+        advanceFling()
 
         drawer.clear()
         drawer.push()
@@ -576,88 +567,107 @@ class MapView(private val context: Context) : IMapView {
         mapCenter = toCoordinate(newPoint)
     }
 
-    private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
-
-        override fun onScroll(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            distanceX: Float,
-            distanceY: Float
-        ): Boolean {
-            if (isPanEnabled && !isLayerDragging) {
-                val delta = rotateByAzimuth(distanceX, distanceY)
-                translatePixels(delta.x, delta.y)
-            }
-            return true
+    private fun onSingleTap(position: Offset) {
+        val pixel = unrotated(PixelCoordinate(position.x, position.y))
+        if (::drawer.isInitialized) {
+            layerManager.onClick(drawer, this@MapView, pixel)
         }
+        onSingleTapCallback?.invoke(toCoordinate(pixel))
+    }
 
-        override fun onDoubleTap(e: MotionEvent): Boolean {
-            zoomWithFocus(2f, PixelCoordinate(e.x, e.y))
-            return super.onDoubleTap(e)
+    private fun onLongPress(position: Offset) {
+        if (isScaling) return
+        val pixel = unrotated(PixelCoordinate(position.x, position.y))
+        if (::drawer.isInitialized && layerManager.onLongPress(drawer, this@MapView, pixel)) {
+            hapticFeedback?.performHapticFeedback(HapticFeedbackType.LongPress)
+            return
         }
+        onLongPressCallback?.invoke(toCoordinate(pixel))
+    }
 
-        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-            val pixel = unrotated(PixelCoordinate(e.x, e.y))
-            if (::drawer.isInitialized) {
-                layerManager.onClick(drawer, this@MapView, pixel)
+    /**
+     * One touch at a time: a touch that starts on a draggable layer drags the layer; otherwise one finger pans,
+     * two pinch-zoom around their centre, and a quick release flings. Moves are consumed only once they pass the
+     * touch slop, so a still press stays a tap or a long press.
+     */
+    private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.detectMapDrags(touchSlop: Float) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            if (!isInteractive) return@awaitEachGesture
+            stopFling()
+            val tracker = VelocityTracker()
+            tracker.addPosition(down.uptimeMillis, down.position)
+            isLayerDragging = startLayerDrag(down.position)
+            var pastSlop = false
+            var travelled = Offset.Zero
+            var lastPosition = down.position
+            while (true) {
+                val event = awaitPointerEvent()
+                val pressed = event.changes.filter { it.pressed }
+                if (pressed.isEmpty()) break
+                val pan = event.calculatePan()
+                val zoom = event.calculateZoom()
+                if (!pastSlop) {
+                    travelled += pan
+                    pastSlop = travelled.getDistance() > touchSlop || (pressed.size > 1 && zoom != 1f)
+                }
+                lastPosition = pressed.first().position
+                if (isLayerDragging) {
+                    dragLayer(lastPosition)
+                } else if (pastSlop) {
+                    isScaling = pressed.size > 1
+                    if (zoom != 1f) {
+                        val centroid = event.calculateCentroid(useCurrent = false)
+                        zoomWithFocus(zoom, PixelCoordinate(centroid.x, centroid.y))
+                    }
+                    if (isPanEnabled && pan != Offset.Zero) {
+                        // The map follows the finger: moving content right means looking further left.
+                        val delta = rotateByAzimuth(-pan.x, -pan.y)
+                        translatePixels(delta.x, delta.y)
+                    }
+                }
+                if (pastSlop) {
+                    event.changes.forEach { if (it.positionChanged()) it.consume() }
+                }
+                if (pressed.size == 1) {
+                    tracker.addPosition(pressed.first().uptimeMillis, pressed.first().position)
+                } else {
+                    tracker.resetTracking()
+                }
             }
-            onSingleTapCallback?.invoke(toCoordinate(pixel))
-            return super.onSingleTapConfirmed(e)
-        }
-
-        override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            velocityX: Float,
-            velocityY: Float
-        ): Boolean {
-            if (isPanEnabled && isFlingEnabled && !isLayerDragging) {
-                val velocity = rotateByAzimuth(velocityX, velocityY)
-                val startX = FLING_MULTIPLIER / 2
-                val startY = FLING_MULTIPLIER / 2
-                lastFlingX = startX
-                lastFlingY = startY
-                scroller.fling(
-                    startX, startY,
-                    (velocity.x * FLING_VELOCITY_SCALE).toInt(), (velocity.y * FLING_VELOCITY_SCALE).toInt(),
-                    0, FLING_MULTIPLIER,
-                    0, FLING_MULTIPLIER
-                )
-                invalidate()
+            if (isLayerDragging) {
+                endLayerDrag(lastPosition)
+            } else if (pastSlop && !isScaling && isPanEnabled && isFlingEnabled) {
+                val velocity = tracker.calculateVelocity()
+                val rotated = rotateByAzimuth(velocity.x, velocity.y)
+                startFling(Offset(rotated.x, rotated.y) * FLING_VELOCITY_SCALE)
             }
-            return true
-        }
-
-        override fun onLongPress(e: MotionEvent) {
-            super.onLongPress(e)
-
-            if (isScaling) return
-
-            val pixel = unrotated(PixelCoordinate(e.x, e.y))
-            if (::drawer.isInitialized && layerManager.onLongPress(drawer, this@MapView, pixel)) {
-                hapticFeedback?.performHapticFeedback(HapticFeedbackType.LongPress)
-                return
-            }
-            val location = toCoordinate(pixel)
-            onLongPressCallback?.invoke(location)
+            isScaling = false
         }
     }
 
-    private val scaleListener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+    private fun startFling(velocity: Offset) {
+        flingVelocity = velocity
+        lastFlingFrameNanos = System.nanoTime()
+        invalidate()
+    }
 
-        override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-            isScaling = true
-            return super.onScaleBegin(detector)
-        }
+    private fun stopFling() {
+        flingVelocity = Offset.Zero
+    }
 
-        override fun onScale(detector: ScaleGestureDetector): Boolean {
-            zoomWithFocus(detector.scaleFactor, PixelCoordinate(detector.focusX, detector.focusY))
-            return true
-        }
-
-        override fun onScaleEnd(detector: ScaleGestureDetector) {
-            isScaling = false
-            super.onScaleEnd(detector)
+    private fun advanceFling() {
+        if (flingVelocity == Offset.Zero) return
+        val now = System.nanoTime()
+        val seconds = ((now - lastFlingFrameNanos) / 1_000_000_000f).coerceIn(0f, 0.05f)
+        lastFlingFrameNanos = now
+        val moved = flingVelocity * seconds
+        translatePixels(-moved.x, -moved.y)
+        flingVelocity *= kotlin.math.exp(-FLING_FRICTION * seconds)
+        if (flingVelocity.getDistance() < FLING_STOP_SPEED) {
+            flingVelocity = Offset.Zero
+        } else {
+            invalidate()
         }
     }
 
@@ -679,59 +689,30 @@ class MapView(private val context: Context) : IMapView {
         }
     }
 
-    private val gestureDetector = GestureDetector(context, gestureListener)
-    private val scaleDetector = ScaleGestureDetector(context, scaleListener)
-
     private val magnifier = MapMagnifier()
     private var isLayerDragging = false
     private var layerTouch = PixelCoordinate(0f, 0f)
 
-    /**
-     * Lets a layer capture a touch that starts on it, so the touch drags something in the layer
-     * rather than panning the map.
-     * @return true if the touch belongs to a layer
-     */
-    private fun handleLayerDrag(event: MotionEvent): Boolean {
-        if (!::drawer.isInitialized) {
-            return false
-        }
-        layerTouch = PixelCoordinate(event.x, event.y)
-        val pixel = unrotated(layerTouch)
-        val wasDragging = isLayerDragging
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> isLayerDragging =
-                layerManager.onDragStart(drawer, this, pixel)
-
-            MotionEvent.ACTION_MOVE -> if (isLayerDragging) {
-                layerManager.onDrag(drawer, this, pixel)
-            }
-
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> if (isLayerDragging) {
-                isLayerDragging = false
-                layerManager.onDragEnd(drawer, this, pixel)
-            }
-        }
-
-        val isLayerTouch = wasDragging || isLayerDragging
-        if (isLayerTouch) {
-            invalidate()
-        }
-        return isLayerTouch
+    /** Lets a layer capture a touch that starts on it, so the touch drags something in the layer. */
+    private fun startLayerDrag(position: Offset): Boolean {
+        if (!::drawer.isInitialized) return false
+        layerTouch = PixelCoordinate(position.x, position.y)
+        val dragging = layerManager.onDragStart(drawer, this, unrotated(layerTouch))
+        if (dragging) invalidate()
+        return dragging
     }
 
-    fun onTouchEvent(event: MotionEvent): Boolean {
-        if (isInteractive) {
-            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                scroller.forceFinished(true)
-            }
-            val isLayerTouch = handleLayerDrag(event)
-            if (!isLayerTouch) {
-                scaleDetector.onTouchEvent(event)
-            }
-            // Layers still get taps and long presses, but a layer drag doesn't pan the map
-            gestureDetector.onTouchEvent(event)
-        }
-        return true
+    private fun dragLayer(position: Offset) {
+        layerTouch = PixelCoordinate(position.x, position.y)
+        layerManager.onDrag(drawer, this, unrotated(layerTouch))
+        invalidate()
+    }
+
+    private fun endLayerDrag(position: Offset) {
+        layerTouch = PixelCoordinate(position.x, position.y)
+        isLayerDragging = false
+        layerManager.onDragEnd(drawer, this, unrotated(layerTouch))
+        invalidate()
     }
 
     private fun unrotated(pixel: PixelCoordinate): PixelCoordinate {
@@ -770,8 +751,9 @@ class MapView(private val context: Context) : IMapView {
     }
 
     companion object {
-        private const val FLING_MULTIPLIER = 1000000
         private const val FLING_VELOCITY_SCALE = 0.6f
+        private const val FLING_FRICTION = 3.5f
+        private const val FLING_STOP_SPEED = 30f
         private const val MIN_RESOLUTION_PIXELS = 0.1f
     }
 }

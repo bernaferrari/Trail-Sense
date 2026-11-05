@@ -4,7 +4,6 @@ import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
-import android.view.MotionEvent
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
@@ -39,17 +38,10 @@ class QuickActionWhistle(btn: QuickActionButtonView, host: TrailSenseDestination
         }
 
         setIcon(TrailIcons.ToolWhistle)
-        button.setOnTouchListener { event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                whistle?.on()
-                isRunning = true
-                setState(true)
-            } else if (event.action == MotionEvent.ACTION_UP) {
-                whistle?.off()
-                isRunning = false
-                setState(false)
-            }
-            true
+        button.setOnPressListener { pressed ->
+            if (pressed) whistle?.on() else whistle?.off()
+            isRunning = pressed
+            setState(pressed)
         }
     }
 

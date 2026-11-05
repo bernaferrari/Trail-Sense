@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
+
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -75,11 +76,7 @@ fun ScreenFlashlightScreen(
     onTurnOff: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val view = LocalView.current
-    DisposableEffect(view) {
-        view.keepScreenOn = true
-        onDispose { view.keepScreenOn = false }
-    }
+    KeepScreenOn()
 
     val lightColor by animateColorAsState(
         targetValue = if (isRedLight) Color.Red else Color.White,

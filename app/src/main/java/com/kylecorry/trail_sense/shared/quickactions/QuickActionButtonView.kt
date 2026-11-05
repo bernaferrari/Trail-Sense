@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import android.view.MotionEvent
 
 /**
  * An abstraction over the widget backing a quick action button. This lets quick actions work with
@@ -15,5 +14,9 @@ interface QuickActionButtonView {
     fun setState(isOn: Boolean)
     fun setOnClickListener(listener: (() -> Unit)?)
     fun setOnLongClickListener(listener: (() -> Boolean)?)
-    fun setOnTouchListener(listener: ((event: MotionEvent) -> Boolean)?)
+    /**
+     * For hold-to-use actions (the whistle): called with true when the button is pressed and false when it is
+     * released. While set, it replaces the button's click and long click.
+     */
+    fun setOnPressListener(listener: ((pressed: Boolean) -> Unit)?)
 }

@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -51,7 +53,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -112,19 +113,12 @@ fun LightningScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val view = LocalView.current
     val scope = rememberCoroutineScope()
     val formatService = remember { FormatService.getInstance(context) }
     val prefs = remember { UserPreferences(context) }
     val repo = remember { LightningRepo.getInstance(context) }
 
-    DisposableEffect(view) {
-        val previous = view.keepScreenOn
-        view.keepScreenOn = true
-        onDispose {
-            view.keepScreenOn = previous
-        }
-    }
+    KeepScreenOn()
 
     var units by remember { mutableStateOf(prefs.baseDistanceUnits) }
     var lightningTime by remember { mutableStateOf<Instant?>(null) }

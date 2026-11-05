@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Spacer
@@ -71,7 +73,6 @@ import androidx.graphics.shapes.toPath
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.res.colorResource
@@ -122,7 +123,9 @@ fun SolarPanelScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val view = LocalView.current
+    // Awake while the sensors run (the screen is resumed).
+    var sensorsOn by remember { mutableStateOf(false) }
+    KeepScreenOn(sensorsOn)
     val solarPanelService = remember { SolarPanelService() }
     val sensorService = remember { SensorService(context) }
     val gps = remember { sensorService.getGPS() }
@@ -154,7 +157,7 @@ fun SolarPanelScreen(
                 return
             }
             isStarted = true
-            view.keepScreenOn = true
+            sensorsOn = true
             compass.start(sensorListener)
             orientation.start(sensorListener)
             gps.start(gpsListener)
@@ -168,7 +171,7 @@ fun SolarPanelScreen(
             compass.stop(sensorListener)
             orientation.stop(sensorListener)
             gps.stop(gpsListener)
-            view.keepScreenOn = false
+            sensorsOn = false
         }
 
         val observer = LifecycleEventObserver { _, event ->

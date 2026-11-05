@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.animateColorAsState
-import android.view.MotionEvent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
@@ -35,7 +35,7 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
     private var isOn by mutableStateOf(false)
     private var onClick: (() -> Unit)? = null
     private var onLongClick: (() -> Boolean)? = null
-    private var onTouch: ((event: MotionEvent) -> Boolean)? = null
+    private var onPress by mutableStateOf<((pressed: Boolean) -> Unit)?>(null)
 
     override fun setIcon(icon: ImageVector) {
         iconVector = icon
@@ -53,8 +53,8 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
         onLongClick = listener
     }
 
-    override fun setOnTouchListener(listener: ((event: MotionEvent) -> Boolean)?) {
-        onTouch = listener
+    override fun setOnPressListener(listener: ((pressed: Boolean) -> Unit)?) {
+        onPress = listener
     }
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -103,11 +103,22 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInteropFilter { isClickable && (onTouch?.invoke(it) ?: false) }
-                    .combinedClickable(
-                        enabled = isClickable,
-                        onClick = { onClick?.invoke() },
-                        onLongClick = { onLongClick?.invoke() }
+                    .then(
+                        when (val press = onPress) {
+                            null -> Modifier.combinedClickable(
+                                enabled = isClickable,
+                                onClick = { onClick?.invoke() },
+                                onLongClick = { onLongClick?.invoke() }
+                            )
+                            else -> Modifier.pointerInput(press, isClickable) {
+                                if (!isClickable) return@pointerInput
+                                detectTapGestures(onPress = {
+                                    press(true)
+                                    tryAwaitRelease()
+                                    press(false)
+                                })
+                            }
+                        }
                     ),
                 contentAlignment = Alignment.Center
             ) {

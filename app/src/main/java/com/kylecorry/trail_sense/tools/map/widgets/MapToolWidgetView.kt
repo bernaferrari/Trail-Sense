@@ -58,10 +58,6 @@ class MapToolWidgetView : ChartToolWidgetViewBase() {
         )
         mapView.setLayersWithPreferences(MapToolRegistration.MAP_ID, layerIds)
 
-        mapView.measure(
-            View.MeasureSpec.makeMeasureSpec(size, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(size, View.MeasureSpec.EXACTLY)
-        )
         mapView.layout(0, 0, size, size)
         return drawMap(mapView, size)
     }

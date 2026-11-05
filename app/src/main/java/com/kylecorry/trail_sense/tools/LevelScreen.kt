@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.level.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -39,7 +41,6 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -81,7 +82,7 @@ import kotlin.math.sqrt
 fun LevelScreen(modifier: Modifier = Modifier) {
     // One question: is it level, and if not, which side is high?
     val context = LocalContext.current
-    val view = LocalView.current
+    KeepScreenOn()
     val formatService = remember { FormatService.getInstance(context) }
     val threshold = remember { UserPreferences(context).bubbleLevel.threshold }
     val gravity = remember { SensorService(context).getGravity() }
@@ -91,8 +92,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     var gy by remember { mutableFloatStateOf(0f) }
     var gz by remember { mutableFloatStateOf(1f) }
 
-    DisposableEffect(gravity, view) {
-        view.keepScreenOn = true
+    DisposableEffect(gravity) {
         val listener = {
             if (!throttle.isThrottled()) {
                 val g = gravity.acceleration
@@ -105,7 +105,6 @@ fun LevelScreen(modifier: Modifier = Modifier) {
         gravity.start(listener)
         onDispose {
             gravity.stop(listener)
-            view.keepScreenOn = false
         }
     }
 
