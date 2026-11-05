@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
-import android.content.Context
 import android.graphics.Color
 import android.view.View
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -17,8 +16,8 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getLayerById
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import androidx.lifecycle.LifecycleOwner
+import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.map.map_layers.MyElevationLayer
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
@@ -41,11 +40,15 @@ class MapToolLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(context: Context, view: IMapView, host: TrailSenseDestinationHost) {
+    fun resume(
+        view: IMapView,
+        lifecycleOwner: LifecycleOwner,
+        onFeatureClick: (GeoJsonFeature) -> Unit
+    ) {
         synchronized(runningLock) {
             isRunning = true
         }
-        host.inBackground {
+        lifecycleOwner.inBackground {
             view.setLayersWithPreferences(
                 MapToolRegistration.MAP_ID,
                 repo.getActiveLayerIds(MapToolRegistration.MAP_ID) +
@@ -68,7 +71,7 @@ class MapToolLayerManager {
                 48f
 
             view.layerManager.setOnGeoJsonFeatureClickListener { feature ->
-                GeoJsonFeatureClickHandler.handleFeatureClick(host, feature)
+                onFeatureClick(feature)
             }
 
             synchronized(runningLock) {

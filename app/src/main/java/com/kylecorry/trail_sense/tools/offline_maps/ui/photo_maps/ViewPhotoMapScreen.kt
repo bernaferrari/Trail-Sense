@@ -401,7 +401,9 @@ class ViewPhotoMapController(
     }
 
     private fun resetLayerManager() {
-        layerManager.resume(host.requireContext(), views.map, mapId, host)
+        layerManager.resume(views.map, mapId, host.lifecycleOwner) {
+            com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler.handleFeatureClick(host, it)
+        }
 
         // Populate the last known location and map bounds
         layerManager.onBoundsChanged()
@@ -470,7 +472,9 @@ class ViewPhotoMapController(
             shouldLockOnMapLoad = false
         }
         views.map.mapAzimuth = getDefaultMapAzimuth(prefs.photoMaps.keepMapFacingUp)
-        layerManager.resume(host.requireContext(), views.map, map.id, host)
+        layerManager.resume(views.map, map.id, host.lifecycleOwner) {
+            com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler.handleFeatureClick(host, it)
+        }
         layerManager.onBoundsChanged()
     }
 

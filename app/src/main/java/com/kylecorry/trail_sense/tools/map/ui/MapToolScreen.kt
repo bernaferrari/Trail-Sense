@@ -274,7 +274,9 @@ private class MapController(
             manager.setTime(mapView, mapTime)
         }
         component.useEffectWithCleanup(manager, mapView, host.hookResetOnResume) {
-            manager.resume(context, mapView, host)
+            manager.resume(mapView, host.lifecycleOwner) {
+                com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler.handleFeatureClick(host, it)
+            }
             return@useEffectWithCleanup {
                 manager.pause(mapView)
             }
@@ -302,7 +304,9 @@ private class MapController(
         val adjustLayers = component.useCallback<Unit>(manager, layerEditSheet, context, mapView) {
             manager.pause(mapView)
             layerEditSheet.setOnDismissListener {
-                manager.resume(context, mapView, host)
+                manager.resume(mapView, host.lifecycleOwner) {
+                com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler.handleFeatureClick(host, it)
+            }
                 setHasTimeDependentLayers(
                     mapView.layerManager.getLayers().any { it.isTimeDependent }
                 )
