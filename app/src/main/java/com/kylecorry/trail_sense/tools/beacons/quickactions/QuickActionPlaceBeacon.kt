@@ -6,6 +6,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
@@ -18,6 +19,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListControllerHost
 import java.time.ZonedDateTime
 import kotlinx.coroutines.launch
 
@@ -77,7 +79,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
                         host.findNavigator().navigate(Route.BeaconDetails(beaconId = id))
                     }
 
-                    host.refreshBeaconList()
+                    host.screenControllerAs<BeaconListControllerHost>()?.refreshBeaconList()
                 }
             }
 

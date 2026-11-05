@@ -67,7 +67,9 @@ import com.kylecorry.trail_sense.tools.tides.ui.CreateTideToolScreen
 import com.kylecorry.trail_sense.tools.tides.ui.TideListToolScreen
 import com.kylecorry.trail_sense.tools.tides.ui.TidesToolScreen
 import com.kylecorry.trail_sense.tools.temperature_estimation.ui.TemperatureEstimationToolScreen
-import com.kylecorry.trail_sense.tools.tools.ui.ToolsScreen
+import com.kylecorry.trail_sense.tools.tools.ui.ToolsHomeScreen
+import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightToolScreen
+import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightToolScreen
 import com.kylecorry.trail_sense.tools.triangulate.ui.TriangulateToolScreen
 import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackToolScreen
 import com.kylecorry.trail_sense.tools.weather.ui.WeatherSettingsToolScreen
@@ -188,14 +190,14 @@ fun DestinationContent(
             )
 
             // --- Thin host wrappers (stateful, stay in host file) ---
-            Route.Tools -> ToolsHome()
-            Route.ScreenFlashlight -> ScreenFlashlight()
+            Route.Tools -> ToolsHomeScreen(this)
+            Route.ScreenFlashlight -> ScreenFlashlightToolScreen(this)
             Route.Notes -> Notes()
             is Route.NoteEditor -> NoteEditor(route)
             is Route.SurvivalGuideReader -> SurvivalGuideReader(route)
             is Route.SurvivalGuideList -> SurvivalGuideList()
             Route.Pedometer -> Pedometer()
-            Route.Flashlight -> Flashlight()
+            Route.Flashlight -> FlashlightToolScreen(this)
             Route.Battery -> BatteryTool()
 
             // --- Tool screens that receive the host for callbacks / services ---
@@ -211,7 +213,7 @@ fun DestinationContent(
             is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
             is Route.BeaconList -> BeaconListToolScreen(
                 host = this,
-                onController = { beaconListController = it }
+                onController = { screenController = it }
             )
             is Route.BeaconDetails -> BeaconDetailsToolScreen(this)
             is Route.PlaceBeacon -> PlaceBeaconToolScreen(this)
@@ -246,7 +248,7 @@ fun DestinationContent(
             is Route.PhotoMaps -> PhotoMapsToolScreen(this)
             Route.Clinometer -> ClinometerToolScreen(
                 host = this,
-                onController = { clinometerLockController = it }
+                onController = { screenController = it }
             )
             Route.Weather -> WeatherToolScreen(this)
             // These open the companion app (TrailSenseComposeDestinationHost.onStart) and draw nothing here.

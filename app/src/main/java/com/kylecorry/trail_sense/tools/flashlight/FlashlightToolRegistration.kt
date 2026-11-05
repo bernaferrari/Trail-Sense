@@ -13,6 +13,7 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsy
 import com.kylecorry.trail_sense.tools.flashlight.quickactions.QuickActionFlashlight
 import com.kylecorry.trail_sense.tools.flashlight.quickactions.QuickActionScreenFlashlight
 import com.kylecorry.trail_sense.tools.flashlight.services.FlashlightToolService
+import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.volumeactions.FlashlightToggleVolumeAction
@@ -72,7 +73,7 @@ object FlashlightToolRegistration : ToolRegistration {
                     {
                         FlashlightToggleVolumeAction(
                             it.requireContext(),
-                            it as? FlashlightController
+                            it.screenControllerAs<FlashlightController>()
                         )
                     }
                 ),
@@ -82,7 +83,7 @@ object FlashlightToolRegistration : ToolRegistration {
                         host.findNavigator().currentRoute == Route.ScreenFlashlight &&
                             UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
                     },
-                    { ScreenFlashlightBrightnessVolumeAction(it as? ScreenFlashlightController) }
+                    { ScreenFlashlightBrightnessVolumeAction(it.screenControllerAs<ScreenFlashlightController>()) }
                 )
             ),
             notificationChannelGroups = listOf(
