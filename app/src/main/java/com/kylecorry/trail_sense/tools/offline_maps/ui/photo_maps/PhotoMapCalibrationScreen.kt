@@ -6,7 +6,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,19 +34,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.observe
 import androidx.annotation.StringRes
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
@@ -62,9 +58,21 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.declination.GPSDeclinationStrategy
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPreferences
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -91,95 +99,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun PhotoMapCalibrationToolScreen(
+internal fun PhotoMapCalibrationToolScreen(
     mapId: Long,
+    viewModelKey: String,
+    commands: Flow<PhotoMapChildCommand>,
     onRotation: (Float) -> Unit,
     onComplete: () -> Unit,
-    onController: (PhotoMapCalibrationController) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(mapId, onRotation, onComplete) {
-        PhotoMapCalibrationController(context, lifecycleOwner, mapId, onRotation, onComplete)
+    val prefs = remember { UserPreferences(context) }
+    val viewModel = viewModel(key = viewModelKey) {
+        PhotoMapCalibrationViewModel(getAppService(), mapId)
     }
+    val calibrationMap = remember { MapCalibrationView(context) }
+    val panel = remember { PhotoMapCalibrationPanelState(context) }
+    val currentOnRotation by rememberUpdatedState(onRotation)
+    val currentOnComplete by rememberUpdatedState(onComplete)
 
-    UnsavedChangesBackHandler(hasChanges = controller.hasUnsavedChanges)
+    UnsavedChangesBackHandler(hasChanges = viewModel.hasUnsavedChanges)
 
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        onController(controller)
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
-        }
-    }
-
-    controller.Content(modifier = modifier)
-}
-
-class PhotoMapCalibrationController(
-    private val context: Context,
-    private val lifecycleOwner: LifecycleOwner,
-    private val mapId: Long,
-    private var showRotation: (Float) -> Unit,
-    private var onDone: () -> Unit
-) {
-
-    private val service = getAppService<MapService>()
-    private val prefs by lazy { UserPreferences(context) }
-    private var calibrationViews: PhotoMapCalibrationViews? =
-        createPhotoMapCalibrationViews(context)
-    private val views: PhotoMapCalibrationViews
-        get() = calibrationViews ?: error("Photo map calibration views are not ready")
-    private val isBound: Boolean
-        get() = calibrationViews != null
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        PhotoMapCalibrationHost(
-            views = views,
-            modifier = modifier
-        )
-    }
-
-    private var map: PhotoMap? = null
-
-    private var calibrationIndex = 0
-    private var maxPoints = 2
-    private val rotationCalculator = MapRotationCalculator()
-    private var originalRotation = 0f
-
-    /** Whether back should ask before leaving: the calibration changed and hasn't been saved. */
-    var hasUnsavedChanges by mutableStateOf(false)
-        private set
-    private var isSaved = false
-
-    private val manager = MapCalibrationManager(maxPoints) {
-        updateMapCalibration()
-        updateHasUnsavedChanges()
-    }
-
-    // Sensors
-    private val sensorService by lazy { SensorService(context) }
-    private val gps by lazy { sensorService.getGPS() }
-    private val compass by lazy { sensorService.getCompass() }
-
-    private val declinationStrategy by lazy {
-        GPSDeclinationStrategy(gps)
-    }
-
-    private var showPreview = false
-
-    fun onCreate() {
+    LaunchedEffect(Unit) {
         CustomUiUtils.disclaimer(
             context,
             context.getString(R.string.map_calibration),
@@ -187,123 +128,296 @@ class PhotoMapCalibrationController(
             context.getString(R.string.map_calibration_shown),
             cancelText = null
         )
+    }
 
-        views.mapCalibrationBottomPanel.onTitleClick = {
+    // The calibration view shows the map as calibrated so far
+    LaunchedEffect(calibrationMap, viewModel.mapVersion) {
+        val map = viewModel.map ?: return@LaunchedEffect
+        calibrationMap.mapAzimuth = 0f
+        calibrationMap.keepMapUp = true
+        calibrationMap.showMap(map)
+        calibrationMap.highlightedIndex = viewModel.highlightedIndex
+    }
+
+    LaunchedEffect(calibrationMap) {
+        calibrationMap.onMapClick = { viewModel.calibrate(it) }
+    }
+
+    // Choosing a point fills in its location
+    LaunchedEffect(viewModel.pointSelection) {
+        if (viewModel.pointSelection > 0) {
+            panel.coordinate = viewModel.selectedPointLocation
+        }
+    }
+
+    LaunchedEffect(viewModel.rotation) {
+        viewModel.rotation?.let { currentOnRotation(it) }
+    }
+
+    // The preview draws the paths, location and beacons over the map
+    LaunchedEffect(calibrationMap) {
+        snapshotFlow { viewModel.showPreview }.drop(1).collect { showPreview ->
+            calibrationMap.stop()
+            val layers = if (showPreview) listOf(
+                PathGeoJsonSource.SOURCE_ID,
+                MyLocationGeoJsonSource.SOURCE_ID,
+                BeaconGeoJsonSource.SOURCE_ID
+            ) else emptyList()
+            calibrationMap.setLayersWithPreferences(
+                OfflineMapsToolRegistration.PHOTO_MAPS_ID,
+                layers
+            )
+            if (showPreview) {
+                calibrationMap.start()
+            }
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.completed.collect { currentOnComplete() }
+    }
+
+    LaunchedEffect(commands) {
+        commands.collect {
+            when (it) {
+                PhotoMapChildCommand.Recenter -> calibrationMap.recenter()
+                PhotoMapChildCommand.Reload -> viewModel.load()
+                else -> Unit
+            }
+        }
+    }
+
+    // Sensors: the user's location and heading on the map
+    DisposableEffect(lifecycleOwner, calibrationMap) {
+        val sensorService = SensorService(context)
+        val gps = sensorService.getGPS()
+        val compass = sensorService.getCompass()
+        val declinationStrategy = GPSDeclinationStrategy(gps)
+        val gpsData = gps.asLiveData()
+        val compassData = compass.asLiveData()
+        val gpsObserver = Observer<Any> {
+            calibrationMap.userLocation = gps.location
+            calibrationMap.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
+            compass.declination = declinationStrategy.getDeclination()
+        }
+        val compassObserver = Observer<Any> {
+            calibrationMap.userAzimuth = compass.bearing
+        }
+        gpsData.observe(lifecycleOwner, gpsObserver)
+        compassData.observe(lifecycleOwner, compassObserver)
+        onDispose {
+            gpsData.removeObserver(gpsObserver)
+            compassData.removeObserver(compassObserver)
+        }
+    }
+
+    LifecycleResumeEffect(calibrationMap) {
+        // Populate the last known location
+        val gps = SensorService(context).getGPS()
+        calibrationMap.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
+        calibrationMap.userLocation = gps.location
+        calibrationMap.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
+        onPauseOrDispose {
+            calibrationMap.stop()
+        }
+    }
+
+    val validation = viewModel.validation
+    val isValid = validation == MapCalibrationValidationResult.Valid
+    val notice = getCalibrationNotice(validation)
+    val isPointCalibrated = viewModel.isCurrentPointCalibrated
+
+    PhotoMapCalibrationHost(
+        calibrationMap = calibrationMap,
+        panel = panel,
+        showPanel = viewModel.isPanelVisible,
+        title = stringResource(
+            R.string.calibrate_map_point_title,
+            viewModel.calibrationIndex + 1,
+            viewModel.maxPoints
+        ),
+        notice = notice,
+        icon = when {
+            notice.isNotBlank() -> TrailIcons.Alert
+            isPointCalibrated -> TrailIcons.CheckOutline
+            else -> TrailIcons.Info
+        },
+        iconTint = when {
+            notice.isNotBlank() -> Color(getErrorColor(context))
+            isPointCalibrated -> Color(AppColor.Green.color)
+            else -> Color(Resources.androidTextColorSecondary(context))
+        },
+        nextText = stringResource(
+            when {
+                viewModel.calibrationIndex != viewModel.maxPoints - 1 -> R.string.next
+                isValid -> R.string.finish_calibration
+                else -> R.string.save_draft
+            }
+        ),
+        showPrevious = viewModel.calibrationIndex == 1,
+        showPreviewButton = viewModel.isFullyCalibrated,
+        isPreviewChecked = viewModel.showPreview,
+        isPreviewEnabled = isValid,
+        onPreviewClick = viewModel::togglePreview,
+        onTitleClick = {
             Alerts.dialog(
                 context,
                 context.getString(R.string.map_calibration),
                 context.getString(R.string.map_calibration_instructions),
                 cancelText = null
             )
+        },
+        onPreviousClick = viewModel::previous,
+        onNextClick = viewModel::next,
+        onCoordinateChange = viewModel::calibrate,
+        onZoomIn = { calibrationMap.zoomBy(2f) },
+        onZoomOut = { calibrationMap.zoomBy(0.5f) },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun getCalibrationNotice(result: MapCalibrationValidationResult): String {
+    return when (result) {
+        MapCalibrationValidationResult.Valid -> ""
+        MapCalibrationValidationResult.Uncalibrated -> ""
+        MapCalibrationValidationResult.SamePixel ->
+            stringResource(R.string.map_calibration_error_same_pixel)
+
+        MapCalibrationValidationResult.SameImageAxis ->
+            stringResource(R.string.map_calibration_error_same_image_axis)
+
+        MapCalibrationValidationResult.SameLocation ->
+            stringResource(R.string.map_calibration_error_same_location)
+
+        MapCalibrationValidationResult.ImplausibleScale ->
+            stringResource(R.string.map_calibration_error_implausible_scale)
+    }
+}
+
+private fun getErrorColor(context: Context): Int {
+    return Resources.getAndroidColorAttr(
+        context,
+        androidx.appcompat.R.attr.colorError
+    )
+}
+
+internal class PhotoMapCalibrationViewModel(
+    private val service: MapService,
+    private val mapId: Long
+) : ViewModel() {
+
+    val maxPoints = 2
+
+    /** The map with the calibration so far (and the preview's rotation). */
+    var map by mutableStateOf<PhotoMap?>(null)
+        private set
+
+    /** Changes whenever the calibration view should show [map] again. */
+    var mapVersion by mutableIntStateOf(0)
+        private set
+
+    var calibrationIndex by mutableIntStateOf(0)
+        private set
+
+    /** The point the calibration view highlights (and moves to); it follows the index once a point changes. */
+    var highlightedIndex by mutableIntStateOf(0)
+        private set
+
+    var showPreview by mutableStateOf(false)
+        private set
+    var isFullyCalibrated by mutableStateOf(false)
+        private set
+    var validation by mutableStateOf(MapCalibrationValidationResult.Uncalibrated)
+        private set
+    var isCurrentPointCalibrated by mutableStateOf(false)
+        private set
+    var isPanelVisible by mutableStateOf(false)
+        private set
+
+    /** Counts point selections; the panel shows [selectedPointLocation] each time. */
+    var pointSelection by mutableIntStateOf(0)
+        private set
+    var selectedPointLocation: Coordinate? = null
+        private set
+
+    /** The map's rotation from the nearest quarter turn. */
+    var rotation by mutableStateOf<Float?>(null)
+        private set
+
+    /** Whether back should ask before leaving: the calibration changed and hasn't been saved. */
+    var hasUnsavedChanges by mutableStateOf(false)
+        private set
+
+    private val _completed = Channel<Unit>(Channel.BUFFERED)
+    val completed: Flow<Unit> = _completed.receiveAsFlow()
+
+    private val rotationCalculator = MapRotationCalculator()
+    private var originalRotation = 0f
+    private var isSaved = false
+
+    private val manager = MapCalibrationManager(maxPoints) {
+        updateMapCalibration()
+        updateHasUnsavedChanges()
+    }
+
+    init {
+        load()
+    }
+
+    fun load() {
+        viewModelScope.launch {
+            val loaded = service.getPhotoMap(mapId)
+            map = loaded
+            loaded?.let(::onMapLoad)
         }
+    }
 
-        reloadMap()
+    fun calibrate(location: PercentCoordinate) {
+        manager.calibrate(calibrationIndex, location)
+    }
 
-        views.mapCalibrationBottomPanel.onNextClick = {
-            if (calibrationIndex == (maxPoints - 1)) {
-                lifecycleOwner.inBackground {
-                    map = map?.let { save(it) }
-                    manager.reset(map?.georeference?.calibrationPoints ?: emptyList())
-                    isSaved = true
-                    updateHasUnsavedChanges()
-                    onDone()
-                }
-            } else {
-                calibrationIndex++
-                selectPoint(calibrationIndex)
+    fun calibrate(coordinate: Coordinate?) {
+        manager.calibrate(calibrationIndex, coordinate)
+    }
+
+    fun next() {
+        if (calibrationIndex == (maxPoints - 1)) {
+            viewModelScope.launch {
+                map = map?.let { save(it) }
+                manager.reset(map?.georeference?.calibrationPoints ?: emptyList())
+                isSaved = true
+                updateHasUnsavedChanges()
+                _completed.send(Unit)
             }
-        }
-
-        views.mapCalibrationBottomPanel.onPreviousClick = {
-            calibrationIndex--
+        } else {
+            calibrationIndex++
             selectPoint(calibrationIndex)
         }
-
-
-        views.mapCalibrationBottomPanel.setOnCoordinateChangeListener {
-            manager.calibrate(calibrationIndex, it)
-        }
-
-        views.calibrationMap.onMapClick = {
-            manager.calibrate(calibrationIndex, it)
-        }
-
-        views.previewButton.onClick = {
-            val validation = validateCalibration()
-            if (validation == MapCalibrationValidationResult.Valid) {
-                setPreviewMode(!showPreview)
-            } else {
-                updateCompletionState()
-            }
-        }
-
-        views.zoomInBtn.isOn = false
-        views.zoomOutBtn.isOn = false
-
-        views.zoomOutBtn.onClick = {
-            views.calibrationMap.zoomBy(0.5f)
-        }
-
-        views.zoomInBtn.onClick = {
-            views.calibrationMap.zoomBy(2f)
-        }
     }
 
-    fun onResume() {
-        // Populate the last known location
-        views.calibrationMap.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
-        views.calibrationMap.userLocation = gps.location
-        views.calibrationMap.userLocationAccuracy =
-            gps.horizontalAccuracy?.let { Distance.meters(it) }
-
-        gps.asLiveData().observe(lifecycleOwner) {
-            views.calibrationMap.userLocation = gps.location
-            views.calibrationMap.userLocationAccuracy =
-                gps.horizontalAccuracy?.let { Distance.meters(it) }
-            compass.declination = declinationStrategy.getDeclination()
-        }
-
-        compass.asLiveData().observe(lifecycleOwner) {
-            views.calibrationMap.userAzimuth = compass.bearing
-        }
+    fun previous() {
+        calibrationIndex--
+        selectPoint(calibrationIndex)
     }
 
-    fun onPause() {
-        calibrationViews?.calibrationMap?.stop()
-    }
-
-    fun onDestroy() {
-        calibrationViews = null
-    }
-
-    fun reloadMap() {
-        lifecycleOwner.inBackground {
-            map = service.getPhotoMap(mapId)
-            onMain {
-                map?.let(::onMapLoad)
-            }
+    fun togglePreview() {
+        if (validateCalibration() == MapCalibrationValidationResult.Valid) {
+            setPreviewMode(!showPreview)
+        } else {
+            updateCompletionState()
         }
     }
 
     private fun onMapLoad(map: PhotoMap) {
         this.map = map
         originalRotation = map.georeference.rotation
-        views.calibrationMap.mapAzimuth = 0f
-        views.calibrationMap.keepMapUp = true
-        views.calibrationMap.showMap(map)
+        mapVersion++
         calibrateMap()
     }
 
     private fun updateMapCalibration() {
-        if (!isBound) {
-            return
-        }
-
-        val isCalibrated = isFullyCalibrated()
-        if (views.previewButton.isVisible != isCalibrated) {
-            views.previewButton.isVisible = isCalibrated
-            views.previewButton.checked = showPreview
-        }
+        isFullyCalibrated = hasAllPoints()
 
         map = map?.copy(
             georeference = map!!.georeference.copy(
@@ -311,11 +425,9 @@ class PhotoMapCalibrationController(
             )
         )
 
-        val validation = validateCalibration()
-        val isValid = validation == MapCalibrationValidationResult.Valid
-        views.previewButton.isEnabled = isValid
+        val isValid = validateCalibration() == MapCalibrationValidationResult.Valid
 
-        if ((!isCalibrated || !isValid) && showPreview) {
+        if ((!isFullyCalibrated || !isValid) && showPreview) {
             setPreviewMode(false)
         }
 
@@ -324,11 +436,9 @@ class PhotoMapCalibrationController(
                 rotation = if (showPreview) rotationCalculator.calculate(map!!) else originalRotation
             )
         )
-        val map = map ?: return
-        views.calibrationMap.mapAzimuth = 0f
-        views.calibrationMap.keepMapUp = true
-        views.calibrationMap.showMap(map)
-        views.calibrationMap.highlightedIndex = calibrationIndex
+        map ?: return
+        highlightedIndex = calibrationIndex
+        mapVersion++
         updateCompletionState()
         updateRotation()
     }
@@ -343,13 +453,13 @@ class PhotoMapCalibrationController(
 
         val baseRotation = rotation.roundNearestAngle(90f)
 
-        showRotation(Trigonometry.deltaAngle(baseRotation, rotation))
+        this.rotation = Trigonometry.deltaAngle(baseRotation, rotation)
     }
 
-
     private fun calibrateMap() {
-        map ?: return
-        loadCalibrationPointsFromMap()
+        val map = map ?: return
+        manager.reset(map.georeference.calibrationPoints)
+        updateHasUnsavedChanges()
 
         // Find the first uncalibrated point
         calibrationIndex = manager.getNextUncalibratedIndex().coerceAtLeast(0)
@@ -357,121 +467,41 @@ class PhotoMapCalibrationController(
         selectPoint(calibrationIndex)
     }
 
-    fun recenter() {
-        views.calibrationMap.recenter()
-    }
-
     private fun selectPoint(index: Int) {
-        views.mapCalibrationBottomPanel.title =
-            getString(R.string.calibrate_map_point_title, index + 1, maxPoints)
-        views.mapCalibrationBottomPanel.coordinate = if (manager.isCalibrated(index)) {
+        selectedPointLocation = if (manager.isCalibrated(index)) {
             manager.getCalibrationPoint(index).location
         } else {
             null
         }
-        views.mapCalibrationBottomPanel.isVisible = true
-        views.mapCalibrationBottomPanel.showPrevious = index == 1
-
+        pointSelection++
+        isPanelVisible = true
         updateCompletionState()
     }
 
     private fun updateCompletionState() {
-        val validation = validateCalibration()
-        val notice = getCalibrationNotice(validation)
-        updateCalibrationTitle(notice)
-
-        val isValid = validation == MapCalibrationValidationResult.Valid
-        views.previewButton.isEnabled = isValid
-        views.mapCalibrationBottomPanel.nextText = when {
-            calibrationIndex != maxPoints - 1 -> getString(R.string.next)
-            isValid -> getString(R.string.finish_calibration)
-            else -> getString(R.string.save_draft)
-        }
-
-        views.mapCalibrationBottomPanel.notice = notice
-        views.mapCalibrationBottomPanel.icon = when {
-            notice.isNotBlank() -> TrailIcons.Alert
-            manager.isCalibrated(calibrationIndex) -> TrailIcons.CheckOutline
-            else -> TrailIcons.Info
-        }
-        views.mapCalibrationBottomPanel.iconTint = when {
-            notice.isNotBlank() -> Color(getErrorColor())
-            manager.isCalibrated(calibrationIndex) -> Color(AppColor.Green.color)
-            else -> Color(Resources.androidTextColorSecondary(context))
-        }
+        validation = validateCalibration()
+        isCurrentPointCalibrated = manager.isCalibrated(calibrationIndex)
     }
 
     private fun setPreviewMode(enabled: Boolean) {
         if (showPreview == enabled) {
             return
         }
-
-        views.previewButton.checked = enabled
-
         showPreview = enabled
         updateMapCalibration()
-
-        views.calibrationMap.stop()
-
-        val layers = if (enabled) listOf(
-            PathGeoJsonSource.SOURCE_ID,
-            MyLocationGeoJsonSource.SOURCE_ID,
-            BeaconGeoJsonSource.SOURCE_ID
-        ) else emptyList()
-        lifecycleOwner.inBackground {
-            views.calibrationMap.setLayersWithPreferences(
-                OfflineMapsToolRegistration.PHOTO_MAPS_ID,
-                layers
-            )
-
-            if (showPreview) {
-                views.calibrationMap.start()
-            }
-        }
-
     }
 
-    private fun isFullyCalibrated(): Boolean {
+    private fun hasAllPoints(): Boolean {
         return manager.getCalibration(true).size == maxPoints
     }
 
     private fun validateCalibration(): MapCalibrationValidationResult {
-        return if (map != null && isFullyCalibrated()) {
-            MapCalibrationValidator.validate(map!!)
+        val map = map
+        return if (map != null && hasAllPoints()) {
+            MapCalibrationValidator.validate(map)
         } else {
             MapCalibrationValidationResult.Uncalibrated
         }
-    }
-
-    private fun getCalibrationNotice(result: MapCalibrationValidationResult): String {
-        return when (result) {
-            MapCalibrationValidationResult.Valid -> ""
-            MapCalibrationValidationResult.Uncalibrated -> ""
-            MapCalibrationValidationResult.SamePixel ->
-                getString(R.string.map_calibration_error_same_pixel)
-
-            MapCalibrationValidationResult.SameImageAxis ->
-                getString(R.string.map_calibration_error_same_image_axis)
-
-            MapCalibrationValidationResult.SameLocation ->
-                getString(R.string.map_calibration_error_same_location)
-
-            MapCalibrationValidationResult.ImplausibleScale ->
-                getString(R.string.map_calibration_error_implausible_scale)
-        }
-    }
-
-    private fun updateCalibrationTitle(notice: String) {
-        views.mapCalibrationBottomPanel.title =
-            getString(R.string.calibrate_map_point_title, calibrationIndex + 1, maxPoints)
-        views.mapCalibrationBottomPanel.notice = notice
-    }
-
-    private fun getErrorColor(): Int {
-        return Resources.getAndroidColorAttr(
-            context,
-            androidx.appcompat.R.attr.colorError
-        )
     }
 
     private suspend fun save(map: PhotoMap): PhotoMap {
@@ -482,73 +512,84 @@ class PhotoMapCalibrationController(
         return updated
     }
 
-    private fun loadCalibrationPointsFromMap() {
-        val map = map ?: return
-        manager.reset(map.georeference.calibrationPoints)
-        updateHasUnsavedChanges()
-    }
-
     private fun updateHasUnsavedChanges() {
         hasUnsavedChanges = !isSaved && manager.hasChanges()
     }
-
-    private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return context.getString(id, *args)
-    }
-
 }
-
-private data class PhotoMapCalibrationViews(
-    val previewButton: PhotoMapTextButtonState,
-    val calibrationMap: MapCalibrationView,
-    val zoomOutBtn: PhotoMapIconButtonState,
-    val zoomInBtn: PhotoMapIconButtonState,
-    val mapCalibrationBottomPanel: PhotoMapCalibrationPanelState
-)
 
 @Suppress("FunctionNaming")
 @Composable
 private fun PhotoMapCalibrationHost(
-    views: PhotoMapCalibrationViews,
+    calibrationMap: MapCalibrationView?,
+    panel: PhotoMapCalibrationPanelState,
+    showPanel: Boolean,
+    title: String,
+    notice: String,
+    icon: ImageVector,
+    iconTint: Color,
+    nextText: String,
+    showPrevious: Boolean,
+    showPreviewButton: Boolean,
+    isPreviewChecked: Boolean,
+    isPreviewEnabled: Boolean,
+    onPreviewClick: () -> Unit,
+    onTitleClick: () -> Unit,
+    onPreviousClick: () -> Unit,
+    onNextClick: () -> Unit,
+    onCoordinateChange: (Coordinate?) -> Unit,
+    onZoomIn: () -> Unit,
+    onZoomOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        views.calibrationMap.Content(Modifier.fillMaxSize())
-        if (views.previewButton.isVisible) {
+        calibrationMap?.Content(Modifier.fillMaxSize().testTag("calibration_map"))
+        if (showPreviewButton) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = TrailSenseSpacing.lg)
             ) {
-                views.previewButton.Content()
+                PhotoMapTextButton(
+                    text = stringResource(R.string.preview),
+                    checked = isPreviewChecked,
+                    enabled = isPreviewEnabled,
+                    onClick = onPreviewClick
+                )
             }
         }
-        views.zoomInBtn.Content(
+        PhotoMapCalibrationIconButton(
+            icon = TrailIcons.Add,
+            contentDescription = R.string.zoom_in,
+            onClick = onZoomIn,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = TrailSenseSpacing.screen, bottom = 232.dp)
         )
-        views.zoomOutBtn.Content(
+        PhotoMapCalibrationIconButton(
+            icon = TrailIcons.ZoomOut,
+            contentDescription = R.string.zoom_out,
+            onClick = onZoomOut,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = TrailSenseSpacing.screen, bottom = 176.dp)
         )
-        if (views.mapCalibrationBottomPanel.isVisible) {
+        if (showPanel) {
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                views.mapCalibrationBottomPanel.Content()
+                panel.Content(
+                    title = title,
+                    notice = notice,
+                    icon = icon,
+                    iconTint = iconTint,
+                    nextText = nextText,
+                    showPrevious = showPrevious,
+                    onTitleClick = onTitleClick,
+                    onPreviousClick = onPreviousClick,
+                    onNextClick = onNextClick,
+                    onCoordinateChange = onCoordinateChange
+                )
             }
         }
     }
-}
-
-private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibrationViews {
-    return PhotoMapCalibrationViews(
-        previewButton = PhotoMapTextButtonState(context.getString(R.string.preview)),
-        calibrationMap = MapCalibrationView(context).apply { id = R.id.calibration_map },
-        zoomOutBtn = PhotoMapIconButtonState(TrailIcons.ZoomOut, R.string.zoom_out),
-        zoomInBtn = PhotoMapIconButtonState(TrailIcons.Add, R.string.zoom_in),
-        mapCalibrationBottomPanel = PhotoMapCalibrationPanelState(context)
-    )
 }
 
 private class PhotoMapCalibrationPanelState(
@@ -559,17 +600,6 @@ private class PhotoMapCalibrationPanelState(
     private val sensorService by lazy { SensorService(context) }
     private val gps by lazy { sensorService.getGPS() }
 
-    var title by mutableStateOf("")
-    var notice by mutableStateOf("")
-    var icon by mutableStateOf(TrailIcons.Info)
-    var iconTint by mutableStateOf(Color(Resources.androidTextColorSecondary(context)))
-    var nextText by mutableStateOf(context.getString(R.string.next))
-    var showPrevious by mutableStateOf(false)
-    var isVisible by mutableStateOf(false)
-    var onTitleClick: () -> Unit = {}
-    var onPreviousClick: () -> Unit = {}
-    var onNextClick: () -> Unit = {}
-
     private var coordinateText by mutableStateOf("")
     private var isLoadingLocation by mutableStateOf(false)
     private var coordinateChangeListener: ((Coordinate?) -> Unit)? = null
@@ -579,10 +609,6 @@ private class PhotoMapCalibrationPanelState(
         set(value) {
             coordinateText = value?.let { formatService.formatLocation(it) } ?: ""
         }
-
-    fun setOnCoordinateChangeListener(listener: ((Coordinate?) -> Unit)?) {
-        coordinateChangeListener = listener
-    }
 
     private fun updateCoordinate(text: String) {
         coordinateText = text
@@ -634,7 +660,19 @@ private class PhotoMapCalibrationPanelState(
     }
 
     @Composable
-    fun Content() {
+    fun Content(
+        title: String,
+        notice: String,
+        icon: ImageVector,
+        iconTint: Color,
+        nextText: String,
+        showPrevious: Boolean,
+        onTitleClick: () -> Unit,
+        onPreviousClick: () -> Unit,
+        onNextClick: () -> Unit,
+        onCoordinateChange: (Coordinate?) -> Unit
+    ) {
+        coordinateChangeListener = onCoordinateChange
         DisposableEffect(Unit) {
             onDispose {
                 gps.stop(this@PhotoMapCalibrationPanelState::onGPSUpdate)
@@ -646,14 +684,20 @@ private class PhotoMapCalibrationPanelState(
                 .padding(TrailSenseSpacing.screen),
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md)
         ) {
-            instructionCard()
+            instructionCard(title, notice, icon, iconTint, onTitleClick)
             coordinateCard()
-            panelActions()
+            panelActions(nextText, showPrevious, onPreviousClick, onNextClick)
         }
     }
 
     @Composable
-    private fun instructionCard() {
+    private fun instructionCard(
+        title: String,
+        notice: String,
+        icon: ImageVector,
+        iconTint: Color,
+        onTitleClick: () -> Unit
+    ) {
         TrailSenseCard(
             modifier = Modifier.fillMaxWidth(),
             onClick = { onTitleClick() }
@@ -774,7 +818,12 @@ private class PhotoMapCalibrationPanelState(
     }
 
     @Composable
-    private fun panelActions() {
+    private fun panelActions(
+        nextText: String,
+        showPrevious: Boolean,
+        onPreviousClick: () -> Unit,
+        onNextClick: () -> Unit
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.md),
@@ -805,74 +854,54 @@ private class PhotoMapCalibrationPanelState(
     }
 }
 
-private class PhotoMapTextButtonState(
-    text: String = ""
+@Composable
+private fun PhotoMapTextButton(
+    text: String,
+    checked: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit
 ) {
-    var text by mutableStateOf(text)
-    var checked by mutableStateOf(false)
-    var isVisible by mutableStateOf(false)
-    var isEnabled by mutableStateOf(true)
-    var onClick by mutableStateOf({})
-
-    @Composable
-    fun Content() {
-        Button(
-            onClick = onClick,
-            enabled = isEnabled,
-            shape = CircleShape,
-            colors = if (checked) {
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        ) {
-            Text(text = text, style = MaterialTheme.typography.labelLarge)
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = CircleShape,
+        colors = if (checked) {
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        } else {
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            )
         }
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
 }
 
-private class PhotoMapIconButtonState(
+@Composable
+private fun PhotoMapCalibrationIconButton(
     icon: ImageVector,
-    @StringRes private val contentDescription: Int
+    @StringRes contentDescription: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var icon by mutableStateOf(icon)
-    var isOn by mutableStateOf(false)
-    var onClick by mutableStateOf({})
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        val background = if (isOn) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.primaryContainer
-        }
-        val foreground = if (isOn) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onPrimaryContainer
-        }
-
-        Surface(
-            onClick = onClick,
-            modifier = modifier.size(48.dp),
-            shape = CircleShape,
-            color = background,
-            shadowElevation = TrailSenseElevation.high
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = rememberVectorPainter(icon),
-                    contentDescription = stringResource(contentDescription),
-                    tint = foreground,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(48.dp),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shadowElevation = TrailSenseElevation.high
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                painter = rememberVectorPainter(icon),
+                contentDescription = stringResource(contentDescription),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
@@ -883,7 +912,25 @@ private class PhotoMapIconButtonState(
 private fun PhotoMapCalibrationHostPreview() {
     TrailSenseTheme {
         PhotoMapCalibrationHost(
-            views = createPhotoMapCalibrationViews(androidx.compose.ui.platform.LocalContext.current)
+            calibrationMap = null,
+            panel = PhotoMapCalibrationPanelState(LocalContext.current),
+            showPanel = true,
+            title = "Calibrate point 1 of 2",
+            notice = "",
+            icon = TrailIcons.Info,
+            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+            nextText = "Next",
+            showPrevious = false,
+            showPreviewButton = true,
+            isPreviewChecked = false,
+            isPreviewEnabled = true,
+            onPreviewClick = {},
+            onTitleClick = {},
+            onPreviousClick = {},
+            onNextClick = {},
+            onCoordinateChange = {},
+            onZoomIn = {},
+            onZoomOut = {}
         )
     }
 }

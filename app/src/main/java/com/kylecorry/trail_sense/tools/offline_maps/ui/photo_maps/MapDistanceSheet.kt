@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import android.view.View
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.view.isVisible
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -41,7 +39,6 @@ class MapDistanceSheetState(context: Context) {
 
     private val formatter = FormatService.getInstance(context)
 
-    var view: View? = null
     var cancelListener: (() -> Unit)? = null
     var undoListener: (() -> Unit)? = null
     var redoListener: (() -> Unit)? = null
@@ -66,12 +63,10 @@ class MapDistanceSheetState(context: Context) {
 
     fun show() {
         isVisible = true
-        view?.isVisible = true
     }
 
     fun hide() {
         isVisible = false
-        view?.isVisible = false
     }
 
     @Composable

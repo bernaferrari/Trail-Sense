@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.graphics.Color
-import android.view.View
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -99,10 +98,6 @@ class PhotoMapToolLayerManager {
             synchronized(runningLock) {
                 if (isRunning) {
                     view.start()
-
-                    if (view is View) {
-                        view.invalidate()
-                    }
                 }
             }
         }

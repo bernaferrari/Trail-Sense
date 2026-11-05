@@ -3,19 +3,34 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
 import com.kylecorry.trail_sense.shared.navigation.Route
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.tools.map.ui.MapFeatureClickHandler
-import android.os.Bundle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,21 +46,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.observe
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
 import java.util.concurrent.atomic.AtomicBoolean
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.trigonometry.Trigonometry
@@ -81,54 +89,76 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathCommand
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
-fun ViewPhotoMapToolScreen(
+internal fun ViewPhotoMapToolScreen(
     mapId: Long,
+    viewModelKey: String,
     autoLockLocation: Boolean,
-    onController: (ViewPhotoMapController) -> Unit,
+    commands: Flow<PhotoMapChildCommand>,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val screenNavigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(mapId, autoLockLocation) {
-        ViewPhotoMapController(
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel(key = viewModelKey) {
+        val appContext = context.applicationContext
+        ViewPhotoMapViewModel(
+            getAppService(),
+            BeaconService(appContext),
+            Navigator.getInstance(appContext),
+            mapId,
+            autoLockLocation
+        )
+    }
+    val screen = remember(viewModel) {
+        ViewPhotoMapRenderer(
             context,
             // The window (screen torch), screen lock and bottom navigation belong to the activity.
             requireNotNull(context.findMainActivity()),
             screenNavigator,
             effects,
             lifecycleOwner,
-            mapId,
-            autoLockLocation
+            scope,
+            viewModel
         )
     }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        onController(controller)
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> {}
+    DisposableEffect(screen) {
+        screen.onCreate()
+        onDispose { screen.onDestroy() }
+    }
+
+    LifecycleResumeEffect(screen) {
+        screen.onResume()
+        onPauseOrDispose { screen.onPause() }
+    }
+
+    LaunchedEffect(screen) {
+        viewModel.mapLoaded.collect { screen.onMapLoad(it) }
+    }
+
+    LaunchedEffect(screen, viewModel.destination) {
+        screen.onDestinationChanged(viewModel.destination)
+    }
+
+    LaunchedEffect(screen, commands) {
+        commands.collect {
+            when (it) {
+                PhotoMapChildCommand.Recenter -> screen.recenter()
+                PhotoMapChildCommand.Reload -> viewModel.load()
+                PhotoMapChildCommand.Measure -> screen.startDistanceMeasurement(emptyArray())
+                PhotoMapChildCommand.Trace -> screen.trace()
+                PhotoMapChildCommand.AdjustLayers -> screen.adjustLayers()
             }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
         }
     }
 
-    controller.Content(modifier = modifier)
+    screen.Content(modifier = modifier)
 }
 
 private tailrec fun Context.findMainActivity(): MainActivity? {
@@ -139,14 +169,103 @@ private tailrec fun Context.findMainActivity(): MainActivity? {
     }
 }
 
-class ViewPhotoMapController(
+internal enum class MapLockMode {
+    Location,
+    Compass,
+    Free,
+    Trace
+}
+
+/** The photo map being viewed, where the user is navigating to and how the map follows them. */
+internal class ViewPhotoMapViewModel(
+    private val service: MapService,
+    private val beaconService: BeaconService,
+    private val navigationService: Navigator,
+    val mapId: Long,
+    autoLockLocation: Boolean
+) : ViewModel() {
+
+    var map by mutableStateOf<PhotoMap?>(null)
+        private set
+    var destination by mutableStateOf<Destination?>(null)
+        private set
+    var lockMode by mutableStateOf(MapLockMode.Free)
+
+    /** The first load locks the map to the user's location when the screen was opened that way. */
+    private var shouldLockOnMapLoad = autoLockLocation
+
+    private val _mapLoaded = Channel<PhotoMap>(Channel.BUFFERED)
+
+    /** Each loaded map, to set the map view up for it. */
+    val mapLoaded: Flow<PhotoMap> = _mapLoaded.receiveAsFlow()
+
+    init {
+        viewModelScope.launch {
+            navigationService.destination2.collect {
+                destination = it
+            }
+        }
+        load()
+    }
+
+    fun load() {
+        viewModelScope.launch {
+            map = withContext(Dispatchers.IO) {
+                service.getPhotoMap(mapId)
+            }
+            map?.let { _mapLoaded.send(it) }
+        }
+    }
+
+    fun consumeLockOnMapLoad(): Boolean {
+        val shouldLock = shouldLockOnMapLoad
+        shouldLockOnMapLoad = false
+        return shouldLock
+    }
+
+    fun nextLockMode(hasCompass: Boolean): MapLockMode {
+        return when (lockMode) {
+            MapLockMode.Location -> if (hasCompass) MapLockMode.Compass else MapLockMode.Free
+            MapLockMode.Compass -> MapLockMode.Free
+            MapLockMode.Free -> MapLockMode.Location
+            MapLockMode.Trace -> MapLockMode.Free
+        }
+    }
+
+    /** Navigates to [location] through a temporary beacon. */
+    fun navigateTo(location: Coordinate) {
+        viewModelScope.launch {
+            val beacon = Beacon(
+                0L,
+                map?.name ?: "",
+                location,
+                visible = false,
+                temporary = true,
+                color = AppColor.Orange.color,
+                owner = BeaconOwner.Maps
+            )
+            val id = onIO {
+                beaconService.add(beacon)
+            }
+            val saved = beacon.copy(id = id)
+            navigationService.navigateTo(saved)
+            destination = Destination.Beacon(saved)
+        }
+    }
+}
+
+/**
+ * The photo map's rendering side: the map view and its layers, sensors, sheets and buttons. It lives in the
+ * composition; the map, destination and lock mode come from [viewModel].
+ */
+private class ViewPhotoMapRenderer(
     private val context: Context,
     private val activity: MainActivity,
     private val screenNavigator: TrailSenseNavigator,
     private val effects: ScreenEffects,
     private val lifecycleOwner: LifecycleOwner,
-    private val mapId: Long,
-    private val autoLockLocation: Boolean
+    private val scope: CoroutineScope,
+    private val viewModel: ViewPhotoMapViewModel
 ) {
     private var photoMapViews: ViewPhotoMapViews? =
         createViewPhotoMapViews(context)
@@ -160,12 +279,9 @@ class ViewPhotoMapController(
     private val altimeter by lazy { sensorService.getAltimeter() }
     private val compass by lazy { sensorService.getCompass() }
     private val hasCompass by lazy { sensorService.hasCompass() }
-    private val beaconService by lazy { BeaconService(context) }
-    private val service = getAppService<MapService>()
     private val formatService by lazy { FormatService.getInstance(context) }
     private val prefs by lazy { UserPreferences(context) }
 
-    private val navigator by lazy { Navigator.getInstance(context) }
     private val screenLock by lazy { NavigationScreenLock(prefs.photoMaps.keepScreenUnlockedWhileOpen) }
 
     private val screenLight by lazy { ScreenTorch(activity.window) }
@@ -173,7 +289,7 @@ class ViewPhotoMapController(
     // Map layers
     private val layerManager = PhotoMapToolLayerManager()
     private val featureClickHandler =
-        MapFeatureClickHandler(context, screenNavigator, effects, lifecycleOwner.lifecycleScope)
+        MapFeatureClickHandler(context, screenNavigator, effects, scope)
     private val layerSheet = MapLayersSheetState(
         OfflineMapsToolRegistration.PHOTO_MAPS_ID,
         PhotoMapToolLayerManager.alwaysEnabledLayers
@@ -182,17 +298,14 @@ class ViewPhotoMapController(
     // Paths
     private val pathService by lazy { PathService.getInstance(context) }
 
-    private var map: PhotoMap? = null
-    private var destination: Destination? = null
+    private val map: PhotoMap?
+        get() = viewModel.map
 
-    private var mapLockMode = MapLockMode.Free
+    private val mapLockMode: MapLockMode
+        get() = viewModel.lockMode
 
     private val throttle = Throttle(20)
-    private val updateTimer = CoroutineTimer {
-        updatePeriodic()
-    }
-
-    private var shouldLockOnMapLoad = false
+    private var updateJob: Job? = null
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -206,10 +319,12 @@ class ViewPhotoMapController(
         )
     }
 
-    fun onCreate() {
-        shouldLockOnMapLoad = autoLockLocation
+    private val gpsData by lazy { gps.asLiveData() }
+    private val altimeterData by lazy { altimeter.asLiveData() }
+    private val compassData by lazy { compass.asLiveData() }
 
-        gps.asLiveData().observe(lifecycleOwner) {
+    private val gpsObserver = Observer<Any> {
+        if (isBound) {
             views.map.userLocation = gps.location
             views.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
             updateDestination()
@@ -218,8 +333,10 @@ class ViewPhotoMapController(
                 views.map.mapCenter = gps.location
             }
         }
-        altimeter.asLiveData().observe(lifecycleOwner) { updateDestination() }
-        compass.asLiveData().observe(lifecycleOwner) {
+    }
+    private val altimeterObserver = Observer<Any> { updateDestination() }
+    private val compassObserver = Observer<Any> {
+        if (isBound) {
             compass.declination = Geophysics.getGeomagneticDeclination(gps.location, gps.altitude)
             val bearing = compass.rawBearing
             views.map.userAzimuth = compass.bearing
@@ -228,14 +345,12 @@ class ViewPhotoMapController(
             }
             updateDestination()
         }
+    }
 
-        lifecycleOwner.lifecycleScope.launch {
-            navigator.destination2.collect {
-                setDestination(it)
-            }
-        }
-
-        reloadMap()
+    fun onCreate() {
+        gpsData.observe(lifecycleOwner, gpsObserver)
+        altimeterData.observe(lifecycleOwner, altimeterObserver)
+        compassData.observe(lifecycleOwner, compassObserver)
 
         views.map.setOnLongPressListener {
             onLongPress(it)
@@ -257,7 +372,7 @@ class ViewPhotoMapController(
 
         // Handle when the lock button is pressed
         views.lockBtn.setOnClickListener {
-            updateMapLockMode(getNextLockMode(mapLockMode), keepMapUp)
+            updateMapLockMode(viewModel.nextLockMode(hasCompass), keepMapUp)
         }
 
         views.zoomOutBtn.setOnClickListener {
@@ -277,7 +392,13 @@ class ViewPhotoMapController(
         if (mapLockMode == MapLockMode.Trace) {
             updateMapLockMode(MapLockMode.Trace, prefs.photoMaps.keepMapFacingUp)
         }
-        updateTimer.interval(5000)
+        updateJob?.cancel()
+        updateJob = scope.launch {
+            while (true) {
+                updatePeriodic()
+                delay(5000)
+            }
+        }
     }
 
     private fun getDefaultMapAzimuth(keepMapUp: Boolean): Float {
@@ -298,49 +419,34 @@ class ViewPhotoMapController(
 
         selectLocation(location)
 
-        lifecycleOwner.inBackground {
-            val elevation = Distance.meters(DEM.getElevation(location).elevation)
+        scope.launch {
+            val elevation = onIO { Distance.meters(DEM.getElevation(location).elevation) }
 
-            onMain {
-                val chosen = effects.chooseAction(
-                    formatService.formatLocation(location),
-                    context.getString(
-                        R.string.elevation_value,
-                        formatService.formatElevation(elevation)
-                    ),
-                    listOf(
-                        ActionItem(context.getString(R.string.beacon), TrailIcons.Location) {
-                            createBeacon(location)
-                            selectLocation(null)
-                        },
-                        ActionItem(context.getString(R.string.navigate), TrailIcons.Beacon) {
-                            navigateTo(location)
-                            selectLocation(null)
-                        },
-                        ActionItem(context.getString(R.string.distance), TrailIcons.Ruler) {
-                            startDistanceMeasurement(arrayOf(gps.location, location))
-                            selectLocation(null)
-                        },
-                    )
+            val chosen = effects.chooseAction(
+                formatService.formatLocation(location),
+                context.getString(
+                    R.string.elevation_value,
+                    formatService.formatElevation(elevation)
+                ),
+                listOf(
+                    ActionItem(context.getString(R.string.beacon), TrailIcons.Location) {
+                        createBeacon(location)
+                        selectLocation(null)
+                    },
+                    ActionItem(context.getString(R.string.navigate), TrailIcons.Beacon) {
+                        viewModel.navigateTo(location)
+                        selectLocation(null)
+                    },
+                    ActionItem(context.getString(R.string.distance), TrailIcons.Ruler) {
+                        startDistanceMeasurement(arrayOf(gps.location, location))
+                        selectLocation(null)
+                    },
                 )
-                if (chosen != null) {
-                    chosen.action()
-                } else {
-                    selectLocation(null)
-                }
-            }
-        }
-    }
-
-    fun reloadMap() {
-        lifecycleOwner.inBackground {
-            withContext(Dispatchers.IO) {
-                map = service.getPhotoMap(mapId)
-            }
-            withContext(Dispatchers.Main) {
-                map?.let {
-                    onMapLoad(it)
-                }
+            )
+            if (chosen != null) {
+                chosen.action()
+            } else {
+                selectLocation(null)
             }
         }
     }
@@ -350,7 +456,7 @@ class ViewPhotoMapController(
             return
         }
 
-        val beacon = destination ?: return
+        val beacon = viewModel.destination ?: return
         views.navigationSheet.updateNavigationSensorValues(
             gps.location,
             altimeter.altitude,
@@ -388,7 +494,7 @@ class ViewPhotoMapController(
             stopDistanceMeasurement()
         }
         views.distanceSheet.createPathListener = {
-            lifecycleOwner.inBackground {
+            scope.launch {
                 map?.let {
                     val skipElevations = AtomicBoolean(false)
                     var id = 0L
@@ -407,10 +513,8 @@ class ViewPhotoMapController(
                         ).execute(layerManager.getDistanceMeasurementPoints())
                     }
 
-                    onMain {
-                        stopDistanceMeasurement()
-                        screenNavigator.navigate(Route.PathOverview(pathId = id))
-                    }
+                    stopDistanceMeasurement()
+                    screenNavigator.navigate(Route.PathOverview(pathId = id))
                 }
             }
         }
@@ -437,7 +541,7 @@ class ViewPhotoMapController(
     }
 
     private fun resetLayerManager() {
-        layerManager.resume(views.map, mapId, lifecycleOwner, featureClickHandler::onFeatureClick)
+        layerManager.resume(views.map, viewModel.mapId, lifecycleOwner, featureClickHandler::onFeatureClick)
 
         // Populate the last known location and map bounds
         layerManager.onBoundsChanged()
@@ -454,34 +558,7 @@ class ViewPhotoMapController(
         layerSheet.show()
     }
 
-    private fun navigateTo(location: Coordinate) {
-        lifecycleOwner.inBackground {
-            // Create a temporary beacon
-            val beacon = Beacon(
-                0L,
-                map?.name ?: "",
-                location,
-                visible = false,
-                temporary = true,
-                color = AppColor.Orange.color,
-                owner = BeaconOwner.Maps
-            )
-            val id = onIO {
-                beaconService.add(beacon)
-            }
-
-            navigateTo(beacon.copy(id = id))
-        }
-    }
-
-    private fun navigateTo(beacon: Beacon): Boolean {
-        navigator.navigateTo(beacon)
-        setDestination(Destination.Beacon(beacon))
-        return true
-    }
-
-    private fun setDestination(destination: Destination?) {
-        this.destination = destination
+    fun onDestinationChanged(destination: Destination?) {
         if (isBound) {
             if (destination == null) {
                 views.navigationSheet.hide()
@@ -492,18 +569,16 @@ class ViewPhotoMapController(
         screenLock.updateLock(activity)
     }
 
-    private fun onMapLoad(map: PhotoMap) {
+    fun onMapLoad(map: PhotoMap) {
         layerManager.pause(views.map)
-        this.map = map
         views.map.minScale = 0f
         val bounds = map.boundary() ?: CoordinateBounds(85.0, 180.0, -85.0, -180.0)
         views.map.fitIntoView(bounds, paddingFactor = 1.05f)
         views.map.constraintBounds = bounds
         views.map.minScale = views.map.scale
         layerManager.improveResolution(views.map.mapBounds, views.map.zoom.roundToInt())
-        if (shouldLockOnMapLoad) {
+        if (viewModel.consumeLockOnMapLoad()) {
             updateMapLockMode(MapLockMode.Location, prefs.photoMaps.keepMapFacingUp)
-            shouldLockOnMapLoad = false
         }
         views.map.mapAzimuth = getDefaultMapAzimuth(prefs.photoMaps.keepMapFacingUp)
         layerManager.resume(views.map, map.id, lifecycleOwner, featureClickHandler::onFeatureClick)
@@ -511,7 +586,7 @@ class ViewPhotoMapController(
     }
 
     private fun updateMapLockMode(mode: MapLockMode, keepMapUp: Boolean) {
-        mapLockMode = mode
+        viewModel.lockMode = mode
 
         // Show zoom buttons
         views.zoomInBtn.isVisible = true
@@ -525,7 +600,7 @@ class ViewPhotoMapController(
         // Show the bottom navigation
         activity.setBottomNavigationEnabled(true)
 
-        when (mapLockMode) {
+        when (mode) {
             MapLockMode.Location -> {
                 // Disable pan
                 views.map.isPanEnabled = false
@@ -609,7 +684,8 @@ class ViewPhotoMapController(
     }
 
     fun onPause() {
-        updateTimer.stop()
+        updateJob?.cancel()
+        updateJob = null
         layerSheet.setOnDismissListener(null)
         layerSheet.dismissAndUpdateWidgets(context)
         photoMapViews?.let {
@@ -630,53 +706,20 @@ class ViewPhotoMapController(
     }
 
     fun onDestroy() {
+        gpsData.removeObserver(gpsObserver)
+        altimeterData.removeObserver(altimeterObserver)
+        compassData.removeObserver(compassObserver)
         screenLock.releaseLock(activity)
         photoMapViews = null
     }
 
-    private fun updatePeriodic() {
+    private suspend fun updatePeriodic() {
         screenLock.updateLock(activity)
         val views = photoMapViews ?: return
-        lifecycleOwner.inBackground {
-            val attribution = views.map.getAttribution(context)
-            onMain {
-                views.mapAttribution.text = attribution
-                views.mapAttribution.isVisible = attribution != null
-            }
-        }
+        val attribution = onIO { views.map.getAttribution(context) }
+        views.mapAttribution.text = attribution
+        views.mapAttribution.isVisible = attribution != null
     }
-
-    private fun getNextLockMode(mode: MapLockMode): MapLockMode {
-        return when (mode) {
-            MapLockMode.Location -> {
-                if (hasCompass) {
-                    MapLockMode.Compass
-                } else {
-                    MapLockMode.Free
-                }
-            }
-
-            MapLockMode.Compass -> {
-                MapLockMode.Free
-            }
-
-            MapLockMode.Free -> {
-                MapLockMode.Location
-            }
-
-            MapLockMode.Trace -> {
-                MapLockMode.Free
-            }
-        }
-    }
-
-    private enum class MapLockMode {
-        Location,
-        Compass,
-        Free,
-        Trace
-    }
-
 }
 
 private data class ViewPhotoMapViews(

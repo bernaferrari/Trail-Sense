@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,13 +38,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import android.content.Context
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
@@ -69,126 +71,121 @@ import kotlinx.coroutines.withContext
 fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(route) {
-        ViewVectorMapController(context, navigator, lifecycleOwner, route.offlineMapFileId)
-    }
-    LaunchedEffect(controller) {
-        controller.loadMap()
-    }
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_PAUSE) {
-                controller.onPause()
-            }
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel { ViewVectorMapViewModel(getAppService(), route.offlineMapFileId) }
+    val mapView = remember {
+        MapView(context).apply {
+            keepScreenOn = true
+            backgroundColorOverride = AndroidColor.rgb(127, 127, 127)
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
+    }
+
+    // Each load (including after a rename or attribution edit) shows the map's tiles and fits its bounds
+    LaunchedEffect(mapView, viewModel.loadCount) {
+        if (viewModel.loadCount > 0) {
+            configureMap(context, mapView, viewModel.map)
         }
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) {
+        mapView.stop()
+    }
+
+    DisposableEffect(mapView) {
+        onDispose { mapView.stop() }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.deleted.collect { navigator.popBackStack() }
     }
 
     VectorMapScreen(
-        map = controller.map,
-        onMapReady = controller::onMapReady,
-        onZoomIn = { controller.mapView?.zoom(2f) },
-        onZoomOut = { controller.mapView?.zoom(0.5f) },
-        onRename = { controller.map?.let { controller.rename(it) } },
-        onEditAttribution = { controller.map?.let { controller.editAttribution(it) } },
-        onDelete = { controller.map?.let { controller.delete(it) } }
+        map = viewModel.map,
+        mapView = mapView,
+        onZoomIn = { mapView.zoom(2f) },
+        onZoomOut = { mapView.zoom(0.5f) },
+        onRename = {
+            viewModel.map?.let {
+                scope.launch {
+                    RenameMapCommand(context, getAppService()).execute(it)
+                    viewModel.load()
+                }
+            }
+        },
+        onEditAttribution = {
+            viewModel.map?.let {
+                scope.launch {
+                    EditOfflineMapAttributionCommand(context).execute(it)
+                    viewModel.load()
+                }
+            }
+        },
+        onDelete = {
+            viewModel.map?.let {
+                scope.launch {
+                    DeleteMapCommand(context, getAppService()).execute(it)
+                    viewModel.onDeleteAttempted(it)
+                }
+            }
+        }
     )
 }
 
-private class ViewVectorMapController(
-    private val context: Context,
-    private val navigator: TrailSenseNavigator,
-    private val lifecycleOwner: LifecycleOwner,
+private fun configureMap(context: Context, view: MapView, map: VectorMap?) {
+    view.stop()
+
+    if (map == null) {
+        view.setLayers(emptyList())
+        return
+    }
+
+    val factory = LayerFactory()
+    val layer = Tools.getMapLayerDefinition(context, TrailMapsTileSource.SOURCE_ID)!!
+    val tileLayer = factory.createLayer(layer)
+    tileLayer.setFeatureFilter(map.id.toString())
+    view.setLayers(listOf(tileLayer))
+    view.start()
+    map.bounds?.let { bounds ->
+        view.doOnLayout {
+            view.fitIntoView(bounds)
+        }
+    }
+}
+
+internal class ViewVectorMapViewModel(
+    private val service: MapService,
     private val mapId: Long
-) {
-    private val service by lazy { getAppService<MapService>() }
+) : ViewModel() {
     var map by mutableStateOf<VectorMap?>(null)
         private set
-    var mapView: MapView? = null
+
+    /** Counts finished loads, so the map is set up again after each one. */
+    var loadCount by mutableIntStateOf(0)
         private set
-    private var configuredMapId: Long? = null
 
-    fun onDestroy() {
-        onPause()
-        mapView?.stop()
-        mapView = null
-        configuredMapId = null
+    private val _deleted = Channel<Unit>(Channel.BUFFERED)
+    val deleted: Flow<Unit> = _deleted.receiveAsFlow()
+
+    init {
+        load()
     }
 
-    fun onPause() {
-        mapView?.stop()
-    }
-
-    fun onMapReady(view: MapView) {
-        mapView = view
-        configureMap(view, map)
-    }
-
-    fun loadMap() {
-        lifecycleOwner.lifecycleScope.launch {
-            val loaded = withContext(Dispatchers.IO) {
+    fun load() {
+        viewModelScope.launch {
+            map = withContext(Dispatchers.IO) {
                 service.getVectorMap(mapId)
             }
-            map = loaded
-            configuredMapId = null
-            mapView?.let { configureMap(it, loaded) }
+            loadCount++
         }
     }
 
-    private fun configureMap(view: MapView, map: VectorMap?) {
-        if (configuredMapId == map?.id) {
-            return
-        }
-
-        view.stop()
-        configuredMapId = map?.id
-
-        if (map == null) {
-            view.setLayers(emptyList())
-            return
-        }
-
-        val factory = LayerFactory()
-        val layer = Tools.getMapLayerDefinition(context, TrailMapsTileSource.SOURCE_ID)!!
-        val tileLayer = factory.createLayer(layer)
-        tileLayer.setFeatureFilter(map.id.toString())
-        view.setLayers(listOf(tileLayer))
-        view.start()
-        map.bounds?.let { bounds ->
-            view.doOnLayout {
-                view.fitIntoView(bounds)
-            }
-        }
-    }
-
-    fun rename(map: VectorMap) {
-        lifecycleOwner.lifecycleScope.launch {
-            RenameMapCommand(context, service).execute(map)
-            loadMap()
-        }
-    }
-
-    fun editAttribution(map: VectorMap) {
-        lifecycleOwner.lifecycleScope.launch {
-            EditOfflineMapAttributionCommand(context).execute(map)
-            loadMap()
-        }
-    }
-
-    fun delete(map: VectorMap) {
-        lifecycleOwner.lifecycleScope.launch {
-            DeleteMapCommand(context, service).execute(map)
+    /** After the delete prompt: leave if the map is gone, otherwise show it again. */
+    fun onDeleteAttempted(map: VectorMap) {
+        viewModelScope.launch {
             if (withContext(Dispatchers.IO) { service.getVectorMap(map.id) } == null) {
-                onMain {
-                    navigator.popBackStack()
-                }
+                _deleted.send(Unit)
             } else {
-                loadMap()
+                load()
             }
         }
     }
@@ -197,7 +194,7 @@ private class ViewVectorMapController(
 @Composable
 private fun VectorMapScreen(
     map: VectorMap?,
-    onMapReady: (MapView) -> Unit,
+    mapView: MapView,
     onZoomIn: () -> Unit,
     onZoomOut: () -> Unit,
     onRename: () -> Unit,
@@ -206,7 +203,6 @@ private fun VectorMapScreen(
     modifier: Modifier = Modifier
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -255,16 +251,7 @@ private fun VectorMapScreen(
             )
 
             Box(modifier = Modifier.weight(1f)) {
-                val composeMapView = remember {
-                    MapView(context).apply {
-                        keepScreenOn = true
-                        backgroundColorOverride = AndroidColor.rgb(127, 127, 127)
-                    }
-                }
-                SideEffect {
-                    onMapReady(composeMapView)
-                }
-                composeMapView.Content(
+                mapView.Content(
                     modifier = Modifier
                         .matchParentSize()
                         .testTag("map")

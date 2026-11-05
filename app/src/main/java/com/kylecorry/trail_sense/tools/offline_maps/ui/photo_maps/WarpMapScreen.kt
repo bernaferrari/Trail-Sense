@@ -3,12 +3,17 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
 import android.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.CoroutineScope
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentBounds
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,127 +58,128 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 
 @Composable
-fun WarpMapToolScreen(
+internal fun WarpMapToolScreen(
     mapId: Long,
+    viewModelKey: String,
     onComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val scope = LocalLifecycleOwner.current.lifecycleScope
-    val controller = remember(mapId, onComplete) {
-        WarpMapController(context, scope, mapId, onComplete)
+    val viewModel = viewModel(key = viewModelKey) {
+        WarpMapViewModel(getAppService(), FileSubsystem.getInstance(context.applicationContext), mapId)
+    }
+    val perspective = rememberPerspectiveCorrectionState()
+    val currentOnComplete by rememberUpdatedState(onComplete)
+
+    DisposableEffect(perspective) {
+        onDispose { perspective.clearImage() }
     }
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {
-            controller.onDestroy()
+    // Saving can take a moment (the image is warped), so it shows the app's loading dialog meanwhile
+    DisposableEffect(viewModel.isSaving) {
+        val loading = if (viewModel.isSaving) {
+            Alerts.loading(context, context.getString(R.string.saving))
+        } else {
+            null
+        }
+        onDispose { loading?.dismiss() }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect {
+            perspective.clearImage()
+            currentOnComplete()
         }
     }
 
     WarpMapScreen(
-        map = controller.map,
-        isPreview = controller.isPreview,
-        onTogglePreview = controller::togglePreview,
-        onInstructionsClick = controller::showInstructions,
-        onNext = controller::next,
-        onPerspectiveReady = { controller.perspectiveState = it },
+        map = viewModel.map,
+        isPreview = viewModel.isPreview,
+        perspective = perspective,
+        onTogglePreview = viewModel::togglePreview,
+        onInstructionsClick = {
+            Alerts.dialog(
+                context,
+                context.getString(R.string.map_perspective_instructions),
+                context.getString(R.string.crop_map_instructions_long),
+                cancelText = null
+            )
+        },
+        onNext = {
+            val percentBounds = perspective.getPercentBounds()
+            if (percentBounds != null) {
+                viewModel.save(percentBounds, perspective.hasChanges)
+            }
+        },
         modifier = modifier
     )
 }
 
-private class WarpMapController(
-    private val context: Context,
-    private val scope: CoroutineScope,
-    private val mapId: Long,
-    private val onComplete: () -> Unit
-) {
-    private val service = getAppService<MapService>()
-    private val files by lazy { FileSubsystem.getInstance(context) }
+internal class WarpMapViewModel(
+    private val service: MapService,
+    private val files: FileSubsystem,
+    private val mapId: Long
+) : ViewModel() {
 
     var map by mutableStateOf<PhotoMap?>(null)
         private set
     var isPreview by mutableStateOf(false)
         private set
-    var perspectiveState: PerspectiveCorrectionState? = null
+    var isSaving by mutableStateOf(false)
+        private set
 
-    fun onCreate() {
-        loadMap()
-    }
+    private val _saved = Channel<Unit>(Channel.BUFFERED)
 
-    fun onDestroy() {
-        perspectiveState?.clearImage()
-        perspectiveState = null
-    }
+    /** Sent once the corrected map is saved. */
+    val saved: Flow<Unit> = _saved.receiveAsFlow()
 
-    fun showInstructions() {
-        Alerts.dialog(
-            context,
-            context.getString(R.string.map_perspective_instructions),
-            context.getString(R.string.crop_map_instructions_long),
-            cancelText = null
-        )
+    init {
+        viewModelScope.launch {
+            map = withContext(Dispatchers.IO) {
+                service.getPhotoMap(mapId)
+            }
+        }
     }
 
     fun togglePreview() {
         isPreview = !isPreview
     }
 
-    private fun loadMap() {
-        scope.launch {
-            val loaded = withContext(Dispatchers.IO) {
-                service.getPhotoMap(mapId)
-            }
-            loaded?.let {
-                onMapLoad(it)
-            }
-        }
-    }
-
-
-    private fun onMapLoad(map: PhotoMap) {
-        this.map = map
-    }
-
-    fun next() {
+    fun save(percentBounds: PercentBounds, hasChanges: Boolean) {
         val currentMap = map ?: return
-        val perspective = perspectiveState ?: return
-        val percentBounds = perspective.getPercentBounds() ?: return
-        val hasChanges = perspective.hasChanges
+        if (isSaving) return
+        isSaving = true
+        viewModelScope.launch {
+            val saved = try {
+                withContext(Dispatchers.IO) {
+                    if (hasChanges) {
+                        val bitmap = files.bitmap(currentMap.filename) ?: return@withContext false
+                        val bounds =
+                            percentBounds.toPixelBounds(bitmap.width.toFloat(), bitmap.height.toFloat())
+                        val warped = bitmap.fixPerspective(bounds, true, Color.WHITE)
+                        try {
+                            files.save(currentMap.filename, warped, recycleOnSave = true)
+                        } catch (e: IOException) {
+                            return@withContext false
+                        }
 
-        scope.launch {
-            val loading = Alerts.loading(
-                context,
-                context.getString(R.string.saving)
-            )
-            val saved = withContext(Dispatchers.IO) {
-                if (hasChanges) {
-                    val bitmap = files.bitmap(currentMap.filename) ?: return@withContext false
-                    val bounds =
-                        percentBounds.toPixelBounds(bitmap.width.toFloat(), bitmap.height.toFloat())
-                    val warped = bitmap.fixPerspective(bounds, true, Color.WHITE)
-                    try {
-                        files.save(currentMap.filename, warped, recycleOnSave = true)
-                    } catch (e: IOException) {
-                        return@withContext false
+                        // Delete the pdf file if it exists
+                        files.delete(currentMap.pdfFileName)
                     }
 
-                    // Delete the pdf file if it exists
-                    files.delete(currentMap.pdfFileName)
-                }
-
-                service.add(
-                    currentMap.copy(
-                        georeference = currentMap.georeference.copy(isWarpingCompleted = true)
+                    service.add(
+                        currentMap.copy(
+                            georeference = currentMap.georeference.copy(isWarpingCompleted = true)
+                        )
                     )
-                )
-                true
+                    true
+                }
+            } finally {
+                isSaving = false
             }
 
-            loading.dismiss()
             if (saved) {
-                perspective.clearImage()
-                onComplete.invoke()
+                _saved.send(Unit)
             }
         }
     }
@@ -186,13 +192,9 @@ private fun WarpMapScreen(
     onTogglePreview: () -> Unit,
     onInstructionsClick: () -> Unit,
     onNext: () -> Unit,
-    onPerspectiveReady: (PerspectiveCorrectionState) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    perspective: PerspectiveCorrectionState = rememberPerspectiveCorrectionState()
 ) {
-    val perspective = rememberPerspectiveCorrectionState()
-    androidx.compose.runtime.LaunchedEffect(perspective) {
-        onPerspectiveReady(perspective)
-    }
 
     Surface(
         modifier = modifier,
@@ -280,8 +282,7 @@ private fun WarpMapScreenPreview() {
             isPreview = false,
             onTogglePreview = {},
             onInstructionsClick = {},
-            onNext = {},
-            onPerspectiveReady = {}
+            onNext = {}
         )
     }
 }

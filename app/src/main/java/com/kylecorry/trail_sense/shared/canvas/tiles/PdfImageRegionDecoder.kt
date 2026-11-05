@@ -9,16 +9,14 @@ import android.util.Size
 import androidx.core.graphics.toRectF
 import com.kylecorry.andromeda.core.math.MathUtils
 import com.kylecorry.andromeda.pdf.PDFRenderer2
-import com.kylecorry.trail_sense.shared.views.subscaleview.decoder.ImageRegionDecoder
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 
-class PdfImageRegionDecoder(private val bitmapConfig: Bitmap.Config? = null) : ImageRegionDecoder,
-    RegionDecoder {
+class PdfImageRegionDecoder(private val bitmapConfig: Bitmap.Config? = null) : RegionDecoder {
 
     private lateinit var renderer: PDFRenderer2
 
-    override fun init(
+    fun init(
         context: Context?,
         uri: Uri
     ): Point {
@@ -34,7 +32,7 @@ class PdfImageRegionDecoder(private val bitmapConfig: Bitmap.Config? = null) : I
         return Point(scaledSize.width, scaledSize.height)
     }
 
-    override fun decodeRegion(
+    private fun decodeRegion(
         sRect: Rect,
         sampleSize: Int
     ): Bitmap {
@@ -43,14 +41,6 @@ class PdfImageRegionDecoder(private val bitmapConfig: Bitmap.Config? = null) : I
             scaledSize,
             srcRegion = sRect.toRectF()
         )!!
-    }
-
-    override fun isReady(): Boolean {
-        return this::renderer.isInitialized
-    }
-
-    override fun recycle() {
-        renderer.close()
     }
 
     override suspend fun decodeRegionSuspend(

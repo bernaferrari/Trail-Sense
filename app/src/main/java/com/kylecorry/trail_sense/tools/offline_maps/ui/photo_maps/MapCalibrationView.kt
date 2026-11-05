@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
 import android.graphics.Color
-import android.view.MotionEvent
+import androidx.compose.ui.geometry.Offset
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -37,7 +37,6 @@ class MapCalibrationView : BasePhotoMapView {
     override fun postDraw() {
         super.postDraw()
         drawCalibrationPoints()
-        invalidate()
     }
 
     override fun showMap(map: PhotoMap) {
@@ -45,9 +44,9 @@ class MapCalibrationView : BasePhotoMapView {
         layerManager.invalidate()
     }
 
-    override fun onSinglePress(e: MotionEvent) {
-        super.onSinglePress(e)
-        val pixel = toSource(e.x, e.y, true)
+    override fun onSinglePress(position: Offset) {
+        super.onSinglePress(position)
+        val pixel = toSource(position.x, position.y, true)
 
         pixel?.let {
             val percentX = it.x / imageWidth
