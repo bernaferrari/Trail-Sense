@@ -36,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -103,7 +102,10 @@ import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
@@ -133,17 +135,62 @@ import java.time.Month
 import java.util.Locale
 
 @Composable
-fun ClimateToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { ClimateController(host) }
+fun ClimateToolScreen() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val viewModel = viewModel {
+        ClimateViewModel(
+            locationSubsystem = LocationSubsystem.getInstance(appContext),
+            weatherSubsystem = WeatherSubsystem.getInstance(appContext),
+            distanceUnits = { prefs.baseDistanceUnits }
+        )
+    }
+    val distanceUnits = prefs.baseDistanceUnits
+    val precipitationUnits = if (distanceUnits.isMetric) DistanceUnits.Millimeters else DistanceUnits.Inches
+    val units = prefs.temperatureUnits
+    val selected = viewModel.months?.firstOrNull { it.month == viewModel.selectedMonth }
 
-    DisposableEffect(controller) {
-        controller.onCreate()
-        onDispose {
-            controller.onDestroy()
-        }
+    fun formatPrecipitation(amount: Distance): String {
+        val value = amount.convertTo(precipitationUnits)
+        return formatter.formatDistance(value, if (precipitationUnits.isMetric) 0 else 1)
     }
 
-    controller.Content()
+    /** The amount alone ("136", "5.4"), for the year card's quiet rain row. */
+    fun formatPrecipitationValue(amount: Distance): String {
+        val value = amount.convertTo(precipitationUnits)
+        return DecimalFormatter.format(value.value, if (precipitationUnits.isMetric) 0 else 1, strict = false)
+    }
+
+    val climateName = viewModel.climate?.let { stringResource(it.nameRes()) }
+    ClimateScreen(
+        title = stringResource(R.string.tool_climate),
+        subtitle = climateName?.let { stringResource(R.string.climate_zone_subtitle, it) }
+            ?: stringResource(R.string.historic_temperature_years, 30),
+        place = getPlaceText(context, formatter, viewModel.location, viewModel.elevation),
+        months = viewModel.months,
+        selectedMonth = viewModel.selectedMonth,
+        currentMonth = LocalDate.now().month,
+        verdict = selected?.let { getVerdict(context, it, ::formatPrecipitation) },
+        formatTemperature = { formatter.formatDegrees(Temperature.celsius(it).convertTo(units).value) },
+        formatPrecipitation = ::formatPrecipitation,
+        formatPrecipitationValue = ::formatPrecipitationValue,
+        onMonthSelected = { viewModel.selectedMonth = it },
+        location = viewModel.location,
+        elevation = viewModel.elevation,
+        onLocationChange = viewModel::setLocationFromInput,
+        onElevationChange = viewModel::setElevationFromInput,
+        locationAutofillRequest = viewModel.locationAutofillRequest,
+        onAutoLocationClick = viewModel::onAutoLocationClick,
+        onLocationBeaconSelected = {
+            it.elevation?.let { beaconElevation ->
+                viewModel.setElevationFromInput(Distance.meters(beaconElevation).convertTo(distanceUnits))
+            }
+        },
+        elevationAutofillRequest = viewModel.elevationAutofillRequest,
+        onAutoElevationClick = viewModel::onAutoElevationClick
+    )
 }
 
 /** One month's normals: the average daily low and high (°C) and the month's total precipitation. */
@@ -154,86 +201,82 @@ private data class ClimateMonth(
     val precipitation: Distance?
 )
 
-private class ClimateController(private val host: TrailSenseDestinationHost) {
+/** The climate zones the tool names. */
+private enum class ClimateKind {
+    TropicalMonsoon,
+    TropicalSavanna,
+    TropicalRainforest,
+    Desert,
+    Steppe,
+    Tundra,
+    IceCap,
+    Temperate,
+    Continental
+}
 
-    private val locationSubsystem by lazy { LocationSubsystem.getInstance(host.requireContext()) }
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+@StringRes
+private fun ClimateKind.nameRes(): Int = when (this) {
+    ClimateKind.TropicalMonsoon -> R.string.climate_tropical_monsoon
+    ClimateKind.TropicalSavanna -> R.string.climate_tropical_savanna
+    ClimateKind.TropicalRainforest -> R.string.climate_tropical_rainforest
+    ClimateKind.Desert -> R.string.climate_desert
+    ClimateKind.Steppe -> R.string.climate_steppe
+    ClimateKind.Tundra -> R.string.climate_tundra
+    ClimateKind.IceCap -> R.string.climate_ice_cap
+    ClimateKind.Temperate -> R.string.climate_temperate
+    ClimateKind.Continental -> R.string.climate_continental
+}
 
-    private val distanceUnits: DistanceUnits
-        get() = prefs.baseDistanceUnits
+/**
+ * The climate tool's state: the place (location and elevation, starting from the device's) and the selected month,
+ * and the place's 30-year monthly normals and climate zone, reloaded whenever the place changes.
+ */
+private class ClimateViewModel(
+    private val locationSubsystem: LocationSubsystem,
+    private val weatherSubsystem: WeatherSubsystem,
+    private val distanceUnits: () -> DistanceUnits
+) : ViewModel() {
 
-    private val precipitationDistanceUnits: DistanceUnits
-        get() = if (distanceUnits.isMetric) DistanceUnits.Millimeters else DistanceUnits.Inches
-
-    private var selectedMonth by mutableStateOf(LocalDate.now().month)
-    private var location by mutableStateOf<Coordinate?>(null)
-    private var elevation by mutableStateOf<Distance?>(null)
-    private var months by mutableStateOf<List<ClimateMonth>?>(null)
-    private var climateName by mutableStateOf<String?>(null)
-    private var locationAutofillRequest by mutableStateOf(0)
-    private var elevationAutofillRequest by mutableStateOf(0)
+    var selectedMonth by mutableStateOf(LocalDate.now().month)
+    var location by mutableStateOf<Coordinate?>(null)
+        private set
+    var elevation by mutableStateOf<Distance?>(null)
+        private set
+    var months by mutableStateOf<List<ClimateMonth>?>(null)
+        private set
+    var climate by mutableStateOf<ClimateKind?>(null)
+        private set
+    var locationAutofillRequest by mutableStateOf(0)
+        private set
+    var elevationAutofillRequest by mutableStateOf(0)
+        private set
 
     private var loadJob: Job? = null
 
-    @Composable
-    fun Content() {
-        val units = prefs.temperatureUnits
-        val selected = months?.firstOrNull { it.month == selectedMonth }
-        ClimateScreen(
-            title = getString(R.string.tool_climate),
-            subtitle = climateName?.let { getString(R.string.climate_zone_subtitle, it) }
-                ?: getString(R.string.historic_temperature_years, 30),
-            place = getPlaceText(),
-            months = months,
-            selectedMonth = selectedMonth,
-            currentMonth = LocalDate.now().month,
-            verdict = selected?.let(::getVerdict),
-            formatTemperature = { formatter.formatDegrees(Temperature.celsius(it).convertTo(units).value) },
-            formatPrecipitation = ::formatPrecipitation,
-            formatPrecipitationValue = ::formatPrecipitationValue,
-            onMonthSelected = { selectedMonth = it },
-            location = location,
-            elevation = elevation,
-            onLocationChange = ::setLocationFromInput,
-            onElevationChange = ::setElevationFromInput,
-            locationAutofillRequest = locationAutofillRequest,
-            onAutoLocationClick = {
-                if (this@ClimateController.elevation == null) {
-                    elevationAutofillRequest++
-                }
-            },
-            onLocationBeaconSelected = {
-                it.elevation?.let { beaconElevation ->
-                    setElevationFromInput(Distance.meters(beaconElevation).convertTo(distanceUnits))
-                }
-            },
-            elevationAutofillRequest = elevationAutofillRequest,
-            onAutoElevationClick = {
-                if (this@ClimateController.location == null) {
-                    locationAutofillRequest++
-                }
-            }
-        )
-    }
-
-    fun onCreate() {
+    init {
         location = locationSubsystem.location
-        elevation = roundedElevation(locationSubsystem.elevation.convertTo(distanceUnits))
+        elevation = roundedElevation(locationSubsystem.elevation.convertTo(distanceUnits()))
         loadClimateData()
     }
 
-    fun onDestroy() {
-        loadJob?.cancel()
+    fun onAutoLocationClick() {
+        if (elevation == null) {
+            elevationAutofillRequest++
+        }
     }
 
-    private fun setLocationFromInput(newLocation: Coordinate?) {
+    fun onAutoElevationClick() {
+        if (location == null) {
+            locationAutofillRequest++
+        }
+    }
+
+    fun setLocationFromInput(newLocation: Coordinate?) {
         location = newLocation ?: locationSubsystem.location
         loadClimateData()
     }
 
-    private fun setElevationFromInput(newElevation: Distance?) {
+    fun setElevationFromInput(newElevation: Distance?) {
         elevation = newElevation ?: locationSubsystem.elevation
         loadClimateData()
     }
@@ -251,7 +294,7 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
         val currentElevation = elevation
 
         loadJob?.cancel()
-        loadJob = host.lifecycleScope.launch {
+        loadJob = viewModelScope.launch {
             val (temperatures, precipitation) = coroutineScope {
                 val temperatures = async {
                     weatherSubsystem.getTemperatureRanges(
@@ -265,7 +308,7 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
                 temperatures.await() to precipitation.await()
             }
             months = toMonths(temperatures, precipitation)
-            climateName = getClimateName(temperatures, precipitation)
+            climate = getClimate(temperatures, precipitation)
         }
     }
 
@@ -286,71 +329,10 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
         }.takeIf { it.isNotEmpty() }
     }
 
-    private fun getPlaceText(): String {
-        val coordinate = location?.let { formatter.formatLocation(it) } ?: return getString(R.string.location)
-        val height = elevation ?: return coordinate
-        return getString(
-            R.string.climate_place_line,
-            coordinate,
-            formatter.formatDistance(height, Units.getDecimalPlaces(height.units))
-        )
-    }
-
-    private fun formatPrecipitation(amount: Distance): String {
-        val value = amount.convertTo(precipitationDistanceUnits)
-        return formatter.formatDistance(value, if (precipitationDistanceUnits.isMetric) 0 else 1)
-    }
-
-    /** The amount alone ("136", "5.4"), for the year card's quiet rain row. */
-    private fun formatPrecipitationValue(amount: Distance): String {
-        val value = amount.convertTo(precipitationDistanceUnits)
-        return DecimalFormatter.format(value.value, if (precipitationDistanceUnits.isMetric) 0 else 1, strict = false)
-    }
-
-    /** "Mild, wet: 92 mm of rain": how the month feels, then what falls. */
-    private fun getVerdict(month: ClimateMonth): String {
-        val mean = (month.lowCelsius + month.highCelsius) / 2f
-        val feel = getString(
-            when {
-                mean < 0f -> R.string.climate_feel_freezing
-                mean < 8f -> R.string.climate_feel_cold
-                mean < 14f -> R.string.climate_feel_cool
-                mean < 20f -> R.string.climate_feel_mild
-                mean < 26f -> R.string.climate_feel_warm
-                else -> R.string.climate_feel_hot
-            }
-        )
-        val precipitation = month.precipitation ?: return feel
-        val millimeters = precipitation.convertTo(DistanceUnits.Millimeters).value
-        val wetness = when {
-            millimeters < 20f -> R.string.climate_feel_dry
-            millimeters >= 200f -> R.string.climate_feel_very_wet
-            millimeters >= 100f -> R.string.climate_feel_wet
-            else -> null
-        }?.let(::getString)
-        val amount = getString(
-            when {
-                month.highCelsius <= 0f -> R.string.climate_snow_amount
-                month.lowCelsius < 0f -> R.string.climate_rain_snow_amount
-                else -> R.string.climate_rain_amount
-            },
-            formatPrecipitation(precipitation)
-        )
-        return if (wetness == null) {
-            getString(R.string.climate_verdict, feel, amount)
-        } else {
-            getString(R.string.climate_verdict_wetness, feel, wetness, amount)
-        }
-    }
-
-    private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return host.getString(id, *args)
-    }
-
-    private fun getClimateName(
+    private fun getClimate(
         temperatures: List<Pair<LocalDate, Range<Temperature>>>,
         precipitation: Map<Month, Distance>
-    ): String? {
+    ): ClimateKind? {
         val monthlyAverageTemperatures = temperatures
             .filter { it.first.dayOfMonth == 15 }
             .associate {
@@ -367,30 +349,85 @@ private class ClimateController(private val host: TrailSenseDestinationHost) {
 
         return when {
             climate.seasonalPrecipitationPattern == KoppenGeigerSeasonalPrecipitationPattern.Monsoon ->
-                getString(R.string.climate_tropical_monsoon)
+                ClimateKind.TropicalMonsoon
 
             climate.seasonalPrecipitationPattern == KoppenGeigerSeasonalPrecipitationPattern.Savanna ->
-                getString(R.string.climate_tropical_savanna)
+                ClimateKind.TropicalSavanna
 
             climate.seasonalPrecipitationPattern == KoppenGeigerSeasonalPrecipitationPattern.Rainforest ->
-                getString(R.string.climate_tropical_rainforest)
+                ClimateKind.TropicalRainforest
 
             climate.seasonalPrecipitationPattern == KoppenGeigerSeasonalPrecipitationPattern.Desert ->
-                getString(R.string.climate_desert)
+                ClimateKind.Desert
 
             climate.seasonalPrecipitationPattern == KoppenGeigerSeasonalPrecipitationPattern.Steppe ->
-                getString(R.string.climate_steppe)
+                ClimateKind.Steppe
 
             climate.seasonalPrecipitationPattern == KoppenGeigerSeasonalPrecipitationPattern.Tundra ->
-                getString(R.string.climate_tundra)
+                ClimateKind.Tundra
 
             climate.seasonalPrecipitationPattern == KoppenGeigerSeasonalPrecipitationPattern.IceCap ->
-                getString(R.string.climate_ice_cap)
+                ClimateKind.IceCap
 
-            climate.climateGroup == KoppenGeigerClimateGroup.Temperate -> getString(R.string.climate_temperate)
-            climate.climateGroup == KoppenGeigerClimateGroup.Continental -> getString(R.string.climate_continental)
+            climate.climateGroup == KoppenGeigerClimateGroup.Temperate -> ClimateKind.Temperate
+            climate.climateGroup == KoppenGeigerClimateGroup.Continental -> ClimateKind.Continental
             else -> null
         }
+    }
+}
+
+private fun getPlaceText(
+    context: Context,
+    formatter: FormatService,
+    location: Coordinate?,
+    elevation: Distance?
+): String {
+    val coordinate = location?.let { formatter.formatLocation(it) } ?: return context.getString(R.string.location)
+    val height = elevation ?: return coordinate
+    return context.getString(
+        R.string.climate_place_line,
+        coordinate,
+        formatter.formatDistance(height, Units.getDecimalPlaces(height.units))
+    )
+}
+
+/** "Mild, wet: 92 mm of rain": how the month feels, then what falls. */
+private fun getVerdict(
+    context: Context,
+    month: ClimateMonth,
+    formatPrecipitation: (Distance) -> String
+): String {
+    val mean = (month.lowCelsius + month.highCelsius) / 2f
+    val feel = context.getString(
+        when {
+            mean < 0f -> R.string.climate_feel_freezing
+            mean < 8f -> R.string.climate_feel_cold
+            mean < 14f -> R.string.climate_feel_cool
+            mean < 20f -> R.string.climate_feel_mild
+            mean < 26f -> R.string.climate_feel_warm
+            else -> R.string.climate_feel_hot
+        }
+    )
+    val precipitation = month.precipitation ?: return feel
+    val millimeters = precipitation.convertTo(DistanceUnits.Millimeters).value
+    val wetness = when {
+        millimeters < 20f -> R.string.climate_feel_dry
+        millimeters >= 200f -> R.string.climate_feel_very_wet
+        millimeters >= 100f -> R.string.climate_feel_wet
+        else -> null
+    }?.let { context.getString(it) }
+    val amount = context.getString(
+        when {
+            month.highCelsius <= 0f -> R.string.climate_snow_amount
+            month.lowCelsius < 0f -> R.string.climate_rain_snow_amount
+            else -> R.string.climate_rain_amount
+        },
+        formatPrecipitation(precipitation)
+    )
+    return if (wetness == null) {
+        context.getString(R.string.climate_verdict, feel, amount)
+    } else {
+        context.getString(R.string.climate_verdict_wetness, feel, wetness, amount)
     }
 }
 
