@@ -1,46 +1,41 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.share
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import android.content.Context
 import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.sharing.Share
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.sharing.ShareAction
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
-class BeaconSender(private val host: TrailSenseDestinationHost) : IBeaconSender {
+/** Offers the share sheet for a beacon (copy, QR, maps, send) and sends it the chosen way. */
+class BeaconSender(
+    private val context: Context,
+    private val effects: ScreenEffects,
+    private val navigator: TrailSenseNavigator,
+    private val scope: CoroutineScope
+) : IBeaconSender {
     override fun send(beacon: Beacon) {
-        Share.share(
-            host, beacon.name, listOf(
-                ShareAction.Copy,
-                ShareAction.QR,
-                ShareAction.Maps,
-                ShareAction.Send
+        scope.launch {
+            val action = chooseShareAction(
+                context,
+                effects,
+                beacon.name,
+                listOf(ShareAction.Copy, ShareAction.QR, ShareAction.Maps, ShareAction.Send)
             )
-        ) {
-            when (it) {
-                ShareAction.Copy -> {
-                    val sender = BeaconCopy(host.requireContext())
-                    sender.send(beacon)
-                }
+            when (action) {
+                ShareAction.Copy -> BeaconCopy(context).send(beacon)
+                ShareAction.QR -> CustomUiUtils.showQR(
+                    context,
+                    navigator,
+                    beacon.name,
+                    BeaconQREncoder().encode(beacon)
+                )
 
-                ShareAction.QR -> {
-                    CustomUiUtils.showQR(
-                        host,
-                        beacon.name,
-                        BeaconQREncoder().encode(beacon)
-                    )
-                }
-
-                ShareAction.Maps -> {
-                    val sender = BeaconGeoSender(host.requireContext())
-                    sender.send(beacon)
-                }
-
-                ShareAction.Send -> {
-                    val sender = BeaconSharesheet(host.requireContext())
-                    sender.send(beacon)
-                }
-
+                ShareAction.Maps -> BeaconGeoSender(context).send(beacon)
+                ShareAction.Send -> BeaconSharesheet(context).send(beacon)
                 else -> {
                     // Do nothing
                 }

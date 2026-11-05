@@ -179,7 +179,7 @@ fun DestinationContent(
             Route.ThermometerSettings -> ThermometerSettingsToolScreen()
             Route.WeatherSettings -> WeatherSettingsToolScreen(this)
             Route.PedometerSettings -> PedometerSettingsToolScreen(this)
-            Route.NavigationSettings -> NavigationSettingsToolScreen(this)
+            Route.NavigationSettings -> NavigationSettingsToolScreen()
             Route.PathsSettings -> PathsSettingsToolScreen()
             Route.AstronomySettings -> AstronomySettingsToolScreen(this)
 
@@ -225,7 +225,7 @@ fun DestinationContent(
             Route.Triangulate -> TriangulateToolScreen(this)
             Route.Clock -> ClockToolScreen(this)
             Route.SignalFinder -> SignalFinderToolScreen(this)
-            Route.TurnBack -> TurnBackToolScreen(this)
+            Route.TurnBack -> TurnBackToolScreen()
             Route.Settings -> SettingsToolScreen()
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen(this)
             is Route.Clouds -> CloudToolScreen(this)
@@ -233,11 +233,11 @@ fun DestinationContent(
             Route.Astronomy -> AstronomyToolScreen(this)
             is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
             is Route.BeaconList -> BeaconListToolScreen(
-                host = this,
+                route = route,
                 onController = { screenController = it }
             )
-            is Route.BeaconDetails -> BeaconDetailsToolScreen(this)
-            is Route.PlaceBeacon -> PlaceBeaconToolScreen(this)
+            is Route.BeaconDetails -> BeaconDetailsToolScreen(route)
+            is Route.PlaceBeacon -> PlaceBeaconToolScreen(route)
             is Route.OfflineMapList -> OfflineMapListToolScreen(this)
             Route.ScanQr -> ScanQRToolScreen(this)
             is Route.ViewQr -> QRShareScreen(
@@ -245,9 +245,9 @@ fun DestinationContent(
                 text = route.text
             )
             is Route.VectorMapView -> ViewVectorMapToolScreen(this)
-            is Route.Navigation -> NavigatorToolScreen(this)
-            is Route.PathOverview -> PathOverviewToolScreen(this)
-            Route.Paths -> PathsToolScreen(this)
+            is Route.Navigation -> NavigatorToolScreen(route, quickActionHost = this)
+            is Route.PathOverview -> PathOverviewToolScreen(route)
+            Route.Paths -> PathsToolScreen()
             Route.CalibrateAltimeter -> CalibrateAltimeterToolScreen()
             Route.CalibrateBarometer -> CalibrateBarometerToolScreen()
             Route.CalibrateCompass -> CalibrateCompassToolScreen()

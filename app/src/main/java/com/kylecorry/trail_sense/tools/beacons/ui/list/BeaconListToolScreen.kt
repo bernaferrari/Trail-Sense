@@ -2,11 +2,25 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
 import com.kylecorry.trail_sense.shared.navigation.toGeoUri
 
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -40,7 +54,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
 import android.graphics.Bitmap
 import android.util.Size
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -119,7 +132,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -174,12 +186,22 @@ interface BeaconListControllerHost {
 
 @Composable
 fun BeaconListToolScreen(
-    host: TrailSenseDestinationHost,
+    route: Route.BeaconList,
     modifier: Modifier = Modifier,
     onController: (BeaconListControllerHost?) -> Unit = {}
 ) {
-    val controller = remember(host) { BeaconListController(host) }
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(lifecycleOwner) {
+        BeaconListController(context, navigator, effects, lifecycleOwner, route)
+    }
+
+    // Back closes the create menu, then goes up a group; at the top it leaves the page as usual.
+    BackHandler(enabled = controller.handlesBack) {
+        controller.onBack()
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -205,15 +227,27 @@ fun BeaconListToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class BeaconListController(private val host: TrailSenseDestinationHost) : BeaconListControllerHost {
+/**
+ * The places list: a group browser over the beacon service with GPX import and export, the QR import camera and the
+ * group commands' dialogs, so it lives with the screen (it holds the screen's context) rather than in a ViewModel.
+ */
+private class BeaconListController(
+    private val context: Context,
+    private val appNavigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner,
+    private val route: Route.BeaconList
+) : BeaconListControllerHost {
+
+    private val lifecycleScope: CoroutineScope
+        get() = lifecycleOwner.lifecycleScope
 
     private val gps by lazy { sensorService.getGPS() }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(context) }
 
-    private lateinit var appNavigator: TrailSenseNavigator
-    private val sensorService by lazy { SensorService(host.requireContext()) }
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val beaconService by lazy { BeaconService(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
+    private val formatService by lazy { FormatService.getInstance(context) }
+    private val beaconService by lazy { BeaconService(context) }
     private val beaconLoader by lazy { BeaconLoader(beaconService, prefs.beacons) }
     private var sort = BeaconSortMethod.Closest
 
@@ -231,16 +265,35 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     private val gpxService by lazy {
         IOFactory().createGpxService(
-            host.requireContext(),
-            host.intentResultRetriever
+            context,
+            // File pickers need the activity's result launcher, an Activity-only API.
+            requireNotNull(context.findMainActivity())
         )
     }
-    private val haptics by lazy { HapticSubsystem.getInstance(host.requireContext()) }
+    private val haptics by lazy { HapticSubsystem.getInstance(context) }
 
     private lateinit var manager: GroupListManager<IBeacon>
     private var lastRoot: IBeacon? = null
     private var isInitialized = false
-    private var backPressedCallback: OnBackPressedCallback? = null
+    private var isInGroup by mutableStateOf(false)
+
+    /** Whether back stays on this page (closing the create menu or going up a group). */
+    val handlesBack: Boolean
+        get() = isCreateMenuOpen || isInGroup
+
+    fun onBack() {
+        when {
+            isCreateMenuOpen -> {
+                setCreateMenuVisibility(false)
+            }
+
+            else -> {
+                if (!manager.up()) {
+                    appNavigator.navigateUp()
+                }
+            }
+        }
+    }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -276,7 +329,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
                 }
             ) {
                 QRImportContent(
-                    title = host.getString(R.string.beacon_qr_import_instructions),
+                    title = context.getString(R.string.beacon_qr_import_instructions),
                     onClose = {
                         hideQrImport()
                     },
@@ -292,17 +345,15 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             return
         }
         isInitialized = true
-        host.routeAs<Route.BeaconList>().initialLocation?.let {
+        route.initialLocation?.let {
             initialLocation = it.toGeoUri()
         }
 
-        appNavigator = host.findNavigator()
-
         sort = prefs.beacons.beaconSort
-        sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
 
         manager = GroupListManager(
-            host.lifecycleScope,
+            lifecycleScope,
             beaconLoader,
             lastRoot,
             this::sortBeacons
@@ -314,7 +365,8 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             if (rootChanged) {
                 beaconListResetKey++
             }
-            title = root?.name ?: host.getString(R.string.places_title)
+            isInGroup = root != null
+            title = root?.name ?: context.getString(R.string.places_title)
         }
 
         initialLocation?.let {
@@ -322,27 +374,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             createBeacon(initialLocation = it)
         }
 
-        backPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                when {
-                    isCreateMenuOpen -> {
-                        setCreateMenuVisibility(false)
-                    }
-
-                    else -> {
-                        if (!manager.up()) {
-                            remove()
-                            appNavigator.navigateUp()
-                        }
-                    }
-                }
-            }
-        }
-        host.mainActivity.onBackPressedDispatcher.addCallback(
-            host.lifecycleOwner,
-            backPressedCallback!!
-        )
-        title = host.getString(R.string.places_title)
+        title = context.getString(R.string.places_title)
     }
 
     private suspend fun sortBeacons(beacons: List<IBeacon>): List<IBeacon> {
@@ -370,11 +402,11 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     private fun handleCreateAction(action: BeaconCreateAction) {
         when (action) {
             BeaconCreateAction.ImportQr -> {
-                host.requestCamera { hasPermission ->
-                    if (hasPermission) {
+                lifecycleScope.launch {
+                    if (effects.requestPermission(AppPermission.Camera)) {
                         importBeaconFromQR()
                     } else {
-                        host.alertNoCameraPermission()
+                        effects.explainPermissionDenied(AppPermission.Camera)
                     }
                 }
             }
@@ -382,7 +414,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             BeaconCreateAction.ImportGpx -> importBeacons()
             BeaconCreateAction.CreateGroup -> {
                 val command =
-                    CreateBeaconGroupCommand(host.requireContext(), host.lifecycleScope, beaconService) {
+                    CreateBeaconGroupCommand(context, lifecycleScope, beaconService) {
                         refresh()
                     }
                 command.execute(manager.root?.id)
@@ -394,12 +426,12 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     }
 
     private fun onExportBeacons() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             val gpx = getExportGPX()
             onMain {
                 Pickers.items(
-                    host.requireContext(),
-                    host.getString(R.string.export),
+                    context,
+                    context.getString(R.string.export),
                     gpx.waypoints.map { it.name ?: formatService.formatLocation(it.coordinate) },
                     List(gpx.waypoints.size) { it },
                 ) {
@@ -434,8 +466,6 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     fun onDestroy() {
         onPause()
-        backPressedCallback?.remove()
-        backPressedCallback = null
         isInitialized = false
     }
 
@@ -493,15 +523,15 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     private fun changeSort() {
         val sortOptions = BeaconSortMethod.values()
         Pickers.item(
-            host.requireContext(),
-            host.getString(R.string.sort),
+            context,
+            context.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.beacons.beaconSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.beacons.beaconSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -509,9 +539,9 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     private fun getSortString(sortMethod: BeaconSortMethod): String {
         return when (sortMethod) {
-            BeaconSortMethod.MostRecent -> host.getString(R.string.most_recent)
-            BeaconSortMethod.Closest -> host.getString(R.string.closest)
-            BeaconSortMethod.Name -> host.getString(R.string.name)
+            BeaconSortMethod.MostRecent -> context.getString(R.string.most_recent)
+            BeaconSortMethod.Closest -> context.getString(R.string.closest)
+            BeaconSortMethod.Name -> context.getString(R.string.name)
         }
     }
 
@@ -520,21 +550,21 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     }
 
     private fun export(gpx: GPXData) {
-        host.inBackground(BackgroundMinimumState.Created) {
+        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
             val exportFile = "trail-sense-${Instant.now().epochSecond}.gpx"
             val success = gpxService.export(gpx, exportFile)
             onMain {
                 if (success) {
-                    host.toast(
-                        host.getResources().getQuantityString(
+                    effects.showMessage(
+                        context.resources.getQuantityString(
                             R.plurals.beacons_exported,
                             gpx.waypoints.size,
                             gpx.waypoints.size
                         )
                     )
                 } else {
-                    host.toast(
-                        host.getString(R.string.beacon_export_error)
+                    effects.showMessage(
+                        context.getString(R.string.beacon_export_error)
                     )
                 }
             }
@@ -542,21 +572,21 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     }
 
     private fun importBeacons() {
-        val importer = BeaconGpxImporter(host.requireContext())
-        host.inBackground(BackgroundMinimumState.Created) {
+        val importer = BeaconGpxImporter(context)
+        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
             val gpx = gpxService.import()
             val waypoints = gpx?.waypoints ?: emptyList()
             onMain {
                 Pickers.items(
-                    host.requireContext(),
-                    host.getString(R.string.import_btn),
+                    context,
+                    context.getString(R.string.import_btn),
                     waypoints.map {
                         it.name ?: formatService.formatLocation(it.coordinate)
                     },
                     List(waypoints.size) { it }
                 ) {
                     if (it != null) {
-                        host.inBackground {
+                        lifecycleOwner.inBackground {
                             val gpxToImport =
                                 GPXData(waypoints.filterIndices(it), emptyList(), emptyList())
                             val count = onIO {
@@ -564,8 +594,8 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
                             }
                             onMain {
                                 Alerts.toast(
-                                    host.requireContext(),
-                                    host.getResources().getQuantityString(
+                                    context,
+                                    context.resources.getQuantityString(
                                         R.plurals.beacons_imported,
                                         count,
                                         count
@@ -621,7 +651,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     }
 
     private fun navigate(beacon: Beacon) {
-        val navigator = Navigator.getInstance(host.requireContext())
+        val navigator = Navigator.getInstance(context)
         navigator.navigateTo(beacon)
         appNavigator.navigate(Route.Navigation())
     }
@@ -633,8 +663,8 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     private fun delete(beacon: Beacon) {
         val command = DeleteBeaconCommand(
-            host.requireContext(),
-            host.lifecycleScope,
+            context,
+            lifecycleScope,
             beaconService
         ) {
             refresh()
@@ -644,17 +674,17 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     private fun delete(group: BeaconGroup?) {
         Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete),
+            context,
+            context.getString(R.string.delete),
             group?.name?.let {
-                host.getString(
+                context.getString(
                     R.string.delete_beacon_group_message,
                     it
                 )
-            } ?: host.getString(R.string.delete_all_beacons),
+            } ?: context.getString(R.string.delete_all_beacons),
         ) { cancelled ->
             if (!cancelled) {
-                host.inBackground {
+                lifecycleOwner.inBackground {
                     onIO {
                         beaconService.delete(group)
                     }
@@ -673,8 +703,8 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     private fun move(beacon: Beacon) {
         val command = MoveBeaconCommand(
-            host.requireContext(),
-            host.lifecycleScope,
+            context,
+            lifecycleScope,
             beaconService
         ) {
             refresh()
@@ -684,12 +714,12 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     private fun move(group: BeaconGroup) {
         val command =
-            MoveBeaconGroupCommand(host.requireContext(), host.lifecycleScope, beaconService) { refresh() }
+            MoveBeaconGroupCommand(context, lifecycleScope, beaconService) { refresh() }
         command.execute(group)
     }
 
     private fun toggleVisibility(beacon: Beacon) {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             val newBeacon = beacon.copy(visible = !beacon.visible)
 
             onIO {
@@ -703,8 +733,8 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     }
 
     private fun setGroupVisibility(group: BeaconGroup, visible: Boolean) {
-        host.inBackground {
-            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
+        lifecycleOwner.inBackground {
+            Alerts.withLoading(context, context.getString(R.string.loading)) {
                 val beacons = onIO {
                     beaconService.loader.getChildren(group.id, null).filterIsInstance<Beacon>()
                 }
@@ -725,20 +755,20 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
 
     private fun rename(group: BeaconGroup) {
         val command =
-            RenameBeaconGroupCommand(host.requireContext(), host.lifecycleScope, beaconService) { refresh() }
+            RenameBeaconGroupCommand(context, lifecycleScope, beaconService) { refresh() }
         command.execute(group)
     }
 
     private fun navigateToNearestCellSignal() {
-        host.inBackground {
-            val command = NavigateToNearestCellSignal(host.requireContext())
+        lifecycleOwner.inBackground {
+            val command = NavigateToNearestCellSignal(context)
             if (command.execute()) {
                 onMain {
                     appNavigator.navigate(Route.Navigation())
                 }
             } else {
                 onMain {
-                    host.toast(host.getString(R.string.no_recorded_cell_signal_nearby))
+                    effects.showMessage(context.getString(R.string.no_recorded_cell_signal_nearby))
                 }
             }
         }
@@ -766,7 +796,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             BeaconAction.Delete -> delete(beacon)
             BeaconAction.Move -> move(beacon)
             BeaconAction.ToggleVisibility -> toggleVisibility(beacon)
-            BeaconAction.Share -> BeaconSender(host).send(beacon)
+            BeaconAction.Share -> BeaconSender(context, effects, appNavigator, lifecycleScope).send(beacon)
         }
     }
 }
@@ -1348,4 +1378,10 @@ private fun BeaconListScreenPreview() {
             onGroupAction = { _, _ -> }
         )
     }
+}
+
+private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
+    is MainActivity -> this
+    is ContextWrapper -> baseContext.findMainActivity()
+    else -> null
 }

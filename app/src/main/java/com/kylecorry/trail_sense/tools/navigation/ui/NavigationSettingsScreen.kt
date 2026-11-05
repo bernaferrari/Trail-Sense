@@ -14,14 +14,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import android.content.Context
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
-import com.kylecorry.trail_sense.settings.ui.goBack
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
@@ -42,8 +51,15 @@ import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
-fun NavigationSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { NavigationSettingsController(host) }
+fun NavigationSettingsToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val controller = remember(context) {
+        NavigationSettingsController(context, navigator, effects, scope) { backDispatcher?.onBackPressed() }
+    }
     DisposableEffect(controller) {
         onDispose {
             controller.onDispose()
@@ -53,14 +69,21 @@ fun NavigationSettingsToolScreen(host: TrailSenseDestinationHost) {
     controller.LayerSheet()
 }
 
-private class NavigationSettingsController(private val host: TrailSenseDestinationHost) {
+/** The page's pickers and preferences; plain state over the preferences, kept while the page is shown. */
+private class NavigationSettingsController(
+    private val context: Context,
+    private val navigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val scope: CoroutineScope,
+    private val back: () -> Unit
+) {
     private val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
 
-    val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    val userPrefs by lazy { UserPreferences(host.requireContext()) }
+    val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
+    val userPrefs by lazy { UserPreferences(context) }
     val prefs by lazy { userPrefs.navigation }
-    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
-    val hasCompass by lazy { SensorService(host.requireContext()).hasCompass() }
+    val formatter by lazy { FormatService.getInstance(context) }
+    val hasCompass by lazy { SensorService(context).hasCompass() }
     val distanceUnits by lazy {
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
     }
@@ -70,7 +93,7 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
     }
 
     fun goBack() {
-        host.goBack()
+        back()
     }
 
     fun showLayerSheet() {
@@ -81,15 +104,15 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
     @Composable
     fun LayerSheet() {
         layerSheet.Content(
-            host.requireContext(),
-            { host.findNavigator().navigate(it) }
+            context,
+            { navigator.navigate(it) }
         )
     }
 
     fun onCurrentPaceSpeedometerSelected() {
-        host.requestActivityRecognition { hasPermission ->
-            if (!hasPermission) {
-                host.alertNoActivityRecognitionPermission()
+        scope.launch {
+            if (!effects.requestPermission(AppPermission.ActivityRecognition)) {
+                effects.explainPermissionDenied(AppPermission.ActivityRecognition)
             }
         }
     }
@@ -101,7 +124,7 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            host.requireContext(),
+            context,
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -114,8 +137,8 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
 
     fun pickVisibleBeaconCount(current: Int, onPicked: (Int) -> Unit) {
         Pickers.number(
-            host.requireContext(),
-            host.getString(R.string.pref_num_visible_beacons_title),
+            context,
+            context.getString(R.string.pref_num_visible_beacons_title),
             null,
             current,
             allowDecimals = false,
@@ -131,10 +154,10 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
 
     fun pickNearbyRadius(current: Distance, onPicked: (Distance) -> Unit) {
         CustomUiUtils.pickDistance(
-            host.requireContext(),
+            context,
             distanceUnits,
             current,
-            host.getString(R.string.pref_max_beacon_distance_title)
+            context.getString(R.string.pref_max_beacon_distance_title)
         ) { distance, cancelled ->
             if (cancelled || distance == null || distance.value <= 0) {
                 return@pickDistance
@@ -147,10 +170,10 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
 
     fun pickBearingLength(current: Distance, onPicked: (Distance) -> Unit) {
         CustomUiUtils.pickDistance(
-            host.requireContext(),
+            context,
             distanceUnits,
             current,
-            host.getString(R.string.bearing_length)
+            context.getString(R.string.bearing_length)
         ) { distance, cancelled ->
             if (cancelled || distance == null || distance.value <= 0) {
                 return@pickDistance
@@ -162,8 +185,8 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
     }
 
     fun options(entriesId: Int, valuesId: Int): List<NavigationOption> {
-        val entries = host.getResources().getStringArray(entriesId)
-        val values = host.getResources().getStringArray(valuesId)
+        val entries = context.resources.getStringArray(entriesId)
+        val values = context.resources.getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             NavigationOption(value, entries.getOrElse(index) { value })
         }
@@ -182,19 +205,19 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
     }
 
     fun getStringPreference(key: Int, default: String): String {
-        return cache.getString(host.getString(key)) ?: default
+        return cache.getString(context.getString(key)) ?: default
     }
 
     fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(host.getString(key)) ?: defaultValue
+        return cache.getBoolean(context.getString(key)) ?: defaultValue
     }
 
     fun putString(key: Int, value: String) {
-        cache.putString(host.getString(key), value)
+        cache.putString(context.getString(key), value)
     }
 
     fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(host.getString(key), value)
+        cache.putBoolean(context.getString(key), value)
     }
 }
 

@@ -68,7 +68,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
@@ -81,9 +80,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownService
 import com.kylecorry.sol.science.astronomy.SunTimesMode
@@ -100,6 +97,22 @@ import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import android.content.Context
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
@@ -115,155 +128,178 @@ object TurnBackKeys {
 }
 
 @Composable
-fun TurnBackToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { TurnBackController(host) }
+fun TurnBackToolScreen() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        TurnBackViewModel(
+            preferences = PreferencesSubsystem.getInstance(appContext).preferences,
+            locationSubsystem = LocationSubsystem.getInstance(appContext),
+            sensorSubsystem = SensorSubsystem.getInstance(appContext)
+        )
+    }
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+    val userPrefs = remember(appContext) { UserPreferences(appContext) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.alertSet.collect {
+            scope.launch {
+                // Exact alarms first; the alarm starts whether or not they were granted, as it always has.
+                effects.requestPermission(AppPermission.ExactAlarms)
+                TurnBackAlarmReceiver.start(context)
+                requestBackgroundLocation(context, viewModel.preferences, effects)
+            }
+            effects.showMessage(context.getString(R.string.turn_back_alert_set))
+        }
+    }
 
     TurnBackScreen(
-        formatter = controller.formatter,
-        loadTurnBackTime = {
-            controller.sharedPrefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_TIME)
+        formatter = formatter,
+        loadTurnBackTime = viewModel::turnBackTime,
+        loadReturnTime = viewModel::returnTime,
+        onPickReturnTime = { currentReturnTime ->
+            CustomUiUtils.pickTime(
+                context,
+                userPrefs.use24HourTime,
+                currentReturnTime?.atZone(ZoneId.systemDefault())?.toLocalTime() ?: LocalTime.now()
+            ) {
+                if (it != null) {
+                    viewModel.setReturnTimeAt(it)
+                }
+            }
         },
-        loadReturnTime = {
-            controller.sharedPrefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
+        onUseSunset = {
+            val job = viewModel.setReturnTimeToSunset()
+            Alerts.withCancelableLoading(
+                context,
+                context.getString(R.string.loading),
+                onCancel = { job.cancel() }
+            ) {
+                // The sunset lookup runs in the ViewModel; the dialog only offers to cancel it.
+            }
         },
-        onPickReturnTime = controller::pickReturnTime,
-        onUseSunset = controller::setReturnTimeToSunset,
-        loadSunset = controller::getNextSunset,
-        onCancel = controller::cancelTurnBack
+        loadSunset = viewModel::getNextSunset,
+        onCancel = {
+            viewModel.cancelTurnBack()
+            TurnBackAlarmReceiver.stop(context)
+        }
     )
 }
 
-private class TurnBackController(private val host: TrailSenseDestinationHost) {
+/**
+ * Turn back's state: the return and turn-around times in preferences, and tonight's sunset. Plain Kotlin over the
+ * preferences and location subsystems; [alertSet] fires once a new return time is stored so the screen can start the
+ * alarm and ask for its permissions.
+ */
+internal class TurnBackViewModel(
+    val preferences: IPreferences,
+    private val locationSubsystem: LocationSubsystem,
+    private val sensorSubsystem: SensorSubsystem
+) : ViewModel() {
 
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    val sharedPrefs by lazy { PreferencesSubsystem.getInstance(host.requireContext()) }
-    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
     private val astronomy = AstronomyService()
 
-    fun pickReturnTime(currentReturnTime: Instant?) {
-        CustomUiUtils.pickTime(
-            host.requireContext(),
-            prefs.use24HourTime,
-            currentReturnTime?.atZone(ZoneId.systemDefault())?.toLocalTime() ?: LocalTime.now()
-        ) {
-            if (it != null) {
-                val newReturnTime = if (it < LocalTime.now()) {
-                    ZonedDateTime.now().plusDays(1).with(it)
-                } else {
-                    ZonedDateTime.now().with(it)
-                }
+    private val _alertSet = Channel<Unit>(Channel.BUFFERED)
 
-                setReturnTime(newReturnTime)
-            }
+    /** One event each time a return time is set. */
+    val alertSet: Flow<Unit> = _alertSet.receiveAsFlow()
+
+    fun turnBackTime(): Instant? = preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_TIME)
+
+    fun returnTime(): Instant? = preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
+
+    /** Return at [time] today, or tomorrow if it has already passed. */
+    fun setReturnTimeAt(time: LocalTime) {
+        val newReturnTime = if (time < LocalTime.now()) {
+            ZonedDateTime.now().plusDays(1).with(time)
+        } else {
+            ZonedDateTime.now().with(time)
         }
+        setReturnTime(newReturnTime)
     }
 
     /** Tonight's sunset at the last known location, for the "Return before dark" row (no GPS fix is requested). */
     suspend fun getNextSunset(): Instant? = withContext(Dispatchers.Default) {
-        val location = LocationSubsystem.getInstance(host.requireContext()).location
+        val location = locationSubsystem.location
         astronomy.getNextSunset(location, SunTimesMode.Actual)?.atZone(ZoneId.systemDefault())?.toInstant()
     }
 
-    fun setReturnTimeToSunset() {
-        host.lifecycleScope.launch {
-            var wasSuccessful = false
-            var sunsetTime: ZonedDateTime? = null
-            val job = launch(Dispatchers.IO) {
-                val location = SensorSubsystem.getInstance(host.requireContext()).getLocation()
-                sunsetTime = astronomy.getNextSunset(location, SunTimesMode.Actual)
-                    ?.atZone(ZoneId.systemDefault())
-                wasSuccessful = true
+    /** Finds tonight's sunset from a fresh location and returns by it; cancel the job to give up. */
+    fun setReturnTimeToSunset(): Job {
+        return viewModelScope.launch {
+            val sunsetTime = withContext(Dispatchers.IO) {
+                val location = sensorSubsystem.getLocation()
+                astronomy.getNextSunset(location, SunTimesMode.Actual)?.atZone(ZoneId.systemDefault())
             }
-
-            Alerts.withCancelableLoading(
-                host.requireContext(),
-                host.getString(R.string.loading),
-                onCancel = { job.cancel() }
-            ) {
-                host.lifecycleScope.launch {
-                    job.join()
-                    if (wasSuccessful) {
-                        setReturnTime(sunsetTime ?: return@launch)
-                    }
-                }
-            }
+            setReturnTime(sunsetTime ?: return@launch)
         }
     }
 
     private fun setReturnTime(time: ZonedDateTime) {
-        val turnBackPercent = 0.4f
         val instant = time.toInstant()
-        val remainingMillisToReturn =
-            Duration.between(Instant.now(), instant).toMillis().coerceAtLeast(0)
-        val newTurnBackTime =
-            Instant.now().plusMillis((remainingMillisToReturn * turnBackPercent).toLong())
-
-        sharedPrefs.preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_TIME, newTurnBackTime)
-        sharedPrefs.preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME, instant)
-        enableTurnBackAlarm()
-
-        host.toast(host.getString(R.string.turn_back_alert_set))
-    }
-
-    private fun enableTurnBackAlarm() {
-        requestExactAlarms {
-            TurnBackAlarmReceiver.start(host.requireContext())
-            requestBackgroundLocation()
-        }
-    }
-
-    private fun requestExactAlarms(action: (hasPermission: Boolean) -> Unit) {
-        host.requestScheduleExactAlarms(action)
-    }
-
-    private fun requestBackgroundLocation() {
-        val shownFlag = PreferencesFlag(
-            sharedPrefs.preferences,
-            "cache_background_location_requested"
-        )
-        if (!IsBackgroundLocationRequired().isSatisfiedBy(host.requireContext())) {
-            shownFlag.set(false)
-            return
-        }
-        if (shownFlag.get()) {
-            return
-        }
-
-        shownFlag.set(true)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            return
-        }
-
-        CustomUiUtils.snackbar(
-            host,
-            host.getString(R.string.sunset_alerts_background_location_disclaimer),
-            Snackbar.LENGTH_LONG,
-            host.getString(R.string.learn_more)
-        ) {
-            val markdown = DependencyRegistry.get<MarkdownService>()
-            val contents =
-                markdown.toMarkdown(host.getString(R.string.access_background_location_rationale))
-
-            Alerts.dialog(
-                host.requireContext(),
-                host.getString(R.string.access_background_location),
-                contents,
-                okText = host.getString(R.string.settings),
-                allowLinks = true
-            ) { cancelled ->
-                if (!cancelled) {
-                    host.requestBackgroundLocation {
-                        // No-op
-                    }
-                }
-            }
-        }
+        val now = Instant.now()
+        preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_TIME, turnBackTimeFor(now, instant))
+        preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME, instant)
+        _alertSet.trySend(Unit)
     }
 
     fun cancelTurnBack() {
-        sharedPrefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_TIME)
-        sharedPrefs.preferences.remove(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
-        TurnBackAlarmReceiver.stop(host.requireContext())
+        preferences.remove(TurnBackKeys.PREF_TURN_BACK_TIME)
+        preferences.remove(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
+    }
+
+    companion object {
+        private const val TURN_BACK_PERCENT = 0.4f
+
+        /** When to turn around to be back by [returnTime]: 40% of the time left, leaving the rest for the walk back. */
+        fun turnBackTimeFor(now: Instant, returnTime: Instant): Instant {
+            val remainingMillisToReturn = Duration.between(now, returnTime).toMillis().coerceAtLeast(0)
+            return now.plusMillis((remainingMillisToReturn * TURN_BACK_PERCENT).toLong())
+        }
+    }
+}
+
+/** Once, when the alarm needs it, offers background location so the alert can find the sunset while closed. */
+private suspend fun requestBackgroundLocation(context: Context, preferences: IPreferences, effects: ScreenEffects) {
+    val shownFlag = PreferencesFlag(preferences, "cache_background_location_requested")
+    if (!IsBackgroundLocationRequired().isSatisfiedBy(context)) {
+        shownFlag.set(false)
+        return
+    }
+    if (shownFlag.get()) {
+        return
+    }
+
+    shownFlag.set(true)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+        return
+    }
+
+    val learnMore = effects.showSnackbar(
+        context.getString(R.string.sunset_alerts_background_location_disclaimer),
+        actionLabel = context.getString(R.string.learn_more),
+        long = true
+    )
+    if (!learnMore) {
+        return
+    }
+    val markdown = DependencyRegistry.get<MarkdownService>()
+    val contents = markdown.toMarkdown(context.getString(R.string.access_background_location_rationale))
+    val cancelled = suspendCancellableCoroutine { continuation ->
+        Alerts.dialog(
+            context,
+            context.getString(R.string.access_background_location),
+            contents,
+            okText = context.getString(R.string.settings),
+            allowLinks = true
+        ) { cancelled ->
+            if (continuation.isActive) continuation.resume(cancelled)
+        }
+    }
+    if (!cancelled) {
+        effects.requestPermission(AppPermission.BackgroundLocation)
     }
 }
 
