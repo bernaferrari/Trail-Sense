@@ -177,7 +177,7 @@ fun DestinationContent(
             Route.UnitSettings -> UnitSettingsToolScreen(this)
             Route.AugmentedRealitySettings -> AugmentedRealitySettingsToolScreen(this)
             Route.ThermometerSettings -> ThermometerSettingsToolScreen(this)
-            Route.WeatherSettings -> WeatherSettingsToolScreen(this)
+            Route.WeatherSettings -> WeatherSettingsToolScreen()
             Route.PedometerSettings -> PedometerSettingsToolScreen(this)
             Route.NavigationSettings -> NavigationSettingsToolScreen(this)
             Route.PathsSettings -> PathsSettingsToolScreen(this)
@@ -271,7 +271,13 @@ fun DestinationContent(
                 host = this,
                 onController = { screenController = it }
             )
-            Route.Weather -> WeatherToolScreen(this)
+            Route.Weather -> WeatherToolScreen(
+                bindQuickActions = { left, right ->
+                    com.kylecorry.trail_sense.tools.weather.quickactions.WeatherQuickActionBinder(
+                        this, left, right, com.kylecorry.trail_sense.shared.UserPreferences(requireContext()).weather
+                    ).bind()
+                }
+            )
             Route.LocalMessaging -> TrailSenseCommsToolScreen(this, "4c285dfe-1c8b-45eb-bb79-3f1d2eb6ae48")
             Route.LocalTalk -> TrailSenseCommsToolScreen(this, "b76f32bf-6a72-4992-a741-0c9bf19ebd11")
         }

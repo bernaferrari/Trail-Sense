@@ -2,6 +2,15 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
+import kotlinx.coroutines.Job
+
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.rounded.WbSunny
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
@@ -99,7 +108,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
@@ -115,13 +123,11 @@ import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
-import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
@@ -129,14 +135,12 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
-import com.kylecorry.trail_sense.tools.tools.infrastructure.observe
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWeatherFrequencyCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import com.kylecorry.trail_sense.tools.weather.quickactions.WeatherQuickActionBinder
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
 import com.kylecorry.trail_sense.tools.weather.ui.fields.AlertWeatherField
@@ -156,200 +160,129 @@ import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 
+/**
+ * The weather tool. [bindQuickActions] binds the forecast's two quick action buttons; the activity's quick actions
+ * still need the destination host, so DestinationContent supplies it.
+ */
 @Composable
 fun WeatherToolScreen(
-    host: TrailSenseDestinationHost,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    bindQuickActions: (left: ComposeQuickActionButtonView, right: ComposeQuickActionButtonView) -> Unit = { _, _ -> }
 ) {
-    val controller = remember(host) { WeatherController(host) }
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val viewModel = viewModel {
+        WeatherViewModel(
+            weatherSubsystem = WeatherSubsystem.getInstance(appContext),
+            prefs = prefs,
+            monitorService = Tools.getService(appContext, WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
+            createLogger = { indicator ->
+                WeatherLogger(appContext, Duration.ofSeconds(30), Duration.ofMillis(500), indicator)
+            }
+        )
+    }
+    val formatService = remember(context) { FormatService.getInstance(context) }
+    val temperatureUnits = remember(prefs) { prefs.temperatureUnits }
+    val views = remember { createWeatherViews(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
+    var showWeatherFrequencyPicker by remember { mutableStateOf(false) }
+    var pressureMarker by remember { mutableStateOf<Pair<Duration, Float>?>(null) }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
+    LaunchedEffect(views) {
+        bindQuickActions(views.weatherTitle.leftButton, views.weatherTitle.rightButton)
+    }
+
+    DisposableEffect(viewModel, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.start()
+                    ShowHistoricTemperatureDisclaimerCommand(context).execute()
+                }
+
+                Lifecycle.Event.ON_PAUSE -> viewModel.stop()
                 else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
         }
     }
 
-    controller.Content(modifier = modifier)
-}
-
-private class WeatherController(
-    private val host: TrailSenseDestinationHost
-) {
-    private var weatherViews: WeatherViews? =
-        createWeatherViews(host.requireContext())
-    private val views: WeatherViews
-        get() = weatherViews ?: error("Weather views are not ready")
-    private val isViewReady: Boolean
-        get() = weatherViews != null
-
-    private var useSeaLevelPressure = false
-    private var units = PressureUnits.Hpa
-
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val temperatureUnits by lazy { prefs.temperatureUnits }
-
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-
-    private var history: List<WeatherObservation> = emptyList()
-    private var pressureForecast: List<Reading<Pressure>> = emptyList()
-    private var rawHistory: List<Reading<Pressure>> = emptyList()
-    private var weatherItems by mutableStateOf<List<WeatherListItem>>(emptyList())
-    private var pressureChartData by mutableStateOf(WeatherPressureChartData())
-    private var pressureMarkerText by mutableStateOf<String?>(null)
-    private var isWeatherUpdating by mutableStateOf(false)
-    private var tendencyDirection by mutableStateOf(0)
-    private var weatherMonitorState by mutableStateOf(FeatureState.Off)
-    private var weatherMonitorFrequency by mutableStateOf<Duration?>(null)
-    private var showWeatherFrequencyPicker by mutableStateOf(false)
-    private var hasLoaded by mutableStateOf(false)
-
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
-    private var weather: CurrentWeather? = null
-    private val loadingIndicator by lazy {
-        ResettableLoadingIndicator(
-            StateLoadingIndicator { isWeatherUpdating = it }
-        )
+    ToolBroadcastEffect(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
+        viewModel.updateStatusBar()
+    }
+    ToolBroadcastEffect(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
+        viewModel.updateStatusBar()
     }
 
-    private val logger by lazy {
-        WeatherLogger(
-            host.requireContext(),
-            Duration.ofSeconds(30),
-            Duration.ofMillis(500),
-            loadingIndicator
-        )
-    }
+    val weather = viewModel.weather
+    val history = viewModel.history
 
-    private val weatherMonitorService by lazy {
-        Tools.getService(host.requireContext(), WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!
-    }
-
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        val weatherFrequencyTitle = stringResource(R.string.pref_weather_update_frequency_title)
-        WeatherHost(
-            views = views,
-            weatherItems = weatherItems,
-            pressureChartData = pressureChartData,
-            pressureMarkerText = pressureMarkerText,
-            isWeatherUpdating = isWeatherUpdating,
-            monitorState = weatherMonitorState,
-            monitorFrequency = weatherMonitorFrequency,
-            formatService = formatService,
-            onChangeMonitorFrequency = {
-                showWeatherFrequencyPicker = true
-            },
-            onPressureMarkerSelected = ::onPressureMarkerSelected,
-            onToggleMonitor = ::toggleWeatherMonitor,
-            modifier = modifier,
-            tendencyDirection = tendencyDirection,
-            isEmpty = hasLoaded && pressureChartData.data.size < 2
-        )
-
-        if (showWeatherFrequencyPicker) {
-            DurationPickerDialog(
-                title = weatherFrequencyTitle,
-                duration = prefs.weather.weatherUpdateFrequency,
-                message = stringResource(R.string.actual_frequency_disclaimer),
-                hint = stringResource(R.string.frequency),
-                onDurationPicked = {
-                    if (it != null) {
-                        changeWeatherFrequency(it)
-                    }
-                    showWeatherFrequencyPicker = false
-                },
-                onDismiss = {
-                    showWeatherFrequencyPicker = false
-                }
+    fun showHumidityChart() {
+        val readings =
+            history.filter { it.humidity != null }.map { Reading(it.humidity!!, it.time) }
+        if (readings.size < 2) {
+            return
+        }
+        val readingDuration = Duration.between(readings.first().time, Instant.now())
+        CustomUiUtils.showComposeContentDialog(
+            context = context,
+            title = context.getString(
+                R.string.humidity_history,
+                formatService.formatDuration(readingDuration, true)
+            )
+        ) {
+            TrailSenseLineChart(
+                readings = readings,
+                minimum = 0f,
+                maximum = 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
             )
         }
     }
 
-    fun onCreate() {
-        WeatherQuickActionBinder(
-            host,
-            views.weatherTitle.leftButton,
-            views.weatherTitle.rightButton,
-            prefs.weather
-        ).bind()
-
-        host.lifecycleScope.launch {
-            weatherSubsystem.weatherChanged.flow.collect {
-                updateWeather()
-            }
+    fun showTemperatureChart() {
+        val readings = history.map {
+            Reading(it.temperature.convertTo(temperatureUnits).value, it.time)
         }
-
-        updateStatusBar()
-
-        Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
-            updateStatusBar()
+        if (readings.size < 2) {
+            return
         }
-
-        Tools.observe(host, WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
-            updateStatusBar()
-        }
-
-    }
-
-    fun onDestroy() {
-        weatherViews = null
-    }
-
-    private fun updateStatusBar() {
-        weatherMonitorState = weatherMonitorService.getFeatureState()
-        weatherMonitorFrequency = weatherMonitorService.getFrequency()
-    }
-
-    private fun changeWeatherFrequency(frequency: Duration) {
-        ChangeWeatherFrequencyCommand(host.requireContext()) { updateStatusBar() }.execute(frequency)
-    }
-
-    private fun toggleWeatherMonitor() {
-        host.inBackground {
-            when (weatherMonitorService.getFeatureState()) {
-                FeatureState.On -> weatherMonitorService.disable()
-                FeatureState.Off -> {
-                    weatherMonitorService.enable()
-                    RequestRemoveBatteryRestrictionCommand(
-                        host.requireContext(),
-                        RemoveBatteryRestrictionsAlerter(host)
-                    ).execute()
-                }
-
-                FeatureState.Unavailable -> host.toast(host.getString(R.string.weather_monitoring_disabled))
-            }
+        val readingDuration = Duration.between(readings.first().time, Instant.now())
+        CustomUiUtils.showComposeContentDialog(
+            context = context,
+            title = context.getString(
+                R.string.temperature_history,
+                formatService.formatDuration(readingDuration, true)
+            )
+        ) {
+            TrailSenseLineChart(
+                readings = readings,
+                freezingValue = Temperature.celsius(0f).convertTo(temperatureUnits).value,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.chart_height))
+            )
         }
     }
 
-    fun onResume() {
-        loadingIndicator.reset()
-        logger.start()
-        useSeaLevelPressure = prefs.weather.useSeaLevelPressure
-        units = prefs.pressureUnits
-        ShowHistoricTemperatureDisclaimerCommand(host.requireContext()).execute()
-        updateWeather()
+    fun showTemperatureForecast() {
+        scope.launch {
+            ShowHighLowTemperatureDialogCommand(context).execute()
+        }
     }
 
-    fun onPause() {
-        logger.stop()
-        loadingIndicator.hide()
-    }
-
-    private fun updateList() {
-        if (!isViewReady) return
-        val weather = weather ?: return
-
+    val weatherItems = remember(weather, history, context) {
+        if (weather == null) {
+            return@remember emptyList()
+        }
         val fields = listOf(
             // Alerts
             AlertWeatherField(weather.prediction.alerts),
@@ -373,22 +306,204 @@ private class WeatherController(
             PressureSystemWeatherField(weather.observation?.pressure),
             FrontWeatherField(weather.prediction.front),
         )
+        fields.mapNotNull { it.getListItem(context) }
+    }
+    val tendencyDirection = weather?.pressureTendency?.characteristic?.name?.let {
+        when {
+            it.startsWith("Rising") && it.endsWith("Fast") -> 2
+            it.startsWith("Rising") -> 1
+            it.startsWith("Falling") && it.endsWith("Fast") -> -2
+            it.startsWith("Falling") -> -1
+            else -> 0
+        }
+    } ?: 0
 
-        weatherItems = fields.mapNotNull { it.getListItem(host.requireContext()) }
-        tendencyDirection = weather.pressureTendency.characteristic.name.let {
-            when {
-                it.startsWith("Rising") && it.endsWith("Fast") -> 2
-                it.startsWith("Rising") -> 1
-                it.startsWith("Falling") && it.endsWith("Fast") -> -2
-                it.startsWith("Falling") -> -1
-                else -> 0
+    LaunchedEffect(weather) {
+        val prediction = weather?.prediction ?: return@LaunchedEffect
+        views.weatherTitle.title = formatService.formatWeather(prediction.primaryHourly)
+        views.weatherTitle.onTitleClick = {
+            if (prediction.hourly.isNotEmpty()) {
+                val conditions = prediction.hourly.joinToString("\n") {
+                    formatService.formatWeather(it)
+                }
+                Alerts.dialog(
+                    context,
+                    context.getString(R.string.weather),
+                    conditions,
+                    cancelText = null
+                )
             }
         }
+        views.weatherTitle.icon = formatService.getWeatherImage(prediction.primaryHourly)
+        views.weatherTitle.condition = prediction.primaryHourly
+        val arrival =
+            formatService.formatWeatherArrival(prediction.hourlyArrival)
+        val then = context.getString(
+            R.string.then_weather,
+            formatService.formatWeather(prediction.primaryDaily).lowercase()
+        )
+
+        val hourlySameAsDaily = prediction.primaryDaily == prediction.primaryHourly
+
+        views.weatherTitle.subtitle =
+            if (arrival.isNotEmpty() && (prediction.primaryDaily == null || hourlySameAsDaily)) {
+                arrival
+            } else if (arrival.isNotEmpty()) {
+                "$arrival, $then"
+            } else if (!hourlySameAsDaily) {
+                then
+            } else {
+                ""
+            }
     }
 
+    val pressureMarkerText = pressureMarker?.let { (timeAgo, pressure) ->
+        val units = viewModel.pressureUnits
+        val formatted = formatService.formatPressure(
+            Pressure.from(pressure, units),
+            Units.getDecimalPlaces(units)
+        )
+        stringResource(
+            R.string.pressure_reading_time_ago,
+            formatted,
+            formatService.formatDuration(timeAgo, false)
+        )
+    }
+
+    val weatherFrequencyTitle = stringResource(R.string.pref_weather_update_frequency_title)
+    WeatherHost(
+        views = views,
+        weatherItems = weatherItems,
+        pressureChartData = viewModel.pressureChartData,
+        pressureMarkerText = pressureMarkerText,
+        isWeatherUpdating = viewModel.isWeatherUpdating,
+        monitorState = viewModel.monitorState,
+        monitorFrequency = viewModel.monitorFrequency,
+        formatService = formatService,
+        onChangeMonitorFrequency = {
+            showWeatherFrequencyPicker = true
+        },
+        onPressureMarkerSelected = { timeAgo, pressure ->
+            pressureMarker = if (timeAgo == null || pressure == null) null else timeAgo to pressure
+        },
+        onToggleMonitor = {
+            scope.launch {
+                when (viewModel.toggleMonitor()) {
+                    FeatureState.Off -> RequestRemoveBatteryRestrictionCommand(
+                        context,
+                        WeatherBatteryRestrictionsAlerter(context, effects, scope)
+                    ).execute()
+
+                    FeatureState.Unavailable -> effects.showMessage(
+                        context.getString(R.string.weather_monitoring_disabled)
+                    )
+
+                    FeatureState.On -> Unit
+                }
+            }
+        },
+        modifier = modifier,
+        tendencyDirection = tendencyDirection,
+        isEmpty = viewModel.hasLoaded && viewModel.pressureChartData.data.size < 2
+    )
+
+    if (showWeatherFrequencyPicker) {
+        DurationPickerDialog(
+            title = weatherFrequencyTitle,
+            duration = prefs.weather.weatherUpdateFrequency,
+            message = stringResource(R.string.actual_frequency_disclaimer),
+            hint = stringResource(R.string.frequency),
+            onDurationPicked = {
+                if (it != null) {
+                    ChangeWeatherFrequencyCommand(context) { viewModel.updateStatusBar() }.execute(it)
+                }
+                showWeatherFrequencyPicker = false
+            },
+            onDismiss = {
+                showWeatherFrequencyPicker = false
+            }
+        )
+    }
+}
+
+/**
+ * The weather tool's state: plain Kotlin over the weather subsystem, preferences and the weather monitor. While the
+ * screen is resumed it logs a reading and keeps the history, the pressure chart and the monitor's status current.
+ */
+internal class WeatherViewModel(
+    private val weatherSubsystem: WeatherSubsystem,
+    private val prefs: UserPreferences,
+    private val monitorService: ToolService,
+    createLogger: (ILoadingIndicator) -> WeatherLogger
+) : ViewModel() {
+
+    var history by mutableStateOf<List<WeatherObservation>>(emptyList())
+        private set
+    var weather by mutableStateOf<CurrentWeather?>(null)
+        private set
+    var pressureChartData by mutableStateOf(WeatherPressureChartData())
+        private set
+    var pressureUnits by mutableStateOf(PressureUnits.Hpa)
+        private set
+    var isWeatherUpdating by mutableStateOf(false)
+        private set
+    var monitorState by mutableStateOf(FeatureState.Off)
+        private set
+    var monitorFrequency by mutableStateOf<Duration?>(null)
+        private set
+    var hasLoaded by mutableStateOf(false)
+        private set
+
+    private val loadingIndicator = ResettableLoadingIndicator(
+        StateLoadingIndicator { isWeatherUpdating = it }
+    )
+    private val logger = createLogger(loadingIndicator)
+    private var updateJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            weatherSubsystem.weatherChanged.flow.collect {
+                updateWeather()
+            }
+        }
+        updateStatusBar()
+    }
+
+    fun start() {
+        loadingIndicator.reset()
+        logger.start()
+        pressureUnits = prefs.pressureUnits
+        updateWeather()
+    }
+
+    fun stop() {
+        logger.stop()
+        loadingIndicator.hide()
+    }
+
+    override fun onCleared() {
+        logger.stop()
+    }
+
+    fun updateStatusBar() {
+        monitorState = monitorService.getFeatureState()
+        monitorFrequency = monitorService.getFrequency()
+    }
+
+    /** Turns the weather monitor on or off and returns the state it was in. */
+    suspend fun toggleMonitor(): FeatureState {
+        val state = monitorService.getFeatureState()
+        when (state) {
+            FeatureState.On -> monitorService.disable()
+            FeatureState.Off -> monitorService.enable()
+            FeatureState.Unavailable -> Unit
+        }
+        return state
+    }
 
     private fun updateWeather() {
-        host.inBackground {
+        updateJob?.cancel()
+        updateJob = viewModelScope.launch {
             val nextHistory = onIO {
                 weatherSubsystem.getHistory().filter {
                     Duration.between(it.time, Instant.now()) <= prefs.weather.pressureHistory
@@ -405,16 +520,10 @@ private class WeatherController(
                 emptyList()
             }
 
-            onMain {
-                history = nextHistory
-                rawHistory = nextRawHistory
-                weather = nextWeather
-                pressureForecast = nextForecast
-                displayPressureChart(history, rawHistory, pressureForecast)
-                updateList()
-                hasLoaded = true
-            }
-            updateForecast()
+            history = nextHistory
+            weather = nextWeather
+            displayPressureChart(nextHistory, nextRawHistory, nextForecast)
+            hasLoaded = true
         }
     }
 
@@ -441,6 +550,7 @@ private class WeatherController(
         rawReadings: List<Reading<Pressure>>,
         forecast: List<Reading<Pressure>>
     ) {
+        val units = pressureUnits
         val displayReadings =
             readings.map { it.pressureReading() }.map { it.copy(value = it.value.convertTo(units)) }
         val displayForecast = forecast.map { it.copy(value = it.value.convertTo(units)) }
@@ -450,124 +560,7 @@ private class WeatherController(
             forecast = displayForecast
         )
     }
-
-    private fun onPressureMarkerSelected(timeAgo: Duration?, pressure: Float?) {
-        pressureMarkerText = if (timeAgo == null || pressure == null) {
-            null
-        } else {
-            val formatted = formatService.formatPressure(
-                Pressure.from(pressure, units),
-                Units.getDecimalPlaces(units)
-            )
-            host.getString(
-                R.string.pressure_reading_time_ago,
-                formatted,
-                formatService.formatDuration(timeAgo, false)
-            )
-        }
-    }
-
-    private suspend fun updateForecast() {
-        if (!isViewReady) return
-        val weather = weather ?: return
-        val prediction = weather.prediction
-        onMain {
-            views.weatherTitle.title = formatService.formatWeather(prediction.primaryHourly)
-            views.weatherTitle.onTitleClick = {
-                if (prediction.hourly.isNotEmpty()) {
-                    val conditions = prediction.hourly.joinToString("\n") {
-                        formatService.formatWeather(it)
-                    }
-                    Alerts.dialog(
-                        host.requireContext(),
-                        host.getString(R.string.weather),
-                        conditions,
-                        cancelText = null
-                    )
-                }
-            }
-            views.weatherTitle.icon = formatService.getWeatherImage(prediction.primaryHourly)
-            views.weatherTitle.condition = prediction.primaryHourly
-            val arrival =
-                formatService.formatWeatherArrival(weather.prediction.hourlyArrival)
-            val then = host.getString(
-                R.string.then_weather,
-                formatService.formatWeather(prediction.primaryDaily).lowercase()
-            )
-
-            val hourlySameAsDaily = prediction.primaryDaily == prediction.primaryHourly
-
-            views.weatherTitle.subtitle =
-                if (arrival.isNotEmpty() && (prediction.primaryDaily == null || hourlySameAsDaily)) {
-                    arrival
-                } else if (arrival.isNotEmpty()) {
-                    "$arrival, $then"
-                } else if (!hourlySameAsDaily) {
-                    then
-                } else {
-                    ""
-                }
-        }
-    }
-
-    private fun showHumidityChart() {
-        val readings =
-            history.filter { it.humidity != null }.map { Reading(it.humidity!!, it.time) }
-        if (readings.size < 2) {
-            return
-        }
-        val readingDuration = Duration.between(readings.first().time, Instant.now())
-        CustomUiUtils.showComposeContentDialog(
-            context = host.requireContext(),
-            title = host.getString(
-                R.string.humidity_history,
-                formatService.formatDuration(readingDuration, true)
-            )
-        ) {
-            TrailSenseLineChart(
-                readings = readings,
-                minimum = 0f,
-                maximum = 100f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
-            )
-        }
-    }
-
-    private fun showTemperatureForecast() {
-        host.inBackground {
-            ShowHighLowTemperatureDialogCommand(host.requireContext()).execute()
-        }
-    }
-
-    private fun showTemperatureChart() {
-        val readings = history.map {
-            Reading(it.temperature.convertTo(temperatureUnits).value, it.time)
-        }
-        if (readings.size < 2) {
-            return
-        }
-        val readingDuration = Duration.between(readings.first().time, Instant.now())
-        CustomUiUtils.showComposeContentDialog(
-            context = host.requireContext(),
-            title = host.getString(
-                R.string.temperature_history,
-                formatService.formatDuration(readingDuration, true)
-            )
-        ) {
-            TrailSenseLineChart(
-                readings = readings,
-                freezingValue = Temperature.celsius(0f).convertTo(temperatureUnits).value,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
-            )
-        }
-    }
-
 }
-
 data class WeatherViews(
     val weatherTitle: WeatherTitleState
 )
@@ -1231,7 +1224,7 @@ private fun WeatherHostPreview() {
     }
 }
 
-private data class WeatherPressureChartData(
+internal data class WeatherPressureChartData(
     val data: List<Reading<Pressure>> = emptyList(),
     val raw: List<Reading<Pressure>> = emptyList(),
     val forecast: List<Reading<Pressure>> = emptyList()
