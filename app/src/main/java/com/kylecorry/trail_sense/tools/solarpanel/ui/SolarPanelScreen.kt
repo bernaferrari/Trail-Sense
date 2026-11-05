@@ -144,7 +144,7 @@ fun SolarPanelScreen(
         mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
     }
 
-    DisposableEffect(lifecycleOwner, compass, orientation, gps, view) {
+    DisposableEffect(lifecycleOwner, compass, orientation, gps) {
         var isStarted = false
         val sensorListener = { true }
         val gpsListener = {
