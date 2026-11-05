@@ -72,15 +72,11 @@ import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
-import android.graphics.Color as AndroidColor
-import android.widget.TextView
 import androidx.core.net.toUri
-import com.kylecorry.andromeda.pdf.PdfConvert
 import com.kylecorry.andromeda.print.ColorMode
 import com.kylecorry.andromeda.print.Orientation
 import com.kylecorry.andromeda.print.Printer
@@ -92,7 +88,6 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -309,22 +304,6 @@ private fun ReaderSection(
     }
 }
 
-@Composable
-private fun MarkdownText(
-    text: String,
-    modifier: Modifier = Modifier,
-    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium
-) {
-    val parsed = remember(text) {
-        DependencyRegistry.get<MarkdownService>().toMarkdown(text)
-    }
-    TrailSenseLinkedText(
-        text = parsed,
-        modifier = modifier.fillMaxWidth(),
-        style = style
-    )
-}
-
 /** Untitled text reads as prose; runs of titled sections become one group of rows. */
 private sealed interface ReaderBlock {
     data class Text(val markdown: String) : ReaderBlock
@@ -417,14 +396,9 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
             )
             val file = files.createTemp("pdf")
             val parsed = markdown.toMarkdown(content)
-            val textView = TextView(context)
-            textView.textSize = 6f
-            textView.setTextColor(AndroidColor.BLACK)
-            markdown.setParsedMarkdown(textView, parsed)
-            delay(2000)
             val uri = file.toUri()
             files.output(uri)?.use {
-                PdfConvert.toPdf(textView, it)
+                writePdf(parsed, it)
             }
             withContext(Dispatchers.Main) {
                 printer.print(uri)
@@ -436,4 +410,42 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
             }
         }
     }
+}
+
+/** Lays [text] out in small black type on A4 pages, the way the printed chapter looked. */
+private fun writePdf(text: CharSequence, output: java.io.OutputStream) {
+    val pageWidth = 595
+    val pageHeight = 842
+    val margin = 36
+    val paint = android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        textSize = 8f
+        color = android.graphics.Color.BLACK
+    }
+    val layout = android.text.StaticLayout.Builder
+        .obtain(text, 0, text.length, paint, pageWidth - margin * 2)
+        .build()
+    val document = android.graphics.pdf.PdfDocument()
+    val contentHeight = pageHeight - margin * 2
+    var line = 0
+    var pageNumber = 1
+    while (line < layout.lineCount) {
+        val top = layout.getLineTop(line)
+        var last = line
+        while (last + 1 < layout.lineCount && layout.getLineBottom(last + 1) - top <= contentHeight) {
+            last++
+        }
+        val bottom = layout.getLineBottom(last)
+        val page = document.startPage(
+            android.graphics.pdf.PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber++).create()
+        )
+        page.canvas.apply {
+            translate(margin.toFloat(), (margin - top).toFloat())
+            clipRect(0, top, pageWidth - margin * 2, bottom)
+            layout.draw(this)
+        }
+        document.finishPage(page)
+        line = last + 1
+    }
+    document.writeTo(output)
+    document.close()
 }
