@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.app.Dialog
+import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -173,7 +173,7 @@ class AstronomyGuidanceTargetPicker(
         val context = view.context
         var selected: AstronomyGuidanceOption? = null
         var resumed = false
-        var alert: Dialog? = null
+        var alert: TrailSenseDialog? = null
         val dialogView = TrailSenseComposeRootView(
             context,
             ViewCompositionStrategy.DisposeOnDetachedFromWindow

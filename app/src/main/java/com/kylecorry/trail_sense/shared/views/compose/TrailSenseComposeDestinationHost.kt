@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
@@ -119,21 +118,6 @@ class TrailSenseComposeDestinationHost(
         onAction: (ActionItem?) -> Unit
     ) {
         actionSheet = ActionSheetState(title, subtitle, actions, onAction)
-    }
-
-    fun showSnackbar(
-        text: String,
-        duration: Int,
-        action: String?,
-        onAction: () -> Unit
-    ): Snackbar {
-        val playBar = rootView.findViewWithTag<View>(getString(R.string.tag_play_bar))
-        return Snackbar.make(playBar ?: requireView(), text, duration).apply {
-            if (action != null) {
-                setAction(action) { onAction() }
-            }
-            show()
-        }
     }
 
     fun showPhotoImport(
@@ -409,19 +393,6 @@ class TrailSenseComposeDestinationHost(
         current.onAction(action)
     }
 
-    override fun getBottomNavigationHeight(): Int {
-        return activity.getBottomNavigationHeight()
-    }
-
-    override fun addOverlayView(view: View) {
-        activity.addOverlayView(view)
-    }
-
-    override fun removeOverlayView(view: View) {
-        activity.removeOverlayView(view)
-    }
-
-
     // ScreenEffects: the platform side of what screens ask for, on top of the host's callback APIs.
 
     override suspend fun requestPermission(permission: AppPermission): Boolean =
@@ -450,21 +421,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     override suspend fun showSnackbar(message: String, actionLabel: String?, long: Boolean): Boolean =
-        kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
-            var acted = false
-            val snackbar = showSnackbar(
-                message,
-                if (long) com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-                else com.google.android.material.snackbar.Snackbar.LENGTH_SHORT,
-                actionLabel
-            ) { acted = true }
-            snackbar.addCallback(object : com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback<com.google.android.material.snackbar.Snackbar>() {
-                override fun onDismissed(transientBottomBar: com.google.android.material.snackbar.Snackbar?, event: Int) {
-                    if (continuation.isActive) continuation.resume(acted) { }
-                }
-            })
-            continuation.invokeOnCancellation { snackbar.dismiss() }
-        }
+        AppHost.from(activity).showSnackbar(message, actionLabel, long)
 
     override suspend fun chooseAction(
         title: String,

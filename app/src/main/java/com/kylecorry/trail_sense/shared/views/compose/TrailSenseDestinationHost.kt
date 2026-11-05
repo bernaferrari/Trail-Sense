@@ -8,13 +8,11 @@ import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
 import android.util.Size
-import android.view.View
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.main.MainActivity
@@ -43,9 +41,6 @@ interface TrailSenseDestinationHost : ScreenEffects {
 
     fun openWidgets()
     fun reloadTheme()
-    fun getBottomNavigationHeight(): Int
-    fun addOverlayView(view: View)
-    fun removeOverlayView(view: View)
 }
 
 interface TrailSenseReactiveDestinationHost : TrailSenseDestinationHost {

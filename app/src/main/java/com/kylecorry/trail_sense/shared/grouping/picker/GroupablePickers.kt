@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.grouping.picker
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import android.app.Dialog
+import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,7 +52,7 @@ object GroupablePickers {
         onPick: (item: T?) -> Unit
     ) {
         var selected: T? = null
-        var alert: Dialog? = null
+        var alert: TrailSenseDialog? = null
         val state = GroupablePickerState(
             emptyText = emptyText,
             titleProvider = titleProvider,

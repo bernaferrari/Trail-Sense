@@ -13,8 +13,6 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Size
-import android.view.Gravity
-import android.view.View
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,18 +37,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.luna.text.toFloatCompat
@@ -63,7 +58,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
@@ -82,6 +76,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 object CustomUiUtils {
+    /** Snackbar lengths for [snackbar], the same values as Material's Snackbar.LENGTH_SHORT and LENGTH_LONG. */
+    const val SNACKBAR_SHORT = -1
+    const val SNACKBAR_LONG = 0
+
     @ColorInt
     fun getQualityColor(quality: Quality): Int {
         return when (quality) {
@@ -103,10 +101,7 @@ object CustomUiUtils {
         onDistancePick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
         var distance: Distance? = default
-        val distanceInput = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
+        val distanceInput: @Composable () -> Unit = {
             DistancePromptContent(
                 value = default,
                 units = units,
@@ -123,7 +118,7 @@ object CustomUiUtils {
             context,
             title,
             content = description,
-            contentView = distanceInput
+            body = distanceInput
         ) { cancelled ->
             if (cancelled) {
                 onDistancePick.invoke(null, true)
@@ -141,10 +136,7 @@ object CustomUiUtils {
         onElevationPick: (distance: Distance?, cancelled: Boolean) -> Unit
     ) {
         var elevation: Distance? = default
-        val elevationInput = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
+        val elevationInput: @Composable () -> Unit = {
             ElevationPromptContent(
                 default = default,
                 hint = hint,
@@ -157,7 +149,7 @@ object CustomUiUtils {
         Alerts.dialog(
             context,
             title,
-            contentView = elevationInput
+            body = elevationInput
         ) { cancelled ->
             if (cancelled) {
                 onElevationPick.invoke(null, true)
@@ -505,22 +497,16 @@ object CustomUiUtils {
         }
     }
 
-    fun setImageColor(textView: android.widget.TextView, @ColorInt color: Int?) {
-        textView.compoundDrawables.forEach {
-            it?.let { Colors.setImageColor(it, color) }
-        }
-    }
-
     /** A snackbar on [host]'s screen; [onAction] runs when its action is pressed. */
     fun snackbar(
         host: TrailSenseDestinationHost,
         text: String,
-        duration: Int = Snackbar.LENGTH_SHORT,
+        duration: Int = SNACKBAR_SHORT,
         action: String? = null,
         onAction: () -> Unit = {}
     ) {
         host.lifecycleOwner.lifecycleScope.launch {
-            if (host.showSnackbar(text, action, long = duration == Snackbar.LENGTH_LONG)) {
+            if (host.showSnackbar(text, action, long = duration == SNACKBAR_LONG)) {
                 onAction()
             }
         }
@@ -586,10 +572,7 @@ object CustomUiUtils {
     ) {
         var selected = default
         val formatService = FormatService.getInstance(context)
-        val view = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
+        val view: @Composable () -> Unit = {
             var amount by remember { mutableStateOf(default?.value?.toString().orEmpty()) }
             var unit by remember { mutableStateOf(default?.units ?: PressureUnits.Hpa) }
 
@@ -633,7 +616,7 @@ object CustomUiUtils {
             }
         }
 
-        Alerts.dialog(context, title, message, contentView = view) {
+        Alerts.dialog(context, title, message, body = view) {
             if (!it) {
                 onPressurePick(selected)
             } else {
@@ -648,10 +631,7 @@ object CustomUiUtils {
         content: CharSequence? = null,
         composeContent: @Composable () -> Unit
     ) {
-        val view = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
+        val view: @Composable () -> Unit = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -673,7 +653,7 @@ object CustomUiUtils {
         Alerts.dialog(
             context,
             title,
-            contentView = view,
+            body = view,
             cancelText = null
         )
     }

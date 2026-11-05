@@ -15,8 +15,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Surface
-import android.view.View
-import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -44,7 +42,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
@@ -53,7 +50,6 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.tryOrLog
@@ -76,6 +72,11 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
 import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.AppHostDialogs
+import com.kylecorry.trail_sense.shared.views.compose.AppHostOverlays
+import com.kylecorry.trail_sense.shared.views.compose.AppHostOwner
+import com.kylecorry.trail_sense.shared.views.compose.AppHostSnackbar
 import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
@@ -86,7 +87,10 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 
-class MainActivity : ComponentActivity(), IntentResultRetriever {
+class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
+
+    /** Dialogs, the snackbar and overlays, drawn above every screen. */
+    override val appHost = AppHost()
 
     var isRunning = false
         private set
@@ -111,7 +115,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
-    private var bottomInsets = 0
     private var appInitialized = false
     private var isOnboarding = false
     private var navGraphInitialized = false
@@ -170,6 +173,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
+        AppHost.attach(appHost)
+
         setupNavController()
 
         setContent {
@@ -183,6 +188,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
                 isAmoled = isBlackTheme
             ) {
                 MainActivityContent(
+                    appHost = appHost,
                     errorBanner = errorBanner,
                     navigator = rootNavigator ?: error("Navigator is not initialized"),
                     quickActionsSheet = quickActionsSheet,
@@ -201,11 +207,11 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         }
 
         updateFullscreenMode()
-        bindLayoutInsets()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        AppHost.detach(appHost)
     }
 
     private fun setupNavController() {
@@ -256,23 +262,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     private fun setBottomNavLabelsVisibility() {
         bottomNavigation.useCompactMode = userPrefs.useCompactMode
         bottomNavigation.showAllLabels = userPrefs.useShowAllBottomNavigationLabels
-        bottomNavigation.bottomInsetDp =
-            (bottomInsets / resources.displayMetrics.density).toInt()
-    }
-
-    private fun bindLayoutInsets() {
-        // Harvest bottom inset (and system bars/cutout info) for bottom nav height calculations
-        // and legacy getBottomNavigationHeight() / overlay positioning. We no longer mutate
-        // a view root's margins; Compose MainActivityContent applies windowInsetsPadding for
-        // top + horizontal safe area.
-        val rootView = findViewById<View>(android.R.id.content) ?: window.decorView
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
-            val insets =
-                windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            bottomInsets = insets.bottom
-            setBottomNavLabelsVisibility()
-            windowInsets
-        }
     }
 
     private fun updateTheme() {
@@ -288,8 +277,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
                 AppThemeMode.System -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
             }
         )
-        // The few remaining View-based surfaces (some pickers and dialogs) take the same colors as Compose: the
-        // wallpaper's, or a scheme built from the chosen seed.
+        // The platform's own surfaces (the windows behind Compose dialogs, system pickers) take the same colors as
+        // Compose: the wallpaper's, or a scheme built from the chosen seed.
         if (applyPalette) {
             val seed = userPrefs.palette.seed
             if (seed == null) {
@@ -661,21 +650,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         bottomNavigation.isEnabled = isEnabled
     }
 
-    fun getBottomNavigationHeight(): Int {
-        val navigationHeight = if (userPrefs.useCompactMode) 55f else 80f
-        return Resources.dp(this, navigationHeight).toInt() + bottomInsets
-    }
-
-    fun addOverlayView(view: View) {
-        val root = findViewById<ViewGroup>(android.R.id.content)
-        root?.addView(view)
-    }
-
-    fun removeOverlayView(view: View) {
-        val root = findViewById<ViewGroup>(android.R.id.content)
-        root?.removeView(view)
-    }
-
     private fun updateFullscreenMode() {
         val isNightMode = userPrefs.theme == UserPreferences.Theme.Night
         val shouldBeFullscreen = isNightMode && userPrefs.nightModeFullscreen
@@ -729,6 +703,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 @Suppress("FunctionName")
 @Composable
 private fun MainActivityContent(
+    appHost: AppHost,
     errorBanner: ErrorBannerState,
     navigator: TrailSenseNavigator,
     quickActionsSheet: QuickActionSheetState,
@@ -779,8 +754,11 @@ private fun MainActivityContent(
                     quickActionsSheet.Content(
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
+                    AppHostOverlays(appHost)
+                    AppHostSnackbar(appHost)
                 }
             }
         }
     }
+    AppHostDialogs(appHost)
 }

@@ -1,31 +1,27 @@
 package com.kylecorry.trail_sense.shared.extensions
 
 import android.app.ForegroundServiceStartNotAllowedException
-import android.app.Dialog
 import android.content.Context
 import android.app.Service
 import android.graphics.Path
 import android.os.Build
-import android.widget.FrameLayout
-import android.widget.ProgressBar
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.dialogs.ProgressBody
+import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.dialogs.onMain
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 
 inline fun Alerts.withCancelableLoading(
     context: Context,
@@ -81,83 +77,58 @@ inline fun Alerts.withCancelableProgress(
     }
 }
 
+/** A progress bar with a cancel button; the returned function sets the progress (0 to 1) from any thread. */
 fun Alerts.cancelableProgress(
     context: Context,
     title: String,
     cancelText: CharSequence = context.getString(android.R.string.cancel),
     onCanceled: (() -> Unit)? = null
-): Pair<AlertDialog, (Float) -> Unit> {
-    val progress = ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal).apply {
-        max = 100
-    }
-    val margin = Resources.dp(context, 24f).toInt()
-    val view = FrameLayout(context).apply {
-        addView(
-            progress,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = margin
-                marginEnd = margin
-                topMargin = margin
-                bottomMargin = margin
-            }
-        )
-    }
+): Pair<TrailSenseDialog, (Float) -> Unit> {
+    val progress = mutableFloatStateOf(0f)
     val dialog = dialog(
         context,
         title,
-        contentView = view,
         okText = null,
         cancelText = cancelText,
-        cancelOnOutsideTouch = false
+        cancelOnOutsideTouch = false,
+        body = {
+            // The old bar sat 24 dp in from every edge of the dialog.
+            ProgressBody(progress = { progress.floatValue }, modifier = Modifier.padding(vertical = 16.dp))
+        }
     ) { cancelled ->
         if (cancelled) {
             onCanceled?.invoke()
         }
     }
-    return dialog to { value ->
-        progress.post {
-            progress.progress = (value.coerceIn(0f, 1f) * progress.max).toInt()
-        }
-    }
+    return dialog to { value -> onMain { progress.floatValue = value.coerceIn(0f, 1f) } }
 }
 
-
+/** A spinner with a cancel button. */
 fun Alerts.cancelableLoading(
     context: Context,
     title: String,
     cancelText: CharSequence = context.getString(android.R.string.cancel),
     onCanceled: (() -> Unit)? = null
-): Dialog {
+): TrailSenseDialog {
     return dialog(
         context,
         title,
-        contentView = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            LoadingDialogContent()
-        },
         okText = null,
         cancelText = cancelText,
-        cancelOnOutsideTouch = false
+        cancelOnOutsideTouch = false,
+        body = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     ) { cancelled ->
         if (cancelled) {
             onCanceled?.invoke()
-        }
-    }
-}
-
-@Composable
-private fun LoadingDialogContent() {
-    TrailSenseTheme {
-        Box(
-            modifier = Modifier.padding(vertical = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
         }
     }
 }

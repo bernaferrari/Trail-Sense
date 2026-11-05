@@ -27,10 +27,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
-import android.view.View
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -59,7 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
-import com.google.android.material.snackbar.Snackbar
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
@@ -383,14 +380,13 @@ class NavigationSheetView(private val context: Context) {
         }
         scope.launch {
             val restore = navigator.cancelAllNavigation()
-            val content = findActivity()?.findViewById<View>(android.R.id.content) ?: return@launch
-            Snackbar.make(
-                content,
+            AppHost.from(context).snackbar(
                 context.getString(R.string.navigation_cancelled),
-                Snackbar.LENGTH_LONG
-            ).setAction(context.getString(R.string.undo)) {
+                context.getString(R.string.undo),
+                long = true
+            ) {
                 CoroutineScope(Dispatchers.Default).launch { restore() }
-            }.show()
+            }
         }
     }
 
@@ -587,17 +583,6 @@ class NavigationSheetView(private val context: Context) {
 
     private fun titled(@StringRes typeRes: Int, text: String): String {
         return "${context.getString(typeRes)}: $text"
-    }
-
-    private fun findActivity(): Activity? {
-        var current: Context? = context
-        while (current is ContextWrapper) {
-            if (current is Activity) {
-                return current
-            }
-            current = current.baseContext
-        }
-        return null
     }
 
     private data class SheetStat(
