@@ -1,12 +1,20 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
+import android.content.Context
+import android.content.ContextWrapper
 import android.view.View
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,7 +58,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
@@ -64,10 +73,25 @@ import kotlin.math.absoluteValue
 
 @Composable
 fun PhotoMapsToolScreen(
-    host: TrailSenseDestinationHost,
+    route: Route.PhotoMaps,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host) { PhotoMapsController(host) }
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(route) {
+        PhotoMapsController(
+            context,
+            navigator,
+            effects,
+            lifecycleOwner,
+            // Exporting picks a file through the activity's result launcher (an Activity-only API).
+            requireNotNull(context.findMainActivity()),
+            route.mapId,
+            route.autoLockLocation
+        )
+    }
 
     DisposableEffect(controller) {
         controller.onCreate()
@@ -79,15 +103,27 @@ fun PhotoMapsToolScreen(
     controller.Content(modifier = modifier)
 }
 
+private tailrec fun Context.findMainActivity(): MainActivity? {
+    return when (this) {
+        is MainActivity -> this
+        is ContextWrapper -> baseContext.findMainActivity()
+        else -> null
+    }
+}
+
 private class PhotoMapsController(
-    private val host: TrailSenseDestinationHost
+    private val context: Context,
+    private val navigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner,
+    private val intentResultRetriever: IntentResultRetriever,
+    private var mapId: Long,
+    private var autoLockLocation: Boolean
 ) {
 
     private val service = getAppService<MapService>()
     private val formatter = getAppService<FormatService>()
 
-    private var mapId = host.routeAs<Route.PhotoMaps>().mapId
-    private var autoLockLocation = host.routeAs<Route.PhotoMaps>().autoLockLocation
     private var map: PhotoMap? = null
     private var currentViewController: ViewPhotoMapController? = null
     private var currentCalibrationController: PhotoMapCalibrationController? = null
@@ -96,7 +132,7 @@ private class PhotoMapsController(
     private var showRecenter by mutableStateOf(false)
     private var childSpec by mutableStateOf<PhotoMapChildSpec?>(null)
 
-    private val exportService by lazy { PhotoMapExportService(host) }
+    private val exportService by lazy { PhotoMapExportService(context, intentResultRetriever, effects, lifecycleOwner) }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -107,16 +143,15 @@ private class PhotoMapsController(
             onRecenter = ::recenter,
             onMenuClick = ::showMenu,
             childSpec = childSpec,
-            host = host,
             onWarpComplete = {
-                host.inBackground {
+                lifecycleOwner.inBackground {
                     loadMap()
                 }
             },
             onCalibrationRotation = ::showRotation,
             onCalibrationController = ::onCalibrationController,
             onCalibrationComplete = {
-                host.inBackground {
+                lifecycleOwner.inBackground {
                     autoRotate()
                     loadMap()
                 }
@@ -127,7 +162,7 @@ private class PhotoMapsController(
     }
 
     fun onCreate() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             loadMap()
         }
     }
@@ -142,19 +177,19 @@ private class PhotoMapsController(
         val isCalibrationFragment = currentCalibrationController != null
 
         val actions = listOf(
-            MapContextualAction.Calibrate to if (isMapView) host.getString(R.string.calibrate) else null,
-            MapContextualAction.Guide to host.getString(R.string.tool_user_guide_title),
-            MapContextualAction.Rename to host.getString(R.string.rename),
-            MapContextualAction.ChangeProjection to if (isMapView || isCalibrationFragment) host.getString(
+            MapContextualAction.Calibrate to if (isMapView) context.getString(R.string.calibrate) else null,
+            MapContextualAction.Guide to context.getString(R.string.tool_user_guide_title),
+            MapContextualAction.Rename to context.getString(R.string.rename),
+            MapContextualAction.ChangeProjection to if (isMapView || isCalibrationFragment) context.getString(
                 R.string.change_map_projection
             ) else null,
-            MapContextualAction.Measure to if (isMapView) host.getString(R.string.measure) else null,
-            MapContextualAction.CreatePath to if (isMapView) host.getString(R.string.create_path) else null,
-            MapContextualAction.AdjustLayers to if (isMapView) host.getString(R.string.layers) else null,
-            MapContextualAction.Export to if (isMapView) host.getString(R.string.export) else null,
-            MapContextualAction.Print to if (isMapView && Printer.canPrint()) host.getString(R.string.print) else null,
-            MapContextualAction.Delete to host.getString(R.string.delete),
-            MapContextualAction.Trace to if (isMapView) host.getString(R.string.trace) else null
+            MapContextualAction.Measure to if (isMapView) context.getString(R.string.measure) else null,
+            MapContextualAction.CreatePath to if (isMapView) context.getString(R.string.create_path) else null,
+            MapContextualAction.AdjustLayers to if (isMapView) context.getString(R.string.layers) else null,
+            MapContextualAction.Export to if (isMapView) context.getString(R.string.export) else null,
+            MapContextualAction.Print to if (isMapView && Printer.canPrint()) context.getString(R.string.print) else null,
+            MapContextualAction.Delete to context.getString(R.string.delete),
+            MapContextualAction.Trace to if (isMapView) context.getString(R.string.trace) else null
         )
 
 
@@ -180,8 +215,8 @@ private class PhotoMapsController(
 
     private fun openGuide() {
         UserGuideUtils.openGuide(
-            host.requireContext(),
-            host.findNavigator(),
+            context,
+            navigator,
             R.raw.guide_tool_offline_maps
         )
     }
@@ -193,7 +228,7 @@ private class PhotoMapsController(
     }
 
     private fun showRotation(rotation: Float) {
-        subtitle = host.getString(R.string.rotation_amount, formatter.formatDegrees(rotation))
+        subtitle = context.getString(R.string.rotation_amount, formatter.formatDegrees(rotation))
     }
 
     private fun hideRotation() {
@@ -201,17 +236,17 @@ private class PhotoMapsController(
     }
 
     private fun delete() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             map?.let {
-                DeleteMapCommand(host.requireContext(), service).execute(it)
-                host.findNavigator().popBackStack()
+                DeleteMapCommand(context, service).execute(it)
+                navigator.popBackStack()
             }
         }
     }
 
     private fun print() {
-        val command = PrintMapCommand(host.requireContext())
-        host.inBackground(BackgroundMinimumState.Created) {
+        val command = PrintMapCommand(context)
+        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
             map?.let {
                 command.execute(it)
             }
@@ -219,7 +254,7 @@ private class PhotoMapsController(
     }
 
     private fun export() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             map?.let {
                 service.getPhotoMap(it.id)?.let { updated ->
                     exportService.export(updated)
@@ -241,10 +276,10 @@ private class PhotoMapsController(
     }
 
     private fun rename() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             map?.let {
                 service.getPhotoMap(it.id)?.let { updated ->
-                    RenameMapCommand(host.requireContext(), service).execute(updated)
+                    RenameMapCommand(context, service).execute(updated)
                     val renamed = service.getPhotoMap(updated.id)
                     onMain {
                         map = renamed
@@ -259,8 +294,8 @@ private class PhotoMapsController(
         val projections = MapProjectionType.values()
         val projectionNames = projections.map { formatter.formatMapProjection(it) }
         Pickers.item(
-            host.requireContext(),
-            host.getString(R.string.change_map_projection),
+            context,
+            context.getString(R.string.change_map_projection),
             projectionNames,
             projections.indexOf(map?.georeference?.projectionType)
         ) {
@@ -268,7 +303,7 @@ private class PhotoMapsController(
             val newProjection = projections[it]
             val applyProjectionChange = {
                 map?.let { m ->
-                    host.inBackground {
+                    lifecycleOwner.inBackground {
                         val updated = service.getPhotoMap(m.id) ?: return@inBackground
                         val changed = service.setProjection(updated, newProjection)
                         onMain {
@@ -281,9 +316,9 @@ private class PhotoMapsController(
 
             if (showConfirmation) {
                 Alerts.dialog(
-                    host.requireContext(),
-                    host.getString(R.string.change_map_projection),
-                    host.getString(R.string.map_calibration_clear_message)
+                    context,
+                    context.getString(R.string.change_map_projection),
+                    context.getString(R.string.map_calibration_clear_message)
                 ) { cancelled ->
                     if (!cancelled) {
                         applyProjectionChange()
@@ -339,7 +374,7 @@ private class PhotoMapsController(
 
         val delta = Trigonometry.deltaAngle(newRotation, updatedMap.georeference.rotation).absoluteValue
         if (delta > 1f) {
-            host.toast(host.getString(R.string.map_auto_rotated))
+            effects.showMessage(context.getString(R.string.map_auto_rotated))
         }
 
         val rotated = updatedMap.copy(
@@ -379,7 +414,6 @@ private fun PhotoMapsScreen(
     onRecenter: () -> Unit,
     onMenuClick: (View) -> Unit,
     childSpec: PhotoMapChildSpec?,
-    host: TrailSenseDestinationHost?,
     onWarpComplete: () -> Unit,
     onCalibrationRotation: (Float) -> Unit,
     onCalibrationController: (PhotoMapCalibrationController) -> Unit,
@@ -404,34 +438,29 @@ private fun PhotoMapsScreen(
                     .fillMaxSize()
                     .testTag("map_fragment")
             ) {
-                if (host != null) {
-                    childSpec?.let { spec ->
-                        key(spec.key) {
-                            when (spec) {
-                                is PhotoMapChildSpec.Warp -> WarpMapToolScreen(
-                                    modifier = Modifier.fillMaxSize(),
-                                    host = host,
-                                    mapId = spec.mapId,
-                                    onComplete = onWarpComplete
-                                )
+                childSpec?.let { spec ->
+                    key(spec.key) {
+                        when (spec) {
+                            is PhotoMapChildSpec.Warp -> WarpMapToolScreen(
+                                modifier = Modifier.fillMaxSize(),
+                                mapId = spec.mapId,
+                                onComplete = onWarpComplete
+                            )
 
-                                is PhotoMapChildSpec.Calibration -> PhotoMapCalibrationToolScreen(
-                                    modifier = Modifier.fillMaxSize(),
-                                    host = host,
-                                    mapId = spec.mapId,
-                                    onRotation = onCalibrationRotation,
-                                    onComplete = onCalibrationComplete,
-                                    onController = onCalibrationController
-                                )
+                            is PhotoMapChildSpec.Calibration -> PhotoMapCalibrationToolScreen(
+                                modifier = Modifier.fillMaxSize(),
+                                mapId = spec.mapId,
+                                onRotation = onCalibrationRotation,
+                                onComplete = onCalibrationComplete,
+                                onController = onCalibrationController
+                            )
 
-                                is PhotoMapChildSpec.View -> ViewPhotoMapToolScreen(
-                                    modifier = Modifier.fillMaxSize(),
-                                    host = host,
-                                    mapId = spec.mapId,
-                                    autoLockLocation = spec.autoLockLocation,
-                                    onController = onViewController
-                                )
-                            }
+                            is PhotoMapChildSpec.View -> ViewPhotoMapToolScreen(
+                                modifier = Modifier.fillMaxSize(),
+                                mapId = spec.mapId,
+                                autoLockLocation = spec.autoLockLocation,
+                                onController = onViewController
+                            )
                         }
                     }
                 }
@@ -485,7 +514,6 @@ private fun PhotoMapsScreenPreview() {
             onRecenter = {},
             onMenuClick = {},
             childSpec = null,
-            host = null,
             onWarpComplete = {},
             onCalibrationRotation = {},
             onCalibrationController = {},

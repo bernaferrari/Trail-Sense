@@ -4,8 +4,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui
 
 import androidx.core.net.toUri
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +32,19 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTopBar
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.OnBackPressedCallback
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
@@ -101,7 +111,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -139,11 +148,31 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 @Composable
 fun OfflineMapListToolScreen(
-    host: TrailSenseDestinationHost,
+    route: Route.OfflineMapList,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host) { OfflineMapListController(host) }
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(route) {
+        OfflineMapListController(
+            context,
+            navigator,
+            effects,
+            lifecycleOwner,
+            // The file picker needs the activity's result launcher (an Activity-only API).
+            requireNotNull(context.findMainActivity()),
+            route.importUri
+        )
+    }
+
+    // Back leaves the open group first, then the screen.
+    BackHandler(enabled = controller.isBackEnabled) {
+        if (!controller.up()) {
+            navigator.navigateUp()
+        }
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -167,19 +196,35 @@ fun OfflineMapListToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class OfflineMapListController(private val host: TrailSenseDestinationHost) {
+private tailrec fun Context.findMainActivity(): MainActivity? {
+    return when (this) {
+        is MainActivity -> this
+        is ContextWrapper -> baseContext.findMainActivity()
+        else -> null
+    }
+}
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
+private class OfflineMapListController(
+    private val context: Context,
+    private val navigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner,
+    private val intentResultRetriever: IntentResultRetriever,
+    private val importUri: String?
+) {
+
+    private val sensorService by lazy { SensorService(context) }
     private val gps by lazy { sensorService.getGPS() }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val mapService by lazy { MapService.Companion.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(context) }
+    private val mapService by lazy { MapService.Companion.getInstance(context) }
     private val mapLoader by lazy { MapGroupLoader(mapService.loader) }
     private lateinit var manager: GroupListManager<IMap>
 
     private var sort = MapSortMethod.Closest
 
     private var lastRoot: IMap? = null
-    private var backPressedCallback: OnBackPressedCallback? = null
+    var isBackEnabled by mutableStateOf(false)
+        private set
     private var mapItems by mutableStateOf<List<IMap>>(emptyList())
     private var mapListResetKey by mutableIntStateOf(0)
     private var title by mutableStateOf("")
@@ -191,17 +236,17 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
 
     private val uriPicker by lazy {
         IntentUriPicker(
-            host.intentResultRetriever,
-            host.requireContext()
+            intentResultRetriever,
+            context
         )
     }
     private val mapImportingIndicator by lazy {
         AlertLoadingIndicator(
-            host.requireContext(),
-            host.getString(R.string.importing_map)
+            context,
+            context.getString(R.string.importing_map)
         )
     }
-    private val exportService by lazy { PhotoMapExportService(host) }
+    private val exportService by lazy { PhotoMapExportService(context, intentResultRetriever, effects, lifecycleOwner) }
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
@@ -243,19 +288,19 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
         }
         isInitialized = true
         manager = GroupListManager(
-            host.lifecycleScope,
+            lifecycleOwner.lifecycleScope,
             mapLoader,
             lastRoot,
             this::sortMaps
         )
 
-        val mapIntentUri = host.routeAs<Route.OfflineMapList>().importUri?.toUri()
+        val mapIntentUri = importUri?.toUri()
         if (mapIntentUri != null) {
             // Imported once: without the URI, coming back to this screen doesn't import it again.
-            host.findNavigator().replace(Route.OfflineMapList())
+            navigator.replace(Route.OfflineMapList())
             createMap(
                 CreateMapFromUriCommand(
-                    host.requireContext(),
+                    context,
                     mapIntentUri,
                     mapImportingIndicator
                 )
@@ -263,29 +308,17 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
         }
 
         sort = prefs.photoMaps.mapSort
-        sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
         manager.onChange = { root, items, rootChanged ->
             mapItems = items
             if (rootChanged) {
                 mapListResetKey++
             }
-            title = (root as MapGroup?)?.name ?: host.getString(R.string.offline_maps)
+            title = (root as MapGroup?)?.name ?: context.getString(R.string.offline_maps)
         }
 
-        backPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (!manager.up()) {
-                    remove()
-                    host.findNavigator().navigateUp()
-                }
-            }
-        }
-        host.mainActivity.onBackPressedDispatcher.addCallback(
-            host.lifecycleOwner,
-            backPressedCallback!!
-        )
         updateBackPressedCallback()
-        title = host.getString(R.string.offline_maps)
+        title = context.getString(R.string.offline_maps)
     }
 
     fun onResume() {
@@ -294,8 +327,8 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
         }
         updateBackPressedCallback()
         manager.refresh()
-        host.inBackground {
-            val mapsDeleted = MapCleanupCommand(host.requireContext()).execute()
+        lifecycleOwner.inBackground {
+            val mapsDeleted = MapCleanupCommand(context).execute()
             if (mapsDeleted) {
                 manager.refresh()
             }
@@ -304,23 +337,22 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
 
     fun onDestroy() {
         onPause()
-        backPressedCallback?.remove()
-        backPressedCallback = null
         isInitialized = false
+        updateBackPressedCallback()
     }
 
     private fun changeSort() {
         val sortOptions = MapSortMethod.values()
         Pickers.item(
-            host.requireContext(),
-            host.getString(R.string.sort),
+            context,
+            context.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.photoMaps.mapSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.photoMaps.mapSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -328,9 +360,9 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
 
     private fun getSortString(sortMethod: MapSortMethod): String {
         return when (sortMethod) {
-            MapSortMethod.MostRecent -> host.getString(R.string.most_recent)
-            MapSortMethod.Closest -> host.getString(R.string.closest)
-            MapSortMethod.Name -> host.getString(R.string.name)
+            MapSortMethod.MostRecent -> context.getString(R.string.most_recent)
+            MapSortMethod.Closest -> context.getString(R.string.closest)
+            MapSortMethod.Name -> context.getString(R.string.name)
         }
     }
 
@@ -360,8 +392,8 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     }
 
     private fun setGroupVisibility(group: MapGroup, visible: Boolean) {
-        host.inBackground {
-            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
+        lifecycleOwner.inBackground {
+            Alerts.withLoading(context, context.getString(R.string.loading)) {
                 val maps = mapService.loader.getChildren(group.id, null)
 
                 // Photo Maps
@@ -411,7 +443,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     }
 
     private fun copyToAppStorage(map: VectorMap) {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             mapImportingIndicator.show()
             try {
                 mapService.copyToAppStorage(map)
@@ -423,15 +455,15 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     }
 
     private fun resize(map: PhotoMap) {
-        host.inBackground {
-            ResizeMapCommand(host.requireContext(), mapImportingIndicator).execute(map)
+        lifecycleOwner.inBackground {
+            ResizeMapCommand(context, mapImportingIndicator).execute(map)
             manager.refresh()
         }
     }
 
     private fun print(map: PhotoMap) {
-        host.inBackground(BackgroundMinimumState.Created) {
-            PrintMapCommand(host.requireContext()).execute(map)
+        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
+            PrintMapCommand(context).execute(map)
         }
     }
 
@@ -440,36 +472,36 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     }
 
     private fun rename(map: IMap) {
-        host.inBackground {
-            RenameMapCommand(host.requireContext(), mapService).execute(map)
+        lifecycleOwner.inBackground {
+            RenameMapCommand(context, mapService).execute(map)
             manager.refresh()
         }
     }
 
     private fun editAttribution(map: VectorMap) {
-        host.inBackground {
-            EditOfflineMapAttributionCommand(host.requireContext()).execute(map)
+        lifecycleOwner.inBackground {
+            EditOfflineMapAttributionCommand(context).execute(map)
             manager.refresh()
         }
     }
 
     private fun move(map: IMap) {
-        host.inBackground {
-            MoveMapCommand(host.requireContext(), mapService).execute(map)
+        lifecycleOwner.inBackground {
+            MoveMapCommand(context, mapService).execute(map)
             manager.refresh()
         }
     }
 
     private fun toggleVisibility(map: IMap) {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             ToggleVisibilityMapCommand(mapService).execute(map)
             manager.refresh()
         }
     }
 
     private fun delete(map: IMap) {
-        host.inBackground {
-            DeleteMapCommand(host.requireContext(), mapService).execute(map)
+        lifecycleOwner.inBackground {
+            DeleteMapCommand(context, mapService).execute(map)
             manager.refresh()
         }
     }
@@ -477,19 +509,19 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     private fun view(map: IMap) {
         when (map) {
             is MapGroup -> manager.open(map.id)
-            is PhotoMap -> host.findNavigator().navigate(Route.PhotoMaps(mapId = map.id))
+            is PhotoMap -> navigator.navigate(Route.PhotoMaps(mapId = map.id))
 
             is VectorMap -> {
                 if (!map.isAvailable) {
                     Alerts.dialog(
-                        host.requireContext(),
-                        host.getString(R.string.invalid_trail_map),
-                        host.getString(R.string.invalid_trail_map_message),
+                        context,
+                        context.getString(R.string.invalid_trail_map),
+                        context.getString(R.string.invalid_trail_map_message),
                         cancelText = null
                     )
                     return
                 }
-                host.findNavigator().navigate(Route.VectorMapView(offlineMapFileId = map.id))
+                navigator.navigate(Route.VectorMapView(offlineMapFileId = map.id))
             }
         }
     }
@@ -505,7 +537,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
             OfflineMapCreateAction.CreateGroup -> createMapGroup()
             OfflineMapCreateAction.ImportFile -> createMap(
                 CreateMapFromFileCommand(
-                    host.requireContext(),
+                    context,
                     uriPicker,
                     mapImportingIndicator
                 )
@@ -513,14 +545,15 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
 
             OfflineMapCreateAction.ImportCamera -> createMap(
                 CreateMapFromCameraCommand(
-                    host,
+                    context,
+                    effects,
                     mapImportingIndicator
                 )
             )
 
             OfflineMapCreateAction.CreateBlank -> createMap(
                 CreateBlankMapCommand(
-                    host.requireContext(),
+                    context,
                     mapImportingIndicator
                 )
             )
@@ -529,8 +562,8 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     }
 
     private fun createMapGroup() {
-        host.inBackground {
-            CreateMapGroupCommand(host.requireContext(), mapService).execute(manager.root?.id)
+        lifecycleOwner.inBackground {
+            CreateMapGroupCommand(context, mapService).execute(manager.root?.id)
             manager.refresh()
         }
     }
@@ -545,11 +578,16 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     }
 
     private fun updateBackPressedCallback() {
-        backPressedCallback?.isEnabled = isInitialized
+        isBackEnabled = isInitialized
+    }
+
+    /** Leaves the open group; false at the root. */
+    fun up(): Boolean {
+        return manager.up()
     }
 
     private fun createMap(command: ICreateMapCommand) {
-        host.inBackground(BackgroundMinimumState.Created) {
+        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
             MapCleanupCommand.isMapImportInProgress = true
             try {
                 onMain {
@@ -565,7 +603,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                 }
 
                 if (map == null) {
-                    host.toast(host.getString(R.string.error_importing_map))
+                    effects.showMessage(context.getString(R.string.error_importing_map))
                     return@inBackground
                 }
 
@@ -576,22 +614,22 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                 }
 
                 if (map is PhotoMap) {
-                    val isPdfMap = map.hasPdf(host.requireContext())
+                    val isPdfMap = map.hasPdf(context)
                     if ((isPdfMap && prefs.photoMaps.autoReducePdfMaps) || (!isPdfMap && prefs.photoMaps.autoReducePhotoMaps)) {
                         mapImportingIndicator.show()
-                        val reducer = HighQualityMapReducer(host.requireContext())
+                        val reducer = HighQualityMapReducer(context)
                         reducer.reduce(map)
                         mapImportingIndicator.hide()
                     }
 
                     if (map.georeference.calibrationPoints.isNotEmpty()) {
-                        host.toast(host.getString(R.string.map_auto_calibrated))
+                        effects.showMessage(context.getString(R.string.map_auto_calibrated))
                     }
                 }
 
                 manager.refresh(true)
                 when (map) {
-                    is PhotoMap -> host.findNavigator().navigate(Route.PhotoMaps(mapId = map.id))
+                    is PhotoMap -> navigator.navigate(Route.PhotoMaps(mapId = map.id))
                 }
             } finally {
                 MapCleanupCommand.isMapImportInProgress = false

@@ -2,8 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -39,7 +37,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.content.Context
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.luna.concurrency.onMain
@@ -49,7 +52,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
@@ -64,9 +66,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ViewVectorMapToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { ViewVectorMapController(host) }
+fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(route) {
+        ViewVectorMapController(context, navigator, lifecycleOwner, route.offlineMapFileId)
+    }
     LaunchedEffect(controller) {
         controller.loadMap()
     }
@@ -94,16 +100,18 @@ fun ViewVectorMapToolScreen(host: TrailSenseDestinationHost) {
     )
 }
 
-private class ViewVectorMapController(private val host: TrailSenseDestinationHost) {
+private class ViewVectorMapController(
+    private val context: Context,
+    private val navigator: TrailSenseNavigator,
+    private val lifecycleOwner: LifecycleOwner,
+    private val mapId: Long
+) {
     private val service by lazy { getAppService<MapService>() }
     var map by mutableStateOf<VectorMap?>(null)
         private set
     var mapView: MapView? = null
         private set
     private var configuredMapId: Long? = null
-
-    private val mapId: Long
-        get() = host.routeAs<Route.VectorMapView>().offlineMapFileId
 
     fun onDestroy() {
         onPause()
@@ -122,7 +130,7 @@ private class ViewVectorMapController(private val host: TrailSenseDestinationHos
     }
 
     fun loadMap() {
-        host.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getVectorMap(mapId)
             }
@@ -146,7 +154,7 @@ private class ViewVectorMapController(private val host: TrailSenseDestinationHos
         }
 
         val factory = LayerFactory()
-        val layer = Tools.getMapLayerDefinition(host.requireContext(), TrailMapsTileSource.SOURCE_ID)!!
+        val layer = Tools.getMapLayerDefinition(context, TrailMapsTileSource.SOURCE_ID)!!
         val tileLayer = factory.createLayer(layer)
         tileLayer.setFeatureFilter(map.id.toString())
         view.setLayers(listOf(tileLayer))
@@ -159,25 +167,25 @@ private class ViewVectorMapController(private val host: TrailSenseDestinationHos
     }
 
     fun rename(map: VectorMap) {
-        host.lifecycleScope.launch {
-            RenameMapCommand(host.requireContext(), service).execute(map)
+        lifecycleOwner.lifecycleScope.launch {
+            RenameMapCommand(context, service).execute(map)
             loadMap()
         }
     }
 
     fun editAttribution(map: VectorMap) {
-        host.lifecycleScope.launch {
-            EditOfflineMapAttributionCommand(host.requireContext()).execute(map)
+        lifecycleOwner.lifecycleScope.launch {
+            EditOfflineMapAttributionCommand(context).execute(map)
             loadMap()
         }
     }
 
     fun delete(map: VectorMap) {
-        host.lifecycleScope.launch {
-            DeleteMapCommand(host.requireContext(), service).execute(map)
+        lifecycleOwner.lifecycleScope.launch {
+            DeleteMapCommand(context, service).execute(map)
             if (withContext(Dispatchers.IO) { service.getVectorMap(map.id) } == null) {
                 onMain {
-                    host.findNavigator().popBackStack()
+                    navigator.popBackStack()
                 }
             } else {
                 loadMap()

@@ -6,6 +6,15 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
+import android.content.ContextWrapper
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.tools.map.ui.MapFeatureClickHandler
 import android.os.Bundle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,9 +65,9 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
-import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
@@ -80,16 +89,27 @@ import kotlin.math.roundToInt
 
 @Composable
 fun ViewPhotoMapToolScreen(
-    host: TrailSenseDestinationHost,
     mapId: Long,
     autoLockLocation: Boolean,
     onController: (ViewPhotoMapController) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host, mapId, autoLockLocation) {
-        ViewPhotoMapController(host, mapId, autoLockLocation)
-    }
+    val context = LocalContext.current
+    val screenNavigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(mapId, autoLockLocation) {
+        ViewPhotoMapController(
+            context,
+            // The window (screen torch), screen lock and bottom navigation belong to the activity.
+            requireNotNull(context.findMainActivity()),
+            screenNavigator,
+            effects,
+            lifecycleOwner,
+            mapId,
+            autoLockLocation
+        )
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -111,42 +131,56 @@ fun ViewPhotoMapToolScreen(
     controller.Content(modifier = modifier)
 }
 
+private tailrec fun Context.findMainActivity(): MainActivity? {
+    return when (this) {
+        is MainActivity -> this
+        is ContextWrapper -> baseContext.findMainActivity()
+        else -> null
+    }
+}
+
 class ViewPhotoMapController(
-    private val host: TrailSenseDestinationHost,
+    private val context: Context,
+    private val activity: MainActivity,
+    private val screenNavigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner,
     private val mapId: Long,
     private val autoLockLocation: Boolean
 ) {
     private var photoMapViews: ViewPhotoMapViews? =
-        createViewPhotoMapViews(host.requireContext())
+        createViewPhotoMapViews(context)
     private val views: ViewPhotoMapViews
         get() = photoMapViews ?: error("Photo map views are not ready")
     private val isBound: Boolean
         get() = photoMapViews != null
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
     private val gps by lazy { sensorService.getGPS() }
     private val altimeter by lazy { sensorService.getAltimeter() }
     private val compass by lazy { sensorService.getCompass() }
     private val hasCompass by lazy { sensorService.hasCompass() }
-    private val beaconService by lazy { BeaconService(host.requireContext()) }
+    private val beaconService by lazy { BeaconService(context) }
     private val service = getAppService<MapService>()
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
+    private val prefs by lazy { UserPreferences(context) }
 
-    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(context) }
     private val screenLock by lazy { NavigationScreenLock(prefs.photoMaps.keepScreenUnlockedWhileOpen) }
 
-    private val screenLight by lazy { ScreenTorch(host.mainActivity.window) }
+    private val screenLight by lazy { ScreenTorch(activity.window) }
 
     // Map layers
     private val layerManager = PhotoMapToolLayerManager()
+    private val featureClickHandler =
+        MapFeatureClickHandler(context, screenNavigator, effects, lifecycleOwner.lifecycleScope)
     private val layerSheet = MapLayersSheetState(
         OfflineMapsToolRegistration.PHOTO_MAPS_ID,
         PhotoMapToolLayerManager.alwaysEnabledLayers
     )
 
     // Paths
-    private val pathService by lazy { PathService.getInstance(host.requireContext()) }
+    private val pathService by lazy { PathService.getInstance(context) }
 
     private var map: PhotoMap? = null
     private var destination: Destination? = null
@@ -167,15 +201,15 @@ class ViewPhotoMapController(
             modifier = modifier
         )
         layerSheet.Content(
-            host.requireContext(),
-            { host.findNavigator().navigate(it) }
+            context,
+            { screenNavigator.navigate(it) }
         )
     }
 
     fun onCreate() {
         shouldLockOnMapLoad = autoLockLocation
 
-        gps.asLiveData().observe(host.lifecycleOwner) {
+        gps.asLiveData().observe(lifecycleOwner) {
             views.map.userLocation = gps.location
             views.map.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
             updateDestination()
@@ -184,8 +218,8 @@ class ViewPhotoMapController(
                 views.map.mapCenter = gps.location
             }
         }
-        altimeter.asLiveData().observe(host.lifecycleOwner) { updateDestination() }
-        compass.asLiveData().observe(host.lifecycleOwner) {
+        altimeter.asLiveData().observe(lifecycleOwner) { updateDestination() }
+        compass.asLiveData().observe(lifecycleOwner) {
             compass.declination = Geophysics.getGeomagneticDeclination(gps.location, gps.altitude)
             val bearing = compass.rawBearing
             views.map.userAzimuth = compass.bearing
@@ -195,7 +229,7 @@ class ViewPhotoMapController(
             updateDestination()
         }
 
-        host.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch {
             navigator.destination2.collect {
                 setDestination(it)
             }
@@ -207,7 +241,7 @@ class ViewPhotoMapController(
             onLongPress(it)
         }
 
-        views.map.setBackgroundColor(Resources.color(host.requireContext(), R.color.colorSecondary))
+        views.map.setBackgroundColor(Resources.color(context, R.color.colorSecondary))
 
         val keepMapUp = prefs.photoMaps.keepMapFacingUp
 
@@ -264,32 +298,34 @@ class ViewPhotoMapController(
 
         selectLocation(location)
 
-        host.inBackground {
+        lifecycleOwner.inBackground {
             val elevation = Distance.meters(DEM.getElevation(location).elevation)
 
             onMain {
-                Share.actions(
-                    host,
+                val chosen = effects.chooseAction(
                     formatService.formatLocation(location),
+                    context.getString(
+                        R.string.elevation_value,
+                        formatService.formatElevation(elevation)
+                    ),
                     listOf(
-                        ActionItem(host.getString(R.string.beacon), TrailIcons.Location) {
+                        ActionItem(context.getString(R.string.beacon), TrailIcons.Location) {
                             createBeacon(location)
                             selectLocation(null)
                         },
-                        ActionItem(host.getString(R.string.navigate), TrailIcons.Beacon) {
+                        ActionItem(context.getString(R.string.navigate), TrailIcons.Beacon) {
                             navigateTo(location)
                             selectLocation(null)
                         },
-                        ActionItem(host.getString(R.string.distance), TrailIcons.Ruler) {
+                        ActionItem(context.getString(R.string.distance), TrailIcons.Ruler) {
                             startDistanceMeasurement(arrayOf(gps.location, location))
                             selectLocation(null)
                         },
-                    ),
-                    subtitle = host.getString(
-                        R.string.elevation_value,
-                        formatService.formatElevation(elevation)
                     )
-                ) {
+                )
+                if (chosen != null) {
+                    chosen.action()
+                } else {
                     selectLocation(null)
                 }
             }
@@ -297,7 +333,7 @@ class ViewPhotoMapController(
     }
 
     fun reloadMap() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             withContext(Dispatchers.IO) {
                 map = service.getPhotoMap(mapId)
             }
@@ -330,7 +366,7 @@ class ViewPhotoMapController(
     }
 
     private fun createBeacon(location: Coordinate) {
-        host.findNavigator().navigate(Route.PlaceBeacon(initialLocation = location.toRouteLocation()))
+        screenNavigator.navigate(Route.PlaceBeacon(initialLocation = location.toRouteLocation()))
     }
 
     private fun showDistance(distance: Distance) {
@@ -342,7 +378,7 @@ class ViewPhotoMapController(
 
     fun startDistanceMeasurement(initialPoints: Array<Coordinate>) {
         if (map?.isCalibrated != true) {
-            host.toast(host.getString(R.string.map_is_not_calibrated))
+            effects.showMessage(context.getString(R.string.map_is_not_calibrated))
             return
         }
 
@@ -352,14 +388,14 @@ class ViewPhotoMapController(
             stopDistanceMeasurement()
         }
         views.distanceSheet.createPathListener = {
-            host.inBackground {
+            lifecycleOwner.inBackground {
                 map?.let {
                     val skipElevations = AtomicBoolean(false)
                     var id = 0L
                     Alerts.withSuspendableCancelableLoading(
-                        host.requireContext(),
-                        host.getString(R.string.loading),
-                        cancelText = host.getString(R.string.skip_elevations),
+                        context,
+                        context.getString(R.string.loading),
+                        cancelText = context.getString(R.string.skip_elevations),
                         onCancel = { skipElevations.set(true) }
                     ) {
                         id = CreatePathCommand(
@@ -373,7 +409,7 @@ class ViewPhotoMapController(
 
                     onMain {
                         stopDistanceMeasurement()
-                        host.findNavigator().navigate(Route.PathOverview(pathId = id))
+                        screenNavigator.navigate(Route.PathOverview(pathId = id))
                     }
                 }
             }
@@ -401,9 +437,7 @@ class ViewPhotoMapController(
     }
 
     private fun resetLayerManager() {
-        layerManager.resume(views.map, mapId, host.lifecycleOwner) {
-            com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler.handleFeatureClick(host, it)
-        }
+        layerManager.resume(views.map, mapId, lifecycleOwner, featureClickHandler::onFeatureClick)
 
         // Populate the last known location and map bounds
         layerManager.onBoundsChanged()
@@ -412,7 +446,7 @@ class ViewPhotoMapController(
     }
 
     fun adjustLayers() {
-        layerSheet.dismissAndUpdateWidgets(host.requireContext())
+        layerSheet.dismissAndUpdateWidgets(context)
         layerManager.pause(views.map)
         layerSheet.setOnDismissListener {
             resetLayerManager()
@@ -421,7 +455,7 @@ class ViewPhotoMapController(
     }
 
     private fun navigateTo(location: Coordinate) {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             // Create a temporary beacon
             val beacon = Beacon(
                 0L,
@@ -455,7 +489,7 @@ class ViewPhotoMapController(
                 updateDestination()
             }
         }
-        screenLock.updateLock(host.mainActivity)
+        screenLock.updateLock(activity)
     }
 
     private fun onMapLoad(map: PhotoMap) {
@@ -472,9 +506,7 @@ class ViewPhotoMapController(
             shouldLockOnMapLoad = false
         }
         views.map.mapAzimuth = getDefaultMapAzimuth(prefs.photoMaps.keepMapFacingUp)
-        layerManager.resume(views.map, map.id, host.lifecycleOwner) {
-            com.kylecorry.trail_sense.shared.sharing.GeoJsonFeatureClickHandler.handleFeatureClick(host, it)
-        }
+        layerManager.resume(views.map, map.id, lifecycleOwner, featureClickHandler::onFeatureClick)
         layerManager.onBoundsChanged()
     }
 
@@ -491,7 +523,7 @@ class ViewPhotoMapController(
         views.map.isZoomEnabled = true
 
         // Show the bottom navigation
-        (host.mainActivity).setBottomNavigationEnabled(true)
+        activity.setBottomNavigationEnabled(true)
 
         when (mapLockMode) {
             MapLockMode.Location -> {
@@ -548,9 +580,9 @@ class ViewPhotoMapController(
 
             MapLockMode.Trace -> {
                 CustomUiUtils.disclaimer(
-                    host.requireContext(),
-                    host.getString(R.string.trace),
-                    host.getString(R.string.map_trace_instructions),
+                    context,
+                    context.getString(R.string.trace),
+                    context.getString(R.string.map_trace_instructions),
                     "disclaimer_shown_map_trace",
                     cancelText = null
                 )
@@ -571,7 +603,7 @@ class ViewPhotoMapController(
                 views.zoomOutBtn.isVisible = false
 
                 // Hide the bottom navigation
-                (host.mainActivity).setBottomNavigationEnabled(false)
+                activity.setBottomNavigationEnabled(false)
             }
         }
     }
@@ -579,7 +611,7 @@ class ViewPhotoMapController(
     fun onPause() {
         updateTimer.stop()
         layerSheet.setOnDismissListener(null)
-        layerSheet.dismissAndUpdateWidgets(host.requireContext())
+        layerSheet.dismissAndUpdateWidgets(context)
         photoMapViews?.let {
             layerManager.pause(it.map)
         }
@@ -587,7 +619,7 @@ class ViewPhotoMapController(
         screenLight.off()
 
         // Show the bottom navigation
-        (host.mainActivity).setBottomNavigationEnabled(true)
+        activity.setBottomNavigationEnabled(true)
     }
 
     fun recenter() {
@@ -598,15 +630,15 @@ class ViewPhotoMapController(
     }
 
     fun onDestroy() {
-        screenLock.releaseLock(host.mainActivity)
+        screenLock.releaseLock(activity)
         photoMapViews = null
     }
 
     private fun updatePeriodic() {
-        screenLock.updateLock(host.mainActivity)
+        screenLock.updateLock(activity)
         val views = photoMapViews ?: return
-        host.inBackground {
-            val attribution = views.map.getAttribution(host.requireContext())
+        lifecycleOwner.inBackground {
+            val attribution = views.map.getAttribution(context)
             onMain {
                 views.mapAttribution.text = attribution
                 views.mapAttribution.isVisible = attribution != null
