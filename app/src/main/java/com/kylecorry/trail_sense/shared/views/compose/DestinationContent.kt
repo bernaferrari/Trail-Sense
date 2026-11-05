@@ -197,7 +197,7 @@ fun DestinationContent(
 
             // --- Tools with a disclaimer, camera permission or plugin details ---
             Route.CliffHeight -> CliffHeightToolScreen(this)
-            Route.Magnifier -> MagnifierToolScreen(this)
+            Route.Magnifier -> MagnifierToolScreen()
             Route.MirrorCamera -> MirrorCameraToolScreen()
             Route.WaterPurification -> WaterPurificationToolScreen(this)
             is Route.PluginDetails -> PluginDetailsScreen(
