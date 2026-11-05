@@ -212,13 +212,13 @@ fun DestinationContent(
 
             // --- Tools with their own state holder ---
             Route.Tools -> ToolsHomeScreen(this)
-            Route.ScreenFlashlight -> ScreenFlashlightToolScreen(this)
+            Route.ScreenFlashlight -> ScreenFlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
             Route.Notes -> NotesToolScreen()
             is Route.NoteEditor -> NoteEditorToolScreen(route)
             is Route.SurvivalGuideReader -> SurvivalGuideReaderToolScreen(route)
             is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(route)
             Route.Pedometer -> PedometerToolScreen(this)
-            Route.Flashlight -> FlashlightToolScreen(this)
+            Route.Flashlight -> FlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
             Route.Battery -> BatteryToolScreen(this)
 
             // --- Tool screens that receive the host for callbacks / services ---

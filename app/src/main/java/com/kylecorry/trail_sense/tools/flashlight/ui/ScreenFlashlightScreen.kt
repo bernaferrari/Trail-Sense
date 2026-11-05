@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.andromeda.preferences.IPreferences
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -56,10 +60,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.interpolation.Interpolation.map
-import com.kylecorry.trail_sense.settings.ui.goBack
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.ScreenControllerEffect
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 /**
  * The screen as a light: the whole screen is the lamp (white or red), with one dark floating panel at the bottom for
@@ -159,10 +160,20 @@ fun ScreenFlashlightScreen(
 
 /** The screen flashlight: lit while the screen is resumed, and the volume buttons step its brightness. */
 @Composable
-fun ScreenFlashlightToolScreen(host: TrailSenseDestinationHost) {
+fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    val state = remember(host) { ScreenFlashlightState(host) }
-    ScreenControllerEffect(host, state)
+    val context = LocalContext.current
+    // The screen torch drives the activity's window brightness.
+    val window = requireNotNull(LocalActivity.current).window
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val state = remember(window) {
+        ScreenFlashlightState(
+            torch = ScreenTorch(window),
+            cache = PreferencesSubsystem.getInstance(context).preferences,
+            brightnessKey = context.getString(R.string.pref_screen_torch_brightness)
+        )
+    }
+    offerController(state)
 
     DisposableEffect(lifecycleOwner, state) {
         state.load()
@@ -186,15 +197,16 @@ fun ScreenFlashlightToolScreen(host: TrailSenseDestinationHost) {
         onToggleColor = state::toggleColor,
         onTurnOff = {
             state.turnOff()
-            host.goBack()
+            dispatcher?.onBackPressed()
         }
     )
 }
 
-private class ScreenFlashlightState(private val host: TrailSenseDestinationHost) : ScreenFlashlightController {
-    private val torch by lazy { ScreenTorch(host.mainActivity.window) }
-    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    private val brightnessKey by lazy { host.getString(R.string.pref_screen_torch_brightness) }
+private class ScreenFlashlightState(
+    private val torch: ScreenTorch,
+    private val cache: IPreferences,
+    private val brightnessKey: String
+) : ScreenFlashlightController {
 
     var brightness by mutableFloatStateOf(100f)
         private set
