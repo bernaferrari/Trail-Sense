@@ -17,10 +17,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.logging.Logger
-import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
-import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.turn_back.TurnBackToolRegistration
 import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackKeys
 
@@ -96,27 +93,6 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         fun stop(context: Context) {
             val scheduler = scheduler(context)
             scheduler.cancel()
-        }
-
-        // TODO: Extract this out of the receiver
-        /**
-         * Enable sunset alerts and request permissions if needed
-         */
-        fun enable(
-            host: TrailSenseDestinationHost,
-            shouldRequestPermissions: Boolean
-        ) {
-            if (shouldRequestPermissions) {
-                host.requestScheduleExactAlarms {
-                    start(host.requireContext())
-                    RequestBackgroundLocationCommand(
-                        host.requireContext(),
-                        BackgroundLocationAlerter(host)
-                    ).execute()
-                }
-            } else {
-                start(host.requireContext())
-            }
         }
     }
 }

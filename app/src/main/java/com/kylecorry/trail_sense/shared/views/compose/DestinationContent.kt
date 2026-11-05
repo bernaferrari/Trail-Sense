@@ -225,7 +225,7 @@ fun DestinationContent(
             Route.Triangulate -> TriangulateToolScreen(this)
             Route.Clock -> ClockToolScreen(this)
             Route.SignalFinder -> SignalFinderToolScreen(this)
-            Route.TurnBack -> TurnBackToolScreen(this)
+            Route.TurnBack -> TurnBackToolScreen()
             Route.Settings -> SettingsToolScreen(this)
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen(this)
             is Route.Clouds -> CloudToolScreen(this)
