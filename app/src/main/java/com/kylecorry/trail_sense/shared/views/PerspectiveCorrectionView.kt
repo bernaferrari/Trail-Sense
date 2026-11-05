@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
-import android.view.MotionEvent
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +19,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
@@ -95,7 +96,22 @@ fun PerspectiveCorrection(
             modifier = modifier
                 .fillMaxSize()
                 .onSizeChanged(state::setSize)
-                .pointerInteropFilter { state.onTouchEvent(it) }
+                .pointerInput(state) {
+                    // Drag a corner: press near it, move, lift.
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        down.consume()
+                        state.onPress(down.position.x, down.position.y)
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            change.consume()
+                            if (!change.pressed) break
+                            state.onDrag(change.position.x, change.position.y)
+                        }
+                        state.onRelease()
+                    }
+                }
         ) {
             state.draw(drawContext.canvas.nativeCanvas, size.width, size.height)
         }
@@ -397,79 +413,77 @@ class PerspectiveCorrectionState(
         )
     }
 
-    fun onTouchEvent(event: MotionEvent): Boolean {
-        val position = toSource(PixelCoordinate(event.x, event.y))
+    fun onPress(x: Float, y: Float) {
+        val position = toSource(PixelCoordinate(x, y))
         val radius = Resources.dp(context, 16f)
-
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                when {
-                    topLeft.distanceTo(position) <= radius -> {
-                        movingCorner = Corner.TopLeft
-                        movingOffset =
-                            PixelCoordinate(position.x - topLeft.x, position.y - topLeft.y)
-                    }
-
-                    topRight.distanceTo(position) <= radius -> {
-                        movingCorner = Corner.TopRight
-                        movingOffset =
-                            PixelCoordinate(position.x - topRight.x, position.y - topRight.y)
-                    }
-
-                    bottomLeft.distanceTo(position) <= radius -> {
-                        movingCorner = Corner.BottomLeft
-                        movingOffset =
-                            PixelCoordinate(position.x - bottomLeft.x, position.y - bottomLeft.y)
-                    }
-
-                    bottomRight.distanceTo(position) <= radius -> {
-                        movingCorner = Corner.BottomRight
-                        movingOffset =
-                            PixelCoordinate(position.x - bottomRight.x, position.y - bottomRight.y)
-                    }
-                }
+        when {
+            topLeft.distanceTo(position) <= radius -> {
+                movingCorner = Corner.TopLeft
+                movingOffset =
+                    PixelCoordinate(position.x - topLeft.x, position.y - topLeft.y)
             }
 
-            MotionEvent.ACTION_MOVE -> {
-                val actualPosition =
-                    PixelCoordinate(position.x - movingOffset.x, position.y - movingOffset.y)
-                when (movingCorner) {
-                    Corner.TopLeft -> {
-                        topLeft =
-                            constrain(actualPosition, null, bottomLeft.y, null, topRight.x, radius)
-                        hasChanges = true
-                    }
-
-                    Corner.TopRight -> {
-                        topRight =
-                            constrain(actualPosition, null, bottomRight.y, topLeft.x, null, radius)
-                        hasChanges = true
-                    }
-
-                    Corner.BottomLeft -> {
-                        bottomLeft =
-                            constrain(actualPosition, topLeft.y, null, null, bottomRight.x, radius)
-                        hasChanges = true
-                    }
-
-                    Corner.BottomRight -> {
-                        bottomRight =
-                            constrain(actualPosition, topRight.y, null, bottomLeft.x, null, radius)
-                        hasChanges = true
-                    }
-
-                    null -> {
-                        // Do nothing, not a valid corner
-                    }
-                }
+            topRight.distanceTo(position) <= radius -> {
+                movingCorner = Corner.TopRight
+                movingOffset =
+                    PixelCoordinate(position.x - topRight.x, position.y - topRight.y)
             }
 
-            MotionEvent.ACTION_UP -> {
-                movingCorner = null
+            bottomLeft.distanceTo(position) <= radius -> {
+                movingCorner = Corner.BottomLeft
+                movingOffset =
+                    PixelCoordinate(position.x - bottomLeft.x, position.y - bottomLeft.y)
+            }
+
+            bottomRight.distanceTo(position) <= radius -> {
+                movingCorner = Corner.BottomRight
+                movingOffset =
+                    PixelCoordinate(position.x - bottomRight.x, position.y - bottomRight.y)
             }
         }
         refresh()
-        return true
+    }
+
+    fun onDrag(x: Float, y: Float) {
+        val position = toSource(PixelCoordinate(x, y))
+        val radius = Resources.dp(context, 16f)
+        val actualPosition =
+            PixelCoordinate(position.x - movingOffset.x, position.y - movingOffset.y)
+        when (movingCorner) {
+            Corner.TopLeft -> {
+                topLeft =
+                    constrain(actualPosition, null, bottomLeft.y, null, topRight.x, radius)
+                hasChanges = true
+            }
+
+            Corner.TopRight -> {
+                topRight =
+                    constrain(actualPosition, null, bottomRight.y, topLeft.x, null, radius)
+                hasChanges = true
+            }
+
+            Corner.BottomLeft -> {
+                bottomLeft =
+                    constrain(actualPosition, topLeft.y, null, null, bottomRight.x, radius)
+                hasChanges = true
+            }
+
+            Corner.BottomRight -> {
+                bottomRight =
+                    constrain(actualPosition, topRight.y, null, bottomLeft.x, null, radius)
+                hasChanges = true
+            }
+
+            null -> {
+                // Do nothing, not a valid corner
+            }
+        }
+        refresh()
+    }
+
+    fun onRelease() {
+        movingCorner = null
+        refresh()
     }
 
     private fun constrain(
