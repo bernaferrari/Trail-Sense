@@ -199,7 +199,7 @@ fun DestinationContent(
             Route.CliffHeight -> CliffHeightToolScreen(this)
             Route.Magnifier -> MagnifierToolScreen()
             Route.MirrorCamera -> MirrorCameraToolScreen()
-            Route.WaterPurification -> WaterPurificationToolScreen(this)
+            Route.WaterPurification -> WaterPurificationToolScreen()
             is Route.PluginDetails -> PluginDetailsScreen(
                 packageId = route.packageId,
                 pluginSubsystem = PluginSubsystem.getInstance(requireContext()),

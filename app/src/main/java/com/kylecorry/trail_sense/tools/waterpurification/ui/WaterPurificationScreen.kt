@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
+import com.kylecorry.andromeda.core.sensors.IAltimeter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
@@ -84,7 +85,6 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -472,20 +472,22 @@ internal enum class TimeSelection {
 
 /** The water boil timer: auto picks the time from the altitude, falling back to three minutes. */
 @Composable
-fun WaterPurificationToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { WaterPurificationController(host) }
+fun WaterPurificationToolScreen() {
+    val context = LocalContext.current.applicationContext
+    val altimeter = remember(context) { SensorService(context).getAltimeter() }
+    val formatService = remember(context) { FormatService.getInstance(context) }
+    val cache = remember(context) { PreferencesSubsystem.getInstance(context).preferences }
+    val boilTime = remember(altimeter) { BoilTime(altimeter) }
     WaterPurificationScreen(
-        cache = controller.cache,
-        formatService = controller.formatService,
-        getSelectedDuration = controller::getDuration
+        cache = cache,
+        formatService = formatService,
+        getSelectedDuration = boilTime::getDuration
     )
 }
 
-private class WaterPurificationController(host: TrailSenseDestinationHost) {
-    private val altimeter = SensorService(host.requireContext()).getAltimeter()
+/** How long to boil for a selection: auto reads the altitude (up to 10 s), otherwise three minutes. */
+private class BoilTime(private val altimeter: IAltimeter) {
     private val waterService = WaterService()
-    val formatService = FormatService.getInstance(host.requireContext())
-    val cache = PreferencesSubsystem.getInstance(host.requireContext()).preferences
 
     suspend fun getDuration(selection: TimeSelection): Duration = onDefault {
         if (selection == TimeSelection.Auto) {
