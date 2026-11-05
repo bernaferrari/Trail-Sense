@@ -91,7 +91,14 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.views.UserError
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.main.MainActivity
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -133,11 +140,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun SignalFinderToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) {
-        SignalFinderController(host)
-    }
+fun SignalFinderToolScreen() {
+    val context = LocalContext.current
+    val appNavigator = LocalNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(context, appNavigator, lifecycleOwner) {
+        SignalFinderController(context, appNavigator, lifecycleOwner)
+    }
     DisposableEffect(controller, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -170,15 +179,19 @@ fun SignalFinderToolScreen(host: TrailSenseDestinationHost) {
     )
 }
 
-private class SignalFinderController(private val host: TrailSenseDestinationHost) {
+private class SignalFinderController(
+    private val context: Context,
+    private val appNavigator: TrailSenseNavigator,
+    private val lifecycleOwner: LifecycleOwner
+) {
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
     private val cellSignal by lazy { sensorService.getCellSignal() }
     private val gps by lazy { sensorService.getGPS() }
-    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
-    val prefs by lazy { UserPreferences(host.requireContext()) }
+    val formatter by lazy { FormatService.getInstance(context) }
+    val prefs by lazy { UserPreferences(context) }
     private val markdown by lazy { DependencyRegistry.get<MarkdownService>() }
-    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(context) }
     private val handler = Handler(Looper.getMainLooper())
 
     var signals by mutableStateOf(emptyList<CellSignal>())
@@ -194,7 +207,7 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
     var hasLoaded by mutableStateOf(false)
         private set
     val disclaimer by lazy {
-        markdown.toMarkdown(host.getString(R.string.cell_tower_disclaimer))
+        markdown.toMarkdown(context.getString(R.string.cell_tower_disclaimer))
     }
     private var lastTowerLocation: Coordinate? = null
     private var towerJob: Job? = null
@@ -236,11 +249,12 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
         cellSignal.stop(sensorListener)
         gps.stop(sensorListener)
         towerJob?.cancel()
-        host.mainActivity.errorBanner.dismiss(ErrorBannerReason.LocationPermissionDenied)
+        context.findMainActivity()?.errorBanner?.dismiss(ErrorBannerReason.LocationPermissionDenied)
     }
 
     private fun updateLocationPermissionError(hasPermission: Boolean) {
-        val banner = host.mainActivity.errorBanner
+        // The location permission banner belongs to the activity.
+        val banner = context.findMainActivity()?.errorBanner ?: return
         if (hasPermission) {
             banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
             return
@@ -249,12 +263,12 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
         banner.report(
             UserError(
                 ErrorBannerReason.LocationPermissionDenied,
-                host.getString(R.string.location_required_for_cell_signals),
+                context.getString(R.string.location_required_for_cell_signals),
                 TrailIcons.SignalCellularOutline,
-                host.getString(R.string.settings)
+                context.getString(R.string.settings)
             ) {
                 banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
-                host.startActivity(Intents.appSettings(host.requireContext()))
+                context.startActivity(Intents.appSettings(context))
             }
         )
     }
@@ -278,7 +292,7 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
     private fun loadNearbyTowers(currentLocation: Coordinate) {
         lastTowerLocation = currentLocation
         towerJob?.cancel()
-        towerJob = host.lifecycleScope.launch {
+        towerJob = lifecycleOwner.lifecycleScope.launch {
             loading = true
             val towers = withContext(Dispatchers.IO) {
                 CellTowerModel.getTowers(
@@ -293,13 +307,19 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
     }
 
     fun navigateToTower(tower: ApproximateCoordinate) {
-        navigator.navigateTo(tower.coordinate, host.getString(R.string.cell_tower))
-        host.findNavigator().navigate(Route.Navigation())
+        navigator.navigateTo(tower.coordinate, context.getString(R.string.cell_tower))
+        appNavigator.navigate(Route.Navigation())
     }
 
     fun createBeacon(tower: ApproximateCoordinate) {
-        host.findNavigator().navigate(Route.PlaceBeacon(initialLocation = tower.coordinate.toRouteLocation()))
+        appNavigator.navigate(Route.PlaceBeacon(initialLocation = tower.coordinate.toRouteLocation()))
     }
+}
+
+private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
+    is MainActivity -> this
+    is ContextWrapper -> baseContext.findMainActivity()
+    else -> null
 }
 
 /**

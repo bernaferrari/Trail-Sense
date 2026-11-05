@@ -100,12 +100,18 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.getMarkdown
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.markdown.MarkdownService
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
@@ -124,12 +130,15 @@ import kotlin.math.min
 
 @Composable
 fun ClinometerToolScreen(
-    host: TrailSenseDestinationHost,
     onController: (ClinometerLockController?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host) { ClinometerController(host) }
+    val context = LocalContext.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(context, effects, lifecycleOwner) {
+        ClinometerController(context, effects, lifecycleOwner)
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -153,21 +162,23 @@ fun ClinometerToolScreen(
 }
 
 private class ClinometerController(
-    private val host: TrailSenseDestinationHost
+    private val context: Context,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner
 ) : ClinometerLockController {
 
     private var clinometerViews: ClinometerViews? =
-        createClinometerViews(host.requireContext())
+        createClinometerViews(context)
     private val views: ClinometerViews
         get() = clinometerViews ?: error("Clinometer views are not ready")
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
     private val orientation by lazy { sensorService.getOrientation() }
     private val cameraClinometer by lazy { Clinometer(orientation, isAugmentedReality = true) }
     private val sideClinometer by lazy { Clinometer(orientation, isAugmentedReality = false) }
     private val deviceOrientation by lazy { sensorService.getDeviceOrientationSensor() }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(context) }
+    private val formatter by lazy { FormatService.getInstance(context) }
     private val throttle = Throttle(20)
     private val invalidCameraOrientations = listOf(
         DeviceOrientation.Orientation.Landscape,
@@ -215,7 +226,7 @@ private class ClinometerController(
 
     @SuppressLint("ClickableViewAccessibility")
     fun onCreate() {
-        host.toast(host.getString(R.string.set_inclination_instructions))
+        effects.showMessage(context.getString(R.string.set_inclination_instructions))
 
         views.clinometerTitle.isLeftButtonSelected = false
         views.clinometerTitle.isRightButtonSelected = false
@@ -250,11 +261,11 @@ private class ClinometerController(
         views.arView.showPosition = false
         views.arView.passThroughTouchEvents = true
 
-        views.arView.bind(views.camera, host.lifecycleOwner)
+        views.arView.bind(views.camera, lifecycleOwner)
 
-        sideClinometer.asLiveData().observe(host.lifecycleOwner) { updateUI() }
-        cameraClinometer.asLiveData().observe(host.lifecycleOwner) { updateUI() }
-        deviceOrientation.asLiveData().observe(host.lifecycleOwner) { updateUI() }
+        sideClinometer.asLiveData().observe(lifecycleOwner) { updateUI() }
+        cameraClinometer.asLiveData().observe(lifecycleOwner) { updateUI() }
+        deviceOrientation.asLiveData().observe(lifecycleOwner) { updateUI() }
     }
 
     private fun startSideClinometer() {
@@ -266,7 +277,8 @@ private class ClinometerController(
     }
 
     private fun startCameraClinometer(showAlert: Boolean) {
-        host.requestCamera { hasPermission ->
+        lifecycleOwner.lifecycleScope.launch {
+            val hasPermission = effects.requestPermission(AppPermission.Camera)
             if (hasPermission) {
                 useCamera = true
                 views.camera.start(
@@ -278,7 +290,7 @@ private class ClinometerController(
             } else {
                 startSideClinometer()
                 if (showAlert) {
-                    host.alertNoCameraPermission()
+                    effects.explainPermissionDenied(AppPermission.Camera)
                 }
             }
         }
@@ -291,8 +303,8 @@ private class ClinometerController(
 
     private fun askForHeightOrDistance() {
         Pickers.item(
-            host.requireContext(), host.getString(R.string.measure), listOf(
-                host.getString(R.string.height), host.getString(R.string.distance)
+            context, context.getString(R.string.measure), listOf(
+                context.getString(R.string.height), context.getString(R.string.distance)
             ), when {
                 distanceAway != null -> 0
                 knownHeight != null -> 1
@@ -311,19 +323,19 @@ private class ClinometerController(
     private fun measureHeightPrompt() {
         val units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
         CustomUiUtils.pickDistance(
-            host.requireContext(),
+            context,
             units,
             distanceAway,
-            host.getString(R.string.clinometer_measure_height_title)
+            context.getString(R.string.clinometer_measure_height_title)
         ) { distance, _ ->
             if (distance != null) {
                 distanceAway = distance
                 knownHeight = null
                 views.clinometerTitle.isRightButtonSelected = true
                 CustomUiUtils.disclaimer(
-                    host.requireContext(),
-                    host.getString(R.string.instructions),
-                    host.getMarkdown(
+                    context,
+                    context.getString(R.string.instructions),
+                    markdown(
                         R.string.clinometer_measure_height_instructions,
                         formatter.formatDistance(distance, 2, false)
                     ),
@@ -338,11 +350,11 @@ private class ClinometerController(
         val units = formatter.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
 
         CustomUiUtils.pickDistance(
-            host.requireContext(),
+            context,
             units,
             knownHeight,
-            host.getString(R.string.clinometer_measure_distance_title),
-            hint = host.getString(R.string.height),
+            context.getString(R.string.clinometer_measure_distance_title),
+            hint = context.getString(R.string.height),
             showFeetAndInches = true
         ) { distance, _ ->
             if (distance != null) {
@@ -351,9 +363,9 @@ private class ClinometerController(
                 views.clinometerTitle.isRightButtonSelected = true
 
                 CustomUiUtils.disclaimer(
-                    host.requireContext(),
-                    host.getString(R.string.instructions),
-                    host.getMarkdown(
+                    context,
+                    context.getString(R.string.instructions),
+                    markdown(
                         R.string.clinometer_measure_distance_instructions,
                         formatter.formatDistance(distance, 2, false)
                     ),
@@ -362,6 +374,10 @@ private class ClinometerController(
                 )
             }
         }
+    }
+
+    private fun markdown(resId: Int, vararg formatArgs: Any?): CharSequence {
+        return DependencyRegistry.get<MarkdownService>().toMarkdown(context.getString(resId, *formatArgs))
     }
 
     fun onResume() {
@@ -426,9 +442,9 @@ private class ClinometerController(
         val slope = getSlopePercent(incline)
         // Straight up or down has no finite grade; say so rather than printing "-%".
         views.clinometerTitle.subtitle = if (!slope.isFinite() || abs(incline) >= 89.95f) {
-            host.getString(R.string.clinometer_vertical)
+            context.getString(R.string.clinometer_vertical)
         } else {
-            host.getString(R.string.slope_amount, formatter.formatPercentage(slope))
+            context.getString(R.string.slope_amount, formatter.formatPercentage(slope))
         }
 
         val risk = Geology.getAvalancheRisk(incline)
@@ -450,7 +466,7 @@ private class ClinometerController(
         when {
             distanceAway != null -> {
                 views.estimatedHeight.isSet = true
-                views.estimatedHeight.description = host.getString(R.string.height)
+                views.estimatedHeight.description = context.getString(R.string.height)
                 views.estimatedHeight.title = formatter.formatDistance(
                     getHeight(distanceAway).toRelativeDistance(), 1, false
                 )
@@ -458,7 +474,7 @@ private class ClinometerController(
 
             knownHeight != null -> {
                 views.estimatedHeight.isSet = true
-                views.estimatedHeight.description = host.getString(R.string.distance)
+                views.estimatedHeight.description = context.getString(R.string.distance)
                 views.estimatedHeight.title = formatter.formatDistance(
                     getDistance(knownHeight).toRelativeDistance(), 1, false
                 )
@@ -466,7 +482,7 @@ private class ClinometerController(
 
             else -> {
                 views.estimatedHeight.isSet = false
-                views.estimatedHeight.title = host.getString(R.string.distance_unset)
+                views.estimatedHeight.title = context.getString(R.string.distance_unset)
             }
         }
     }
@@ -498,9 +514,9 @@ private class ClinometerController(
 
     private fun getAvalancheRiskString(risk: AvalancheRisk): String {
         return when (risk) {
-            AvalancheRisk.Low -> host.getString(R.string.low)
-            AvalancheRisk.Moderate -> host.getString(R.string.moderate)
-            AvalancheRisk.High -> host.getString(R.string.high)
+            AvalancheRisk.Low -> context.getString(R.string.low)
+            AvalancheRisk.Moderate -> context.getString(R.string.moderate)
+            AvalancheRisk.High -> context.getString(R.string.high)
         }
     }
 
@@ -618,7 +634,7 @@ private class ClinometerController(
         )
         markerLayer.addMarker(
             ARMarker(
-                point, CanvasCircle(Resources.getPrimaryMarkerColor(host.requireContext()))
+                point, CanvasCircle(Resources.getPrimaryMarkerColor(context))
             )
         )
         return point

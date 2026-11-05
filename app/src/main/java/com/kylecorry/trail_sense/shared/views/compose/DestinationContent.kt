@@ -186,7 +186,8 @@ fun DestinationContent(
             // --- Map (special: controller callback + reactive) ---
             Route.Map -> MapToolScreen(
                 component = reactiveComponent,
-                host = this,
+                resumeCount = { hookResetOnResume },
+                onCleanupReactiveEffects = ::cleanupReactiveEffects,
                 onController = {
                     mapController = it
                     if (it != null) {
@@ -222,16 +223,16 @@ fun DestinationContent(
             Route.Battery -> BatteryToolScreen(this)
 
             // --- Tool screens that receive the host for callbacks / services ---
-            Route.Triangulate -> TriangulateToolScreen(this)
+            Route.Triangulate -> TriangulateToolScreen()
             Route.Clock -> ClockToolScreen()
-            Route.SignalFinder -> SignalFinderToolScreen(this)
+            Route.SignalFinder -> SignalFinderToolScreen()
             Route.TurnBack -> TurnBackToolScreen(this)
             Route.Settings -> SettingsToolScreen(this)
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen()
             is Route.Clouds -> CloudToolScreen(this)
             is Route.CloudResults -> CloudResultsToolScreen(this)
             Route.Astronomy -> AstronomyToolScreen(this)
-            is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
+            is Route.AugmentedReality -> AugmentedRealityToolScreen(route)
             is Route.BeaconList -> BeaconListToolScreen(
                 route = route,
                 onController = { screenController = it }
@@ -239,7 +240,7 @@ fun DestinationContent(
             is Route.BeaconDetails -> BeaconDetailsToolScreen(route)
             is Route.PlaceBeacon -> PlaceBeaconToolScreen(route)
             is Route.OfflineMapList -> OfflineMapListToolScreen(this)
-            Route.ScanQr -> ScanQRToolScreen(this)
+            Route.ScanQr -> ScanQRToolScreen()
             is Route.ViewQr -> QRShareScreen(
                 title = route.title,
                 text = route.text
@@ -268,7 +269,6 @@ fun DestinationContent(
             is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(route)
             is Route.PhotoMaps -> PhotoMapsToolScreen(this)
             Route.Clinometer -> ClinometerToolScreen(
-                host = this,
                 onController = { screenController = it }
             )
             Route.Weather -> WeatherToolScreen(

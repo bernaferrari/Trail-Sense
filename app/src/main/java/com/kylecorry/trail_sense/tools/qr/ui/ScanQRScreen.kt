@@ -90,7 +90,6 @@ import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
@@ -99,7 +98,18 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.main.MainActivity
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
@@ -118,9 +128,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ScanQRToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { ScanQRController(host) }
+fun ScanQRToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(context, navigator, effects, lifecycleOwner) {
+        ScanQRController(context, navigator, effects, lifecycleOwner)
+    }
     DisposableEffect(controller, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -155,7 +170,12 @@ fun ScanQRToolScreen(host: TrailSenseDestinationHost) {
     )
 }
 
-private class ScanQRController(private val host: TrailSenseDestinationHost) {
+private class ScanQRController(
+    private val context: Context,
+    private val navigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner
+) {
     private val cameraSize = Size(200, 200)
 
     var history by mutableStateOf<List<String>>(emptyList())
@@ -170,38 +190,37 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
     private val beaconQREncoder = BeaconQREncoder()
     private val noteQREncoder = NoteQREncoder()
 
-    private val haptics by lazy { HapticSubsystem.getInstance(host.requireContext()) }
+    private val haptics by lazy { HapticSubsystem.getInstance(context) }
     private val scanLock = Any()
 
     fun onCameraReady(cameraView: CameraState) {
         this.cameraView = cameraView
         cameraView.clipToOutline = true
-        if (shouldStartCamera && host.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+        if (shouldStartCamera && lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             startCamera()
         }
     }
 
     fun copy(text: String) {
         Clipboard.copy(
-            host.requireContext(),
+            context,
             text,
-            host.getString(R.string.copied_to_clipboard_toast)
+            context.getString(R.string.copied_to_clipboard_toast)
         )
     }
 
     fun createNote(text: String) {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             val id = withContext(Dispatchers.IO) {
-                NoteRepo.getInstance(host.requireContext())
+                NoteRepo.getInstance(context)
                     .addNote(noteQREncoder.decode(text))
             }
             withContext(Dispatchers.Main) {
-                CustomUiUtils.snackbar(
-                    host,
-                    host.getString(R.string.saved_to_note),
-                    action = host.getString(R.string.view)
+                showSnackbar(
+                    context.getString(R.string.saved_to_note),
+                    context.getString(R.string.view)
                 ) {
-                    host.findNavigator().navigate(Route.NoteEditor(editNoteId = id))
+                    navigator.navigate(Route.NoteEditor(editNoteId = id))
                 }
             }
         }
@@ -209,7 +228,7 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
 
     fun openMap(text: String) {
         val intent = Intents.url(text)
-        Intents.openChooser(host.requireContext(), intent, text)
+        Intents.openChooser(context, intent, text)
     }
 
     fun openUrl(text: String) {
@@ -220,19 +239,18 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
             text
         }
         val intent = Intents.url(url)
-        Intents.openChooser(host.requireContext(), intent, text)
+        Intents.openChooser(context, intent, text)
     }
 
     fun createBeacon(text: String) {
         val beacon = beaconQREncoder.decode(text) ?: return
-        host.inBackground {
-            val id = BeaconService(host.requireContext()).add(beacon)
-            CustomUiUtils.snackbar(
-                host,
-                host.getString(R.string.beacon_created),
-                action = host.getString(R.string.view)
+        lifecycleOwner.inBackground {
+            val id = BeaconService(context).add(beacon)
+            showSnackbar(
+                context.getString(R.string.beacon_created),
+                context.getString(R.string.view)
             ) {
-                host.findNavigator().navigate(Route.BeaconDetails(beaconId = id))
+                navigator.navigate(Route.BeaconDetails(beaconId = id))
             }
         }
     }
@@ -245,10 +263,9 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
 
         history = history.filterNot { it == text }
         updateHistoryList(false)
-        CustomUiUtils.snackbar(
-            host,
-            host.getString(R.string.result_deleted),
-            action = host.getString(R.string.undo)
+        showSnackbar(
+            context.getString(R.string.result_deleted),
+            context.getString(R.string.undo)
         ) {
             if (!history.contains(text)) {
                 val restored = history.toMutableList()
@@ -264,26 +281,28 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
     }
 
     fun scanFromGallery() {
-        host.inBackground(BackgroundMinimumState.Created) {
-            val uri = IntentUriPicker(host.intentResultRetriever, host.requireContext())
+        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
+            // The gallery picker needs the activity's result launcher.
+            val activity = context.findMainActivity() ?: return@inBackground
+            val uri = IntentUriPicker(activity, context)
                 .open(listOf("image/*"))
                 .getOrNull() ?: return@inBackground
 
             val indicator = AlertLoadingIndicator(
-                host.requireContext(),
-                host.getString(R.string.scanning_image)
+                context,
+                context.getString(R.string.scanning_image)
             )
             try {
                 indicator.show()
                 val path = withContext(Dispatchers.IO) {
-                    FileSubsystem.getInstance(host.requireContext()).copyToTemp(uri)
+                    FileSubsystem.getInstance(context).copyToTemp(uri)
                 }?.path ?: return@inBackground
 
                 val bitmap = withContext(Dispatchers.IO) {
                     BitmapUtils.decodeBitmapScaled(path, mediaMaxWidth, mediaMaxHeight)
                 } ?: return@inBackground
 
-                DeleteTempFilesCommand(host.requireContext()).execute()
+                DeleteTempFilesCommand(context).execute()
                 onCameraUpdate(bitmap, isFromGallery = true)
             } finally {
                 indicator.hide()
@@ -293,7 +312,8 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
 
     fun onResume() {
         updateHistoryList()
-        host.requestCamera { hasPermission ->
+        lifecycleOwner.lifecycleScope.launch {
+            val hasPermission = effects.requestPermission(AppPermission.Camera)
             isCameraDenied = !hasPermission
             if (hasPermission) {
                 shouldStartCamera = true
@@ -316,7 +336,7 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
         bitmap: Bitmap,
         isFromGallery: Boolean = false
     ): Boolean = synchronized(scanLock) {
-        if (!host.lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)) {
+        if (!lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)) {
             bitmap.recycle()
             return true
         }
@@ -333,8 +353,8 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
             onQRScanned(message)
         } else if (isFromGallery) {
             Alerts.toast(
-                host.requireContext(),
-                host.getString(R.string.no_qr_code_detected)
+                context,
+                context.getString(R.string.no_qr_code_detected)
             )
         }
 
@@ -371,8 +391,16 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
         }
     }
 
+    private fun showSnackbar(message: String, action: String, onAction: () -> Unit) {
+        lifecycleOwner.lifecycleScope.launch {
+            if (effects.showSnackbar(message, action)) {
+                onAction()
+            }
+        }
+    }
+
     fun openAppSettings() {
-        host.startActivity(Intents.appSettings(host.requireContext()))
+        context.startActivity(Intents.appSettings(context))
     }
 
     fun onPause() {
@@ -390,6 +418,12 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
         const val mediaMaxWidth = 500
         const val mediaMaxHeight = 500
     }
+}
+
+private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
+    is MainActivity -> this
+    is ContextWrapper -> baseContext.findMainActivity()
+    else -> null
 }
 
 /**
