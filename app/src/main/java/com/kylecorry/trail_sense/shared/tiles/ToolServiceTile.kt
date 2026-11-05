@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.shared.tiles
 
 import android.os.Bundle
 import android.service.quicksettings.Tile
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.widgets.tiles.AndromedaTileService
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -17,6 +18,7 @@ abstract class ToolServiceTile(
     private val serviceId: String,
     private val stateChangeBroadcastId: String,
     private val frequencyChangeBroadcastId: String? = null,
+    private val icon: ImageVector,
     private val isForegroundService: Boolean = false
 ) : AndromedaTileService() {
     protected val service by lazy { Tools.getService(this, serviceId) }
@@ -53,7 +55,13 @@ abstract class ToolServiceTile(
         }
     }
 
+    override fun onTileAdded() {
+        super.onTileAdded()
+        showIcon(icon)
+    }
+
     override fun onStartListening() {
+        showIcon(icon)
         Tools.subscribe(stateChangeBroadcastId, this::onStateChanged)
         updateState()
         if (frequencyChangeBroadcastId != null) {

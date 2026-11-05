@@ -204,7 +204,6 @@
         <service
             android:name=".tools.paths.tiles.BacktrackTile"
             android:exported="true"
-            android:icon="@drawable/ic_tool_backtrack"
             android:label="@string/backtrack"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <meta-data
@@ -218,7 +217,6 @@
         <service
             android:name=".tools.weather.tiles.WeatherMonitorTile"
             android:exported="true"
-            android:icon="@drawable/cloud"
             android:label="@string/weather_monitor"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <meta-data
@@ -232,7 +230,6 @@
         <service
             android:name=".tools.pedometer.tiles.PedometerTile"
             android:exported="true"
-            android:icon="@drawable/steps"
             android:label="@string/pedometer"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <meta-data
