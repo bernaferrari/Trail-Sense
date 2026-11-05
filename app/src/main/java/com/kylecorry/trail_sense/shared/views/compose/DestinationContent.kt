@@ -228,8 +228,8 @@ fun DestinationContent(
             Route.TurnBack -> TurnBackToolScreen(this)
             Route.Settings -> SettingsToolScreen(this)
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen(this)
-            is Route.Clouds -> CloudToolScreen(this)
-            is Route.CloudResults -> CloudResultsToolScreen(this)
+            is Route.Clouds -> CloudToolScreen(route)
+            is Route.CloudResults -> CloudResultsToolScreen(route)
             Route.Astronomy -> AstronomyToolScreen(this)
             is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
             is Route.BeaconList -> BeaconListToolScreen(
