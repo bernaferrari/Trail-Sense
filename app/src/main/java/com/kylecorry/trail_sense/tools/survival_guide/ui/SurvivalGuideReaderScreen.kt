@@ -3,6 +3,11 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import android.content.Context
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.CoroutineScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -85,7 +90,6 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -371,77 +375,64 @@ private fun ReaderHero(@Suppress("UNUSED_PARAMETER") chapter: Chapter, sections:
 
 /** A survival guide chapter for [Route.SurvivalGuideReader], scrolled to its heading; debug builds can print it. */
 @Composable
-fun SurvivalGuideReaderToolScreen(host: TrailSenseDestinationHost, route: Route.SurvivalGuideReader) {
-    val controller = remember(host) { SurvivalGuideReaderController(host, route.chapterResourceId) }
-    LaunchedEffect(controller) {
-        controller.load()
+fun SurvivalGuideReaderToolScreen(route: Route.SurvivalGuideReader) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val chapterResourceId = route.chapterResourceId
+    val chapter = remember(chapterResourceId) {
+        Chapters.getChapters(context).first { it.resource == chapterResourceId }
+    }
+    val content by produceState<String?>(null, chapterResourceId) {
+        value = withContext(Dispatchers.IO) {
+            TextUtils.loadTextFromResources(context, chapterResourceId)
+        }
     }
     SurvivalGuideReaderScreen(
-        chapter = controller.chapter,
-        content = controller.content,
+        chapter = chapter,
+        content = content,
         headerIndex = route.headerIndex,
         canPrint = isDebug(),
-        onPrint = controller::print
+        onPrint = { printChapter(context, scope, it) }
     )
 }
 
-private class SurvivalGuideReaderController(
-    private val host: TrailSenseDestinationHost,
-    private val chapterResourceId: Int
-) {
-    val chapter by lazy {
-        Chapters.getChapters(host.requireContext()).first { it.resource == chapterResourceId }
-    }
-
-    var content by mutableStateOf<String?>(null)
-        private set
-
-    fun load() {
-        host.lifecycleScope.launch {
-            content = withContext(Dispatchers.IO) {
-                TextUtils.loadTextFromResources(host.requireContext(), chapterResourceId)
-            }
+/** Prints [chapter] as a PDF (debug builds only); [context] is the screen's, for the loading dialog and printer. */
+private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapter) {
+    val files = FileSubsystem.getInstance(context)
+    val markdown = DependencyRegistry.get<MarkdownService>()
+    scope.launch(Dispatchers.IO) {
+        val loading = withContext(Dispatchers.Main) {
+            Alerts.loading(context, context.getString(R.string.loading))
         }
-    }
-
-    fun print(chapter: Chapter) {
-        val context = host.requireContext()
-        val files = FileSubsystem.getInstance(context)
-        val markdown = DependencyRegistry.get<MarkdownService>()
-        host.lifecycleScope.launch(Dispatchers.IO) {
-            val loading = withContext(Dispatchers.Main) {
-                Alerts.loading(context, host.getString(R.string.loading))
-            }
-            try {
-                val printer = Printer(context)
-                printer.setColorMode(ColorMode.Color)
-                printer.setScaleMode(ScaleMode.Fit)
-                printer.setOrientation(Orientation.Portrait)
-                val content = TextUtils.removeMarkdownComments(
-                    "# ${chapter.title}\n" + TextUtils.loadTextFromResources(
-                        context,
-                        chapter.resource
-                    )
+        try {
+            val printer = Printer(context)
+            printer.setColorMode(ColorMode.Color)
+            printer.setScaleMode(ScaleMode.Fit)
+            printer.setOrientation(Orientation.Portrait)
+            val content = TextUtils.removeMarkdownComments(
+                "# ${chapter.title}\n" + TextUtils.loadTextFromResources(
+                    context,
+                    chapter.resource
                 )
-                val file = files.createTemp("pdf")
-                val parsed = markdown.toMarkdown(content)
-                val textView = TextView(context)
-                textView.textSize = 6f
-                textView.setTextColor(AndroidColor.BLACK)
-                markdown.setParsedMarkdown(textView, parsed)
-                delay(2000)
-                val uri = file.toUri()
-                files.output(uri)?.use {
-                    PdfConvert.toPdf(textView, it)
-                }
-                withContext(Dispatchers.Main) {
-                    printer.print(uri)
-                }
-            } finally {
-                DeleteTempFilesCommand(context).execute()
-                withContext(Dispatchers.Main) {
-                    loading.dismiss()
-                }
+            )
+            val file = files.createTemp("pdf")
+            val parsed = markdown.toMarkdown(content)
+            val textView = TextView(context)
+            textView.textSize = 6f
+            textView.setTextColor(AndroidColor.BLACK)
+            markdown.setParsedMarkdown(textView, parsed)
+            delay(2000)
+            val uri = file.toUri()
+            files.output(uri)?.use {
+                PdfConvert.toPdf(textView, it)
+            }
+            withContext(Dispatchers.Main) {
+                printer.print(uri)
+            }
+        } finally {
+            DeleteTempFilesCommand(context).execute()
+            withContext(Dispatchers.Main) {
+                loading.dismiss()
             }
         }
     }
