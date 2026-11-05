@@ -4,7 +4,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Paint
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
@@ -159,7 +158,7 @@ class SightingCompassDialog(
         }
 
         isCameraStarted = true
-        camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
+        camera.setScaleType(CameraScaleType.Fit)
         camera.start(
             lifecycleOwner = lifecycleOwner,
             readFrames = false,

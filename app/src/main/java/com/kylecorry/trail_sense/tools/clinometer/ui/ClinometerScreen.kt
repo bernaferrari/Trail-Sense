@@ -1,11 +1,9 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import androidx.compose.ui.draw.alpha
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
-import android.view.MotionEvent
-import androidx.camera.view.PreviewView
+import com.kylecorry.trail_sense.shared.camera.CameraScaleType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -224,14 +224,13 @@ private class ClinometerController(
         )
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     fun onCreate() {
         effects.showMessage(context.getString(R.string.set_inclination_instructions))
 
         views.clinometerTitle.isLeftButtonSelected = false
         views.clinometerTitle.isRightButtonSelected = false
 
-        views.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
+        views.camera.setScaleType(CameraScaleType.Fill)
         views.camera.setShowTorch(false)
         views.camera.passThroughTouchEvents = true
 
@@ -247,14 +246,8 @@ private class ClinometerController(
             askForHeightOrDistance()
         }
 
-        views.onTouch = { event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                onTouchDown()
-            } else if (event.action == MotionEvent.ACTION_UP) {
-                onTouchUp()
-            }
-            true
-        }
+        views.onTouchDown = ::onTouchDown
+        views.onTouchUp = ::onTouchUp
 
         views.arView.setLayers(listOf(lineLayer, markerLayer))
         views.arView.showReticle = false
@@ -654,7 +647,8 @@ private data class ClinometerViews(
     val estimatedHeight: ClinometerDataPointState,
     val clinometerInstructions: ClinometerVisibilityState,
     val cameraClinometerInstructions: ClinometerVisibilityState,
-    var onTouch: ((MotionEvent) -> Boolean)? = null
+    var onTouchDown: (() -> Unit)? = null,
+    var onTouchUp: (() -> Unit)? = null
 )
 
 private class ClinometerVisibilityState(initialVisible: Boolean = true) {
@@ -759,9 +753,10 @@ private fun ClinometerHost(
                 .fillMaxSize()
                 .widthIn(max = TrailSenseSize.maximumContentWidth)
                 .align(Alignment.TopCenter)
-                .pointerInteropFilter { event ->
-                    views.onTouch?.invoke(event) ?: false
-                }
+                .lockOnHold(
+                    onDown = { views.onTouchDown?.invoke() },
+                    onUp = { views.onTouchUp?.invoke() }
+                )
                 .padding(
                     start = TrailSenseSpacing.lg,
                     end = TrailSenseSpacing.lg,
@@ -997,6 +992,21 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         clinometerInstructions = clinometerInstructions,
         cameraClinometerInstructions = cameraClinometerInstructions
     )
+}
+
+/**
+ * A touch anywhere that no control takes: [onDown] when the finger lands, [onUp] when the last finger lifts (also
+ * when something else took the rest of the gesture, so a hold never stays open).
+ */
+private fun Modifier.lockOnHold(onDown: () -> Unit, onUp: () -> Unit): Modifier = pointerInput(Unit) {
+    awaitEachGesture {
+        awaitFirstDown()
+        onDown()
+        do {
+            val event = awaitPointerEvent()
+        } while (event.changes.any { it.pressed })
+        onUp()
+    }
 }
 
 /** Shown while the phone is held the wrong way: one plain hint line (how to hold it) under the resting dial. */

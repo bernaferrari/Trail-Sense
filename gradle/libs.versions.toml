@@ -82,7 +82,7 @@ andromeda-views = { module = "com.kylecorry.andromeda:views", version.ref = "and
 andromeda-widgets = { module = "com.kylecorry.andromeda:widgets", version.ref = "andromedaVersion" }
 andromeda-ipc = { module = "com.kylecorry.andromeda:ipc", version.ref = "andromedaVersion" }
 andromeda-geojson = { module = "com.kylecorry.andromeda:geojson", version.ref = "andromedaVersion" }
-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraxVersion" }
+camera-compose = { module = "androidx.camera:camera-compose", version.ref = "cameraxVersion" }
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraxVersion" }
 camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraxVersion" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }

@@ -10,7 +10,7 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import androidx.annotation.StringRes
-import androidx.camera.view.PreviewView
+import com.kylecorry.trail_sense.shared.camera.CameraScaleType
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -383,7 +383,7 @@ private class AugmentedRealityController(
         views.accuracyView.setSensors(views.arView.gps, views.arView.geomagneticOrientationSensor)
         views.accuracyView.setOnClickListener { displayAccuracyTips() }
 
-        views.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
+        views.camera.setScaleType(CameraScaleType.Fill)
         views.camera.setShowTorch(false)
 
         views.arView.infiniteFocusWhenPointedUp = true

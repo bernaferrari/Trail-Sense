@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import com.kylecorry.trail_sense.shared.icons.trail.QrCode
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.shared.views.roundedRectangleBackground
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
@@ -195,7 +194,6 @@ private class ScanQRController(
 
     fun onCameraReady(cameraView: CameraState) {
         this.cameraView = cameraView
-        cameraView.clipToOutline = true
         if (shouldStartCamera && lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             startCamera()
         }
@@ -452,7 +450,7 @@ private fun QrScannerScreen(
     val context = LocalContext.current
     val cameraState = remember {
         CameraState(context).apply {
-            setBackground(roundedRectangleBackground(context))
+            setPreviewBackgroundColor(androidx.compose.ui.graphics.Color.White)
         }
     }
 
