@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.WbTwilight
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.andromeda.alerts.toast
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -48,7 +49,8 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, host: TrailSenseDestina
             when (state) {
                 FeatureState.On -> service?.disable()
                 FeatureState.Off -> {
-                    SunsetAlarmReceiver.enable(host, true)
+                    // The quick action bar's host is also the screen's ScreenEffects; QuickActionButton only hands out the host.
+                    SunsetAlarmReceiver.enable(context, host as? ScreenEffects, host.lifecycleScope)
                     val alertTime = Duration.ofMinutes(prefs.astronomy.sunsetAlertMinutesBefore)
                     val formattedAlertTime = formatter.formatDuration(alertTime)
                     host.toast(

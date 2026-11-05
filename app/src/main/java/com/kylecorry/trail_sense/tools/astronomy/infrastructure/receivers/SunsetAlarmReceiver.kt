@@ -3,16 +3,12 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
 import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.permissions.BackgroundLocationAlerter
-import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands.SunsetAlarmCommand
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,28 +52,19 @@ class SunsetAlarmReceiver : BroadcastReceiver() {
 
         // TODO: Extract this out of the receiver
         /**
-         * Enable sunset alerts and request permissions if needed
+         * Enable sunset alerts and, with [effects], request permissions if needed
          */
         suspend fun enable(
-            host: TrailSenseDestinationHost,
-            shouldRequestPermissions: Boolean
+            context: Context,
+            effects: ScreenEffects?,
+            scope: CoroutineScope
         ) {
-            val service = Tools.getService(
-                host.requireContext(),
-                AstronomyToolRegistration.SERVICE_SUNSET_ALERTS
+            enableAstronomyAlert(
+                context,
+                AstronomyToolRegistration.SERVICE_SUNSET_ALERTS,
+                effects,
+                scope
             )
-            service?.enable()
-            if (shouldRequestPermissions) {
-                host.requestScheduleExactAlarms {
-                    host.inBackground(BackgroundMinimumState.Created) {
-                        service?.restart()
-                    }
-                    RequestBackgroundLocationCommand(
-                        host.requireContext(),
-                        BackgroundLocationAlerter(host)
-                    ).execute()
-                }
-            }
         }
     }
 }

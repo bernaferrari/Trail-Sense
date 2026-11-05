@@ -181,7 +181,7 @@ fun DestinationContent(
             Route.PedometerSettings -> PedometerSettingsToolScreen(this)
             Route.NavigationSettings -> NavigationSettingsToolScreen(this)
             Route.PathsSettings -> PathsSettingsToolScreen(this)
-            Route.AstronomySettings -> AstronomySettingsToolScreen(this)
+            Route.AstronomySettings -> AstronomySettingsToolScreen()
 
             // --- Map (special: controller callback + reactive) ---
             Route.Map -> MapToolScreen(
@@ -196,7 +196,7 @@ fun DestinationContent(
             )
 
             // --- Tools with a disclaimer, camera permission or plugin details ---
-            Route.CliffHeight -> CliffHeightToolScreen(this)
+            Route.CliffHeight -> CliffHeightToolScreen()
             Route.Magnifier -> MagnifierToolScreen(this)
             Route.MirrorCamera -> MirrorCameraToolScreen(this)
             Route.WaterPurification -> WaterPurificationToolScreen(this)
@@ -219,18 +219,18 @@ fun DestinationContent(
             is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(this, route)
             Route.Pedometer -> PedometerToolScreen(this)
             Route.Flashlight -> FlashlightToolScreen(this)
-            Route.Battery -> BatteryToolScreen(this)
+            Route.Battery -> BatteryToolScreen()
 
             // --- Tool screens that receive the host for callbacks / services ---
             Route.Triangulate -> TriangulateToolScreen(this)
-            Route.Clock -> ClockToolScreen(this)
+            Route.Clock -> ClockToolScreen()
             Route.SignalFinder -> SignalFinderToolScreen(this)
             Route.TurnBack -> TurnBackToolScreen(this)
             Route.Settings -> SettingsToolScreen(this)
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen(this)
             is Route.Clouds -> CloudToolScreen(this)
             is Route.CloudResults -> CloudResultsToolScreen(this)
-            Route.Astronomy -> AstronomyToolScreen(this)
+            Route.Astronomy -> AstronomyToolScreen(quickActionHost = this)
             is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
             is Route.BeaconList -> BeaconListToolScreen(
                 host = this,
@@ -256,7 +256,7 @@ fun DestinationContent(
             Route.Tides -> TidesToolScreen(this)
             Route.TideList -> TideListToolScreen(this)
             is Route.CreateTide -> CreateTideToolScreen(this)
-            Route.Climate -> ClimateToolScreen(this)
+            Route.Climate -> ClimateToolScreen()
             Route.PackList -> PackListToolScreen(this)
             is Route.PackItemList -> PackItemListToolScreen(this)
             is Route.CreatePackItem -> CreateItemToolScreen(route)
@@ -272,8 +272,8 @@ fun DestinationContent(
                 onController = { screenController = it }
             )
             Route.Weather -> WeatherToolScreen(this)
-            Route.LocalMessaging -> TrailSenseCommsToolScreen(this, "4c285dfe-1c8b-45eb-bb79-3f1d2eb6ae48")
-            Route.LocalTalk -> TrailSenseCommsToolScreen(this, "b76f32bf-6a72-4992-a741-0c9bf19ebd11")
+            Route.LocalMessaging -> TrailSenseCommsToolScreen("4c285dfe-1c8b-45eb-bb79-3f1d2eb6ae48")
+            Route.LocalTalk -> TrailSenseCommsToolScreen("b76f32bf-6a72-4992-a741-0c9bf19ebd11")
         }
     }
 }

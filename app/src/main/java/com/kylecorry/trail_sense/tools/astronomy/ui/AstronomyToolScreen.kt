@@ -2,6 +2,19 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
 import com.kylecorry.trail_sense.shared.navigation.Route
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.views.ErrorBannerState
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -138,11 +151,19 @@ import java.time.ZonedDateTime
 
 @Composable
 fun AstronomyToolScreen(
-    host: TrailSenseDestinationHost,
+    quickActionHost: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host) { AstronomyController(host) }
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    // The error banner lives on the activity; the screen only reports to it.
+    val errorBanner = (LocalActivity.current as? MainActivity)?.errorBanner
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(context, navigator) {
+        AstronomyController(context, navigator, effects, scope, lifecycleOwner, errorBanner, quickActionHost)
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -166,9 +187,24 @@ fun AstronomyToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class AstronomyController(private val host: TrailSenseDestinationHost) {
+/**
+ * The astronomy screen's state holder. It drives the View-era chart and picker state objects, so it lives in the
+ * composition (remembered) with the narrow things it uses instead of a destination host. The quick action bar still
+ * needs a host because the shared QuickActionFactory takes one.
+ */
+private class AstronomyController(
+    private val context: Context,
+    private val navigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val scope: CoroutineScope,
+    private val lifecycleOwner: LifecycleOwner,
+    private val errorBanner: ErrorBannerState?,
+    private val quickActionHost: TrailSenseDestinationHost
+) {
 
-    private val views = createAstronomyViews(host.requireContext(), this::showTimeSeeker)
+    private val views = createAstronomyViews(context, this::showTimeSeeker)
+    private var searchJob: Job? = null
+    private var refreshJob: Job? = null
     private val isViewReady: Boolean
         get() = isCreated
 
@@ -179,10 +215,10 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
 
     private lateinit var sunTimesMode: SunTimesMode
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
+    private val prefs by lazy { UserPreferences(context) }
     private val astronomyService = AstronomyService()
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
     private val declination by lazy { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
     private val markdownService by lazy { DependencyRegistry.get<MarkdownService>() }
 
@@ -217,11 +253,11 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
 
     private val producers by lazy {
         listOf(
-            SunListItemProducer(host.requireContext()),
-            MoonListItemProducer(host.requireContext()),
-            MeteorShowerListItemProducer(host.requireContext()),
-            LunarEclipseListItemProducer(host.requireContext()),
-            SolarEclipseListItemProducer(host.requireContext())
+            SunListItemProducer(context),
+            MoonListItemProducer(context),
+            MeteorShowerListItemProducer(context),
+            LunarEclipseListItemProducer(context),
+            SolarEclipseListItemProducer(context)
         )
     }
 
@@ -241,14 +277,15 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         isCreated = true
 
         AstronomyQuickActionBinder(
-            host,
+            quickActionHost,
+            lifecycleOwner,
             views.astronomyTitle.leftButton,
             views.astronomyTitle.rightButton,
             prefs.astronomy
         ).bind()
 
         views.button3d.isVisible =
-            Tools.isToolAvailable(host.requireContext(), Tools.AUGMENTED_REALITY)
+            Tools.isToolAvailable(context, Tools.AUGMENTED_REALITY)
         views.button3d.onClick = {
             val time = if (isSeeking) {
                 currentSeekChartTime
@@ -258,7 +295,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                 views.displayDate.date.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
             }
             openAugmentedReality(
-                host.findNavigator(),
+                navigator,
                 ARMode.Astronomy,
                 enableCamera = prefs.astronomy.startCameraIn3DView,
                 time = time
@@ -283,18 +320,18 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             )
 
             val optionNames = listOfNotNull(
-                host.getString(R.string.full_moon),
-                host.getString(R.string.new_moon),
-                host.getString(R.string.quarter_moon),
-                host.getString(R.string.meteor_shower),
-                host.getString(R.string.lunar_eclipse),
-                host.getString(R.string.solar_eclipse),
-                host.getString(R.string.supermoon)
+                context.getString(R.string.full_moon),
+                context.getString(R.string.new_moon),
+                context.getString(R.string.quarter_moon),
+                context.getString(R.string.meteor_shower),
+                context.getString(R.string.lunar_eclipse),
+                context.getString(R.string.solar_eclipse),
+                context.getString(R.string.supermoon)
             ).map { it.capitalizeWords() }
 
             Pickers.item(
-                host.requireContext(),
-                host.getString(R.string.find_next_occurrence),
+                context,
+                context.getString(R.string.find_next_occurrence),
                 optionNames,
                 options.indexOf(lastAstronomyEventSearch)
             ) {
@@ -302,8 +339,9 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                     val search = options[it]
                     lastAstronomyEventSearch = search
                     val currentDate = views.displayDate.date
-                    host.inBackground {
-                        Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
+                    searchJob?.cancel()
+                    searchJob = scope.launch {
+                        Alerts.withLoading(context, context.getString(R.string.loading)) {
                             val nextEvent = onDefault {
                                 astronomyService.findNextEvent(
                                     search, location, currentDate
@@ -316,8 +354,8 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                                 refreshAstronomy()
 
                                 if (nextEvent == null) {
-                                    host.toast(
-                                        host.getString(
+                                    effects.showMessage(
+                                        context.getString(
                                             R.string.unable_to_find_next_astronomy,
                                             optionNames[it].lowercase()
                                         )
@@ -372,18 +410,18 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
     private fun updateSeekPositions() {
         val positions = getSunMoonPositions(currentSeekChartTime)
         views.timeSeekerDetails.sunPosition = markdownService.toMarkdown(
-            host.getString(
+            context.getString(
                 R.string.sun_moon_position_template,
-                host.getString(R.string.sun),
+                context.getString(R.string.sun),
                 formatService.formatDegrees(positions.sunAltitude),
                 formatService.formatDegrees(positions.sunAzimuth)
             )
         )
 
         views.timeSeekerDetails.moonPosition = markdownService.toMarkdown(
-            host.getString(
+            context.getString(
                 R.string.sun_moon_position_template,
-                host.getString(R.string.moon),
+                context.getString(R.string.moon),
                 formatService.formatDegrees(positions.moonAltitude),
                 formatService.formatDegrees(positions.moonAzimuth)
             )
@@ -401,7 +439,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         isSeeking = false
         views.timeSeeker.isVisible = false
         views.button3d.isVisible =
-            Tools.isToolAvailable(host.requireContext(), Tools.AUGMENTED_REALITY)
+            Tools.isToolAvailable(context, Tools.AUGMENTED_REALITY)
         val displayDate = views.displayDate.date
         if (displayDate == LocalDate.now()) {
             plotMoonImage(data.moon)
@@ -444,8 +482,8 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         refreshAstronomy()
 
         CustomUiUtils.oneTimeToast(
-            host.requireContext(),
-            host.getString(R.string.tap_sun_moon_hint),
+            context,
+            context.getString(R.string.tap_sun_moon_hint),
             "cache_tap_sun_moon_shown"
         )
     }
@@ -499,9 +537,9 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             if (!isViewReady) {
                 return@withContext
             }
-            val size = Resources.dp(host.requireContext(), 24f).toInt()
+            val size = Resources.dp(context, 24f).toInt()
             chart.setMoonImage(
-                MoonPhaseImageMapper(host.requireContext()).getPhaseImage(
+                MoonPhaseImageMapper(context).getPhaseImage(
                     phase.phaseAngle,
                     size,
                     size,
@@ -612,17 +650,17 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
             if (nextSunrise != null && (nextSunset == null || nextSunrise.isBefore(nextSunset))) {
                 views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunrise))
-                views.astronomyTitle.subtitle = host.getString(R.string.until_sunrise)
+                views.astronomyTitle.subtitle = context.getString(R.string.until_sunrise)
             } else if (nextSunset != null) {
                 views.astronomyTitle.title =
                     formatService.formatDuration(Duration.between(currentTime, nextSunset))
-                views.astronomyTitle.subtitle = host.getString(R.string.until_sunset)
+                views.astronomyTitle.subtitle = context.getString(R.string.until_sunset)
             } else if (astronomyService.isSunUp(location)) {
-                views.astronomyTitle.title = host.getString(R.string.sun_up_no_set)
-                views.astronomyTitle.subtitle = host.getString(R.string.sun_does_not_set)
+                views.astronomyTitle.title = context.getString(R.string.sun_up_no_set)
+                views.astronomyTitle.subtitle = context.getString(R.string.sun_does_not_set)
             } else {
-                views.astronomyTitle.title = host.getString(R.string.sun_down_no_set)
-                views.astronomyTitle.subtitle = host.getString(R.string.sun_does_not_rise)
+                views.astronomyTitle.title = context.getString(R.string.sun_down_no_set)
+                views.astronomyTitle.subtitle = context.getString(R.string.sun_does_not_rise)
             }
         }
     }
@@ -633,24 +671,23 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         }
 
         if (gps is MockedGPS && prefs.gps.locationOverride == Coordinate.zero) {
-            val activity = host.mainActivity
-            val appNavigator = host.findNavigator()
+            val appNavigator = navigator
             val error = UserError(
                 ErrorBannerReason.LocationNotSet,
-                host.getString(R.string.location_not_set),
+                context.getString(R.string.location_not_set),
                 TrailIcons.Satellite,
-                host.getString(R.string.set)
+                context.getString(R.string.set)
             ) {
-                activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
+                errorBanner?.dismiss(ErrorBannerReason.LocationNotSet)
                 appNavigator.navigate(Route.CalibrateGps)
             }
-            activity.errorBanner.report(error)
+            errorBanner?.report(error)
             gpsErrorShown = true
         } else if (gps is CachedGPS && location == Coordinate.zero) {
             val error = UserError(
-                ErrorBannerReason.NoGPS, host.getString(R.string.location_disabled), TrailIcons.Satellite
+                ErrorBannerReason.NoGPS, context.getString(R.string.location_disabled), TrailIcons.Satellite
             )
-            (host.mainActivity).errorBanner.report(error)
+            errorBanner?.report(error)
             gpsErrorShown = true
         }
     }
@@ -667,9 +704,9 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         if (data.moon.isNotEmpty() && data.sun.isNotEmpty()) {
             val phase = astronomyService.getMoonPhase(currentSeekChartTime)
             val tilt = astronomyService.getMoonTilt(location, currentSeekChartTime)
-            val size = Resources.dp(host.requireContext(), 24f).toInt()
+            val size = Resources.dp(context, 24f).toInt()
             chart.setMoonImage(
-                MoonPhaseImageMapper(host.requireContext()).getPhaseImage(
+                MoonPhaseImageMapper(context).getPhaseImage(
                     phase.phaseAngle,
                     size,
                     size,
@@ -688,7 +725,8 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
         }
         detectAndShowGPSError()
         views.displayDate.setDayViewDecorator(AstronomyDayViewDecorator(location))
-        host.inBackground {
+        refreshJob?.cancel()
+        refreshJob = scope.launch {
             updateAstronomyDetails()
             updateAstronomyChart()
             displayTimeUntilNextSunEvent()

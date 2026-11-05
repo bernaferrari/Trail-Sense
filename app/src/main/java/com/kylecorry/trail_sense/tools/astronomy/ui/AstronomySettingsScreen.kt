@@ -11,7 +11,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import android.content.Context
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -23,7 +31,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
-import com.kylecorry.trail_sense.settings.ui.goBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
@@ -33,9 +40,15 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import java.time.Duration
 
 @Composable
-fun AstronomySettingsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { AstronomySettingsController(host) }
+fun AstronomySettingsToolScreen() {
+    val context = LocalContext.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val controller = remember(context) {
+        AstronomySettingsController(context, effects, scope, lifecycleOwner) { backDispatcher?.onBackPressed() }
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -56,20 +69,27 @@ fun AstronomySettingsToolScreen(host: TrailSenseDestinationHost) {
     controller.Content()
 }
 
-private class AstronomySettingsController(private val host: TrailSenseDestinationHost) {
+/** The astronomy settings rows, over preferences and the sunrise and sunset alert services. */
+private class AstronomySettingsController(
+    private val context: Context,
+    private val effects: ScreenEffects,
+    private val scope: CoroutineScope,
+    private val lifecycleOwner: LifecycleOwner,
+    private val onBack: () -> Unit
+) {
 
-    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
+    private val prefs by lazy { UserPreferences(context) }
+    private val formatter by lazy { FormatService.getInstance(context) }
     private val sunsetService by lazy {
         Tools.getService(
-            host.requireContext(),
+            context,
             AstronomyToolRegistration.SERVICE_SUNSET_ALERTS
         )!!
     }
     private val sunriseService by lazy {
         Tools.getService(
-            host.requireContext(),
+            context,
             AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS
         )!!
     }
@@ -81,12 +101,12 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
     fun Content() {
         val sunTimeOptions = remember { options(R.array.sun_times_entries, R.array.sun_times_values) }
         val quickActionOptions = remember {
-            Tools.getQuickActions(host.requireContext()).map { AstronomyOption(it.id.toString(), it.name) }
+            Tools.getQuickActions(context).map { AstronomyOption(it.id.toString(), it.name) }
         }
         val sunsetTimeOptions = remember { timeOptions(listOf(30L, 60L, 90L, 120L, 150L, 180L)) }
         val sunriseTimeOptions = remember { timeOptions(listOf(0L, 15L, 30L, 45L, 60L, 90L, 120L)) }
         val showStartCameraIn3D = remember {
-            Tools.isToolAvailable(host.requireContext(), Tools.AUGMENTED_REALITY)
+            Tools.isToolAvailable(context, Tools.AUGMENTED_REALITY)
         }
 
         var sunTimeMode by remember { mutableStateOf(getStringPreference(R.string.pref_sun_time_mode, "actual")) }
@@ -121,7 +141,7 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
 
         TrailSensePage(
             title = stringResource(R.string.astronomy),
-            onBack = host::goBack,
+            onBack = onBack,
             backLabel = stringResource(R.string.back)
         ) {
             trailSenseSection("general", title = generalTitle) {
@@ -338,7 +358,7 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
         val sunsetAlertTimeKey = getString(R.string.pref_sunset_alert_time)
         val sunriseAlertTimeKey = getString(R.string.pref_sunrise_alert_time)
 
-        cache.onChange.asLiveData().observe(host.lifecycleOwner) {
+        cache.onChange.asLiveData().observe(lifecycleOwner) {
             if (it == sunsetAlertTimeKey) {
                 restartSunsetAlerts()
             } else if (it == sunriseAlertTimeKey) {
@@ -391,9 +411,9 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
     }
 
     private fun onSunsetAlertsPreferenceChanged(enabled: Boolean) {
-        host.inBackground {
+        scope.launch {
             if (enabled) {
-                SunsetAlarmReceiver.enable(host, true)
+                SunsetAlarmReceiver.enable(context, effects, scope)
             } else {
                 sunsetService.disable()
             }
@@ -401,9 +421,9 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
     }
 
     private fun onSunriseAlertsPreferenceChanged(enabled: Boolean) {
-        host.inBackground {
+        scope.launch {
             if (enabled) {
-                SunriseAlarmReceiver.enable(host, true)
+                SunriseAlarmReceiver.enable(context, effects, scope)
             } else {
                 sunriseService.disable()
             }
@@ -411,13 +431,13 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
     }
 
     private fun restartSunsetAlerts() {
-        host.inBackground {
+        scope.launch {
             sunsetService.restart()
         }
     }
 
     private fun restartSunriseAlerts() {
-        host.inBackground {
+        scope.launch {
             sunriseService.restart()
         }
     }
@@ -429,7 +449,7 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
         onSelected: (String) -> Unit
     ) {
         Pickers.item(
-            host.requireContext(),
+            context,
             title,
             options.map { it.label },
             options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -441,8 +461,8 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
     }
 
     private fun options(entriesId: Int, valuesId: Int): List<AstronomyOption> {
-        val entries = host.getResources().getStringArray(entriesId)
-        val values = host.getResources().getStringArray(valuesId)
+        val entries = context.resources.getStringArray(entriesId)
+        val values = context.resources.getStringArray(valuesId)
         return values.mapIndexed { index, value ->
             AstronomyOption(value, entries.getOrElse(index) { value })
         }
@@ -478,7 +498,7 @@ private class AstronomySettingsController(private val host: TrailSenseDestinatio
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return host.getString(id, *args)
+        return context.getString(id, *args)
     }
 
     private fun onSunsetAlertsChanged(data: Bundle): Boolean {
