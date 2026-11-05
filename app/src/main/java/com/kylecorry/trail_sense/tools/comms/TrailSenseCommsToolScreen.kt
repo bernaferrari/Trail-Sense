@@ -6,16 +6,17 @@ import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.kylecorry.andromeda.core.system.Package
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * Local Messaging and Local Talk live in the Trail Sense Comms app: opening the tool opens that app on [tool] (when it
  * is installed) and draws nothing here.
  */
 @Composable
-fun TrailSenseCommsToolScreen(host: TrailSenseDestinationHost, tool: String) {
-    LaunchedEffect(host, tool) {
-        openCommsApp(host.requireContext(), tool)
+fun TrailSenseCommsToolScreen(tool: String) {
+    val context = LocalContext.current
+    LaunchedEffect(tool) {
+        openCommsApp(context, tool)
     }
 }
 
