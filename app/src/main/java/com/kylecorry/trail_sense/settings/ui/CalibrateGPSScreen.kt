@@ -62,9 +62,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import android.view.View
-import android.widget.TextView
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.location.GPS
@@ -82,7 +79,6 @@ import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSPowerMode
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
-import com.kylecorry.trail_sense.shared.views.Slider
 import java.time.Duration
 import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
@@ -245,70 +241,41 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
         }
     }
 
-    fun showAccuracyFilterDialog(onChanged: () -> Unit) {
-        val context = host.requireContext()
-        val view = View.inflate(context, R.layout.view_gps_accuracy_filter, null)
-        val accuracyLabel = view.findViewById<TextView>(R.id.accuracy_label)
-        val waitLabel = view.findViewById<TextView>(R.id.wait_label)
-        val accuracySlider = view.findViewById<Slider>(R.id.accuracy_slider)
-        val waitSlider = view.findViewById<Slider>(R.id.wait_slider)
+    /** The accuracy slider's range, whole steps in the user's distance units. */
+    fun accuracyFilterRange(): IntRange {
+        val units = prefs.baseDistanceUnits
+        val minimum = Distance.meters(GPSAccuracyFilter.MIN_ACCURACY_METERS.toFloat())
+            .convertTo(units).value.roundToInt()
+        val maximum = Distance.meters(GPSAccuracyFilter.MAX_ACCURACY_METERS.toFloat())
+            .convertTo(units).value.roundToInt()
+        return minimum..maximum
+    }
+
+    /** The saved (or default) target accuracy, in the user's distance units, and wait, in seconds. */
+    fun currentAccuracyFilter(): Pair<Int, Int> {
         val current = prefs.gps.accuracyFilter
-        val distanceUnits = prefs.baseDistanceUnits
-        val minimumAccuracy = Distance.meters(GPSAccuracyFilter.MIN_ACCURACY_METERS.toFloat())
-            .convertTo(distanceUnits).value.roundToInt()
-        val maximumAccuracy = Distance.meters(GPSAccuracyFilter.MAX_ACCURACY_METERS.toFloat())
-            .convertTo(distanceUnits).value.roundToInt()
-
-        var accuracy = Distance.meters(
+        val range = accuracyFilterRange()
+        val accuracy = Distance.meters(
             current.minAccuracy ?: GPSAccuracyFilter.Default.minAccuracy!!
-        ).convertTo(distanceUnits).value.roundToInt().coerceIn(minimumAccuracy, maximumAccuracy)
-        var wait = current.maxAccuracyWait?.seconds?.toInt()
+        ).convertTo(prefs.baseDistanceUnits).value.roundToInt().coerceIn(range.first, range.last)
+        val wait = current.maxAccuracyWait?.seconds?.toInt()
             ?: GPSAccuracyFilter.Default.maxAccuracyWait!!.seconds.toInt()
+        return accuracy to wait
+    }
 
-        accuracySlider.valueFrom = minimumAccuracy.toFloat()
-        accuracySlider.valueTo = maximumAccuracy.toFloat()
-        accuracySlider.stepSize = 1f
-        accuracySlider.value = accuracy.toFloat()
-        accuracySlider.addOnChangeListener { _, value, _ ->
-            accuracy = value.toInt()
-            accuracyLabel.text = context.getString(
-                R.string.gps_accuracy_target,
-                formatService.formatDistance(Distance.from(accuracy.toFloat(), distanceUnits))
-            )
-        }
+    fun formatAccuracyTarget(accuracy: Int): String = host.getString(
+        R.string.gps_accuracy_target,
+        formatService.formatDistance(Distance.from(accuracy.toFloat(), prefs.baseDistanceUnits))
+    )
 
-        waitSlider.valueFrom = GPSAccuracyFilter.MIN_WAIT_SECONDS.toFloat()
-        waitSlider.valueTo = GPSAccuracyFilter.MAX_WAIT_SECONDS.toFloat()
-        waitSlider.stepSize = 1f
-        waitSlider.value = wait.toFloat()
-        waitSlider.addOnChangeListener { _, value, _ ->
-            wait = value.toInt()
-            waitLabel.text = context.getString(
-                R.string.gps_accuracy_wait,
-                formatService.formatDuration(Duration.ofSeconds(wait.toLong()), includeSeconds = true)
-            )
-        }
+    fun formatAccuracyWait(seconds: Int): String = host.getString(
+        R.string.gps_accuracy_wait,
+        formatService.formatDuration(Duration.ofSeconds(seconds.toLong()), includeSeconds = true)
+    )
 
-        accuracyLabel.text = context.getString(
-            R.string.gps_accuracy_target,
-            formatService.formatDistance(Distance.from(accuracy.toFloat(), distanceUnits))
-        )
-        waitLabel.text = context.getString(
-            R.string.gps_accuracy_wait,
-            formatService.formatDuration(Duration.ofSeconds(wait.toLong()), includeSeconds = true)
-        )
-
-        Alerts.dialog(
-            context,
-            context.getString(R.string.pref_gps_accuracy_requirement_title),
-            contentView = view
-        ) { cancelled ->
-            if (!cancelled) {
-                val accuracyMeters = Distance.from(accuracy.toFloat(), distanceUnits).meters().value
-                prefs.gps.accuracyFilter = GPSAccuracyFilter.custom(accuracyMeters, wait)
-                onChanged()
-            }
-        }
+    fun saveAccuracyFilter(accuracy: Int, wait: Int) {
+        val accuracyMeters = Distance.from(accuracy.toFloat(), prefs.baseDistanceUnits).meters().value
+        prefs.gps.accuracyFilter = GPSAccuracyFilter.custom(accuracyMeters, wait)
     }
 
     fun setLocationOverride(coordinate: Coordinate?) {
@@ -421,6 +388,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
         mutableStateOf(prefs.gps.locationSource == GPSLocationSource.GPS)
     }
     var accuracyFilterSummary by remember { mutableStateOf(controller.accuracyFilterSummary()) }
+    var showAccuracyFilter by remember { mutableStateOf(false) }
     var permissionVisible by remember { mutableStateOf(!controller.isAutoGPSPreferenceEnabled()) }
     var autoLocationEnabled by remember { mutableStateOf(controller.isAutoGPSPreferenceEnabled()) }
     var overrideEnabled by remember { mutableStateOf(controller.isLocationOverrideEnabled()) }
@@ -539,11 +507,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                     SettingsPickerRow(
                         label = stringResource(R.string.pref_gps_accuracy_requirement_title),
                         selected = accuracyFilterSummary,
-                        onClick = {
-                            controller.showAccuracyFilterDialog {
-                                accuracyFilterSummary = controller.accuracyFilterSummary()
-                            }
-                        },
+                        onClick = { showAccuracyFilter = true },
                         position = position
                     )
                 }
@@ -580,6 +544,62 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                     }
                 }
             }
+        }
+    }
+
+    if (showAccuracyFilter) {
+        GPSAccuracyFilterDialog(
+            controller = controller,
+            onDismiss = { showAccuracyFilter = false },
+            onSave = { accuracy, wait ->
+                showAccuracyFilter = false
+                controller.saveAccuracyFilter(accuracy, wait)
+                accuracyFilterSummary = controller.accuracyFilterSummary()
+            }
+        )
+    }
+}
+
+/** The target accuracy and how long to wait for it, each on a slider with its value above. */
+@Composable
+private fun GPSAccuracyFilterDialog(
+    controller: CalibrateGPSController,
+    onDismiss: () -> Unit,
+    onSave: (accuracy: Int, wait: Int) -> Unit
+) {
+    val range = remember(controller) { controller.accuracyFilterRange() }
+    val initial = remember(controller) { controller.currentAccuracyFilter() }
+    var accuracy by remember { mutableIntStateOf(initial.first) }
+    var wait by remember { mutableIntStateOf(initial.second) }
+    val waitRange = GPSAccuracyFilter.MIN_WAIT_SECONDS..GPSAccuracyFilter.MAX_WAIT_SECONDS
+
+    TrailSenseDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.pref_gps_accuracy_requirement_title),
+        confirmText = stringResource(android.R.string.ok),
+        onConfirm = { onSave(accuracy, wait) },
+        dismissText = stringResource(android.R.string.cancel)
+    ) {
+        Column {
+            Text(
+                text = controller.formatAccuracyTarget(accuracy),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            ComposeSlider(
+                value = accuracy.toFloat(),
+                onValueChange = { accuracy = it.roundToInt().coerceIn(range.first, range.last) },
+                valueRange = range.first.toFloat()..range.last.toFloat()
+            )
+            Text(
+                text = controller.formatAccuracyWait(wait),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(top = TrailSenseSpacing.sm)
+            )
+            ComposeSlider(
+                value = wait.toFloat(),
+                onValueChange = { wait = it.roundToInt().coerceIn(waitRange.first, waitRange.last) },
+                valueRange = waitRange.first.toFloat()..waitRange.last.toFloat()
+            )
         }
     }
 }

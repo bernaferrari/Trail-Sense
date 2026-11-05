@@ -1,28 +1,41 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import com.kylecorry.trail_sense.shared.views.roundedRectangleBackground
 import android.content.Context
 import android.graphics.Color
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.TextView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import com.kylecorry.trail_sense.shared.views.MaterialSpinnerView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLoadingIndicator
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
@@ -58,26 +71,7 @@ class SimplifyPathCommand(
     }
 
     private fun showPreview(path: Path, points: List<PathPoint>) {
-        val view = LayoutInflater.from(context).inflate(R.layout.dialog_simplify_path, null)
-        val mapHost = view.findViewById<FrameLayout>(R.id.simplify_preview_map)
-        mapHost.background = roundedRectangleBackground(context, context.getColor(R.color.colorSecondary))
-        val removedText = view.findViewById<TextView>(R.id.simplify_points_removed)
-        val qualitySpinner = view.findViewById<MaterialSpinnerView>(R.id.simplify_quality)
-        val loadingIndicator = view.findViewById<View>(R.id.simplify_loading)
-
         val map = MapView(context)
-        val mapView = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            map.Content(Modifier.fillMaxSize())
-        }.apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-        mapHost.addView(mapView)
 
         val originalCoordinates = points.map { it.coordinate }
         val originalLayer = GeoJsonLayer(
@@ -88,8 +82,11 @@ class SimplifyPathCommand(
             StaticLineGeoJsonSource(emptyList(), path.style.color, thicknessScale = 0.75f)
         val simplifiedLayer = GeoJsonLayer(simplifiedSource, SIMPLIFIED_LAYER_ID)
 
-        fun selectedQuality() =
-            QUALITIES.getOrElse(qualitySpinner.selectedItemPosition) { QUALITIES[0] }.first
+        val selectedIndex = mutableIntStateOf(0)
+        val removedText = mutableStateOf("")
+        val isLoading = mutableStateOf(false)
+
+        fun selectedQuality() = QUALITIES.getOrElse(selectedIndex.intValue) { QUALITIES[0] }.first
 
         val simplified = mutableMapOf<PathSimplificationQuality, List<PathPoint>>()
         var updateJob: Job? = null
@@ -98,7 +95,7 @@ class SimplifyPathCommand(
             val quality = selectedQuality()
             updateJob?.cancel()
             updateJob = lifecycleOwner.lifecycleScope.launch {
-                loadingIndicator.visibility = View.VISIBLE
+                isLoading.value = true
                 val kept = simplified.getOrPut(quality) {
                     withContext(Dispatchers.Default) { PathSimplifier.simplify(points, quality) }
                 }
@@ -106,12 +103,55 @@ class SimplifyPathCommand(
                 simplifiedSource.line = kept.map { it.coordinate }
                 simplifiedLayer.invalidate()
                 map.invalidate()
-                removedText.text = context.resources.getQuantityString(
+                removedText.value = context.resources.getQuantityString(
                     R.plurals.waypoints_to_be_deleted,
                     removed,
                     removed
                 )
-                loadingIndicator.visibility = View.GONE
+                isLoading.value = false
+            }
+        }
+
+        val content = TrailSenseComposeRootView(
+            context,
+            ViewCompositionStrategy.DisposeOnDetachedFromWindow
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
+                Text(
+                    text = stringResource(R.string.quality),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    QUALITIES.forEachIndexed { index, (_, label) ->
+                        TrailSenseChip(
+                            text = stringResource(label),
+                            selected = selectedIndex.intValue == index,
+                            onClick = {
+                                if (selectedIndex.intValue != index) {
+                                    selectedIndex.intValue = index
+                                    update()
+                                }
+                            }
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clip(RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_size)))
+                        .background(colorResource(R.color.colorSecondary))
+                ) {
+                    map.Content(Modifier.fillMaxSize())
+                    if (isLoading.value) {
+                        TrailSenseLoadingIndicator()
+                    }
+                }
+                Text(
+                    text = removedText.value,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
 
@@ -120,16 +160,12 @@ class SimplifyPathCommand(
         if (originalCoordinates.size >= 2) {
             map.doOnLayout { map.fitIntoView(CoordinateBounds.from(originalCoordinates)) }
         }
-
-        qualitySpinner.setHint(context.getString(R.string.quality))
-        qualitySpinner.setItems(QUALITIES.map { context.getString(it.second) })
-        qualitySpinner.setOnItemSelectedListener { update() }
-        qualitySpinner.setSelection(0)
+        update()
 
         Alerts.dialog(
             context,
             context.getString(R.string.simplify),
-            contentView = view
+            contentView = content
         ) { cancelled ->
             updateJob?.cancel()
             map.stop()
