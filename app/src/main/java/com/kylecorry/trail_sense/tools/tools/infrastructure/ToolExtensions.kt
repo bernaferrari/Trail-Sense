@@ -6,6 +6,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.trail_sense.shared.FeatureState
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.compose.LifecycleResumeEffect
 
 fun ToolService.getFeatureState(): FeatureState {
     return if (isBlocked()) {
@@ -40,4 +45,19 @@ fun Tools.observe(
             else -> {} // Do nothing
         }
     })
+}
+
+/**
+ * Runs [onReceiveBroadcast] for each [toolBroadcastId] broadcast while the screen is resumed: the composable form of
+ * [observe], for screens that no longer take the destination host.
+ */
+@Composable
+fun ToolBroadcastEffect(toolBroadcastId: String, onReceiveBroadcast: suspend (data: Bundle) -> Unit) {
+    val scope = rememberCoroutineScope()
+    val onReceive by rememberUpdatedState(onReceiveBroadcast)
+    LifecycleResumeEffect(toolBroadcastId) {
+        val callback: (Bundle) -> Unit = { data -> scope.launch { onReceive(data) } }
+        Tools.subscribe(toolBroadcastId, callback)
+        onPauseOrDispose { Tools.unsubscribe(toolBroadcastId, callback) }
+    }
 }

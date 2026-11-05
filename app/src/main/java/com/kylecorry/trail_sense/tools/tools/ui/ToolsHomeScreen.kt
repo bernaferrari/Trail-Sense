@@ -1,7 +1,10 @@
 package com.kylecorry.trail_sense.tools.tools.ui
 
 import android.app.PendingIntent
+import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -12,24 +15,32 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.icons.toIconCompat
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.ScreenControllerEffect
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 
-/** The Tools tab: every tool, pinned ones first; reselecting the tab focuses the search. */
+/**
+ * The Tools tab: every tool, pinned ones first; reselecting the tab focuses the search. [onController] offers the
+ * activity the screen's [ToolSearchFocusable] while it is shown (null once it leaves).
+ */
 @Composable
-fun ToolsHomeScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { ToolsHomeController(host) }
-    ScreenControllerEffect(host, controller)
+fun ToolsHomeScreen(onController: (ToolSearchFocusable?) -> Unit) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val controller = remember(context, navigator) { ToolsHomeController(context, navigator) }
+    DisposableEffect(controller) {
+        onController(controller)
+        onDispose { onController(null) }
+    }
     ToolsScreen(
         pinnedToolIds = controller.pinnedToolManager.pinnedIds.value,
         onToolClick = { tool ->
-            host.findNavigator().navigate(tool.route)
+            navigator.navigate(tool.route)
         },
         onToolLongClick = controller::showToolActions,
         onSettingsClick = {
-            host.findNavigator().navigate(Route.Settings)
+            navigator.navigate(Route.Settings)
         },
         onSearchFocusRequestChanged = {
             controller.focusSearchRequest = it
@@ -37,8 +48,11 @@ fun ToolsHomeScreen(host: TrailSenseDestinationHost) {
     )
 }
 
-private class ToolsHomeController(private val host: TrailSenseDestinationHost) : ToolSearchFocusable {
-    val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(host.requireContext())) }
+private class ToolsHomeController(
+    private val context: Context,
+    private val navigator: TrailSenseNavigator
+) : ToolSearchFocusable {
+    val pinnedToolManager by lazy { PinnedToolManager(UserPreferences(context)) }
     var focusSearchRequest: (() -> Boolean)? = null
 
     override fun focusSearch(): Boolean {
@@ -46,40 +60,38 @@ private class ToolsHomeController(private val host: TrailSenseDestinationHost) :
     }
 
     fun showToolActions(tool: Tool) {
-        val context = host.requireContext()
         val actions = listOfNotNull(
-            if (tool.isExperimental) host.getString(R.string.experimental) else null,
-            if (tool.description != null) host.getString(R.string.pref_category_about) else null,
-            if (pinnedToolManager.isPinned(tool.id)) host.getString(R.string.unpin) else host.getString(R.string.pin),
-            if (tool.guideId != null) host.getString(R.string.tool_user_guide_title) else null,
-            if (tool.settingsRoute != null) host.getString(R.string.settings) else null,
-            host.getString(R.string.add_to_homescreen)
+            if (tool.isExperimental) context.getString(R.string.experimental) else null,
+            if (tool.description != null) context.getString(R.string.pref_category_about) else null,
+            if (pinnedToolManager.isPinned(tool.id)) context.getString(R.string.unpin) else context.getString(R.string.pin),
+            if (tool.guideId != null) context.getString(R.string.tool_user_guide_title) else null,
+            if (tool.settingsRoute != null) context.getString(R.string.settings) else null,
+            context.getString(R.string.add_to_homescreen)
         )
 
         Pickers.item(context, tool.name, actions) { selected ->
             when (actions.getOrNull(selected ?: return@item)) {
-                host.getString(R.string.experimental) -> Unit
-                host.getString(R.string.pref_category_about) -> Alerts.dialog(
+                context.getString(R.string.experimental) -> Unit
+                context.getString(R.string.pref_category_about) -> Alerts.dialog(
                     context,
                     tool.name,
                     tool.description,
                     cancelText = null
                 )
-                host.getString(R.string.unpin) -> pinnedToolManager.unpin(tool.id)
-                host.getString(R.string.pin) -> pinnedToolManager.pin(tool.id)
-                host.getString(R.string.tool_user_guide_title) -> UserGuideUtils.showGuide(
+                context.getString(R.string.unpin) -> pinnedToolManager.unpin(tool.id)
+                context.getString(R.string.pin) -> pinnedToolManager.pin(tool.id)
+                context.getString(R.string.tool_user_guide_title) -> UserGuideUtils.showGuide(
                     context,
-                    host.findNavigator(),
+                    navigator,
                     tool.guideId!!
                 )
-                host.getString(R.string.settings) -> host.findNavigator().navigate(tool.settingsRoute!!)
-                host.getString(R.string.add_to_homescreen) -> addToHomescreen(tool)
+                context.getString(R.string.settings) -> navigator.navigate(tool.settingsRoute!!)
+                context.getString(R.string.add_to_homescreen) -> addToHomescreen(tool)
             }
         }
     }
 
     private fun addToHomescreen(tool: Tool) {
-        val context = host.requireContext()
         if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             return
         }
