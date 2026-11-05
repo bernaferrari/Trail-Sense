@@ -221,7 +221,6 @@ dependencies {
     implementation(libs.andromeda.files)
     implementation(libs.andromeda.notify)
     implementation(libs.andromeda.alerts)
-    implementation(libs.andromeda.pickers)
     implementation(libs.andromeda.list)
     implementation(libs.andromeda.qr)
     implementation(libs.andromeda.markdown)

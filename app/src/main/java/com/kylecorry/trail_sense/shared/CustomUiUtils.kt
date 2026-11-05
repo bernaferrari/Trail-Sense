@@ -47,7 +47,6 @@ import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.andromeda.pickers.material.AndromedaDayViewDecorator
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.units.Distance
@@ -417,7 +416,6 @@ object CustomUiUtils {
     fun pickDate(
         context: Context,
         date: LocalDate = LocalDate.now(),
-        dayViewDecorator: AndromedaDayViewDecorator? = null,
         onDatePick: (date: LocalDate?) -> Unit
     ) {
         Pickers.date(context, date, onDatePick)

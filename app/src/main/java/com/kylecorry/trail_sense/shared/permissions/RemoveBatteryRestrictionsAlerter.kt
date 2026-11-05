@@ -6,7 +6,6 @@ import kotlinx.coroutines.launch
 
 import androidx.lifecycle.lifecycleScope
 
-import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -20,7 +19,7 @@ class RemoveBatteryRestrictionsAlerter(private val host: TrailSenseDestinationHo
         CustomUiUtils.snackbar(
             host,
             context.getString(R.string.battery_settings_limit_accuracy),
-            Snackbar.LENGTH_LONG,
+            CustomUiUtils.SNACKBAR_LONG,
             context.getString(R.string.learn_more)
         ) {
             host.lifecycleOwner.lifecycleScope.launch {

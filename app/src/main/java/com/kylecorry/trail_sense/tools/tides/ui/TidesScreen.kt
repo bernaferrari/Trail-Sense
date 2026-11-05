@@ -826,7 +826,7 @@ private fun TideDayHeader(
                     onLongClickLabel = todayLabel,
                     role = Role.Button,
                     onClick = {
-                        CustomUiUtils.pickDate(context, date, null) {
+                        CustomUiUtils.pickDate(context, date) {
                             if (it != null) {
                                 onDateChange(it)
                             }

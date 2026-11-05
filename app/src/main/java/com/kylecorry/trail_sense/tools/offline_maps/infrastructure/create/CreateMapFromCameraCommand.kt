@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
 import android.content.Context
 import androidx.core.net.toUri
-import com.kylecorry.andromeda.alerts.loading.ILoadingIndicator
+import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.UserPreferences

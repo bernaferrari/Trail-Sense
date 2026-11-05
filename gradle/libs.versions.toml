@@ -63,7 +63,6 @@ andromeda-core = { module = "com.kylecorry.andromeda:core", version.ref = "andro
 andromeda-bitmaps = { module = "com.kylecorry.andromeda:bitmaps", version.ref = "andromedaVersion" }
 andromeda-pdf = { module = "com.kylecorry.andromeda:pdf", version.ref = "andromedaVersion" }
 andromeda-permissions = { module = "com.kylecorry.andromeda:permissions", version.ref = "andromedaVersion" }
-andromeda-pickers = { module = "com.kylecorry.andromeda:pickers", version.ref = "andromedaVersion" }
 andromeda-preferences = { module = "com.kylecorry.andromeda:preferences", version.ref = "andromedaVersion" }
 andromeda-print = { module = "com.kylecorry.andromeda:print", version.ref = "andromedaVersion" }
 andromeda-qr = { module = "com.kylecorry.andromeda:qr", version.ref = "andromedaVersion" }

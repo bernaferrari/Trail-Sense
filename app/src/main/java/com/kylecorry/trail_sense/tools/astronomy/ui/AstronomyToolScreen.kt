@@ -283,11 +283,7 @@ fun AstronomyToolScreen(
             onPrevious = { viewModel.changeDate(viewModel.displayDate.minusDays(1)) },
             onNext = { viewModel.changeDate(viewModel.displayDate.plusDays(1)) },
             onPickDate = {
-                CustomUiUtils.pickDate(
-                    context,
-                    viewModel.displayDate,
-                    AstronomyDayViewDecorator(viewModel.location)
-                ) {
+                CustomUiUtils.pickDate(context, viewModel.displayDate) {
                     if (it != null) {
                         viewModel.changeDate(it)
                     }

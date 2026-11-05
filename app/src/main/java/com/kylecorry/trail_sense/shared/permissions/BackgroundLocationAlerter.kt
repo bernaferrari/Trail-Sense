@@ -7,7 +7,6 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 
 import android.os.Build
-import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
@@ -24,7 +23,7 @@ class BackgroundLocationAlerter(private val host: TrailSenseDestinationHost) : I
         CustomUiUtils.snackbar(
             host,
             context.getString(R.string.sunset_alerts_background_location_disclaimer),
-            Snackbar.LENGTH_LONG,
+            CustomUiUtils.SNACKBAR_LONG,
             context.getString(R.string.settings)
         ) {
             // The system permission screen supplies the detailed explanation.

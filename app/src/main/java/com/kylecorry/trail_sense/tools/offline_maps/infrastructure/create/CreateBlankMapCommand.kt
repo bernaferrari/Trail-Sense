@@ -43,7 +43,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
-import com.kylecorry.andromeda.alerts.loading.ILoadingIndicator
+import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onIO

@@ -34,7 +34,6 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 
@@ -70,17 +69,10 @@ object GroupablePickers {
                 }
             }
         )
-        val view = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            state.Content()
-        }
-
         manager.onChange = state::update
 
         manager.open(initialGroup)
-        alert = Alerts.dialog(context, title ?: "", contentView = view, okText = null) {
+        alert = Alerts.dialog(context, title ?: "", okText = null, body = { state.Content() }) {
             onPick.invoke(selected)
         }
     }
@@ -110,17 +102,10 @@ object GroupablePickers {
                 }
             }
         )
-        val view = TrailSenseComposeRootView(
-            context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
-            state.Content()
-        }
-
         manager.onChange = state::update
 
         manager.open(initialGroup)
-        Alerts.dialog(context, title ?: "", contentView = view, okText = okText) {
+        Alerts.dialog(context, title ?: "", okText = okText, body = { state.Content() }) {
             onPick.invoke(it, state.selectedRoot)
         }
     }

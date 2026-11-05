@@ -217,7 +217,7 @@ private fun DatePickerRow(
                 .size(48.dp)
                 .combinedClickable(
                     onClick = {
-                        CustomUiUtils.pickDate(context, date, null) {
+                        CustomUiUtils.pickDate(context, date) {
                             if (it != null) {
                                 onDateChanged(it)
                             }

@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
 import android.content.Context
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
@@ -359,7 +361,13 @@ fun SurvivalGuideReaderToolScreen(route: Route.SurvivalGuideReader) {
     val scope = rememberCoroutineScope()
     val chapterResourceId = route.chapterResourceId
     val chapter = remember(chapterResourceId) {
-        Chapters.getChapters(context).first { it.resource == chapterResourceId }
+        Chapters.getChapters(context).firstOrNull { it.resource == chapterResourceId }
+    }
+    if (chapter == null) {
+        // A chapter that no longer exists (an old shortcut or a stale saved screen): go back instead of crashing.
+        val navigator = LocalNavigator.current
+        LaunchedEffect(Unit) { navigator.popBackStack() }
+        return
     }
     val content by produceState<String?>(null, chapterResourceId) {
         value = withContext(Dispatchers.IO) {

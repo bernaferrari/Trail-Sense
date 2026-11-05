@@ -30,7 +30,6 @@ import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.readableName
 import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -174,10 +173,11 @@ class AstronomyGuidanceTargetPicker(
         var selected: AstronomyGuidanceOption? = null
         var resumed = false
         var alert: TrailSenseDialog? = null
-        val dialogView = TrailSenseComposeRootView(
+        alert = Alerts.dialog(
             context,
-            ViewCompositionStrategy.DisposeOnDetachedFromWindow
-        ) {
+            context.getString(R.string.locate),
+            okText = null,
+            body = {
             AstronomyGuidanceTargetPickerContent(
                 options = options,
                 onSelected = {
@@ -189,13 +189,7 @@ class AstronomyGuidanceTargetPicker(
                 alert?.dismiss()
                 }
             )
-        }
-
-        alert = Alerts.dialog(
-            context,
-            context.getString(R.string.locate),
-            contentView = dialogView,
-            okText = null
+            }
         ) {
             if (!resumed) {
                 resumed = true

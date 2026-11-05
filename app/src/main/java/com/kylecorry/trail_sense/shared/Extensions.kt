@@ -4,7 +4,6 @@ import android.content.Context
 
 import android.os.Bundle
 import android.provider.Settings
-import android.view.View
 import androidx.annotation.IdRes
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -68,21 +67,6 @@ fun Vector2.rotateInRect(angle: Float, currentSize: Size, newSizeOverride: Size?
     return minus(Vector2(currentSize.width / 2f, currentSize.height / 2f))
         .rotate(angle)
         .plus(Vector2(newSize.width / 2f, newSize.height / 2f))
-}
-
-fun View.getViewBounds(rotation: Float = 0f): Rectangle {
-    val rectangle = Rectangle(
-        0f,
-        height.toFloat(),
-        width.toFloat(),
-        0f,
-    )
-
-    if (rotation != 0f) {
-        return rectangle.rotate(rotation)
-    }
-
-    return rectangle
 }
 
 fun ICanvasDrawer.getBounds(rotation: Float = 0f): Rectangle {

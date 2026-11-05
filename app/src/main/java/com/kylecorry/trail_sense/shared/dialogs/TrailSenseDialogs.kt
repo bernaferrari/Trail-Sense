@@ -7,7 +7,6 @@ package com.kylecorry.trail_sense.shared.dialogs
 
 import android.content.Context
 import android.text.Spanned
-import android.view.View
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,9 +76,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.composeContentOf
 import com.kylecorry.trail_sense.shared.views.compose.toAnnotatedString
 import java.time.Instant
 import java.time.LocalDate
@@ -203,31 +200,15 @@ private fun DialogButtons(
     }
 }
 
-/**
- * A caller's view inside a dialog: only views made with [TrailSenseComposeRootView] are supported, and the dialog
- * draws their Compose content directly. New code passes `body` instead.
- */
-@Composable
-private fun DialogView(view: View, modifier: Modifier = Modifier) {
-    val composeContent = remember(view) { composeContentOf(view) }
-    if (composeContent == null) {
-        Log.e("TrailSenseDialogs", "A dialog's contentView must come from TrailSenseComposeRootView; pass body instead")
-        return
-    }
-    Box(modifier.fillMaxWidth()) { composeContent() }
-}
-
 object Alerts {
 
     /**
-     * A dialog with a [title], an optional [content] message, and an optional [body] drawn below it. [contentView]
-     * is the older way to pass a body; prefer [body].
+     * A dialog with a [title], an optional [content] message, and an optional [body] drawn below it.
      */
     fun dialog(
         context: Context,
         title: CharSequence,
         content: CharSequence? = null,
-        contentView: View? = null,
         okText: CharSequence? = context.getString(android.R.string.ok),
         cancelText: CharSequence? = context.getString(android.R.string.cancel),
         allowLinks: Boolean = false,
@@ -243,7 +224,7 @@ object Alerts {
             closed = true
             onClose?.invoke(cancelled)
         }
-        val hasBody = contentView != null || body != null
+        val hasBody = body != null
         return showComposeDialog(
             context,
             cancelable = cancelable,
@@ -265,7 +246,6 @@ object Alerts {
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
                 if (content != null) DialogMessage(content, allowLinks)
-                if (contentView != null) DialogView(contentView)
                 if (body != null) Box(Modifier.fillMaxWidth()) { body() }
             }
             DialogButtons(
@@ -348,7 +328,6 @@ object CoroutineAlerts {
         context: Context,
         title: CharSequence,
         content: CharSequence? = null,
-        contentView: View? = null,
         okText: CharSequence? = context.getString(android.R.string.ok),
         cancelText: CharSequence? = context.getString(android.R.string.cancel),
         allowLinks: Boolean = false,
@@ -358,7 +337,7 @@ object CoroutineAlerts {
         body: (@Composable () -> Unit)? = null
     ): Boolean = suspendCancellableCoroutine { continuation ->
         val dialog = Alerts.dialog(
-            context, title, content, contentView, okText, cancelText, allowLinks, cancelable,
+            context, title, content, okText, cancelText, allowLinks, cancelable,
             cancelOnOutsideTouch, scrollable, body
         ) { cancelled ->
             if (continuation.isActive) continuation.resume(cancelled)
@@ -691,10 +670,6 @@ object Pickers {
             }
         }
     }
-
-    /** The older form: [anchorView] only supplies the Context; prefer the Context overload. */
-    fun menu(anchorView: View, items: List<CharSequence?>, onSelection: (index: Int) -> Boolean) =
-        menu(anchorView.context, items, onSelection)
 }
 
 @Composable

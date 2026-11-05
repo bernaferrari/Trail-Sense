@@ -821,8 +821,10 @@ private fun ElevationInput(
     val units = remember {
         formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)
     }
+    // Always starts in the person's preferred unit: elevations arrive in metres (from the altimeter, the GPS or a
+    // saved place) and are shown converted, until the person picks another unit here.
     var unit by remember(units) {
-        mutableStateOf(elevation?.units ?: UserPreferences(context).baseDistanceUnits)
+        mutableStateOf(UserPreferences(context).baseDistanceUnits)
     }
     var elevationText by remember {
         mutableStateOf(formatDistanceAmount(elevation, unit))
