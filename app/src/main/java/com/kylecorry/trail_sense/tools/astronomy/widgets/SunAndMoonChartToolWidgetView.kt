@@ -3,14 +3,14 @@ package com.kylecorry.trail_sense.tools.astronomy.widgets
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChart
+import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChartState
+import androidx.compose.ui.graphics.asImageBitmap
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
@@ -43,27 +43,27 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
         var content: ToolWidgetContent.Chart? = null
         onMain {
             val userPrefs = UserPreferences(context)
-            val astroChart = AstroChart(context) {}
-            astroChart.setBands(userPrefs.astronomy.showAstronomyBands)
-            astroChart.plot(sunAltitudes, moonAltitudes)
-
             val size = Resources.dp(context, 24f).toInt()
             val moonImage = MoonPhaseImageMapper(context).getPhaseImage(
                 moon.phaseAngle,
                 size,
                 size,
                 moon.tilt
+            ).asImageBitmap()
+            val state = AstroChartState(
+                startTime = sunAltitudes.firstOrNull()?.time ?: Instant.now(),
+                sun = sunAltitudes,
+                moon = moonAltitudes,
+                sunPosition = currentSun,
+                moonPosition = currentMoon,
+                showBands = userPrefs.astronomy.showAstronomyBands
             )
-
-            astroChart.setMoonImage(moonImage)
-            astroChart.moveSun(currentSun)
-            astroChart.moveMoon(currentMoon)
 
             content = chartContent(
                 context,
                 WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.ASTRONOMY))
             ) {
-                astroChart.Content(Modifier.fillMaxSize())
+                AstroChart(state, moonImage, Modifier.fillMaxSize())
             }
         }
 
