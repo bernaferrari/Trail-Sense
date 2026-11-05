@@ -40,6 +40,12 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.andromeda.clipboard.Clipboard
+import com.kylecorry.andromeda.core.system.CurrentApp
+import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
 internal fun ErrorHandlerScreen(
@@ -153,4 +159,48 @@ private fun ErrorTextAction(
             Text(text, style = MaterialTheme.typography.labelMedium)
         }
     }
+}
+
+/** The page shown after a tool crashed ([Route.ErrorHandler]): report it, reopen the tool, or restart. */
+@Composable
+fun ErrorHandlerToolScreen(host: TrailSenseDestinationHost, route: Route.ErrorHandler) {
+    val toolId = route.toolId
+    val errorDetails = route.error
+    val appNavigator = host.findNavigator()
+    ErrorHandlerScreen(
+        toolId = toolId,
+        onEmail = {
+            host.startActivity(
+                Intents.email(
+                    host.getString(R.string.email),
+                    "Error in ${host.getString(R.string.app_name)}",
+                    errorDetails
+                )
+            )
+        },
+        onCopyError = {
+            Clipboard.copy(
+                host.requireContext(),
+                errorDetails,
+                host.getString(R.string.copied_to_clipboard_toast)
+            )
+        },
+        onViewDetails = {
+            Alerts.dialog(
+                host.requireContext(),
+                host.getString(R.string.error_occurred),
+                errorDetails,
+                cancelText = null
+            )
+        },
+        onReopenTool = {
+            Tools.getTool(host.requireContext(), toolId)?.let { appNavigator.navigate(it.route) }
+        },
+        onRestartApp = {
+            CurrentApp.restart(host.requireContext())
+        },
+        onOpenSettings = {
+            appNavigator.navigate(Route.Settings)
+        }
+    )
 }

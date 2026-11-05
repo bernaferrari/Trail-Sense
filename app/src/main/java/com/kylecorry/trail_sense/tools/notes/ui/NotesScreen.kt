@@ -77,6 +77,14 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
+import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * The notes list: newest first, one grouped card of rows (title, then the date and the start of the note), with the
@@ -316,4 +324,58 @@ private fun formatTimestamp(epochMillis: Long): String? {
             .atZone(ZoneId.systemDefault())
             .format(timestampFormatter)
     }.getOrNull()
+}
+
+/** The Notes tool: every note, newest first, each with edit, delete and QR share. */
+@Composable
+fun NotesToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { NotesController(host) }
+    NotesScreen(
+        notes = controller.notes,
+        lifecycleOwner = host.lifecycleOwner,
+        onAdd = controller::add,
+        onEdit = controller::edit,
+        onDelete = controller::delete,
+        onShowQR = controller::showQR
+    )
+}
+
+private class NotesController(private val host: TrailSenseDestinationHost) {
+    private val repo by lazy { NoteRepo.getInstance(host.requireContext()) }
+    val notes by lazy { repo.getNotes() }
+
+    fun add() {
+        host.findNavigator().navigate(Route.NoteEditor())
+    }
+
+    fun edit(note: Note) {
+        host.findNavigator().navigate(Route.NoteEditor(editNoteId = note.id))
+    }
+
+    fun showQR(note: Note) {
+        CustomUiUtils.showQR(
+            host.requireContext(),
+            host.findNavigator(),
+            note.title ?: host.getString(android.R.string.untitled),
+            NoteQREncoder().encode(note)
+        )
+    }
+
+    fun delete(note: Note) {
+        Alerts.dialog(
+            host.requireContext(),
+            host.getString(R.string.delete_note_title),
+            if (note.title?.trim().isNullOrEmpty()) {
+                host.getString(android.R.string.untitled)
+            } else {
+                note.title
+            }
+        ) { cancelled ->
+            if (!cancelled) {
+                host.lifecycleScope.launch(Dispatchers.IO) {
+                    repo.deleteNote(note)
+                }
+            }
+        }
+    }
 }

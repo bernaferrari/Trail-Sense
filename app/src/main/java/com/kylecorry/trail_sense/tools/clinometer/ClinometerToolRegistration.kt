@@ -6,6 +6,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.tools.clinometer.ui.ClinometerLockController
 import com.kylecorry.trail_sense.tools.clinometer.volumeactions.ClinometerLockVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -31,7 +32,7 @@ object ClinometerToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.Normal,
                     { context, isToolOpen, _ -> isToolOpen && UserPreferences(context).clinometer.lockWithVolumeButtons },
-                    { ClinometerLockVolumeAction(it as? ClinometerLockController) }
+                    { ClinometerLockVolumeAction(it.screenControllerAs<ClinometerLockController>()) }
                 )
             ),
             diagnostics = listOf(

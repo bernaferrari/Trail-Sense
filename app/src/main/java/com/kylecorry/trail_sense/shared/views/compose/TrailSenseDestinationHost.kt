@@ -10,6 +10,8 @@ import android.os.Bundle
 import android.util.Size
 import android.view.View
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.google.android.material.snackbar.Snackbar
@@ -68,9 +70,15 @@ interface TrailSenseDestinationHost {
         onAction: () -> Unit = {}
     ): Snackbar
 
+    /**
+     * What the shown screen offers the activity while it is on top, such as a FlashlightController for the volume
+     * buttons or a ToolSearchFocusable for reselecting the Tools tab. Screens set it with [ScreenControllerEffect];
+     * null when the screen offers nothing.
+     */
+    var screenController: Any?
+
     fun openWidgets()
     fun reloadTheme()
-    fun refreshBeaconList()
     fun getBottomNavigationHeight(): Int
     fun addOverlayView(view: View)
     fun removeOverlayView(view: View)
@@ -83,3 +91,19 @@ interface TrailSenseReactiveDestinationHost : TrailSenseDestinationHost {
 
 /** This screen's route, as the type the screen was registered for. */
 inline fun <reified T : Route> TrailSenseDestinationHost.routeAs(): T = route as T
+
+/** The shown screen's controller, if it offers a [T]. */
+inline fun <reified T> TrailSenseDestinationHost.screenControllerAs(): T? = screenController as? T
+
+/** Offers [controller] as this screen's [TrailSenseDestinationHost.screenController] while the screen is shown. */
+@Composable
+fun ScreenControllerEffect(host: TrailSenseDestinationHost, controller: Any) {
+    DisposableEffect(host, controller) {
+        host.screenController = controller
+        onDispose {
+            if (host.screenController === controller) {
+                host.screenController = null
+            }
+        }
+    }
+}

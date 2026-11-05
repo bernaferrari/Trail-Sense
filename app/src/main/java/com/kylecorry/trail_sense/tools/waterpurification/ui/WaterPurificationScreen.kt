@@ -79,6 +79,14 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.PI
 import kotlin.math.sin
+import com.kylecorry.luna.concurrency.onDefault
+import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.DistanceUnits
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
+import kotlinx.coroutines.withTimeoutOrNull
 
 const val WATER_PURIFICATION_END_TIME_KEY = "water_purification_start_time"
 
@@ -460,4 +468,42 @@ internal enum class TimeSelection {
     Auto,
     LowAltitude,
     HighAltitude
+}
+
+/** The water boil timer: auto picks the time from the altitude, falling back to three minutes. */
+@Composable
+fun WaterPurificationToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { WaterPurificationController(host) }
+    WaterPurificationScreen(
+        cache = controller.cache,
+        formatService = controller.formatService,
+        getSelectedDuration = controller::getDuration
+    )
+}
+
+private class WaterPurificationController(host: TrailSenseDestinationHost) {
+    private val altimeter = SensorService(host.requireContext()).getAltimeter()
+    private val waterService = WaterService()
+    val formatService = FormatService.getInstance(host.requireContext())
+    val cache = PreferencesSubsystem.getInstance(host.requireContext()).preferences
+
+    suspend fun getDuration(selection: TimeSelection): Duration = onDefault {
+        if (selection == TimeSelection.Auto) {
+            if (!altimeter.hasValidReading) {
+                withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) {
+                    altimeter.read()
+                }
+            }
+
+            if (altimeter.hasValidReading) {
+                return@onDefault waterService.getPurificationTime(
+                    Distance.from(altimeter.altitude, DistanceUnits.Meters)
+                )
+            }
+        } else if (selection == TimeSelection.LowAltitude) {
+            return@onDefault Duration.ofMinutes(1)
+        }
+
+        Duration.ofMinutes(3)
+    }
 }

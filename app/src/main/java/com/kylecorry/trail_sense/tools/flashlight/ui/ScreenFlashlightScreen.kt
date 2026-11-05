@@ -48,6 +48,18 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import kotlin.math.roundToInt
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.kylecorry.andromeda.torch.ScreenTorch
+import com.kylecorry.sol.math.interpolation.Interpolation.map
+import com.kylecorry.trail_sense.settings.ui.goBack
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.ScreenControllerEffect
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 /**
  * The screen as a light: the whole screen is the lamp (white or red), with one dark floating panel at the bottom for
@@ -142,5 +154,90 @@ fun ScreenFlashlightScreen(
                 )
             }
         }
+    }
+}
+
+/** The screen flashlight: lit while the screen is resumed, and the volume buttons step its brightness. */
+@Composable
+fun ScreenFlashlightToolScreen(host: TrailSenseDestinationHost) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val state = remember(host) { ScreenFlashlightState(host) }
+    ScreenControllerEffect(host, state)
+
+    DisposableEffect(lifecycleOwner, state) {
+        state.load()
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> state.turnOn()
+                Lifecycle.Event.ON_PAUSE -> state.turnOff()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    ScreenFlashlightScreen(
+        brightness = state.brightness,
+        isRedLight = state.isRedLight,
+        onBrightnessChange = state::setBrightness,
+        onToggleColor = state::toggleColor,
+        onTurnOff = {
+            state.turnOff()
+            host.goBack()
+        }
+    )
+}
+
+private class ScreenFlashlightState(private val host: TrailSenseDestinationHost) : ScreenFlashlightController {
+    private val torch by lazy { ScreenTorch(host.mainActivity.window) }
+    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
+    private val brightnessKey by lazy { host.getString(R.string.pref_screen_torch_brightness) }
+
+    var brightness by mutableFloatStateOf(100f)
+        private set
+    var isRedLight by mutableStateOf(false)
+        private set
+
+    fun load() {
+        if (cache.getBoolean(RED_LIGHT_KEY) == null) {
+            cache.putBoolean(RED_LIGHT_KEY, false)
+        }
+        isRedLight = cache.getBoolean(RED_LIGHT_KEY) == true
+        brightness = (cache.getInt(brightnessKey) ?: 100).toFloat()
+    }
+
+    fun toggleColor() {
+        isRedLight = !isRedLight
+        cache.putBoolean(RED_LIGHT_KEY, isRedLight)
+    }
+
+    fun turnOn() {
+        setBrightness(cache.getInt(brightnessKey) ?: 100)
+    }
+
+    fun turnOff() {
+        torch.off()
+    }
+
+    fun setBrightness(percent: Int) {
+        val coerced = percent.coerceIn(0, 100)
+        brightness = coerced.toFloat()
+        cache.putInt(brightnessKey, coerced)
+        torch.on(map(coerced / 100f, 0f, 1f, 0.1f, 1f))
+    }
+
+    override fun handleVolumeButtonPress(isVolumeUp: Boolean) {
+        if (isVolumeUp) {
+            setBrightness((brightness.toInt() + 10).coerceAtMost(100))
+        } else {
+            setBrightness((brightness.toInt() - 10).coerceAtLeast(0))
+        }
+    }
+
+    private companion object {
+        const val RED_LIGHT_KEY = "cache_red_light"
     }
 }

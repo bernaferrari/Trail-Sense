@@ -76,6 +76,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
 import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
@@ -612,7 +613,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             navigator?.currentRoute == Route.Tools &&
             !quickActionsSheet.isOpen()
         ) {
-            val toolsHost = activeDestinationHost as? ToolSearchFocusable
+            val toolsHost = activeDestinationHost?.screenControllerAs<ToolSearchFocusable>()
             if (toolsHost?.focusSearch() == true) {
                 return
             }
