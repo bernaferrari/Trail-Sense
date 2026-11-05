@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import kotlinx.coroutines.launch
+
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -35,9 +41,7 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.IStrideLengthEstimator
@@ -45,12 +49,15 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.St
 import kotlinx.coroutines.delay
 
 @Composable
-fun StrideLengthEstimationToolScreen(host: TrailSenseDestinationHost) {
-    val estimator = remember(host) {
-        StrideLengthEstimatorFactory(host.requireContext()).getEstimator()
+fun StrideLengthEstimationToolScreen() {
+    val context = LocalContext.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    val estimator = remember(context) {
+        StrideLengthEstimatorFactory(context).getEstimator()
     }
-    val formatter = remember(host) { FormatService.getInstance(host.requireContext()) }
-    val prefs = remember(host) { UserPreferences(host.requireContext()) }
+    val formatter = remember(context) { FormatService.getInstance(context) }
+    val prefs = remember(context) { UserPreferences(context) }
     val units = remember(prefs) { prefs.baseDistanceUnits }
 
     StrideLengthScreen(
@@ -60,13 +67,13 @@ fun StrideLengthEstimationToolScreen(host: TrailSenseDestinationHost) {
         },
         onSave = {
             prefs.pedometer.strideLength = estimator.strideLength ?: Distance.meters(0f)
-            Alerts.toast(host.requireContext(), host.getString(R.string.saved))
+            effects.showMessage(context.getString(R.string.saved))
         },
         onPermissionDenied = {
-            host.alertNoActivityRecognitionPermission()
+            effects.explainPermissionDenied(AppPermission.ActivityRecognition)
         },
         requestPermission = { callback ->
-            host.requestActivityRecognition(callback)
+            scope.launch { callback(effects.requestPermission(AppPermission.ActivityRecognition)) }
         }
     )
 }

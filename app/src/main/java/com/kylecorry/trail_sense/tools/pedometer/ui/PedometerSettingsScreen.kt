@@ -2,6 +2,17 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import android.content.Context
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.os.Bundle
@@ -11,7 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -31,7 +41,6 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
-import com.kylecorry.trail_sense.settings.ui.goBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
@@ -45,8 +54,11 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.Pedome
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
-fun PedometerSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { PedometerSettingsController(host) }
+fun PedometerSettingsToolScreen() {
+    val context = LocalContext.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
+    val controller = remember(context) { PedometerSettingsController(context, scope, effects) }
     val lifecycleOwner = LocalLifecycleOwner.current
     androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -66,14 +78,18 @@ fun PedometerSettingsToolScreen(host: TrailSenseDestinationHost) {
         }
     }
 
-    PedometerSettingsContent(controller, host)
+    PedometerSettingsContent(controller)
 }
 
-private class PedometerSettingsController(private val host: TrailSenseDestinationHost) {
+private class PedometerSettingsController(
+    private val context: Context,
+    private val scope: CoroutineScope,
+    private val effects: ScreenEffects
+) {
 
-    val userPrefs by lazy { UserPreferences(host.requireContext()) }
-    val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    val formatter by lazy { FormatService.getInstance(host.requireContext()) }
+    val userPrefs by lazy { UserPreferences(context) }
+    val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
+    val formatter by lazy { FormatService.getInstance(context) }
     private val strideLengthUnits by lazy {
         formatter.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
     }
@@ -121,26 +137,26 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
         updateEnabled: (Boolean) -> Unit
     ) {
         if (enabled) {
-            host.requestActivityRecognition { hasPermission ->
-                if (hasPermission) {
+            scope.launch {
+                if (effects.requestPermission(AppPermission.ActivityRecognition)) {
                     if (cache.getBoolean("pedometer_battery_sent") != true) {
                         Alerts.dialog(
-                            host.requireContext(),
-                            host.getString(R.string.pedometer),
-                            host.getString(R.string.pedometer_disclaimer),
+                            context,
+                            context.getString(R.string.pedometer),
+                            context.getString(R.string.pedometer_disclaimer),
                             cancelText = null
                         )
                         cache.putBoolean("pedometer_battery_sent", true)
                     }
-                    PedometerSubsystem.getInstance(host.requireContext()).enable()
+                    PedometerSubsystem.getInstance(context).enable()
                 } else {
-                    PedometerSubsystem.getInstance(host.requireContext()).disable()
+                    PedometerSubsystem.getInstance(context).disable()
                     updateEnabled(false)
-                    host.alertNoActivityRecognitionPermission()
+                    effects.explainPermissionDenied(AppPermission.ActivityRecognition)
                 }
             }
         } else {
-            PedometerSubsystem.getInstance(host.requireContext()).disable()
+            PedometerSubsystem.getInstance(context).disable()
         }
     }
 
@@ -149,10 +165,10 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
         onPicked: (Distance) -> Unit
     ) {
         CustomUiUtils.pickDistance(
-            host.requireContext(),
+            context,
             strideLengthUnits,
             current,
-            host.getString(R.string.pref_stride_length_title),
+            context.getString(R.string.pref_stride_length_title),
             showFeetAndInches = true
         ) { distance, cancelled ->
             if (cancelled || distance == null || distance.value <= 0f) {
@@ -168,7 +184,7 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
     }
 
     fun averagePaceTimeLabel(mode: AveragePaceTimeMode): String {
-        return host.getString(
+        return context.getString(
             when (mode) {
                 AveragePaceTimeMode.Active -> R.string.active_time
                 AveragePaceTimeMode.Elapsed -> R.string.elapsed_time
@@ -179,8 +195,8 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
     fun pickAveragePaceTime(onPicked: (AveragePaceTimeMode) -> Unit) {
         val modes = AveragePaceTimeMode.entries
         Pickers.item(
-            host.requireContext(),
-            host.getString(R.string.pref_pedometer_average_pace_time_title),
+            context,
+            context.getString(R.string.pref_pedometer_average_pace_time_title),
             modes.map { averagePaceTimeLabel(it) },
             modes.indexOf(userPrefs.pedometer.averagePaceTimeMode).coerceAtLeast(0)
         ) { index ->
@@ -194,13 +210,13 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
 
     fun pickStepHistory(onPicked: (Int) -> Unit) {
         Pickers.number(
-            host.requireContext(),
-            host.getString(R.string.pref_pedometer_history_days_title),
+            context,
+            context.getString(R.string.pref_pedometer_history_days_title),
             null,
             userPrefs.pedometer.stepHistory.toDays().toInt(),
             allowDecimals = false,
             allowNegative = false,
-            hint = host.getString(R.string.days)
+            hint = context.getString(R.string.days)
         ) { days ->
             if (days != null) {
                 val dayCount = if (days.toInt() > 0) days.toInt() else 1
@@ -211,21 +227,21 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
     }
 
     fun isPermissionRequestVisible(enabled: Boolean): Boolean {
-        return (enabled && !Permissions.canRecognizeActivity(host.requireContext())) ||
-                (!enabled && !Permissions.isBackgroundLocationEnabled(host.requireContext()))
+        return (enabled && !Permissions.canRecognizeActivity(context)) ||
+                (!enabled && !Permissions.isBackgroundLocationEnabled(context))
     }
 
     fun notificationSummary(): String {
-        val isBlocked = Notify.isChannelBlocked(host.requireContext(), StepCounterService.CHANNEL_ID)
-        return if (isBlocked) host.getString(R.string.off) else host.getString(R.string.on)
+        val isBlocked = Notify.isChannelBlocked(context, StepCounterService.CHANNEL_ID)
+        return if (isBlocked) context.getString(R.string.off) else context.getString(R.string.on)
     }
 
     fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(host.getString(key)) ?: defaultValue
+        return cache.getBoolean(context.getString(key)) ?: defaultValue
     }
 
     fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(host.getString(key), value)
+        cache.putBoolean(context.getString(key), value)
     }
 
     private fun onPedometerEnabled(_data: Bundle): Boolean {
@@ -241,9 +257,11 @@ private class PedometerSettingsController(private val host: TrailSenseDestinatio
 
 @Composable
 private fun PedometerSettingsContent(
-    controller: PedometerSettingsController,
-    host: TrailSenseDestinationHost
+    controller: PedometerSettingsController
 ) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val userPrefs = controller.userPrefs
     var enabled by remember { mutableStateOf(userPrefs.pedometer.isEnabled) }
     var strideLength by remember {
@@ -280,7 +298,7 @@ private fun PedometerSettingsContent(
 
     TrailSensePage(
         title = pedometerTitle,
-        onBack = host::goBack,
+        onBack = { dispatcher?.onBackPressed() },
         backLabel = stringResource(R.string.back)
     ) {
         trailSenseSection("pedometer") {
@@ -304,7 +322,7 @@ private fun PedometerSettingsContent(
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.request_permission),
-                        onClick = { host.startActivity(Intents.appSettings(host.requireContext())) },
+                        onClick = { context.startActivity(Intents.appSettings(context)) },
                         position = position
                     )
                 }
@@ -314,8 +332,8 @@ private fun PedometerSettingsContent(
                     label = stringResource(R.string.notifications_channel, pedometerTitle),
                     selected = notificationSummary,
                     onClick = {
-                        host.startActivity(
-                            Intents.notificationSettings(host.requireContext(), StepCounterService.CHANNEL_ID)
+                        context.startActivity(
+                            Intents.notificationSettings(context, StepCounterService.CHANNEL_ID)
                         )
                     },
                     position = position
@@ -341,7 +359,7 @@ private fun PedometerSettingsContent(
                 SettingsActionRow(
                     label = stringResource(R.string.estimate_stride_length),
                     onClick = {
-                        host.findNavigator().navigate(
+                        navigator.navigate(
                             Route.StrideLengthEstimation
                         )
                     },
