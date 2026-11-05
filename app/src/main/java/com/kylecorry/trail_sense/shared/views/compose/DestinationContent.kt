@@ -232,7 +232,7 @@ fun DestinationContent(
             is Route.Clouds -> CloudToolScreen(this)
             is Route.CloudResults -> CloudResultsToolScreen(this)
             Route.Astronomy -> AstronomyToolScreen(this)
-            is Route.AugmentedReality -> AugmentedRealityToolScreen(this)
+            is Route.AugmentedReality -> AugmentedRealityToolScreen(route)
             is Route.BeaconList -> BeaconListToolScreen(
                 host = this,
                 onController = { screenController = it }
