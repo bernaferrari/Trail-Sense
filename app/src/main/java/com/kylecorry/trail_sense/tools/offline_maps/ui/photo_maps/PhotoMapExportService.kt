@@ -1,40 +1,48 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import com.kylecorry.andromeda.alerts.toast
+import android.content.Context
+import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
+import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.io.ExternalUriService
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.MapExportService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.ExportMapCommand
 
-class PhotoMapExportService(private val host: TrailSenseDestinationHost) {
+class PhotoMapExportService(
+    private val context: Context,
+    intentResultRetriever: IntentResultRetriever,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner
+) {
     private val uriPicker = IntentUriPicker(
-        host.intentResultRetriever,
-        host.requireContext()
+        intentResultRetriever,
+        context
     )
     private val loading = AlertLoadingIndicator(
-        host.requireContext(),
-        host.getString(R.string.exporting_map)
+        context,
+        context.getString(R.string.exporting_map)
     )
     private val exporter = MapExportService(
-        host.requireContext(),
+        context,
         uriPicker,
-        ExternalUriService(host.requireContext())
+        ExternalUriService(context)
     )
 
     private val command = ExportMapCommand(exporter, loading)
 
     fun export(map: PhotoMap) {
-        host.inBackground(BackgroundMinimumState.Created) {
+        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
             val success = command.execute(map)
             if (success) {
-                host.toast(host.getString(R.string.map_exported))
+                effects.showMessage(context.getString(R.string.map_exported))
             } else {
-                host.toast(host.getString(R.string.map_export_error))
+                effects.showMessage(context.getString(R.string.map_export_error))
             }
         }
     }

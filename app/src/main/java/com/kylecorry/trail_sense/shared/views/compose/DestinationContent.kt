@@ -239,13 +239,13 @@ fun DestinationContent(
             )
             is Route.BeaconDetails -> BeaconDetailsToolScreen(route)
             is Route.PlaceBeacon -> PlaceBeaconToolScreen(route)
-            is Route.OfflineMapList -> OfflineMapListToolScreen(this)
+            is Route.OfflineMapList -> OfflineMapListToolScreen(route)
             Route.ScanQr -> ScanQRToolScreen()
             is Route.ViewQr -> QRShareScreen(
                 title = route.title,
                 text = route.text
             )
-            is Route.VectorMapView -> ViewVectorMapToolScreen(this)
+            is Route.VectorMapView -> ViewVectorMapToolScreen(route)
             is Route.Navigation -> NavigatorToolScreen(this)
             is Route.PathOverview -> PathOverviewToolScreen(this)
             Route.Paths -> PathsToolScreen(this)
@@ -267,7 +267,7 @@ fun DestinationContent(
             is Route.SightingList -> SightingListToolScreen(route)
             is Route.CreateFieldGuidePage -> CreateFieldGuidePageToolScreen(route)
             is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(route)
-            is Route.PhotoMaps -> PhotoMapsToolScreen(this)
+            is Route.PhotoMaps -> PhotoMapsToolScreen(route)
             Route.Clinometer -> ClinometerToolScreen(
                 onController = { screenController = it }
             )

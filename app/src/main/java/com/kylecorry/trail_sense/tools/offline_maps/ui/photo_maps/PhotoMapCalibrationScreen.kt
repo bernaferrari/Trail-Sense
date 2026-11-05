@@ -5,7 +5,8 @@ package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import androidx.activity.OnBackPressedCallback
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,7 +62,8 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.declination.GPSDeclinationStrategy
-import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
@@ -69,7 +71,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseElevation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
@@ -91,17 +92,19 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoMapCalibrationToolScreen(
-    host: TrailSenseDestinationHost,
     mapId: Long,
     onRotation: (Float) -> Unit,
     onComplete: () -> Unit,
     onController: (PhotoMapCalibrationController) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host, mapId, onRotation, onComplete) {
-        PhotoMapCalibrationController(host, mapId, onRotation, onComplete)
-    }
+    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(mapId, onRotation, onComplete) {
+        PhotoMapCalibrationController(context, lifecycleOwner, mapId, onRotation, onComplete)
+    }
+
+    UnsavedChangesBackHandler(hasChanges = controller.hasUnsavedChanges)
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -124,16 +127,17 @@ fun PhotoMapCalibrationToolScreen(
 }
 
 class PhotoMapCalibrationController(
-    private val host: TrailSenseDestinationHost,
+    private val context: Context,
+    private val lifecycleOwner: LifecycleOwner,
     private val mapId: Long,
     private var showRotation: (Float) -> Unit,
     private var onDone: () -> Unit
 ) {
 
     private val service = getAppService<MapService>()
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(context) }
     private var calibrationViews: PhotoMapCalibrationViews? =
-        createPhotoMapCalibrationViews(host.requireContext())
+        createPhotoMapCalibrationViews(context)
     private val views: PhotoMapCalibrationViews
         get() = calibrationViews ?: error("Photo map calibration views are not ready")
     private val isBound: Boolean
@@ -154,14 +158,18 @@ class PhotoMapCalibrationController(
     private val rotationCalculator = MapRotationCalculator()
     private var originalRotation = 0f
 
-    private var backCallback: OnBackPressedCallback? = null
+    /** Whether back should ask before leaving: the calibration changed and hasn't been saved. */
+    var hasUnsavedChanges by mutableStateOf(false)
+        private set
+    private var isSaved = false
 
     private val manager = MapCalibrationManager(maxPoints) {
         updateMapCalibration()
+        updateHasUnsavedChanges()
     }
 
     // Sensors
-    private val sensorService by lazy { SensorService(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
     private val gps by lazy { sensorService.getGPS() }
     private val compass by lazy { sensorService.getCompass() }
 
@@ -173,18 +181,18 @@ class PhotoMapCalibrationController(
 
     fun onCreate() {
         CustomUiUtils.disclaimer(
-            host.requireContext(),
-            host.getString(R.string.map_calibration),
-            host.getString(R.string.map_calibration_instructions),
-            host.getString(R.string.map_calibration_shown),
+            context,
+            context.getString(R.string.map_calibration),
+            context.getString(R.string.map_calibration_instructions),
+            context.getString(R.string.map_calibration_shown),
             cancelText = null
         )
 
         views.mapCalibrationBottomPanel.onTitleClick = {
             Alerts.dialog(
-                host.requireContext(),
-                host.getString(R.string.map_calibration),
-                host.getString(R.string.map_calibration_instructions),
+                context,
+                context.getString(R.string.map_calibration),
+                context.getString(R.string.map_calibration_instructions),
                 cancelText = null
             )
         }
@@ -193,10 +201,11 @@ class PhotoMapCalibrationController(
 
         views.mapCalibrationBottomPanel.onNextClick = {
             if (calibrationIndex == (maxPoints - 1)) {
-                host.inBackground {
+                lifecycleOwner.inBackground {
                     map = map?.let { save(it) }
                     manager.reset(map?.georeference?.calibrationPoints ?: emptyList())
-                    backCallback?.remove()
+                    isSaved = true
+                    updateHasUnsavedChanges()
                     onDone()
                 }
             } else {
@@ -238,10 +247,6 @@ class PhotoMapCalibrationController(
         views.zoomInBtn.onClick = {
             views.calibrationMap.zoomBy(2f)
         }
-
-        backCallback = host.promptIfUnsavedChanges {
-            hasChanges()
-        }
     }
 
     fun onResume() {
@@ -251,14 +256,14 @@ class PhotoMapCalibrationController(
         views.calibrationMap.userLocationAccuracy =
             gps.horizontalAccuracy?.let { Distance.meters(it) }
 
-        gps.asLiveData().observe(host.lifecycleOwner) {
+        gps.asLiveData().observe(lifecycleOwner) {
             views.calibrationMap.userLocation = gps.location
             views.calibrationMap.userLocationAccuracy =
                 gps.horizontalAccuracy?.let { Distance.meters(it) }
             compass.declination = declinationStrategy.getDeclination()
         }
 
-        compass.asLiveData().observe(host.lifecycleOwner) {
+        compass.asLiveData().observe(lifecycleOwner) {
             views.calibrationMap.userAzimuth = compass.bearing
         }
     }
@@ -268,13 +273,11 @@ class PhotoMapCalibrationController(
     }
 
     fun onDestroy() {
-        backCallback?.remove()
-        backCallback = null
         calibrationViews = null
     }
 
     fun reloadMap() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             map = service.getPhotoMap(mapId)
             onMain {
                 map?.let(::onMapLoad)
@@ -394,7 +397,7 @@ class PhotoMapCalibrationController(
         views.mapCalibrationBottomPanel.iconTint = when {
             notice.isNotBlank() -> Color(getErrorColor())
             manager.isCalibrated(calibrationIndex) -> Color(AppColor.Green.color)
-            else -> Color(Resources.androidTextColorSecondary(host.requireContext()))
+            else -> Color(Resources.androidTextColorSecondary(context))
         }
     }
 
@@ -415,7 +418,7 @@ class PhotoMapCalibrationController(
             MyLocationGeoJsonSource.SOURCE_ID,
             BeaconGeoJsonSource.SOURCE_ID
         ) else emptyList()
-        host.inBackground {
+        lifecycleOwner.inBackground {
             views.calibrationMap.setLayersWithPreferences(
                 OfflineMapsToolRegistration.PHOTO_MAPS_ID,
                 layers
@@ -466,7 +469,7 @@ class PhotoMapCalibrationController(
 
     private fun getErrorColor(): Int {
         return Resources.getAndroidColorAttr(
-            host.requireContext(),
+            context,
             androidx.appcompat.R.attr.colorError
         )
     }
@@ -482,14 +485,15 @@ class PhotoMapCalibrationController(
     private fun loadCalibrationPointsFromMap() {
         val map = map ?: return
         manager.reset(map.georeference.calibrationPoints)
+        updateHasUnsavedChanges()
     }
 
-    private fun hasChanges(): Boolean {
-        return manager.hasChanges()
+    private fun updateHasUnsavedChanges() {
+        hasUnsavedChanges = !isSaved && manager.hasChanges()
     }
 
     private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return host.getString(id, *args)
+        return context.getString(id, *args)
     }
 
 }

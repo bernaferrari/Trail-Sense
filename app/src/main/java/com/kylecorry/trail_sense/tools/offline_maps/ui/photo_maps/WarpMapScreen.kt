@@ -3,7 +3,12 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
+import android.content.Context
 import android.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,7 +43,6 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrection
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrectionState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.rememberPerspectiveCorrectionState
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -50,13 +54,14 @@ import java.io.IOException
 
 @Composable
 fun WarpMapToolScreen(
-    host: TrailSenseDestinationHost,
     mapId: Long,
     onComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host, mapId, onComplete) {
-        WarpMapController(host, mapId, onComplete)
+    val context = LocalContext.current
+    val scope = LocalLifecycleOwner.current.lifecycleScope
+    val controller = remember(mapId, onComplete) {
+        WarpMapController(context, scope, mapId, onComplete)
     }
 
     DisposableEffect(controller) {
@@ -78,12 +83,13 @@ fun WarpMapToolScreen(
 }
 
 private class WarpMapController(
-    private val host: TrailSenseDestinationHost,
+    private val context: Context,
+    private val scope: CoroutineScope,
     private val mapId: Long,
     private val onComplete: () -> Unit
 ) {
     private val service = getAppService<MapService>()
-    private val files by lazy { FileSubsystem.getInstance(host.requireContext()) }
+    private val files by lazy { FileSubsystem.getInstance(context) }
 
     var map by mutableStateOf<PhotoMap?>(null)
         private set
@@ -102,9 +108,9 @@ private class WarpMapController(
 
     fun showInstructions() {
         Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.map_perspective_instructions),
-            host.getString(R.string.crop_map_instructions_long),
+            context,
+            context.getString(R.string.map_perspective_instructions),
+            context.getString(R.string.crop_map_instructions_long),
             cancelText = null
         )
     }
@@ -114,7 +120,7 @@ private class WarpMapController(
     }
 
     private fun loadMap() {
-        host.lifecycleScope.launch {
+        scope.launch {
             val loaded = withContext(Dispatchers.IO) {
                 service.getPhotoMap(mapId)
             }
@@ -135,10 +141,10 @@ private class WarpMapController(
         val percentBounds = perspective.getPercentBounds() ?: return
         val hasChanges = perspective.hasChanges
 
-        host.lifecycleScope.launch {
+        scope.launch {
             val loading = Alerts.loading(
-                host.requireContext(),
-                host.getString(R.string.saving)
+                context,
+                context.getString(R.string.saving)
             )
             val saved = withContext(Dispatchers.IO) {
                 if (hasChanges) {
