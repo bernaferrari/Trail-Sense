@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import android.content.Context
 import android.os.Bundle
-import android.view.View
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -56,7 +59,6 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.ReactiveComponent
 import com.kylecorry.andromeda.core.ui.useCallback
 import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.units.Coordinate
@@ -134,9 +136,13 @@ fun MapToolScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val viewModel = viewModel { MapToolViewModel(MapService.getInstance(appContext)) }
+    // The map, its controls and sheets are rendering objects driven by the host's reactive hooks, so the controller
+    // that wires them stays in the composition; only whether there is a map to show lives in the ViewModel.
     val controller = remember(component) {
         MapController(
             component,
@@ -155,7 +161,26 @@ fun MapToolScreen(
             controller.onDestroy()
         }
     }
-    controller.Content(modifier = modifier.fillMaxSize())
+    LaunchedEffect(viewModel, resumeCount()) {
+        viewModel.refreshMaps()
+    }
+    controller.Content(hasRenderableMap = viewModel.hasRenderableMap, modifier = modifier.fillMaxSize())
+}
+
+/** Whether any visible offline map can be drawn; checked again each time the map resumes. */
+internal class MapToolViewModel(private val mapService: MapService) : ViewModel() {
+
+    var hasRenderableMap by mutableStateOf<Boolean?>(null)
+        private set
+
+    suspend fun refreshMaps() {
+        hasRenderableMap = withContext(Dispatchers.IO) {
+            runCatching {
+                mapService.getAllVectorMaps().any { it.visible } ||
+                    mapService.getAllPhotoMaps().any { it.visible && it.isCalibrated }
+            }.getOrDefault(false)
+        }
+    }
 }
 
 private class MapController(
@@ -176,20 +201,9 @@ private class MapController(
     val views = createMapViews(context)
     private var wasViewCreated = true
     private val layerEditSheet = MapLayersSheetState(MapToolRegistration.MAP_ID)
-    private val mapService = MapService.getInstance(context)
-    private var hasRenderableMap by mutableStateOf<Boolean?>(null)
 
     @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        LaunchedEffect(resumeCount()) {
-            hasRenderableMap = withContext(Dispatchers.IO) {
-                runCatching {
-                    mapService.getAllVectorMaps().any { it.visible } ||
-                            mapService.getAllPhotoMaps().any { it.visible && it.isCalibrated }
-                }.getOrDefault(false)
-            }
-        }
-
+    fun Content(hasRenderableMap: Boolean?, modifier: Modifier = Modifier) {
         when (hasRenderableMap) {
             true -> {
                 MapHost(views = views, modifier = modifier)
@@ -275,7 +289,6 @@ private class MapController(
         val prefs = component.useService<UserPreferences>()
         val formatter = component.useService<FormatService>()
         val activity = component.useActivity()
-        val rootView = component.useRootView()
         val (lockMode, setLockMode) = useLockMode()
 
         val screenLight = component.useMemo(activity) {
@@ -552,7 +565,7 @@ private class MapController(
         component.useEffect(menuButton, startDistanceMeasurement) {
             menuButton.setState(false)
             menuButton.setOnClickListener {
-                showMapMenu(rootView, startDistanceMeasurement, { adjustLayers() }, setLockMode)
+                showMapMenu(startDistanceMeasurement, { adjustLayers() }, setLockMode)
             }
         }
 
@@ -648,7 +661,6 @@ private class MapController(
     }
 
     private fun showMapMenu(
-        anchor: View,
         startDistanceMeasurement: (Coordinate?, Boolean) -> Unit,
         adjustLayers: () -> Unit,
         setLockMode: (MapLockMode) -> Unit
@@ -660,10 +672,7 @@ private class MapController(
             MapAction.Trace to context.getString(R.string.trace)
         )
 
-        Pickers.menu(
-            anchor,
-            actions.map { action -> action.second }
-        ) { index ->
+        views.menu.open(actions.map { it.second }) { index ->
             when (actions[index].first) {
                 MapAction.Measure, MapAction.CreatePath -> startDistanceMeasurement(
                     null,
@@ -673,7 +682,6 @@ private class MapController(
                 MapAction.AdjustLayers -> adjustLayers()
                 MapAction.Trace -> setLockMode(MapLockMode.Trace)
             }
-            true
         }
     }
 
@@ -772,6 +780,7 @@ private data class MapViews(
     val map: MapView,
     val mapAttribution: MapAttributionState,
     val menuButton: MapIconButton,
+    val menu: MapMenuState,
     val timeButton: MapIconButton,
     val zoomInButton: MapIconButton,
     val zoomOutButton: MapIconButton,
@@ -803,12 +812,15 @@ private fun MapHost(
             }
         }
 
-        // Menu control (top end)
-        views.menuButton.Content(
+        // Menu control (top end), with its options dropping down from it
+        Box(
             Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = TrailSenseSpacing.sm, end = TrailSenseSpacing.screen)
-        )
+        ) {
+            views.menuButton.Content()
+            views.menu.Content()
+        }
 
         MapControlRail(
             views = views,
@@ -945,6 +957,7 @@ private fun createMapViews(context: Context): MapViews {
         map = map,
         mapAttribution = attribution,
         menuButton = menuButton,
+        menu = MapMenuState(),
         timeButton = timeButton,
         zoomInButton = zoomInButton,
         zoomOutButton = zoomOutButton,
@@ -954,6 +967,37 @@ private fun createMapViews(context: Context): MapViews {
         distanceSheet = distanceSheet,
         timeSheet = timeSheet
     )
+}
+
+/** The map's overflow menu: its options, open while [open] has been called and nothing was picked yet. */
+private class MapMenuState {
+    private var items by mutableStateOf<List<String>>(emptyList())
+    private var onSelect: (Int) -> Unit = {}
+    private var expanded by mutableStateOf(false)
+
+    fun open(items: List<String>, onSelect: (index: Int) -> Unit) {
+        this.items = items
+        this.onSelect = onSelect
+        expanded = true
+    }
+
+    @Composable
+    fun Content() {
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            items.forEachIndexed { index, item ->
+                DropdownMenuItem(
+                    text = { Text(item) },
+                    onClick = {
+                        expanded = false
+                        onSelect(index)
+                    }
+                )
+            }
+        }
+    }
 }
 
 private fun mapControl(icon: ImageVector, contentDescription: String): MapIconButton {

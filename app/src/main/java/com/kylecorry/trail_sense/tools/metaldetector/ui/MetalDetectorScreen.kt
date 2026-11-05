@@ -63,7 +63,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -84,7 +83,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -92,8 +91,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.ISensor
@@ -125,7 +127,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -138,61 +139,76 @@ fun MetalDetectorToolScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val view = LocalView.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val scope = rememberCoroutineScope()
-    val controller = remember {
-        MetalDetectorController(context, scope)
+    val appContext = context.applicationContext
+    val viewModel = viewModel {
+        MetalDetectorViewModel(
+            sensors = SensorService(appContext),
+            prefs = UserPreferences(appContext),
+            haptics = HapticSubsystem.getInstance(appContext)
+        )
+    }
+    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { viewModel.onPause() }
     }
 
-    DisposableEffect(lifecycleOwner, controller) {
-        val previousKeepScreenOn = view.keepScreenOn
-        view.keepScreenOn = true
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            view.keepScreenOn = previousKeepScreenOn
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onPause()
-            controller.onDestroy()
-        }
-    }
-
-    controller.Content(modifier)
+    MetalDetectorScreen(
+        title = viewModel.magneticField?.let { formatService.formatMagneticField(it) } ?: "",
+        fieldValue = viewModel.magneticField?.let { DecimalFormatter.format(it.toDouble(), 0) } ?: "--",
+        fieldUnit = stringResource(R.string.magnetic_field_format_precise, "").trim(),
+        thresholdText = formatService.formatMagneticField(viewModel.threshold, decimalPlaces = 1),
+        isHighSensitivity = viewModel.isHighSensitivity,
+        audioEnabled = viewModel.audioEnabled,
+        vibrationEnabled = viewModel.vibrationEnabled,
+        showAudioButton = viewModel.showAudioButton,
+        showMetalDirection = viewModel.showMetalDirection,
+        metalDetected = viewModel.metalDetected,
+        onAudioToggle = viewModel::toggleAudio,
+        onVibrationToggle = viewModel::toggleVibration,
+        onHighSensitivityChange = viewModel::updateHighSensitivity,
+        onCalibrate = viewModel::calibrate,
+        thresholdSliderValue = viewModel.thresholdSliderValue,
+        onThresholdChange = viewModel::changeThresholdSlider,
+        chartReadings = viewModel.chartReadings,
+        lowerThreshold = viewModel.lowerThreshold,
+        upperThreshold = viewModel.upperThreshold,
+        metalDirectionFieldStrength = viewModel.metalDirectionFieldStrength,
+        metalDirection = viewModel.metalDirection,
+        showSinglePoleDirection = viewModel.showSinglePoleDirection,
+        metalDirectionSensitivity = viewModel.metalDirectionSensitivity,
+        magnetometer = viewModel.magnetometer,
+        onAccuracyClick = { ImproveAccuracyAlerter(context).alert(listOf(viewModel.magnetometer)) },
+        // The screen stays on while detecting.
+        modifier = modifier.keepScreenOn()
+    )
 }
 
-private class MetalDetectorController(
-    private val context: Context,
-    private val scope: CoroutineScope
-) {
-    private val sensors by lazy { SensorService(context) }
-    private val magnetometer by lazy { sensors.getMagnetometer() }
-    private val formatService by lazy { FormatService.getInstance(context) }
-    private val lowPassMagnetometer by lazy { sensors.getMagnetometer(true) }
-    private val orientation by lazy { SensorService(context).getGyroscope() }
-    private val gravity by lazy { sensors.getGravity() }
+/**
+ * The metal detector's state: the magnetometer (and, for the direction dial, the low-pass magnetometer, gyroscope
+ * and gravity) while the page is resumed, the calibrated reference, the threshold, the trace, and the sound and
+ * vibration that say metal is near.
+ */
+internal class MetalDetectorViewModel(
+    sensors: SensorService,
+    private val prefs: UserPreferences,
+    private val haptics: HapticSubsystem
+) : ViewModel() {
+    val magnetometer = sensors.getMagnetometer()
+    private val lowPassMagnetometer = sensors.getMagnetometer(true)
+    private val orientation = sensors.getGyroscope()
+    private val gravity = sensors.getGravity()
 
     private val filter = LowPassFilter(0.2f, 0f)
 
     private var isVibrating = false
     private var lastReadingTime = System.currentTimeMillis() + 1000L
-    private var threshold = 5f
 
     private val readings = mutableListOf<Float>()
 
     private val throttle = Throttle(20)
-    private val prefs by lazy { UserPreferences(context) }
 
-    private var isHighSensitivity by mutableStateOf(false)
     private var calibratedField = Vector3.zero
     private var calibratedOrientation = Quaternion.zero
     private var referenceMagnitude = 0f
@@ -201,68 +217,48 @@ private class MetalDetectorController(
         calibrate()
     }
 
-    private val haptics by lazy { HapticSubsystem.getInstance(context) }
-
     private val isMetalDetected = Debouncer(Duration.ofMillis(100))
 
     private var audio: ISoundPlayer? = null
     private val audioLock = Any()
 
-    private var title by mutableStateOf("")
-    private var fieldValue by mutableStateOf("--")
-    private val fieldUnit by lazy {
-        context.getString(R.string.magnetic_field_format_precise, "").trim()
-    }
-    private var thresholdText by mutableStateOf("")
-    private var audioEnabled by mutableStateOf(false)
-    private var vibrationEnabled by mutableStateOf(true)
-    private var showAudioButton by mutableStateOf(true)
-    private var metalDetected by mutableStateOf(false)
-    private var thresholdSliderValue by mutableStateOf(50f)
-    private var metalDirectionFieldStrength by mutableStateOf(0f)
-    private var metalDirection by mutableStateOf(Bearing.from(0f) to Bearing.from(180f))
-    private var showSinglePoleDirection by mutableStateOf(false)
-    private var metalDirectionSensitivity by mutableStateOf(1f)
-    private var chartReadings by mutableStateOf<List<Float>>(emptyList())
-    private var lowerThreshold by mutableStateOf(0f)
-    private var upperThreshold by mutableStateOf(0f)
+    /** The field strength shown, or null before the first reading. */
+    var magneticField by mutableStateOf<Float?>(null)
+        private set
+    var threshold by mutableFloatStateOf(5f)
+        private set
+    var isHighSensitivity by mutableStateOf(false)
+        private set
+    var audioEnabled by mutableStateOf(prefs.metalDetector.isMetalAudioEnabled)
+        private set
+    var vibrationEnabled by mutableStateOf(!prefs.metalDetector.isMetalVibrationDisabled)
+        private set
+    var showAudioButton by mutableStateOf(true)
+        private set
+    var metalDetected by mutableStateOf(false)
+        private set
+    var thresholdSliderValue by mutableFloatStateOf(50f)
+        private set
+    var metalDirectionFieldStrength by mutableFloatStateOf(0f)
+        private set
+    var metalDirection by mutableStateOf(Bearing.from(0f) to Bearing.from(180f))
+        private set
+    var showSinglePoleDirection by mutableStateOf(false)
+        private set
+    var metalDirectionSensitivity by mutableFloatStateOf(1f)
+        private set
+    var chartReadings by mutableStateOf<List<Float>>(emptyList())
+        private set
+    var lowerThreshold by mutableFloatStateOf(0f)
+        private set
+    var upperThreshold by mutableFloatStateOf(0f)
+        private set
 
-    init {
-        audioEnabled = prefs.metalDetector.isMetalAudioEnabled
-        vibrationEnabled = !prefs.metalDetector.isMetalVibrationDisabled
-        thresholdText = formatService.formatMagneticField(threshold, decimalPlaces = 1)
-    }
+    val showMetalDirection: Boolean
+        get() = prefs.metalDetector.showMetalDirection
 
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        MetalDetectorScreen(
-            title = title,
-            fieldValue = fieldValue,
-            fieldUnit = fieldUnit,
-            thresholdText = thresholdText,
-            isHighSensitivity = isHighSensitivity,
-            audioEnabled = audioEnabled,
-            vibrationEnabled = vibrationEnabled,
-            showAudioButton = showAudioButton,
-            showMetalDirection = prefs.metalDetector.showMetalDirection,
-            metalDetected = metalDetected,
-            onAudioToggle = ::toggleAudio,
-            onVibrationToggle = ::toggleVibration,
-            onHighSensitivityChange = ::updateHighSensitivity,
-            onCalibrate = ::calibrate,
-            thresholdSliderValue = thresholdSliderValue,
-            onThresholdChange = { thresholdSliderValue = it },
-            chartReadings = chartReadings,
-            lowerThreshold = lowerThreshold,
-            upperThreshold = upperThreshold,
-            metalDirectionFieldStrength = metalDirectionFieldStrength,
-            metalDirection = metalDirection,
-            showSinglePoleDirection = showSinglePoleDirection,
-            metalDirectionSensitivity = metalDirectionSensitivity,
-            magnetometer = magnetometer,
-            onAccuracyClick = ::displayAccuracyTips,
-            modifier = modifier
-        )
+    fun changeThresholdSlider(value: Float) {
+        thresholdSliderValue = value
     }
 
     fun onResume() {
@@ -293,11 +289,12 @@ private class MetalDetectorController(
         audio?.off()
     }
 
-    fun onDestroy() {
+    override fun onCleared() {
+        onPause()
         audio?.release()
     }
 
-    private fun updateHighSensitivity(isChecked: Boolean) {
+    fun updateHighSensitivity(isChecked: Boolean) {
         isHighSensitivity = isChecked
         isMetalDetected.debounceTime = if (isChecked) {
             Duration.ofMillis(50)
@@ -306,7 +303,7 @@ private class MetalDetectorController(
         }
     }
 
-    private fun toggleAudio() {
+    fun toggleAudio() {
         if (prefs.metalDetector.isMetalAudioEnabled) {
             prefs.metalDetector.isMetalAudioEnabled = false
             audioEnabled = false
@@ -318,7 +315,7 @@ private class MetalDetectorController(
         }
     }
 
-    private fun toggleVibration() {
+    fun toggleVibration() {
         if (prefs.metalDetector.isMetalVibrationDisabled) {
             prefs.metalDetector.isMetalVibrationDisabled = false
         } else {
@@ -328,7 +325,7 @@ private class MetalDetectorController(
         vibrationEnabled = !prefs.metalDetector.isMetalVibrationDisabled
     }
 
-    private fun calibrate() {
+    fun calibrate() {
         referenceMagnitude = readings.takeLast(20).average().toFloat()
         calibratedField = lowPassMagnetometer.magneticField
         calibratedOrientation = orientation.orientation
@@ -369,8 +366,7 @@ private class MetalDetectorController(
 
         updateThreshold()
 
-        title = formatService.formatMagneticField(magneticField)
-        fieldValue = DecimalFormatter.format(magneticField.toDouble(), 0)
+        this.magneticField = magneticField
 
         metalDetected = isMetalDetected(magneticField)
         maybeVibrate(metalDetected)
@@ -426,7 +422,6 @@ private class MetalDetectorController(
 
     private fun updateThreshold() {
         threshold = (thresholdSliderValue / 10f).coerceAtLeast(0.1f)
-        thresholdText = formatService.formatMagneticField(threshold, decimalPlaces = 1)
     }
 
     private fun addReading(reading: Float) {
@@ -449,7 +444,7 @@ private class MetalDetectorController(
     }
 
     private fun initializeAudio() {
-        scope.launch {
+        viewModelScope.launch {
             val initialized = onDefault {
                 try {
                     synchronized(audioLock) {
@@ -469,11 +464,6 @@ private class MetalDetectorController(
                 showAudioButton = false
             }
         }
-    }
-
-    private fun displayAccuracyTips() {
-        val alerter = ImproveAccuracyAlerter(context)
-        alerter.alert(listOf(magnetometer))
     }
 
     companion object {

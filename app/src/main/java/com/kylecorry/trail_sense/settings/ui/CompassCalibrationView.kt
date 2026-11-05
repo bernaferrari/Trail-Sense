@@ -1,8 +1,5 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import android.content.Context
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -18,32 +15,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.interpolation.Interpolation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
-
-fun compassCalibrationView(
-    context: Context,
-    width: Int,
-    height: Int
-): View {
-    return TrailSenseComposeRootView(
-        context,
-        ViewCompositionStrategy.DisposeOnDetachedFromWindow
-    ) {
-        CompassCalibrationContent()
-    }.apply {
-        layoutParams = ViewGroup.LayoutParams(width, height)
-    }
-}
 
 @Composable
 fun CompassCalibrationContent(modifier: Modifier = Modifier) {

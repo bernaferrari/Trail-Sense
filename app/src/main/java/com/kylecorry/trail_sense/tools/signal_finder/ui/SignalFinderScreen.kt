@@ -43,11 +43,10 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.CellTower
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,10 +96,6 @@ import com.kylecorry.trail_sense.main.MainActivity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.GeoUri
@@ -136,63 +131,85 @@ import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerMod
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
 fun SignalFinderToolScreen() {
     val context = LocalContext.current
+    val appContext = context.applicationContext
     val appNavigator = LocalNavigator.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(context, appNavigator, lifecycleOwner) {
-        SignalFinderController(context, appNavigator, lifecycleOwner)
+    // The location permission banner belongs to the activity.
+    val errorBanner = context.findMainActivity()?.errorBanner
+    val viewModel = viewModel { SignalFinderViewModel(SensorService(appContext)) }
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val disclaimer = remember(context) {
+        DependencyRegistry.get<MarkdownService>().toMarkdown(context.getString(R.string.cell_tower_disclaimer))
     }
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { viewModel.onPause() }
+    }
+
+    val hasLocationPermission = viewModel.hasLocationPermission
+    LaunchedEffect(hasLocationPermission, errorBanner) {
+        val banner = errorBanner ?: return@LaunchedEffect
+        if (hasLocationPermission != false) {
+            if (hasLocationPermission == true) {
+                banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
             }
+            return@LaunchedEffect
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
-        }
+        banner.report(
+            UserError(
+                ErrorBannerReason.LocationPermissionDenied,
+                context.getString(R.string.location_required_for_cell_signals),
+                TrailIcons.SignalCellularOutline,
+                context.getString(R.string.settings)
+            ) {
+                banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
+                context.startActivity(Intents.appSettings(context))
+            }
+        )
+    }
+    DisposableEffect(errorBanner) {
+        onDispose { errorBanner?.dismiss(ErrorBannerReason.LocationPermissionDenied) }
     }
 
     SignalFinderScreen(
-        signals = controller.signals,
-        towers = controller.nearbyTowers,
-        location = controller.location,
-        loading = controller.loading,
-        hasLoaded = controller.hasLoaded,
-        disclaimer = controller.disclaimer,
-        formatter = controller.formatter,
-        prefs = controller.prefs,
-        onNavigateToTower = controller::navigateToTower,
-        onCreateBeacon = controller::createBeacon
+        signals = viewModel.signals,
+        towers = viewModel.nearbyTowers,
+        location = viewModel.location,
+        loading = viewModel.loading,
+        hasLoaded = viewModel.hasLoaded,
+        disclaimer = disclaimer,
+        formatter = formatter,
+        prefs = prefs,
+        onNavigateToTower = { tower ->
+            Navigator.getInstance(context).navigateTo(tower.coordinate, context.getString(R.string.cell_tower))
+            appNavigator.navigate(Route.Navigation())
+        },
+        onCreateBeacon = { tower ->
+            appNavigator.navigate(Route.PlaceBeacon(initialLocation = tower.coordinate.toRouteLocation()))
+        }
     )
 }
 
-private class SignalFinderController(
-    private val context: Context,
-    private val appNavigator: TrailSenseNavigator,
-    private val lifecycleOwner: LifecycleOwner
-) {
+/**
+ * The signal finder's state: the cell signals and location while the page is resumed (refreshed on each reading and
+ * every second), and the cell towers near the last place they were looked up (again after moving 100 m).
+ */
+internal class SignalFinderViewModel(private val sensorService: SensorService) : ViewModel() {
 
-    private val sensorService by lazy { SensorService(context) }
-    private val cellSignal by lazy { sensorService.getCellSignal() }
-    private val gps by lazy { sensorService.getGPS() }
-    val formatter by lazy { FormatService.getInstance(context) }
-    val prefs by lazy { UserPreferences(context) }
-    private val markdown by lazy { DependencyRegistry.get<MarkdownService>() }
-    private val navigator by lazy { Navigator.getInstance(context) }
-    private val handler = Handler(Looper.getMainLooper())
+    private val cellSignal = sensorService.getCellSignal()
+    private val gps = sensorService.getGPS()
 
     var signals by mutableStateOf(emptyList<CellSignal>())
         private set
@@ -206,79 +223,47 @@ private class SignalFinderController(
     /** Set once the first tower search finishes, so "No cell towers found" never flashes before it. */
     var hasLoaded by mutableStateOf(false)
         private set
-    val disclaimer by lazy {
-        markdown.toMarkdown(context.getString(R.string.cell_tower_disclaimer))
-    }
+
+    /** Whether location may be read (null until the page is first resumed). */
+    var hasLocationPermission by mutableStateOf<Boolean?>(null)
+        private set
+
     private var lastTowerLocation: Coordinate? = null
     private var towerJob: Job? = null
-    private var locationPermission: Boolean? = null
+    private var ticker: Job? = null
 
-    private val sensorListener = {
-        refreshReadings()
+    private val sensorListener: () -> Boolean = {
+        viewModelScope.launch { refreshReadings() }
         true
-    }
-    private val refreshRunnable = object : Runnable {
-        override fun run() {
-            refreshReadings()
-            handler.postDelayed(this, 1000)
-        }
     }
 
     fun onResume() {
-        val hasPermission = sensorService.hasLocationPermission()
-        if (locationPermission != hasPermission) {
-            locationPermission = hasPermission
-            updateLocationPermissionError(hasPermission)
-        }
+        hasLocationPermission = sensorService.hasLocationPermission()
         cellSignal.start(sensorListener)
         gps.start(sensorListener)
         refreshReadings()
-        handler.removeCallbacks(refreshRunnable)
-        handler.postDelayed(refreshRunnable, 1000)
+        ticker?.cancel()
+        ticker = viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                refreshReadings()
+            }
+        }
     }
 
     fun onPause() {
-        handler.removeCallbacks(refreshRunnable)
+        ticker?.cancel()
+        ticker = null
         cellSignal.stop(sensorListener)
         gps.stop(sensorListener)
         towerJob?.cancel()
     }
 
-    fun onDestroy() {
-        handler.removeCallbacks(refreshRunnable)
-        cellSignal.stop(sensorListener)
-        gps.stop(sensorListener)
-        towerJob?.cancel()
-        context.findMainActivity()?.errorBanner?.dismiss(ErrorBannerReason.LocationPermissionDenied)
-    }
-
-    private fun updateLocationPermissionError(hasPermission: Boolean) {
-        // The location permission banner belongs to the activity.
-        val banner = context.findMainActivity()?.errorBanner ?: return
-        if (hasPermission) {
-            banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
-            return
-        }
-
-        banner.report(
-            UserError(
-                ErrorBannerReason.LocationPermissionDenied,
-                context.getString(R.string.location_required_for_cell_signals),
-                TrailIcons.SignalCellularOutline,
-                context.getString(R.string.settings)
-            ) {
-                banner.dismiss(ErrorBannerReason.LocationPermissionDenied)
-                context.startActivity(Intents.appSettings(context))
-            }
-        )
+    override fun onCleared() {
+        onPause()
     }
 
     private fun refreshReadings() {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            handler.post { refreshReadings() }
-            return
-        }
-
         signals = cellSignal.signals
         val currentLocation = gps.location
         location = currentLocation
@@ -292,7 +277,7 @@ private class SignalFinderController(
     private fun loadNearbyTowers(currentLocation: Coordinate) {
         lastTowerLocation = currentLocation
         towerJob?.cancel()
-        towerJob = lifecycleOwner.lifecycleScope.launch {
+        towerJob = viewModelScope.launch {
             loading = true
             val towers = withContext(Dispatchers.IO) {
                 CellTowerModel.getTowers(
@@ -304,15 +289,6 @@ private class SignalFinderController(
             loading = false
             hasLoaded = true
         }
-    }
-
-    fun navigateToTower(tower: ApproximateCoordinate) {
-        navigator.navigateTo(tower.coordinate, context.getString(R.string.cell_tower))
-        appNavigator.navigate(Route.Navigation())
-    }
-
-    fun createBeacon(tower: ApproximateCoordinate) {
-        appNavigator.navigate(Route.PlaceBeacon(initialLocation = tower.coordinate.toRouteLocation()))
     }
 }
 

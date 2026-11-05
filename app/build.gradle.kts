@@ -234,7 +234,8 @@ dependencies {
     implementation(libs.andromeda.pdf)
     implementation(libs.andromeda.exceptions)
     implementation(libs.andromeda.print)
-    implementation(libs.andromeda.views)
+    // Only the instrumented tests still match old Andromeda list rows by their view ids
+    androidTestImplementation(libs.andromeda.views)
     implementation(libs.andromeda.xml)
     implementation(libs.andromeda.json)
     implementation(libs.andromeda.widgets)

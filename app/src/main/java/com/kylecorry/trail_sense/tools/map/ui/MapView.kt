@@ -6,7 +6,6 @@ import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Matrix
 import android.graphics.Path
 import android.view.GestureDetector
-import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
@@ -14,7 +13,6 @@ import android.widget.OverScroller
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
@@ -22,7 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.keepScreenOn
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -88,7 +89,7 @@ class MapView(private val context: Context) : IMapView {
 
     private val lookupMatrix = Matrix()
     private var externalTouchListener: ((MapView, MotionEvent) -> Boolean)? = null
-    private var hostView: View? = null
+    private var hapticFeedback: HapticFeedback? = null
 
     override val layerManager = MapViewLayerManager {
         invalidate()
@@ -400,18 +401,11 @@ class MapView(private val context: Context) : IMapView {
             if (isInvisible) {
                 return@TrailSenseTheme
             }
-            val view = LocalView.current
-            hostView = view
-            DisposableEffect(view, keepScreenOn) {
-                val previousKeepScreenOn = view.keepScreenOn
-                view.keepScreenOn = keepScreenOn
-                onDispose {
-                    view.keepScreenOn = previousKeepScreenOn
-                }
-            }
+            hapticFeedback = LocalHapticFeedback.current
             Canvas(
                 modifier = modifier
                     .fillMaxSize()
+                    .then(if (keepScreenOn) Modifier.keepScreenOn() else Modifier)
                     .pointerInteropFilter {
                         if (externalTouchListener?.invoke(this@MapView, it) == true) {
                             true
@@ -641,7 +635,7 @@ class MapView(private val context: Context) : IMapView {
 
             val pixel = unrotated(PixelCoordinate(e.x, e.y))
             if (::drawer.isInitialized && layerManager.onLongPress(drawer, this@MapView, pixel)) {
-                hostView?.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                hapticFeedback?.performHapticFeedback(HapticFeedbackType.LongPress)
                 return
             }
             val location = toCoordinate(pixel)
