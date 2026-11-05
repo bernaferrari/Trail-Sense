@@ -42,6 +42,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCameraUnavailable
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.andromeda.torch.ScreenTorch
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
 internal fun MirrorCameraScreen(
@@ -158,3 +160,22 @@ internal fun MirrorCameraScreen(
 
 /** The mirror glass: rounder than a card so it reads as an object, not a panel. */
 private val MirrorCorner = 56.dp
+
+/** The mirror: the front camera, with the screen lit white while it is shown. */
+@Composable
+fun MirrorCameraToolScreen(host: TrailSenseDestinationHost) {
+    val flashlight = remember(host) { ScreenTorch(host.mainActivity.window) }
+    MirrorCameraScreen(
+        onRequestCamera = { action ->
+            host.requestCamera {
+                val isAvailable = Permissions.isCameraEnabled(host.requireContext())
+                if (!isAvailable) {
+                    host.alertNoCameraPermission()
+                }
+                action(isAvailable)
+            }
+        },
+        onResumeScreen = { flashlight.on() },
+        onPauseScreen = { flashlight.off() }
+    )
+}

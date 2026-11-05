@@ -314,16 +314,6 @@ class TrailSenseComposeDestinationHost(
     private var layerSheet by mutableStateOf<MapLayersSheetState?>(null)
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
     private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
-    private val notesRepo by lazy { NoteRepo.getInstance(requireContext()) }
-    private var editingNote: Note? = null
-    private var noteTitle = ""
-    private var noteContent = ""
-    private var survivalGuideContent by mutableStateOf<String?>(null)
-    private var survivalGuideQuery by mutableStateOf("")
-    private var survivalGuideChapters by mutableStateOf(emptyList<GuideDetails>())
-    private var survivalGuideSearchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
-    private var survivalGuideSummary by mutableStateOf("")
-    private var survivalGuideSearchJob: Job? = null
     override var screenController: Any? = null
     internal var mapController: MapControllerHost? = null
     private var resumeCount = 0
@@ -608,34 +598,9 @@ class TrailSenseComposeDestinationHost(
 
     fun onStart() {
         requireMainActivity().registerDestinationHost(this)
-        when (route) {
-            Route.LocalMessaging -> openApp(
-                requireContext(),
-                "com.kylecorry.trail_sense_comms",
-                "4c285dfe-1c8b-45eb-bb79-3f1d2eb6ae48"
-            )
-            Route.LocalTalk -> openApp(
-                requireContext(),
-                "com.kylecorry.trail_sense_comms",
-                "b76f32bf-6a72-4992-a741-0c9bf19ebd11"
-            )
-            Route.CliffHeight -> CustomUiUtils.disclaimer(
-                requireContext(),
-                getString(R.string.disclaimer_message_title),
-                getString(R.string.tool_cliff_height_disclaimer),
-                "cache_dialog_tool_cliff_height",
-                considerShownIfCancelled = true,
-                cancelText = null
-            )
-            is Route.NoteEditor -> promptIfUnsavedChanges(::hasNoteChanges)
-            is Route.SurvivalGuideReader -> loadSurvivalGuideChapter(route.chapterResourceId)
-            is Route.SurvivalGuideList -> initializeSurvivalGuideList(route.searchQuery)
-            else -> Unit
-        }
     }
 
     fun onStop() {
-        survivalGuideSearchJob?.cancel()
         requireMainActivity().unregisterDestinationHost(this)
     }
 
@@ -722,86 +687,6 @@ class TrailSenseComposeDestinationHost(
 
     override fun removeOverlayView(view: View) {
         requireMainActivity().removeOverlayView(view)
-    }
-
-    @Composable
-    internal fun Notes() {
-        NotesScreen(
-            notes = notesRepo.getNotes(),
-            lifecycleOwner = lifecycleOwner,
-            onAdd = {
-                findNavigator().navigate(Route.NoteEditor())
-            },
-            onEdit = ::editNote,
-            onDelete = ::deleteNote,
-            onShowQR = ::showNoteQR
-        )
-    }
-
-    @Composable
-    internal fun NoteEditor(route: Route.NoteEditor) {
-        NoteEditorScreen(
-            noteId = route.editNoteId,
-            loadNote = { notesRepo.getNote(it) },
-            onStateChanged = { newTitle, newContent, note ->
-                noteTitle = newTitle
-                noteContent = newContent
-                editingNote = note
-            },
-            onSave = { newTitle, newContent ->
-                saveNote(newTitle, newContent)
-            }
-        )
-    }
-
-    @Composable
-    internal fun SurvivalGuideReader(route: Route.SurvivalGuideReader) {
-        val chapter = getSurvivalGuideChapter(route.chapterResourceId)
-        SurvivalGuideReaderScreen(
-            chapter = chapter,
-            content = survivalGuideContent,
-            headerIndex = route.headerIndex,
-            canPrint = isDebug(),
-            onPrint = ::printSurvivalGuideChapter
-        )
-    }
-
-    @Composable
-    internal fun SurvivalGuideList() {
-        SurvivalGuideListScreen(
-            query = survivalGuideQuery,
-            listItems = getSurvivalGuideListItems(),
-            summary = survivalGuideSummary,
-            firstResult = survivalGuideSearchResults.firstOrNull(),
-            markdown = DependencyRegistry.get(),
-            onQueryChange = ::updateSurvivalGuideQuery,
-            onSummaryClick = ::openSurvivalGuideSearchResult
-        )
-    }
-
-    @Composable
-    internal fun Pedometer() {
-        val pedometer = remember { PedometerSubsystem.getInstance(requireContext()) }
-        val prefs = remember { UserPreferences(requireContext()) }
-        val formatter = remember { FormatService.getInstance(requireContext()) }
-        PedometerScreen(
-            pedometer = pedometer,
-            prefs = prefs,
-            formatService = formatter,
-            onReset = ::resetPedometer,
-            onTogglePedometer = { togglePedometer(pedometer) },
-            onToggleDistanceAlert = { togglePedometerDistanceAlert(prefs, formatter) }
-        )
-    }
-
-    @Composable
-    internal fun BatteryTool() {
-        BatteryToolScreen(
-            onShowHistory = ::showBatteryHistory,
-            onOpenPowerSettings = {
-                findNavigator().navigate(Route.PowerSettings)
-            }
-        )
     }
 
     @Composable
@@ -1405,40 +1290,6 @@ class TrailSenseComposeDestinationHost(
     }
 
     @Composable
-    internal fun WaterPurification() {
-        val sensorService = remember { SensorService(requireContext()) }
-        val formatService = remember { FormatService.getInstance(requireContext()) }
-        val altimeter = remember { sensorService.getAltimeter() }
-        val cache = remember { PreferencesSubsystem.getInstance(requireContext()).preferences }
-        val waterService = remember { WaterService() }
-        WaterPurificationScreen(
-            cache = cache,
-            formatService = formatService,
-            getSelectedDuration = { selection ->
-                onDefault {
-                    if (selection == TimeSelection.Auto) {
-                        if (!altimeter.hasValidReading) {
-                            withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) {
-                                altimeter.read()
-                            }
-                        }
-
-                        if (altimeter.hasValidReading) {
-                            return@onDefault waterService.getPurificationTime(
-                                Distance.from(altimeter.altitude, DistanceUnits.Meters)
-                            )
-                        }
-                    } else if (selection == TimeSelection.LowAltitude) {
-                        return@onDefault Duration.ofMinutes(1)
-                    }
-
-                    Duration.ofMinutes(3)
-                }
-            }
-        )
-    }
-
-    @Composable
     internal fun PhotoMapSettings() {
         val prefs = remember { UserPreferences(requireContext()).photoMaps }
         var reducePhotoResolution by remember {
@@ -1540,16 +1391,6 @@ class TrailSenseComposeDestinationHost(
                 }
             }
         }
-    }
-
-    @Composable
-    internal fun MirrorCamera() {
-        val flashlight = remember { ScreenTorch(requireActivity().window) }
-        MirrorCameraScreen(
-            onRequestCamera = ::requestCameraForMirror,
-            onResumeScreen = { flashlight.on() },
-            onPauseScreen = { flashlight.off() }
-        )
     }
 
     @Composable
@@ -1757,78 +1598,6 @@ class TrailSenseComposeDestinationHost(
                 }
             }
         }
-    }
-
-    @Composable
-    internal fun GuideList() {
-        GuideListScreen(
-            guides = Guides.guides(requireContext()),
-            onOpenGuide = {
-                tryOrNothing {
-                    findNavigator().navigate(Route.Guide(name = it.name, contents = it.contents))
-                }
-            }
-        )
-    }
-
-    @Composable
-    internal fun Diagnostics() {
-        DiagnosticsScreen(
-            onShowSensorDetails = {
-                findNavigator().navigate(Route.SensorDetails)
-            },
-            onShowDiagnostic = {
-                DiagnosticAlerter(requireContext()).alert(it) { action ->
-                    action.action(requireContext(), findNavigator())
-                }
-            },
-            onExportLogs = {
-                DownloadDiagnosticsLogsCommand(this).execute()
-            }
-        )
-    }
-
-    @Composable
-    internal fun ErrorHandler(route: Route.ErrorHandler) {
-        val toolId = route.toolId
-        val errorDetails = route.error
-        val appNavigator = findNavigator()
-        ErrorHandlerScreen(
-            toolId = toolId,
-            onEmail = {
-                startActivity(
-                    Intents.email(
-                        getString(R.string.email),
-                        "Error in ${getString(R.string.app_name)}",
-                        errorDetails
-                    )
-                )
-            },
-            onCopyError = {
-                Clipboard.copy(
-                    requireContext(),
-                    errorDetails,
-                    getString(R.string.copied_to_clipboard_toast)
-                )
-            },
-            onViewDetails = {
-                Alerts.dialog(
-                    requireContext(),
-                    getString(R.string.error_occurred),
-                    errorDetails,
-                    cancelText = null
-                )
-            },
-            onReopenTool = {
-                Tools.getTool(requireContext(), toolId)?.let { appNavigator.navigate(it.route) }
-            },
-            onRestartApp = {
-                CurrentApp.restart(requireContext())
-            },
-            onOpenSettings = {
-                appNavigator.navigate(Route.Settings)
-            }
-        )
     }
 
     @Composable
@@ -2496,16 +2265,6 @@ class TrailSenseComposeDestinationHost(
         )
     }
 
-    private fun openApp(context: Context, packageName: String, tool: String) {
-        if (!Package.isPackageInstalled(context, packageName)) return
-        val intent = context.packageManager.getLaunchIntentForPackage(packageName) ?: return
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        intent.putExtras(Bundle().apply {
-            putString("tool", tool)
-        })
-        context.startActivity(intent)
-    }
-
     private fun showLicense(library: Library) {
         val content = (library.url + "\n\n" + library.license()).toSpannable()
         LinkifyCompat.addLinks(content, WEB_URLS)
@@ -2690,26 +2449,6 @@ class TrailSenseComposeDestinationHost(
             getString(R.string.reduce_map_resolution_crop_disclaimer_shown),
             cancelText = null
         )
-    }
-
-    internal fun requestCameraForMagnifier(action: (hasPermission: Boolean) -> Unit) {
-        requestPermissions(listOf(Manifest.permission.CAMERA)) {
-            val isAvailable = Camera.isAvailable(requireContext())
-            if (!isAvailable) {
-                alertNoCameraPermission()
-            }
-            action(isAvailable)
-        }
-    }
-
-    private fun requestCameraForMirror(action: (hasPermission: Boolean) -> Unit) {
-        requestPermissions(listOf(Manifest.permission.CAMERA)) {
-            val isAvailable = Permissions.isCameraEnabled(requireContext())
-            if (!isAvailable) {
-                alertNoCameraPermission()
-            }
-            action(isAvailable)
-        }
     }
 
     private fun backup() {
@@ -3099,307 +2838,6 @@ class TrailSenseComposeDestinationHost(
 
     private fun openPluginDetails(plugin: Plugin) {
         findNavigator().navigate(Route.PluginDetails(packageId = plugin.packageId))
-    }
-
-    private fun showNoteQR(note: Note) {
-        CustomUiUtils.showQR(
-            requireContext(),
-            findNavigator(),
-            note.title ?: getString(android.R.string.untitled),
-            NoteQREncoder().encode(note)
-        )
-    }
-
-    private fun deleteNote(note: Note) {
-        Alerts.dialog(
-            requireContext(),
-            getString(R.string.delete_note_title),
-            if (note.title?.trim().isNullOrEmpty()) {
-                getString(android.R.string.untitled)
-            } else {
-                note.title
-            }
-        ) { cancelled ->
-            if (!cancelled) {
-                lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    notesRepo.deleteNote(note)
-                }
-            }
-        }
-    }
-
-    private fun editNote(note: Note) {
-        findNavigator().navigate(Route.NoteEditor(editNoteId = note.id))
-    }
-
-    private suspend fun saveNote(title: String, content: String) {
-        val existingNote = editingNote
-        val note = existingNote?.copy(title = title, contents = content)
-            ?.apply { id = existingNote.id }
-            ?: Note(title, content, Instant.now().toEpochMilli())
-        withContext(Dispatchers.IO) {
-            notesRepo.addNote(note)
-        }
-        withContext(Dispatchers.Main) {
-            findNavigator().navigateUp()
-        }
-    }
-
-    private fun hasNoteChanges(): Boolean {
-        return !nothingEnteredForNote() &&
-                (noteTitle != editingNote?.title.orEmpty() ||
-                        noteContent != editingNote?.contents.orEmpty())
-    }
-
-    private fun nothingEnteredForNote(): Boolean {
-        if (editingNote != null) {
-            return false
-        }
-
-        return noteTitle.isBlank() && noteContent.isBlank()
-    }
-
-    private fun getSurvivalGuideChapter(chapterResourceId: Int): Chapter {
-        return Chapters.getChapters(requireContext()).first { it.resource == chapterResourceId }
-    }
-
-    private fun loadSurvivalGuideChapter(chapterResourceId: Int) {
-        lifecycleOwner.lifecycleScope.launch {
-            survivalGuideContent = withContext(Dispatchers.IO) {
-                TextUtils.loadTextFromResources(requireContext(), chapterResourceId)
-            }
-        }
-    }
-
-    private fun printSurvivalGuideChapter(chapter: Chapter) {
-        val context = requireContext()
-        val files = FileSubsystem.getInstance(context)
-        val markdown = DependencyRegistry.get<com.kylecorry.andromeda.markdown.MarkdownService>()
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val loading = withContext(Dispatchers.Main) {
-                Alerts.loading(context, getString(R.string.loading))
-            }
-            try {
-                val printer = Printer(context)
-                printer.setColorMode(ColorMode.Color)
-                printer.setScaleMode(ScaleMode.Fit)
-                printer.setOrientation(Orientation.Portrait)
-                val content = TextUtils.removeMarkdownComments(
-                    "# ${chapter.title}\n" + TextUtils.loadTextFromResources(
-                        context,
-                        chapter.resource
-                    )
-                )
-                val file = files.createTemp("pdf")
-                val parsed = markdown.toMarkdown(content)
-                val textView = TextView(context)
-                textView.textSize = 6f
-                textView.setTextColor(AndroidColor.BLACK)
-                markdown.setParsedMarkdown(textView, parsed)
-                delay(2000)
-                val uri = file.toUri()
-                files.output(uri)?.use {
-                    PdfConvert.toPdf(textView, it)
-                }
-                withContext(Dispatchers.Main) {
-                    printer.print(uri)
-                }
-            } finally {
-                DeleteTempFilesCommand(context).execute()
-                withContext(Dispatchers.Main) {
-                    loading.dismiss()
-                }
-            }
-        }
-    }
-
-    private fun initializeSurvivalGuideList(searchQuery: String) {
-        survivalGuideQuery = searchQuery
-        CustomUiUtils.disclaimer(
-            requireContext(),
-            getString(R.string.survival_guide),
-            getString(R.string.survival_guide_disclaimer),
-            "pref_survival_guide_disclaimer_shown",
-            cancelText = null
-        )
-        requireActivity().onBackPressedDispatcher.addCallback(
-            lifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (survivalGuideQuery.isNotBlank()) {
-                        updateSurvivalGuideQuery("")
-                    } else {
-                        isEnabled = false
-                        requireActivity().onBackPressedDispatcher.onBackPressed()
-                    }
-                }
-            }
-        )
-        loadSurvivalGuideChapters()
-        if (survivalGuideQuery.isNotBlank()) {
-            searchSurvivalGuide(survivalGuideQuery)
-        }
-    }
-
-    private fun loadSurvivalGuideChapters() {
-        lifecycleOwner.lifecycleScope.launch {
-            survivalGuideChapters = GuideLoader(requireContext()).load(includeContent = false)
-        }
-    }
-
-    private fun updateSurvivalGuideQuery(value: String) {
-        if (survivalGuideQuery == value) {
-            return
-        }
-        survivalGuideQuery = value
-        searchSurvivalGuide(value)
-    }
-
-    private fun searchSurvivalGuide(value: String) {
-        survivalGuideSearchJob?.cancel()
-        if (value.isBlank()) {
-            survivalGuideSearchResults = emptyList()
-            survivalGuideSummary = ""
-            return
-        }
-        val searchService = SurvivalGuideSearch(requireContext())
-        survivalGuideSearchJob = lifecycleOwner.lifecycleScope.launch {
-            delay(200)
-            val results = searchService.search(value)
-            if (survivalGuideQuery != value) {
-                return@launch
-            }
-            survivalGuideSearchResults = results
-            val firstResult = results.firstOrNull()
-            survivalGuideSummary = if (firstResult != null && firstResult.score >= 0.5f) {
-                searchService.getSummary(firstResult)
-            } else {
-                ""
-            }
-        }
-    }
-
-    private fun getSurvivalGuideListItems(): List<SurvivalGuideListItem> {
-        return if (survivalGuideQuery.isBlank() || survivalGuideSearchResults.isEmpty()) {
-            survivalGuideChapters.map {
-                SurvivalGuideListItem(
-                    id = it.chapter.resource.toLong(),
-                    title = it.chapter.title,
-                    subtitle = it.sections.firstOrNull()?.summary,
-                    icon = it.chapter.icon,
-                    tag = null,
-                    onClick = { openSurvivalGuideChapter(it.chapter.resource) }
-                )
-            }
-        } else {
-            survivalGuideSearchResults.map {
-                SurvivalGuideListItem(
-                    id = it.chapter.resource.toLong(),
-                    title = it.heading ?: getString(R.string.overview),
-                    subtitle = it.summary,
-                    icon = it.chapter.icon,
-                    tag = it.chapter.title,
-                    onClick = { openSurvivalGuideSearchResult(it) }
-                )
-            }
-        }
-    }
-
-    private fun openSurvivalGuideChapter(chapterResource: Int) {
-        findNavigator().navigate(Route.SurvivalGuideReader(chapterResourceId = chapterResource))
-    }
-
-    private fun openSurvivalGuideSearchResult(result: SurvivalGuideSearchResult) {
-        findNavigator().navigate(Route.SurvivalGuideReader(chapterResourceId = result.chapter.resource, headerIndex = result.headingIndex))
-    }
-
-    private fun resetPedometer() {
-        Alerts.dialog(requireContext(), getString(R.string.reset_distance_title)) {
-            if (!it) {
-                lifecycleOwner.lifecycleScope.launch {
-                    getAppService<StepTrackerService>().startNewStepTrackingPeriod()
-                }
-            }
-        }
-    }
-
-    private fun togglePedometer(pedometer: PedometerSubsystem) {
-        when (pedometer.state.getOrNull()) {
-            FeatureState.On -> pedometer.disable()
-            FeatureState.Off -> startStepCounter(pedometer)
-            else -> {
-                if (pedometer.isDisabledDueToPermissions()) {
-                    startStepCounter(pedometer)
-                }
-            }
-        }
-    }
-
-    private fun togglePedometerDistanceAlert(prefs: UserPreferences, formatter: FormatService) {
-        val alertDistance = prefs.pedometer.alertDistance
-        if (alertDistance == null) {
-            val units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
-            CustomUiUtils.pickDistance(
-                requireContext(),
-                units,
-                title = getString(R.string.distance_alert),
-            ) { distance, _ ->
-                if (distance != null) {
-                    prefs.pedometer.alertDistance = distance
-                }
-            }
-        } else {
-            val distance = alertDistance.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
-            Alerts.dialog(
-                requireContext(),
-                getString(R.string.distance_alert),
-                getString(
-                    R.string.remove_distance_alert,
-                    formatter.formatDistance(
-                        distance,
-                        Units.getDecimalPlaces(distance.units),
-                        false
-                    )
-                )
-            ) {
-                if (!it) {
-                    prefs.pedometer.alertDistance = null
-                }
-            }
-        }
-    }
-
-    private fun startStepCounter(pedometer: PedometerSubsystem) {
-        requestActivityRecognition { hasPermission ->
-            if (hasPermission) {
-                pedometer.enable()
-            } else {
-                pedometer.disable()
-                alertNoActivityRecognitionPermission()
-            }
-        }
-    }
-
-    private fun showBatteryHistory(readings: List<BatteryReading>, formatter: FormatService) {
-        val readingDuration = Duration.between(
-            readings.firstOrNull()?.time,
-            readings.lastOrNull()?.time
-        )
-        CustomUiUtils.showComposeContentDialog(
-            context = requireContext(),
-            title = getString(R.string.battery_history, formatter.formatDuration(readingDuration, false))
-        ) {
-            TrailSenseLineChart(
-                readings = readings.map {
-                    Reading(it.percent, it.time)
-                },
-                minimum = 0f,
-                maximum = 100f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
-            )
-        }
     }
 
     private data class PluginSettingsState(

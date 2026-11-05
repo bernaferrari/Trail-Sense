@@ -76,6 +76,20 @@ import com.kylecorry.trail_sense.tools.weather.ui.WeatherSettingsToolScreen
 import com.kylecorry.trail_sense.tools.weather.ui.WeatherToolScreen
 import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 
+import com.kylecorry.trail_sense.main.errors.ErrorHandlerToolScreen
+import com.kylecorry.trail_sense.tools.guide.ui.GuideListToolScreen
+import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsToolScreen
+import com.kylecorry.trail_sense.tools.cliffheight.ui.CliffHeightToolScreen
+import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierToolScreen
+import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraToolScreen
+import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationToolScreen
+import com.kylecorry.trail_sense.tools.notes.ui.NotesToolScreen
+import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorToolScreen
+import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideReaderToolScreen
+import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideListToolScreen
+import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerToolScreen
+import com.kylecorry.trail_sense.tools.battery.ui.BatteryToolScreen
+import com.kylecorry.trail_sense.tools.comms.TrailSenseCommsToolScreen
 /**
  * Extracted destination dispatch logic.
  * Renders the screen for a [Route]. The `when` is exhaustive, so a new route without a screen doesn't compile.
@@ -115,9 +129,9 @@ fun DestinationContent(
                 resource = route.contents
             )
             Route.Experimentation -> ExperimentationContent()
-            is Route.ErrorHandler -> ErrorHandler(route)
-            Route.GuideList -> GuideList()
-            Route.Diagnostics -> Diagnostics()
+            is Route.ErrorHandler -> ErrorHandlerToolScreen(this, route)
+            Route.GuideList -> GuideListToolScreen(this)
+            Route.Diagnostics -> DiagnosticsToolScreen(this)
 
             // --- Settings screens (many defined as internal composables on host) ---
             Route.CellSignalSettings -> CellSignalSettings()
@@ -165,20 +179,10 @@ fun DestinationContent(
             )
 
             // --- Special init destinations with lambdas (still dispatch here for visual) ---
-            Route.CliffHeight -> CliffHeightScreen(
-                onOpenGuide = {
-                    UserGuideUtils.showGuide(
-                        requireContext(),
-                        findNavigator(),
-                        R.raw.guide_tool_cliff_height
-                    )
-                }
-            )
-            Route.Magnifier -> MagnifierScreen(
-                onRequestCamera = ::requestCameraForMagnifier
-            )
-            Route.MirrorCamera -> MirrorCamera()
-            Route.WaterPurification -> WaterPurification()
+            Route.CliffHeight -> CliffHeightToolScreen(this)
+            Route.Magnifier -> MagnifierToolScreen(this)
+            Route.MirrorCamera -> MirrorCameraToolScreen(this)
+            Route.WaterPurification -> WaterPurificationToolScreen(this)
             is Route.PluginDetails -> PluginDetailsScreen(
                 packageId = route.packageId,
                 pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
@@ -192,13 +196,13 @@ fun DestinationContent(
             // --- Thin host wrappers (stateful, stay in host file) ---
             Route.Tools -> ToolsHomeScreen(this)
             Route.ScreenFlashlight -> ScreenFlashlightToolScreen(this)
-            Route.Notes -> Notes()
-            is Route.NoteEditor -> NoteEditor(route)
-            is Route.SurvivalGuideReader -> SurvivalGuideReader(route)
-            is Route.SurvivalGuideList -> SurvivalGuideList()
-            Route.Pedometer -> Pedometer()
+            Route.Notes -> NotesToolScreen(this)
+            is Route.NoteEditor -> NoteEditorToolScreen(this, route)
+            is Route.SurvivalGuideReader -> SurvivalGuideReaderToolScreen(this, route)
+            is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(this, route)
+            Route.Pedometer -> PedometerToolScreen(this)
             Route.Flashlight -> FlashlightToolScreen(this)
-            Route.Battery -> BatteryTool()
+            Route.Battery -> BatteryToolScreen(this)
 
             // --- Tool screens that receive the host for callbacks / services ---
             Route.Triangulate -> TriangulateToolScreen(this)
@@ -251,8 +255,8 @@ fun DestinationContent(
                 onController = { screenController = it }
             )
             Route.Weather -> WeatherToolScreen(this)
-            // These open the companion app (TrailSenseComposeDestinationHost.onStart) and draw nothing here.
-            Route.LocalMessaging, Route.LocalTalk -> Unit
+            Route.LocalMessaging -> TrailSenseCommsToolScreen(this, "4c285dfe-1c8b-45eb-bb79-3f1d2eb6ae48")
+            Route.LocalTalk -> TrailSenseCommsToolScreen(this, "b76f32bf-6a72-4992-a741-0c9bf19ebd11")
         }
     }
 }

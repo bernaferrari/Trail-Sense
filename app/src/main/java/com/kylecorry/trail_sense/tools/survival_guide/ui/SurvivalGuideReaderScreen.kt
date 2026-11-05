@@ -72,6 +72,25 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
+import android.graphics.Color as AndroidColor
+import android.widget.TextView
+import androidx.core.net.toUri
+import com.kylecorry.andromeda.pdf.PdfConvert
+import com.kylecorry.andromeda.print.ColorMode
+import com.kylecorry.andromeda.print.Orientation
+import com.kylecorry.andromeda.print.Printer
+import com.kylecorry.andromeda.print.ScaleMode
+import com.kylecorry.trail_sense.shared.debugging.isDebug
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
+import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * One survival guide chapter: the chapter's introduction as plain reading text, then its sections as one group of
@@ -348,4 +367,82 @@ private fun ReaderHero(@Suppress("UNUSED_PARAMETER") chapter: Chapter, sections:
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)
     )
+}
+
+/** A survival guide chapter for [Route.SurvivalGuideReader], scrolled to its heading; debug builds can print it. */
+@Composable
+fun SurvivalGuideReaderToolScreen(host: TrailSenseDestinationHost, route: Route.SurvivalGuideReader) {
+    val controller = remember(host) { SurvivalGuideReaderController(host, route.chapterResourceId) }
+    LaunchedEffect(controller) {
+        controller.load()
+    }
+    SurvivalGuideReaderScreen(
+        chapter = controller.chapter,
+        content = controller.content,
+        headerIndex = route.headerIndex,
+        canPrint = isDebug(),
+        onPrint = controller::print
+    )
+}
+
+private class SurvivalGuideReaderController(
+    private val host: TrailSenseDestinationHost,
+    private val chapterResourceId: Int
+) {
+    val chapter by lazy {
+        Chapters.getChapters(host.requireContext()).first { it.resource == chapterResourceId }
+    }
+
+    var content by mutableStateOf<String?>(null)
+        private set
+
+    fun load() {
+        host.lifecycleScope.launch {
+            content = withContext(Dispatchers.IO) {
+                TextUtils.loadTextFromResources(host.requireContext(), chapterResourceId)
+            }
+        }
+    }
+
+    fun print(chapter: Chapter) {
+        val context = host.requireContext()
+        val files = FileSubsystem.getInstance(context)
+        val markdown = DependencyRegistry.get<MarkdownService>()
+        host.lifecycleScope.launch(Dispatchers.IO) {
+            val loading = withContext(Dispatchers.Main) {
+                Alerts.loading(context, host.getString(R.string.loading))
+            }
+            try {
+                val printer = Printer(context)
+                printer.setColorMode(ColorMode.Color)
+                printer.setScaleMode(ScaleMode.Fit)
+                printer.setOrientation(Orientation.Portrait)
+                val content = TextUtils.removeMarkdownComments(
+                    "# ${chapter.title}\n" + TextUtils.loadTextFromResources(
+                        context,
+                        chapter.resource
+                    )
+                )
+                val file = files.createTemp("pdf")
+                val parsed = markdown.toMarkdown(content)
+                val textView = TextView(context)
+                textView.textSize = 6f
+                textView.setTextColor(AndroidColor.BLACK)
+                markdown.setParsedMarkdown(textView, parsed)
+                delay(2000)
+                val uri = file.toUri()
+                files.output(uri)?.use {
+                    PdfConvert.toPdf(textView, it)
+                }
+                withContext(Dispatchers.Main) {
+                    printer.print(uri)
+                }
+            } finally {
+                DeleteTempFilesCommand(context).execute()
+                withContext(Dispatchers.Main) {
+                    loading.dismiss()
+                }
+            }
+        }
+    }
 }

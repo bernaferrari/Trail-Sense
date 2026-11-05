@@ -129,13 +129,19 @@ import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.absoluteValue
+import android.content.Context
+import androidx.compose.ui.res.dimensionResource
+import com.kylecorry.sol.units.Reading
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 private const val CURRENT_FILTER_SIZE = 100
 
 @Composable
 fun BatteryToolScreen(
-    onShowHistory: (List<BatteryReading>, FormatService) -> Unit,
-    onOpenPowerSettings: () -> Unit,
+    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -216,7 +222,7 @@ fun BatteryToolScreen(
 
     fun showHistory() {
         if (prefs.power.enableBatteryLog) {
-            onShowHistory(readings, formatter)
+            showBatteryHistory(context, readings, formatter)
         } else {
             Alerts.dialog(
                 context,
@@ -225,7 +231,7 @@ fun BatteryToolScreen(
                 okText = context.getString(R.string.settings),
                 onClose = {
                     if (!it) {
-                        onOpenPowerSettings()
+                        host.findNavigator().navigate(Route.PowerSettings)
                     }
                 }
             )
@@ -872,5 +878,27 @@ private fun getBatteryUsage(service: RunningService): BatteryUsage {
         service.frequency < Duration.ofMinutes(15) -> BatteryUsage.High
         service.frequency <= Duration.ofMinutes(25) -> BatteryUsage.Moderate
         else -> BatteryUsage.Low
+    }
+}
+
+private fun showBatteryHistory(context: Context, readings: List<BatteryReading>, formatter: FormatService) {
+    val readingDuration = Duration.between(
+        readings.firstOrNull()?.time,
+        readings.lastOrNull()?.time
+    )
+    CustomUiUtils.showComposeContentDialog(
+        context = context,
+        title = context.getString(R.string.battery_history, formatter.formatDuration(readingDuration, false))
+    ) {
+        TrailSenseLineChart(
+            readings = readings.map {
+                Reading(it.percent, it.time)
+            },
+            minimum = 0f,
+            maximum = 100f,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.chart_height))
+        )
     }
 }

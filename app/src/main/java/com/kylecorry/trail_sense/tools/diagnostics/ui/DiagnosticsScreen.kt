@@ -108,6 +108,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiag
 import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 /** How long to wait for every scanner to report before the screen stops saying it's still checking. */
 private const val DIAGNOSTICS_SETTLE_MILLIS = 3000L
@@ -381,4 +383,22 @@ private fun statusIcon(severity: ToolDiagnosticSeverity): ImageVector {
         ToolDiagnosticSeverity.Error -> Icons.Default.ErrorOutline
         ToolDiagnosticSeverity.Warning -> Icons.Default.WarningAmber
     }
+}
+
+/** Diagnostics: what is wrong with the sensors and permissions, each with its fix, and the logs to export. */
+@Composable
+fun DiagnosticsToolScreen(host: TrailSenseDestinationHost) {
+    DiagnosticsScreen(
+        onShowSensorDetails = {
+            host.findNavigator().navigate(Route.SensorDetails)
+        },
+        onShowDiagnostic = {
+            DiagnosticAlerter(host.requireContext()).alert(it) { action ->
+                action.action(host.requireContext(), host.findNavigator())
+            }
+        },
+        onExportLogs = {
+            DownloadDiagnosticsLogsCommand(host).execute()
+        }
+    )
 }

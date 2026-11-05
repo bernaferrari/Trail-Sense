@@ -67,6 +67,9 @@ import com.kylecorry.trail_sense.tools.cliffheight.domain.CliffHeightService
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
 /**
  * Cliff height, in the boiler's shape: the cliff itself is the object. A stone falls down its face in real time
@@ -381,4 +384,28 @@ private fun formatElapsed(startTime: Instant?): String {
     val start = startTime ?: return ""
     val millis = Duration.between(start, Instant.now()).toMillis().coerceAtLeast(0)
     return String.format("%.1fs", millis / 1000f)
+}
+
+/** The cliff height tool, which shows its disclaimer once on the way in. */
+@Composable
+fun CliffHeightToolScreen(host: TrailSenseDestinationHost) {
+    LaunchedEffect(host) {
+        CustomUiUtils.disclaimer(
+            host.requireContext(),
+            host.getString(R.string.disclaimer_message_title),
+            host.getString(R.string.tool_cliff_height_disclaimer),
+            "cache_dialog_tool_cliff_height",
+            considerShownIfCancelled = true,
+            cancelText = null
+        )
+    }
+    CliffHeightScreen(
+        onOpenGuide = {
+            UserGuideUtils.showGuide(
+                host.requireContext(),
+                host.findNavigator(),
+                R.raw.guide_tool_cliff_height
+            )
+        }
+    )
 }

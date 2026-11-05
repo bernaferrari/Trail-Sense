@@ -56,6 +56,21 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
+import androidx.activity.OnBackPressedCallback
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideLoader
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 data class SurvivalGuideListItem(
     val id: Long,
@@ -261,4 +276,141 @@ private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
             null
         }
     ).joinToString(" › ")
+}
+
+/** The survival guide's chapters, or the search results for its query; back clears the query first. */
+@Composable
+fun SurvivalGuideListToolScreen(host: TrailSenseDestinationHost, route: Route.SurvivalGuideList) {
+    val controller = remember(host) { SurvivalGuideListController(host) }
+    DisposableEffect(controller) {
+        controller.start(route.searchQuery)
+        onDispose {
+            controller.stop()
+        }
+    }
+    SurvivalGuideListScreen(
+        query = controller.query,
+        listItems = controller.listItems(),
+        summary = controller.summary,
+        firstResult = controller.searchResults.firstOrNull(),
+        markdown = DependencyRegistry.get(),
+        onQueryChange = controller::updateQuery,
+        onSummaryClick = controller::openSearchResult
+    )
+}
+
+private class SurvivalGuideListController(private val host: TrailSenseDestinationHost) {
+    var query by mutableStateOf("")
+        private set
+    var summary by mutableStateOf("")
+        private set
+    var searchResults by mutableStateOf(emptyList<SurvivalGuideSearchResult>())
+        private set
+    private var chapters by mutableStateOf(emptyList<GuideDetails>())
+    private var searchJob: Job? = null
+
+    fun start(searchQuery: String) {
+        query = searchQuery
+        CustomUiUtils.disclaimer(
+            host.requireContext(),
+            host.getString(R.string.survival_guide),
+            host.getString(R.string.survival_guide_disclaimer),
+            "pref_survival_guide_disclaimer_shown",
+            cancelText = null
+        )
+        host.mainActivity.onBackPressedDispatcher.addCallback(
+            host.lifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (query.isNotBlank()) {
+                        updateQuery("")
+                    } else {
+                        isEnabled = false
+                        host.mainActivity.onBackPressedDispatcher.onBackPressed()
+                    }
+                }
+            }
+        )
+        host.lifecycleScope.launch {
+            chapters = GuideLoader(host.requireContext()).load(includeContent = false)
+        }
+        if (query.isNotBlank()) {
+            search(query)
+        }
+    }
+
+    fun stop() {
+        searchJob?.cancel()
+    }
+
+    fun updateQuery(value: String) {
+        if (query == value) {
+            return
+        }
+        query = value
+        search(value)
+    }
+
+    private fun search(value: String) {
+        searchJob?.cancel()
+        if (value.isBlank()) {
+            searchResults = emptyList()
+            summary = ""
+            return
+        }
+        val searchService = SurvivalGuideSearch(host.requireContext())
+        searchJob = host.lifecycleScope.launch {
+            delay(200)
+            val results = searchService.search(value)
+            if (query != value) {
+                return@launch
+            }
+            searchResults = results
+            val firstResult = results.firstOrNull()
+            summary = if (firstResult != null && firstResult.score >= 0.5f) {
+                searchService.getSummary(firstResult)
+            } else {
+                ""
+            }
+        }
+    }
+
+    fun listItems(): List<SurvivalGuideListItem> {
+        return if (query.isBlank() || searchResults.isEmpty()) {
+            chapters.map {
+                SurvivalGuideListItem(
+                    id = it.chapter.resource.toLong(),
+                    title = it.chapter.title,
+                    subtitle = it.sections.firstOrNull()?.summary,
+                    icon = it.chapter.icon,
+                    tag = null,
+                    onClick = { openChapter(it.chapter.resource) }
+                )
+            }
+        } else {
+            searchResults.map {
+                SurvivalGuideListItem(
+                    id = it.chapter.resource.toLong(),
+                    title = it.heading ?: host.getString(R.string.overview),
+                    subtitle = it.summary,
+                    icon = it.chapter.icon,
+                    tag = it.chapter.title,
+                    onClick = { openSearchResult(it) }
+                )
+            }
+        }
+    }
+
+    private fun openChapter(chapterResource: Int) {
+        host.findNavigator().navigate(Route.SurvivalGuideReader(chapterResourceId = chapterResource))
+    }
+
+    fun openSearchResult(result: SurvivalGuideSearchResult) {
+        host.findNavigator().navigate(
+            Route.SurvivalGuideReader(
+                chapterResourceId = result.chapter.resource,
+                headerIndex = result.headingIndex
+            )
+        )
+    }
 }

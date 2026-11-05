@@ -133,6 +133,9 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.DistanceUtils
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 /**
  * Pedometer, an instrument like the boil timer. One question: how far have I walked? A ring of footprints holds the
@@ -986,3 +989,90 @@ private data class PedometerDataPoint(
     val label: String,
     val icon: ImageVector
 )
+
+/** The Pedometer tool: today's steps and distance, with the counter, the reset and the distance alert. */
+@Composable
+fun PedometerToolScreen(host: TrailSenseDestinationHost) {
+    val controller = remember(host) { PedometerController(host) }
+    PedometerScreen(
+        pedometer = controller.pedometer,
+        prefs = controller.prefs,
+        formatService = controller.formatter,
+        onReset = controller::reset,
+        onTogglePedometer = controller::togglePedometer,
+        onToggleDistanceAlert = controller::toggleDistanceAlert
+    )
+}
+
+private class PedometerController(private val host: TrailSenseDestinationHost) {
+    val pedometer = PedometerSubsystem.getInstance(host.requireContext())
+    val prefs = UserPreferences(host.requireContext())
+    val formatter = FormatService.getInstance(host.requireContext())
+
+    fun reset() {
+        Alerts.dialog(host.requireContext(), host.getString(R.string.reset_distance_title)) {
+            if (!it) {
+                host.lifecycleScope.launch {
+                    getAppService<StepTrackerService>().startNewStepTrackingPeriod()
+                }
+            }
+        }
+    }
+
+    fun togglePedometer() {
+        when (pedometer.state.getOrNull()) {
+            FeatureState.On -> pedometer.disable()
+            FeatureState.Off -> startStepCounter()
+            else -> {
+                if (pedometer.isDisabledDueToPermissions()) {
+                    startStepCounter()
+                }
+            }
+        }
+    }
+
+    fun toggleDistanceAlert() {
+        val alertDistance = prefs.pedometer.alertDistance
+        if (alertDistance == null) {
+            val units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
+            CustomUiUtils.pickDistance(
+                host.requireContext(),
+                units,
+                title = host.getString(R.string.distance_alert),
+            ) { distance, _ ->
+                if (distance != null) {
+                    prefs.pedometer.alertDistance = distance
+                }
+            }
+        } else {
+            val distance = alertDistance.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
+            Alerts.dialog(
+                host.requireContext(),
+                host.getString(R.string.distance_alert),
+                host.getString(
+                    R.string.remove_distance_alert,
+                    formatter.formatDistance(
+                        distance,
+                        Units.getDecimalPlaces(distance.units),
+                        false
+                    )
+                )
+            ) {
+                if (!it) {
+                    prefs.pedometer.alertDistance = null
+                }
+            }
+        }
+    }
+
+    private fun startStepCounter() {
+        host.requestActivityRecognition { hasPermission ->
+            if (hasPermission) {
+                pedometer.enable()
+            } else {
+                pedometer.disable()
+                host.alertNoActivityRecognitionPermission()
+            }
+        }
+    }
+}

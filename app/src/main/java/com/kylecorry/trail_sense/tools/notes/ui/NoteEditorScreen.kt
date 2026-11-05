@@ -35,6 +35,12 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.DisposableEffect
+import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
+import java.time.Instant
 
 /**
  * The note editor: the title and the contents as one grouped object, the contents roomy enough to write in, and Save
@@ -126,3 +132,64 @@ fun NoteEditorScreen(
     }
 }
 
+/** The note editor for [Route.NoteEditor]; back asks before dropping unsaved changes. */
+@Composable
+fun NoteEditorToolScreen(host: TrailSenseDestinationHost, route: Route.NoteEditor) {
+    val controller = remember(host) { NoteEditorController(host) }
+    DisposableEffect(controller) {
+        val callback = host.promptIfUnsavedChanges(controller::hasChanges)
+        onDispose {
+            callback.remove()
+        }
+    }
+    NoteEditorScreen(
+        noteId = route.editNoteId,
+        loadNote = controller::loadNote,
+        onStateChanged = controller::onStateChanged,
+        onSave = controller::save
+    )
+}
+
+private class NoteEditorController(private val host: TrailSenseDestinationHost) {
+    private val repo by lazy { NoteRepo.getInstance(host.requireContext()) }
+    private var editingNote: Note? = null
+    private var title = ""
+    private var content = ""
+
+    suspend fun loadNote(id: Long): Note? {
+        return repo.getNote(id)
+    }
+
+    fun onStateChanged(title: String, content: String, note: Note?) {
+        this.title = title
+        this.content = content
+        editingNote = note
+    }
+
+    suspend fun save(title: String, content: String) {
+        val existingNote = editingNote
+        val note = existingNote?.copy(title = title, contents = content)
+            ?.apply { id = existingNote.id }
+            ?: Note(title, content, Instant.now().toEpochMilli())
+        withContext(Dispatchers.IO) {
+            repo.addNote(note)
+        }
+        withContext(Dispatchers.Main) {
+            host.findNavigator().navigateUp()
+        }
+    }
+
+    fun hasChanges(): Boolean {
+        return !nothingEntered() &&
+                (title != editingNote?.title.orEmpty() ||
+                        content != editingNote?.contents.orEmpty())
+    }
+
+    private fun nothingEntered(): Boolean {
+        if (editingNote != null) {
+            return false
+        }
+
+        return title.isBlank() && content.isBlank()
+    }
+}

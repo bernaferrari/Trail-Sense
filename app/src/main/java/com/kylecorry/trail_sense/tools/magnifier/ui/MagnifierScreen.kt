@@ -66,6 +66,7 @@ import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
 internal fun MagnifierScreen(
@@ -296,3 +297,18 @@ private fun MagnifierToggle(
 }
 
 private const val ZOOM_STEP = 0.1f
+
+/** The magnifier: the back camera, zoomed in, once the camera is allowed. */
+@Composable
+fun MagnifierToolScreen(host: TrailSenseDestinationHost) {
+    MagnifierScreen(
+        onRequestCamera = { action ->
+            host.requestCamera { isAvailable ->
+                if (!isAvailable) {
+                    host.alertNoCameraPermission()
+                }
+                action(isAvailable)
+            }
+        }
+    )
+}
