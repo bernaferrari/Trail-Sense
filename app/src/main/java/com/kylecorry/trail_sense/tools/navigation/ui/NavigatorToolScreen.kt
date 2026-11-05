@@ -5,34 +5,26 @@ import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import android.content.Context
-import android.os.Bundle
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,36 +38,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
-import androidx.lifecycle.observe
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.geography.projections.AzimuthalEquidistantProjection
 import com.kylecorry.sol.units.CompassDirection
 import com.kylecorry.sol.units.Coordinate
@@ -96,18 +74,14 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheet
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
-import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
@@ -129,25 +103,42 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import android.content.ContextWrapper
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.navigation.RouteLocation
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.shareLocation
+import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.Instant
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavigatorToolScreen(
     route: Route.Navigation,
@@ -155,295 +146,61 @@ fun NavigatorToolScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val navigator = LocalNavigator.current
+    val appContext = context.applicationContext
+    val appNavigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(lifecycleOwner) {
-        NavigatorController(context, navigator, effects, lifecycleOwner, route, quickActionHost)
-    }
-
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        val userPrefs = UserPreferences(appContext)
+        val sensors = NavigatorSensors(SensorService(appContext), userPrefs)
+        NavigatorViewModel(
+            route = route,
+            sensors = sensors,
+            navigator = Navigator.getInstance(appContext),
+            beaconRepo = BeaconRepo.getInstance(appContext),
+            pathService = PathService.getInstance(appContext),
+            weatherRepo = WeatherRepo.getInstance(appContext),
+            prefs = userPrefs.navigation,
+            useTrueNorth = userPrefs.compass.useTrueNorth,
+            diagnostics = listOf(
+                GPSDiagnosticScanner(sensors.gps).fullScan(appContext),
+                MagnetometerDiagnosticScanner().fullScan(appContext)
+            ),
+            debugElevations = { readings, smoothed ->
+                DebugElevationsCommand(appContext, readings, smoothed).execute()
             }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
-        }
+        )
     }
-
-    controller.Content(modifier = modifier.fillMaxSize())
-}
-
-/**
- * The compass: Android views (the dials, the radar map) driven by sensors, so it lives with the screen rather than in
- * a ViewModel. [quickActionHost] is only handed to the quick action buttons, whose shared factory still takes a host.
- */
-private class NavigatorController(
-    private val context: Context,
-    private val appNavigator: TrailSenseNavigator,
-    private val effects: ScreenEffects,
-    private val lifecycleOwner: LifecycleOwner,
-    private val route: Route.Navigation,
-    private val quickActionHost: TrailSenseDestinationHost
-) {
-
+    val userPrefs = remember(appContext) { UserPreferences(appContext) }
+    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
     // The screen lock and the error banner are the activity's own.
-    private val activity: MainActivity by lazy { requireNotNull(context.findMainActivity()) }
-    private val lifecycleScope: CoroutineScope
-        get() = lifecycleOwner.lifecycleScope
+    val activity = remember(context) { requireNotNull(context.findMainActivity()) }
+    val screenLock = remember { NavigationScreenLock(userPrefs.navigation.keepScreenUnlockedWhileOpen) }
 
-    private val views = createNavigatorViews(
-        context,
-        onNorthReferenceSettingsClick = {
+    val display = remember(context) {
+        NavigatorDisplay(
+            context = context,
+            viewModel = viewModel,
+            userPrefs = userPrefs,
+            formatService = formatService,
+            onNorthReferenceSettingsClick = { appNavigator.navigate(Route.CalibrateCompass) },
+            requestCameraPermission = { callback ->
+                scope.launch { callback(effects.requestPermission(AppPermission.Camera)) }
+            },
+            onCameraPermissionDenied = { effects.explainPermissionDenied(AppPermission.Camera) },
+            onOpenBeacon = { beaconId -> appNavigator.navigate(Route.BeaconDetails(beaconId = beaconId)) }
+        )
+    }
+    val views = display.views
+    val errors = remember(context) {
+        NavigatorUserErrors(context, activity.errorBanner, appNavigator) {
             appNavigator.navigate(Route.CalibrateCompass)
-        },
-        requestCameraPermission = { callback ->
-            lifecycleScope.launch { callback(effects.requestPermission(AppPermission.Camera)) }
-        },
-        onCameraPermissionDenied = { effects.explainPermissionDenied(AppPermission.Camera) },
-        onOpenBeacon = { beaconId ->
-            appNavigator.navigate(Route.BeaconDetails(beaconId = beaconId))
-        }
-    )
-    private val isViewReady: Boolean
-        get() = isCreated
-    private var checkCalibrationOnNextReading = false
-
-    private val orientation by lazy { sensorService.getOrientation() }
-    private val compass by lazy { sensorService.getCompass(orientation) }
-    private val gps by lazy { sensorService.getGPS(frequency = Duration.ofMillis(200)) }
-    private val clinometer by lazy { Clinometer(orientation, isAugmentedReality = true) }
-    private val altimeter by lazy { sensorService.getAltimeter(gps = gps) }
-    private val speedometer by lazy { sensorService.getSpeedometer(gps = gps) }
-    private val declinationProvider by lazy {
-        DeclinationFactory().getDeclinationStrategy(
-            userPrefs,
-            gps
-        )
-    }
-    private var declination = 0f
-
-    private val userPrefs by lazy { UserPreferences(context) }
-
-    private val beaconRepo by lazy { BeaconRepo.getInstance(context) }
-
-    private val sensorService by lazy { SensorService(context) }
-    private val pathService by lazy { PathService.getInstance(context) }
-    private val weatherRepo by lazy { WeatherRepo.getInstance(context) }
-
-    private val navigationService = NavigationService()
-    private val formatService by lazy { FormatService.getInstance(context) }
-
-    private var beacons: Collection<Beacon> = listOf()
-    private var nearbyBeacons: List<Beacon> = listOf()
-
-    private var destination: Destination? = null
-    private val navigator by lazy { Navigator.getInstance(context) }
-
-    // Diagnostics
-    private val errors by lazy {
-        NavigatorUserErrors(context, activity.errorBanner, appNavigator, this::displayAccuracyTips)
-    }
-
-    // Data commands
-    private val updateAstronomyLayerCommand by lazy {
-        UpdateAstronomyLayerCommand(
-            astronomyCompassLayer,
-            userPrefs,
-            gps
-        ) { declination }
-    }
-
-    private val loadBeaconsRunner = CoroutineQueueRunner()
-
-    private val layers = NavigationCompassLayerManager()
-    private val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
-
-    // Compass layers
-    private val beaconCompassLayer = BeaconCompassLayer()
-    private val astronomyCompassLayer = MarkerCompassLayer()
-    private val navigationCompassLayer = NavigationCompassLayer()
-
-    // Feature availability
-    private val hasCompass by lazy { sensorService.hasCompass() }
-
-    // Cached preferences
-    private val baseDistanceUnits by lazy { userPrefs.baseDistanceUnits }
-    private val isNearbyEnabled by lazy { userPrefs.navigation.showMultipleBeacons }
-    private val isNearbyLinearOnly by lazy { userPrefs.navigation.showNearbyBeaconsOnlyOnLinearCompass }
-    private val nearbyCount by lazy { userPrefs.navigation.numberOfVisibleBeacons }
-    private val nearbyDistance
-        get() = userPrefs.navigation.maxBeaconDistance
-    private val styleChooser by lazy { CompassStyleChooser(userPrefs.navigation, hasCompass) }
-    private val useTrueNorth by lazy { userPrefs.compass.useTrueNorth }
-    private val screenLock by lazy { NavigationScreenLock(userPrefs.navigation.keepScreenUnlockedWhileOpen) }
-
-    // State
-    private var diagnosticResults: Map<Int, List<String>> = emptyMap()
-    private var lastErrorCodes: List<String> = emptyList()
-    private var lastAttributionLayerKey: Int? = null
-    private var lastAttributionRadarVisible: Boolean? = null
-    private var showLocationSheet by mutableStateOf(false)
-    private var locationFormat = BuiltInCoordinateFormat.DecimalDegrees
-    private var showAltitudeSheet by mutableStateOf(false)
-    private var showAltitudeHistoryDurationPicker by mutableStateOf(false)
-    private var altitudeHistorySummary by mutableStateOf("")
-    private var altitudeChartReadings by mutableStateOf<List<Reading<Float>>>(emptyList())
-    private var altitudeUnits = baseDistanceUnits
-    private var altitudeHistoryDuration = MAX_ALTITUDE_HISTORY_DURATION
-    private var backtrackAltitudeReadings = listOf<Reading<Float>>()
-    private var weatherAltitudeReadings = listOf<Reading<Float>>()
-
-    private val northReferenceHideTimer = CoroutineTimer {
-        if (isViewReady) {
-            views.northReferenceIndicator.showLabel = false
         }
     }
 
-    private val compassLayerTimer = CoroutineTimer {
-        updateCompassLayers()
-    }
-
-    private val updateTimer = CoroutineTimer {
-        refreshNavigation()
-    }
-
-    private val triggers = HookTriggers()
-    private var isCreated = false
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        NavigatorHost(
-            views = views,
-            modifier = modifier
-        )
-        if (showLocationSheet) {
-            TrailSenseSheet(
-                onDismissRequest = {
-                    showLocationSheet = false
-                }
-            ) {
-                LocationSheet(
-                    initialFormat = locationFormat,
-                    getState = ::getLocationSheetState,
-                    onFormatSelected = {
-                        locationFormat = it
-                    },
-                    onPickFormat = ::pickLocationFormat,
-                    onShare = {
-                        lifecycleScope.launch {
-                            shareLocation(context, effects, appNavigator, gps.location, locationFormat)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    onCopy = { text ->
-                        com.kylecorry.andromeda.clipboard.Clipboard.copy(context, text, context.getString(R.string.copied_to_clipboard_toast))
-                    }
-                )
-            }
-        }
-        if (showAltitudeSheet) {
-            TrailSenseSheet(
-                onDismissRequest = {
-                    showAltitudeSheet = false
-                },
-                title = stringResource(R.string.elevation_history)
-            ) {
-                val historyDurationTitle = context.getString(R.string.elevation_history_length)
-                AltitudeContent(
-                    historySummary = altitudeHistorySummary,
-                    readings = altitudeChartReadings,
-                    units = altitudeUnits,
-                    onHistoryClick = {
-                        showAltitudeHistoryDurationPicker = true
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                if (showAltitudeHistoryDurationPicker) {
-                    DurationPickerDialog(
-                        title = historyDurationTitle,
-                        duration = altitudeHistoryDuration,
-                        onDurationPicked = {
-                            if (it != null) {
-                                altitudeHistoryDuration = it
-                                updateAltitudeChart()
-                            }
-                            showAltitudeHistoryDurationPicker = false
-                        },
-                        onDismiss = {
-                            showAltitudeHistoryDurationPicker = false
-                        }
-                    )
-                }
-            }
-        }
-        layerSheet.Content(
-            context,
-            { appNavigator.navigate(it) }
-        )
-    }
-
-    fun onCreate() {
-        if (isCreated) {
-            return
-        }
-        isCreated = true
-        val beaconId = route.destinationBeaconId
-        checkCalibrationOnNextReading = route.navigationStarted
-
-        // Load the destination and start navigation
-        if (beaconId != 0L) {
-            showCalibrationDialog()
-            navigator.navigateTo(beaconId)
-        }
-
-        lifecycleScope.launch {
-            navigator.destination2.collect {
-                destination = it
-                updateNearbyBeacons()
-                handleShowWhenLocked()
-            }
-        }
-
-        // Observe diagnostics
-        listOf(
-            GPSDiagnosticScanner(gps),
-            MagnetometerDiagnosticScanner()
-        ).mapIndexed { index, scanner ->
-            lifecycleScope.launch {
-                scanner.fullScan(context).collect { results ->
-                    diagnosticResults = diagnosticResults + (index to results.map { it.id })
-                }
-            }
-        }
-
-        views.linearCompass.setCompassLayers(
-            listOf(
-                astronomyCompassLayer,
-                beaconCompassLayer,
-                navigationCompassLayer
-            )
-        )
-        views.radarCompass.setCompassLayers(
-            listOfNotNull(
-                astronomyCompassLayer,
-                if (isNearbyLinearOnly) null else beaconCompassLayer,
-                navigationCompassLayer
-            )
-        )
-
-
+    // One-time wiring of the rendering objects to the ViewModel.
+    DisposableEffect(display) {
         NavigationQuickActionBinder(
             quickActionHost,
             views.navigationTitle.leftButton,
@@ -451,197 +208,527 @@ private class NavigatorController(
             userPrefs.navigation
         ).bind()
 
-        lifecycleScope.launch {
+        views.navigationTitle.onSubtitleLongClick = {
+            scope.launch {
+                shareLocation(context, effects, appNavigator, viewModel.sensors.gps.location)
+            }
+            true
+        }
+        views.navigationTitle.onSubtitleClick = { viewModel.openLocationSheet(userPrefs.coordinateFormat) }
+        views.altitude.onClick = { viewModel.openAltitudeSheet() }
+        views.linearCompass.setOnClickListener { viewModel.toggleDestinationBearing() }
+        views.onBeaconClick = { appNavigator.navigate(Route.BeaconList()) }
+        views.onBeaconLongClick = {
+            // Straight to the editor, as the map and the field guide do: Save and Back return here.
+            appNavigator.navigate(Route.PlaceBeacon(initialLocation = viewModel.currentLocationForNewPlace()))
+        }
+        views.accuracyView.setOnClickListener { appNavigator.navigate(Route.CalibrateCompass) }
+        views.radarCompassMap.setOnSingleTapListener { viewModel.toggleDestinationBearing() }
+        views.radarCompassMap.setOnLongPressListener {
+            display.layerSheet.dismiss()
+            display.layers.pause(views.radarCompassMap)
+            display.layerSheet.setOnDismissListener {
+                display.layers.resume(views.radarCompassMap, lifecycleOwner.lifecycleScope)
+            }
+            display.layerSheet.show()
+        }
+        onDispose {
+            screenLock.releaseLock(activity)
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.destination.collect { screenLock.updateLock(activity) }
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.cancelNavigationRequests.collect { views.navigationSheet.requestCancelNavigation() }
+    }
+
+    // The sensors run while the screen is started, as their LiveData observers did.
+    LifecycleStartEffect(viewModel) {
+        viewModel.startSensors()
+        onStopOrDispose {
+            viewModel.stopSensors()
+        }
+    }
+
+    // The dials redraw on timers while the screen is in front.
+    LifecycleResumeEffect(display) {
+        val updateTimer = CoroutineTimer { display.refresh(errors) }
+        val compassLayerTimer = CoroutineTimer { display.updateCompassLayers(lifecycleOwner.lifecycleScope) }
+        val northReferenceHideTimer = CoroutineTimer { views.northReferenceIndicator.showLabel = false }
+        display.resume(lifecycleOwner.lifecycleScope)
+        northReferenceHideTimer.once(Duration.ofSeconds(5))
+        updateTimer.interval(NAVIGATION_UPDATE_INTERVAL)
+        compassLayerTimer.interval(100)
+        display.refresh(errors)
+        onPauseOrDispose {
+            viewModel.cancelBeaconLoading()
+            errors.reset()
+            updateTimer.stop()
+            compassLayerTimer.stop()
+            northReferenceHideTimer.stop()
+            display.pause()
+        }
+    }
+
+    NavigatorHost(
+        views = views,
+        modifier = modifier.fillMaxSize()
+    )
+
+    if (viewModel.showCalibrationDialog) {
+        NavigationCalibrationDialog(
+            onClose = viewModel::closeCalibrationDialog
+        )
+    }
+
+    if (viewModel.showLocationSheet) {
+        TrailSenseSheet(
+            onDismissRequest = viewModel::closeLocationSheet
+        ) {
+            LocationSheet(
+                initialFormat = viewModel.locationFormat,
+                getState = { format -> getLocationSheetState(context, formatService, viewModel, userPrefs, format) },
+                onFormatSelected = { viewModel.locationFormat = it },
+                onPickFormat = { currentFormat, onSelected ->
+                    val formats = BuiltInCoordinateFormat.entries
+                    Pickers.item(
+                        context,
+                        context.getString(R.string.pref_coordinate_format_title),
+                        formats.map { formatService.formatCoordinateType(it) },
+                        defaultSelectedIndex = formats.indexOf(currentFormat)
+                    ) {
+                        if (it != null) {
+                            onSelected(formats[it])
+                        }
+                    }
+                },
+                onShare = {
+                    scope.launch {
+                        shareLocation(
+                            context,
+                            effects,
+                            appNavigator,
+                            viewModel.sensors.gps.location,
+                            viewModel.locationFormat
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                onCopy = { text ->
+                    com.kylecorry.andromeda.clipboard.Clipboard.copy(
+                        context,
+                        text,
+                        context.getString(R.string.copied_to_clipboard_toast)
+                    )
+                }
+            )
+        }
+    }
+    if (viewModel.showAltitudeSheet) {
+        TrailSenseSheet(
+            onDismissRequest = viewModel::closeAltitudeSheet,
+            title = stringResource(R.string.elevation_history)
+        ) {
+            AltitudeContent(
+                historySummary = stringResource(
+                    R.string.last_duration,
+                    formatService.formatDuration(viewModel.altitudeHistoryDuration)
+                ),
+                readings = viewModel.altitudeChartReadings,
+                units = userPrefs.baseDistanceUnits,
+                onHistoryClick = { viewModel.showAltitudeHistoryDurationPicker = true },
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (viewModel.showAltitudeHistoryDurationPicker) {
+                DurationPickerDialog(
+                    title = stringResource(R.string.elevation_history_length),
+                    duration = viewModel.altitudeHistoryDuration,
+                    onDurationPicked = {
+                        if (it != null) {
+                            viewModel.changeAltitudeHistoryDuration(it)
+                        }
+                        viewModel.showAltitudeHistoryDurationPicker = false
+                    },
+                    onDismiss = {
+                        viewModel.showAltitudeHistoryDurationPicker = false
+                    }
+                )
+            }
+        }
+    }
+    display.layerSheet.Content(
+        context,
+        { appNavigator.navigate(it) }
+    )
+}
+
+private const val NAVIGATION_UPDATE_INTERVAL = 33L
+
+private fun getLocationSheetState(
+    context: Context,
+    formatService: FormatService,
+    viewModel: NavigatorViewModel,
+    userPrefs: UserPreferences,
+    format: BuiltInCoordinateFormat
+): LocationSheetState {
+    val gps = viewModel.sensors.gps
+    val accuracy = gps.horizontalAccuracy?.let {
+        val accuracyStr = formatService.formatDistance(
+            Distance.meters(it).convertTo(userPrefs.baseDistanceUnits)
+        )
+        "± $accuracyStr"
+    }
+
+    val timeAgo = Duration.between(gps.eventTime, Instant.now())
+    return LocationSheetState(
+        location = formatService.formatLocation(gps.location, format),
+        coordinateFormat = formatService.formatCoordinateType(format),
+        accuracy = accuracy,
+        satellites = (gps.satellites ?: 0).toString(),
+        time = context.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
+        datum = context.getString(R.string.wgs84)
+    )
+}
+
+/** The compass's sensors, made once per screen from the app's sensor service. */
+internal class NavigatorSensors(sensorService: SensorService, userPrefs: UserPreferences) {
+    val orientation = sensorService.getOrientation()
+    val compass = sensorService.getCompass(orientation)
+    val gps = sensorService.getGPS(frequency = Duration.ofMillis(200))
+    val clinometer = Clinometer(orientation, isAugmentedReality = true)
+    val altimeter = sensorService.getAltimeter(gps = gps)
+    val speedometer = sensorService.getSpeedometer(gps = gps)
+    val declinationProvider = DeclinationFactory().getDeclinationStrategy(userPrefs, gps)
+    val hasCompass = sensorService.hasCompass()
+}
+
+/**
+ * The compass's state: the destination, the nearby beacons, the declination, the diagnostics, the elevation history
+ * and which sheet or dialog is open. Plain Kotlin over the navigator, the repositories and the sensors; the dials and
+ * the radar map are rendering objects that stay with the composition and read from here.
+ */
+internal class NavigatorViewModel(
+    route: Route.Navigation,
+    val sensors: NavigatorSensors,
+    private val navigator: Navigator,
+    private val beaconRepo: BeaconRepo,
+    pathService: PathService,
+    weatherRepo: WeatherRepo,
+    private val prefs: NavigationPreferences,
+    val useTrueNorth: Boolean,
+    diagnostics: List<Flow<List<ToolDiagnosticResult>>>,
+    private val debugElevations: suspend (List<Reading<Float>>, List<Reading<Float>>) -> Unit
+) : ViewModel() {
+
+    private val navigationService = NavigationService()
+    private val loadBeaconsRunner = CoroutineQueueRunner()
+    private val triggers = HookTriggers()
+    private val styleChooser = CompassStyleChooser(prefs, sensors.hasCompass)
+
+    val hasCompass: Boolean
+        get() = sensors.hasCompass
+
+    // Cached preferences
+    private val isNearbyEnabled = prefs.showMultipleBeacons
+    val isNearbyLinearOnly = prefs.showNearbyBeaconsOnlyOnLinearCompass
+    private val nearbyCount = prefs.numberOfVisibleBeacons
+    private val nearbyDistance
+        get() = prefs.maxBeaconDistance
+
+    private var beacons: Collection<Beacon> = listOf()
+
+    @Volatile
+    var nearbyBeacons: List<Beacon> = listOf()
+        private set
+
+    @Volatile
+    var currentDestination: Destination? = null
+        private set
+
+    /** The destination as the navigator reports it. */
+    val destination: Flow<Destination?> = navigator.destination2
+
+    @Volatile
+    var declination = 0f
+        private set
+
+    private var diagnosticResults by mutableStateOf<Map<Int, List<String>>>(emptyMap())
+
+    /** The diagnostic codes the sensors report right now. */
+    val diagnosticCodes: List<String>
+        get() = diagnosticResults.values.flatten().distinct()
+
+    private var checkCalibrationOnNextReading = route.navigationStarted
+
+    // Sheets and dialogs
+    var showCalibrationDialog by mutableStateOf(false)
+        private set
+    var showLocationSheet by mutableStateOf(false)
+        private set
+    var locationFormat by mutableStateOf(BuiltInCoordinateFormat.DecimalDegrees)
+    var showAltitudeSheet by mutableStateOf(false)
+        private set
+    var showAltitudeHistoryDurationPicker by mutableStateOf(false)
+    var altitudeChartReadings by mutableStateOf<List<Reading<Float>>>(emptyList())
+        private set
+    var altitudeHistoryDuration by mutableStateOf(MAX_ALTITUDE_HISTORY_DURATION)
+        private set
+    private var backtrackAltitudeReadings = listOf<Reading<Float>>()
+    private var weatherAltitudeReadings = listOf<Reading<Float>>()
+
+    private val _cancelNavigationRequests = Channel<Unit>(Channel.CONFLATED)
+
+    /** One event each time a tap on the dial asks to cancel the current navigation. */
+    val cancelNavigationRequests: Flow<Unit> = _cancelNavigationRequests.receiveAsFlow()
+
+    private val keepAlive: () -> Boolean = { true }
+    private val onCompassReading: () -> Boolean = {
+        val compass = sensors.compass
+        if (checkCalibrationOnNextReading && compass.quality != Quality.Unknown) {
+            checkCalibrationOnNextReading = false
+            if (compass.quality == Quality.Poor) {
+                requestCalibrationDialog()
+            }
+        }
+        true
+    }
+
+    init {
+        // Load the destination and start navigation
+        val beaconId = route.destinationBeaconId
+        if (beaconId != 0L) {
+            requestCalibrationDialog()
+            navigator.navigateTo(beaconId)
+        }
+
+        viewModelScope.launch {
+            navigator.destination2.collect {
+                currentDestination = it
+                updateNearbyBeacons()
+            }
+        }
+
+        diagnostics.forEachIndexed { index, scan ->
+            viewModelScope.launch {
+                scan.collect { results ->
+                    diagnosticResults = diagnosticResults + (index to results.map { it.id })
+                }
+            }
+        }
+
+        viewModelScope.launch {
             beaconRepo.getBeacons().collect {
                 beacons = it
                 updateNearbyBeacons()
             }
         }
 
-        compass.asLiveData().observe(lifecycleOwner) {
-            if (checkCalibrationOnNextReading && compass.quality != Quality.Unknown) {
-                checkCalibrationOnNextReading = false
-                if (compass.quality == Quality.Poor) {
-                    showCalibrationDialog()
+        viewModelScope.launch {
+            pathService.getRecentAltitudesLive(Instant.now().minus(MAX_ALTITUDE_FILTER_HISTORY_DURATION))
+                .asFlow()
+                .collect {
+                    backtrackAltitudeReadings = it
+                    updateAltitudeChart()
                 }
+        }
+
+        viewModelScope.launch {
+            weatherRepo.getAllLive().asFlow().collect { readings ->
+                weatherAltitudeReadings = readings.mapNotNull { reading ->
+                    if (reading.value.altitude == 0f) {
+                        return@mapNotNull null
+                    }
+                    Reading(reading.value.altitude, reading.time)
+                }
+                updateAltitudeChart()
             }
         }
-        clinometer.asLiveData().observe(lifecycleOwner) { }
-        altimeter.asLiveData().observe(lifecycleOwner) { }
-        gps.asLiveData().observe(lifecycleOwner) { }
-        speedometer.asLiveData().observe(lifecycleOwner) { }
-        getBacktrackAltitudeReadings().observe(lifecycleOwner) {
-            backtrackAltitudeReadings = it
-            updateAltitudeChart()
-        }
-        getWeatherAltitudeReadings().observe(lifecycleOwner) {
-            weatherAltitudeReadings = it
-            updateAltitudeChart()
-        }
-
-        views.navigationTitle.onSubtitleLongClick = {
-            lifecycleScope.launch {
-                shareLocation(context, effects, appNavigator, gps.location)
-            }
-            true
-        }
-
-        views.navigationTitle.onSubtitleClick = {
-            locationFormat = userPrefs.coordinateFormat
-            showLocationSheet = true
-        }
-
-        views.altitude.onClick = {
-            altitudeUnits = baseDistanceUnits
-            altitudeHistorySummary = formatAltitudeHistoryDuration()
-            updateAltitudeChart()
-            showAltitudeSheet = true
-        }
-
-        views.linearCompass.setOnClickListener {
-            toggleDestinationBearing()
-        }
-
-        views.onBeaconClick = {
-            appNavigator.navigate(Route.BeaconList())
-        }
-
-        views.onBeaconLongClick = {
-            if (gps.hasValidReading) {
-                val altitude = if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
-                // Straight to the editor, as the map and the field guide do: Save and Back return here.
-                appNavigator.navigate(
-                    Route.PlaceBeacon(initialLocation = gps.location.toRouteLocation(altitude))
-                )
-            } else {
-                appNavigator.navigate(Route.PlaceBeacon())
-            }
-        }
-
-        views.accuracyView.setSensors(gps, compass)
-        views.accuracyView.setOnClickListener { displayAccuracyTips() }
-
-        views.radarCompassMap.setOnSingleTapListener {
-            toggleDestinationBearing()
-        }
-
-        views.radarCompassMap.setOnLongPressListener {
-            layerSheet.dismiss()
-            layers.pause(views.radarCompassMap)
-            layerSheet.setOnDismissListener {
-                layers.resume(views.radarCompassMap, lifecycleOwner)
-            }
-            layerSheet.show()
-        }
-
-        views.linearCompass.setOnClickListener {
-            toggleDestinationBearing()
-        }
-
-        views.radarCompassMap.isPanEnabled = false
-        views.radarCompassMap.isFlingEnabled = false
-        // No disc of its own: the radar's paths and places draw straight onto the dial.
-        views.radarCompassMap.backgroundColorOverride = null
-        views.radarCompassMap.minScale = 0.001f
-        views.radarCompassMap.mapCenter = gps.location
-        views.radarCompassMap.metersPerProjectedUnit = 1.0
-        views.radarCompassMap.latitudeScaleFactor = { 1f }
-        views.radarCompassMap.projection = AzimuthalEquidistantProjection(gps.location)
-        views.radarCompassMap.resolutionPixels = userPrefs.navigation.radarCompassScale
-        views.radarCompassMap.setOnScaleChangeListener(true) { resolutionPixels ->
-            val radiusMeters = resolutionPixels * views.radarCompassMap.width / 2f
-            views.radarCompass.setRadiusDistance(Distance.meters(radiusMeters))
-            userPrefs.navigation.radarCompassScale = resolutionPixels
-        }
-
-        if (!hasCompass) {
-            views.radarCompass.shouldDrawDial = userPrefs.navigation.showDialTicksWhenNoCompass
-            views.radarCompass.shouldDrawAzimuthIndicator = false
-            views.navigationTitle.isTitleVisible = false
-            views.northReferenceIndicator.isVisible = false
-        } else {
-            views.radarCompass.shouldDrawAzimuthIndicator =
-                userPrefs.navigation.showAzimuthIndicator
-        }
-
-        refreshNavigation()
     }
 
-    private fun toggleDestinationBearing() {
-        lifecycleOwner.inBackground {
+    fun startSensors() {
+        sensors.compass.start(onCompassReading)
+        sensors.clinometer.start(keepAlive)
+        sensors.altimeter.start(keepAlive)
+        sensors.gps.start(keepAlive)
+        sensors.speedometer.start(keepAlive)
+    }
+
+    fun stopSensors() {
+        sensors.compass.stop(onCompassReading)
+        sensors.clinometer.stop(keepAlive)
+        sensors.altimeter.stop(keepAlive)
+        sensors.gps.stop(keepAlive)
+        sensors.speedometer.stop(keepAlive)
+    }
+
+    override fun onCleared() {
+        stopSensors()
+        loadBeaconsRunner.cancel()
+    }
+
+    fun cancelBeaconLoading() {
+        loadBeaconsRunner.cancel()
+    }
+
+    private fun requestCalibrationDialog() {
+        if (prefs.showCalibrationOnNavigateDialog) {
+            showCalibrationDialog = true
+        }
+    }
+
+    fun closeCalibrationDialog(doNotAskAgain: Boolean) {
+        showCalibrationDialog = false
+        if (doNotAskAgain) {
+            prefs.showCalibrationOnNavigateDialog = false
+        }
+    }
+
+    fun openLocationSheet(coordinateFormat: BuiltInCoordinateFormat) {
+        locationFormat = coordinateFormat
+        showLocationSheet = true
+    }
+
+    fun closeLocationSheet() {
+        showLocationSheet = false
+    }
+
+    fun openAltitudeSheet() {
+        updateAltitudeChart()
+        showAltitudeSheet = true
+    }
+
+    fun closeAltitudeSheet() {
+        showAltitudeSheet = false
+    }
+
+    fun changeAltitudeHistoryDuration(duration: Duration) {
+        altitudeHistoryDuration = duration
+        updateAltitudeChart()
+    }
+
+    fun setRadarScale(resolutionPixels: Float) {
+        prefs.radarCompassScale = resolutionPixels
+    }
+
+    /** Where a place saved from here starts: the current location and elevation, once the GPS has a fix. */
+    fun currentLocationForNewPlace(): RouteLocation? {
+        val gps = sensors.gps
+        if (!gps.hasValidReading) {
+            return null
+        }
+        val altimeter = sensors.altimeter
+        val altitude = if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
+        return gps.location.toRouteLocation(altitude)
+    }
+
+    /** A tap on the dial: aim at the heading, or ask to cancel what is being navigated to. */
+    fun toggleDestinationBearing() {
+        viewModelScope.launch {
+            val destination = currentDestination
             if (destination is Destination.Beacon) {
                 // TODO: Prompt to cancel navigation?
                 // Don't set destination bearing while navigating to a beacon
-                return@inBackground
+                return@launch
             }
 
             if (destination == null && hasCompass) {
                 // TODO: Wait for GPS location to be up to date (show a loading indicator)
-                navigator.navigateToBearing(compass.rawBearing, gps.location)
+                navigator.navigateToBearing(sensors.compass.rawBearing, sensors.gps.location)
             } else {
-                onMain {
-                    if (isViewReady) {
-                        views.navigationSheet.requestCancelNavigation()
+                _cancelNavigationRequests.trySend(Unit)
+            }
+        }
+    }
+
+    /** Called on each frame: refreshes the declination and the nearby beacons for the current location. */
+    fun updateLocation() {
+        declination = sensors.declinationProvider.getDeclination()
+        sensors.compass.declination = declination
+        updateNearbyBeacons()
+    }
+
+    /** Whether the sun and moon markers should be recomputed (every kilometre or minute). */
+    fun shouldUpdateAstronomy(): Boolean {
+        return triggers.distance(
+            "astronomy",
+            sensors.gps.location,
+            ASTRONOMY_UPDATE_DISTANCE,
+            highAccuracy = false
+        ) || triggers.frequency("astronomy", ASTRONOMY_UPDATE_FREQUENCY)
+    }
+
+    /** Whether the radar should be redrawn this frame (once a second). */
+    fun shouldInvalidateCompass(): Boolean {
+        return triggers.frequency("compass_invalidation", Duration.ofSeconds(1))
+    }
+
+    /** The speed while moving; null standing still (a standing 0.0 km/h is noise). */
+    fun movingSpeed(): Float? {
+        return sensors.speedometer.speed.value.takeIf { it > 0.5f }
+    }
+
+    fun compassStyle(): CompassStyle {
+        val deviceOrientation = if (sensors.clinometer.incline > -30) {
+            DeviceOrientation.Orientation.Portrait
+        } else {
+            DeviceOrientation.Orientation.Flat
+        }
+        return styleChooser.getStyle(deviceOrientation)
+    }
+
+    /** What the destination card shows: the destination, or the beacon you face; and whether it is navigating. */
+    fun sheetDestination(): Pair<Destination, Boolean>? {
+        val destination = currentDestination
+        val shown = destination ?: getSelectedBeacon(nearbyBeacons)?.let { Destination.Beacon(it) }
+        return shown?.let { it to (destination != null) }
+    }
+
+    fun getDestinationBearing(): Float? {
+        return currentDestination?.let { navigator.getBearing(sensors.gps.location, it).value }
+    }
+
+    private fun getSelectedBeacon(nearby: Collection<Beacon>): Beacon? {
+        return (currentDestination as? Destination.Beacon)?.beacon ?: getFacingBeacon(nearby)
+    }
+
+    private fun getFacingBeacon(nearby: Collection<Beacon>): Beacon? {
+        return navigationService.getFacingBeacon(
+            sensors.gps.location,
+            sensors.compass.rawBearing,
+            nearby,
+            declination,
+            useTrueNorth
+        )
+    }
+
+    private fun updateNearbyBeacons() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                loadBeaconsRunner.skipIfRunning {
+                    val destinationBeacon = (currentDestination as? Destination.Beacon)?.beacon
+                    if (!isNearbyEnabled) {
+                        nearbyBeacons = listOfNotNull(destinationBeacon)
+                        return@skipIfRunning
                     }
+
+                    nearbyBeacons = (navigationService.getNearbyBeacons(
+                        sensors.gps.location,
+                        beacons,
+                        nearbyCount,
+                        8f,
+                        nearbyDistance
+                    ) + listOfNotNull(destinationBeacon)).distinctBy { it.id }
                 }
             }
         }
     }
 
-    private fun handleShowWhenLocked() {
-        screenLock.updateLock(activity)
-    }
-
-    fun displayAccuracyTips() {
-        appNavigator.navigate(Route.CalibrateCompass)
-    }
-
-    private fun pickLocationFormat(
-        currentFormat: BuiltInCoordinateFormat,
-        onSelected: (BuiltInCoordinateFormat) -> Unit
-    ) {
-        val formats = BuiltInCoordinateFormat.entries
-        val formatStrings = formats.map { formatService.formatCoordinateType(it) }
-        Pickers.item(
-            context,
-            context.getString(R.string.pref_coordinate_format_title),
-            formatStrings,
-            defaultSelectedIndex = formats.indexOf(currentFormat)
-        ) {
-            if (it != null) {
-                onSelected(formats[it])
-            }
-        }
-    }
-
-    private fun getLocationSheetState(format: BuiltInCoordinateFormat): LocationSheetState {
-        val accuracy = gps.horizontalAccuracy?.let {
-            val accuracyStr = formatService.formatDistance(
-                Distance.meters(it).convertTo(baseDistanceUnits)
-            )
-            "± $accuracyStr"
-        }
-
-        val timeAgo = Duration.between(gps.eventTime, Instant.now())
-        return LocationSheetState(
-            location = formatService.formatLocation(gps.location, format),
-            coordinateFormat = formatService.formatCoordinateType(format),
-            accuracy = accuracy,
-            satellites = (gps.satellites ?: 0).toString(),
-            time = context.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
-            datum = context.getString(R.string.wgs84)
-        )
-    }
-
-    private fun updateAltitudeChart(readings: List<Reading<Float>>) {
-        altitudeChartReadings = readings
-        altitudeHistorySummary = formatAltitudeHistoryDuration()
-    }
-
     private fun updateAltitudeChart() {
-        lifecycleOwner.inBackground {
-            val currentAltitude = Reading(altimeter.altitude, Instant.now())
-            val filteredReadings = onDefault {
+        viewModelScope.launch {
+            val currentAltitude = Reading(sensors.altimeter.altitude, Instant.now())
+            altitudeChartReadings = withContext(Dispatchers.Default) {
                 val readings =
                     (backtrackAltitudeReadings + weatherAltitudeReadings + currentAltitude).sortedBy { it.time }
                         .filter {
@@ -653,182 +740,181 @@ private class NavigatorController(
 
                 val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
 
-                onIO {
-                    DebugElevationsCommand(context, readings, smoothed).execute()
+                withContext(Dispatchers.IO) {
+                    debugElevations(readings, smoothed)
                 }
 
                 smoothed.filter {
                     Duration.between(it.time, Instant.now()).abs() <= altitudeHistoryDuration
                 }
             }
-
-            onMain { updateAltitudeChart(filteredReadings) }
         }
     }
 
-    private fun formatAltitudeHistoryDuration(): String {
-        return context.getString(
-            R.string.last_duration,
-            formatService.formatDuration(altitudeHistoryDuration)
+    companion object {
+        private val ASTRONOMY_UPDATE_DISTANCE = Distance.kilometers(1f).meters()
+        private val ASTRONOMY_UPDATE_FREQUENCY = Duration.ofMinutes(1)
+        private val MAX_ALTITUDE_HISTORY_DURATION = Duration.ofDays(1)
+        private val MAX_ALTITUDE_FILTER_HISTORY_DURATION = MAX_ALTITUDE_HISTORY_DURATION.plusHours(6)
+    }
+}
+
+/**
+ * The compass's rendering objects (the dials, the radar map and its layers, the destination card) and how a frame of
+ * the ViewModel's state is drawn on them. It holds no state of its own beyond what drawing needs.
+ */
+private class NavigatorDisplay(
+    private val context: Context,
+    private val viewModel: NavigatorViewModel,
+    private val userPrefs: UserPreferences,
+    private val formatService: FormatService,
+    onNorthReferenceSettingsClick: () -> Unit,
+    requestCameraPermission: ((Boolean) -> Unit) -> Unit,
+    onCameraPermissionDenied: () -> Unit,
+    onOpenBeacon: (Long) -> Unit
+) {
+    val views = createNavigatorViews(
+        context,
+        onNorthReferenceSettingsClick = onNorthReferenceSettingsClick,
+        requestCameraPermission = requestCameraPermission,
+        onCameraPermissionDenied = onCameraPermissionDenied,
+        onOpenBeacon = onOpenBeacon
+    )
+
+    val layers = NavigationCompassLayerManager()
+    val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
+
+    // Compass layers
+    private val beaconCompassLayer = BeaconCompassLayer()
+    private val astronomyCompassLayer = MarkerCompassLayer()
+    private val navigationCompassLayer = NavigationCompassLayer()
+
+    private val updateAstronomyLayerCommand = UpdateAstronomyLayerCommand(
+        astronomyCompassLayer,
+        userPrefs,
+        viewModel.sensors.gps
+    ) { viewModel.declination }
+
+    private val baseDistanceUnits = userPrefs.baseDistanceUnits
+    private var lastErrorCodes: List<String> = emptyList()
+    private var lastAttributionLayerKey: Int? = null
+    private var lastAttributionRadarVisible: Boolean? = null
+    private var scope: CoroutineScope? = null
+
+    init {
+        val sensors = viewModel.sensors
+        views.linearCompass.setCompassLayers(
+            listOf(
+                astronomyCompassLayer,
+                beaconCompassLayer,
+                navigationCompassLayer
+            )
         )
-    }
-
-    private fun getWeatherAltitudeReadings(): LiveData<List<Reading<Float>>> {
-        return weatherRepo.getAllLive().map { readings ->
-            readings.mapNotNull { reading ->
-                if (reading.value.altitude == 0f) {
-                    return@mapNotNull null
-                }
-                Reading(reading.value.altitude, reading.time)
-            }
-        }
-    }
-
-    private fun getBacktrackAltitudeReadings(): LiveData<List<Reading<Float>>> {
-        return pathService.getRecentAltitudesLive(
-            Instant.now().minus(MAX_ALTITUDE_FILTER_HISTORY_DURATION)
+        views.radarCompass.setCompassLayers(
+            listOfNotNull(
+                astronomyCompassLayer,
+                if (viewModel.isNearbyLinearOnly) null else beaconCompassLayer,
+                navigationCompassLayer
+            )
         )
-    }
 
-    private fun updateAstronomyData() {
-        lifecycleOwner.inBackground {
-            if (gps.location == Coordinate.zero) {
-                return@inBackground
-            }
+        views.accuracyView.setSensors(sensors.gps, sensors.compass)
 
-            updateAstronomyLayerCommand.execute()
+        val map = views.radarCompassMap
+        map.isPanEnabled = false
+        map.isFlingEnabled = false
+        // No disc of its own: the radar's paths and places draw straight onto the dial.
+        map.backgroundColorOverride = null
+        map.minScale = 0.001f
+        map.mapCenter = sensors.gps.location
+        map.metersPerProjectedUnit = 1.0
+        map.latitudeScaleFactor = { 1f }
+        map.projection = AzimuthalEquidistantProjection(sensors.gps.location)
+        map.resolutionPixels = userPrefs.navigation.radarCompassScale
+        map.setOnScaleChangeListener(true) { resolutionPixels ->
+            val radiusMeters = resolutionPixels * map.width / 2f
+            views.radarCompass.setRadiusDistance(Distance.meters(radiusMeters))
+            viewModel.setRadarScale(resolutionPixels)
+        }
+
+        if (!viewModel.hasCompass) {
+            views.radarCompass.shouldDrawDial = userPrefs.navigation.showDialTicksWhenNoCompass
+            views.radarCompass.shouldDrawAzimuthIndicator = false
+            views.navigationTitle.isTitleVisible = false
+            views.northReferenceIndicator.isVisible = false
+        } else {
+            views.radarCompass.shouldDrawAzimuthIndicator = userPrefs.navigation.showAzimuthIndicator
         }
     }
 
-    fun onResume() {
-        if (!isViewReady) {
-            return
-        }
-
-        views.radarCompassMap.useDensityPixelsForZoom =
-            !userPrefs.navigation.highDetailMode
-        layers.resume(views.radarCompassMap, lifecycleOwner)
+    fun resume(scope: CoroutineScope) {
+        this.scope = scope
+        views.radarCompassMap.useDensityPixelsForZoom = !userPrefs.navigation.highDetailMode
+        layers.resume(views.radarCompassMap, scope)
         views.radarCompass.bindMapView(views.radarCompassMap)
 
         // Show the north reference indicator
         views.northReferenceIndicator.showDetailsOnClick = true
-        views.northReferenceIndicator.useTrueNorth = useTrueNorth
+        views.northReferenceIndicator.useTrueNorth = viewModel.useTrueNorth
         views.northReferenceIndicator.showLabel = true
-        northReferenceHideTimer.once(Duration.ofSeconds(5))
         lastErrorCodes = emptyList()
-        updateTimer.interval(NAVIGATION_UPDATE_INTERVAL)
-        compassLayerTimer.interval(100)
-        refreshNavigation()
     }
 
-    fun onPause() {
-        loadBeaconsRunner.cancel()
-        errors.reset()
-        updateTimer.stop()
-        compassLayerTimer.stop()
+    fun pause() {
         layerSheet.setOnDismissListener(null)
         layerSheet.dismiss()
-        if (isViewReady) {
-            layers.pause(views.radarCompassMap)
-        }
-        northReferenceHideTimer.stop()
+        layers.pause(views.radarCompassMap)
+        scope = null
     }
 
-    fun onDestroy() {
-        onPause()
-        screenLock.releaseLock(activity)
-        isCreated = false
-    }
-
-    private fun updateNearbyBeacons() {
-        lifecycleOwner.inBackground {
-            onIO {
-                loadBeaconsRunner.skipIfRunning {
-                    val destinationBeacon = (destination as? Destination.Beacon)?.beacon
-                    if (!isNearbyEnabled) {
-                        nearbyBeacons = listOfNotNull(destinationBeacon)
-                        return@skipIfRunning
-                    }
-
-                    nearbyBeacons = (navigationService.getNearbyBeacons(
-                        gps.location,
-                        beacons,
-                        nearbyCount,
-                        8f,
-                        nearbyDistance
-                    ) + listOfNotNull(destinationBeacon)).distinctBy { it.id }
-                }
-            }
-        }
-    }
-
-    private fun getDestinationBearing(): Float? {
-        return destination?.let { navigator.getBearing(gps.location, it).value }
-    }
-
-    private fun getSelectedBeacon(nearby: Collection<Beacon>): Beacon? {
-        return (destination as? Destination.Beacon)?.beacon ?: getFacingBeacon(nearby)
-    }
-
-    private fun getFacingBeacon(nearby: Collection<Beacon>): Beacon? {
-        return navigationService.getFacingBeacon(
-            gps.location,
-            compass.rawBearing,
-            nearby,
-            declination,
-            useTrueNorth
-        )
-    }
-
-    private fun refreshNavigation() {
-        if (!isViewReady) {
-            return
-        }
-
+    fun refresh(errors: NavigatorUserErrors) {
+        val sensors = viewModel.sensors
         updateNavigationSheet()
         // Speed only while moving: a standing 0.0 km/h is noise.
-        views.speed.title = speedometer.speed.value.takeIf { it > 0.5f }?.let { formatService.formatSpeed(it) } ?: ""
+        views.speed.title = viewModel.movingSpeed()?.let { formatService.formatSpeed(it) } ?: ""
         updateCompassBearing()
 
-        if (triggers.frequency("compass_invalidation", Duration.ofSeconds(1))) {
+        if (viewModel.shouldInvalidateCompass()) {
             views.radarCompass.invalidate()
         }
 
         views.altitude.title = formatService.formatDistance(
-            Distance.meters(altimeter.altitude).convertTo(baseDistanceUnits)
+            Distance.meters(sensors.altimeter.altitude).convertTo(baseDistanceUnits)
         )
         updateLocation()
 
-        if (
-            triggers.distance(
-                "astronomy",
-                gps.location,
-                ASTRONOMY_UPDATE_DISTANCE,
-                highAccuracy = false
-            ) || triggers.frequency("astronomy", ASTRONOMY_UPDATE_FREQUENCY)
-        ) {
-            updateAstronomyData()
+        if (viewModel.shouldUpdateAstronomy()) {
+            scope?.launch {
+                if (sensors.gps.location != Coordinate.zero) {
+                    updateAstronomyLayerCommand.execute()
+                }
+            }
         }
 
         updateMapAttributionIfNeeded()
         updateCompassStyle()
         updateQuickActionAvailability()
-        updateDiagnosticErrors()
+
+        val codes = viewModel.diagnosticCodes
+        if (codes != lastErrorCodes) {
+            lastErrorCodes = codes
+            errors.update(codes)
+        }
     }
 
     private fun updateNavigationSheet() {
-        val currentDestination =
-            destination ?: getSelectedBeacon(nearbyBeacons)?.let { Destination.Beacon(it) }
-        if (currentDestination != null) {
+        val sensors = viewModel.sensors
+        val shown = viewModel.sheetDestination()
+        if (shown != null) {
             // The heading too, so the card's arrow turns with you (it pointed at 0° forever without it).
             views.navigationSheet.updateNavigationSensorValues(
-                gps.location,
-                altimeter.altitude,
-                speedometer.speed.value,
-                declination,
-                compass.rawBearing
+                sensors.gps.location,
+                sensors.altimeter.altitude,
+                sensors.speedometer.speed.value,
+                viewModel.declination,
+                sensors.compass.rawBearing
             )
-            views.navigationSheet.show(currentDestination, destination != null)
+            views.navigationSheet.show(shown.first, shown.second)
         } else {
             views.navigationSheet.hide()
         }
@@ -843,33 +929,19 @@ private class NavigatorController(
         lastAttributionLayerKey = layers.key
         lastAttributionRadarVisible = isRadarVisible
 
-        lifecycleOwner.inBackground {
+        scope?.launch {
             if (isRadarVisible) {
                 val attribution = views.radarCompassMap.getAttribution(context)
-                onMain {
-                    if (isViewReady) {
-                        views.mapAttribution.text = attribution
-                        views.mapAttribution.isVisible = attribution != null
-                    }
-                }
+                views.mapAttribution.text = attribution
+                views.mapAttribution.isVisible = attribution != null
             } else {
-                onMain {
-                    if (isViewReady) {
-                        views.mapAttribution.isVisible = false
-                    }
-                }
+                views.mapAttribution.isVisible = false
             }
         }
     }
 
     private fun updateCompassStyle() {
-        val deviceOrientation = if (clinometer.incline > -30) {
-            DeviceOrientation.Orientation.Portrait
-        } else {
-            DeviceOrientation.Orientation.Flat
-        }
-        val style = styleChooser.getStyle(deviceOrientation)
-
+        val style = viewModel.compassStyle()
         views.linearCompass.isInvisible = style != CompassStyle.Linear
         views.radarCompass.isInvisible = style != CompassStyle.Radar
         views.radarCompassMap.isInvisible = style != CompassStyle.Radar
@@ -878,28 +950,20 @@ private class NavigatorController(
     private fun updateQuickActionAvailability() {
         // TODO: Extract this logic to the flashlight (if camera is in use)
         if (userPrefs.navigation.rightButton == Tools.QUICK_ACTION_FLASHLIGHT) {
-            views.navigationTitle.rightButton.isClickable =
-                !views.linearCompass.isCameraActive
+            views.navigationTitle.rightButton.isClickable = !views.linearCompass.isCameraActive
         }
         if (userPrefs.navigation.leftButton == Tools.QUICK_ACTION_FLASHLIGHT) {
-            views.navigationTitle.leftButton.isClickable =
-                !views.linearCompass.isCameraActive
-        }
-    }
-
-    private fun updateDiagnosticErrors() {
-        val codes = diagnosticResults.values.flatten().distinct()
-        if (codes != lastErrorCodes) {
-            lastErrorCodes = codes
-            errors.update(codes)
+            views.navigationTitle.leftButton.isClickable = !views.linearCompass.isCameraActive
         }
     }
 
     private fun updateCompassBearing() {
+        val compass = viewModel.sensors.compass
         val bearing = compass.rawBearing
+        val declination = viewModel.declination
 
         // Azimuth
-        if (hasCompass) {
+        if (viewModel.hasCompass) {
             views.navigationTitle.title = formatService.formatDegrees(bearing, replace360 = true)
             views.navigationTitle.shortDirection = formatService.formatDirection(CompassDirection.nearest(bearing))
             // Spelled out: the dial already shows the letters, the readout says it the way a person would.
@@ -926,7 +990,7 @@ private class NavigatorController(
             it.declination = declination
         }
 
-        val actualBearing = if (useTrueNorth) {
+        val actualBearing = if (viewModel.useTrueNorth) {
             compass.bearing
         } else {
             compass.bearing.withDeclination(declination)
@@ -936,10 +1000,10 @@ private class NavigatorController(
     }
 
     private fun updateLocation() {
+        val gps = viewModel.sensors.gps
         val location = gps.location
 
-        declination = declinationProvider.getDeclination()
-        compass.declination = declination
+        viewModel.updateLocation()
 
         // Readable at a glance: hemispheres instead of minus signs, 4 decimals (about 10 m) for decimal degrees; other
         // formats (UTM, MGRS, DMS…) as the person chose them.
@@ -951,8 +1015,7 @@ private class NavigatorController(
             formatService.formatLocation(location)
         }
 
-        views.radarCompassMap.userLocationAccuracy =
-            gps.horizontalAccuracy?.let { Distance.meters(it) }
+        views.radarCompassMap.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
 
         // Compass center point
         listOf<ICompassView>(
@@ -964,16 +1027,13 @@ private class NavigatorController(
 
         views.radarCompassMap.mapCenter = location
         views.radarCompassMap.userLocation = location
-
         views.radarCompassMap.projection = AzimuthalEquidistantProjection(location)
-
-        updateNearbyBeacons()
     }
 
-    private fun updateCompassLayers() {
-        lifecycleOwner.inBackground {
-            val destBearing = getDestinationBearing()
-            val destinationBeacon = (destination as? Destination.Beacon)?.beacon
+    fun updateCompassLayers(scope: CoroutineScope) {
+        scope.launch(Dispatchers.Default) {
+            val destBearing = viewModel.getDestinationBearing()
+            val destinationBeacon = (viewModel.currentDestination as? Destination.Beacon)?.beacon
             val destColor = destinationBeacon?.color ?: AppColor.Blue.color
 
             val direction = destBearing?.let {
@@ -981,7 +1041,7 @@ private class NavigatorController(
             }
 
             // Update beacon layers
-            beaconCompassLayer.setBeacons(nearbyBeacons)
+            beaconCompassLayer.setBeacons(viewModel.nearbyBeacons)
             beaconCompassLayer.highlight(destinationBeacon)
 
             // Destination
@@ -994,48 +1054,36 @@ private class NavigatorController(
             }
         }
     }
+}
 
-    private fun showCalibrationDialog() {
-        if (userPrefs.navigation.showCalibrationOnNavigateDialog) {
-            var doNotAskAgain = false
-            val doNotAskAgainText = context.getString(R.string.do_not_ask_again)
-            val contentView = TrailSenseComposeRootView(
-                context,
-                ViewCompositionStrategy.DisposeOnDetachedFromWindow
+/** Asks for a calibration before navigating, with a way to stop asking. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun NavigationCalibrationDialog(onClose: (doNotAskAgain: Boolean) -> Unit) {
+    var doNotAskAgain by remember { mutableStateOf(false) }
+    val okText = stringResource(android.R.string.ok)
+    AlertDialog(
+        onDismissRequest = { onClose(false) },
+        properties = DialogProperties(dismissOnClickOutside = false),
+        title = { Text(stringResource(R.string.calibrate_compass_dialog_title)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
             ) {
+                Text(stringResource(R.string.calibrate_compass_on_navigate_dialog_content, okText))
                 NavigationCalibrationDialogContent(
-                    doNotAskAgainText = doNotAskAgainText,
-                    onDoNotAskAgainChanged = {
-                        doNotAskAgain = it
-                    }
+                    doNotAskAgainText = stringResource(R.string.do_not_ask_again),
+                    onDoNotAskAgainChanged = { doNotAskAgain = it }
                 )
             }
-            Alerts.dialog(
-                context,
-                context.getString(R.string.calibrate_compass_dialog_title),
-                context.getString(
-                    R.string.calibrate_compass_on_navigate_dialog_content,
-                    context.getString(android.R.string.ok)
-                ),
-                contentView = contentView,
-                cancelText = null,
-                cancelOnOutsideTouch = false,
-                scrollable = true
-            ) { cancelled ->
-                if (!cancelled && doNotAskAgain) {
-                    userPrefs.navigation.showCalibrationOnNavigateDialog = false
-                }
+        },
+        confirmButton = {
+            Button(onClick = { onClose(doNotAskAgain) }, shapes = ButtonDefaults.shapes()) {
+                Text(okText)
             }
         }
-    }
-
-    companion object {
-        private val ASTRONOMY_UPDATE_DISTANCE = Distance.kilometers(1f).meters()
-        private val ASTRONOMY_UPDATE_FREQUENCY = Duration.ofMinutes(1)
-        private val MAX_ALTITUDE_HISTORY_DURATION = Duration.ofDays(1)
-        private val MAX_ALTITUDE_FILTER_HISTORY_DURATION = MAX_ALTITUDE_HISTORY_DURATION.plusHours(6)
-        private const val NAVIGATION_UPDATE_INTERVAL = 33L
-    }
+    )
 }
 
 @Composable

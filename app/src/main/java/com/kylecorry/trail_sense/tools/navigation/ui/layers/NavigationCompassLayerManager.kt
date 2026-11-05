@@ -1,15 +1,14 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers
 
-import android.view.View
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import androidx.lifecycle.LifecycleOwner
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class NavigationCompassLayerManager {
     private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
@@ -20,11 +19,11 @@ class NavigationCompassLayerManager {
     private var isRunning = false
     private val runningLock = Any()
 
-    fun resume(view: IMapView, lifecycleOwner: LifecycleOwner) {
+    fun resume(view: IMapView, scope: CoroutineScope) {
         synchronized(runningLock) {
             isRunning = true
         }
-        lifecycleOwner.inBackground {
+        scope.launch {
             view.setLayersWithPreferences(
                 NavigationToolRegistration.MAP_ID,
                 // On a compass the centre is always you, so the "my location" arrow is noise there.
@@ -41,10 +40,6 @@ class NavigationCompassLayerManager {
             synchronized(runningLock) {
                 if (isRunning) {
                     view.start()
-
-                    if (view is View) {
-                        view.invalidate()
-                    }
                 }
             }
         }

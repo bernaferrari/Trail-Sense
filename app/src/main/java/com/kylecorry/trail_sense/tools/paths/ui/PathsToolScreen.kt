@@ -5,24 +5,24 @@ package com.kylecorry.trail_sense.tools.paths.ui
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import kotlinx.coroutines.CoroutineScope
+import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
+import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathDialog
+import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathRequest
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-import androidx.compose.ui.graphics.graphicsLayer
 import com.kylecorry.trail_sense.shared.views.PathsEmptyIllustration
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults
@@ -30,16 +30,13 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -47,12 +44,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
@@ -62,7 +57,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -72,26 +66,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.luminance
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlightAction
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -99,12 +80,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.alerts.toast
-import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
@@ -126,7 +101,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
@@ -166,273 +140,37 @@ fun PathsToolScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val navigator = LocalNavigator.current
+    val appContext = context.applicationContext
+    val appNavigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(lifecycleOwner) { PathsController(context, navigator, effects, lifecycleOwner) }
-
-    // Back goes up a group; at the top it leaves the page as usual.
-    BackHandler(enabled = controller.handlesBack) {
-        controller.onBack()
-    }
-
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
-        }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
-        }
-    }
-
-    controller.Content(modifier = modifier.fillMaxSize())
-}
-
-/**
- * The paths list: a group browser over the path service with GPX import and export, Backtrack's status and the path
- * commands' dialogs, so it lives with the screen (it holds the screen's context) rather than in a ViewModel.
- */
-private class PathsController(
-    private val context: Context,
-    private val appNavigator: TrailSenseNavigator,
-    private val effects: ScreenEffects,
-    private val lifecycleOwner: LifecycleOwner
-) {
-
-    private val lifecycleScope: CoroutineScope
-        get() = lifecycleOwner.lifecycleScope
-
-    private val service by lazy {
-        Tools.getService(
-            context,
-            PathsToolRegistration.SERVICE_BACKTRACK
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        PathsViewModel(
+            pathService = PathService.getInstance(appContext),
+            preferences = UserPreferences(appContext).paths,
+            backtrack = Tools.getService(appContext, PathsToolRegistration.SERVICE_BACKTRACK),
+            gps = SensorService(appContext).getGPS()
         )
     }
-    private val prefs by lazy { UserPreferences(context) }
-    private val pathService by lazy {
-        PathService.getInstance(context)
-    }
-
-    private val gps by lazy {
-        SensorService(context).getGPS()
-    }
-
-    private val gpxService by lazy {
+    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val pathService = viewModel.pathService
+    val gpxService = remember(context) {
         IOFactory().createGpxService(
             context,
             // File pickers need the activity's result launcher, an Activity-only API.
             requireNotNull(context.findMainActivity())
         )
     }
-
-    private var sort = PathSortMethod.MostRecent
-
-    private val pathLoader by lazy { PathGroupLoader(pathService) }
-    private lateinit var manager: GroupListManager<IPath>
-
-    private var lastRoot: IPath? = null
-    private var pathItems by mutableStateOf<List<IPath>>(emptyList())
-    private var pathListResetKey by mutableIntStateOf(0)
-    private var title by mutableStateOf("")
-    private var searchText by mutableStateOf("")
-    private var backtrackState by mutableStateOf(FeatureState.Off)
-    private var backtrackFrequency by mutableStateOf<Duration?>(null)
-    private var sortMenuText by mutableStateOf("")
-    private var showBacktrackFrequencyPicker by mutableStateOf(false)
-    private var isInGroup by mutableStateOf(false)
-
-    /** Whether back stays on this page (going up a group). */
-    val handlesBack: Boolean
-        get() = isInGroup
-
-    fun onBack() {
-        if (!manager.up()) {
-            appNavigator.navigateUp()
-        }
+    var showBacktrackFrequencyPicker by remember { mutableStateOf(false) }
+    var simplifyRequest by remember { mutableStateOf<SimplifyPathRequest?>(null) }
+    val simplifyCommand = remember(context, scope) {
+        SimplifyPathCommand(context, scope, pathService) { simplifyRequest = it }
     }
-    private var isInitialized = false
-    private var isLoaded by mutableStateOf(false)
+    val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    @Composable
-    fun Content(modifier: Modifier = Modifier) {
-        val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
-        val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-        PathsScreen(
-            title = title.ifBlank { stringResource(R.string.paths) },
-            sortMenuText = sortMenuText.ifBlank {
-                stringResource(R.string.sort_by, stringResource(R.string.most_recent))
-            },
-            searchText = searchText,
-            items = pathItems,
-            isLoaded = isLoaded,
-            resetKey = pathListResetKey,
-            backtrackState = backtrackState,
-            backtrackFrequency = backtrackFrequency,
-            formatService = FormatService.getInstance(context),
-            baseDistanceUnits = prefs.baseDistanceUnits,
-            onBack = { dispatcher?.onBackPressed() },
-            onSearchChange = {
-                searchText = it
-                manager.search(it)
-            },
-            onMenuAction = ::handleToolbarAction,
-            onPathAction = ::handleAction,
-            onGroupAction = ::handleGroupAction,
-            onImportPath = ::importPaths,
-            onCreateGroup = ::createGroup,
-            onCreatePath = ::createPath,
-            onBacktrackFrequencyClick = {
-                showBacktrackFrequencyPicker = true
-            },
-            onBacktrackToggleClick = ::toggleBacktrack,
-            modifier = modifier
-        )
-
-        if (showBacktrackFrequencyPicker) {
-            DurationPickerDialog(
-                title = backtrackFrequencyTitle,
-                duration = prefs.paths.backtrackRecordFrequency,
-                message = stringResource(R.string.actual_frequency_disclaimer),
-                hint = stringResource(R.string.frequency),
-                showSeconds = true,
-                onDurationPicked = {
-                    if (it != null) {
-                        changeBacktrackFrequency(it)
-                    }
-                    showBacktrackFrequencyPicker = false
-                },
-                onDismiss = {
-                    showBacktrackFrequencyPicker = false
-                }
-            )
-        }
-    }
-
-    fun onCreate() {
-        if (isInitialized) {
-            return
-        }
-        isInitialized = true
-        manager = GroupListManager(
-            lifecycleScope,
-            pathLoader,
-            lastRoot,
-            this::sortPaths
-        )
-
-        manager.onChange = { root, items, rootChanged ->
-            pathItems = items
-            isLoaded = true
-            if (rootChanged) {
-                pathListResetKey++
-            }
-            isInGroup = root != null
-            title = (root as PathGroup?)?.name ?: context.getString(R.string.paths)
-        }
-
-        sort = prefs.paths.pathSort
-        sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
-
-        // Path updates currently require loading all paths because the repository exposes full snapshots.
-        lifecycleScope.launch {
-            pathService.getPaths().collect {
-                manager.refresh()
-            }
-        }
-
-        title = context.getString(R.string.paths)
-    }
-
-    fun onResume() {
-        if (!isInitialized) {
-            return
-        }
-        Tools.subscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED,
-            this::onBacktrackChanged
-        )
-        Tools.subscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED,
-            this::onBacktrackChanged
-        )
-        updateStatusBar()
-    }
-
-    fun onPause() {
-        if (!isInitialized) {
-            return
-        }
-        tryOrNothing {
-            lastRoot = manager.root
-        }
-        Tools.unsubscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED,
-            this::onBacktrackChanged
-        )
-        Tools.unsubscribe(
-            PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED,
-            this::onBacktrackChanged
-        )
-    }
-
-    fun onDestroy() {
-        onPause()
-        isInitialized = false
-    }
-
-    private fun updateStatusBar() {
-        val service = service ?: return
-        backtrackState = service.getFeatureState()
-        backtrackFrequency = service.getFrequency()
-    }
-
-    private fun handleToolbarAction(action: PathsToolbarAction) {
-        when (action) {
-            PathsToolbarAction.Sort -> changeSort()
-            PathsToolbarAction.Export -> exportCurrentGroup()
-        }
-    }
-
-    private fun changeBacktrackFrequency(frequency: Duration) {
-        ChangeBacktrackFrequencyCommand(
-            context,
-            lifecycleScope
-        ) { updateStatusBar() }.execute(frequency)
-    }
-
-    private fun toggleBacktrack() {
-        val command = ToggleBacktrackCommand(context, effects, lifecycleScope)
-        command.execute()
-    }
-
-    private fun changeSort() {
-        val sortOptions = PathSortMethod.values()
-        Pickers.item(
-            context,
-            context.getString(R.string.sort),
-            sortOptions.map { getSortString(it) },
-            sortOptions.indexOf(prefs.paths.pathSort)
-        ) { newSort ->
-            if (newSort != null) {
-                prefs.paths.pathSort = sortOptions[newSort]
-                sort = sortOptions[newSort]
-                sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
-                onSortChanged()
-            }
-        }
-    }
-
-    private fun getSortString(sortMethod: PathSortMethod): String {
+    fun getSortString(sortMethod: PathSortMethod): String {
         return when (sortMethod) {
             PathSortMethod.MostRecent -> context.getString(R.string.most_recent)
             PathSortMethod.Longest -> context.getString(R.string.longest)
@@ -442,15 +180,58 @@ private class PathsController(
         }
     }
 
-    private fun onSortChanged() {
-        manager.refresh(true)
+    fun changeSort() {
+        val sortOptions = PathSortMethod.values()
+        Pickers.item(
+            context,
+            context.getString(R.string.sort),
+            sortOptions.map { getSortString(it) },
+            sortOptions.indexOf(viewModel.sort)
+        ) { newSort ->
+            if (newSort != null) {
+                viewModel.changeSort(sortOptions[newSort])
+            }
+        }
     }
 
-    private fun handleGroupAction(group: PathGroup, action: PathGroupAction) {
+    fun exportPath(path: IPath?) {
+        ExportPathCommand(context, scope, gpxService, pathService).execute(path)
+    }
+
+    fun setGroupVisibility(group: PathGroup, visible: Boolean) {
+        scope.launch {
+            Alerts.withLoading(context, context.getString(R.string.loading)) {
+                viewModel.setGroupVisibility(group, visible)
+            }
+        }
+    }
+
+    fun movePath(path: IPath) {
+        val command = MoveIPathCommand(context, pathService)
+        scope.launch {
+            val newGroup = command.execute(path)
+            if (newGroup?.id != path.parentId) {
+                effects.showMessage(
+                    context.getString(R.string.moved_to, newGroup?.name ?: context.getString(R.string.no_group))
+                )
+                viewModel.refresh()
+            }
+        }
+    }
+
+    fun handleGroupAction(group: PathGroup, action: PathGroupAction) {
         when (action) {
-            PathGroupAction.Delete -> deleteGroup(group)
-            PathGroupAction.Rename -> renameGroup(group)
-            PathGroupAction.Open -> manager.open(group.id)
+            PathGroupAction.Delete -> scope.launch {
+                DeletePathGroupGroupCommand(context, pathService).execute(group)
+                viewModel.refresh()
+            }
+
+            PathGroupAction.Rename -> scope.launch {
+                RenamePathGroupGroupCommand(context, pathService).execute(group)
+                viewModel.refresh()
+            }
+
+            PathGroupAction.Open -> viewModel.open(group.id)
             PathGroupAction.Move -> movePath(group)
             PathGroupAction.Export -> exportPath(group)
             PathGroupAction.ShowAll -> setGroupVisibility(group, true)
@@ -458,45 +239,233 @@ private class PathsController(
         }
     }
 
-    private fun setGroupVisibility(group: PathGroup, visible: Boolean) {
-        lifecycleOwner.inBackground {
-            Alerts.withLoading(context, context.getString(R.string.loading)) {
-                val paths = onIO {
-                    pathService.loader().getChildren(group.id, null).filterIsInstance<Path>()
-                }
-
-                onIO {
-                    paths
-                        .asSequence()
-                        .filter { it.style.visible != visible }
-                        .forEach { pathService.addPath(it.copy(style = it.style.copy(visible = visible))) }
-                }
-            }
-        }
-    }
-
-    private fun handleAction(path: Path, action: PathAction) {
+    fun handleAction(path: Path, action: PathAction) {
         when (action) {
             PathAction.Export -> exportPath(path)
-            PathAction.Delete -> deletePath(path)
-            PathAction.Merge -> merge(path)
-            PathAction.Show -> showPath(path)
-            PathAction.Rename -> renamePath(path)
-            PathAction.Keep -> keepPath(path)
-            PathAction.ToggleVisibility -> togglePathVisibility(path)
-            PathAction.Simplify -> simplifyPath(path)
+            PathAction.Delete -> DeletePathCommand(context, scope, pathService).execute(path)
+            PathAction.Merge -> MergePathCommand(context, scope, pathService).execute(path)
+            PathAction.Show -> ViewPathCommand(appNavigator).execute(path)
+            PathAction.Rename -> RenamePathCommand(context, scope, pathService).execute(path)
+            PathAction.Keep -> KeepPathCommand(context, scope, pathService).execute(path)
+            PathAction.ToggleVisibility -> TogglePathVisibilityCommand(context, scope, pathService).execute(path)
+            PathAction.Simplify -> simplifyCommand.execute(path)
             PathAction.Move -> movePath(path)
             else -> {}
         }
     }
 
-    private fun simplifyPath(path: Path) {
-        val command = SimplifyPathCommand(
-            context,
-            lifecycleOwner,
-            pathService
+    // Back goes up a group; at the top it leaves the page as usual.
+    BackHandler(enabled = viewModel.handlesBack) {
+        if (!viewModel.up()) {
+            appNavigator.navigateUp()
+        }
+    }
+
+    // Backtrack's state is followed while the page is shown.
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose {
+            viewModel.onPause()
+        }
+    }
+
+    PathsScreen(
+        title = viewModel.groupName ?: stringResource(R.string.paths),
+        sortMenuText = stringResource(R.string.sort_by, getSortString(viewModel.sort)),
+        searchText = viewModel.searchText,
+        items = viewModel.items,
+        isLoaded = viewModel.isLoaded,
+        resetKey = viewModel.resetKey,
+        backtrackState = viewModel.backtrackState,
+        backtrackFrequency = viewModel.backtrackFrequency,
+        formatService = formatService,
+        baseDistanceUnits = prefs.baseDistanceUnits,
+        onBack = { dispatcher?.onBackPressed() },
+        onSearchChange = viewModel::search,
+        onMenuAction = { action ->
+            when (action) {
+                PathsToolbarAction.Sort -> changeSort()
+                PathsToolbarAction.Export -> exportPath(viewModel.root)
+            }
+        },
+        onPathAction = ::handleAction,
+        onGroupAction = ::handleGroupAction,
+        onImportPath = {
+            ImportPathsCommand(context, scope, gpxService, pathService, prefs.paths).execute(viewModel.rootId)
+        },
+        onCreateGroup = {
+            scope.launch {
+                CreatePathGroupCommand(context, pathService).execute(viewModel.rootId)
+                viewModel.refresh()
+            }
+        },
+        onCreatePath = {
+            scope.launch {
+                CreatePathCommand(context, pathService, prefs.paths).execute(viewModel.rootId)?.let {
+                    ViewPathCommand(appNavigator).execute(it)
+                }
+            }
+        },
+        onBacktrackFrequencyClick = {
+            showBacktrackFrequencyPicker = true
+        },
+        onBacktrackToggleClick = {
+            ToggleBacktrackCommand(context, effects, scope).execute()
+        },
+        modifier = modifier.fillMaxSize()
+    )
+
+    if (showBacktrackFrequencyPicker) {
+        DurationPickerDialog(
+            title = backtrackFrequencyTitle,
+            duration = prefs.paths.backtrackRecordFrequency,
+            message = stringResource(R.string.actual_frequency_disclaimer),
+            hint = stringResource(R.string.frequency),
+            showSeconds = true,
+            onDurationPicked = {
+                if (it != null) {
+                    ChangeBacktrackFrequencyCommand(context, scope) {
+                        viewModel.updateBacktrackStatus()
+                    }.execute(it)
+                }
+                showBacktrackFrequencyPicker = false
+            },
+            onDismiss = {
+                showBacktrackFrequencyPicker = false
+            }
         )
-        command.execute(path)
+    }
+
+    simplifyRequest?.let { request ->
+        SimplifyPathDialog(
+            request = request,
+            onApply = { simplifyCommand.apply(request.path, it) },
+            onDismiss = { simplifyRequest = null }
+        )
+    }
+}
+
+/**
+ * The paths list's state: a group browser over the path service (search, sort, the group you're in) and Backtrack's
+ * status, plain Kotlin with no Android UI types. The screen shows the commands' dialogs and the file pickers.
+ */
+internal class PathsViewModel(
+    val pathService: PathService,
+    private val preferences: PathsPreferences,
+    private val backtrack: ToolService?,
+    private val gps: IGPS
+) : ViewModel() {
+
+    var items by mutableStateOf<List<IPath>>(emptyList())
+        private set
+    var resetKey by mutableIntStateOf(0)
+        private set
+    var isLoaded by mutableStateOf(false)
+        private set
+
+    /** The open group's name, or null at the top. */
+    var groupName by mutableStateOf<String?>(null)
+        private set
+    var searchText by mutableStateOf("")
+        private set
+    var sort by mutableStateOf(preferences.pathSort)
+        private set
+    var backtrackState by mutableStateOf(FeatureState.Off)
+        private set
+    var backtrackFrequency by mutableStateOf<Duration?>(null)
+        private set
+    private var isInGroup by mutableStateOf(false)
+
+    private val manager = GroupListManager(
+        viewModelScope,
+        PathGroupLoader(pathService),
+        null,
+        this::sortPaths
+    ).also {
+        it.onChange = { root, newItems, rootChanged ->
+            items = newItems
+            isLoaded = true
+            if (rootChanged) {
+                resetKey++
+            }
+            isInGroup = root != null
+            groupName = (root as PathGroup?)?.name
+        }
+    }
+
+    val root: IPath?
+        get() = manager.root
+
+    val rootId: Long?
+        get() = manager.root?.id
+
+    /** Whether back stays on this page (going up a group). */
+    val handlesBack: Boolean
+        get() = isInGroup
+
+    private val onBacktrackChanged: (Bundle) -> Unit = { updateBacktrackStatus() }
+
+    init {
+        // Path updates currently require loading all paths because the repository exposes full snapshots.
+        viewModelScope.launch {
+            pathService.getPaths().collect {
+                manager.refresh()
+            }
+        }
+    }
+
+    fun onResume() {
+        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED, onBacktrackChanged)
+        updateBacktrackStatus()
+    }
+
+    fun onPause() {
+        Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+        Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED, onBacktrackChanged)
+    }
+
+    override fun onCleared() {
+        onPause()
+    }
+
+    fun updateBacktrackStatus() {
+        val service = backtrack ?: return
+        backtrackState = service.getFeatureState()
+        backtrackFrequency = service.getFrequency()
+    }
+
+    /** Goes up a group; false at the top. */
+    fun up(): Boolean {
+        return manager.up()
+    }
+
+    fun open(groupId: Long) {
+        manager.open(groupId)
+    }
+
+    fun search(text: String) {
+        searchText = text
+        manager.search(text)
+    }
+
+    fun changeSort(method: PathSortMethod) {
+        preferences.pathSort = method
+        sort = method
+        manager.refresh(true)
+    }
+
+    fun refresh() {
+        manager.refresh()
+    }
+
+    suspend fun setGroupVisibility(group: PathGroup, visible: Boolean) {
+        withContext(Dispatchers.IO) {
+            pathService.loader().getChildren(group.id, null)
+                .filterIsInstance<Path>()
+                .filter { it.style.visible != visible }
+                .forEach { pathService.addPath(it.copy(style = it.style.copy(visible = visible))) }
+        }
     }
 
     private suspend fun sortPaths(paths: List<IPath>): List<IPath> {
@@ -509,137 +478,6 @@ private class PathsController(
         }
         return strategy.sort(paths)
     }
-
-    private fun togglePathVisibility(path: Path) {
-        val command = TogglePathVisibilityCommand(
-            context,
-            lifecycleOwner,
-            pathService
-        )
-        command.execute(path)
-    }
-
-    private fun renamePath(path: Path) {
-        val command = RenamePathCommand(
-            context,
-            lifecycleOwner,
-            pathService
-        )
-        command.execute(path)
-    }
-
-    private fun keepPath(path: Path) {
-        val command = KeepPathCommand(
-            context,
-            lifecycleOwner,
-            pathService
-        )
-        command.execute(path)
-    }
-
-    private fun showPath(path: Path) {
-        val command = ViewPathCommand(appNavigator)
-        command.execute(path)
-    }
-
-    private fun showPath(id: Long) {
-        val command = ViewPathCommand(appNavigator)
-        command.execute(id)
-    }
-
-    private fun importPaths() {
-        val command = ImportPathsCommand(
-            context,
-            lifecycleOwner,
-            gpxService,
-            pathService,
-            prefs.paths
-        )
-        command.execute(manager.root?.id)
-    }
-
-    private fun exportPath(path: IPath?) {
-        val command = ExportPathCommand(
-            context,
-            lifecycleOwner,
-            gpxService,
-            pathService
-        )
-        command.execute(path)
-    }
-
-    private fun exportCurrentGroup() {
-        exportPath(manager.root)
-    }
-
-    private fun deletePath(path: Path) {
-        val command = DeletePathCommand(
-            context,
-            lifecycleOwner,
-            pathService
-        )
-        command.execute(path)
-    }
-
-    private fun merge(path: Path) {
-        val command = MergePathCommand(
-            context,
-            lifecycleOwner,
-            pathService
-        )
-        command.execute(path)
-    }
-
-    private fun createPath() {
-        val command = CreatePathCommand(context, pathService, prefs.paths)
-        lifecycleOwner.inBackground {
-            command.execute(manager.root?.id)?.let {
-                showPath(it)
-            }
-        }
-    }
-
-    // Groups
-    private fun deleteGroup(group: PathGroup) {
-        val command = DeletePathGroupGroupCommand(context, pathService)
-        lifecycleOwner.inBackground {
-            command.execute(group)
-            manager.refresh()
-        }
-    }
-
-    private fun renameGroup(group: PathGroup) {
-        val command = RenamePathGroupGroupCommand(context, pathService)
-        lifecycleOwner.inBackground {
-            command.execute(group)
-            manager.refresh()
-        }
-    }
-
-    private fun createGroup() {
-        val command = CreatePathGroupCommand(context, pathService)
-        lifecycleOwner.inBackground {
-            command.execute(manager.root?.id)
-            manager.refresh()
-        }
-    }
-
-    private fun movePath(path: IPath) {
-        val command = MoveIPathCommand(context, pathService)
-        lifecycleOwner.inBackground {
-            val newGroup = command.execute(path)
-            if (newGroup?.id != path.parentId) {
-                effects.showMessage(context.getString(R.string.moved_to, newGroup?.name ?: context.getString(R.string.no_group)))
-                manager.refresh()
-            }
-        }
-    }
-
-    private fun onBacktrackChanged(data: Bundle): Boolean {
-        updateStatusBar()
-        return true
-    }
-
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

@@ -7,7 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,12 +17,14 @@ import android.content.Context
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import kotlinx.coroutines.CoroutineScope
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
 import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.units.Distance
@@ -53,68 +54,298 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 @Composable
 fun NavigationSettingsToolScreen() {
     val context = LocalContext.current
+    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    val controller = remember(context) {
-        NavigationSettingsController(context, navigator, effects, scope) { backDispatcher?.onBackPressed() }
-    }
-    DisposableEffect(controller) {
-        onDispose {
-            controller.onDispose()
-        }
-    }
-    NavigationSettingsContent(controller)
-    controller.LayerSheet()
-}
-
-/** The page's pickers and preferences; plain state over the preferences, kept while the page is shown. */
-private class NavigationSettingsController(
-    private val context: Context,
-    private val navigator: TrailSenseNavigator,
-    private val effects: ScreenEffects,
-    private val scope: CoroutineScope,
-    private val back: () -> Unit
-) {
-    private val layerSheet = MapLayersSheetState(NavigationToolRegistration.MAP_ID)
-
-    val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
-    val userPrefs by lazy { UserPreferences(context) }
-    val prefs by lazy { userPrefs.navigation }
-    val formatter by lazy { FormatService.getInstance(context) }
-    val hasCompass by lazy { SensorService(context).hasCompass() }
-    val distanceUnits by lazy {
-        formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
-    }
-
-    fun onDispose() {
-        layerSheet.dismiss()
-    }
-
-    fun goBack() {
-        back()
-    }
-
-    fun showLayerSheet() {
-        layerSheet.dismiss()
-        layerSheet.show()
-    }
-
-    @Composable
-    fun LayerSheet() {
-        layerSheet.Content(
-            context,
-            { navigator.navigate(it) }
+    val viewModel = viewModel {
+        val userPrefs = UserPreferences(appContext)
+        NavigationSettingsViewModel(
+            prefs = userPrefs.navigation,
+            cache = PreferencesSubsystem.getInstance(appContext).preferences,
+            keys = NavigationSettingsKeys.from(appContext),
+            hasCompass = SensorService(appContext).hasCompass(),
+            baseDistanceUnits = userPrefs.baseDistanceUnits
         )
     }
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+    val distanceUnits = remember(formatter) { formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits) }
+    val layerSheet = remember { MapLayersSheetState(NavigationToolRegistration.MAP_ID) }
 
-    fun onCurrentPaceSpeedometerSelected() {
-        scope.launch {
-            if (!effects.requestPermission(AppPermission.ActivityRecognition)) {
-                effects.explainPermissionDenied(AppPermission.ActivityRecognition)
-            }
+    DisposableEffect(layerSheet) {
+        onDispose {
+            layerSheet.dismiss()
         }
+    }
+
+    NavigationSettingsContent(
+        viewModel = viewModel,
+        formatDistance = { formatter.formatDistance(it, Units.getDecimalPlaces(it.units)) },
+        onPickDistance = { current, title, onPicked ->
+            CustomUiUtils.pickDistance(
+                context,
+                distanceUnits,
+                current,
+                title
+            ) { distance, cancelled ->
+                if (!cancelled && distance != null && distance.value > 0) {
+                    onPicked(distance)
+                }
+            }
+        },
+        onCurrentPaceSpeedometerSelected = {
+            scope.launch {
+                if (!effects.requestPermission(AppPermission.ActivityRecognition)) {
+                    effects.explainPermissionDenied(AppPermission.ActivityRecognition)
+                }
+            }
+        },
+        onShowLayers = {
+            layerSheet.dismiss()
+            layerSheet.show()
+        },
+        onBack = { backDispatcher?.onBackPressed() }
+    )
+    layerSheet.Content(
+        context,
+        { navigator.navigate(it) }
+    )
+}
+
+/** The preference keys the page writes, resolved once from the resources so the ViewModel never touches them. */
+internal data class NavigationSettingsKeys(
+    val quickActionLeft: String,
+    val quickActionRight: String,
+    val showCalibrationDialog: String,
+    val lockScreenPresence: String,
+    val keepUnlocked: String,
+    val speedometerType: String,
+    val showLinearCompass: String,
+    val showDialTicksWhenNoCompass: String,
+    val showSunMoonCompass: String,
+    val displayMultipleBeacons: String,
+    val numberOfVisibleBeacons: String,
+    val nearbyLinearOnly: String,
+    val showAzimuthIndicator: String,
+    val highDetailMode: String,
+    val dialLobes: String
+) {
+    companion object {
+        fun from(context: Context): NavigationSettingsKeys {
+            return NavigationSettingsKeys(
+                quickActionLeft = context.getString(R.string.pref_navigation_quick_action_left),
+                quickActionRight = context.getString(R.string.pref_navigation_quick_action_right),
+                showCalibrationDialog = context.getString(R.string.pref_show_calibrate_on_navigate_dialog),
+                lockScreenPresence = context.getString(R.string.pref_navigation_lock_screen_presence),
+                keepUnlocked = context.getString(R.string.pref_navigation_keep_unlocked),
+                speedometerType = context.getString(R.string.pref_navigation_speedometer_type),
+                showLinearCompass = context.getString(R.string.pref_show_linear_compass),
+                showDialTicksWhenNoCompass = context.getString(R.string.pref_show_dial_ticks_when_no_compass),
+                showSunMoonCompass = context.getString(R.string.pref_show_sun_moon_compass),
+                displayMultipleBeacons = context.getString(R.string.pref_display_multi_beacons),
+                numberOfVisibleBeacons = context.getString(R.string.pref_num_visible_beacons),
+                nearbyLinearOnly = context.getString(R.string.pref_nearby_linear_only),
+                showAzimuthIndicator = context.getString(R.string.pref_navigation_show_azimuth_indicator),
+                highDetailMode = context.getString(R.string.pref_navigation_high_detail_mode),
+                dialLobes = context.getString(R.string.pref_navigation_dial_lobes)
+            )
+        }
+    }
+}
+
+/**
+ * The navigation settings: each setting as state, read from the preferences when the page opens and written back as
+ * it changes. Plain Kotlin; the page shows the pickers and formats the distances.
+ */
+internal class NavigationSettingsViewModel(
+    private val prefs: NavigationPreferences,
+    private val cache: IPreferences,
+    private val keys: NavigationSettingsKeys,
+    val hasCompass: Boolean,
+    private val baseDistanceUnits: DistanceUnits
+) : ViewModel() {
+
+    var leftQuickAction by mutableStateOf(prefs.leftButton.toString())
+        private set
+    var rightQuickAction by mutableStateOf(prefs.rightButton.toString())
+        private set
+    var showCalibrationDialog by mutableStateOf(cache.getBoolean(keys.showCalibrationDialog) ?: true)
+        private set
+    var keepScreenUnlockedWhileNavigating by mutableStateOf(prefs.keepScreenUnlockedWhileNavigating)
+        private set
+    var keepScreenUnlockedWhileOpen by mutableStateOf(prefs.keepScreenUnlockedWhileOpen)
+        private set
+    var lockBearingToLocation by mutableStateOf(prefs.lockBearingToLocation)
+        private set
+    var speedometerType by mutableStateOf(cache.getString(keys.speedometerType) ?: "instant")
+        private set
+    var showLinearCompass by mutableStateOf(cache.getBoolean(keys.showLinearCompass) ?: false)
+        private set
+    var showDialTicksWhenNoCompass by mutableStateOf(prefs.showDialTicksWhenNoCompass)
+        private set
+    var showSunMoonCompass by mutableStateOf(cache.getString(keys.showSunMoonCompass) ?: "when_up")
+        private set
+    var displayMultipleBeacons by mutableStateOf(if (hasCompass) prefs.showMultipleBeacons else true)
+        private set
+    var numberOfVisibleBeacons by mutableStateOf(prefs.numberOfVisibleBeacons)
+        private set
+    var nearbyRadius by mutableStateOf(relative(Distance.meters(prefs.maxBeaconDistance)))
+        private set
+    var nearbyLinearOnly by mutableStateOf(prefs.showNearbyBeaconsOnlyOnLinearCompass)
+        private set
+    var showAzimuthIndicator by mutableStateOf(prefs.showAzimuthIndicator)
+        private set
+    var highDetailMode by mutableStateOf(prefs.highDetailMode)
+        private set
+    var bearingLength by mutableStateOf(relative(prefs.bearingDistance))
+        private set
+    var dialLobes by mutableStateOf(prefs.dialLobes.toString())
+        private set
+
+    /** The longest bearing line, in the units the page shows. */
+    val maxBearingLength: Distance = relative(Destination.Bearing.maxBearingDistance)
+
+    init {
+        if (!hasCompass) {
+            displayMultipleBeacons = true
+            cache.putBoolean(keys.displayMultipleBeacons, true)
+        }
+    }
+
+    fun updateLeftQuickAction(value: String) {
+        leftQuickAction = value
+        cache.putString(keys.quickActionLeft, value)
+    }
+
+    fun updateRightQuickAction(value: String) {
+        rightQuickAction = value
+        cache.putString(keys.quickActionRight, value)
+    }
+
+    fun updateShowCalibrationDialog(value: Boolean) {
+        showCalibrationDialog = value
+        cache.putBoolean(keys.showCalibrationDialog, value)
+    }
+
+    fun updateKeepScreenUnlockedWhileNavigating(value: Boolean) {
+        keepScreenUnlockedWhileNavigating = value
+        cache.putBoolean(keys.lockScreenPresence, value)
+    }
+
+    fun updateKeepScreenUnlockedWhileOpen(value: Boolean) {
+        keepScreenUnlockedWhileOpen = value
+        cache.putBoolean(keys.keepUnlocked, value)
+    }
+
+    fun updateLockBearingToLocation(value: Boolean) {
+        lockBearingToLocation = value
+        prefs.lockBearingToLocation = value
+    }
+
+    /** Returns true when the new speedometer counts steps, so the page can ask for activity recognition. */
+    fun updateSpeedometerType(value: String): Boolean {
+        speedometerType = value
+        cache.putString(keys.speedometerType, value)
+        return value == "instant_pedometer"
+    }
+
+    fun updateShowLinearCompass(value: Boolean) {
+        showLinearCompass = value
+        cache.putBoolean(keys.showLinearCompass, value)
+    }
+
+    fun updateShowDialTicksWhenNoCompass(value: Boolean) {
+        showDialTicksWhenNoCompass = value
+        cache.putBoolean(keys.showDialTicksWhenNoCompass, value)
+    }
+
+    fun updateShowSunMoonCompass(value: String) {
+        showSunMoonCompass = value
+        cache.putString(keys.showSunMoonCompass, value)
+    }
+
+    fun updateDialLobes(value: String) {
+        dialLobes = value
+        cache.putString(keys.dialLobes, value)
+    }
+
+    fun updateShowAzimuthIndicator(value: Boolean) {
+        showAzimuthIndicator = value
+        cache.putBoolean(keys.showAzimuthIndicator, value)
+    }
+
+    fun updateDisplayMultipleBeacons(value: Boolean) {
+        displayMultipleBeacons = value
+        cache.putBoolean(keys.displayMultipleBeacons, value)
+    }
+
+    fun updateNumberOfVisibleBeacons(count: Int) {
+        cache.putString(keys.numberOfVisibleBeacons, count.toString())
+        numberOfVisibleBeacons = count
+    }
+
+    fun updateNearbyRadius(distance: Distance) {
+        prefs.maxBeaconDistance = distance.meters().value
+        nearbyRadius = relative(Distance.meters(prefs.maxBeaconDistance))
+    }
+
+    fun updateNearbyLinearOnly(value: Boolean) {
+        nearbyLinearOnly = value
+        cache.putBoolean(keys.nearbyLinearOnly, value)
+    }
+
+    fun updateHighDetailMode(value: Boolean) {
+        highDetailMode = value
+        cache.putBoolean(keys.highDetailMode, value)
+    }
+
+    fun updateBearingLength(distance: Distance) {
+        prefs.bearingDistance = distance
+        bearingLength = relative(prefs.bearingDistance)
+    }
+
+    private fun relative(distance: Distance): Distance {
+        return distance.convertTo(baseDistanceUnits).toRelativeDistance()
+    }
+}
+
+private data class NavigationOption(
+    val value: String,
+    val label: String
+)
+
+private fun Context.navigationOptions(entriesId: Int, valuesId: Int): List<NavigationOption> {
+    val entries = resources.getStringArray(entriesId)
+    val values = resources.getStringArray(valuesId)
+    return values.mapIndexed { index, value ->
+        NavigationOption(value, entries.getOrElse(index) { value })
+    }
+}
+
+private fun optionLabel(options: List<NavigationOption>, selected: String): String {
+    return options.firstOrNull { it.value == selected }?.label ?: selected
+}
+
+@Composable
+private fun NavigationSettingsContent(
+    viewModel: NavigationSettingsViewModel,
+    formatDistance: (Distance) -> String,
+    onPickDistance: (current: Distance, title: String, onPicked: (Distance) -> Unit) -> Unit,
+    onCurrentPaceSpeedometerSelected: () -> Unit,
+    onShowLayers: () -> Unit,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val hasCompass = viewModel.hasCompass
+    val quickActionOptions = remember {
+        Tools.getQuickActions(context).map { NavigationOption(it.id.toString(), it.name) }
+    }
+    val speedometerOptions = remember {
+        context.navigationOptions(R.array.speedometer_entries, R.array.speedometer_values)
+    }
+    val sunMoonOptions = remember {
+        context.navigationOptions(R.array.sun_moon_compass_entries, R.array.sun_moon_compass_values)
     }
 
     fun pickOption(
@@ -135,155 +366,6 @@ private class NavigationSettingsController(
         }
     }
 
-    fun pickVisibleBeaconCount(current: Int, onPicked: (Int) -> Unit) {
-        Pickers.number(
-            context,
-            context.getString(R.string.pref_num_visible_beacons_title),
-            null,
-            current,
-            allowDecimals = false,
-            allowNegative = false
-        ) { value ->
-            if (value != null) {
-                val count = value.toInt()
-                putString(R.string.pref_num_visible_beacons, count.toString())
-                onPicked(count)
-            }
-        }
-    }
-
-    fun pickNearbyRadius(current: Distance, onPicked: (Distance) -> Unit) {
-        CustomUiUtils.pickDistance(
-            context,
-            distanceUnits,
-            current,
-            context.getString(R.string.pref_max_beacon_distance_title)
-        ) { distance, cancelled ->
-            if (cancelled || distance == null || distance.value <= 0) {
-                return@pickDistance
-            }
-
-            prefs.maxBeaconDistance = distance.meters().value
-            onPicked(relative(Distance.meters(prefs.maxBeaconDistance)))
-        }
-    }
-
-    fun pickBearingLength(current: Distance, onPicked: (Distance) -> Unit) {
-        CustomUiUtils.pickDistance(
-            context,
-            distanceUnits,
-            current,
-            context.getString(R.string.bearing_length)
-        ) { distance, cancelled ->
-            if (cancelled || distance == null || distance.value <= 0) {
-                return@pickDistance
-            }
-
-            prefs.bearingDistance = distance
-            onPicked(relative(prefs.bearingDistance))
-        }
-    }
-
-    fun options(entriesId: Int, valuesId: Int): List<NavigationOption> {
-        val entries = context.resources.getStringArray(entriesId)
-        val values = context.resources.getStringArray(valuesId)
-        return values.mapIndexed { index, value ->
-            NavigationOption(value, entries.getOrElse(index) { value })
-        }
-    }
-
-    fun optionLabel(options: List<NavigationOption>, selected: String): String {
-        return options.firstOrNull { it.value == selected }?.label ?: selected
-    }
-
-    fun formatDistance(distance: Distance): String {
-        return formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units))
-    }
-
-    fun relative(distance: Distance): Distance {
-        return distance.convertTo(userPrefs.baseDistanceUnits).toRelativeDistance()
-    }
-
-    fun getStringPreference(key: Int, default: String): String {
-        return cache.getString(context.getString(key)) ?: default
-    }
-
-    fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(context.getString(key)) ?: defaultValue
-    }
-
-    fun putString(key: Int, value: String) {
-        cache.putString(context.getString(key), value)
-    }
-
-    fun putBoolean(key: Int, value: Boolean) {
-        cache.putBoolean(context.getString(key), value)
-    }
-}
-
-private data class NavigationOption(
-    val value: String,
-    val label: String
-)
-
-@Composable
-private fun NavigationSettingsContent(controller: NavigationSettingsController) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val prefs = controller.prefs
-    val hasCompass = controller.hasCompass
-    val quickActionOptions = remember {
-        Tools.getQuickActions(context).map { NavigationOption(it.id.toString(), it.name) }
-    }
-    val speedometerOptions = remember {
-        controller.options(R.array.speedometer_entries, R.array.speedometer_values)
-    }
-    val sunMoonOptions = remember {
-        controller.options(R.array.sun_moon_compass_entries, R.array.sun_moon_compass_values)
-    }
-
-    var leftQuickAction by remember { mutableStateOf(prefs.leftButton.toString()) }
-    var rightQuickAction by remember { mutableStateOf(prefs.rightButton.toString()) }
-    var showCalibrationDialog by remember {
-        mutableStateOf(controller.getBoolean(R.string.pref_show_calibrate_on_navigate_dialog, true))
-    }
-    var keepScreenUnlockedWhileNavigating by remember {
-        mutableStateOf(prefs.keepScreenUnlockedWhileNavigating)
-    }
-    var keepScreenUnlockedWhileOpen by remember { mutableStateOf(prefs.keepScreenUnlockedWhileOpen) }
-    var lockBearingToLocation by remember { mutableStateOf(prefs.lockBearingToLocation) }
-    var speedometerType by remember {
-        mutableStateOf(controller.getStringPreference(R.string.pref_navigation_speedometer_type, "instant"))
-    }
-    var showLinearCompass by remember {
-        mutableStateOf(controller.getBoolean(R.string.pref_show_linear_compass, false))
-    }
-    var showDialTicksWhenNoCompass by remember { mutableStateOf(prefs.showDialTicksWhenNoCompass) }
-    var showSunMoonCompass by remember {
-        mutableStateOf(controller.getStringPreference(R.string.pref_show_sun_moon_compass, "when_up"))
-    }
-    var displayMultipleBeacons by remember {
-        mutableStateOf(if (hasCompass) prefs.showMultipleBeacons else true)
-    }
-    var numberOfVisibleBeacons by remember { mutableStateOf(prefs.numberOfVisibleBeacons) }
-    var nearbyRadius by remember {
-        mutableStateOf(controller.relative(Distance.meters(prefs.maxBeaconDistance)))
-    }
-    var nearbyLinearOnly by remember { mutableStateOf(prefs.showNearbyBeaconsOnlyOnLinearCompass) }
-    var drawCompassDialBezel by remember { mutableStateOf(prefs.drawDialBezel) }
-    var showAzimuthIndicator by remember { mutableStateOf(prefs.showAzimuthIndicator) }
-    var highDetailMode by remember { mutableStateOf(prefs.highDetailMode) }
-    var bearingLength by remember { mutableStateOf(controller.relative(prefs.bearingDistance)) }
-    val maxBearingLength = remember {
-        controller.formatDistance(controller.relative(Destination.Bearing.maxBearingDistance))
-    }
-
-    LaunchedEffect(hasCompass) {
-        if (!hasCompass) {
-            displayMultipleBeacons = true
-            controller.putBoolean(R.string.pref_display_multi_beacons, true)
-        }
-    }
-
     val generalTitle = stringResource(R.string.general)
     val navigationTitle = stringResource(R.string.navigation)
     val compassTitle = stringResource(R.string.pref_compass_sensor_title)
@@ -291,34 +373,30 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
     val mapTitle = stringResource(R.string.map)
     val sunMoonTitle = stringResource(R.string.pref_show_sun_moon_compass_title)
     val bearingFooter = stringResource(R.string.bearing_length_description) + " " +
-            stringResource(R.string.bearing_length_max, maxBearingLength)
+            stringResource(R.string.bearing_length_max, formatDistance(viewModel.maxBearingLength))
     val sunMoonChoices = sunMoonOptions.map { TrailSenseChoice(it.value, it.label) }
     val dialShapeTitle = stringResource(R.string.navigation_dial_shape)
     val dialShapeChoices = listOf(
         TrailSenseChoice("12", stringResource(R.string.navigation_dial_shape_12)),
         TrailSenseChoice("8", stringResource(R.string.navigation_dial_shape_8))
     )
-    var dialLobes by remember { mutableStateOf(prefs.dialLobes.toString()) }
-
     TrailSensePage(
         title = navigationTitle,
-        onBack = controller::goBack,
+        onBack = onBack,
         backLabel = stringResource(R.string.back)
     ) {
         trailSenseSection("quick_actions", title = generalTitle) {
             row { position ->
                 SettingsPickerRow(
                     label = stringResource(R.string.left_quick_action),
-                    selected = controller.optionLabel(quickActionOptions, leftQuickAction),
+                    selected = optionLabel(quickActionOptions, viewModel.leftQuickAction),
                     onClick = {
-                        controller.pickOption(
+                        pickOption(
                             context.getString(R.string.left_quick_action),
                             quickActionOptions,
-                            leftQuickAction
-                        ) {
-                            leftQuickAction = it
-                            controller.putString(R.string.pref_navigation_quick_action_left, it)
-                        }
+                            viewModel.leftQuickAction,
+                            viewModel::updateLeftQuickAction
+                        )
                     },
                     position = position
                 )
@@ -326,16 +404,14 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
             row { position ->
                 SettingsPickerRow(
                     label = stringResource(R.string.right_quick_action),
-                    selected = controller.optionLabel(quickActionOptions, rightQuickAction),
+                    selected = optionLabel(quickActionOptions, viewModel.rightQuickAction),
                     onClick = {
-                        controller.pickOption(
+                        pickOption(
                             context.getString(R.string.right_quick_action),
                             quickActionOptions,
-                            rightQuickAction
-                        ) {
-                            rightQuickAction = it
-                            controller.putString(R.string.pref_navigation_quick_action_right, it)
-                        }
+                            viewModel.rightQuickAction,
+                            viewModel::updateRightQuickAction
+                        )
                     },
                     position = position
                 )
@@ -347,11 +423,8 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                 row { position ->
                     SettingsSwitchRow(
                         label = stringResource(R.string.pref_show_calibrate_on_navigate_dialog_title),
-                        checked = showCalibrationDialog,
-                        onCheckedChange = {
-                            showCalibrationDialog = it
-                            controller.putBoolean(R.string.pref_show_calibrate_on_navigate_dialog, it)
-                        },
+                        checked = viewModel.showCalibrationDialog,
+                        onCheckedChange = viewModel::updateShowCalibrationDialog,
                         position = position
                     )
                 }
@@ -359,22 +432,16 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
             row { position ->
                 SettingsSwitchRow(
                     label = stringResource(R.string.pref_navigation_lock_screen_presence_title),
-                    checked = keepScreenUnlockedWhileNavigating,
-                    onCheckedChange = {
-                        keepScreenUnlockedWhileNavigating = it
-                        controller.putBoolean(R.string.pref_navigation_lock_screen_presence, it)
-                    },
+                    checked = viewModel.keepScreenUnlockedWhileNavigating,
+                    onCheckedChange = viewModel::updateKeepScreenUnlockedWhileNavigating,
                     position = position
                 )
             }
             row { position ->
                 SettingsSwitchRow(
                     label = stringResource(R.string.pref_navigation_lock_screen_when_open_title),
-                    checked = keepScreenUnlockedWhileOpen,
-                    onCheckedChange = {
-                        keepScreenUnlockedWhileOpen = it
-                        controller.putBoolean(R.string.pref_navigation_keep_unlocked, it)
-                    },
+                    checked = viewModel.keepScreenUnlockedWhileOpen,
+                    onCheckedChange = viewModel::updateKeepScreenUnlockedWhileOpen,
                     position = position
                 )
             }
@@ -382,28 +449,23 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                 SettingsSwitchRow(
                     label = stringResource(R.string.lock_bearing_to_location),
                     summary = stringResource(R.string.lock_bearing_to_location_description),
-                    checked = lockBearingToLocation,
-                    onCheckedChange = {
-                        lockBearingToLocation = it
-                        prefs.lockBearingToLocation = it
-                    },
+                    checked = viewModel.lockBearingToLocation,
+                    onCheckedChange = viewModel::updateLockBearingToLocation,
                     position = position
                 )
             }
             row { position ->
                 SettingsPickerRow(
                     label = stringResource(R.string.speedometer),
-                    selected = controller.optionLabel(speedometerOptions, speedometerType),
+                    selected = optionLabel(speedometerOptions, viewModel.speedometerType),
                     onClick = {
-                        controller.pickOption(
+                        pickOption(
                             context.getString(R.string.speedometer),
                             speedometerOptions,
-                            speedometerType
+                            viewModel.speedometerType
                         ) {
-                            speedometerType = it
-                            controller.putString(R.string.pref_navigation_speedometer_type, it)
-                            if (it == "instant_pedometer") {
-                                controller.onCurrentPaceSpeedometerSelected()
+                            if (viewModel.updateSpeedometerType(it)) {
+                                onCurrentPaceSpeedometerSelected()
                             }
                         }
                     },
@@ -413,8 +475,14 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
             row { position ->
                 SettingsPickerRow(
                     label = stringResource(R.string.bearing_length),
-                    selected = controller.formatDistance(bearingLength),
-                    onClick = { controller.pickBearingLength(bearingLength) { bearingLength = it } },
+                    selected = formatDistance(viewModel.bearingLength),
+                    onClick = {
+                        onPickDistance(
+                            viewModel.bearingLength,
+                            context.getString(R.string.bearing_length),
+                            viewModel::updateBearingLength
+                        )
+                    },
                     position = position
                 )
             }
@@ -426,11 +494,8 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     SettingsSwitchRow(
                         label = stringResource(R.string.pref_show_linear_compass_title),
                         summary = stringResource(R.string.pref_show_linear_compass_summary),
-                        checked = showLinearCompass,
-                        onCheckedChange = {
-                            showLinearCompass = it
-                            controller.putBoolean(R.string.pref_show_linear_compass, it)
-                        },
+                        checked = viewModel.showLinearCompass,
+                        onCheckedChange = viewModel::updateShowLinearCompass,
                         position = position
                     )
                 }
@@ -439,11 +504,8 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     SettingsSwitchRow(
                         label = stringResource(R.string.show_dial_ticks_on_nearby_radar),
                         summary = stringResource(R.string.show_dial_ticks_on_nearby_radar_summary),
-                        checked = showDialTicksWhenNoCompass,
-                        onCheckedChange = {
-                            showDialTicksWhenNoCompass = it
-                            controller.putBoolean(R.string.pref_show_dial_ticks_when_no_compass, it)
-                        },
+                        checked = viewModel.showDialTicksWhenNoCompass,
+                        onCheckedChange = viewModel::updateShowDialTicksWhenNoCompass,
                         position = position
                     )
                 }
@@ -457,12 +519,9 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     )
                     TrailSenseConnectedChoice(
                         options = sunMoonChoices,
-                        selected = showSunMoonCompass,
+                        selected = viewModel.showSunMoonCompass,
                         label = sunMoonTitle,
-                        onSelect = {
-                            showSunMoonCompass = it
-                            controller.putString(R.string.pref_show_sun_moon_compass, it)
-                        }
+                        onSelect = viewModel::updateShowSunMoonCompass
                     )
                 }
             }
@@ -475,12 +534,9 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     )
                     TrailSenseConnectedChoice(
                         options = dialShapeChoices,
-                        selected = dialLobes,
+                        selected = viewModel.dialLobes,
                         label = dialShapeTitle,
-                        onSelect = {
-                            dialLobes = it
-                            controller.putString(R.string.pref_navigation_dial_lobes, it)
-                        }
+                        onSelect = viewModel::updateDialLobes
                     )
                 }
             }
@@ -489,11 +545,8 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     SettingsSwitchRow(
                         label = stringResource(R.string.pref_navigation_show_azimuth_indicator_title),
                         summary = stringResource(R.string.pref_navigation_show_azimuth_indicator_summary),
-                        checked = showAzimuthIndicator,
-                        onCheckedChange = {
-                            showAzimuthIndicator = it
-                            controller.putBoolean(R.string.pref_navigation_show_azimuth_indicator, it)
-                        },
+                        checked = viewModel.showAzimuthIndicator,
+                        onCheckedChange = viewModel::updateShowAzimuthIndicator,
                         position = position
                     )
                 }
@@ -506,22 +559,28 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     SettingsSwitchRow(
                         label = stringResource(R.string.pref_display_multi_beacons_title),
                         summary = stringResource(R.string.pref_display_multi_beacons_summary),
-                        checked = displayMultipleBeacons,
-                        onCheckedChange = {
-                            displayMultipleBeacons = it
-                            controller.putBoolean(R.string.pref_display_multi_beacons, it)
-                        },
+                        checked = viewModel.displayMultipleBeacons,
+                        onCheckedChange = viewModel::updateDisplayMultipleBeacons,
                         position = position
                     )
                 }
-                if (displayMultipleBeacons) {
+                if (viewModel.displayMultipleBeacons) {
                     row { position ->
                         SettingsPickerRow(
                             label = stringResource(R.string.pref_num_visible_beacons_title),
-                            selected = numberOfVisibleBeacons.toString(),
+                            selected = viewModel.numberOfVisibleBeacons.toString(),
                             onClick = {
-                                controller.pickVisibleBeaconCount(numberOfVisibleBeacons) {
-                                    numberOfVisibleBeacons = it
+                                Pickers.number(
+                                    context,
+                                    context.getString(R.string.pref_num_visible_beacons_title),
+                                    null,
+                                    viewModel.numberOfVisibleBeacons,
+                                    allowDecimals = false,
+                                    allowNegative = false
+                                ) { value ->
+                                    if (value != null) {
+                                        viewModel.updateNumberOfVisibleBeacons(value.toInt())
+                                    }
                                 }
                             },
                             position = position
@@ -530,19 +589,22 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                     row { position ->
                         SettingsPickerRow(
                             label = stringResource(R.string.pref_max_beacon_distance_title),
-                            selected = controller.formatDistance(nearbyRadius),
-                            onClick = { controller.pickNearbyRadius(nearbyRadius) { nearbyRadius = it } },
+                            selected = formatDistance(viewModel.nearbyRadius),
+                            onClick = {
+                                onPickDistance(
+                                    viewModel.nearbyRadius,
+                                    context.getString(R.string.pref_max_beacon_distance_title),
+                                    viewModel::updateNearbyRadius
+                                )
+                            },
                             position = position
                         )
                     }
                     row { position ->
                         SettingsSwitchRow(
                             label = stringResource(R.string.pref_nearby_linear_only_title),
-                            checked = nearbyLinearOnly,
-                            onCheckedChange = {
-                                nearbyLinearOnly = it
-                                controller.putBoolean(R.string.pref_nearby_linear_only, it)
-                            },
+                            checked = viewModel.nearbyLinearOnly,
+                            onCheckedChange = viewModel::updateNearbyLinearOnly,
                             position = position
                         )
                     }
@@ -555,18 +617,15 @@ private fun NavigationSettingsContent(controller: NavigationSettingsController) 
                 SettingsSwitchRow(
                     label = stringResource(R.string.pref_high_detail_mode_title),
                     summary = stringResource(R.string.pref_high_detail_mode_summary),
-                    checked = highDetailMode,
-                    onCheckedChange = {
-                        highDetailMode = it
-                        controller.putBoolean(R.string.pref_navigation_high_detail_mode, it)
-                    },
+                    checked = viewModel.highDetailMode,
+                    onCheckedChange = viewModel::updateHighDetailMode,
                     position = position
                 )
             }
             row { position ->
                 SettingsActionRow(
                     label = stringResource(R.string.layers),
-                    onClick = controller::showLayerSheet,
+                    onClick = onShowLayers,
                     position = position
                 )
             }
