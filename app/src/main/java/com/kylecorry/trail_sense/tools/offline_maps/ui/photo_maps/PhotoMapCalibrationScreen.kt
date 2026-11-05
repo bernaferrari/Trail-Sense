@@ -544,7 +544,7 @@ private fun PhotoMapCalibrationHost(
 private fun createPhotoMapCalibrationViews(context: Context): PhotoMapCalibrationViews {
     return PhotoMapCalibrationViews(
         previewButton = PhotoMapTextButtonState(context.getString(R.string.preview)),
-        calibrationMap = MapCalibrationView(context).apply { id = R.id.calibration_map },
+        calibrationMap = MapCalibrationView(context),
         zoomOutBtn = PhotoMapIconButtonState(TrailIcons.ZoomOut, R.string.zoom_out),
         zoomInBtn = PhotoMapIconButtonState(TrailIcons.Add, R.string.zoom_in),
         mapCalibrationBottomPanel = PhotoMapCalibrationPanelState(context)

@@ -1,41 +1,33 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.graphics.Canvas as AndroidCanvas
-import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PointF
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.View
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalView
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.trail_sense.shared.views.subscaleview.ImageSource
-import com.kylecorry.trail_sense.shared.views.subscaleview.SubsamplingScaleImageView
-import com.kylecorry.trail_sense.shared.views.subscaleview.decoder.SkiaImageDecoder
-import com.kylecorry.trail_sense.shared.views.subscaleview.decoder.SkiaImageRegionDecoder
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.math.trigonometry.Trigonometry
-import com.kylecorry.trail_sense.shared.canvas.tiles.PdfImageDecoder
-import com.kylecorry.trail_sense.shared.canvas.tiles.PdfImageRegionDecoder
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.views.subscaleview.ImageTileSourceSpec
+import com.kylecorry.trail_sense.shared.views.subscaleview.SubsamplingImage
+import com.kylecorry.trail_sense.shared.views.subscaleview.SubsamplingImageState
 import kotlin.math.max
 
+/**
+ * A large image (or PDF page) in tiles with pan and zoom, and an overlay drawn in image coordinates over it.
+ * A rendering object: keep it in the composition (`remember`) and draw it with [Content].
+ */
 open class EnhancedImageView(
     protected val context: Context
 ) {
@@ -44,93 +36,25 @@ open class EnhancedImageView(
         action()
     }
 
-    var id: Int = 0
-    var keepScreenOn: Boolean = false
     private var backgroundColorOverride: Int? = null
     protected lateinit var drawer: ICanvasDrawer
     private var isSetup = false
     private var renderVersion by mutableIntStateOf(0)
-    private var contentWidth by mutableIntStateOf(0)
-    private var contentHeight by mutableIntStateOf(0)
 
-    private val imageView = TiledImageView(context)
-
-    private inner class TiledImageView(
-        context: Context
-    ) : SubsamplingScaleImageView(context, null) {
-        override fun invalidate() {
-            super.invalidate()
-            requestRedraw()
-        }
-
-        override fun tileVisible(tile: Tile?): Boolean {
-            if (imageRotation == 0f && rotationOffset == 0f) {
-                return super.tileVisible(tile)
-            }
-
-            val rect = tile?.sRect ?: return false
-
-            val topLeftSource = toSource(0f, 0f, true)
-            val topRightSource = toSource(width.toFloat(), 0f, true)
-            val bottomRightSource = toSource(width.toFloat(), height.toFloat(), true)
-            val bottomLeftSource = toSource(0f, height.toFloat(), true)
-
-            val sVisLeft = minOf(
-                topLeftSource?.x ?: 0f,
-                topRightSource?.x ?: 0f,
-                bottomRightSource?.x ?: 0f,
-                bottomLeftSource?.x ?: 0f
-            )
-            val sVisRight = maxOf(
-                topLeftSource?.x ?: 0f,
-                topRightSource?.x ?: 0f,
-                bottomRightSource?.x ?: 0f,
-                bottomLeftSource?.x ?: 0f
-            )
-            val sVisTop = minOf(
-                topLeftSource?.y ?: 0f,
-                topRightSource?.y ?: 0f,
-                bottomRightSource?.y ?: 0f,
-                bottomLeftSource?.y ?: 0f
-            )
-            val sVisBottom = maxOf(
-                topLeftSource?.y ?: 0f,
-                topRightSource?.y ?: 0f,
-                bottomRightSource?.y ?: 0f,
-                bottomLeftSource?.y ?: 0f
-            )
-
-            return sVisLeft > rect.right || rect.left > sVisRight || sVisTop > rect.bottom || rect.top <= sVisBottom
-        }
-
-        override fun onImageLoaded() {
-            super.onImageLoaded()
-            this@EnhancedImageView.onImageLoaded()
-        }
-
-        override fun onTouchEvent(event: MotionEvent): Boolean {
-            val consumed = gestureDetector.onTouchEvent(event)
-            return consumed || super.onTouchEvent(event)
-        }
-
-        fun refreshTiles() {
-            refreshRequiredTiles(true)
-        }
-
-        fun isInteractingWithZoom(): Boolean {
-            return isZooming || isQuickScaling
-        }
+    private val image = SubsamplingImageState(context).apply {
+        maxScale = 6f
+        doubleTapZoomBy = 2f
+        addOnReadyListener { this@EnhancedImageView.onImageLoaded() }
     }
 
     protected var imageRotation = 0f
         set(value) {
             field = value
-            imageView.refreshTiles()
+            updateRotation()
             invalidate()
         }
 
     private val imageClipPath = Path()
-    private val lookupMatrix = Matrix()
     private val files = FileSubsystem.getInstance(context)
     private var lastImage: String? = null
     private var lastScale = 1f
@@ -142,82 +66,54 @@ open class EnhancedImageView(
         get() = Size(imageWidth.toFloat(), imageHeight.toFloat())
 
     val orientation: Int
-        get() = imageView.orientation
+        get() = image.orientation
 
     val scale: Float
-        get() = imageView.scale
+        get() = image.scale
 
     protected var minScale: Float
-        get() = imageView.minScale
+        get() = image.minScale
         set(value) {
-            imageView.minScale = value
+            image.minScale = value
         }
 
     protected var maxScale: Float
-        get() = imageView.maxScale
+        get() = image.maxScale
         set(value) {
-            imageView.maxScale = value
+            image.maxScale = value
         }
 
     protected val center: PointF?
-        get() = imageView.center
+        get() = image.getCenter()
 
     protected val isImageLoaded: Boolean
-        get() = imageView.isImageLoaded
+        get() = image.isReady
 
     @Composable
     fun Content(modifier: Modifier = Modifier) {
-        EnhancedImageContent(modifier)
-    }
-
-    @Composable
-    fun EnhancedImageContent(modifier: Modifier = Modifier) {
         TrailSenseTheme {
-            val view = LocalView.current
-            DisposableEffect(view, keepScreenOn) {
-                val previousKeepScreenOn = view.keepScreenOn
-                view.keepScreenOn = keepScreenOn
-                onDispose {
-                    view.keepScreenOn = previousKeepScreenOn
-                }
-            }
-            Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .pointerInteropFilter {
-                        imageView.dispatchTouchEvent(it)
-                    }
-                    .onSizeChanged {
-                        contentWidth = it.width
-                        contentHeight = it.height
-                    }
+            SubsamplingImage(
+                state = image,
+                modifier = modifier,
+                background = backgroundColorOverride?.let { Color(it) } ?: Color.Transparent,
+                onTap = { onSinglePress(it) }
             ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    renderVersion
-                    if (contentWidth > 0 && contentHeight > 0) {
-                        backgroundColorOverride?.let {
-                            drawContext.canvas.nativeCanvas.drawColor(it)
-                        }
-                        imageView.measure(
-                            View.MeasureSpec.makeMeasureSpec(contentWidth, View.MeasureSpec.EXACTLY),
-                            View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY)
-                        )
-                        imageView.layout(0, 0, contentWidth, contentHeight)
-                        imageView.draw(drawContext.canvas.nativeCanvas)
-                    }
+                renderVersion
+                drawIntoCanvas {
+                    val canvas = it.nativeCanvas
                     if (::drawer.isInitialized) {
-                        drawer.canvas = drawContext.canvas.nativeCanvas
+                        drawer.canvas = canvas
                     } else {
-                        drawer = CanvasDrawer(context, drawContext.canvas.nativeCanvas)
+                        drawer = CanvasDrawer(context, canvas)
                     }
-                    renderOverlay(drawContext.canvas.nativeCanvas)
+                    renderOverlay()
                 }
             }
         }
     }
 
     fun invalidate() {
-        requestRedraw()
+        renderVersion++
     }
 
     fun setBackgroundColor(color: Int) {
@@ -226,44 +122,29 @@ open class EnhancedImageView(
     }
 
     val width: Int
-        get() = contentWidth
+        get() = image.viewWidth
 
     val height: Int
-        get() = contentHeight
+        get() = image.viewHeight
 
-    private fun requestRedraw() {
-        post {
-            renderVersion++
-        }
-    }
-
-    private fun renderOverlay(canvas: AndroidCanvas) {
-        if (!imageView.isReady) {
+    private fun renderOverlay() {
+        if (!image.isReady) {
             return
         }
 
         if (!isSetup) {
-            mySetup()
+            setup()
             isSetup = true
         }
 
-        drawer.canvas = canvas
         drawer.push()
-        drawer.rotate(-imageRotation + rotationOffset)
+        drawer.rotate(viewRotation, width / 2f, height / 2f)
         myDraw()
         tryOrNothing {
             drawer.pop()
         }
 
         drawOverlay()
-    }
-
-    private fun mySetup() {
-        imageView.setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_OUTSIDE)
-        imageView.maxScale = 6f
-        imageView.alwaysZoomDoubleTap = true
-        imageView.alwaysZoomDoubleTapZoomScale = 2f
-        setup()
     }
 
     private fun myDraw() {
@@ -285,12 +166,10 @@ open class EnhancedImageView(
             lastScale = scale
         }
 
-        imageView.vTranslate?.let {
-            if (it.x != lastTranslateX || it.y != lastTranslateY) {
-                onTranslateChanged(lastTranslateX, lastTranslateY, it.x, it.y)
-                lastTranslateX = it.x
-                lastTranslateY = it.y
-            }
+        if (image.translateX != lastTranslateX || image.translateY != lastTranslateY) {
+            onTranslateChanged(lastTranslateX, lastTranslateY, image.translateX, image.translateY)
+            lastTranslateX = image.translateX
+            lastTranslateY = image.translateY
         }
 
         preDraw()
@@ -325,34 +204,41 @@ open class EnhancedImageView(
 
     fun setImage(filename: String, rotation: Float = 0f) {
         val baseRotation = getBaseRotation(rotation)
-        if (imageView.orientation != baseRotation) {
-            imageView.orientation = when (baseRotation) {
-                90 -> SubsamplingScaleImageView.ORIENTATION_90
-                180 -> SubsamplingScaleImageView.ORIENTATION_180
-                270 -> SubsamplingScaleImageView.ORIENTATION_270
-                else -> SubsamplingScaleImageView.ORIENTATION_0
-            }
-        }
         rotationOffset = Trigonometry.deltaAngle(
             baseRotation.toFloat(),
             rotation
         )
+        image.orientation = when (baseRotation) {
+            90, 180, 270 -> baseRotation
+            else -> 0
+        }
+        updateRotation()
+
+        // Leave room for the image to turn by its offset from the quarter turn
+        val offset = rotationOffset
+        image.minScaleFactor = { width, height ->
+            val rotatedSize = Size(width, height).rotate(offset)
+            1f / max(rotatedSize.width / width, rotatedSize.height / height)
+        }
 
         if (lastImage != filename) {
-            val uri = files.uri(filename)
-
-            if (filename.lowercase().endsWith(".pdf")) {
-                imageView.setBitmapDecoderClass(PdfImageDecoder::class.java)
-                imageView.setRegionDecoderClass(PdfImageRegionDecoder::class.java)
-            } else {
-                imageView.setBitmapDecoderClass(SkiaImageDecoder::class.java)
-                imageView.setRegionDecoderClass(SkiaImageRegionDecoder::class.java)
-            }
-
-            imageView.setImage(ImageSource.uri(uri))
+            image.setSource(
+                ImageTileSourceSpec(
+                    files.uri(filename),
+                    isPdf = filename.lowercase().endsWith(".pdf")
+                )
+            )
             lastImage = filename
         }
         invalidate()
+    }
+
+    /** The image and overlay turn together by how far the image is rotated from its own offset. */
+    private val viewRotation: Float
+        get() = -imageRotation + rotationOffset
+
+    private fun updateRotation() {
+        image.rotation = viewRotation
     }
 
     private fun getBaseRotation(rotation: Float): Int {
@@ -360,14 +246,6 @@ open class EnhancedImageView(
     }
 
     protected open fun onImageLoaded() {
-        val rotatedImageSize =
-            Size(imageWidth.toFloat(), imageHeight.toFloat()).rotate(rotationOffset)
-        val percentIncrease = max(
-            rotatedImageSize.width / imageWidth,
-            rotatedImageSize.height / imageHeight
-        )
-        imageView.setMinimumScaleType(SubsamplingScaleImageView.SCALE_TYPE_CUSTOM)
-        imageView.minScale /= percentIncrease
         invalidate()
     }
 
@@ -385,11 +263,11 @@ open class EnhancedImageView(
     }
 
     fun recenter() {
-        imageView.resetScaleAndCenter()
+        image.resetScaleAndCenter()
     }
 
     fun moveTo(x: Float, y: Float) {
-        imageView.setScaleAndCenter(scale, PointF(x, y))
+        image.setScaleAndCenter(scale, PointF(x, y))
     }
 
     fun zoomBy(multiple: Float) {
@@ -397,11 +275,11 @@ open class EnhancedImageView(
     }
 
     protected fun requestScale(scale: Float) {
-        imageView.requestScale(scale)
+        image.requestScale(scale)
     }
 
     protected fun requestCenter(point: PointF) {
-        imageView.requestCenter(point)
+        image.requestCenter(point)
     }
 
     protected fun toView(
@@ -409,15 +287,11 @@ open class EnhancedImageView(
         sourceY: Float,
         withRotation: Boolean = false
     ): PointF? {
-        val view = imageView.sourceToViewCoord(sourceX, sourceY) ?: return null
-
-        if (withRotation) {
-            transform(view, inPlace = true) {
-                postRotate(-imageRotation + rotationOffset, width / 2f, height / 2f)
-            }
+        val view = image.sourceToView(sourceX, sourceY) ?: return null
+        if (!withRotation) {
+            return view
         }
-
-        return view
+        return rotate(view, viewRotation)
     }
 
     protected fun toSource(
@@ -425,82 +299,33 @@ open class EnhancedImageView(
         viewY: Float,
         withRotation: Boolean = false
     ): PointF? {
-        val view = PointF(viewX, viewY)
-
-        if (withRotation) {
-            transform(view, invert = true, inPlace = true) {
-                postRotate(-imageRotation + rotationOffset, width / 2f, height / 2f)
-            }
+        val view = if (withRotation) {
+            rotate(PointF(viewX, viewY), -viewRotation)
+        } else {
+            PointF(viewX, viewY)
         }
+        return image.viewToSource(view.x, view.y)
+    }
 
-        return imageView.viewToSourceCoord(view.x, view.y)
+    private fun rotate(point: PointF, degrees: Float): PointF {
+        if (degrees == 0f) return point
+        val radians = Math.toRadians(degrees.toDouble())
+        val cos = kotlin.math.cos(radians).toFloat()
+        val sin = kotlin.math.sin(radians).toFloat()
+        val cx = width / 2f
+        val cy = height / 2f
+        val dx = point.x - cx
+        val dy = point.y - cy
+        return PointF(cx + dx * cos - dy * sin, cy + dx * sin + dy * cos)
     }
 
     val imageWidth: Int
-        get() {
-            return if (imageView.orientation == 90 || imageView.orientation == 270) {
-                imageView.sHeight
-            } else {
-                imageView.sWidth
-            }
-        }
+        get() = image.width
 
     val imageHeight: Int
-        get() {
-            return if (imageView.orientation == 90 || imageView.orientation == 270) {
-                imageView.sWidth
-            } else {
-                imageView.sHeight
-            }
-        }
+        get() = image.height
 
-    protected open fun onLongPress(e: MotionEvent) {
+    protected open fun onSinglePress(position: Offset) {
         // Do nothing
-    }
-
-    protected open fun onSinglePress(e: MotionEvent) {
-        // Do nothing
-    }
-
-    private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
-        override fun onLongPress(e: MotionEvent) {
-            super.onLongPress(e)
-
-            if (imageView.isInteractingWithZoom()) return
-
-            this@EnhancedImageView.onLongPress(e)
-        }
-
-        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-            this@EnhancedImageView.onSinglePress(e)
-            return super.onSingleTapConfirmed(e)
-        }
-    }
-
-    private val gestureDetector = GestureDetector(context, gestureListener)
-
-    private fun transform(
-        point: PointF,
-        invert: Boolean = false,
-        inPlace: Boolean = false,
-        actions: Matrix.() -> Unit
-    ): PointF {
-        synchronized(lookupMatrix) {
-            lookupMatrix.reset()
-            actions(lookupMatrix)
-            if (invert) {
-                lookupMatrix.invert(lookupMatrix)
-            }
-            val pointArray = floatArrayOf(point.x, point.y)
-            lookupMatrix.mapPoints(pointArray)
-
-            if (inPlace) {
-                point.x = pointArray[0]
-                point.y = pointArray[1]
-                return point
-            }
-
-            return PointF(pointArray[0], pointArray[1])
-        }
     }
 }
