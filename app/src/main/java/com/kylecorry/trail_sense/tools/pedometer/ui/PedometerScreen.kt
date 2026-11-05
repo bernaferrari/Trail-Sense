@@ -89,11 +89,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.ISpeedometer
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
-import com.kylecorry.andromeda.views.chart.Chart
 import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Distance
