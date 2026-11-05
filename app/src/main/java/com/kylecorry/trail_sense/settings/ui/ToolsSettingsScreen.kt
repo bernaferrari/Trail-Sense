@@ -1,5 +1,13 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.activity.compose.LocalActivity
+
+import com.kylecorry.trail_sense.main.MainActivity
+
+import android.content.Context
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -12,8 +20,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.requireMainActivity
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -21,13 +27,16 @@ import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
 
 @Composable
-fun ToolsSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()) }
-    val cache = remember { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    val widgetThemeOptions = remember { host.widgetThemeOptions() }
-    var widgetTheme by remember { mutableStateOf(host.getDefaultWidgetTheme(cache)) }
+fun ToolsSettingsToolScreen() {
+    val context = LocalContext.current
+    // The bottom navigation belongs to the activity; it redraws when a slot changes.
+    val mainActivity = LocalActivity.current as? MainActivity
+    val prefs = remember { UserPreferences(context) }
+    val cache = remember { PreferencesSubsystem.getInstance(context).preferences }
+    val widgetThemeOptions = remember { context.widgetThemeOptions() }
+    var widgetTheme by remember { mutableStateOf(context.getDefaultWidgetTheme(cache)) }
     val tools = remember {
-        AlphabeticalToolSort().sort(Tools.getTools(host.requireContext())).first().tools
+        AlphabeticalToolSort().sort(Tools.getTools(context)).first().tools
     }
     var bottomNavSelection by remember {
         mutableStateOf(prefs.bottomNavigationTools)
@@ -40,13 +49,13 @@ fun ToolsSettingsToolScreen(host: TrailSenseDestinationHost) {
     )
 
     // Titled like the Settings row that opens it ("Tools" read as the tool list).
-    SettingsList(host, title = stringResource(R.string.sky_settings_tools_summary)) {
+    SettingsList(title = stringResource(R.string.sky_settings_tools_summary)) {
         trailSenseSection("shortcuts") {
             row { position ->
                 SettingsActionRow(
                     label = stringResource(R.string.quick_actions),
                     summary = stringResource(R.string.tool_quick_action_summary),
-                    onClick = { host.pickQuickActions(prefs) },
+                    onClick = { context.pickQuickActions(prefs) },
                     position = position
                 )
             }
@@ -54,7 +63,7 @@ fun ToolsSettingsToolScreen(host: TrailSenseDestinationHost) {
                 SettingsActionRow(
                     label = stringResource(R.string.widget_pref_title),
                     summary = stringResource(R.string.widget_bottom_sheet_instructions),
-                    onClick = { host.pickWidgets(prefs) },
+                    onClick = { context.pickWidgets(prefs) },
                     position = position
                 )
             }
@@ -63,10 +72,10 @@ fun ToolsSettingsToolScreen(host: TrailSenseDestinationHost) {
                     label = stringResource(R.string.default_widget_theme),
                     selected = optionLabel(widgetThemeOptions, widgetTheme),
                     onClick = {
-                        host.pickOption(host.getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
+                        context.pickOption(context.getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
                             widgetTheme = it
-                            host.putString(cache, R.string.pref_default_widget_theme, it)
-                            Tools.triggerWidgetUpdate(host.requireContext(), null)
+                            context.putString(cache, R.string.pref_default_widget_theme, it)
+                            Tools.triggerWidgetUpdate(context, null)
                         }
                     },
                     position = position
@@ -83,9 +92,16 @@ fun ToolsSettingsToolScreen(host: TrailSenseDestinationHost) {
                     val pickerTitle = stringResource(R.string.bottom_navigation_slot, index + 1)
                     SettingsActionRow(
                         label = stringResource(R.string.settings_bottom_navigation_slot, index + 1),
-                        summary = host.getBottomNavToolName(tools, bottomNavSelection.getOrNull(index)),
+                        summary = context.getBottomNavToolName(tools, bottomNavSelection.getOrNull(index)),
                         onClick = {
-                            host.pickBottomNavTool(pickerTitle, index, tools, bottomNavSelection, prefs) {
+                            context.pickBottomNavTool(
+                                pickerTitle,
+                                index,
+                                tools,
+                                bottomNavSelection,
+                                prefs,
+                                { mainActivity?.updateBottomNavigation() }
+                            ) {
                                 bottomNavSelection = it
                             }
                         },
@@ -97,8 +113,8 @@ fun ToolsSettingsToolScreen(host: TrailSenseDestinationHost) {
     }
 }
 
-private fun TrailSenseDestinationHost.pickQuickActions(prefs: UserPreferences) {
-    val potentialActions = Tools.getQuickActions(requireContext())
+private fun Context.pickQuickActions(prefs: UserPreferences) {
+    val potentialActions = Tools.getQuickActions(this)
         .filterNot { it.id == Tools.QUICK_ACTION_NONE }
 
     val selected = prefs.toolQuickActions
@@ -108,7 +124,7 @@ private fun TrailSenseDestinationHost.pickQuickActions(prefs: UserPreferences) {
     }
 
     Pickers.items(
-        requireContext(),
+        this,
         getString(R.string.quick_actions),
         potentialActions.map { it.name },
         selectedIndices
@@ -119,11 +135,11 @@ private fun TrailSenseDestinationHost.pickQuickActions(prefs: UserPreferences) {
     }
 }
 
-private fun TrailSenseDestinationHost.pickWidgets(prefs: UserPreferences) {
-    val tools = Tools.getTools(requireContext())
+private fun Context.pickWidgets(prefs: UserPreferences) {
+    val tools = Tools.getTools(this)
     val potentialWidgets = tools
         .flatMap { it.widgets }
-        .filter { it.isEnabled(requireContext()) && it.canPlaceInApp }
+        .filter { it.isEnabled(this) && it.canPlaceInApp }
         .distinctBy { it.id }
         .sortedBy { it.name }
 
@@ -134,7 +150,7 @@ private fun TrailSenseDestinationHost.pickWidgets(prefs: UserPreferences) {
     }
 
     Pickers.items(
-        requireContext(),
+        this,
         getString(R.string.widget_pref_title),
         potentialWidgets.map { it.name },
         selectedIndices
@@ -145,19 +161,20 @@ private fun TrailSenseDestinationHost.pickWidgets(prefs: UserPreferences) {
     }
 }
 
-private fun TrailSenseDestinationHost.pickBottomNavTool(
+private fun Context.pickBottomNavTool(
     title: String,
     index: Int,
     tools: List<Tool>,
     bottomNavSelection: List<Long>,
     prefs: UserPreferences,
+    onBottomNavigationChanged: () -> Unit,
     onSelectionChanged: (List<Long>) -> Unit
 ) {
     val names = listOf(getString(R.string.none)) + tools.map { it.name }
     val ids = listOf(0L) + tools.map { it.id }
 
     Pickers.item(
-        requireContext(),
+        this,
         title,
         names,
         ids.indexOfFirst { it == bottomNavSelection.getOrNull(index) }
@@ -169,16 +186,16 @@ private fun TrailSenseDestinationHost.pickBottomNavTool(
             }
             prefs.bottomNavigationTools = newSelection
             onSelectionChanged(newSelection)
-            requireMainActivity().updateBottomNavigation()
+            onBottomNavigationChanged()
         }
     }
 }
 
-private fun TrailSenseDestinationHost.getBottomNavToolName(tools: List<Tool>, id: Long?): String {
+private fun Context.getBottomNavToolName(tools: List<Tool>, id: Long?): String {
     return tools.firstOrNull { it.id == id }?.name ?: getString(R.string.none)
 }
 
-private fun TrailSenseDestinationHost.widgetThemeOptions(): List<SettingsOption> {
+private fun Context.widgetThemeOptions(): List<SettingsOption> {
     return listOf(
         SettingsOption(
             WidgetTheme.System.id.toString(),
@@ -201,7 +218,7 @@ private fun TrailSenseDestinationHost.widgetThemeOptions(): List<SettingsOption>
     )
 }
 
-private fun TrailSenseDestinationHost.getDefaultWidgetTheme(cache: IPreferences): String {
+private fun Context.getDefaultWidgetTheme(cache: IPreferences): String {
     val key = getString(R.string.pref_default_widget_theme)
     val current = cache.getString(key)
     if (current != null) {

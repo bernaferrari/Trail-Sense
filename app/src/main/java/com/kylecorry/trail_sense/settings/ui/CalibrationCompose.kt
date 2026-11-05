@@ -27,6 +27,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -66,6 +68,16 @@ fun Quality.toCalibrationTone(): CalibrationTone = when (this) {
 /** Back from a calibration or tool settings page, the same way the system back gesture goes. */
 fun TrailSenseDestinationHost.goBack() {
     mainActivity.onBackPressedDispatcher.onBackPressed()
+}
+
+/**
+ * Back from a calibration or tool settings page, the same way the system back gesture goes (so an
+ * [androidx.activity.compose.BackHandler] on the page still gets a say).
+ */
+@Composable
+fun rememberGoBack(): () -> Unit {
+    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    return remember(dispatcher) { { dispatcher?.onBackPressed() } }
 }
 
 /**

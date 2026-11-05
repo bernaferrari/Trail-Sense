@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
@@ -21,20 +25,21 @@ import com.kylecorry.trail_sense.shared.icons.trail.SignalCellular3
 import com.kylecorry.trail_sense.shared.icons.trail.Thermometer
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
-fun SensorSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val hasBarometer = remember { Sensors.hasBarometer(host.requireContext()) }
+fun SensorSettingsToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val hasBarometer = remember { Sensors.hasBarometer(context) }
     val items = remember(hasBarometer) {
         sensorSettingsItems(hasBarometer)
     }
     // The sensors to calibrate, then the raw readings of every sensor on their own.
     val (details, sensors) = items.partition { it.key == "details" }
 
-    SettingsList(host, title = stringResource(R.string.sensors)) {
+    SettingsList(title = stringResource(R.string.sensors)) {
         listOf("sensors" to sensors, "details" to details).forEach { (key, group) ->
             trailSenseSection(key) {
                 group.forEach { item ->
@@ -50,7 +55,7 @@ fun SensorSettingsToolScreen(host: TrailSenseDestinationHost) {
                                 )
                             },
                             onClick = {
-                                host.findNavigator().navigate(item.destination)
+                                navigator.navigate(item.destination)
                             },
                             position = position,
                             animateEntrance = false

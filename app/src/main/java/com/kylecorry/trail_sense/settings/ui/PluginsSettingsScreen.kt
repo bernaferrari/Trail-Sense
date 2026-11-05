@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
+
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -17,15 +23,17 @@ import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun PluginsSettingsToolScreen(host: TrailSenseDestinationHost) {
+fun PluginsSettingsToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
-    val pluginSubsystem = remember { PluginSubsystem.getInstance(host.requireContext()) }
+    val pluginSubsystem = remember { PluginSubsystem.getInstance(context) }
     var plugins by remember { mutableStateOf<PluginSettingsState?>(null) }
 
     fun refresh() {
@@ -53,7 +61,7 @@ fun PluginsSettingsToolScreen(host: TrailSenseDestinationHost) {
     val connectedTitle = stringResource(R.string.connected_plugins)
     val availableTitle = stringResource(R.string.available_plugins)
 
-    SettingsList(host, title = stringResource(R.string.plugins)) {
+    SettingsList(title = stringResource(R.string.plugins)) {
         // Nothing until the first load finishes, so "None" never flashes over plugins that are there.
         val loaded = plugins ?: return@SettingsList
         trailSenseSection("connected", title = connectedTitle) {
@@ -67,7 +75,7 @@ fun PluginsSettingsToolScreen(host: TrailSenseDestinationHost) {
                     SettingsActionRow(
                         label = plugin.name,
                         summary = plugin.packageId,
-                        onClick = { host.openPluginDetails(plugin) },
+                        onClick = { navigator.navigate(Route.PluginDetails(packageId = plugin.packageId)) },
                         position = position
                     )
                 }
@@ -84,7 +92,7 @@ fun PluginsSettingsToolScreen(host: TrailSenseDestinationHost) {
                     SettingsActionRow(
                         label = plugin.name,
                         summary = plugin.packageId,
-                        onClick = { host.confirmConnect(pluginSubsystem, plugin, ::refresh) },
+                        onClick = { context.confirmConnect(pluginSubsystem, plugin, scope, ::refresh) },
                         position = position
                     )
                 }
@@ -100,27 +108,24 @@ private suspend fun loadPlugins(pluginSubsystem: PluginSubsystem): PluginSetting
     )
 }
 
-private fun TrailSenseDestinationHost.confirmConnect(
+private fun Context.confirmConnect(
     pluginSubsystem: PluginSubsystem,
     plugin: Plugin,
+    scope: CoroutineScope,
     onConnected: () -> Unit
 ) {
     Alerts.dialog(
-        requireContext(),
+        this,
         getString(R.string.plugin_connect_title),
         getString(R.string.plugin_connect_message, plugin.name)
     ) { cancelled ->
         if (!cancelled) {
-            lifecycleScope.launch {
+            scope.launch {
                 pluginSubsystem.connect(plugin)
                 onConnected()
             }
         }
     }
-}
-
-private fun TrailSenseDestinationHost.openPluginDetails(plugin: Plugin) {
-    findNavigator().navigate(Route.PluginDetails(packageId = plugin.packageId))
 }
 
 private fun List<Plugin>.sortedPlugins(): List<Plugin> {

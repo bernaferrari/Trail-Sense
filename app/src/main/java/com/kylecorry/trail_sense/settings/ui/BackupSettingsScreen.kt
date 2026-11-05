@@ -1,9 +1,14 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
@@ -13,13 +18,16 @@ import com.kylecorry.trail_sense.settings.backup.ChangeAutomaticBackupDirectoryC
 import com.kylecorry.trail_sense.settings.backup.RestoreCommand
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlinx.coroutines.launch
 
 @Composable
-fun BackupSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()) }
+fun BackupSettingsToolScreen() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    // The activity implements the Activity-only IntentResultRetriever the file pickers need.
+    val resultRetriever = context as IntentResultRetriever
+    val prefs = remember { UserPreferences(context) }
     var autoBackupEnabled by remember {
         mutableStateOf(prefs.backup.isAutoBackupEnabled)
     }
@@ -30,19 +38,19 @@ fun BackupSettingsToolScreen(host: TrailSenseDestinationHost) {
         mutableStateOf(prefs.backup.includeMapsforgeMaps)
     }
 
-    SettingsList(host, title = stringResource(R.string.backup_restore)) {
+    SettingsList(title = stringResource(R.string.backup_restore)) {
         trailSenseSection("manual") {
             row { position ->
                 SettingsActionRow(
                     label = stringResource(R.string.backup),
-                    onClick = host::backup,
+                    onClick = { scope.launch { backup(context, resultRetriever) } },
                     position = position
                 )
             }
             row { position ->
                 SettingsActionRow(
                     label = stringResource(R.string.restore),
-                    onClick = host::restore,
+                    onClick = { scope.launch { restore(context, resultRetriever) } },
                     position = position
                 )
             }
@@ -57,7 +65,7 @@ fun BackupSettingsToolScreen(host: TrailSenseDestinationHost) {
                         autoBackupEnabled = it
                         prefs.backup.isAutoBackupEnabled = it
                         if (it) {
-                            host.changeAutoBackupDirectory(prefs) { isEnabled ->
+                            changeAutoBackupDirectory(context, resultRetriever, prefs) { isEnabled ->
                                 autoBackupEnabled = isEnabled
                                 autoBackupSummary = getAutoBackupSummary(prefs, isEnabled)
                             }
@@ -84,26 +92,21 @@ fun BackupSettingsToolScreen(host: TrailSenseDestinationHost) {
     }
 }
 
-private fun TrailSenseDestinationHost.backup() {
-    val uriPicker = IntentUriPicker(mainActivity as IntentResultRetriever, requireContext())
-    lifecycleScope.launch {
-        BackupCommand(requireContext(), uriPicker).execute()
-    }
+private suspend fun backup(context: Context, resultRetriever: IntentResultRetriever) {
+    BackupCommand(context, IntentUriPicker(resultRetriever, context)).execute()
 }
 
-private fun TrailSenseDestinationHost.restore() {
-    val uriPicker = IntentUriPicker(mainActivity as IntentResultRetriever, requireContext())
-    lifecycleScope.launch {
-        RestoreCommand(requireContext(), uriPicker).execute()
-    }
+private suspend fun restore(context: Context, resultRetriever: IntentResultRetriever) {
+    RestoreCommand(context, IntentUriPicker(resultRetriever, context)).execute()
 }
 
-private fun TrailSenseDestinationHost.changeAutoBackupDirectory(
+private fun changeAutoBackupDirectory(
+    context: Context,
+    resultRetriever: IntentResultRetriever,
     prefs: UserPreferences,
     onChanged: (Boolean) -> Unit
 ) {
-    val resultRetriever = mainActivity as IntentResultRetriever
-    ChangeAutomaticBackupDirectoryCommand(requireContext(), resultRetriever) { isSuccessful ->
+    ChangeAutomaticBackupDirectoryCommand(context, resultRetriever) { isSuccessful ->
         if (!isSuccessful) {
             prefs.backup.isAutoBackupEnabled = false
         }

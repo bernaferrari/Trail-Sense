@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,16 +12,16 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 
 @Composable
-fun FlashlightSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val formatter = remember { FormatService.getInstance(host.requireContext()) }
-    val prefs = remember { UserPreferences(host.requireContext()).flashlight }
+fun FlashlightSettingsToolScreen() {
+    val context = LocalContext.current
+    val formatter = remember { FormatService.getInstance(context) }
+    val prefs = remember { UserPreferences(context).flashlight }
     val hasFlashlight = remember {
-        FlashlightSubsystem.getInstance(host.requireContext()).isAvailable()
+        FlashlightSubsystem.getInstance(context).isAvailable()
     }
     var toggleWithVolume by remember {
         mutableStateOf(prefs.toggleWithVolumeButtons)
@@ -33,7 +35,7 @@ fun FlashlightSettingsToolScreen(host: TrailSenseDestinationHost) {
     val timeoutTitle = stringResource(R.string.pref_flashlight_timeout_title)
     val screenTitle = stringResource(R.string.screen_flashlight)
 
-    SettingsList(host, title = stringResource(R.string.flashlight_title)) {
+    SettingsList(title = stringResource(R.string.flashlight_title)) {
         // Without a torch only the screen flashlight is left, so its header would have nothing to set it apart.
         if (hasFlashlight) {
             trailSenseSection("torch") {

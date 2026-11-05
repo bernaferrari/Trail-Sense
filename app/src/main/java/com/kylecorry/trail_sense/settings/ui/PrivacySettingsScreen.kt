@@ -1,5 +1,13 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
+
+import androidx.activity.compose.LocalActivity
+
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -16,14 +24,16 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
-fun PrivacySettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()) }
+fun PrivacySettingsToolScreen() {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    val navigator = LocalNavigator.current
+    val prefs = remember { UserPreferences(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
-    var isLocationMocked by remember { mutableStateOf(host.isLocationMocked(prefs)) }
+    var isLocationMocked by remember { mutableStateOf(context.isLocationMocked(prefs)) }
     var isScreenshotProtectionOn by remember {
         mutableStateOf(prefs.privacy.isScreenshotProtectionOn)
     }
@@ -31,7 +41,7 @@ fun PrivacySettingsToolScreen(host: TrailSenseDestinationHost) {
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                isLocationMocked = host.isLocationMocked(prefs)
+                isLocationMocked = context.isLocationMocked(prefs)
                 isScreenshotProtectionOn = prefs.privacy.isScreenshotProtectionOn
             }
         }
@@ -41,7 +51,7 @@ fun PrivacySettingsToolScreen(host: TrailSenseDestinationHost) {
         }
     }
 
-    SettingsList(host, title = stringResource(R.string.privacy)) {
+    SettingsList(title = stringResource(R.string.privacy)) {
         trailSenseSection("privacy") {
             row { position ->
                 SettingsActionRow(
@@ -52,7 +62,7 @@ fun PrivacySettingsToolScreen(host: TrailSenseDestinationHost) {
                         stringResource(R.string.location_not_mocked)
                     },
                     onClick = {
-                        host.findNavigator().navigate(
+                        navigator.navigate(
                             Route.CalibrateGps
                         )
                     },
@@ -66,7 +76,7 @@ fun PrivacySettingsToolScreen(host: TrailSenseDestinationHost) {
                     onCheckedChange = {
                         isScreenshotProtectionOn = it
                         prefs.privacy.isScreenshotProtectionOn = it
-                        Screen.setAllowScreenshots(host.mainActivity.window, !it)
+                        activity?.window?.let { window -> Screen.setAllowScreenshots(window, !it) }
                     },
                     position = position
                 )
@@ -75,7 +85,7 @@ fun PrivacySettingsToolScreen(host: TrailSenseDestinationHost) {
     }
 }
 
-private fun TrailSenseDestinationHost.isLocationMocked(prefs: UserPreferences): Boolean {
+private fun Context.isLocationMocked(prefs: UserPreferences): Boolean {
     return prefs.gps.locationSource == GPSLocationSource.Manual ||
-        !SensorService(requireContext()).hasLocationPermission()
+        !SensorService(this).hasLocationPermission()
 }

@@ -10,16 +10,15 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlin.math.roundToInt
 
 @Composable
-fun BubbleLevelSettingsToolScreen(host: TrailSenseDestinationHost) {
+fun BubbleLevelSettingsToolScreen() {
     val prefs = remember { DependencyRegistry.get<UserPreferences>().bubbleLevel }
     val formatter = remember { DependencyRegistry.get<FormatService>() }
     var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
-    SettingsList(host, title = stringResource(R.string.tool_bubble_level_title)) {
+    SettingsList(title = stringResource(R.string.tool_bubble_level_title)) {
         trailSenseSection("threshold") {
             row { position ->
                 // Chosen in place: a whole-degree slider with its value beside the label, no dialog.

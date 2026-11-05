@@ -1,5 +1,13 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.main.MainActivity
+
+import android.content.Context
+
+import androidx.activity.compose.LocalActivity
+
+import androidx.compose.ui.platform.LocalContext
+
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,30 +22,31 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem.GroupBehavior
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
-fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val cache = remember { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    val userPrefs = remember { UserPreferences(host.requireContext()) }
+fun ExperimentalSettingsToolScreen() {
+    val context = LocalContext.current
+    // The bottom navigation belongs to the activity; it redraws its tools when this tool appears or goes.
+    val mainActivity = LocalActivity.current as? MainActivity
+    val cache = remember { PreferencesSubsystem.getInstance(context).preferences }
+    val userPrefs = remember { UserPreferences(context) }
     val hasMetalDirectionSupport = remember {
-        Sensors.hasGyroscope(host.requireContext()) && SensorService(host.requireContext()).hasCompass()
+        Sensors.hasGyroscope(context) && SensorService(context).hasCompass()
     }
     val showForecastSource = remember {
-        Tools.isToolAvailable(host.requireContext(), Tools.WEATHER) && isDebug()
+        Tools.isToolAvailable(context, Tools.WEATHER) && isDebug()
     }
     val showNotificationGrouping = remember {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
     }
     val forecastOptions = remember { forecastOptions() }
-    val notificationGroupingOptions = remember { host.notificationGroupingOptions() }
+    val notificationGroupingOptions = remember { context.notificationGroupingOptions() }
 
     var showMetalDirection by remember {
-        mutableStateOf(host.getBoolean(cache, R.string.pref_experimental_metal_direction, false))
+        mutableStateOf(context.getBoolean(cache, R.string.pref_experimental_metal_direction, false))
     }
     var useZeroShutterLag by remember {
         mutableStateOf(userPrefs.camera.useZeroShutterLag)
@@ -50,7 +59,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
     }
     var forecastSource by remember {
         mutableStateOf(
-            host.getStringPreference(
+            context.getStringPreference(
                 cache,
                 R.string.pref_weather_forecast_source,
                 forecastSourceValue(ForecastSource.Sol)
@@ -71,7 +80,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
     val notificationsTitle = stringResource(R.string.settings_notifications_section)
 
     // Each experiment sits under the part of the app it changes, so no row needs to say where it applies.
-    SettingsList(host, title = stringResource(R.string.experimental)) {
+    SettingsList(title = stringResource(R.string.experimental)) {
         trailSenseSection("tools", title = toolsTitle) {
             row { position ->
                 SettingsSwitchRow(
@@ -81,7 +90,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
                     onCheckedChange = {
                         isCliffHeightEnabled = it
                         userPrefs.isCliffHeightEnabled = it
-                        host.requireMainActivity().updateBottomNavigation()
+                        mainActivity?.updateBottomNavigation()
                     },
                     position = position
                 )
@@ -94,7 +103,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
                         checked = showMetalDirection,
                         onCheckedChange = {
                             showMetalDirection = it
-                            host.putBoolean(cache, R.string.pref_experimental_metal_direction, it)
+                            context.putBoolean(cache, R.string.pref_experimental_metal_direction, it)
                         },
                         position = position
                     )
@@ -108,7 +117,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
                     checked = useZeroShutterLag,
                     onCheckedChange = {
                         useZeroShutterLag = it
-                        host.putBoolean(cache, R.string.pref_use_zero_shutter_lag, it)
+                        context.putBoolean(cache, R.string.pref_use_zero_shutter_lag, it)
                     },
                     position = position
                 )
@@ -121,7 +130,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
                     checked = useFilteredGps,
                     onCheckedChange = {
                         useFilteredGps = it
-                        cache.putInt(host.getString(R.string.pref_gps_smoothing), if (it) 50 else 0)
+                        cache.putInt(context.getString(R.string.pref_gps_smoothing), if (it) 50 else 0)
                     },
                     position = position
                 )
@@ -134,7 +143,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
                     checked = showPressureForecast,
                     onCheckedChange = {
                         showPressureForecast = it
-                        host.putBoolean(cache, R.string.pref_show_pressure_forecast, it)
+                        context.putBoolean(cache, R.string.pref_show_pressure_forecast, it)
                     },
                     position = position
                 )
@@ -147,7 +156,7 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
                         selected = forecastSource,
                         onSelected = {
                             forecastSource = it
-                            host.putString(cache, R.string.pref_weather_forecast_source, it)
+                            context.putString(cache, R.string.pref_weather_forecast_source, it)
                         },
                         position = position
                     )
@@ -158,13 +167,12 @@ fun ExperimentalSettingsToolScreen(host: TrailSenseDestinationHost) {
             trailSenseSection("notifications", title = notificationsTitle) {
                 row { position ->
                     UnitPickerRow(
-    host,
-                        label = stringResource(R.string.notification_grouping),
+    label = stringResource(R.string.notification_grouping),
                         options = notificationGroupingOptions,
                         selected = notificationGrouping,
                         onSelected = {
                             notificationGrouping = it
-                            host.putString(cache, R.string.pref_notification_group_behavior, it)
+                            context.putString(cache, R.string.pref_notification_group_behavior, it)
                         },
                         position = position
                     )
@@ -180,7 +188,7 @@ private fun forecastOptions(): List<SettingsOption> {
     }
 }
 
-private fun TrailSenseDestinationHost.notificationGroupingOptions(): List<SettingsOption> {
+private fun Context.notificationGroupingOptions(): List<SettingsOption> {
     val labels = mapOf(
         GroupBehavior.System to getString(R.string.theme_system),
         GroupBehavior.UngroupAll to getString(R.string.ungroup_all),

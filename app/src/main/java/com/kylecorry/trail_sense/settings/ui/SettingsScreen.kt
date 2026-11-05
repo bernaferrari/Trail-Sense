@@ -3,6 +3,12 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.main.MainActivity
+
+import androidx.activity.compose.LocalActivity
+
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.runtime.mutableStateOf
@@ -69,7 +75,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.Theme
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.Visible
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
@@ -93,16 +98,19 @@ private val navigationMap = mapOf(
 )
 
 @Composable
-fun SettingsToolScreen(host: TrailSenseDestinationHost) {
+fun SettingsToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    // The theme and the bottom navigation belong to the activity, so these switches reach it directly.
+    val mainActivity = LocalActivity.current as MainActivity
     val plugins = remember { getAppService<PluginSubsystem>() }
 
     SettingsScreen(
-        version = Package.getVersionName(host.requireContext()),
+        version = Package.getVersionName(context),
         pluginsEnabled = plugins.arePluginsEnabled(),
-        onBack = { host.mainActivity.onBackPressedDispatcher.onBackPressed() },
-        onNavigate = { host.findNavigator().navigate(it) },
+        onBack = rememberGoBack(),
+        onNavigate = { navigator.navigate(it) },
         appearance = {
-            val context = host.requireContext()
             val prefs = remember { com.kylecorry.trail_sense.shared.UserPreferences(context) }
             val cache = remember {
                 com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem.getInstance(context).preferences
@@ -116,18 +124,18 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
                 compassWallpaperColors = remember { cache.getBoolean(compassColorsKey) ?: false },
                 onThemeChanged = {
                     prefs.theme = it
-                    host.mainActivity.reloadTheme()
+                    mainActivity.reloadTheme()
                 },
                 onPaletteChanged = { com.kylecorry.trail_sense.main.theme.ThemeChoices.changed() },
                 onNightFullscreenChanged = {
                     cache.putBoolean(fullscreenKey, it)
-                    host.mainActivity.reloadTheme()
+                    mainActivity.reloadTheme()
                 },
                 onCompassWallpaperColorsChanged = { cache.putBoolean(compassColorsKey, it) }
             )
         },
-        onCompactModeChanged = { host.mainActivity.changeBottomNavLabelsVisibility(it) },
-        onShowAllLabelsChanged = { host.mainActivity.showAllBottomNavLabels(it) }
+        onCompactModeChanged = { mainActivity.changeBottomNavLabelsVisibility(it) },
+        onShowAllLabelsChanged = { mainActivity.showAllBottomNavLabels(it) }
     )
 }
 

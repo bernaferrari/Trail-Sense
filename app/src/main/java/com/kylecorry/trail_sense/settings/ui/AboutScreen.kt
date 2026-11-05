@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
+import androidx.compose.ui.platform.LocalContext
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.content.Intent
@@ -50,22 +54,23 @@ import com.kylecorry.trail_sense.shared.icons.trail.Trail
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
 
 @Composable
-fun AboutToolScreen(host: TrailSenseDestinationHost) {
+fun AboutToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
     AboutScreen(
-        version = Package.getVersionName(host.requireContext()),
-        onOpenUrl = { host.startActivity(Intents.url(it)) },
+        version = Package.getVersionName(context),
+        onOpenUrl = { context.startActivity(Intents.url(it)) },
         onEmailDeveloper = {
-            val intent = Intents.email(host.getString(R.string.email), host.getString(R.string.app_name))
-            host.startActivity(Intent.createChooser(intent, host.getString(R.string.pref_email_title)))
+            val intent = Intents.email(context.getString(R.string.email), context.getString(R.string.app_name))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.pref_email_title)))
         },
-        onLicenses = { host.findNavigator().navigate(Route.Licenses) }
+        onLicenses = { navigator.navigate(Route.Licenses) }
     )
 }
 

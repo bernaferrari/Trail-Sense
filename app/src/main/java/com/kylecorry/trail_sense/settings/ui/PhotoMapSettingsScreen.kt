@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,20 +14,20 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapToolLayerManager
 
 @Composable
-fun PhotoMapSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val layerSheet = rememberSettingsLayerSheet(host) {
+fun PhotoMapSettingsToolScreen() {
+    val context = LocalContext.current
+    val layerSheet = rememberSettingsLayerSheet {
         MapLayersSheetState(
             OfflineMapsToolRegistration.PHOTO_MAPS_ID,
             PhotoMapToolLayerManager.alwaysEnabledLayers
         )
     }
-    val prefs = remember { UserPreferences(host.requireContext()).photoMaps }
+    val prefs = remember { UserPreferences(context).photoMaps }
     var reducePhotoResolution by remember {
         mutableStateOf(prefs.autoReducePhotoMaps)
     }
@@ -38,7 +42,7 @@ fun PhotoMapSettingsToolScreen(host: TrailSenseDestinationHost) {
     var highDetailMode by remember { mutableStateOf(prefs.highDetailMode) }
     val importTitle = stringResource(R.string.on_import)
 
-    SettingsList(host, title = stringResource(R.string.photo_maps)) {
+    SettingsList(title = stringResource(R.string.photo_maps)) {
         trailSenseSection("import", title = importTitle) {
             row { position ->
                 SettingsSwitchRow(
@@ -47,7 +51,7 @@ fun PhotoMapSettingsToolScreen(host: TrailSenseDestinationHost) {
                     onCheckedChange = {
                         reducePhotoResolution = it
                         prefs.autoReducePhotoMaps = it
-                        host.onReduceMapResolutionChange(reducePdfResolution)
+                        context.onReduceMapResolutionChange(reducePdfResolution)
                     },
                     position = position
                 )
@@ -59,7 +63,7 @@ fun PhotoMapSettingsToolScreen(host: TrailSenseDestinationHost) {
                     onCheckedChange = {
                         reducePdfResolution = it
                         prefs.autoReducePdfMaps = it
-                        host.onReduceMapResolutionChange(reducePhotoResolution)
+                        context.onReduceMapResolutionChange(reducePhotoResolution)
                     },
                     position = position
                 )
@@ -127,13 +131,13 @@ fun PhotoMapSettingsToolScreen(host: TrailSenseDestinationHost) {
 }
 
 
-private fun TrailSenseDestinationHost.onReduceMapResolutionChange(shouldReduce: Boolean) {
+private fun Context.onReduceMapResolutionChange(shouldReduce: Boolean) {
     if (shouldReduce) {
         return
     }
 
     CustomUiUtils.disclaimer(
-        requireContext(),
+        this,
         getString(R.string.reduce_map_resolution),
         getString(R.string.reduce_map_resolution_crop_disclaimer),
         getString(R.string.reduce_map_resolution_crop_disclaimer_shown),

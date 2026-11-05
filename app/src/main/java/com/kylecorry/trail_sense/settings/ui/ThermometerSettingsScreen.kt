@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.settings.ui
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
+import android.content.Context
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -12,35 +13,39 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.painterResource
+import androidx.activity.compose.LocalActivity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.observe
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.IThermometer
-import com.kylecorry.trail_sense.shared.extensions.asLiveData
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
-import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.extensions.asLiveData
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
 import com.kylecorry.trail_sense.shared.views.UserError
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
@@ -51,245 +56,415 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagn
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.BackfillHistoricalTemperaturesCommand
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import java.time.Duration
 import java.time.Instant
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.roundToInt
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @Composable
-fun ThermometerSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { ThermometerSettingsController(host) }
+fun ThermometerSettingsToolScreen() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    // The error banner lives on the activity; this is the only Activity-only API the page uses.
+    val activity = LocalActivity.current as? MainActivity
+    val viewModel = viewModel {
+        ThermometerSettingsViewModel(
+            prefs = UserPreferences(appContext),
+            cache = PreferencesSubsystem.getInstance(appContext).preferences,
+            sensorService = SensorService(appContext),
+            weather = WeatherSubsystem.getInstance(appContext),
+            keys = ThermometerPreferenceKeys(
+                source = appContext.getString(R.string.pref_thermometer_source),
+                smoothing = appContext.getString(R.string.pref_temperature_smoothing),
+                calibration = listOf(
+                    R.string.pref_min_calibrated_temp_c,
+                    R.string.pref_max_calibrated_temp_c,
+                    R.string.pref_min_uncalibrated_temp_c,
+                    R.string.pref_max_uncalibrated_temp_c
+                ).map { appContext.getString(it) }
+            )
+        )
+    }
+    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val cache = remember(appContext) { PreferencesSubsystem.getInstance(appContext).preferences }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.onCreate()
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> {}
-            }
+    // Preference changes are followed while the page is started, as before.
+    DisposableEffect(lifecycleOwner, viewModel) {
+        val changes = cache.onChange.asLiveData()
+        val observer = Observer<String> { viewModel.onPreferenceChanged(it) }
+        changes.observe(lifecycleOwner, observer)
+        onDispose { changes.removeObserver(observer) }
+    }
+
+    val thermometerSource = viewModel.thermometerSource
+    LifecycleResumeEffect(viewModel, thermometerSource) {
+        viewModel.startThermometer()
+        if (activity != null) {
+            displayLocationErrors(context, activity, { navigator.navigate(it) }, thermometerSource)
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
+        onPauseOrDispose {
+            viewModel.stopThermometer()
+            activity?.errorBanner?.dismiss(ErrorBannerReason.LocationNotSet)
         }
     }
 
-    controller.Content()
-}
+    val sourceOptions = rememberSettingsOptions(
+        R.array.thermometer_source_entries,
+        R.array.thermometer_source_values
+    )
+    val source = viewModel.source
+    val smoothing = viewModel.smoothing
+    val calibration = viewModel.calibration
+    val chartData = viewModel.chartData
+    val temperature = viewModel.temperature?.let { formatService.formatTemperature(it) }
+        ?: stringResource(R.string.dash)
 
-private class ThermometerSettingsController(private val host: TrailSenseDestinationHost) {
+    val sourceTitle = stringResource(R.string.source)
+    val historyTitle = stringResource(R.string.history)
+    val calibrationTitle = stringResource(R.string.calibrate)
+    val aboutTitle = stringResource(R.string.pref_category_about)
+    val noData = stringResource(R.string.no_data)
+    val chartLegend = stringResource(R.string.calibration_chart_legend)
+    val sourceFooter = stringResource(R.string.thermometer_source_explanation)
+    val calibrationFooter = stringResource(R.string.thermometer_calibration_explanation)
+    val thermometerIcon = rememberVectorPainter(TrailIcons.Thermometer)
+    val sourceChoices = sourceOptions.map { TrailSenseChoice(it.value, it.label) }
+    val entries = viewModel.calibrationEntries(calibration)
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
-    private var calibratedThermometer: IThermometer? = null
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    private val temperatureUnits by lazy { prefs.temperatureUnits }
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-
-    private val weather by lazy { WeatherSubsystem.getInstance(host.requireContext()) }
-    private var history: List<WeatherObservation> = emptyList()
-    private var uncalibratedHistory: List<Reading<RawWeatherObservation>> = emptyList()
-
-    private val runner = CoroutineQueueRunner()
-
-    private var setTemperatureState: ((String) -> Unit)? = null
-    private var setChartState: ((TemperatureChartData) -> Unit)? = null
-    private var setCalibrationState: ((TemperatureCalibrationState) -> Unit)? = null
-    private var setSmoothingState: ((Int) -> Unit)? = null
-    private var setBackfillVisible: ((Boolean) -> Unit)? = null
-
-    @Composable
-    fun Content() {
-        val sourceOptions = remember {
-            options(R.array.thermometer_source_entries, R.array.thermometer_source_values)
+    TrailSensePage(
+        title = stringResource(R.string.tool_thermometer_title),
+        onBack = rememberGoBack(),
+        backLabel = stringResource(R.string.back)
+    ) {
+        item("hero") {
+            CalibrationHero(
+                label = stringResource(R.string.temperature),
+                value = temperature,
+                icon = thermometerIcon,
+                status = optionLabel(sourceOptions, source)
+            )
         }
 
-        var temperature by remember { mutableStateOf(getString(R.string.dash)) }
-        var chartData by remember { mutableStateOf<TemperatureChartData?>(null) }
-        var source by remember { mutableStateOf(getSourcePreference()) }
-        var smoothing by remember { mutableStateOf(getInt(R.string.pref_temperature_smoothing, 0)) }
-        var calibration by remember { mutableStateOf(getCalibrationState()) }
-        var backfillVisible by remember {
-            mutableStateOf(prefs.thermometer.source == ThermometerSource.Historic)
-        }
-
-        setTemperatureState = { temperature = it }
-        setChartState = { chartData = it }
-        setCalibrationState = { calibration = it }
-        setSmoothingState = { smoothing = it }
-        setBackfillVisible = { backfillVisible = it }
-
-        val sourceTitle = stringResource(R.string.source)
-        val historyTitle = stringResource(R.string.history)
-        val calibrationTitle = stringResource(R.string.calibrate)
-        val aboutTitle = stringResource(R.string.pref_category_about)
-        val noData = stringResource(R.string.no_data)
-        val chartLegend = stringResource(R.string.calibration_chart_legend)
-        val sourceFooter = stringResource(R.string.thermometer_source_explanation)
-        val calibrationFooter = stringResource(R.string.thermometer_calibration_explanation)
-        val thermometerIcon = rememberVectorPainter(TrailIcons.Thermometer)
-        val sourceChoices = sourceOptions.map { TrailSenseChoice(it.value, it.label) }
-        val entries = calibrationEntries(calibration)
-
-        TrailSensePage(
-            title = stringResource(R.string.tool_thermometer_title),
-            onBack = host::goBack,
-            backLabel = stringResource(R.string.back)
-        ) {
-            item("hero") {
-                CalibrationHero(
-                    label = stringResource(R.string.temperature),
-                    value = temperature,
-                    icon = thermometerIcon,
-                    status = optionLabel(sourceOptions, source)
+        trailSenseSection("history", title = historyTitle, footer = chartLegend) {
+            row { position ->
+                CalibrationHistoryChart(
+                    data = chartData?.data,
+                    raw = chartData?.raw.orEmpty(),
+                    margin = 5f,
+                    minRange = 10f,
+                    emptyText = noData,
+                    position = position
                 )
             }
+        }
 
-            trailSenseSection("history", title = historyTitle, footer = chartLegend) {
-                row { position ->
-                    CalibrationHistoryChart(
-                        data = chartData?.data,
-                        raw = chartData?.raw.orEmpty(),
-                        margin = 5f,
-                        minRange = 10f,
-                        emptyText = noData,
-                        position = position
+        trailSenseSection("source", title = sourceTitle, footer = sourceFooter) {
+            row { position ->
+                TrailSenseGroupCard(position = position) {
+                    TrailSenseConnectedChoice(
+                        options = sourceChoices,
+                        selected = source,
+                        label = sourceTitle,
+                        onSelect = viewModel::selectSource
                     )
                 }
             }
-
-            trailSenseSection("source", title = sourceTitle, footer = sourceFooter) {
-                row { position ->
-                    TrailSenseGroupCard(position = position) {
-                        TrailSenseConnectedChoice(
-                            options = sourceChoices,
-                            selected = source,
-                            label = sourceTitle,
-                            onSelect = {
-                                source = it
-                                putString(R.string.pref_thermometer_source, it)
-                                onSourceChanged(sourceFromPreference(it))
-                            }
-                        )
-                    }
-                }
-                row { position ->
-                    CalibrationSliderRow(
-                        title = stringResource(R.string.smoothing),
-                        summary = stringResource(R.string.smoothing_summary),
-                        value = smoothing,
-                        valueLabel = formatService.formatPercentage(smoothing / 10f),
-                        range = 0..1000,
-                        onValueChange = {
-                            smoothing = it
-                            putInt(R.string.pref_temperature_smoothing, it)
-                        },
-                        position = position
-                    )
-                }
-            }
-
-            trailSenseSection("calibration", title = calibrationTitle, footer = calibrationFooter) {
-                entries.forEach { entry ->
-                    row { position ->
-                        SettingsPickerRow(
-                            label = stringResource(entry.title),
-                            selected = DecimalFormatter.format(entry.value, 1),
-                            onClick = {
-                                pickTemperature(getString(entry.title), entry.value) { value ->
-                                    entry.onPicked(value)
-                                    refreshCalibrationState()
-                                    reloadThermometer()
-                                }
-                            },
-                            position = position
-                        )
-                    }
-                }
-                row { position ->
-                    SettingsActionRow(
-                        label = stringResource(R.string.reset_calibration),
-                        onClick = ::resetCalibration,
-                        position = position
-                    )
-                }
-            }
-
-            trailSenseSection("about", title = aboutTitle) {
-                if (backfillVisible) {
-                    row { position ->
-                        SettingsActionRow(
-                            label = stringResource(R.string.pref_backfill_temperatures_title),
-                            onClick = ::backfillTemperatures,
-                            position = position
-                        )
-                    }
-                }
-                row { position ->
-                    SettingsActionRow(
-                        label = stringResource(R.string.tool_user_guide_title),
-                        onClick = {
-                            UserGuideUtils.showGuide(
-                                host.requireContext(),
-                                host.findNavigator(),
-                                R.raw.guide_tool_settings
-                            )
-                        },
-                        position = position
-                    )
-                }
+            row { position ->
+                CalibrationSliderRow(
+                    title = stringResource(R.string.smoothing),
+                    summary = stringResource(R.string.smoothing_summary),
+                    value = smoothing,
+                    valueLabel = formatService.formatPercentage(smoothing / 10f),
+                    range = 0..1000,
+                    onValueChange = viewModel::changeSmoothing,
+                    position = position
+                )
             }
         }
+
+        trailSenseSection("calibration", title = calibrationTitle, footer = calibrationFooter) {
+            entries.forEach { entry ->
+                row { position ->
+                    SettingsPickerRow(
+                        label = stringResource(entry.title),
+                        selected = DecimalFormatter.format(entry.value, 1),
+                        onClick = {
+                            pickTemperature(context, context.getString(entry.title), entry.value) { value ->
+                                viewModel.setCalibration(entry, value)
+                            }
+                        },
+                        position = position
+                    )
+                }
+            }
+            row { position ->
+                SettingsActionRow(
+                    label = stringResource(R.string.reset_calibration),
+                    onClick = viewModel::resetCalibration,
+                    position = position
+                )
+            }
+        }
+
+        trailSenseSection("about", title = aboutTitle) {
+            if (viewModel.backfillVisible) {
+                row { position ->
+                    SettingsActionRow(
+                        label = stringResource(R.string.pref_backfill_temperatures_title),
+                        onClick = {
+                            Alerts.dialog(
+                                context,
+                                context.getString(R.string.pref_backfill_temperatures_title),
+                                context.getString(R.string.pref_backfill_temperatures_description)
+                            ) {
+                                if (!it) {
+                                    scope.launch {
+                                        val loading =
+                                            AlertLoadingIndicator(context, context.getString(R.string.updating))
+                                        loading.show()
+                                        BackfillHistoricalTemperaturesCommand.create(appContext).execute()
+                                        loading.hide()
+                                    }
+                                }
+                            }
+                        },
+                        position = position
+                    )
+                }
+            }
+            row { position ->
+                SettingsActionRow(
+                    label = stringResource(R.string.tool_user_guide_title),
+                    onClick = {
+                        UserGuideUtils.showGuide(
+                            context,
+                            navigator,
+                            R.raw.guide_tool_settings
+                        )
+                    },
+                    position = position
+                )
+            }
+        }
+    }
+}
+
+private fun pickTemperature(
+    context: Context,
+    title: String,
+    current: Float,
+    onSelected: (Float) -> Unit
+) {
+    Pickers.number(
+        context,
+        title,
+        null,
+        current,
+        allowDecimals = true,
+        allowNegative = false,
+        hint = context.getString(R.string.temperature)
+    ) {
+        if (it != null) {
+            onSelected(it.toFloat())
+        }
+    }
+}
+
+private fun displayLocationErrors(
+    context: Context,
+    activity: MainActivity,
+    navigate: (Route) -> Unit,
+    source: ThermometerSource
+) {
+    if (source == ThermometerSource.Historic && isLocationUnset(context)) {
+        val error = UserError(
+            ErrorBannerReason.LocationNotSet,
+            context.getString(R.string.location_not_set) + "\n" +
+                    context.getString(R.string.for_historic_temperatures),
+            TrailIcons.Satellite,
+            context.getString(R.string.set)
+        ) {
+            activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
+            navigate(Route.CalibrateGps)
+        }
+        activity.errorBanner.report(error)
+    } else {
+        activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
+    }
+}
+
+private fun isLocationUnset(context: Context): Boolean {
+    val diagnostic = GPSDiagnosticScanner()
+    return diagnostic.quickScan(context)
+        .any { it.id == GPSDiagnosticScanner.LOCATION_UNSET }
+}
+
+/** The preference keys the thermometer page reads and watches. */
+internal data class ThermometerPreferenceKeys(
+    val source: String,
+    val smoothing: String,
+    /** Calibration keys whose change means the calibrated thermometer must be rebuilt. */
+    val calibration: List<String>
+)
+
+internal data class TemperatureChartData(
+    val data: List<Reading<Float>>,
+    val raw: List<Reading<Float>>
+)
+
+internal data class TemperatureCalibrationState(
+    val minBatteryC: Float,
+    val minActualC: Float,
+    val maxBatteryC: Float,
+    val maxActualC: Float,
+    val minBatteryF: Float,
+    val minActualF: Float,
+    val maxBatteryF: Float,
+    val maxActualF: Float
+)
+
+internal class TemperatureCalibrationEntry(
+    @StringRes val title: Int,
+    val value: Float,
+    val onPicked: (Float) -> Unit
+)
+
+/**
+ * The thermometer page's state: the live calibrated reading, the history chart, the source, smoothing and the four
+ * calibration points. Plain Kotlin over the preferences, the sensor service and the weather subsystem.
+ */
+internal class ThermometerSettingsViewModel(
+    private val prefs: UserPreferences,
+    private val cache: IPreferences,
+    private val sensorService: SensorService,
+    private val weather: IWeatherSubsystem,
+    private val keys: ThermometerPreferenceKeys
+) : ViewModel() {
+
+    private val temperatureUnits = prefs.temperatureUnits
+    private var calibratedThermometer: IThermometer? = null
+    private var isThermometerOn = false
+    private var history: List<WeatherObservation> = emptyList()
+    private var uncalibratedHistory: List<Reading<RawWeatherObservation>> = emptyList()
+    private val runner = CoroutineQueueRunner()
+
+    var temperature by mutableStateOf<Temperature?>(null)
+        private set
+    var chartData by mutableStateOf<TemperatureChartData?>(null)
+        private set
+    var source by mutableStateOf(cache.getString(keys.source) ?: "historic")
+        private set
+    var smoothing by mutableStateOf(cache.getInt(keys.smoothing) ?: 0)
+        private set
+    var calibration by mutableStateOf(readCalibration())
+        private set
+    var backfillVisible by mutableStateOf(prefs.thermometer.source == ThermometerSource.Historic)
+        private set
+
+    /** The source the errors are shown for; updated whenever the source changes. */
+    var thermometerSource by mutableStateOf(prefs.thermometer.source)
+        private set
+
+    init {
+        viewModelScope.launch {
+            weather.weatherChanged.flow.collect {
+                updateData()
+            }
+        }
+        updateData()
+    }
+
+    fun selectSource(value: String) {
+        source = value
+        cache.putString(keys.source, value)
+        onSourceChanged(if (value == "sensor") ThermometerSource.Sensor else ThermometerSource.Historic)
+    }
+
+    fun changeSmoothing(value: Int) {
+        smoothing = value
+        cache.putInt(keys.smoothing, value)
+    }
+
+    fun setCalibration(entry: TemperatureCalibrationEntry, value: Float) {
+        entry.onPicked(value)
+        calibration = readCalibration()
+        reloadThermometer()
+    }
+
+    fun resetCalibration() {
+        prefs.thermometer.resetThermometerCalibration()
+        calibration = readCalibration()
+        reloadThermometer()
+    }
+
+    fun onPreferenceChanged(key: String) {
+        if (key in keys.calibration || key == keys.source) {
+            reloadThermometer()
+        }
+        if (key == keys.source) {
+            onSourceChanged(prefs.thermometer.source)
+        }
+    }
+
+    fun startThermometer() {
+        isThermometerOn = true
+        reloadThermometer()
+    }
+
+    fun stopThermometer() {
+        isThermometerOn = false
+        calibratedThermometer?.stop(this::onThermometerUpdate)
     }
 
     /** The four calibration points in the user's units; each writes both the Celsius and Fahrenheit preference. */
-    private fun calibrationEntries(calibration: TemperatureCalibrationState): List<CalibrationEntry> {
+    fun calibrationEntries(calibration: TemperatureCalibrationState): List<TemperatureCalibrationEntry> {
         return if (temperatureUnits == TemperatureUnits.Celsius) {
             listOf(
-                CalibrationEntry(R.string.min_temp_uncalibrated, calibration.minBatteryC) { value ->
+                TemperatureCalibrationEntry(R.string.min_temp_uncalibrated, calibration.minBatteryC) { value ->
                     prefs.thermometer.minBatteryTemperature = value
                     prefs.thermometer.minBatteryTemperatureF = celsiusToFahrenheit(value)
                 },
-                CalibrationEntry(R.string.min_temp_calibrated, calibration.minActualC) { value ->
+                TemperatureCalibrationEntry(R.string.min_temp_calibrated, calibration.minActualC) { value ->
                     prefs.thermometer.minActualTemperature = value
                     prefs.thermometer.minActualTemperatureF = celsiusToFahrenheit(value)
                 },
-                CalibrationEntry(R.string.max_temp_uncalibrated, calibration.maxBatteryC) { value ->
+                TemperatureCalibrationEntry(R.string.max_temp_uncalibrated, calibration.maxBatteryC) { value ->
                     prefs.thermometer.maxBatteryTemperature = value
                     prefs.thermometer.maxBatteryTemperatureF = celsiusToFahrenheit(value)
                 },
-                CalibrationEntry(R.string.max_temp_calibrated, calibration.maxActualC) { value ->
+                TemperatureCalibrationEntry(R.string.max_temp_calibrated, calibration.maxActualC) { value ->
                     prefs.thermometer.maxActualTemperature = value
                     prefs.thermometer.maxActualTemperatureF = celsiusToFahrenheit(value)
                 }
             )
         } else {
             listOf(
-                CalibrationEntry(R.string.min_temp_uncalibrated, calibration.minBatteryF) { value ->
+                TemperatureCalibrationEntry(R.string.min_temp_uncalibrated, calibration.minBatteryF) { value ->
                     prefs.thermometer.minBatteryTemperatureF = value
                     prefs.thermometer.minBatteryTemperature = fahrenheitToCelsius(value)
                 },
-                CalibrationEntry(R.string.min_temp_calibrated, calibration.minActualF) { value ->
+                TemperatureCalibrationEntry(R.string.min_temp_calibrated, calibration.minActualF) { value ->
                     prefs.thermometer.minActualTemperatureF = value
                     prefs.thermometer.minActualTemperature = fahrenheitToCelsius(value)
                 },
-                CalibrationEntry(R.string.max_temp_uncalibrated, calibration.maxBatteryF) { value ->
+                TemperatureCalibrationEntry(R.string.max_temp_uncalibrated, calibration.maxBatteryF) { value ->
                     prefs.thermometer.maxBatteryTemperatureF = value
                     prefs.thermometer.maxBatteryTemperature = fahrenheitToCelsius(value)
                 },
-                CalibrationEntry(R.string.max_temp_calibrated, calibration.maxActualF) { value ->
+                TemperatureCalibrationEntry(R.string.max_temp_calibrated, calibration.maxActualF) { value ->
                     prefs.thermometer.maxActualTemperatureF = value
                     prefs.thermometer.maxActualTemperature = fahrenheitToCelsius(value)
                 }
             )
         }
+    }
+
+    override fun onCleared() {
+        calibratedThermometer?.stop(this::onThermometerUpdate)
     }
 
     private fun celsiusToFahrenheit(value: Float): Float {
@@ -300,64 +475,12 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
         return Temperature.from(value, TemperatureUnits.Fahrenheit).celsius().value
     }
 
-    private class CalibrationEntry(
-        @StringRes val title: Int,
-        val value: Float,
-        val onPicked: (Float) -> Unit
-    )
-
-    fun onCreate() {
-        val source = getString(R.string.pref_thermometer_source)
-        val thermometerInvalidationKeys = listOf(
-            R.string.pref_min_calibrated_temp_c,
-            R.string.pref_max_calibrated_temp_c,
-            R.string.pref_min_uncalibrated_temp_c,
-            R.string.pref_max_uncalibrated_temp_c
-        ).map { getString(it) } + listOf(source)
-        cache.onChange.asLiveData().observe(host.lifecycleOwner) {
-            if (thermometerInvalidationKeys.contains(it)) {
-                reloadThermometer()
-            }
-
-            if (it == source) {
-                onSourceChanged(prefs.thermometer.source)
-            }
-        }
-
-        host.lifecycleScope.launch {
-            weather.weatherChanged.flow.collect {
-                updateData()
-            }
-        }
-        updateData()
-    }
-
-    fun onResume() {
-        reloadThermometer()
-        displayErrors(prefs.thermometer.source)
-    }
-
-    fun onPause() {
-        calibratedThermometer?.stop(this::onThermometerUpdate)
-        hideLocationUnsetError()
-    }
-
-    fun onDestroy() {
-        setTemperatureState = null
-        setChartState = null
-        setCalibrationState = null
-        setSmoothingState = null
-        setBackfillVisible = null
-    }
-
     private fun updateData() {
-        host.inBackground {
+        viewModelScope.launch {
             runner.replace {
                 history = weather.getHistory()
                 uncalibratedHistory = weather.getRawHistory()
-                onMain {
-                    updateChart()
-                }
+                updateChart()
             }
         }
     }
@@ -387,130 +510,41 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
             )
         }
 
-        setChartState?.invoke(TemperatureChartData(displayReadings, displayRawReadings))
+        chartData = TemperatureChartData(displayReadings, displayRawReadings)
     }
 
-    private fun onSourceChanged(source: ThermometerSource) {
-        when (source) {
+    private fun onSourceChanged(newSource: ThermometerSource) {
+        when (newSource) {
             ThermometerSource.Historic -> setSmoothing(0f)
             ThermometerSource.Sensor -> setSmoothing(0.2f)
         }
-        setBackfillVisible?.invoke(source == ThermometerSource.Historic)
-        displayErrors(source)
+        backfillVisible = newSource == ThermometerSource.Historic
+        thermometerSource = newSource
         resetCalibration()
     }
 
-    private fun resetCalibration() {
-        prefs.thermometer.resetThermometerCalibration()
-        refreshCalibrationState()
-        reloadThermometer()
-    }
-
-    private fun setSmoothing(smoothing: Float) {
-        prefs.thermometer.smoothing = smoothing
-        setSmoothingState?.invoke((smoothing * 1000).safeRoundToInt())
-    }
-
-    private fun refreshCalibrationState() {
-        setCalibrationState?.invoke(getCalibrationState())
+    private fun setSmoothing(value: Float) {
+        prefs.thermometer.smoothing = value
+        smoothing = (value * 1000).safeRoundToInt()
     }
 
     private fun reloadThermometer() {
         calibratedThermometer?.stop(this::onThermometerUpdate)
+        calibratedThermometer = null
+        if (!isThermometerOn) {
+            return
+        }
         calibratedThermometer = sensorService.getThermometer()
         calibratedThermometer?.start(this::onThermometerUpdate)
     }
 
     private fun onThermometerUpdate(): Boolean {
-        val temperature = calibratedThermometer?.temperature ?: return true
-        setTemperatureState?.invoke(
-            formatService.formatTemperature(
-                Temperature.from(
-                    temperature,
-                    TemperatureUnits.Celsius
-                ).convertTo(prefs.temperatureUnits)
-            )
-        )
+        val reading = calibratedThermometer?.temperature ?: return true
+        temperature = Temperature.from(reading, TemperatureUnits.Celsius).convertTo(prefs.temperatureUnits)
         return true
     }
 
-    private fun backfillTemperatures() {
-        Alerts.dialog(
-            host.requireContext(),
-            getString(R.string.pref_backfill_temperatures_title),
-            getString(R.string.pref_backfill_temperatures_description)
-        ) {
-            if (!it) {
-                host.inBackground {
-                    val loading =
-                        AlertLoadingIndicator(host.requireContext(), getString(R.string.updating))
-                    loading.show()
-                    BackfillHistoricalTemperaturesCommand.create(host.requireContext()).execute()
-                    loading.hide()
-                }
-            }
-        }
-    }
-
-    private fun pickOption(
-        title: String,
-        options: List<ThermometerOption>,
-        selected: String,
-        onSelected: (String) -> Unit
-    ) {
-        Pickers.item(
-            host.requireContext(),
-            title,
-            options.map { it.label },
-            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
-        ) { index ->
-            if (index != null) {
-                onSelected(options[index].value)
-            }
-        }
-    }
-
-    private fun pickTemperature(
-        title: String,
-        current: Float,
-        onSelected: (Float) -> Unit
-    ) {
-        Pickers.number(
-            host.requireContext(),
-            title,
-            null,
-            current,
-            allowDecimals = true,
-            allowNegative = false,
-            hint = getString(R.string.temperature)
-        ) {
-            if (it != null) {
-                onSelected(it.toFloat())
-            }
-        }
-    }
-
-    private fun options(entriesId: Int, valuesId: Int): List<ThermometerOption> {
-        val entries = host.getResources().getStringArray(entriesId)
-        val values = host.getResources().getStringArray(valuesId)
-        return values.mapIndexed { index, value ->
-            ThermometerOption(value, entries.getOrElse(index) { value })
-        }
-    }
-
-    private fun optionLabel(options: List<ThermometerOption>, selected: String): String {
-        return options.firstOrNull { it.value == selected }?.label ?: selected
-    }
-
-    private fun getSourcePreference(): String {
-        return cache.getString(getString(R.string.pref_thermometer_source)) ?: "historic"
-    }
-
-    private fun sourceFromPreference(value: String): ThermometerSource {
-        return if (value == "sensor") ThermometerSource.Sensor else ThermometerSource.Historic
-    }
-
-    private fun getCalibrationState(): TemperatureCalibrationState {
+    private fun readCalibration(): TemperatureCalibrationState {
         return TemperatureCalibrationState(
             minBatteryC = prefs.thermometer.minBatteryTemperature,
             minActualC = prefs.thermometer.minActualTemperature,
@@ -522,76 +556,4 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
             maxActualF = prefs.thermometer.maxActualTemperatureF
         )
     }
-
-    private fun getInt(key: Int, defaultValue: Int): Int {
-        return cache.getInt(getString(key)) ?: defaultValue
-    }
-
-    private fun putString(key: Int, value: String) {
-        cache.putString(getString(key), value)
-    }
-
-    private fun putInt(key: Int, value: Int) {
-        cache.putInt(getString(key), value)
-    }
-
-    private fun displayErrors(source: ThermometerSource) {
-        if (source == ThermometerSource.Historic && isLocationUnset()) {
-            showLocationUnsetError()
-        } else {
-            hideLocationUnsetError()
-        }
-    }
-
-    private fun hideLocationUnsetError() {
-        val activity = host.mainActivity
-        activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
-    }
-
-    private fun showLocationUnsetError() {
-        val activity = host.mainActivity
-        val appNavigator = host.findNavigator()
-        val error = UserError(
-            ErrorBannerReason.LocationNotSet,
-            getString(R.string.location_not_set) + "\n" +
-                    getString(R.string.for_historic_temperatures),
-            TrailIcons.Satellite,
-            getString(R.string.set)
-        ) {
-            activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
-            appNavigator.navigate(Route.CalibrateGps)
-        }
-        activity.errorBanner.report(error)
-    }
-
-    private fun isLocationUnset(): Boolean {
-        val diagnostic = GPSDiagnosticScanner()
-        return diagnostic.quickScan(host.requireContext())
-            .any { it.id == GPSDiagnosticScanner.LOCATION_UNSET }
-    }
-
-    private fun getString(@StringRes id: Int, vararg args: Any): String {
-        return host.getString(id, *args)
-    }
-
-    private data class TemperatureChartData(
-        val data: List<Reading<Float>>,
-        val raw: List<Reading<Float>>
-    )
-
-    private data class TemperatureCalibrationState(
-        val minBatteryC: Float,
-        val minActualC: Float,
-        val maxBatteryC: Float,
-        val maxActualC: Float,
-        val minBatteryF: Float,
-        val minActualF: Float,
-        val maxBatteryF: Float,
-        val maxActualF: Float
-    )
-
-    private data class ThermometerOption(
-        val value: String,
-        val label: String
-    )
 }

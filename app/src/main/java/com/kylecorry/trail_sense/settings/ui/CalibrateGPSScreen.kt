@@ -57,11 +57,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.location.GPS
@@ -99,36 +98,48 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
-fun CalibrateGPSToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CalibrateGPSController(host) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    androidx.compose.runtime.DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                Lifecycle.Event.ON_DESTROY -> controller.onDestroy()
-                else -> Unit
+fun CalibrateGPSToolScreen() {
+    val context = LocalContext.current.applicationContext
+    val viewModel = viewModel {
+        CalibrateGPSViewModel(
+            prefs = UserPreferences(context),
+            sensorService = SensorService(context),
+            formatService = FormatService.getInstance(context),
+            isGpsAvailable = { GPS.isAvailable(context) },
+            createRealGps = { source ->
+                when (source) {
+                    RealGpsSource.Device -> CustomGPS(context)
+                    RealGpsSource.Cached -> CachedGPS(context)
+                    RealGpsSource.Override -> OverrideGPS(context)
+                }
             }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onPause()
-            controller.onDestroy()
-        }
+        )
     }
 
-    CalibrateGPSContent(controller)
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { viewModel.onPause() }
+    }
+
+    CalibrateGPSContent(viewModel)
 }
 
-private class CalibrateGPSController(private val host: TrailSenseDestinationHost) {
+/** Where the override's GPS autofill reads its location from. */
+internal enum class RealGpsSource { Device, Cached, Override }
 
-    val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val sensorService by lazy { SensorService(host.requireContext()) }
+/**
+ * The GPS page's state: the location and its accuracy while the page is resumed, whether location permission and the
+ * override apply, the accuracy filter, and filling the override from the real GPS.
+ */
+internal class CalibrateGPSViewModel(
+    val prefs: UserPreferences,
+    private val sensorService: SensorService,
+    private val formatService: FormatService,
+    private val isGpsAvailable: () -> Boolean,
+    private val createRealGps: (RealGpsSource) -> IGPS
+) : ViewModel() {
+
     private val throttle = Throttle(20)
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
 
     private var gps: IGPS = sensorService.getGPS()
     private var realGps: IGPS = getRealGPS()
@@ -137,34 +148,23 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
     var isOverrideLocationLoading by mutableStateOf(false)
         private set
 
+    var locationSummary by mutableStateOf(formatService.formatLocation(gps.location))
+        private set
+
+    /** The horizontal accuracy as a distance in the user's units, or null when the GPS doesn't report one. */
+    var accuracy by mutableStateOf(formatAccuracy())
+        private set
+    var permissionVisible by mutableStateOf(!isAutoGPSPreferenceEnabled())
+        private set
+    var autoLocationEnabled by mutableStateOf(isAutoGPSPreferenceEnabled())
+        private set
+    var overrideEnabled by mutableStateOf(isLocationOverrideEnabled())
+        private set
+    var accuracyFilter by mutableStateOf(prefs.gps.accuracyFilter)
+        private set
+
     private var wasUsingRealGPS = shouldUseRealGPS()
     private var wasUsingCachedGPS = shouldUseCachedGPS()
-
-    private var setLocationSummary: ((String) -> Unit)? = null
-    private var setAccuracySummary: ((String?) -> Unit)? = null
-    private var setPermissionVisible: ((Boolean) -> Unit)? = null
-    private var setAutoLocationEnabled: ((Boolean) -> Unit)? = null
-    private var setOverrideEnabled: ((Boolean) -> Unit)? = null
-
-    fun setLocationSummary(updater: (String) -> Unit) {
-        setLocationSummary = updater
-    }
-
-    fun setAccuracySummary(updater: (String?) -> Unit) {
-        setAccuracySummary = updater
-    }
-
-    fun setPermissionVisible(updater: (Boolean) -> Unit) {
-        setPermissionVisible = updater
-    }
-
-    fun setAutoLocationEnabled(updater: (Boolean) -> Unit) {
-        setAutoLocationEnabled = updater
-    }
-
-    fun setOverrideEnabled(updater: (Boolean) -> Unit) {
-        setOverrideEnabled = updater
-    }
 
     fun onResume() {
         if (gps.hasValidReading) {
@@ -178,41 +178,30 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
         stopOverrideLocationAutofill()
     }
 
-    fun onDestroy() {
-        setLocationSummary = null
-        setAccuracySummary = null
-        setPermissionVisible = null
-        setAutoLocationEnabled = null
-        setOverrideEnabled = null
+    override fun onCleared() {
+        onPause()
     }
 
-    fun formatLocation(): String {
-        return formatService.formatLocation(gps.location)
-    }
-
-    fun formatAccuracy(): String? {
+    private fun formatAccuracy(): String? {
         return gps.horizontalAccuracy?.let {
-            val accuracyStr = formatService.formatDistance(
+            formatService.formatDistance(
                 Distance.meters(it).convertTo(prefs.baseDistanceUnits)
             )
-            host.getString(R.string.accuracy_distance_format, accuracyStr)
         }
     }
 
-    fun isLocationOverrideEnabled(): Boolean {
+    private fun isLocationOverrideEnabled(): Boolean {
         return !isAutoGPSPreferenceEnabled() || prefs.gps.locationSource == GPSLocationSource.Manual
     }
 
-    fun isAutoGPSPreferenceEnabled(): Boolean {
+    private fun isAutoGPSPreferenceEnabled(): Boolean {
         return sensorService.hasLocationPermission()
     }
 
-    fun goBack() {
-        host.goBack()
-    }
-
-    fun openAppSettings() {
-        host.startActivity(Intents.appSettings(host.requireContext()))
+    fun setAutoLocation(enabled: Boolean) {
+        prefs.gps.locationSource = if (enabled) GPSLocationSource.GPS else GPSLocationSource.Manual
+        overrideEnabled = isLocationOverrideEnabled()
+        onAutoLocationChanged()
     }
 
     fun onAutoLocationChanged() {
@@ -221,23 +210,8 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
     }
 
     fun clearCache() {
-        host.lifecycleOwner.lifecycleScope.launch {
+        viewModelScope.launch {
             CacheGPSModule.clearCache()
-        }
-    }
-
-    fun accuracyFilterSummary(): String {
-        val filter = prefs.gps.accuracyFilter
-        val accuracy = filter.minAccuracy
-        val wait = filter.maxAccuracyWait
-        return if (accuracy == null || wait == null) {
-            host.getString(R.string.none)
-        } else {
-            host.getString(
-                R.string.gps_accuracy_filter_summary,
-                formatService.formatElevation(Distance.meters(accuracy)),
-                formatService.formatDuration(wait, includeSeconds = true)
-            )
         }
     }
 
@@ -263,19 +237,15 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
         return accuracy to wait
     }
 
-    fun formatAccuracyTarget(accuracy: Int): String = host.getString(
-        R.string.gps_accuracy_target,
-        formatService.formatDistance(Distance.from(accuracy.toFloat(), prefs.baseDistanceUnits))
-    )
-
-    fun formatAccuracyWait(seconds: Int): String = host.getString(
-        R.string.gps_accuracy_wait,
-        formatService.formatDuration(Duration.ofSeconds(seconds.toLong()), includeSeconds = true)
-    )
+    /** A target accuracy in the user's distance units, as a distance. */
+    fun accuracyTargetDistance(accuracy: Int): Distance {
+        return Distance.from(accuracy.toFloat(), prefs.baseDistanceUnits)
+    }
 
     fun saveAccuracyFilter(accuracy: Int, wait: Int) {
         val accuracyMeters = Distance.from(accuracy.toFloat(), prefs.baseDistanceUnits).meters().value
         prefs.gps.accuracyFilter = GPSAccuracyFilter.custom(accuracyMeters, wait)
+        accuracyFilter = prefs.gps.accuracyFilter
     }
 
     fun setLocationOverride(coordinate: Coordinate?) {
@@ -296,13 +266,6 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
 
     fun realLocation(): Coordinate {
         return realGps.location
-    }
-
-    fun putBoolean(key: Int, value: Boolean) {
-        PreferencesSubsystem.getInstance(host.requireContext()).preferences.putBoolean(
-            host.getString(key),
-            value
-        )
     }
 
     private fun resetGPS() {
@@ -330,19 +293,21 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
     }
 
     private fun getRealGPS(): IGPS {
-        return when {
-            shouldUseRealGPS() -> CustomGPS(host.requireContext())
-            shouldUseCachedGPS() -> CachedGPS(host.requireContext())
-            else -> OverrideGPS(host.requireContext())
-        }
+        return createRealGps(
+            when {
+                shouldUseRealGPS() -> RealGpsSource.Device
+                shouldUseCachedGPS() -> RealGpsSource.Cached
+                else -> RealGpsSource.Override
+            }
+        )
     }
 
     private fun shouldUseCachedGPS(): Boolean {
-        return sensorService.hasLocationPermission() && !GPS.isAvailable(host.requireContext())
+        return sensorService.hasLocationPermission() && !isGpsAvailable()
     }
 
     private fun shouldUseRealGPS(): Boolean {
-        return GPS.isAvailable(host.requireContext())
+        return isGpsAvailable()
     }
 
     private fun onOverrideLocationUpdate(): Boolean {
@@ -371,28 +336,41 @@ private class CalibrateGPSController(private val host: TrailSenseDestinationHost
             wasUsingRealGPS = useReal
         }
 
-        setPermissionVisible?.invoke(!isAutoGPSPreferenceEnabled())
-        setAutoLocationEnabled?.invoke(isAutoGPSPreferenceEnabled())
-        setOverrideEnabled?.invoke(isLocationOverrideEnabled())
-        setLocationSummary?.invoke(formatService.formatLocation(gps.location))
-        setAccuracySummary?.invoke(formatAccuracy())
+        permissionVisible = !isAutoGPSPreferenceEnabled()
+        autoLocationEnabled = isAutoGPSPreferenceEnabled()
+        overrideEnabled = isLocationOverrideEnabled()
+        locationSummary = formatService.formatLocation(gps.location)
+        accuracy = formatAccuracy()
     }
 }
 
 @Composable
-private fun CalibrateGPSContent(controller: CalibrateGPSController) {
-    val prefs = controller.prefs
-    var locationSummary by remember { mutableStateOf(controller.formatLocation()) }
-    var accuracySummary by remember { mutableStateOf(controller.formatAccuracy()) }
+private fun CalibrateGPSContent(viewModel: CalibrateGPSViewModel) {
+    val prefs = viewModel.prefs
+    val context = LocalContext.current
+    val formatService = remember(context) { FormatService.getInstance(context) }
+    val goBack = rememberGoBack()
+    val locationSummary = viewModel.locationSummary
+    val accuracySummary = viewModel.accuracy?.let { stringResource(R.string.accuracy_distance_format, it) }
     var autoLocation by remember {
         mutableStateOf(prefs.gps.locationSource == GPSLocationSource.GPS)
     }
-    var accuracyFilterSummary by remember { mutableStateOf(controller.accuracyFilterSummary()) }
+    val filter = viewModel.accuracyFilter
+    val filterAccuracy = filter.minAccuracy
+    val filterWait = filter.maxAccuracyWait
+    val accuracyFilterSummary = if (filterAccuracy == null || filterWait == null) {
+        stringResource(R.string.none)
+    } else {
+        stringResource(
+            R.string.gps_accuracy_filter_summary,
+            formatService.formatElevation(Distance.meters(filterAccuracy)),
+            formatService.formatDuration(filterWait, includeSeconds = true)
+        )
+    }
     var showAccuracyFilter by remember { mutableStateOf(false) }
-    var permissionVisible by remember { mutableStateOf(!controller.isAutoGPSPreferenceEnabled()) }
-    var autoLocationEnabled by remember { mutableStateOf(controller.isAutoGPSPreferenceEnabled()) }
-    var overrideEnabled by remember { mutableStateOf(controller.isLocationOverrideEnabled()) }
-    val context = LocalContext.current
+    val permissionVisible = viewModel.permissionVisible
+    val autoLocationEnabled = viewModel.autoLocationEnabled
+    val overrideEnabled = viewModel.overrideEnabled
     val cache = remember(context) { PreferencesSubsystem.getInstance(context).preferences }
     var powerMode by remember { mutableStateOf(prefs.gps.powerMode) }
     var smoothing by remember { mutableIntStateOf(prefs.gps.smoothing) }
@@ -402,12 +380,6 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
         TrailSenseChoice(GPSPowerMode.Balanced, stringResource(R.string.gps_power_usage_balanced)),
         TrailSenseChoice(GPSPowerMode.High, stringResource(R.string.gps_power_usage_high))
     )
-
-    controller.setLocationSummary { locationSummary = it }
-    controller.setAccuracySummary { accuracySummary = it }
-    controller.setPermissionVisible { permissionVisible = it }
-    controller.setAutoLocationEnabled { autoLocationEnabled = it }
-    controller.setOverrideEnabled { overrideEnabled = it }
 
     val gpsTitle = stringResource(R.string.gps)
     val overrideTitle = stringResource(R.string.pref_gps_override_title)
@@ -420,7 +392,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
 
     TrailSensePage(
         title = gpsTitle,
-        onBack = controller::goBack,
+        onBack = goBack,
         backLabel = stringResource(R.string.back)
     ) {
         item("hero") {
@@ -439,7 +411,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.request_permission),
-                        onClick = controller::openAppSettings,
+                        onClick = { context.startActivity(Intents.appSettings(context)) },
                         position = position
                     )
                 }
@@ -454,10 +426,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                         checked = autoLocation,
                         onCheckedChange = {
                             autoLocation = it
-                            prefs.gps.locationSource =
-                                if (it) GPSLocationSource.GPS else GPSLocationSource.Manual
-                            overrideEnabled = controller.isLocationOverrideEnabled()
-                            controller.onAutoLocationChanged()
+                            viewModel.setAutoLocation(it)
                         },
                         position = position
                     )
@@ -482,7 +451,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                                         selected.id.toString()
                                     )
                                     powerMode = selected
-                                    controller.onAutoLocationChanged()
+                                    viewModel.onAutoLocationChanged()
                                 }
                             }
                         )
@@ -514,7 +483,7 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.clear_cache),
-                        onClick = controller::clearCache,
+                        onClick = viewModel::clearCache,
                         position = position
                     )
                 }
@@ -534,12 +503,12 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
                         )
                     ) {
                         GPSOverrideCoordinateInput(
-                            coordinate = controller.locationOverride,
+                            coordinate = viewModel.locationOverride,
                             enabled = true,
-                            isLoading = controller.isOverrideLocationLoading,
-                            locationProvider = controller::realLocation,
-                            onCoordinateChange = controller::setLocationOverride,
-                            onAutoFill = controller::autofillOverrideLocation
+                            isLoading = viewModel.isOverrideLocationLoading,
+                            locationProvider = viewModel::realLocation,
+                            onCoordinateChange = viewModel::setLocationOverride,
+                            onAutoFill = viewModel::autofillOverrideLocation
                         )
                     }
                 }
@@ -549,12 +518,11 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
 
     if (showAccuracyFilter) {
         GPSAccuracyFilterDialog(
-            controller = controller,
+            viewModel = viewModel,
             onDismiss = { showAccuracyFilter = false },
             onSave = { accuracy, wait ->
                 showAccuracyFilter = false
-                controller.saveAccuracyFilter(accuracy, wait)
-                accuracyFilterSummary = controller.accuracyFilterSummary()
+                viewModel.saveAccuracyFilter(accuracy, wait)
             }
         )
     }
@@ -563,12 +531,14 @@ private fun CalibrateGPSContent(controller: CalibrateGPSController) {
 /** The target accuracy and how long to wait for it, each on a slider with its value above. */
 @Composable
 private fun GPSAccuracyFilterDialog(
-    controller: CalibrateGPSController,
+    viewModel: CalibrateGPSViewModel,
     onDismiss: () -> Unit,
     onSave: (accuracy: Int, wait: Int) -> Unit
 ) {
-    val range = remember(controller) { controller.accuracyFilterRange() }
-    val initial = remember(controller) { controller.currentAccuracyFilter() }
+    val context = LocalContext.current
+    val formatService = remember(context) { FormatService.getInstance(context) }
+    val range = remember(viewModel) { viewModel.accuracyFilterRange() }
+    val initial = remember(viewModel) { viewModel.currentAccuracyFilter() }
     var accuracy by remember { mutableIntStateOf(initial.first) }
     var wait by remember { mutableIntStateOf(initial.second) }
     val waitRange = GPSAccuracyFilter.MIN_WAIT_SECONDS..GPSAccuracyFilter.MAX_WAIT_SECONDS
@@ -582,7 +552,10 @@ private fun GPSAccuracyFilterDialog(
     ) {
         Column {
             Text(
-                text = controller.formatAccuracyTarget(accuracy),
+                text = stringResource(
+                    R.string.gps_accuracy_target,
+                    formatService.formatDistance(viewModel.accuracyTargetDistance(accuracy))
+                ),
                 style = MaterialTheme.typography.bodyLarge
             )
             ComposeSlider(
@@ -591,7 +564,10 @@ private fun GPSAccuracyFilterDialog(
                 valueRange = range.first.toFloat()..range.last.toFloat()
             )
             Text(
-                text = controller.formatAccuracyWait(wait),
+                text = stringResource(
+                    R.string.gps_accuracy_wait,
+                    formatService.formatDuration(Duration.ofSeconds(wait.toLong()), includeSeconds = true)
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = TrailSenseSpacing.sm)
             )

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,19 +11,19 @@ import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
-fun ErrorSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { ErrorPreferences(host.requireContext()) }
+fun ErrorSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { ErrorPreferences(context) }
     val errors = remember { ErrorBannerReason.values().sortedBy { it.id } }
     var values by remember {
         mutableStateOf(errors.associateWith { prefs.canShowError(it) })
     }
     val footer = stringResource(R.string.settings_error_banners_footer)
 
-    SettingsList(host, title = stringResource(R.string.error_banners)) {
+    SettingsList(title = stringResource(R.string.error_banners)) {
         trailSenseSection("errors", footer = footer) {
             errors.forEach { error ->
                 row { position ->

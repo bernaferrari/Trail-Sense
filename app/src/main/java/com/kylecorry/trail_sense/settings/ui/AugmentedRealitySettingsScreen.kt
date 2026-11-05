@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,20 +19,20 @@ import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
-fun AugmentedRealitySettingsToolScreen(host: TrailSenseDestinationHost) {
-    val userPrefs = remember { UserPreferences(host.requireContext()) }
-    val formatter = remember { FormatService.getInstance(host.requireContext()) }
+fun AugmentedRealitySettingsToolScreen() {
+    val context = LocalContext.current
+    val userPrefs = remember { UserPreferences(context) }
+    val formatter = remember { FormatService.getInstance(context) }
     val distanceUnits = remember {
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
     }
     val arPrefs = userPrefs.augmentedReality
-    val hasGyro = remember { Sensors.hasGyroscope(host.requireContext()) }
+    val hasGyro = remember { Sensors.hasGyroscope(context) }
     val pathDistanceDescription = remember {
-        host.getString(
+        context.getString(
             R.string.path_distance_performance_disclaimer,
             formatter.formatDistance(
                 relativeDistance(
@@ -74,7 +78,7 @@ fun AugmentedRealitySettingsToolScreen(host: TrailSenseDestinationHost) {
     val advancedTitle = stringResource(R.string.advanced)
 
     // Each layer's own options only show while the layer does.
-    SettingsList(host, title = stringResource(R.string.augmented_reality)) {
+    SettingsList(title = stringResource(R.string.augmented_reality)) {
         trailSenseSection("beacons", title = beaconsTitle) {
             row { position ->
                 SettingsSwitchRow(
@@ -91,11 +95,11 @@ fun AugmentedRealitySettingsToolScreen(host: TrailSenseDestinationHost) {
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.view_distance),
-                        summary = host.formatDistance(formatter, beaconViewDistance),
+                        summary = context.formatDistance(formatter, beaconViewDistance),
                         onClick = {
-                            host.pickDistance(
+                            context.pickDistance(
                                 distanceUnits,
-                                title = host.getString(R.string.view_distance),
+                                title = context.getString(R.string.view_distance),
                                 current = beaconViewDistance
                             ) {
                                 beaconViewDistance = it
@@ -123,11 +127,11 @@ fun AugmentedRealitySettingsToolScreen(host: TrailSenseDestinationHost) {
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.view_distance),
-                        summary = host.formatDistance(formatter, pathViewDistance),
+                        summary = context.formatDistance(formatter, pathViewDistance),
                         onClick = {
-                            host.pickDistance(
+                            context.pickDistance(
                                 distanceUnits,
-                                title = host.getString(R.string.view_distance),
+                                title = context.getString(R.string.view_distance),
                                 current = pathViewDistance,
                                 description = pathDistanceDescription
                             ) {
@@ -255,7 +259,7 @@ fun AugmentedRealitySettingsToolScreen(host: TrailSenseDestinationHost) {
     }
 }
 
-private fun TrailSenseDestinationHost.pickDistance(
+private fun Context.pickDistance(
     units: List<DistanceUnits>,
     title: String,
     current: Distance,
@@ -263,7 +267,7 @@ private fun TrailSenseDestinationHost.pickDistance(
     onPicked: (Distance) -> Unit
 ) {
     CustomUiUtils.pickDistance(
-        requireContext(),
+        this,
         units,
         current,
         title,

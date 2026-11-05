@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,13 +16,13 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
-fun ClinometerSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()) }
-    val formatter = remember { FormatService.getInstance(host.requireContext()) }
+fun ClinometerSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context) }
+    val formatter = remember { FormatService.getInstance(context) }
     var lockWithVolume by remember {
         mutableStateOf(prefs.clinometer.lockWithVolumeButtons)
     }
@@ -27,7 +31,7 @@ fun ClinometerSettingsToolScreen(host: TrailSenseDestinationHost) {
     }
     val baselineTitle = stringResource(R.string.pref_clinometer_baseline_distance_title)
 
-    SettingsList(host, title = stringResource(R.string.clinometer_title)) {
+    SettingsList(title = stringResource(R.string.clinometer_title)) {
         trailSenseSection("clinometer") {
             row { position ->
                 SettingsSwitchRow(
@@ -43,9 +47,9 @@ fun ClinometerSettingsToolScreen(host: TrailSenseDestinationHost) {
             row { position ->
                 SettingsActionRow(
                     label = baselineTitle,
-                    summary = host.formatDistance(formatter, baselineDistance),
+                    summary = context.formatDistance(formatter, baselineDistance),
                     onClick = {
-                        host.pickBaselineDistance(prefs, formatter, baselineTitle, baselineDistance) {
+                        context.pickBaselineDistance(prefs, formatter, baselineTitle, baselineDistance) {
                             baselineDistance = it
                         }
                     },
@@ -56,7 +60,7 @@ fun ClinometerSettingsToolScreen(host: TrailSenseDestinationHost) {
     }
 }
 
-private fun TrailSenseDestinationHost.pickBaselineDistance(
+private fun Context.pickBaselineDistance(
     prefs: UserPreferences,
     formatter: FormatService,
     title: String,
@@ -64,7 +68,7 @@ private fun TrailSenseDestinationHost.pickBaselineDistance(
     onChange: (Distance?) -> Unit
 ) {
     CustomUiUtils.pickDistance(
-        requireContext(),
+        this,
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
         current,
         title

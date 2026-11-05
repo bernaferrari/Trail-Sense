@@ -28,12 +28,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
+import android.content.Context
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
@@ -56,37 +63,74 @@ import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
-fun CalibrateCompassToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { CalibrateCompassController(host) }
+fun CalibrateCompassToolScreen() {
+    val context = LocalContext.current.applicationContext
+    val cache = remember(context) { PreferencesSubsystem.getInstance(context).preferences }
+    val viewModel = viewModel {
+        CalibrateCompassViewModel(
+            prefs = UserPreferences(context),
+            formatService = FormatService.getInstance(context),
+            sensorService = SensorService(context)
+        )
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val effects = LocalScreenEffects.current
 
-    DisposableEffect(controller, lifecycleOwner) {
-        controller.observePreferences(lifecycleOwner)
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                Lifecycle.Event.ON_DESTROY -> controller.onDestroy()
-                else -> Unit
+    // The compass restarts when its north, smoothing or source changes while the page is shown.
+    DisposableEffect(viewModel, lifecycleOwner, cache) {
+        val resetPrefs = listOf(
+            context.getString(R.string.pref_use_true_north),
+            context.getString(R.string.pref_compass_filter_amt),
+            context.getString(R.string.pref_compass_source)
+        )
+        val changes = cache.onChange.asLiveData()
+        val observer = Observer<String> {
+            if (resetPrefs.contains(it)) {
+                viewModel.resetCompass()
             }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onPause()
-            controller.onDestroy()
+        changes.observe(lifecycleOwner, observer)
+        onDispose { changes.removeObserver(observer) }
+    }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.onResume()
+        onPauseOrDispose { viewModel.onPause() }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            when (message) {
+                CompassMessage.DeclinationOverrideUpdated -> effects.showMessage(
+                    context.getString(R.string.declination_override_updated_toast)
+                )
+
+                is CompassMessage.AccuracyImproved -> effects.showMessage(
+                    context.getString(R.string.compass_accuracy_improved, message.accuracy)
+                )
+            }
         }
     }
 
-    CalibrateCompassContent(controller)
+    CalibrateCompassContent(viewModel, cache)
 }
 
-private class CalibrateCompassController(private val host: TrailSenseDestinationHost) {
+/** A passing message the compass page shows. */
+internal sealed interface CompassMessage {
+    data object DeclinationOverrideUpdated : CompassMessage
+    data class AccuracyImproved(val accuracy: String) : CompassMessage
+}
 
-    val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val cache by lazy { PreferencesSubsystem.getInstance(host.requireContext()).preferences }
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val sensorService by lazy { SensorService(host.requireContext()) }
+/**
+ * The compass page's live readings: the compass and GPS run while the page is resumed, and the readings, the
+ * declination override and passing messages come out as plain values.
+ */
+internal class CalibrateCompassViewModel(
+    val prefs: UserPreferences,
+    private val formatService: FormatService,
+    private val sensorService: SensorService
+) : ViewModel() {
+
     private val throttle = Throttle(20)
     private val gps: IGPS by lazy { sensorService.getGPS() }
     val hasCompass by lazy { sensorService.hasCompass() }
@@ -94,29 +138,13 @@ private class CalibrateCompassController(private val host: TrailSenseDestination
     private var compass: ICompass = sensorService.getCompass()
     private var prevQuality = Quality.Unknown
 
-    private var setCompassReadings: ((CompassReadings) -> Unit)? = null
-    private var setDeclinationOverride: ((Float) -> Unit)? = null
+    var readings by mutableStateOf<CompassReadings?>(null)
+        private set
+    var declinationOverride by mutableStateOf(prefs.declinationOverride)
+        private set
 
-    fun observePreferences(lifecycleOwner: LifecycleOwner) {
-        val resetPrefs = listOf(
-            host.getString(R.string.pref_use_true_north),
-            host.getString(R.string.pref_compass_filter_amt),
-            host.getString(R.string.pref_compass_source)
-        )
-        cache.onChange.asLiveData().observe(lifecycleOwner) {
-            if (resetPrefs.contains(it)) {
-                resetCompass()
-            }
-        }
-    }
-
-    fun setCompassReadings(updater: (CompassReadings) -> Unit) {
-        setCompassReadings = updater
-    }
-
-    fun setDeclinationOverride(updater: (Float) -> Unit) {
-        setDeclinationOverride = updater
-    }
+    private val _messages = Channel<CompassMessage>(Channel.BUFFERED)
+    val messages: Flow<CompassMessage> = _messages.receiveAsFlow()
 
     fun onResume() {
         startCompass()
@@ -131,9 +159,8 @@ private class CalibrateCompassController(private val host: TrailSenseDestination
         gps.stop(::onUpdateDeclinationFromGpsCallback)
     }
 
-    fun onDestroy() {
-        setCompassReadings = null
-        setDeclinationOverride = null
+    override fun onCleared() {
+        onPause()
     }
 
     fun resetCompass() {
@@ -150,69 +177,10 @@ private class CalibrateCompassController(private val host: TrailSenseDestination
         }
     }
 
-    fun pickOption(
-        title: String,
-        options: List<CompassOption>,
-        selected: String,
-        onSelected: (String) -> Unit
-    ) {
-        Pickers.item(
-            host.requireContext(),
-            title,
-            options.map { it.label },
-            options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
-        ) { index ->
-            if (index != null) {
-                onSelected(options[index].value)
-            }
-        }
-    }
-
-    fun pickDeclinationOverride(current: Float, onPicked: (Float) -> Unit) {
-        Pickers.number(
-            host.requireContext(),
-            host.getString(R.string.compass_declination_override),
-            null,
-            current,
-            allowDecimals = true,
-            allowNegative = true,
-            hint = host.getString(R.string.declination)
-        ) {
-            if (it != null) {
-                val declination = it.toFloat()
-                prefs.declinationOverride = declination
-                onPicked(declination)
-                update()
-            }
-        }
-    }
-
-    fun getCompassSourceOptions(): List<CompassOption> {
-        val availableSources = CompassProvider.getAvailableSources(host.requireContext())
-        return mapOf(
-            CompassSource.RotationVector to host.getString(R.string.compass_source_mag_gyro),
-            CompassSource.GeomagneticRotationVector to host.getString(R.string.magnetometer),
-            CompassSource.CustomRotationVector to host.getString(R.string.magnetometer_gyro_custom),
-            CompassSource.CustomMagnetometer to host.getString(R.string.compass_source_legacy_ts),
-            CompassSource.Orientation to host.getString(R.string.compass_source_legacy_android)
-        ).filter { availableSources.contains(it.key) }
-            .map { CompassOption(it.key.id, it.value) }
-    }
-
-    fun optionLabel(options: List<CompassOption>, selected: String): String {
-        return options.firstOrNull { it.value == selected }?.label ?: selected
-    }
-
-    fun getBoolean(key: Int, defaultValue: Boolean = false): Boolean {
-        return cache.getBoolean(host.getString(key)) ?: defaultValue
-    }
-
-    fun putString(key: Int, value: String) {
-        cache.putString(host.getString(key), value)
-    }
-
-    fun putInt(key: Int, value: Int) {
-        cache.putInt(host.getString(key), value)
+    fun changeDeclinationOverride(declination: Float) {
+        prefs.declinationOverride = declination
+        declinationOverride = declination
+        update()
     }
 
     private fun onLocationUpdate(): Boolean {
@@ -227,12 +195,9 @@ private class CalibrateCompassController(private val host: TrailSenseDestination
     private fun onUpdateDeclinationFromGpsCallback(): Boolean {
         val declination = Geophysics.getGeomagneticDeclination(gps.location, gps.altitude)
         prefs.declinationOverride = declination
-        setDeclinationOverride?.invoke(declination)
+        declinationOverride = declination
         update()
-        Alerts.toast(
-            host.requireContext(),
-            host.getString(R.string.declination_override_updated_toast)
-        )
+        _messages.trySend(CompassMessage.DeclinationOverrideUpdated)
         return false
     }
 
@@ -256,29 +221,20 @@ private class CalibrateCompassController(private val host: TrailSenseDestination
 
         if (prevQuality != Quality.Unknown && prevQuality != compass.quality) {
             if (compass.quality.ordinal > prevQuality.ordinal) {
-                Alerts.toast(
-                    host.requireContext(),
-                    host.getString(R.string.compass_accuracy_improved, getCompassAccuracy())
-                )
+                _messages.trySend(CompassMessage.AccuracyImproved(getCompassAccuracy()))
             }
             prevQuality = compass.quality
         }
 
         compass.declination = getDeclination()
 
-        setCompassReadings?.invoke(
-            CompassReadings(
-                azimuth = formatService.formatDegrees(compass.rawBearing, replace360 = true),
-                declination = formatService.formatDegrees(compass.declination),
-                accuracy = getCompassAccuracy(),
-                quality = compass.quality,
-                declinationOverride = prefs.declinationOverride
-            )
+        readings = CompassReadings(
+            azimuth = formatService.formatDegrees(compass.rawBearing, replace360 = true),
+            declination = formatService.formatDegrees(compass.declination),
+            accuracy = getCompassAccuracy(),
+            quality = compass.quality
         )
-    }
-
-    fun goBack() {
-        host.goBack()
+        declinationOverride = prefs.declinationOverride
     }
 
     private fun getCompassAccuracy(): String {
@@ -286,50 +242,38 @@ private class CalibrateCompassController(private val host: TrailSenseDestination
     }
 }
 
-private data class CompassReadings(
+internal data class CompassReadings(
     val azimuth: String,
     val declination: String,
     val accuracy: String,
-    val quality: Quality,
-    val declinationOverride: Float
-)
-
-private data class CompassOption(
-    val value: String,
-    val label: String
+    val quality: Quality
 )
 
 @Composable
-private fun CalibrateCompassContent(controller: CalibrateCompassController) {
-    val prefs = controller.prefs
-    val hasCompass = controller.hasCompass
-    val compassSourceOptions = remember { controller.getCompassSourceOptions() }
+private fun CalibrateCompassContent(viewModel: CalibrateCompassViewModel, cache: IPreferences) {
+    val context = LocalContext.current
+    val prefs = viewModel.prefs
+    val hasCompass = viewModel.hasCompass
+    val compassSourceOptions = remember(context) { compassSourceOptions(context) }
     val dash = stringResource(R.string.dash)
     val sourceTitle = stringResource(R.string.source)
+    val declinationOverrideTitle = stringResource(R.string.compass_declination_override)
+    val declinationHint = stringResource(R.string.declination)
+    val goBack = rememberGoBack()
 
-    var azimuth by remember { mutableStateOf(dash) }
-    var accuracy by remember { mutableStateOf<String?>(null) }
-    var quality by remember { mutableStateOf(Quality.Unknown) }
-    var declination by remember { mutableStateOf(dash) }
+    val readings = viewModel.readings
+    val azimuth = readings?.azimuth ?: dash
+    val accuracy = readings?.accuracy
+    val quality = readings?.quality ?: Quality.Unknown
+    val declination = readings?.declination ?: dash
+    val declinationOverride = viewModel.declinationOverride
     var source by remember { mutableStateOf(prefs.compass.source.id) }
     var smoothing by remember { mutableStateOf(prefs.compass.compassSmoothing) }
     var useTrueNorth by remember {
-        mutableStateOf(controller.getBoolean(R.string.pref_use_true_north, true))
+        mutableStateOf(context.getBoolean(cache, R.string.pref_use_true_north, true))
     }
     var useAutoDeclination by remember { mutableStateOf(prefs.useAutoDeclination) }
-    var declinationOverride by remember { mutableStateOf(prefs.declinationOverride) }
     var showCalibrationDialog by remember { mutableStateOf(false) }
-
-    controller.setCompassReadings {
-        azimuth = it.azimuth
-        accuracy = it.accuracy
-        quality = it.quality
-        declination = it.declination
-        declinationOverride = it.declinationOverride
-    }
-    controller.setDeclinationOverride {
-        declinationOverride = it
-    }
 
     val sensorTitle = stringResource(R.string.sensor)
     val declinationTitle = stringResource(R.string.compass_declination)
@@ -339,7 +283,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
 
     TrailSensePage(
         title = stringResource(R.string.pref_compass_sensor_title),
-        onBack = controller::goBack,
+        onBack = goBack,
         backLabel = stringResource(R.string.back)
     ) {
         if (hasCompass) {
@@ -364,12 +308,12 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                 row { position ->
                     SettingsPickerRow(
                         label = sourceTitle,
-                        selected = controller.optionLabel(compassSourceOptions, source),
+                        selected = optionLabel(compassSourceOptions, source),
                         onClick = {
-                            controller.pickOption(sourceTitle, compassSourceOptions, source) {
+                            context.pickOption(sourceTitle, compassSourceOptions, source) {
                                 source = it
-                                controller.putString(R.string.pref_compass_source, it)
-                                controller.resetCompass()
+                                context.putString(cache, R.string.pref_compass_source, it)
+                                viewModel.resetCompass()
                             }
                         },
                         position = position
@@ -383,8 +327,8 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                         range = 1..100,
                         onValueChange = {
                             smoothing = it
-                            controller.putInt(R.string.pref_compass_filter_amt, it)
-                            controller.resetCompass()
+                            cache.putInt(context.getString(R.string.pref_compass_filter_amt), it)
+                            viewModel.resetCompass()
                         },
                         position = position
                     )
@@ -396,7 +340,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                         onCheckedChange = {
                             useTrueNorth = it
                             prefs.compass.useTrueNorth = it
-                            controller.resetCompass()
+                            viewModel.resetCompass()
                         },
                         position = position
                     )
@@ -420,7 +364,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                     onCheckedChange = {
                         useAutoDeclination = it
                         prefs.useAutoDeclination = it
-                        controller.update()
+                        viewModel.update()
                     },
                     position = position
                 )
@@ -428,11 +372,21 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
             if (!useAutoDeclination) {
                 row { position ->
                     SettingsPickerRow(
-                        label = stringResource(R.string.compass_declination_override),
+                        label = declinationOverrideTitle,
                         selected = stringResource(R.string.degree_format, declinationOverride),
                         onClick = {
-                            controller.pickDeclinationOverride(declinationOverride) {
-                                declinationOverride = it
+                            Pickers.number(
+                                context,
+                                declinationOverrideTitle,
+                                null,
+                                declinationOverride,
+                                allowDecimals = true,
+                                allowNegative = true,
+                                hint = declinationHint
+                            ) {
+                                if (it != null) {
+                                    viewModel.changeDeclinationOverride(it.toFloat())
+                                }
                             }
                         },
                         position = position
@@ -441,7 +395,7 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.override_from_gps),
-                        onClick = controller::updateDeclinationFromGps,
+                        onClick = viewModel::updateDeclinationFromGps,
                         position = position
                     )
                 }
@@ -480,4 +434,17 @@ private fun CalibrateCompassContent(controller: CalibrateCompassController) {
             }
         }
     }
+}
+
+/** The compass sources this device has, named for the picker. */
+private fun compassSourceOptions(context: Context): List<SettingsOption> {
+    val availableSources = CompassProvider.getAvailableSources(context)
+    return mapOf(
+        CompassSource.RotationVector to context.getString(R.string.compass_source_mag_gyro),
+        CompassSource.GeomagneticRotationVector to context.getString(R.string.magnetometer),
+        CompassSource.CustomRotationVector to context.getString(R.string.magnetometer_gyro_custom),
+        CompassSource.CustomMagnetometer to context.getString(R.string.compass_source_legacy_ts),
+        CompassSource.Orientation to context.getString(R.string.compass_source_legacy_android)
+    ).filter { availableSources.contains(it.key) }
+        .map { SettingsOption(it.key.id, it.value) }
 }

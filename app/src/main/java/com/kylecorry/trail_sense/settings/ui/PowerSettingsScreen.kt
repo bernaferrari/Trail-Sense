@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
+
+import androidx.compose.ui.platform.LocalContext
+
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
@@ -12,14 +16,14 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.receivers.StartOnBootController
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.tiles.TileManager
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 
 @Composable
-fun PowerSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()) }
+fun PowerSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context) }
     var lowPowerMode by remember { mutableStateOf(prefs.isLowPowerModeOn) }
     var autoLowPower by remember { mutableStateOf(prefs.power.autoLowPower) }
     var startOnBoot by remember { mutableStateOf(prefs.power.startOnBoot) }
@@ -27,7 +31,7 @@ fun PowerSettingsToolScreen(host: TrailSenseDestinationHost) {
     var batteryLogEnabled by remember { mutableStateOf(prefs.power.enableBatteryLog) }
     val backgroundTitle = stringResource(R.string.background)
 
-    SettingsList(host, title = stringResource(R.string.tool_battery_title)) {
+    SettingsList(title = stringResource(R.string.tool_battery_title)) {
         trailSenseSection("power_saving") {
             row { position ->
                 SettingsSwitchRow(
@@ -36,7 +40,7 @@ fun PowerSettingsToolScreen(host: TrailSenseDestinationHost) {
                     checked = lowPowerMode,
                     onCheckedChange = {
                         lowPowerMode = it
-                        host.setLowPowerMode(prefs, it)
+                        context.setLowPowerMode(prefs, it)
                     },
                     position = position
                 )
@@ -62,7 +66,7 @@ fun PowerSettingsToolScreen(host: TrailSenseDestinationHost) {
                     onCheckedChange = {
                         startOnBoot = it
                         prefs.power.startOnBoot = it
-                        host.setStartOnBoot(it)
+                        context.setStartOnBoot(it)
                     },
                     position = position
                 )
@@ -76,7 +80,7 @@ fun PowerSettingsToolScreen(host: TrailSenseDestinationHost) {
                         onCheckedChange = {
                             tilesEnabled = it
                             prefs.power.areTilesEnabled = it
-                            TileManager().setTilesEnabled(host.requireContext(), it)
+                            TileManager().setTilesEnabled(context, it)
                         },
                         position = position
                     )
@@ -90,7 +94,7 @@ fun PowerSettingsToolScreen(host: TrailSenseDestinationHost) {
                     onCheckedChange = {
                         batteryLogEnabled = it
                         prefs.power.enableBatteryLog = it
-                        BatteryLogWorker.enableBatteryLog(host.requireContext(), it)
+                        BatteryLogWorker.enableBatteryLog(context, it)
                     },
                     position = position
                 )
@@ -99,18 +103,18 @@ fun PowerSettingsToolScreen(host: TrailSenseDestinationHost) {
     }
 }
 
-private fun TrailSenseDestinationHost.setLowPowerMode(prefs: UserPreferences, enabled: Boolean) {
+private fun Context.setLowPowerMode(prefs: UserPreferences, enabled: Boolean) {
     if (enabled) {
         prefs.power.userEnabledLowPower = true
-        LowPowerMode(requireContext()).enable()
+        LowPowerMode(this).enable()
     } else {
         prefs.power.userEnabledLowPower = false
-        LowPowerMode(requireContext()).disable()
+        LowPowerMode(this).disable()
     }
 }
 
-private fun TrailSenseDestinationHost.setStartOnBoot(enabled: Boolean) {
-    val controller = StartOnBootController(requireContext())
+private fun Context.setStartOnBoot(enabled: Boolean) {
+    val controller = StartOnBootController(this)
     if (enabled) {
         controller.enable()
     } else {

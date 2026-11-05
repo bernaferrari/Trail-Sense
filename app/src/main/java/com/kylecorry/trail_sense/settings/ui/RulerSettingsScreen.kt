@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
@@ -15,21 +17,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
-fun RulerSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()).ruler }
+fun RulerSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context).ruler }
     var scale by remember { mutableFloatStateOf(prefs.rulerScale) }
     var flipped by remember { mutableStateOf(prefs.rulerFlipped) }
     var showCalibrationDialog by remember { mutableStateOf(false) }
     val calibrationTitle = stringResource(R.string.pref_ruler_calibration_title)
 
-    SettingsList(host, title = stringResource(R.string.tool_ruler_title)) {
+    SettingsList(title = stringResource(R.string.tool_ruler_title)) {
         trailSenseSection("ruler") {
             row { position ->
                 SettingsActionRow(

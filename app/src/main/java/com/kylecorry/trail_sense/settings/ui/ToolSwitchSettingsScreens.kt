@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,11 +10,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
-fun CellSignalSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()).cellSignal }
+fun CellSignalSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context).cellSignal }
     var populateCache by remember { mutableStateOf(prefs.populateCache) }
     SingleSwitchSettingsScreen(
         title = stringResource(R.string.cell_signal),
@@ -23,13 +25,14 @@ fun CellSignalSettingsToolScreen(host: TrailSenseDestinationHost) {
             populateCache = it
             prefs.populateCache = it
         },
-        onBack = host::goBack
+        onBack = rememberGoBack()
     )
 }
 
 @Composable
-fun ClockSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()).clock }
+fun ClockSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context).clock }
     var showAnalogClock by remember { mutableStateOf(prefs.showAnalogClock) }
     SingleSwitchSettingsScreen(
         title = stringResource(R.string.tool_clock_title),
@@ -39,13 +42,14 @@ fun ClockSettingsToolScreen(host: TrailSenseDestinationHost) {
             showAnalogClock = it
             prefs.showAnalogClock = it
         },
-        onBack = host::goBack
+        onBack = rememberGoBack()
     )
 }
 
 @Composable
-fun TideSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()).tides }
+fun TideSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context).tides }
     var showNearestTide by remember { mutableStateOf(prefs.showNearestTide) }
     SingleSwitchSettingsScreen(
         title = stringResource(R.string.tides),
@@ -55,13 +59,14 @@ fun TideSettingsToolScreen(host: TrailSenseDestinationHost) {
             showNearestTide = it
             prefs.showNearestTide = it
         },
-        onBack = host::goBack
+        onBack = rememberGoBack()
     )
 }
 
 @Composable
-fun TurnBackSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()).turnBack }
+fun TurnBackSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context).turnBack }
     var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
     SingleSwitchSettingsScreen(
         title = stringResource(R.string.tool_turn_back),
@@ -72,13 +77,14 @@ fun TurnBackSettingsToolScreen(host: TrailSenseDestinationHost) {
             useAlarm = it
             prefs.useAlarm = it
         },
-        onBack = host::goBack
+        onBack = rememberGoBack()
     )
 }
 
 @Composable
-fun WaterBoilSettingsToolScreen(host: TrailSenseDestinationHost) {
-    val prefs = remember { UserPreferences(host.requireContext()).waterBoilTimer }
+fun WaterBoilSettingsToolScreen() {
+    val context = LocalContext.current
+    val prefs = remember { UserPreferences(context).waterBoilTimer }
     var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
     SingleSwitchSettingsScreen(
         title = stringResource(R.string.water_boil_timer),
@@ -89,6 +95,6 @@ fun WaterBoilSettingsToolScreen(host: TrailSenseDestinationHost) {
             useAlarm = it
             prefs.useAlarm = it
         },
-        onBack = host::goBack
+        onBack = rememberGoBack()
     )
 }

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import android.content.Context
 import androidx.annotation.ArrayRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -24,7 +26,8 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -38,38 +41,48 @@ internal data class SettingsOption(
 /** Every settings page: the family's page with its large title and a way back. */
 @Composable
 internal fun SettingsList(
-    host: TrailSenseDestinationHost,
     title: String,
     content: LazyListScope.() -> Unit
 ) {
     TrailSensePage(
         title = title,
-        onBack = host::goBack,
+        onBack = rememberGoBack(),
         backLabel = stringResource(R.string.back),
         content = content
     )
 }
 
 /** The options of a string-array preference: [valuesId] stored, [entriesId] shown. */
-internal fun TrailSenseDestinationHost.settingsOptions(
+internal fun Context.settingsOptions(
     @ArrayRes entriesId: Int,
     @ArrayRes valuesId: Int
 ): List<SettingsOption> {
-    val entries = getResources().getStringArray(entriesId)
-    val values = getResources().getStringArray(valuesId)
+    val entries = resources.getStringArray(entriesId)
+    val values = resources.getStringArray(valuesId)
     return values.mapIndexed { index, value ->
         SettingsOption(value, entries.getOrElse(index) { value })
     }
 }
 
-internal fun TrailSenseDestinationHost.pickOption(
+/** The options of a string-array preference, read once for this screen. */
+@Composable
+internal fun rememberSettingsOptions(
+    @ArrayRes entriesId: Int,
+    @ArrayRes valuesId: Int
+): List<SettingsOption> {
+    val context = LocalContext.current
+    return remember(context, entriesId, valuesId) { context.settingsOptions(entriesId, valuesId) }
+}
+
+/** Opens the family's single-choice dialog over [options] and reports the stored value picked. */
+internal fun Context.pickOption(
     title: String,
     options: List<SettingsOption>,
     selected: String,
     onSelected: (String) -> Unit
 ) {
     Pickers.item(
-        requireContext(),
+        this,
         title,
         options.map { it.label },
         options.indexOfFirst { it.value == selected }.coerceAtLeast(0)
@@ -84,7 +97,7 @@ internal fun optionLabel(options: List<SettingsOption>, selected: String): Strin
     return options.firstOrNull { it.value == selected }?.label ?: selected
 }
 
-internal fun TrailSenseDestinationHost.getStringPreference(
+internal fun Context.getStringPreference(
     cache: IPreferences,
     @StringRes key: Int,
     default: String
@@ -92,7 +105,7 @@ internal fun TrailSenseDestinationHost.getStringPreference(
     return cache.getString(getString(key)) ?: default
 }
 
-internal fun TrailSenseDestinationHost.getBoolean(
+internal fun Context.getBoolean(
     cache: IPreferences,
     @StringRes key: Int,
     default: Boolean
@@ -100,28 +113,32 @@ internal fun TrailSenseDestinationHost.getBoolean(
     return cache.getBoolean(getString(key)) ?: default
 }
 
-internal fun TrailSenseDestinationHost.putString(cache: IPreferences, @StringRes key: Int, value: String) {
+internal fun Context.putString(cache: IPreferences, @StringRes key: Int, value: String) {
     cache.putString(getString(key), value)
 }
 
-internal fun TrailSenseDestinationHost.putBoolean(cache: IPreferences, @StringRes key: Int, value: Boolean) {
+internal fun Context.putBoolean(cache: IPreferences, @StringRes key: Int, value: Boolean) {
     cache.putBoolean(getString(key), value)
 }
 
-/** A distance with its unit's usual decimals, or a dash when there is none. */
-internal fun TrailSenseDestinationHost.formatDistance(formatter: FormatService, distance: Distance?): String {
+/** A distance with its unit's usual decimals, or [none] when there is no distance. */
+internal fun formatDistance(formatter: FormatService, distance: Distance?, none: String): String {
     return distance?.let {
         formatter.formatDistance(
             it,
             Units.getDecimalPlaces(it.units)
         )
-    } ?: getString(R.string.dash)
+    } ?: none
+}
+
+/** A distance with its unit's usual decimals, or a dash when there is none. */
+internal fun Context.formatDistance(formatter: FormatService, distance: Distance?): String {
+    return formatDistance(formatter, distance, getString(R.string.dash))
 }
 
 /** A choice with its current value on the right; tap to pick another from a dialog. */
 @Composable
 internal fun UnitPickerRow(
-    host: TrailSenseDestinationHost,
     label: String,
     options: List<SettingsOption>,
     selected: String,
@@ -129,11 +146,12 @@ internal fun UnitPickerRow(
     position: TrailSenseGroupPosition,
     icon: ImageVector? = null
 ) {
+    val context = LocalContext.current
     SettingsPickerRow(
         label = label,
         selected = optionLabel(options, selected),
         onClick = {
-            host.pickOption(label, options, selected, onSelected)
+            context.pickOption(label, options, selected, onSelected)
         },
         position = position,
         icon = icon
@@ -143,17 +161,17 @@ internal fun UnitPickerRow(
 /** A unit as one calm row: its name, and its current value on the right; tap to pick another. */
 @Composable
 internal fun UnitValueRow(
-    host: TrailSenseDestinationHost,
     label: String,
     options: List<SettingsOption>,
     selected: String,
     position: TrailSenseGroupPosition,
     onSelected: (String) -> Unit
 ) {
+    val context = LocalContext.current
     TrailSenseListItem(
         title = label,
         trailingText = optionLabel(options, selected),
-        onClick = { host.pickOption(label, options, selected, onSelected) },
+        onClick = { context.pickOption(label, options, selected, onSelected) },
         position = position
     )
 }
@@ -183,7 +201,8 @@ internal fun UnitChoiceRow(
  * when the page pauses.
  */
 internal class SettingsLayerSheet(
-    private val host: TrailSenseDestinationHost,
+    private val context: Context,
+    private val navigator: TrailSenseNavigator,
     private val create: () -> MapLayersSheetState
 ) {
     private var sheet by mutableStateOf<MapLayersSheetState?>(null)
@@ -194,14 +213,14 @@ internal class SettingsLayerSheet(
     }
 
     fun dismiss() {
-        sheet?.dismissAndUpdateWidgets(host.requireContext())
+        sheet?.dismissAndUpdateWidgets(context)
     }
 
     @Composable
     fun Content() {
         sheet?.Content(
-            host.requireContext(),
-            { host.findNavigator().navigate(it) },
+            context,
+            { navigator.navigate(it) },
             Modifier.fillMaxSize()
         )
     }
@@ -209,11 +228,12 @@ internal class SettingsLayerSheet(
 
 @Composable
 internal fun rememberSettingsLayerSheet(
-    host: TrailSenseDestinationHost,
     create: () -> MapLayersSheetState
 ): SettingsLayerSheet {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val sheet = remember(host) { SettingsLayerSheet(host, create) }
+    val sheet = remember(context, navigator) { SettingsLayerSheet(context, navigator, create) }
     DisposableEffect(lifecycleOwner, sheet) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_PAUSE) {
