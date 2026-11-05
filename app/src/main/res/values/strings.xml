@@ -1024,6 +1024,7 @@
     <string name="season_summer">Summer</string>
     <string name="season_fall">Fall</string>
     <string name="up_to_amount">Up to %s</string>
+    <string name="solar_no_sun_left">The panel won\'t get any sun</string>
     <!--Kilowatt hour / meter squared - solar energy -->
     <string name="kwh_per_meter_squared_format">%s kWh / m²</string>
     <string name="tilt">Tilt</string>
@@ -1172,7 +1173,7 @@
     <string name="average_speed_backtrack">Average speed (Backtrack)</string>
     <string name="reset_distance_title">Reset distance?</string>
     <string name="navigating_to_nearest_path_point">Navigating to nearest path point</string>
-    <string name="beacons">Beacons</string>
+    <string name="beacons">Places</string>
     <string name="pref_start_on_boot" translatable="false">pref_start_on_boot</string>
     <string name="pref_start_on_boot_title">Start on boot</string>
     <string name="pref_enable_analog_clock" translatable="false">pref_enable_analog_clock</string>

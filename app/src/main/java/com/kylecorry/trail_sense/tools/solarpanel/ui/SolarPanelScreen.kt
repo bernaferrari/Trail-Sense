@@ -258,7 +258,8 @@ fun SolarPanelScreen(
                         alignToRestOfDay,
                         nowDuration,
                         formatter,
-                        context.getString(R.string.up_to_amount)
+                        context.getString(R.string.up_to_amount),
+                        context.getString(R.string.solar_no_sun_left)
                     ),
                     position = currentPosition,
                     compass = compass,
@@ -701,7 +702,8 @@ private fun getEnergyText(
     alignToRestOfDay: Boolean,
     nowDuration: Duration,
     formatter: FormatService,
-    upToFormat: String
+    upToFormat: String,
+    noSunText: String
 ): String {
     val energy = solarPanelService.getSolarEnergy(
         gps.location,
@@ -710,6 +712,8 @@ private fun getEnergyText(
         if (alignToRestOfDay) Duration.ofDays(1) else nowDuration,
         restrictToToday = alignToRestOfDay
     )
+    // Rounds to 0.0 (night, or the sun is behind the panel): say so in words, not "Up to 0 kWh / m²".
+    if (energy < 0.05f) return noSunText
     return upToFormat.format(formatter.formatSolarEnergy(energy))
 }
 

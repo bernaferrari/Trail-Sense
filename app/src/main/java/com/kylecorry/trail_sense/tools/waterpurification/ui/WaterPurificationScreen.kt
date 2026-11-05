@@ -363,12 +363,20 @@ private fun BoilPot(
                     style = MaterialTheme.typography.titleSmall,
                     color = inkColor.copy(alpha = 0.8f)
                 )
-                Text(
-                    text = seconds?.let { "%d:%02d".format(it / 60, it % 60) } ?: stringResource(R.string.dash),
-                    style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                    color = inkColor
-                )
+                if (seconds == null) {
+                    // Auto is still finding the elevation: a calm loading shape instead of a dash.
+                    androidx.compose.material3.LoadingIndicator(
+                        color = inkColor,
+                        modifier = Modifier.size(64.dp)
+                    )
+                } else {
+                    Text(
+                        text = "%d:%02d".format(seconds / 60, seconds % 60),
+                        style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
+                        fontWeight = FontWeight.SemiBold,
+                        color = inkColor
+                    )
+                }
             }
         }
     }

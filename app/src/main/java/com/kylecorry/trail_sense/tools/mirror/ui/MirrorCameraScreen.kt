@@ -53,7 +53,7 @@ internal fun MirrorCameraScreen(
     val context = LocalContext.current
     val cameraState = remember {
         CameraState(context).apply {
-            setScaleType(PreviewView.ScaleType.FIT_CENTER)
+            setScaleType(PreviewView.ScaleType.FILL_CENTER)
             setShowTorch(false)
             setPreviewBackgroundColor(Color.WHITE)
             keepScreenOn = true

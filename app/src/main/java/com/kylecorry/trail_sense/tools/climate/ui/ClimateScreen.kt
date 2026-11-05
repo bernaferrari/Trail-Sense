@@ -659,20 +659,21 @@ private fun ClimateYear(
         BoxWithConstraints(Modifier.padding(vertical = TrailSenseSpacing.lg)) {
             val inset = TrailSenseSpacing.sm
             val fits = (maxWidth - inset * 2) / months.size >= ClimateColumnWidth
-            val columnWidth = if (fits) (maxWidth - inset * 2) / months.size else ClimateColumnWidth
+            // When the year doesn't fit, a whole number of columns fills the card exactly, so no month is ever cut
+            // in half at its edge.
+            val visibleColumns = ((maxWidth - inset * 2) / ClimateColumnWidth).toInt().coerceAtLeast(1)
+            val columnWidth = if (fits) (maxWidth - inset * 2) / months.size else (maxWidth - inset * 2) / visibleColumns
             val scroll = rememberScrollState()
             val density = androidx.compose.ui.platform.LocalDensity.current
-            val viewportPx = with(density) { maxWidth.toPx() }
             val columnPx = with(density) { columnWidth.toPx() }
-            val insetPx = with(density) { inset.toPx() }
             // Open on the selected month, centred, once the row knows how far it can scroll.
             LaunchedEffect(fits) {
                 if (fits) return@LaunchedEffect
                 val index = months.indexOfFirst { it.month == selectedMonth }.coerceAtLeast(0)
                 androidx.compose.runtime.snapshotFlow { scroll.maxValue }
                     .first { it > 0 && it < Int.MAX_VALUE }
-                val target = insetPx + index * columnPx - (viewportPx - columnPx) / 2f
-                scroll.scrollTo(target.toInt().coerceIn(0, scroll.maxValue))
+                val first = (index - visibleColumns / 2).coerceIn(0, months.size - visibleColumns)
+                scroll.scrollTo((first * columnPx).toInt().coerceIn(0, scroll.maxValue))
             }
             Row(
                 modifier = Modifier

@@ -768,7 +768,7 @@ private fun WeatherPressureSection(
                 )
             }
         }
-        if (tendency?.trailingText != null) {
+        if (number != null && tendency?.trailingText != null) {
             // One line: the change that matters, in emphasis, then what it means. (It used to say "rising" in
             // words, then the rate in the smallest type under it.)
             val rate = stringResource(

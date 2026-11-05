@@ -13,6 +13,7 @@ kotlin {
     android {
         namespace = "com.kylecorry.trail_sense.shared"
         compileSdk = 37
+        androidResources { enable = true }
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
