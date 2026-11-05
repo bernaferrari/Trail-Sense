@@ -186,7 +186,8 @@ fun DestinationContent(
             // --- Map (special: controller callback + reactive) ---
             Route.Map -> MapToolScreen(
                 component = reactiveComponent,
-                host = this,
+                resumeCount = { hookResetOnResume },
+                onCleanupReactiveEffects = ::cleanupReactiveEffects,
                 onController = {
                     mapController = it
                     if (it != null) {
