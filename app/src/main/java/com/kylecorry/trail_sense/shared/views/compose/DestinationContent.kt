@@ -148,7 +148,7 @@ fun DestinationContent(
             Route.Experimentation -> ExperimentationContent()
             is Route.ErrorHandler -> ErrorHandlerToolScreen(this, route)
             Route.GuideList -> GuideListToolScreen(this)
-            Route.Diagnostics -> DiagnosticsToolScreen(this)
+            Route.Diagnostics -> DiagnosticsToolScreen()
 
             // --- Settings screens ---
             Route.CellSignalSettings -> CellSignalSettingsToolScreen()

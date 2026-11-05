@@ -3,6 +3,14 @@
 
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+
+import androidx.compose.runtime.rememberCoroutineScope
+
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+
 import androidx.compose.ui.semantics.stateDescription
 
 import androidx.compose.ui.semantics.semantics
@@ -109,7 +117,6 @@ import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 /** How long to wait for every scanner to report before the screen stops saying it's still checking. */
 private const val DIAGNOSTICS_SETTLE_MILLIS = 3000L
@@ -387,18 +394,25 @@ private fun statusIcon(severity: ToolDiagnosticSeverity): ImageVector {
 
 /** Diagnostics: what is wrong with the sensors and permissions, each with its fix, and the logs to export. */
 @Composable
-fun DiagnosticsToolScreen(host: TrailSenseDestinationHost) {
+fun DiagnosticsToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
     DiagnosticsScreen(
         onShowSensorDetails = {
-            host.findNavigator().navigate(Route.SensorDetails)
+            navigator.navigate(Route.SensorDetails)
         },
         onShowDiagnostic = {
-            DiagnosticAlerter(host.requireContext()).alert(it) { action ->
-                action.action(host.requireContext(), host.findNavigator())
+            DiagnosticAlerter(context).alert(it) { action ->
+                action.action(context, navigator)
             }
         },
         onExportLogs = {
-            DownloadDiagnosticsLogsCommand(host).execute()
+            scope.launch {
+                // The activity implements the Activity-only IntentResultRetriever the file picker needs.
+                DownloadDiagnosticsLogsCommand(context, context as IntentResultRetriever, effects).execute()
+            }
         }
     )
 }
