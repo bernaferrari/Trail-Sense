@@ -135,15 +135,15 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
 private const val CURRENT_FILTER_SIZE = 100
 
 @Composable
 fun BatteryToolScreen(
-    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
+    val navigator = LocalNavigator.current
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val batteryService = remember { BatteryService() }
@@ -231,7 +231,7 @@ fun BatteryToolScreen(
                 okText = context.getString(R.string.settings),
                 onClose = {
                     if (!it) {
-                        host.findNavigator().navigate(Route.PowerSettings)
+                        navigator.navigate(Route.PowerSettings)
                     }
                 }
             )

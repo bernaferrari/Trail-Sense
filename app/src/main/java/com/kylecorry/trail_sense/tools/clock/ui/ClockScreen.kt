@@ -79,7 +79,11 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import androidx.compose.runtime.rememberCoroutineScope
+import android.content.Context
+import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -99,8 +103,10 @@ import kotlin.math.min
 import kotlin.math.sin
 
 @Composable
-fun ClockToolScreen(host: TrailSenseDestinationHost) {
+fun ClockToolScreen() {
     val context = LocalContext.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
     val formatService = remember { FormatService.getInstance(context) }
     val sensorService = remember { SensorService(context) }
     val gps = remember { sensorService.getGPS() }
@@ -111,9 +117,11 @@ fun ClockToolScreen(host: TrailSenseDestinationHost) {
         prefs = prefs,
         gps = gps,
         getGpsTime = { getGPSTime(gps) },
-        requestExactAlarms = { host.requestScheduleExactAlarms(it) },
+        requestExactAlarms = { onResult ->
+            scope.launch { onResult(effects.requestPermission(AppPermission.ExactAlarms)) }
+        },
         onScheduleNextMinute = { gpsTime, systemTime ->
-            sendNextMinuteNotification(host, formatService, gpsTime, systemTime)
+            sendNextMinuteNotification(context, formatService, gpsTime, systemTime)
         }
     )
 }
@@ -423,12 +431,11 @@ private fun getGPSTime(gps: ISatelliteGPS): Instant {
 }
 
 private fun sendNextMinuteNotification(
-    host: TrailSenseDestinationHost,
+    context: Context,
     formatService: FormatService,
     gpsTime: Instant,
     systemTime: Instant
 ) {
-    val context = host.requireContext()
     val systemDiff = Duration.between(systemTime, Instant.now())
     val currentTime = gpsTime.plus(systemDiff)
     val clockError = Duration.between(systemTime, gpsTime)
@@ -444,20 +451,20 @@ private fun sendNextMinuteNotification(
 
     Alerts.dialog(
         context,
-        host.getString(R.string.clock_sync_time_settings),
-        host.getString(R.string.clock_sync_instructions, formattedTime)
+        context.getString(R.string.clock_sync_time_settings),
+        context.getString(R.string.clock_sync_instructions, formattedTime)
     ) { cancelled ->
         if (!cancelled) {
             Alerts.toast(
                 context,
-                host.getString(R.string.pip_notification_scheduled, formattedTime)
+                context.getString(R.string.pip_notification_scheduled, formattedTime)
             )
 
             val scheduler = AlarmTaskScheduler(context) {
                 NextMinuteBroadcastReceiver.pendingIntent(context, formattedTime)
             }
             scheduler.once(sendTime.toZonedDateTime().toInstant())
-            host.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
+            context.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
         }
     }
 }
