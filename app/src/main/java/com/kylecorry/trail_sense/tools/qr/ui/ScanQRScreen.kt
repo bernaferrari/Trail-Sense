@@ -28,9 +28,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.Maps
 import com.kylecorry.trail_sense.shared.icons.trail.ToolNotes
 import com.kylecorry.trail_sense.shared.icons.trail.Copy
 import com.kylecorry.trail_sense.shared.icons.trail.Delete
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.os.Bundle
 import android.util.Size
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -60,13 +58,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,15 +72,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.clipboard.Clipboard
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
@@ -99,16 +88,14 @@ import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.main.MainActivity
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
@@ -121,300 +108,148 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
-import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
-import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+private val QR_CAMERA_SIZE = Size(200, 200)
+private const val MEDIA_MAX_WIDTH = 500
+private const val MEDIA_MAX_HEIGHT = 500
 
 @Composable
 fun ScanQRToolScreen() {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(context, navigator, effects, lifecycleOwner) {
-        ScanQRController(context, navigator, effects, lifecycleOwner)
+    val scope = rememberCoroutineScope()
+    val viewModel = viewModel {
+        val app = context.applicationContext
+        ScanQRViewModel(
+            HapticSubsystem.getInstance(app),
+            NoteRepo.getInstance(app),
+            BeaconService(app)
+        )
     }
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                else -> Unit
+    val cameraState = remember {
+        CameraState(context).apply {
+            setPreviewBackgroundColor(Color.White)
+        }
+    }
+
+    LifecycleResumeEffect(viewModel, cameraState) {
+        viewModel.onResume()
+        // Not tied to this resume: the permission prompt itself pauses the screen.
+        scope.launch {
+            val hasPermission = effects.requestPermission(AppPermission.Camera)
+            // The scanner shows why the camera is missing in place of the viewfinder.
+            viewModel.onCameraPermission(hasPermission)
+            if (hasPermission) {
+                cameraState.start(QR_CAMERA_SIZE) { viewModel.onImage(it) }
             }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            controller.onResume()
+        onPauseOrDispose {
+            cameraState.stop()
+            viewModel.onPause()
         }
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is ScanQREvent.NoteSaved -> launch {
+                    val view = effects.showSnackbar(
+                        context.getString(R.string.saved_to_note),
+                        context.getString(R.string.view)
+                    )
+                    if (view) {
+                        navigator.navigate(Route.NoteEditor(editNoteId = event.noteId))
+                    }
+                }
+
+                is ScanQREvent.BeaconCreated -> launch {
+                    val view = effects.showSnackbar(
+                        context.getString(R.string.beacon_created),
+                        context.getString(R.string.view)
+                    )
+                    if (view) {
+                        navigator.navigate(Route.BeaconDetails(beaconId = event.beaconId))
+                    }
+                }
+
+                is ScanQREvent.ResultDeleted -> launch {
+                    val undo = effects.showSnackbar(
+                        context.getString(R.string.result_deleted),
+                        context.getString(R.string.undo)
+                    )
+                    if (undo) {
+                        viewModel.restoreResult(event.text, event.index)
+                    }
+                }
+
+                ScanQREvent.NoQrCodeDetected -> Alerts.toast(
+                    context,
+                    context.getString(R.string.no_qr_code_detected)
+                )
+            }
         }
     }
 
     QrScannerScreen(
-        history = controller.history,
-        scrollRequest = controller.historyScrollRequest,
-        isCameraDenied = controller.isCameraDenied,
-        onOpenAppSettings = controller::openAppSettings,
-        onCameraReady = controller::onCameraReady,
-        onCopy = controller::copy,
-        onCreateNote = controller::createNote,
-        onOpenMap = controller::openMap,
-        onCreateBeacon = controller::createBeacon,
-        onOpenUrl = controller::openUrl,
-        onDelete = controller::deleteResult,
-        onScanFromGallery = controller::scanFromGallery
+        cameraState = cameraState,
+        history = viewModel.history,
+        scrollRequest = viewModel.historyScrollRequest,
+        isCameraDenied = viewModel.isCameraDenied,
+        onOpenAppSettings = { context.startActivity(Intents.appSettings(context)) },
+        onCopy = { text ->
+            Clipboard.copy(context, text, context.getString(R.string.copied_to_clipboard_toast))
+        },
+        onCreateNote = viewModel::createNote,
+        onOpenMap = { text -> Intents.openChooser(context, Intents.url(text), text) },
+        onCreateBeacon = viewModel::createBeacon,
+        onOpenUrl = { text -> Intents.openChooser(context, Intents.url(toUrl(text)), text) },
+        onDelete = viewModel::deleteResult,
+        onScanFromGallery = {
+            scope.launch {
+                scanFromGallery(context) { viewModel.onImage(it, isFromGallery = true) }
+            }
+        }
     )
 }
 
-private class ScanQRController(
-    private val context: Context,
-    private val navigator: TrailSenseNavigator,
-    private val effects: ScreenEffects,
-    private val lifecycleOwner: LifecycleOwner
-) {
-    private val cameraSize = Size(200, 200)
-
-    var history by mutableStateOf<List<String>>(emptyList())
-        private set
-    var historyScrollRequest by mutableIntStateOf(0)
-        private set
-    var isCameraDenied by mutableStateOf(false)
-        private set
-    private var cameraView: CameraState? = null
-    private var shouldStartCamera = false
-
-    private val beaconQREncoder = BeaconQREncoder()
-    private val noteQREncoder = NoteQREncoder()
-
-    private val haptics by lazy { HapticSubsystem.getInstance(context) }
-    private val scanLock = Any()
-
-    fun onCameraReady(cameraView: CameraState) {
-        this.cameraView = cameraView
-        if (shouldStartCamera && lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            startCamera()
-        }
+private fun toUrl(text: String): String {
+    val protocols = listOf("http", "https", "rtsp", "ftp")
+    return if (protocols.none { text.lowercase().startsWith(it) }) {
+        "https://$text"
+    } else {
+        text
     }
+}
 
-    fun copy(text: String) {
-        Clipboard.copy(
-            context,
-            text,
-            context.getString(R.string.copied_to_clipboard_toast)
-        )
-    }
+/** Lets the user pick an image and hands it, scaled down, to [onImage]. */
+private suspend fun scanFromGallery(context: Context, onImage: (Bitmap) -> Unit) {
+    // The gallery picker needs the activity's result launcher.
+    val activity = context.findMainActivity() ?: return
+    val uri = IntentUriPicker(activity, context)
+        .open(listOf("image/*"))
+        .getOrNull() ?: return
 
-    fun createNote(text: String) {
-        lifecycleOwner.inBackground {
-            val id = withContext(Dispatchers.IO) {
-                NoteRepo.getInstance(context)
-                    .addNote(noteQREncoder.decode(text))
-            }
-            withContext(Dispatchers.Main) {
-                showSnackbar(
-                    context.getString(R.string.saved_to_note),
-                    context.getString(R.string.view)
-                ) {
-                    navigator.navigate(Route.NoteEditor(editNoteId = id))
-                }
-            }
-        }
-    }
+    val indicator = AlertLoadingIndicator(
+        context,
+        context.getString(R.string.scanning_image)
+    )
+    try {
+        indicator.show()
+        val path = withContext(Dispatchers.IO) {
+            FileSubsystem.getInstance(context).copyToTemp(uri)
+        }?.path ?: return
 
-    fun openMap(text: String) {
-        val intent = Intents.url(text)
-        Intents.openChooser(context, intent, text)
-    }
+        val bitmap = withContext(Dispatchers.IO) {
+            BitmapUtils.decodeBitmapScaled(path, MEDIA_MAX_WIDTH, MEDIA_MAX_HEIGHT)
+        } ?: return
 
-    fun openUrl(text: String) {
-        val protocols = listOf("http", "https", "rtsp", "ftp")
-        val url = if (protocols.none { text.lowercase().startsWith(it) }) {
-            "https://$text"
-        } else {
-            text
-        }
-        val intent = Intents.url(url)
-        Intents.openChooser(context, intent, text)
-    }
-
-    fun createBeacon(text: String) {
-        val beacon = beaconQREncoder.decode(text) ?: return
-        lifecycleOwner.inBackground {
-            val id = BeaconService(context).add(beacon)
-            showSnackbar(
-                context.getString(R.string.beacon_created),
-                context.getString(R.string.view)
-            ) {
-                navigator.navigate(Route.BeaconDetails(beaconId = id))
-            }
-        }
-    }
-
-    fun deleteResult(text: String) {
-        val index = history.indexOf(text)
-        if (index < 0) {
-            return
-        }
-
-        history = history.filterNot { it == text }
-        updateHistoryList(false)
-        showSnackbar(
-            context.getString(R.string.result_deleted),
-            context.getString(R.string.undo)
-        ) {
-            if (!history.contains(text)) {
-                val restored = history.toMutableList()
-                if (index <= restored.size) {
-                    restored.add(index, text)
-                } else {
-                    restored.add(text)
-                }
-                history = restored
-                updateHistoryList(false)
-            }
-        }
-    }
-
-    fun scanFromGallery() {
-        lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
-            // The gallery picker needs the activity's result launcher.
-            val activity = context.findMainActivity() ?: return@inBackground
-            val uri = IntentUriPicker(activity, context)
-                .open(listOf("image/*"))
-                .getOrNull() ?: return@inBackground
-
-            val indicator = AlertLoadingIndicator(
-                context,
-                context.getString(R.string.scanning_image)
-            )
-            try {
-                indicator.show()
-                val path = withContext(Dispatchers.IO) {
-                    FileSubsystem.getInstance(context).copyToTemp(uri)
-                }?.path ?: return@inBackground
-
-                val bitmap = withContext(Dispatchers.IO) {
-                    BitmapUtils.decodeBitmapScaled(path, mediaMaxWidth, mediaMaxHeight)
-                } ?: return@inBackground
-
-                DeleteTempFilesCommand(context).execute()
-                onCameraUpdate(bitmap, isFromGallery = true)
-            } finally {
-                indicator.hide()
-            }
-        }
-    }
-
-    fun onResume() {
-        updateHistoryList()
-        lifecycleOwner.lifecycleScope.launch {
-            val hasPermission = effects.requestPermission(AppPermission.Camera)
-            isCameraDenied = !hasPermission
-            if (hasPermission) {
-                shouldStartCamera = true
-                startCamera()
-            } else {
-                // The scanner shows why the camera is missing in place of the viewfinder.
-                shouldStartCamera = false
-            }
-        }
-    }
-
-    private fun startCamera() {
-        cameraView?.start(cameraSize) {
-            onCameraUpdate(it)
-        }
-    }
-
-    @SuppressLint("UnsafeOptInUsageError")
-    private fun onCameraUpdate(
-        bitmap: Bitmap,
-        isFromGallery: Boolean = false
-    ): Boolean = synchronized(scanLock) {
-        if (!lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.CREATED)) {
-            bitmap.recycle()
-            return true
-        }
-        var message: String? = null
-        try {
-            message = QR.decode(bitmap, highAccuracy = isFromGallery)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            bitmap.recycle()
-        }
-
-        if (message != null) {
-            onQRScanned(message)
-        } else if (isFromGallery) {
-            Alerts.toast(
-                context,
-                context.getString(R.string.no_qr_code_detected)
-            )
-        }
-
-        return true
-    }
-
-    private fun addReading(text: String) {
-        val updated = history.toMutableList()
-        if (updated.contains(text)) {
-            updated.remove(text)
-        }
-
-        updated.add(0, text)
-
-        while (updated.size > 10) {
-            updated.removeLastOrNull()
-        }
-
-        history = updated
-        updateHistoryList()
-    }
-
-    private fun updateHistoryList(scrollToTop: Boolean = true) {
-        if (scrollToTop) {
-            historyScrollRequest++
-        }
-    }
-
-    private fun onQRScanned(message: String) {
-        val lastMessage = history.firstOrNull()
-        if (message.isNotEmpty() && lastMessage != message) {
-            addReading(message)
-            haptics.click()
-        }
-    }
-
-    private fun showSnackbar(message: String, action: String, onAction: () -> Unit) {
-        lifecycleOwner.lifecycleScope.launch {
-            if (effects.showSnackbar(message, action)) {
-                onAction()
-            }
-        }
-    }
-
-    fun openAppSettings() {
-        context.startActivity(Intents.appSettings(context))
-    }
-
-    fun onPause() {
-        shouldStartCamera = false
-        cameraView?.stop()
-        haptics.off()
-    }
-
-    fun onDestroy() {
-        cameraView?.stop()
-        cameraView = null
-    }
-
-    companion object {
-        const val mediaMaxWidth = 500
-        const val mediaMaxHeight = 500
+        DeleteTempFilesCommand(context).execute()
+        onImage(bitmap)
+    } finally {
+        indicator.hide()
     }
 }
 
@@ -430,11 +265,11 @@ private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
  */
 @Composable
 private fun QrScannerScreen(
+    cameraState: CameraState,
     history: List<String>,
     scrollRequest: Int,
     isCameraDenied: Boolean,
     onOpenAppSettings: () -> Unit,
-    onCameraReady: (CameraState) -> Unit,
     onCopy: (String) -> Unit,
     onCreateNote: (String) -> Unit,
     onOpenMap: (String) -> Unit,
@@ -447,17 +282,6 @@ private fun QrScannerScreen(
     val listState = rememberLazyListState()
     val results = history.ifEmpty { listOf("") }
     val scannerDescription = stringResource(R.string.qr_code_scanner)
-    val context = LocalContext.current
-    val cameraState = remember {
-        CameraState(context).apply {
-            setPreviewBackgroundColor(androidx.compose.ui.graphics.Color.White)
-        }
-    }
-
-    LaunchedEffect(cameraState) {
-        onCameraReady(cameraState)
-    }
-
     LaunchedEffect(scrollRequest) {
         listState.animateScrollToItem(0)
     }
