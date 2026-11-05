@@ -2,9 +2,14 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -26,7 +31,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,16 +40,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -64,50 +64,94 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun SightingListToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { SightingListController(host) }
-    val lifecycleOwner = LocalLifecycleOwner.current
+fun SightingListToolScreen(route: Route.SightingList) {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val viewModel = viewModel { SightingListViewModel(route.pageId, FieldGuideRepo.getInstance(appContext)) }
+    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
+    val beaconNavigator = remember(appContext) { Navigator.getInstance(appContext) }
+    val sightingLabel = stringResource(R.string.sighting)
 
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                controller.loadPage()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.loadPage()
+        onPauseOrDispose { }
+    }
+
+    fun sightingTitle(sighting: Sighting): String {
+        return sighting.time?.let { time ->
+            formatter.formatRelativeDateTime(
+                time.toZonedDateTime(),
+                includeSeconds = false
+            )
+        } ?: sightingLabel
+    }
+
+    val page = viewModel.page
+    val sightings = page?.sightings?.sortedByDescending { it.time } ?: emptyList()
+    val items = sightings.map { sighting ->
+        SightingListItem(
+            sighting = sighting,
+            title = sightingTitle(sighting),
+            subtitle = sighting.notes ?: "",
+            isHarvested = sighting.harvested == true,
+            hasLocation = sighting.location != null,
+            onEdit = {
+                navigator.navigate(Route.CreateFieldGuideSighting(pageId = route.pageId, sightingId = sighting.id))
+            },
+            onNavigate = {
+                beaconNavigator.navigateTo(
+                    sighting.location ?: Coordinate.zero,
+                    page?.name ?: "",
+                    BeaconOwner.FieldGuide,
+                    elevation = sighting.altitude
+                )
+                navigator.navigate(Route.Navigation())
+            },
+            onCreateBeacon = {
+                val location = (sighting.location ?: Coordinate.zero).toRouteLocation(sighting.altitude)
+                    .copy(parameters = mapOf("label" to (page?.name ?: "")))
+                navigator.navigate(Route.PlaceBeacon(initialLocation = location))
+            },
+            onDelete = {
+                Alerts.dialog(
+                    context,
+                    context.getString(R.string.delete),
+                    sightingTitle(sighting)
+                ) { cancelled ->
+                    if (!cancelled) {
+                        viewModel.deleteSighting(sighting)
+                    }
+                }
             }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        controller.loadPage()
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        )
     }
 
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     SightingListScreen(
-        title = controller.pageTitle,
-        loaded = controller.loaded,
-        items = controller.getSightingListItems(),
+        title = viewModel.pageTitle,
+        loaded = viewModel.loaded,
+        items = items,
         onBack = { dispatcher?.onBackPressed() },
-        onCreate = controller::createSighting
+        onCreate = { navigator.navigate(Route.CreateFieldGuideSighting(pageId = route.pageId)) }
     )
 }
 
-private class SightingListController(private val host: TrailSenseDestinationHost) {
+/** A field guide page's sightings, reread each time the list is shown and after a sighting is deleted. */
+internal class SightingListViewModel(
+    private val pageId: Long,
+    private val repo: FieldGuideRepo
+) : ViewModel() {
 
-    private val formatter by lazy { FormatService.getInstance(host.requireContext()) }
-    private val repo by lazy { FieldGuideRepo.getInstance(host.requireContext()) }
-    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
-    private val pageId by lazy {
-        host.routeAs<Route.SightingList>().pageId
-    }
-
-    private var page by mutableStateOf<FieldGuidePage?>(null)
+    var page by mutableStateOf<FieldGuidePage?>(null)
+        private set
     var loaded by mutableStateOf(false)
         private set
     val pageTitle: String?
         get() = page?.name?.takeIf { it.isNotBlank() }
 
     fun loadPage() {
-        host.lifecycleScope.launch {
+        viewModelScope.launch {
             page = withContext(Dispatchers.IO) {
                 repo.getPage(pageId)
             }
@@ -115,73 +159,13 @@ private class SightingListController(private val host: TrailSenseDestinationHost
         }
     }
 
-    fun getSightingListItems(): List<SightingListItem> {
-        val currentPage = page
-        val sightings = currentPage?.sightings?.sortedByDescending { it.time } ?: emptyList()
-        return sightings.map {
-            SightingListItem(
-                sighting = it,
-                title = it.time?.let { time ->
-                    formatter.formatRelativeDateTime(
-                        time.toZonedDateTime(),
-                        includeSeconds = false
-                    )
-                } ?: host.getString(R.string.sighting),
-                subtitle = it.notes ?: "",
-                isHarvested = it.harvested == true,
-                hasLocation = it.location != null,
-                onEdit = { editSighting(it) },
-                onNavigate = { navigateToSighting(it) },
-                onCreateBeacon = { createBeacon(it) },
-                onDelete = { deleteSighting(it) }
-            )
-        }
-    }
-
-    fun createSighting() {
-        host.findNavigator().navigate(Route.CreateFieldGuideSighting(pageId = pageId))
-    }
-
-    private fun editSighting(sighting: Sighting) {
-        host.findNavigator().navigate(Route.CreateFieldGuideSighting(pageId = pageId, sightingId = sighting.id))
-    }
-
-    private fun deleteSighting(sighting: Sighting) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete),
-            sighting.time?.let { time ->
-                formatter.formatRelativeDateTime(
-                    time.toZonedDateTime(),
-                    includeSeconds = false
-                )
-            } ?: host.getString(R.string.sighting)
-        ) { cancelled ->
-            if (!cancelled) {
-                host.lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        repo.deleteSighting(sighting)
-                    }
-                    loadPage()
-                }
+    fun deleteSighting(sighting: Sighting) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repo.deleteSighting(sighting)
             }
+            loadPage()
         }
-    }
-
-    private fun navigateToSighting(sighting: Sighting) {
-        navigator.navigateTo(
-            sighting.location ?: Coordinate.zero,
-            page?.name ?: "",
-            BeaconOwner.FieldGuide,
-            elevation = sighting.altitude
-        )
-        host.findNavigator().navigate(Route.Navigation())
-    }
-
-    private fun createBeacon(sighting: Sighting) {
-        val location = (sighting.location ?: Coordinate.zero).toRouteLocation(sighting.altitude)
-            .copy(parameters = mapOf("label" to (page?.name ?: "")))
-        host.findNavigator().navigate(Route.PlaceBeacon(initialLocation = location))
     }
 }
 

@@ -260,12 +260,12 @@ fun DestinationContent(
             Route.PackList -> PackListToolScreen(this)
             is Route.PackItemList -> PackItemListToolScreen(this)
             is Route.CreatePackItem -> CreateItemToolScreen(route)
-            Route.FieldGuide -> FieldGuideToolScreen(this)
-            is Route.FieldGuidePage -> FieldGuidePageToolScreen(this)
-            Route.FieldGuideSettings -> FieldGuideSettingsToolScreen(this)
-            is Route.SightingList -> SightingListToolScreen(this)
-            is Route.CreateFieldGuidePage -> CreateFieldGuidePageToolScreen(this)
-            is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(this)
+            Route.FieldGuide -> FieldGuideToolScreen()
+            is Route.FieldGuidePage -> FieldGuidePageToolScreen(route)
+            Route.FieldGuideSettings -> FieldGuideSettingsToolScreen()
+            is Route.SightingList -> SightingListToolScreen(route)
+            is Route.CreateFieldGuidePage -> CreateFieldGuidePageToolScreen(route)
+            is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(route)
             is Route.PhotoMaps -> PhotoMapsToolScreen(this)
             Route.Clinometer -> ClinometerToolScreen(
                 host = this,
