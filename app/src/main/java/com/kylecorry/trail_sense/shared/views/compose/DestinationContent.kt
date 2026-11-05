@@ -240,7 +240,7 @@ fun DestinationContent(
             is Route.BeaconDetails -> BeaconDetailsToolScreen(this)
             is Route.PlaceBeacon -> PlaceBeaconToolScreen(this)
             is Route.OfflineMapList -> OfflineMapListToolScreen(this)
-            Route.ScanQr -> ScanQRToolScreen(this)
+            Route.ScanQr -> ScanQRToolScreen()
             is Route.ViewQr -> QRShareScreen(
                 title = route.title,
                 text = route.text
