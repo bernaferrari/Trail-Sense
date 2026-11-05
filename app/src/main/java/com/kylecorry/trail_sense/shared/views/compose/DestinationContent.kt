@@ -252,7 +252,7 @@ fun DestinationContent(
             Route.CalibrateBarometer -> CalibrateBarometerToolScreen()
             Route.CalibrateCompass -> CalibrateCompassToolScreen()
             Route.CalibrateGps -> CalibrateGPSToolScreen()
-            Route.SensorDetails -> SensorDetailsToolScreen(this)
+            Route.SensorDetails -> SensorDetailsToolScreen()
             Route.Tides -> TidesToolScreen(this)
             Route.TideList -> TideListToolScreen(this)
             is Route.CreateTide -> CreateTideToolScreen(this)

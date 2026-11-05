@@ -42,7 +42,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,10 +59,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.core.content.getSystemService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.sensors.ISensor
@@ -105,23 +103,15 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun SensorDetailsToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { SensorDetailsController(host) }
-    val lifecycleOwner = LocalLifecycleOwner.current
+fun SensorDetailsToolScreen() {
+    val context = LocalContext.current
+    // A live readout of every sensor while the page is shown; it formats its own rows, so it stays a plain holder.
+    val controller = remember(context) { SensorDetailsController(context) }
 
-    DisposableEffect(controller, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                Lifecycle.Event.ON_DESTROY -> controller.onDestroy()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onDestroy()
+    LifecycleResumeEffect(controller) {
+        controller.onResume()
+        onPauseOrDispose {
+            controller.onPause()
         }
     }
 
@@ -131,12 +121,12 @@ fun SensorDetailsToolScreen(host: TrailSenseDestinationHost) {
     )
 }
 
-private class SensorDetailsController(private val host: TrailSenseDestinationHost) {
+private class SensorDetailsController(private val context: Context) {
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
+    private val prefs by lazy { UserPreferences(context) }
 
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
     private val sensorDetailsMap = mutableMapOf<String, SensorDetails?>()
     var sensorDetails by mutableStateOf<List<SensorDetails>>(emptyList())
         private set
@@ -154,7 +144,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     private val magnetometer by lazy { sensorService.getMagnetometer() }
     private val barometer by lazy { sensorService.getBarometer() }
     private val hygrometer by lazy { sensorService.getHygrometer() }
-    private val battery by lazy { Battery(host.requireContext()) }
+    private val battery by lazy { Battery(context) }
     private val gyroscope by lazy { sensorService.getGyroscope() }
     private val thermometer by lazy { sensorService.getThermometer() }
     private val cellSignal by lazy { sensorService.getCellSignal() }
@@ -166,10 +156,10 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     private val altimeter by lazy { sensorService.getAltimeter() }
 
     // Cache
-    private val cachedGPS by lazy { CachedGPS(host.requireContext(), 500) }
-    private val cachedAltimeter by lazy { CachedAltimeter(host.requireContext(), 500) }
+    private val cachedGPS by lazy { CachedGPS(context, 500) }
+    private val cachedAltimeter by lazy { CachedAltimeter(context, 500) }
 
-    private val unavailableText by lazy { host.getString(R.string.unavailable) }
+    private val unavailableText by lazy { context.getString(R.string.unavailable) }
     private val observedSensors: List<ISensor> by lazy {
         listOf(
             cachedGPS,
@@ -202,17 +192,12 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         observedSensors.forEach { it.stop(sensorListener) }
     }
 
-    fun onDestroy() {
-        handler.removeCallbacks(updateRunnable)
-        observedSensors.forEach { it.stop(sensorListener) }
-    }
-
     private fun initializeUnavailableSensors() {
-        if (!Sensors.hasCompass(host.requireContext())) {
+        if (!Sensors.hasCompass(context)) {
             sensorDetailsMap["compass"] = SensorDetails(
-                host.getString(R.string.pref_compass_sensor_title),
+                context.getString(R.string.pref_compass_sensor_title),
                 "",
-                host.getString(R.string.unavailable),
+                context.getString(R.string.unavailable),
                 CustomUiUtils.getQualityColor(Quality.Poor),
                 TrailIcons.CompassIcon
             )
@@ -220,7 +205,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     }
 
     fun showSensorList() {
-        val sensorManager = host.requireContext().getSystemService<SensorManager>()
+        val sensorManager = context.getSystemService<SensorManager>()
         val sensors = sensorManager?.getSensorList(Sensor.TYPE_ALL)
 
         val description = sensors?.joinToString("\n\n") { sensor ->
@@ -228,8 +213,8 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         } ?: ""
 
         Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.sensors),
+            context,
+            context.getString(R.string.sensors),
             description,
             cancelText = null
         )
@@ -265,13 +250,13 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     }
 
     private fun updateGyro() {
-        if (!Sensors.hasSensor(host.requireContext(), Sensor.TYPE_GYROSCOPE)) {
+        if (!Sensors.hasSensor(context, Sensor.TYPE_GYROSCOPE)) {
             return
         }
         val euler = gyroscope.orientation.toEuler()
         sensorDetailsMap["gyroscope"] = SensorDetails(
-            host.getString(R.string.sensor_gyroscope),
-            host.getString(
+            context.getString(R.string.sensor_gyroscope),
+            context.getString(
                 R.string.roll_pitch_yaw,
                 formatService.formatDegrees(euler.roll),
                 formatService.formatDegrees(euler.pitch),
@@ -285,7 +270,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateClock() {
         sensorDetailsMap["clock"] = SensorDetails(
-            host.getString(R.string.tool_clock_title),
+            context.getString(R.string.tool_clock_title),
             formatService.formatTime(LocalTime.now()) + " " + ZonedDateTime.now().zone.getDisplayName(
                 TextStyle.FULL,
                 Locale.getDefault()
@@ -298,7 +283,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateGPSCache() {
         sensorDetailsMap["gps_cache"] = SensorDetails(
-            host.getString(R.string.gps_cache),
+            context.getString(R.string.gps_cache),
             formatService.formatLocation(cachedGPS.location),
             getGPSCacheStatus(),
             CustomUiUtils.getQualityColor(getGPSCacheQuality()),
@@ -314,7 +299,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             .convertTo(if (prefs.distanceUnits == UserPreferences.DistanceUnits.Meters) DistanceUnits.Meters else DistanceUnits.Feet)
 
         sensorDetailsMap["altimeter_cache"] = SensorDetails(
-            host.getString(R.string.altimeter_cache),
+            context.getString(R.string.altimeter_cache),
             formatService.formatDistance(altitude),
             getAltimeterCacheStatus(),
             CustomUiUtils.getQualityColor(getAltimeterCacheQuality()),
@@ -329,7 +314,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         )
             .convertTo(if (prefs.distanceUnits == UserPreferences.DistanceUnits.Meters) DistanceUnits.Meters else DistanceUnits.Feet)
         sensorDetailsMap["altimeter"] = SensorDetails(
-            host.getString(R.string.pref_altimeter_calibration_title),
+            context.getString(R.string.pref_altimeter_calibration_title),
             formatService.formatDistance(altitude),
             getAltimeterStatus(),
             getAltimeterColor(),
@@ -344,7 +329,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             else -> Quality.Poor
         }
         sensorDetailsMap["battery"] = SensorDetails(
-            host.getString(R.string.tool_battery_title),
+            context.getString(R.string.tool_battery_title),
             formatService.formatPercentage(battery.percent),
             formatService.formatBatteryHealth(battery.health),
             CustomUiUtils.getQualityColor(quality),
@@ -359,7 +344,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         val pressure =
             Pressure.from(barometer.pressure, PressureUnits.Hpa).convertTo(prefs.pressureUnits)
         sensorDetailsMap["barometer"] = SensorDetails(
-            host.getString(R.string.barometer),
+            context.getString(R.string.barometer),
             formatService.formatPressure(
                 pressure,
                 Units.getDecimalPlaces(prefs.pressureUnits)
@@ -372,11 +357,11 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateGPS() {
         sensorDetailsMap["gps"] = SensorDetails(
-            host.getString(R.string.gps),
+            context.getString(R.string.gps),
             // The status stays one word on the right. The satellite count that explains it is the row's quiet
             // supporting line; the coordinates wrap to two lines here and the GPS cache row already shows the fix, so
             // they only show when there is no count (a manual or unavailable GPS).
-            gps.satellites?.let { host.requireContext().resources.getQuantityString(R.plurals.sensor_gps_satellites, it, it) }
+            gps.satellites?.let { context.resources.getQuantityString(R.plurals.sensor_gps_satellites, it, it) }
                 ?: formatService.formatLocation(gps.location),
             getGPSStatus(),
             getGPSColor(),
@@ -387,7 +372,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     private fun updateCompass() {
         sensorDetailsMap["compass"] = if (compass is MockSensor) {
             SensorDetails(
-                host.getString(R.string.pref_compass_sensor_title),
+                context.getString(R.string.pref_compass_sensor_title),
                 "-",
                 unavailableText,
                 CustomUiUtils.getQualityColor(Quality.Unknown),
@@ -395,7 +380,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             )
         } else {
             SensorDetails(
-                host.getString(R.string.pref_compass_sensor_title),
+                context.getString(R.string.pref_compass_sensor_title),
                 formatService.formatDegrees(compass.rawBearing, replace360 = true),
                 formatService.formatQuality(compass.quality),
                 CustomUiUtils.getQualityColor(compass.quality),
@@ -410,7 +395,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
             TemperatureUnits.Celsius
         ).convertTo(prefs.temperatureUnits)
         sensorDetailsMap["thermometer"] = SensorDetails(
-            host.getString(R.string.tool_thermometer_title),
+            context.getString(R.string.tool_thermometer_title),
             formatService.formatTemperature(temperature),
             formatService.formatQuality(thermometer.quality),
             CustomUiUtils.getQualityColor(thermometer.quality),
@@ -424,7 +409,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         }
 
         sensorDetailsMap["hygrometer"] = SensorDetails(
-            host.getString(R.string.hygrometer),
+            context.getString(R.string.hygrometer),
             formatService.formatPercentage(hygrometer.humidity),
             formatService.formatQuality(hygrometer.quality),
             CustomUiUtils.getQualityColor(hygrometer.quality),
@@ -434,7 +419,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateGravity() {
         sensorDetailsMap["gravity"] = SensorDetails(
-            host.getString(R.string.gravity),
+            context.getString(R.string.gravity),
             formatService.formatAcceleration(gravity.acceleration.magnitude(), 2),
             formatService.formatQuality(gravity.quality),
             CustomUiUtils.getQualityColor(gravity.quality),
@@ -444,7 +429,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateAccelerometer() {
         sensorDetailsMap["accelerometer"] = SensorDetails(
-            host.getString(R.string.accelerometer),
+            context.getString(R.string.accelerometer),
             formatService.formatAcceleration(accelerometer.acceleration.magnitude(), 2),
             formatService.formatQuality(accelerometer.quality),
             CustomUiUtils.getQualityColor(accelerometer.quality),
@@ -457,7 +442,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         // A dBm of 0 is the radio not reporting one, not a perfect signal; leave it out rather than show it.
         val dbm = signal?.dbm?.takeIf { it != 0 }?.let { " (${formatService.formatDbm(it)})" } ?: ""
         sensorDetailsMap["cell"] = SensorDetails(
-            host.getString(R.string.cell_signal),
+            context.getString(R.string.cell_signal),
             "${formatService.formatCellNetwork(signal?.network)} · " +
                 "${formatService.formatPercentage(signal?.strength ?: 0f)}$dbm",
             formatService.formatQuality(signal?.quality ?: Quality.Unknown),
@@ -468,7 +453,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun updateMagnetometer() {
         sensorDetailsMap["magnetometer"] = SensorDetails(
-            host.getString(R.string.magnetometer),
+            context.getString(R.string.magnetometer),
             formatService.formatMagneticField(magnetometer.magneticField.magnitude()),
             formatService.formatQuality(magnetometer.quality),
             CustomUiUtils.getQualityColor(magnetometer.quality),
@@ -479,11 +464,11 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     @ColorInt
     private fun getAltimeterColor(): Int {
         if (altimeter is OverrideAltimeter) {
-            return Resources.color(host.requireContext(), R.color.green)
+            return Resources.color(context, R.color.green)
         }
 
         if (altimeter is CachedAltimeter) {
-            return Resources.color(host.requireContext(), R.color.red)
+            return Resources.color(context, R.color.red)
         }
 
         if (altimeter is BarometricAltimeter) {
@@ -491,7 +476,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
         }
 
         if (!altimeter.hasValidReading) {
-            return Resources.color(host.requireContext(), R.color.yellow)
+            return Resources.color(context, R.color.yellow)
         }
 
         return CustomUiUtils.getQualityColor(altimeter.quality)
@@ -499,15 +484,15 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun getAltimeterStatus(): String {
         if (altimeter is OverrideAltimeter) {
-            return host.getString(R.string.gps_user)
+            return context.getString(R.string.gps_user)
         }
 
         if (altimeter is CachedGPS) {
-            return host.getString(R.string.unavailable)
+            return context.getString(R.string.unavailable)
         }
 
         if (!altimeter.hasValidReading) {
-            return host.getString(R.string.gps_searching)
+            return context.getString(R.string.gps_searching)
         }
 
         return formatService.formatQuality(altimeter.quality)
@@ -516,19 +501,19 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
     @ColorInt
     private fun getGPSColor(): Int {
         if (gps is OverrideGPS) {
-            return Resources.color(host.requireContext(), R.color.green)
+            return Resources.color(context, R.color.green)
         }
 
-        if (gps is InactiveGPS || !GPS.isAvailable(host.requireContext())) {
-            return Resources.color(host.requireContext(), R.color.red)
+        if (gps is InactiveGPS || !GPS.isAvailable(context)) {
+            return Resources.color(context, R.color.red)
         }
 
         if (getAppService<LocationSubsystem>().isLocationStale) {
-            return Resources.color(host.requireContext(), R.color.yellow)
+            return Resources.color(context, R.color.yellow)
         }
 
         if (!gps.hasValidReading || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)) {
-            return Resources.color(host.requireContext(), R.color.yellow)
+            return Resources.color(context, R.color.yellow)
         }
 
         return CustomUiUtils.getQualityColor(gps.quality)
@@ -536,7 +521,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun getGPSCacheStatus(): String {
         return if (cachedGPS.location == Coordinate.zero) {
-            host.getString(R.string.unavailable)
+            context.getString(R.string.unavailable)
         } else {
             formatService.formatQuality(Quality.Good)
         }
@@ -552,7 +537,7 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun getAltimeterCacheStatus(): String {
         return if (cachedAltimeter.altitude == 0f) {
-            host.getString(R.string.unavailable)
+            context.getString(R.string.unavailable)
         } else {
             formatService.formatQuality(Quality.Good)
         }
@@ -568,19 +553,19 @@ private class SensorDetailsController(private val host: TrailSenseDestinationHos
 
     private fun getGPSStatus(): String {
         if (gps is OverrideGPS) {
-            return host.getString(R.string.gps_user)
+            return context.getString(R.string.gps_user)
         }
 
-        if (gps is InactiveGPS || !GPS.isAvailable(host.requireContext())) {
-            return host.getString(R.string.unavailable)
+        if (gps is InactiveGPS || !GPS.isAvailable(context)) {
+            return context.getString(R.string.unavailable)
         }
 
         if (getAppService<LocationSubsystem>().isLocationStale) {
-            return host.getString(R.string.gps_stale)
+            return context.getString(R.string.gps_stale)
         }
 
         if (!gps.hasValidReading || (gps is CustomGPS && (gps as CustomGPS).isTimedOut)) {
-            return host.getString(R.string.gps_searching)
+            return context.getString(R.string.gps_searching)
         }
 
         return formatService.formatQuality(gps.quality)
