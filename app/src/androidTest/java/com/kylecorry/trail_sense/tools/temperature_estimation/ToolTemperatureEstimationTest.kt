@@ -23,8 +23,9 @@ class ToolTemperatureEstimationTest : ToolTestBase(Tools.TEMPERATURE_ESTIMATION)
         input(id("temp_est_dest_elevation"), "1000")
         hasText("12 °F")
 
-        // Humidity adjustment
+        // Humidity adjustment (humidity and wind sit behind "More conditions")
         input(id("temp_est_dest_elevation"), "")
+        click(id("temp_est_more_conditions"))
         input(id("temp_est_base_temperature"), "90")
         input(id("temp_est_humidity"), "70")
         hasText("106 °F")
