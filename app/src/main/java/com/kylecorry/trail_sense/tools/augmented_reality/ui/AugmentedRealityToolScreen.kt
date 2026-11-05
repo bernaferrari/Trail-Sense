@@ -10,7 +10,7 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import androidx.annotation.StringRes
-import androidx.camera.view.PreviewView
+import com.kylecorry.trail_sense.shared.camera.CameraScaleType
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -66,6 +66,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -118,7 +119,6 @@ import com.kylecorry.trail_sense.shared.extensions.inBackground
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
@@ -166,8 +166,17 @@ fun AugmentedRealityToolScreen(
     val context = LocalContext.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(route, context, effects, lifecycleOwner) {
-        AugmentedRealityController(route, context, effects, lifecycleOwner)
+    val viewModel = viewModel {
+        AugmentedRealityViewModel(
+            initialModeId = route.modeId,
+            initialCameraEnabled = route.cameraEnabled,
+            initialTime = route.time,
+            prefs = UserPreferences(context.applicationContext).augmentedReality
+        )
+    }
+    // The camera, AR view, layers and guidance targets draw and sense, so they stay with the composition.
+    val controller = remember(viewModel, context, effects, lifecycleOwner) {
+        AugmentedRealityController(viewModel, context, effects, lifecycleOwner)
     }
 
     DisposableEffect(controller, lifecycleOwner) {
@@ -193,7 +202,7 @@ fun AugmentedRealityToolScreen(
 }
 
 private class AugmentedRealityController(
-    private val route: Route.AugmentedReality,
+    private val viewModel: AugmentedRealityViewModel,
     private val context: Context,
     private val effects: ScreenEffects,
     private val lifecycleOwner: LifecycleOwner
@@ -203,8 +212,11 @@ private class AugmentedRealityController(
     private val isViewReady: Boolean
         get() = isCreated
 
-    private var mode = ARMode.Normal
-    private var timeOverride: Instant? = null
+    private var mode: ARMode
+        get() = viewModel.mode
+        set(value) {
+            viewModel.mode = value
+        }
 
     private val userPrefs by lazy { UserPreferences(context) }
     private val beaconRepo by lazy {
@@ -275,7 +287,11 @@ private class AugmentedRealityController(
     }
     private var pathLayerManager: AugmentedRealityPathLayerManager? = null
 
-    private var isCameraEnabled = true
+    private var isCameraEnabled: Boolean
+        get() = viewModel.isCameraEnabled
+        set(value) {
+            viewModel.isCameraEnabled = value
+        }
 
     private var lastLocation = Coordinate.zero
     private val layerManagementUpdater = CoroutineTimer(actionBehavior = TimerActionBehavior.Skip) {
@@ -309,11 +325,6 @@ private class AugmentedRealityController(
     private var visibleLayersOverride: List<ARLayer>? = null
     private var visibleLayers: List<ARLayer> = emptyList()
     private var isCreated = false
-    private var showLayersSheet by mutableStateOf(false)
-    private var showBeaconLayer by mutableStateOf(false)
-    private var showPathLayer by mutableStateOf(false)
-    private var showAstronomyLayer by mutableStateOf(false)
-    private var showGridLayer by mutableStateOf(false)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -323,32 +334,20 @@ private class AugmentedRealityController(
             modifier = modifier
         )
 
-        if (showLayersSheet) {
+        if (viewModel.showLayersSheet) {
             TrailSenseSheet(
                 onDismissRequest = ::dismissLayersSheet,
                 title = stringResource(R.string.layers)
             ) {
                 ARLayersContent(
-                    showBeaconLayer = showBeaconLayer,
-                    onShowBeaconLayerChange = {
-                        showBeaconLayer = it
-                        userPrefs.augmentedReality.showBeaconLayer = it
-                    },
-                    showPathLayer = showPathLayer,
-                    onShowPathLayerChange = {
-                        showPathLayer = it
-                        userPrefs.augmentedReality.showPathLayer = it
-                    },
-                    showAstronomyLayer = showAstronomyLayer,
-                    onShowAstronomyLayerChange = {
-                        showAstronomyLayer = it
-                        userPrefs.augmentedReality.showAstronomyLayer = it
-                    },
-                    showGridLayer = showGridLayer,
-                    onShowGridLayerChange = {
-                        showGridLayer = it
-                        userPrefs.augmentedReality.showGridLayer = it
-                    },
+                    showBeaconLayer = viewModel.showBeaconLayer,
+                    onShowBeaconLayerChange = viewModel::onShowBeaconLayerChange,
+                    showPathLayer = viewModel.showPathLayer,
+                    onShowPathLayerChange = viewModel::onShowPathLayerChange,
+                    showAstronomyLayer = viewModel.showAstronomyLayer,
+                    onShowAstronomyLayerChange = viewModel::onShowAstronomyLayerChange,
+                    showGridLayer = viewModel.showGridLayer,
+                    onShowGridLayerChange = viewModel::onShowGridLayerChange,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -383,15 +382,11 @@ private class AugmentedRealityController(
         views.accuracyView.setSensors(views.arView.gps, views.arView.geomagneticOrientationSensor)
         views.accuracyView.setOnClickListener { displayAccuracyTips() }
 
-        views.camera.setScaleType(PreviewView.ScaleType.FILL_CENTER)
+        views.camera.setScaleType(CameraScaleType.Fill)
         views.camera.setShowTorch(false)
 
         views.arView.infiniteFocusWhenPointedUp = true
         views.arView.bind(views.camera, lifecycleOwner)
-
-        val desiredMode = ARMode.entries.withId(route.modeId) ?: ARMode.Normal
-
-        isCameraEnabled = route.cameraEnabled
 
         views.cameraToggle.onClick = {
             if (isCameraEnabled) {
@@ -418,7 +413,7 @@ private class AugmentedRealityController(
                 setTimeOverride(null)
                 views.timeSheet.hide()
             } else {
-                views.timeSheet.setTime(timeOverride)
+                views.timeSheet.setTime(viewModel.timeOverride)
                 views.timeSheet.show()
             }
             updateTimeButtonState()
@@ -430,7 +425,11 @@ private class AugmentedRealityController(
             refreshGuidance()
         }
 
-        setMode(desiredMode, route.time?.let { ZonedDateTime.parse(it) })
+        // The route's mode and time the first time; the ViewModel's own after that.
+        val initialTime = viewModel.consumeInitialTime()
+        val desiredMode = mode
+        mode = ARMode.Normal
+        setMode(desiredMode, initialTime)
 
         views.calibrateBtn.onLongClick = {
             Alerts.dialog(
@@ -655,7 +654,7 @@ private class AugmentedRealityController(
                 visibleLayersOverride = listOf(gridLayer, astronomyLayer)
                 overrideTime?.let {
                     setTimeOverride(it.toInstant())
-                    views.timeSheet.setTime(timeOverride)
+                    views.timeSheet.setTime(viewModel.timeOverride)
                     views.timeSheet.show()
                     updateTimeButtonState()
                 }
@@ -818,16 +817,11 @@ private class AugmentedRealityController(
     }
 
     private fun showLayersSheet() {
-        val prefs = userPrefs.augmentedReality
-        showBeaconLayer = prefs.showBeaconLayer
-        showPathLayer = prefs.showPathLayer
-        showAstronomyLayer = prefs.showAstronomyLayer
-        showGridLayer = prefs.showGridLayer
-        showLayersSheet = true
+        viewModel.openLayersSheet()
     }
 
     private fun dismissLayersSheet() {
-        showLayersSheet = false
+        viewModel.dismissLayersSheet()
         updateLayerVisibility()
     }
 
@@ -886,12 +880,12 @@ private class AugmentedRealityController(
     }
 
     private fun setTimeOverride(time: Instant?) {
-        timeOverride = time
+        viewModel.timeOverride = time
         astronomyLayer.timeOverride = time?.toZonedDateTime()
     }
 
     private fun updateTimeButtonState() {
-        val isActive = timeOverride != null || views.timeSheet.isVisible
+        val isActive = viewModel.timeOverride != null || views.timeSheet.isVisible
         views.timeBtn.alpha = if (isActive) 1f else 0.7f
     }
 

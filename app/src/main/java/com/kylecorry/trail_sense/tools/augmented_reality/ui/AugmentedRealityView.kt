@@ -5,8 +5,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Path
 import android.graphics.RectF
-import android.view.GestureDetector
-import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -54,6 +51,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.text
 import com.kylecorry.trail_sense.shared.textDimensions
 import com.kylecorry.trail_sense.shared.views.CameraState
+import com.kylecorry.trail_sense.shared.views.cameraGestures
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.calibration.IARCalibrator
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapper
@@ -334,9 +332,13 @@ class AugmentedRealityView(val context: Context) {
             Canvas(
                 modifier = modifier
                     .fillMaxSize()
-                    .pointerInteropFilter { event ->
-                        onTouchEvent(event)
-                    }
+                    // Taps reach the layers; pinches and double taps zoom the camera under the overlay.
+                    .cameraGestures(
+                        camera = { camera },
+                        consume = { !passThroughTouchEvents },
+                        enabled = { isVisible },
+                        onTap = { onTap(PixelCoordinate(it.x, it.y)) }
+                    )
                     .onSizeChanged {
                         contentWidth = it.width
                         contentHeight = it.height
@@ -617,27 +619,13 @@ class AugmentedRealityView(val context: Context) {
         toTrueNorth = Quaternion.from(Euler(0f, 0f, -declinationProvider.getDeclination()))
     }
 
-    private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
-        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-            val pixel = PixelCoordinate(e.x, e.y)
-            for (layer in layers.reversed()) {
-                if (::drawer.isInitialized && layer.onClick(drawer, this@AugmentedRealityView, pixel)) {
-                    return true
-                }
+    private fun onTap(pixel: PixelCoordinate) {
+        camera?.click()
+        for (layer in layers.reversed()) {
+            if (::drawer.isInitialized && layer.onClick(drawer, this@AugmentedRealityView, pixel)) {
+                return
             }
-            return super.onSingleTapConfirmed(e)
         }
-    }
-
-    private val mGestureDetector = GestureDetector(context, gestureListener)
-
-    fun onTouchEvent(event: MotionEvent): Boolean {
-        if (!isVisible) {
-            return false
-        }
-        mGestureDetector.onTouchEvent(event)
-        camera?.dispatchTouchEvent(event)
-        return !passThroughTouchEvents
     }
 
     fun unbind() {

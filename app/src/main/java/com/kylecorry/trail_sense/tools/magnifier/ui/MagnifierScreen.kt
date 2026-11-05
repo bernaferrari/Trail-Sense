@@ -90,6 +90,7 @@ internal fun MagnifierScreen(
     var hasPermissionAnswer by remember { mutableStateOf(false) }
     var isCloseUpFocus by remember { mutableStateOf(false) }
     var frozenFrame by remember { mutableStateOf<Bitmap?>(null) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         onRequestCamera {
@@ -233,7 +234,12 @@ internal fun MagnifierScreen(
                         icon = if (frozenFrame == null) Icons.Default.Pause else Icons.Default.PlayArrow,
                         style = TrailSenseButtonStyle.Filled,
                         onClick = {
-                            frozenFrame = if (frozenFrame == null) cameraState.previewImage else null
+                            if (frozenFrame == null) {
+                                // The frozen picture is the camera's next frame.
+                                scope.launch { frozenFrame = cameraState.nextFrame() }
+                            } else {
+                                frozenFrame = null
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)

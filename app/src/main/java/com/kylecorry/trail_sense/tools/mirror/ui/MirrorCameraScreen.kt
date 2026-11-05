@@ -8,8 +8,7 @@ import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
-import android.graphics.Color
-import androidx.camera.view.PreviewView
+import com.kylecorry.trail_sense.shared.camera.CameraScaleType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,9 +58,9 @@ internal fun MirrorCameraScreen(
     val context = LocalContext.current
     val cameraState = remember {
         CameraState(context).apply {
-            setScaleType(PreviewView.ScaleType.FILL_CENTER)
+            setScaleType(CameraScaleType.Fill)
             setShowTorch(false)
-            setPreviewBackgroundColor(Color.WHITE)
+            setPreviewBackgroundColor(ComposeColor.White)
             keepScreenOn = true
         }
     }

@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.Uri
 import android.util.Size
 import androidx.camera.core.ImageCapture
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.shape.CircleShape
@@ -169,7 +168,7 @@ class PhotoImportDialog(
         }
 
         isCameraStarted = true
-        camera.setScaleType(PreviewView.ScaleType.FIT_CENTER)
+        camera.setScaleType(CameraScaleType.Fit)
         camera.start(
             resolution,
             lifecycleOwner = lifecycleOwner,
