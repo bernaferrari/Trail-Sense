@@ -68,7 +68,7 @@ import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
 import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
 /**
@@ -388,12 +388,14 @@ private fun formatElapsed(startTime: Instant?): String {
 
 /** The cliff height tool, which shows its disclaimer once on the way in. */
 @Composable
-fun CliffHeightToolScreen(host: TrailSenseDestinationHost) {
-    LaunchedEffect(host) {
+fun CliffHeightToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    LaunchedEffect(Unit) {
         CustomUiUtils.disclaimer(
-            host.requireContext(),
-            host.getString(R.string.disclaimer_message_title),
-            host.getString(R.string.tool_cliff_height_disclaimer),
+            context,
+            context.getString(R.string.disclaimer_message_title),
+            context.getString(R.string.tool_cliff_height_disclaimer),
             "cache_dialog_tool_cliff_height",
             considerShownIfCancelled = true,
             cancelText = null
@@ -402,8 +404,8 @@ fun CliffHeightToolScreen(host: TrailSenseDestinationHost) {
     CliffHeightScreen(
         onOpenGuide = {
             UserGuideUtils.showGuide(
-                host.requireContext(),
-                host.findNavigator(),
+                context,
+                navigator,
                 R.raw.guide_tool_cliff_height
             )
         }
