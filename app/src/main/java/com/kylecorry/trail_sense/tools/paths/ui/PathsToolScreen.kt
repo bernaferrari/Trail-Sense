@@ -2,6 +2,20 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import kotlinx.coroutines.CoroutineScope
+
 import androidx.compose.ui.graphics.graphicsLayer
 import com.kylecorry.trail_sense.shared.views.PathsEmptyIllustration
 import androidx.compose.foundation.background
@@ -16,7 +30,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
@@ -106,7 +119,6 @@ import com.kylecorry.trail_sense.shared.io.IOFactory
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -151,11 +163,18 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PathsToolScreen(
-    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host) { PathsController(host) }
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(lifecycleOwner) { PathsController(context, navigator, effects, lifecycleOwner) }
+
+    // Back goes up a group; at the top it leaves the page as usual.
+    BackHandler(enabled = controller.handlesBack) {
+        controller.onBack()
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -179,27 +198,40 @@ fun PathsToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class PathsController(private val host: TrailSenseDestinationHost) {
+/**
+ * The paths list: a group browser over the path service with GPX import and export, Backtrack's status and the path
+ * commands' dialogs, so it lives with the screen (it holds the screen's context) rather than in a ViewModel.
+ */
+private class PathsController(
+    private val context: Context,
+    private val appNavigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner
+) {
+
+    private val lifecycleScope: CoroutineScope
+        get() = lifecycleOwner.lifecycleScope
 
     private val service by lazy {
         Tools.getService(
-            host.requireContext(),
+            context,
             PathsToolRegistration.SERVICE_BACKTRACK
         )
     }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
+    private val prefs by lazy { UserPreferences(context) }
     private val pathService by lazy {
-        PathService.getInstance(host.requireContext())
+        PathService.getInstance(context)
     }
 
     private val gps by lazy {
-        SensorService(host.requireContext()).getGPS()
+        SensorService(context).getGPS()
     }
 
     private val gpxService by lazy {
         IOFactory().createGpxService(
-            host.requireContext(),
-            host.intentResultRetriever
+            context,
+            // File pickers need the activity's result launcher, an Activity-only API.
+            requireNotNull(context.findMainActivity())
         )
     }
 
@@ -217,7 +249,17 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
     private var backtrackFrequency by mutableStateOf<Duration?>(null)
     private var sortMenuText by mutableStateOf("")
     private var showBacktrackFrequencyPicker by mutableStateOf(false)
-    private var backPressedCallback: OnBackPressedCallback? = null
+    private var isInGroup by mutableStateOf(false)
+
+    /** Whether back stays on this page (going up a group). */
+    val handlesBack: Boolean
+        get() = isInGroup
+
+    fun onBack() {
+        if (!manager.up()) {
+            appNavigator.navigateUp()
+        }
+    }
     private var isInitialized = false
     private var isLoaded by mutableStateOf(false)
 
@@ -236,7 +278,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
             resetKey = pathListResetKey,
             backtrackState = backtrackState,
             backtrackFrequency = backtrackFrequency,
-            formatService = FormatService.getInstance(host.requireContext()),
+            formatService = FormatService.getInstance(context),
             baseDistanceUnits = prefs.baseDistanceUnits,
             onBack = { dispatcher?.onBackPressed() },
             onSearchChange = {
@@ -282,7 +324,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
         }
         isInitialized = true
         manager = GroupListManager(
-            host.lifecycleScope,
+            lifecycleScope,
             pathLoader,
             lastRoot,
             this::sortPaths
@@ -294,33 +336,21 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
             if (rootChanged) {
                 pathListResetKey++
             }
-            title = (root as PathGroup?)?.name ?: host.getString(R.string.paths)
+            isInGroup = root != null
+            title = (root as PathGroup?)?.name ?: context.getString(R.string.paths)
         }
 
         sort = prefs.paths.pathSort
-        sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
+        sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
 
         // Path updates currently require loading all paths because the repository exposes full snapshots.
-        host.lifecycleScope.launch {
+        lifecycleScope.launch {
             pathService.getPaths().collect {
                 manager.refresh()
             }
         }
 
-        backPressedCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (!manager.up()) {
-                    remove()
-                    host.findNavigator().navigateUp()
-                }
-            }
-        }
-        host.mainActivity.onBackPressedDispatcher.addCallback(
-            host.lifecycleOwner,
-            backPressedCallback!!
-        )
-
-        title = host.getString(R.string.paths)
+        title = context.getString(R.string.paths)
     }
 
     fun onResume() {
@@ -357,8 +387,6 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     fun onDestroy() {
         onPause()
-        backPressedCallback?.remove()
-        backPressedCallback = null
         isInitialized = false
     }
 
@@ -377,28 +405,28 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun changeBacktrackFrequency(frequency: Duration) {
         ChangeBacktrackFrequencyCommand(
-            host.requireContext(),
-            host.lifecycleScope
+            context,
+            lifecycleScope
         ) { updateStatusBar() }.execute(frequency)
     }
 
     private fun toggleBacktrack() {
-        val command = ToggleBacktrackCommand(host)
+        val command = ToggleBacktrackCommand(context, effects, lifecycleScope)
         command.execute()
     }
 
     private fun changeSort() {
         val sortOptions = PathSortMethod.values()
         Pickers.item(
-            host.requireContext(),
-            host.getString(R.string.sort),
+            context,
+            context.getString(R.string.sort),
             sortOptions.map { getSortString(it) },
             sortOptions.indexOf(prefs.paths.pathSort)
         ) { newSort ->
             if (newSort != null) {
                 prefs.paths.pathSort = sortOptions[newSort]
                 sort = sortOptions[newSort]
-                sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
+                sortMenuText = context.getString(R.string.sort_by, getSortString(sort))
                 onSortChanged()
             }
         }
@@ -406,11 +434,11 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun getSortString(sortMethod: PathSortMethod): String {
         return when (sortMethod) {
-            PathSortMethod.MostRecent -> host.getString(R.string.most_recent)
-            PathSortMethod.Longest -> host.getString(R.string.longest)
-            PathSortMethod.Shortest -> host.getString(R.string.shortest)
-            PathSortMethod.Closest -> host.getString(R.string.closest)
-            PathSortMethod.Name -> host.getString(R.string.name)
+            PathSortMethod.MostRecent -> context.getString(R.string.most_recent)
+            PathSortMethod.Longest -> context.getString(R.string.longest)
+            PathSortMethod.Shortest -> context.getString(R.string.shortest)
+            PathSortMethod.Closest -> context.getString(R.string.closest)
+            PathSortMethod.Name -> context.getString(R.string.name)
         }
     }
 
@@ -431,8 +459,8 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun setGroupVisibility(group: PathGroup, visible: Boolean) {
-        host.inBackground {
-            Alerts.withLoading(host.requireContext(), host.getString(R.string.loading)) {
+        lifecycleOwner.inBackground {
+            Alerts.withLoading(context, context.getString(R.string.loading)) {
                 val paths = onIO {
                     pathService.loader().getChildren(group.id, null).filterIsInstance<Path>()
                 }
@@ -464,8 +492,8 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun simplifyPath(path: Path) {
         val command = SimplifyPathCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -484,8 +512,8 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun togglePathVisibility(path: Path) {
         val command = TogglePathVisibilityCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -493,8 +521,8 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun renamePath(path: Path) {
         val command = RenamePathCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -502,27 +530,27 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun keepPath(path: Path) {
         val command = KeepPathCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             pathService
         )
         command.execute(path)
     }
 
     private fun showPath(path: Path) {
-        val command = ViewPathCommand(host.findNavigator())
+        val command = ViewPathCommand(appNavigator)
         command.execute(path)
     }
 
     private fun showPath(id: Long) {
-        val command = ViewPathCommand(host.findNavigator())
+        val command = ViewPathCommand(appNavigator)
         command.execute(id)
     }
 
     private fun importPaths() {
         val command = ImportPathsCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             gpxService,
             pathService,
             prefs.paths
@@ -532,8 +560,8 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun exportPath(path: IPath?) {
         val command = ExportPathCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             gpxService,
             pathService
         )
@@ -546,8 +574,8 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun deletePath(path: Path) {
         val command = DeletePathCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             pathService
         )
         command.execute(path)
@@ -555,16 +583,16 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     private fun merge(path: Path) {
         val command = MergePathCommand(
-            host.requireContext(),
-            host.lifecycleOwner,
+            context,
+            lifecycleOwner,
             pathService
         )
         command.execute(path)
     }
 
     private fun createPath() {
-        val command = CreatePathCommand(host.requireContext(), pathService, prefs.paths)
-        host.inBackground {
+        val command = CreatePathCommand(context, pathService, prefs.paths)
+        lifecycleOwner.inBackground {
             command.execute(manager.root?.id)?.let {
                 showPath(it)
             }
@@ -573,35 +601,35 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
 
     // Groups
     private fun deleteGroup(group: PathGroup) {
-        val command = DeletePathGroupGroupCommand(host.requireContext(), pathService)
-        host.inBackground {
+        val command = DeletePathGroupGroupCommand(context, pathService)
+        lifecycleOwner.inBackground {
             command.execute(group)
             manager.refresh()
         }
     }
 
     private fun renameGroup(group: PathGroup) {
-        val command = RenamePathGroupGroupCommand(host.requireContext(), pathService)
-        host.inBackground {
+        val command = RenamePathGroupGroupCommand(context, pathService)
+        lifecycleOwner.inBackground {
             command.execute(group)
             manager.refresh()
         }
     }
 
     private fun createGroup() {
-        val command = CreatePathGroupCommand(host.requireContext(), pathService)
-        host.inBackground {
+        val command = CreatePathGroupCommand(context, pathService)
+        lifecycleOwner.inBackground {
             command.execute(manager.root?.id)
             manager.refresh()
         }
     }
 
     private fun movePath(path: IPath) {
-        val command = MoveIPathCommand(host.requireContext(), pathService)
-        host.inBackground {
+        val command = MoveIPathCommand(context, pathService)
+        lifecycleOwner.inBackground {
             val newGroup = command.execute(path)
             if (newGroup?.id != path.parentId) {
-                host.toast(host.getString(R.string.moved_to, newGroup?.name ?: host.getString(R.string.no_group)))
+                effects.showMessage(context.getString(R.string.moved_to, newGroup?.name ?: context.getString(R.string.no_group)))
                 manager.refresh()
             }
         }
@@ -1164,4 +1192,10 @@ private fun PathsScreenPreview() {
             onBacktrackToggleClick = {}
         )
     }
+}
+
+private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
+    is MainActivity -> this
+    is ContextWrapper -> baseContext.findMainActivity()
+    else -> null
 }
