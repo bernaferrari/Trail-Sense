@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
-import com.kylecorry.trail_sense.shared.views.compose.routeAs
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -99,7 +98,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.NorthReferenceBadgeState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
@@ -133,17 +131,36 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.Magnetom
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import android.content.ContextWrapper
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.shareLocation
+import kotlinx.coroutines.CoroutineScope
 import java.time.Duration
 import java.time.Instant
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 @Composable
 fun NavigatorToolScreen(
-    host: TrailSenseDestinationHost,
+    route: Route.Navigation,
+    quickActionHost: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
-    val controller = remember(host) { NavigatorController(host) }
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val controller = remember(lifecycleOwner) {
+        NavigatorController(context, navigator, effects, lifecycleOwner, route, quickActionHost)
+    }
 
     DisposableEffect(controller, lifecycleOwner) {
         controller.onCreate()
@@ -167,17 +184,35 @@ fun NavigatorToolScreen(
     controller.Content(modifier = modifier.fillMaxSize())
 }
 
-private class NavigatorController(private val host: TrailSenseDestinationHost) {
+/**
+ * The compass: Android views (the dials, the radar map) driven by sensors, so it lives with the screen rather than in
+ * a ViewModel. [quickActionHost] is only handed to the quick action buttons, whose shared factory still takes a host.
+ */
+private class NavigatorController(
+    private val context: Context,
+    private val appNavigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner,
+    private val route: Route.Navigation,
+    private val quickActionHost: TrailSenseDestinationHost
+) {
+
+    // The screen lock and the error banner are the activity's own.
+    private val activity: MainActivity by lazy { requireNotNull(context.findMainActivity()) }
+    private val lifecycleScope: CoroutineScope
+        get() = lifecycleOwner.lifecycleScope
 
     private val views = createNavigatorViews(
-        host.requireContext(),
+        context,
         onNorthReferenceSettingsClick = {
-            host.findNavigator().navigate(Route.CalibrateCompass)
+            appNavigator.navigate(Route.CalibrateCompass)
         },
-        requestCameraPermission = { callback -> host.requestCamera(callback) },
-        onCameraPermissionDenied = { host.alertNoCameraPermission() },
+        requestCameraPermission = { callback ->
+            lifecycleScope.launch { callback(effects.requestPermission(AppPermission.Camera)) }
+        },
+        onCameraPermissionDenied = { effects.explainPermissionDenied(AppPermission.Camera) },
         onOpenBeacon = { beaconId ->
-            host.findNavigator().navigate(Route.BeaconDetails(beaconId = beaconId))
+            appNavigator.navigate(Route.BeaconDetails(beaconId = beaconId))
         }
     )
     private val isViewReady: Boolean
@@ -198,25 +233,27 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
     private var declination = 0f
 
-    private val userPrefs by lazy { UserPreferences(host.requireContext()) }
+    private val userPrefs by lazy { UserPreferences(context) }
 
-    private val beaconRepo by lazy { BeaconRepo.getInstance(host.requireContext()) }
+    private val beaconRepo by lazy { BeaconRepo.getInstance(context) }
 
-    private val sensorService by lazy { SensorService(host.requireContext()) }
-    private val pathService by lazy { PathService.getInstance(host.requireContext()) }
-    private val weatherRepo by lazy { WeatherRepo.getInstance(host.requireContext()) }
+    private val sensorService by lazy { SensorService(context) }
+    private val pathService by lazy { PathService.getInstance(context) }
+    private val weatherRepo by lazy { WeatherRepo.getInstance(context) }
 
     private val navigationService = NavigationService()
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
 
     private var beacons: Collection<Beacon> = listOf()
     private var nearbyBeacons: List<Beacon> = listOf()
 
     private var destination: Destination? = null
-    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
+    private val navigator by lazy { Navigator.getInstance(context) }
 
     // Diagnostics
-    private val errors by lazy { NavigatorUserErrors(host, this::displayAccuracyTips) }
+    private val errors by lazy {
+        NavigatorUserErrors(context, activity.errorBanner, appNavigator, this::displayAccuracyTips)
+    }
 
     // Data commands
     private val updateAstronomyLayerCommand by lazy {
@@ -305,11 +342,13 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                     },
                     onPickFormat = ::pickLocationFormat,
                     onShare = {
-                        Share.shareLocation(host, gps.location, locationFormat)
+                        lifecycleScope.launch {
+                            shareLocation(context, effects, appNavigator, gps.location, locationFormat)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     onCopy = { text ->
-                        com.kylecorry.andromeda.clipboard.Clipboard.copy(host.requireContext(), text, host.getString(R.string.copied_to_clipboard_toast))
+                        com.kylecorry.andromeda.clipboard.Clipboard.copy(context, text, context.getString(R.string.copied_to_clipboard_toast))
                     }
                 )
             }
@@ -321,7 +360,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                 },
                 title = stringResource(R.string.elevation_history)
             ) {
-                val historyDurationTitle = host.getString(R.string.elevation_history_length)
+                val historyDurationTitle = context.getString(R.string.elevation_history_length)
                 AltitudeContent(
                     historySummary = altitudeHistorySummary,
                     readings = altitudeChartReadings,
@@ -350,8 +389,8 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             }
         }
         layerSheet.Content(
-            host.requireContext(),
-            { host.findNavigator().navigate(it) }
+            context,
+            { appNavigator.navigate(it) }
         )
     }
 
@@ -360,7 +399,6 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             return
         }
         isCreated = true
-        val route = host.routeAs<Route.Navigation>()
         val beaconId = route.destinationBeaconId
         checkCalibrationOnNextReading = route.navigationStarted
 
@@ -370,7 +408,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             navigator.navigateTo(beaconId)
         }
 
-        host.lifecycleScope.launch {
+        lifecycleScope.launch {
             navigator.destination2.collect {
                 destination = it
                 updateNearbyBeacons()
@@ -383,8 +421,8 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             GPSDiagnosticScanner(gps),
             MagnetometerDiagnosticScanner()
         ).mapIndexed { index, scanner ->
-            host.lifecycleScope.launch {
-                scanner.fullScan(host.requireContext()).collect { results ->
+            lifecycleScope.launch {
+                scanner.fullScan(context).collect { results ->
                     diagnosticResults = diagnosticResults + (index to results.map { it.id })
                 }
             }
@@ -407,20 +445,20 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
 
 
         NavigationQuickActionBinder(
-            host,
+            quickActionHost,
             views.navigationTitle.leftButton,
             views.navigationTitle.rightButton,
             userPrefs.navigation
         ).bind()
 
-        host.lifecycleScope.launch {
+        lifecycleScope.launch {
             beaconRepo.getBeacons().collect {
                 beacons = it
                 updateNearbyBeacons()
             }
         }
 
-        compass.asLiveData().observe(host.lifecycleOwner) {
+        compass.asLiveData().observe(lifecycleOwner) {
             if (checkCalibrationOnNextReading && compass.quality != Quality.Unknown) {
                 checkCalibrationOnNextReading = false
                 if (compass.quality == Quality.Poor) {
@@ -428,24 +466,23 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                 }
             }
         }
-        clinometer.asLiveData().observe(host.lifecycleOwner) { }
-        altimeter.asLiveData().observe(host.lifecycleOwner) { }
-        gps.asLiveData().observe(host.lifecycleOwner) { }
-        speedometer.asLiveData().observe(host.lifecycleOwner) { }
-        getBacktrackAltitudeReadings().observe(host.lifecycleOwner) {
+        clinometer.asLiveData().observe(lifecycleOwner) { }
+        altimeter.asLiveData().observe(lifecycleOwner) { }
+        gps.asLiveData().observe(lifecycleOwner) { }
+        speedometer.asLiveData().observe(lifecycleOwner) { }
+        getBacktrackAltitudeReadings().observe(lifecycleOwner) {
             backtrackAltitudeReadings = it
             updateAltitudeChart()
         }
-        getWeatherAltitudeReadings().observe(host.lifecycleOwner) {
+        getWeatherAltitudeReadings().observe(lifecycleOwner) {
             weatherAltitudeReadings = it
             updateAltitudeChart()
         }
 
         views.navigationTitle.onSubtitleLongClick = {
-            Share.shareLocation(
-                host,
-                gps.location
-            )
+            lifecycleScope.launch {
+                shareLocation(context, effects, appNavigator, gps.location)
+            }
             true
         }
 
@@ -466,18 +503,18 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         }
 
         views.onBeaconClick = {
-            host.findNavigator().navigate(Route.BeaconList())
+            appNavigator.navigate(Route.BeaconList())
         }
 
         views.onBeaconLongClick = {
             if (gps.hasValidReading) {
                 val altitude = if (altimeter.hasValidReading) altimeter.altitude else gps.altitude
                 // Straight to the editor, as the map and the field guide do: Save and Back return here.
-                host.findNavigator().navigate(
+                appNavigator.navigate(
                     Route.PlaceBeacon(initialLocation = gps.location.toRouteLocation(altitude))
                 )
             } else {
-                host.findNavigator().navigate(Route.PlaceBeacon())
+                appNavigator.navigate(Route.PlaceBeacon())
             }
         }
 
@@ -492,7 +529,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             layerSheet.dismiss()
             layers.pause(views.radarCompassMap)
             layerSheet.setOnDismissListener {
-                layers.resume(host.requireContext(), views.radarCompassMap, host)
+                layers.resume(views.radarCompassMap, lifecycleOwner)
             }
             layerSheet.show()
         }
@@ -531,7 +568,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun toggleDestinationBearing() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             if (destination is Destination.Beacon) {
                 // TODO: Prompt to cancel navigation?
                 // Don't set destination bearing while navigating to a beacon
@@ -552,11 +589,11 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun handleShowWhenLocked() {
-        screenLock.updateLock(host.mainActivity)
+        screenLock.updateLock(activity)
     }
 
     fun displayAccuracyTips() {
-        host.findNavigator().navigate(Route.CalibrateCompass)
+        appNavigator.navigate(Route.CalibrateCompass)
     }
 
     private fun pickLocationFormat(
@@ -566,8 +603,8 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         val formats = BuiltInCoordinateFormat.entries
         val formatStrings = formats.map { formatService.formatCoordinateType(it) }
         Pickers.item(
-            host.requireContext(),
-            host.getString(R.string.pref_coordinate_format_title),
+            context,
+            context.getString(R.string.pref_coordinate_format_title),
             formatStrings,
             defaultSelectedIndex = formats.indexOf(currentFormat)
         ) {
@@ -591,8 +628,8 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             coordinateFormat = formatService.formatCoordinateType(format),
             accuracy = accuracy,
             satellites = (gps.satellites ?: 0).toString(),
-            time = host.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
-            datum = host.getString(R.string.wgs84)
+            time = context.getString(R.string.time_ago, formatService.formatDuration(timeAgo)),
+            datum = context.getString(R.string.wgs84)
         )
     }
 
@@ -602,7 +639,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun updateAltitudeChart() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             val currentAltitude = Reading(altimeter.altitude, Instant.now())
             val filteredReadings = onDefault {
                 val readings =
@@ -617,7 +654,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                 val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
 
                 onIO {
-                    DebugElevationsCommand(host.requireContext(), readings, smoothed).execute()
+                    DebugElevationsCommand(context, readings, smoothed).execute()
                 }
 
                 smoothed.filter {
@@ -630,7 +667,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun formatAltitudeHistoryDuration(): String {
-        return host.getString(
+        return context.getString(
             R.string.last_duration,
             formatService.formatDuration(altitudeHistoryDuration)
         )
@@ -654,7 +691,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun updateAstronomyData() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             if (gps.location == Coordinate.zero) {
                 return@inBackground
             }
@@ -670,7 +707,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
 
         views.radarCompassMap.useDensityPixelsForZoom =
             !userPrefs.navigation.highDetailMode
-        layers.resume(host.requireContext(), views.radarCompassMap, host)
+        layers.resume(views.radarCompassMap, lifecycleOwner)
         views.radarCompass.bindMapView(views.radarCompassMap)
 
         // Show the north reference indicator
@@ -699,12 +736,12 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
 
     fun onDestroy() {
         onPause()
-        screenLock.releaseLock(host.mainActivity)
+        screenLock.releaseLock(activity)
         isCreated = false
     }
 
     private fun updateNearbyBeacons() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             onIO {
                 loadBeaconsRunner.skipIfRunning {
                     val destinationBeacon = (destination as? Destination.Beacon)?.beacon
@@ -806,9 +843,9 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         lastAttributionLayerKey = layers.key
         lastAttributionRadarVisible = isRadarVisible
 
-        host.inBackground {
+        lifecycleOwner.inBackground {
             if (isRadarVisible) {
-                val attribution = views.radarCompassMap.getAttribution(host.requireContext())
+                val attribution = views.radarCompassMap.getAttribution(context)
                 onMain {
                     if (isViewReady) {
                         views.mapAttribution.text = attribution
@@ -866,7 +903,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
             views.navigationTitle.title = formatService.formatDegrees(bearing, replace360 = true)
             views.navigationTitle.shortDirection = formatService.formatDirection(CompassDirection.nearest(bearing))
             // Spelled out: the dial already shows the letters, the readout says it the way a person would.
-            views.navigationTitle.direction = host.requireContext().getString(
+            views.navigationTitle.direction = context.getString(
                 when (CompassDirection.nearest(bearing)) {
                     CompassDirection.North -> R.string.direction_north_full
                     CompassDirection.NorthEast -> R.string.direction_north_east_full
@@ -934,7 +971,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun updateCompassLayers() {
-        host.inBackground {
+        lifecycleOwner.inBackground {
             val destBearing = getDestinationBearing()
             val destinationBeacon = (destination as? Destination.Beacon)?.beacon
             val destColor = destinationBeacon?.color ?: AppColor.Blue.color
@@ -961,9 +998,9 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     private fun showCalibrationDialog() {
         if (userPrefs.navigation.showCalibrationOnNavigateDialog) {
             var doNotAskAgain = false
-            val doNotAskAgainText = host.getString(R.string.do_not_ask_again)
+            val doNotAskAgainText = context.getString(R.string.do_not_ask_again)
             val contentView = TrailSenseComposeRootView(
-                host.requireContext(),
+                context,
                 ViewCompositionStrategy.DisposeOnDetachedFromWindow
             ) {
                 NavigationCalibrationDialogContent(
@@ -974,11 +1011,11 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                 )
             }
             Alerts.dialog(
-                host.requireContext(),
-                host.getString(R.string.calibrate_compass_dialog_title),
-                host.getString(
+                context,
+                context.getString(R.string.calibrate_compass_dialog_title),
+                context.getString(
                     R.string.calibrate_compass_on_navigate_dialog_content,
-                    host.getString(android.R.string.ok)
+                    context.getString(android.R.string.ok)
                 ),
                 contentView = contentView,
                 cancelText = null,
@@ -1395,4 +1432,10 @@ private fun NavigatorHostPreview() {
             views = createNavigatorViews(LocalContext.current)
         )
     }
+}
+
+private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
+    is MainActivity -> this
+    is ContextWrapper -> baseContext.findMainActivity()
+    else -> null
 }

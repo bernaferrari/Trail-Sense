@@ -179,7 +179,7 @@ fun DestinationContent(
             Route.ThermometerSettings -> ThermometerSettingsToolScreen(this)
             Route.WeatherSettings -> WeatherSettingsToolScreen(this)
             Route.PedometerSettings -> PedometerSettingsToolScreen(this)
-            Route.NavigationSettings -> NavigationSettingsToolScreen(this)
+            Route.NavigationSettings -> NavigationSettingsToolScreen()
             Route.PathsSettings -> PathsSettingsToolScreen(this)
             Route.AstronomySettings -> AstronomySettingsToolScreen(this)
 
@@ -245,7 +245,7 @@ fun DestinationContent(
                 text = route.text
             )
             is Route.VectorMapView -> ViewVectorMapToolScreen(this)
-            is Route.Navigation -> NavigatorToolScreen(this)
+            is Route.Navigation -> NavigatorToolScreen(route, quickActionHost = this)
             is Route.PathOverview -> PathOverviewToolScreen(this)
             Route.Paths -> PathsToolScreen(this)
             Route.CalibrateAltimeter -> CalibrateAltimeterToolScreen(this)

@@ -7,20 +7,23 @@ import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.views.UserError
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import android.content.Context
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.views.ErrorBannerState
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
 import java.util.Locale
 
+/** The compass's sensor problems, shown on the activity's error [banner]. */
 class NavigatorUserErrors(
-    private val host: TrailSenseDestinationHost,
+    private val context: Context,
+    private val banner: ErrorBannerState,
+    private val navigator: TrailSenseNavigator,
     private val onDisplayAccuracyTips: () -> Unit
 ) {
 
-    private val banner = host.requireMainActivity().errorBanner
-    private val formatter = FormatService.getInstance(host.requireContext())
+    private val formatter = FormatService.getInstance(context)
 
     private val possibleErrors = listOf(
         ErrorBannerReason.NoGPS,
@@ -33,39 +36,38 @@ class NavigatorUserErrors(
     private val errorMap = mapOf(
         GPSDiagnosticScanner.GPS_UNAVAILABLE to UserError(
             ErrorBannerReason.NoGPS,
-            host.getString(R.string.location_disabled),
+            context.getString(R.string.location_disabled),
             TrailIcons.Satellite
         ),
         GPSDiagnosticScanner.LOCATION_UNSET to UserError(
             ErrorBannerReason.LocationNotSet,
-            host.getString(R.string.location_not_set),
+            context.getString(R.string.location_not_set),
             TrailIcons.Satellite,
-            host.getString(R.string.set)
+            context.getString(R.string.set)
         ) {
-            val appNavigator = host.findNavigator()
             banner.dismiss(ErrorBannerReason.LocationNotSet)
-            appNavigator.navigate(Route.CalibrateGps)
+            navigator.navigate(Route.CalibrateGps)
         },
         GPSDiagnosticScanner.GPS_TIMED_OUT to UserError(
             ErrorBannerReason.GPSTimeout,
-            host.getString(R.string.gps_signal_lost),
+            context.getString(R.string.gps_signal_lost),
             TrailIcons.Satellite
         ),
         MagnetometerDiagnosticScanner.MAGNETOMETER_POOR to UserError(
             ErrorBannerReason.CompassPoor,
-            host.getString(
+            context.getString(
                 R.string.compass_calibrate_toast,
                 formatter.formatQuality(Quality.Poor).lowercase(Locale.getDefault())
             ),
             TrailIcons.CompassIcon,
-            host.getString(R.string.how)
+            context.getString(R.string.how)
         ) {
             onDisplayAccuracyTips()
             banner.dismiss(ErrorBannerReason.CompassPoor)
         },
         MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE to UserError(
             ErrorBannerReason.NoCompass,
-            host.getString(R.string.no_sensor_message, host.getString(R.string.pref_compass_sensor_title).lowercase()),
+            context.getString(R.string.no_sensor_message, context.getString(R.string.pref_compass_sensor_title).lowercase()),
             TrailIcons.CompassIcon
         )
     )
