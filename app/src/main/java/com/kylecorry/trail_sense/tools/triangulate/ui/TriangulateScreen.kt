@@ -150,10 +150,16 @@ import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.sharing.Share
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.BearingInput as ComposeBearingInput
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import android.content.Context
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
@@ -167,12 +173,14 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
 fun TriangulateToolScreen(
-    host: TrailSenseDestinationHost,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val appNavigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val controller = remember(host) {
-        TriangulateController(host)
+    val controller = remember(context, appNavigator, effects, lifecycleOwner) {
+        TriangulateController(context, appNavigator, effects, lifecycleOwner)
     }
 
     DisposableEffect(lifecycleOwner, controller) {
@@ -199,13 +207,16 @@ fun TriangulateToolScreen(
 }
 
 private class TriangulateController(
-    private val host: TrailSenseDestinationHost
+    private val context: Context,
+    private val appNavigator: TrailSenseNavigator,
+    private val effects: ScreenEffects,
+    private val lifecycleOwner: LifecycleOwner
 ) {
 
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val appNavigation by lazy { TrailSenseAppNavigation(host.findNavigator()) }
-    private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
+    private val formatService by lazy { FormatService.getInstance(context) }
+    private val prefs by lazy { UserPreferences(context) }
+    private val appNavigation by lazy { TrailSenseAppNavigation(appNavigator) }
+    private val navigator by lazy { Navigator.getInstance(context) }
 
     private var location: Coordinate? = null
 
@@ -235,8 +246,8 @@ private class TriangulateController(
     private val isBound: Boolean
         get() = isViewCreated
 
-    private val compass by lazy { SensorService(host.requireContext()).getCompass() }
-    private val hasCompass by lazy { SensorService(host.requireContext()).hasCompass() }
+    private val compass by lazy { SensorService(context).getCompass() }
+    private val hasCompass by lazy { SensorService(context).hasCompass() }
     private var cameraSheet: SightingCompassDialog? = null
     private var cameraBearingIndex: Int? = null
 
@@ -305,27 +316,29 @@ private class TriangulateController(
 
     private fun createBeacon() {
         location?.let {
-            AppUtils.placeBeacon(host.requireContext(), GeoUri(it))
+            AppUtils.placeBeacon(context, GeoUri(it))
         }
     }
 
     private fun navigateToLocation() {
         location?.let {
-            navigator.navigateTo(it, host.getString(R.string.location), BeaconOwner.Triangulate)
+            navigator.navigateTo(it, context.getString(R.string.location), BeaconOwner.Triangulate)
             appNavigation.navigate(Route.Navigation())
         }
     }
 
     private fun shareLocation() {
         location?.let {
-            Share.shareLocation(host, it)
+            lifecycleOwner.lifecycleScope.launch {
+                shareLocation(context, appNavigator, effects, it)
+            }
         }
     }
 
     private fun updateGpsOverride() {
         location?.let { coord ->
             prefs.gps.locationOverride = coord
-            Alerts.toast(host.requireContext(), host.getString(R.string.location_override_updated))
+            Alerts.toast(context, context.getString(R.string.location_override_updated))
         }
     }
 
@@ -355,14 +368,15 @@ private class TriangulateController(
     }
 
     private fun setBearingFromCamera(index: Int) {
-        host.requestCamera { hasPermission ->
+        lifecycleOwner.lifecycleScope.launch {
+            val hasPermission = effects.requestPermission(AppPermission.Camera)
             if (hasPermission) {
                 cameraBearingIndex = index
                 if (cameraSheet == null) {
                     cameraSheet = SightingCompassDialog(
-                        host.requireContext(),
-                        host.lifecycleOwner,
-                        host.lifecycleScope
+                        context,
+                        lifecycleOwner,
+                        lifecycleOwner.lifecycleScope
                     ) {
                         cameraBearingIndex?.let { selectedIndex ->
                             updateBearing(selectedIndex, it, false)
@@ -371,7 +385,7 @@ private class TriangulateController(
                 }
                 cameraSheet?.show()
             } else {
-                host.alertNoCameraPermission()
+                effects.explainPermissionDenied(AppPermission.Camera)
             }
         }
     }
@@ -391,15 +405,15 @@ private class TriangulateController(
             formatService.formatDistance(it, Units.getDecimalPlaces(it.units))
         }
         return buildSpannedString {
-            append(host.getString(R.string.location_number, locationIdx))
+            append(context.getString(R.string.location_number, locationIdx))
             if (distance != null) {
                 appendLine()
                 scale(0.75f) {
                     append(
                         if (shouldCalculateMyLocation) {
-                            host.getString(R.string.distance_away_from_self, formattedDistance)
+                            context.getString(R.string.distance_away_from_self, formattedDistance)
                         } else {
-                            host.getString(R.string.distance_away_from_destination, formattedDistance)
+                            context.getString(R.string.distance_away_from_destination, formattedDistance)
                         }
                     )
                 }
@@ -413,11 +427,11 @@ private class TriangulateController(
         }
 
         if (shouldCalculateMyLocation) {
-            location1Instructions = host.getString(R.string.triangulate_self_location_1_instructions)
-            location2Instructions = host.getString(R.string.triangulate_self_location_2_instructions)
+            location1Instructions = context.getString(R.string.triangulate_self_location_1_instructions)
+            location2Instructions = context.getString(R.string.triangulate_self_location_2_instructions)
         } else {
-            location1Instructions = host.getString(R.string.triangulate_destination_location_1_instructions)
-            location2Instructions = host.getString(
+            location1Instructions = context.getString(R.string.triangulate_destination_location_1_instructions)
+            location2Instructions = context.getString(
                 R.string.triangulate_destination_location_2_instructions,
                 formatService.formatDistance(
                     recommendedMinDistance,
@@ -507,7 +521,7 @@ private class TriangulateController(
         this.location = location
         result = location
         if (location == null || location.latitude.isNaN() || location.longitude.isNaN()) {
-            title = host.getString(R.string.could_not_triangulate)
+            title = context.getString(R.string.could_not_triangulate)
             actionsVisible = false
         } else {
             title = formatService.formatLocation(location)
@@ -526,7 +540,7 @@ private class TriangulateController(
             return
         }
 
-        val preferences = PreferencesSubsystem.getInstance(host.requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(context).preferences
         preferences.putBoolean("state_triangulate_self", shouldCalculateMyLocation)
         preferences.putOrRemoveFloat("state_triangulate_bearing1", bearing1Value)
         preferences.putOrRemoveFloat("state_triangulate_bearing2", bearing2Value)
@@ -547,7 +561,7 @@ private class TriangulateController(
             return
         }
 
-        val preferences = PreferencesSubsystem.getInstance(host.requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(context).preferences
         shouldCalculateMyLocation = preferences.getBoolean("state_triangulate_self") ?: false
         bearing1Value = preferences.getFloat("state_triangulate_bearing1")
         bearing2Value = preferences.getFloat("state_triangulate_bearing2")
@@ -566,7 +580,7 @@ private class TriangulateController(
         bearing1TrueNorth = false
         bearing2TrueNorth = false
 
-        val preferences = PreferencesSubsystem.getInstance(host.requireContext()).preferences
+        val preferences = PreferencesSubsystem.getInstance(context).preferences
         preferences.remove("state_triangulate_self")
         preferences.remove("state_triangulate_bearing1")
         preferences.remove("state_triangulate_bearing2")

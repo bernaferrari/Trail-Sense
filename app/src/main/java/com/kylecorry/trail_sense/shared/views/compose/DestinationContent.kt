@@ -223,7 +223,7 @@ fun DestinationContent(
             Route.Battery -> BatteryToolScreen(this)
 
             // --- Tool screens that receive the host for callbacks / services ---
-            Route.Triangulate -> TriangulateToolScreen(this)
+            Route.Triangulate -> TriangulateToolScreen()
             Route.Clock -> ClockToolScreen(this)
             Route.SignalFinder -> SignalFinderToolScreen()
             Route.TurnBack -> TurnBackToolScreen(this)
