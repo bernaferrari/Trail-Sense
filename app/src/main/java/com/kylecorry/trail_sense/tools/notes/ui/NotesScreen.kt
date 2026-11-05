@@ -4,6 +4,10 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.material3.MaterialShapes
 import com.kylecorry.trail_sense.shared.views.NotesEmptyIllustration
 import androidx.compose.material3.toShape
@@ -80,7 +84,6 @@ import java.time.format.FormatStyle
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import kotlinx.coroutines.Dispatchers
@@ -328,54 +331,41 @@ private fun formatTimestamp(epochMillis: Long): String? {
 
 /** The Notes tool: every note, newest first, each with edit, delete and QR share. */
 @Composable
-fun NotesToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { NotesController(host) }
+fun NotesToolScreen() {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    val repo = remember(context) { NoteRepo.getInstance(context.applicationContext) }
+    val notes = remember(repo) { repo.getNotes() }
     NotesScreen(
-        notes = controller.notes,
-        lifecycleOwner = host.lifecycleOwner,
-        onAdd = controller::add,
-        onEdit = controller::edit,
-        onDelete = controller::delete,
-        onShowQR = controller::showQR
-    )
-}
-
-private class NotesController(private val host: TrailSenseDestinationHost) {
-    private val repo by lazy { NoteRepo.getInstance(host.requireContext()) }
-    val notes by lazy { repo.getNotes() }
-
-    fun add() {
-        host.findNavigator().navigate(Route.NoteEditor())
-    }
-
-    fun edit(note: Note) {
-        host.findNavigator().navigate(Route.NoteEditor(editNoteId = note.id))
-    }
-
-    fun showQR(note: Note) {
-        CustomUiUtils.showQR(
-            host.requireContext(),
-            host.findNavigator(),
-            note.title ?: host.getString(android.R.string.untitled),
-            NoteQREncoder().encode(note)
-        )
-    }
-
-    fun delete(note: Note) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete_note_title),
-            if (note.title?.trim().isNullOrEmpty()) {
-                host.getString(android.R.string.untitled)
-            } else {
-                note.title
-            }
-        ) { cancelled ->
-            if (!cancelled) {
-                host.lifecycleScope.launch(Dispatchers.IO) {
-                    repo.deleteNote(note)
+        notes = notes,
+        lifecycleOwner = LocalLifecycleOwner.current,
+        onAdd = { navigator.navigate(Route.NoteEditor()) },
+        onEdit = { note -> navigator.navigate(Route.NoteEditor(editNoteId = note.id)) },
+        onDelete = { note ->
+            Alerts.dialog(
+                context,
+                context.getString(R.string.delete_note_title),
+                if (note.title?.trim().isNullOrEmpty()) {
+                    context.getString(android.R.string.untitled)
+                } else {
+                    note.title
+                }
+            ) { cancelled ->
+                if (!cancelled) {
+                    scope.launch(Dispatchers.IO) {
+                        repo.deleteNote(note)
+                    }
                 }
             }
+        },
+        onShowQR = { note ->
+            CustomUiUtils.showQR(
+                context,
+                navigator,
+                note.title ?: context.getString(android.R.string.untitled),
+                NoteQREncoder().encode(note)
+            )
         }
-    }
+    )
 }

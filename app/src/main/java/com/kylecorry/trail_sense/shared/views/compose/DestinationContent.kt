@@ -213,8 +213,8 @@ fun DestinationContent(
             // --- Tools with their own state holder ---
             Route.Tools -> ToolsHomeScreen(this)
             Route.ScreenFlashlight -> ScreenFlashlightToolScreen(this)
-            Route.Notes -> NotesToolScreen(this)
-            is Route.NoteEditor -> NoteEditorToolScreen(this, route)
+            Route.Notes -> NotesToolScreen()
+            is Route.NoteEditor -> NoteEditorToolScreen(route)
             is Route.SurvivalGuideReader -> SurvivalGuideReaderToolScreen(this, route)
             is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(this, route)
             Route.Pedometer -> PedometerToolScreen(this)
