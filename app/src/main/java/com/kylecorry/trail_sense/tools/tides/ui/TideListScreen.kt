@@ -4,6 +4,13 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.trail_sense.settings.infrastructure.TidePreferences
+import com.kylecorry.sol.units.Coordinate
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.foundation.layout.padding
@@ -47,7 +54,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -64,47 +70,81 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun TideListToolScreen(host: TrailSenseDestinationHost) {
-    val controller = remember(host) { TideListController(host) }
+fun TideListToolScreen() {
+    val context = LocalContext.current
+    val appContext = context.applicationContext
+    val navigator = LocalNavigator.current
+    val viewModel = viewModel {
+        val gps = SensorService(appContext).getGPS()
+        TideListViewModel(
+            tideRepo = TideTableRepo.getInstance(appContext),
+            tideTypeCommand = CurrentTideTypeCommand(TideService(appContext)),
+            toggleVisibilityCommand = ToggleTideTableVisibilityCommand(appContext),
+            tidePreferences = UserPreferences(appContext).tides,
+            currentLocation = { gps.location }
+        )
+    }
+    val formatService = remember(context) { FormatService.getInstance(context) }
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    DisposableEffect(controller, lifecycleOwner) {
+    DisposableEffect(viewModel, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> controller.onResume()
-                Lifecycle.Event.ON_PAUSE -> controller.onPause()
-                Lifecycle.Event.ON_DESTROY -> controller.onPause()
+                Lifecycle.Event.ON_RESUME -> viewModel.refreshTides()
+                Lifecycle.Event.ON_PAUSE -> viewModel.stop()
+                Lifecycle.Event.ON_DESTROY -> viewModel.stop()
                 else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            controller.onPause()
+            viewModel.stop()
         }
     }
 
     TideListScreen(
-        tides = controller.tides,
-        loaded = controller.loaded,
-        onCreate = controller::createTide,
-        onSelect = controller::selectTide,
-        onEdit = controller::editTide,
-        onDelete = controller::deleteTide,
-        onToggleVisibility = controller::toggleVisibility,
+        tides = viewModel.tides,
+        loaded = viewModel.loaded,
+        onCreate = { navigator.navigate(Route.CreateTide()) },
+        onSelect = {
+            viewModel.select(it)
+            navigator.navigateUp()
+        },
+        onEdit = { navigator.navigate(Route.CreateTide(editTideId = it.id)) },
+        onDelete = { tide ->
+            val title = tide.name ?: if (tide.location != null) {
+                formatService.formatLocation(tide.location)
+            } else {
+                context.getString(android.R.string.untitled)
+            }
+            Alerts.dialog(
+                context,
+                context.getString(R.string.delete_tide_prompt),
+                title
+            ) { cancelled ->
+                if (!cancelled) {
+                    viewModel.delete(tide)
+                }
+            }
+        },
+        onToggleVisibility = viewModel::toggleVisibility,
         onBack = { dispatcher?.onBackPressed() }
     )
 }
 
-private class TideListController(private val host: TrailSenseDestinationHost) {
-
-    private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
-    private val tideRepo by lazy { TideTableRepo.getInstance(host.requireContext()) }
-    private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val sensorService by lazy { SensorService(host.requireContext()) }
-    private val gps by lazy { sensorService.getGPS() }
-    private val tideTypeCommand by lazy { CurrentTideTypeCommand(TideService(host.requireContext())) }
+/**
+ * The tide tables, built-in first and then nearest first, each with its current tide filled in as it is estimated.
+ * Plain Kotlin over the tide table repository and preferences.
+ */
+internal class TideListViewModel(
+    private val tideRepo: TideTableRepo,
+    private val tideTypeCommand: CurrentTideTypeCommand,
+    private val toggleVisibilityCommand: ToggleTideTableVisibilityCommand,
+    private val tidePreferences: TidePreferences,
+    private val currentLocation: () -> Coordinate
+) : ViewModel() {
 
     private var refreshJob: Job? = null
     var tides by mutableStateOf(emptyList<Pair<TideTable, TideType?>>())
@@ -112,67 +152,39 @@ private class TideListController(private val host: TrailSenseDestinationHost) {
     var loaded by mutableStateOf(false)
         private set
 
-    fun onResume() {
-        refreshTides()
-    }
-
-    fun onPause() {
+    fun stop() {
         refreshJob?.cancel()
     }
 
-    fun deleteTide(tide: TideTable) {
-        Alerts.dialog(
-            host.requireContext(),
-            host.getString(R.string.delete_tide_prompt),
-            getTideTitle(tide)
-        ) { cancelled ->
-            if (!cancelled) {
-                host.lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        tideRepo.deleteTideTable(tide)
-                    }
-                    refreshTides()
-                }
-            }
-        }
-    }
-
-    fun toggleVisibility(tide: TideTable) {
-        host.lifecycleScope.launch {
+    fun delete(tide: TideTable) {
+        viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                ToggleTideTableVisibilityCommand(host.requireContext()).execute(tide)
+                tideRepo.deleteTideTable(tide)
             }
             refreshTides()
         }
     }
 
-    fun editTide(tide: TideTable) {
-        host.findNavigator().navigate(Route.CreateTide(editTideId = tide.id))
-    }
-
-    fun createTide() {
-        host.findNavigator().navigate(Route.CreateTide())
-    }
-
-    fun selectTide(tide: TideTable) {
-        prefs.tides.lastTide = tide.id
-        host.findNavigator().navigateUp()
-    }
-
-    private fun getTideTitle(tide: TideTable): String {
-        return tide.name ?: if (tide.location != null) {
-            formatService.formatLocation(tide.location)
-        } else {
-            host.getString(android.R.string.untitled)
+    fun toggleVisibility(tide: TideTable) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                toggleVisibilityCommand.execute(tide)
+            }
+            refreshTides()
         }
     }
 
-    private fun refreshTides() {
+    fun select(tide: TideTable) {
+        tidePreferences.lastTide = tide.id
+    }
+
+    fun refreshTides() {
         refreshJob?.cancel()
-        refreshJob = host.lifecycleScope.launch {
+        refreshJob = viewModelScope.launch {
+            val location = currentLocation()
             val tables = withContext(Dispatchers.IO) {
                 tideRepo.getTideTables().sortedWith(compareBy({ it.isEditable }, { tide ->
-                    tide.location?.distanceTo(gps.location) ?: Float.POSITIVE_INFINITY
+                    tide.location?.distanceTo(location) ?: Float.POSITIVE_INFINITY
                 }))
             }
             tides = tables.map { it to null }
