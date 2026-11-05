@@ -74,7 +74,6 @@ import com.kylecorry.trail_sense.shared.extensions.usePauseEffect
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.requireMainActivity
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
@@ -155,7 +154,7 @@ private class MapController(
             }
             false -> MapEmptyState(
                 onAddMap = {
-                    host.findNavController().navigateWithAnimation(R.id.mapListFragment)
+                    host.findNavigator().navigate(R.id.mapListFragment)
                 },
                 modifier = modifier
             )
@@ -164,7 +163,7 @@ private class MapController(
     }
 
     private fun navigateFromLayerSheet(action: Int) {
-        host.findNavController().navigateWithAnimation(action)
+        host.findNavigator().navigate(action)
     }
 
     override fun onPause() {
@@ -233,7 +232,7 @@ private class MapController(
         val prefs = component.useService<UserPreferences>()
         val formatter = component.useService<FormatService>()
         val activity = component.useActivity()
-        val navController = host.findNavController()
+        val appNavigator = host.findNavigator()
         val rootView = component.useRootView()
         val (lockMode, setLockMode) = useLockMode()
 
@@ -318,7 +317,7 @@ private class MapController(
             component.useCallback(
                 mapDistanceSheetView,
                 stopDistanceMeasurement,
-                navController,
+                appNavigator,
                 manager,
                 pathService,
                 navigation.location
@@ -353,7 +352,7 @@ private class MapController(
 
                         onMain {
                             stopDistanceMeasurement()
-                            navController.navigateWithAnimation(
+                            appNavigator.navigate(
                                 R.id.pathDetailsFragment,
                                 Bundle().apply {
                                     putLong("path_id", id)
@@ -455,7 +454,7 @@ private class MapController(
             }
         }
 
-        component.useEffect(mapView, manager, navController, startDistanceMeasurement, prefs) {
+        component.useEffect(mapView, manager, appNavigator, startDistanceMeasurement, prefs) {
             mapView.setOnLongPressListener { location ->
                 if (manager.isMeasuringDistance()) {
                     return@setOnLongPressListener
@@ -473,7 +472,7 @@ private class MapController(
                                     val bundle = Bundle().apply {
                                         putParcelable("initial_location", GeoUri(location))
                                     }
-                                    navController.navigateWithAnimation(
+                                    appNavigator.navigate(
                                         R.id.placeBeaconFragment,
                                         bundle
                                     )

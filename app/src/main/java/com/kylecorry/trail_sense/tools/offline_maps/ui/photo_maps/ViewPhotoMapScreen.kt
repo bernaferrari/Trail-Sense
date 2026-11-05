@@ -50,7 +50,6 @@ import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.Share
@@ -165,7 +164,7 @@ class ViewPhotoMapController(
         )
         layerSheet.Content(
             host.requireContext(),
-            { host.findNavController().navigateWithAnimation(it) }
+            { host.findNavigator().navigate(it) }
         )
     }
 
@@ -330,7 +329,7 @@ class ViewPhotoMapController(
         val bundle = Bundle().apply {
             putParcelable("initial_location", GeoUri(location))
         }
-        host.findNavController().navigate(R.id.placeBeaconFragment, bundle)
+        host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
     }
 
     private fun showDistance(distance: Distance) {
@@ -373,7 +372,7 @@ class ViewPhotoMapController(
 
                     onMain {
                         stopDistanceMeasurement()
-                        host.findNavController().navigate(
+                        host.findNavigator().navigate(
                             R.id.action_maps_to_path,
                             Bundle().apply {
                                 putLong("path_id", id)

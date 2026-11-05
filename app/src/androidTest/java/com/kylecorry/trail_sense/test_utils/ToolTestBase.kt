@@ -3,14 +3,14 @@ package com.kylecorry.trail_sense.test_utils
 import android.Manifest
 import android.os.Build
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import androidx.test.core.app.ActivityScenario
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.torch.Torch
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.delay
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
@@ -52,7 +52,7 @@ open class ToolTestBase(
     val screenshotRule = ScreenshotFailureRule()
 
     protected lateinit var scenario: ActivityScenario<MainActivity>
-    protected lateinit var navController: NavController
+    protected lateinit var appNavigator: TrailSenseNavigator
 
     private var volume: Int = 0
 
@@ -71,7 +71,7 @@ open class ToolTestBase(
         TestData.clear()
         beforeLaunch()
         scenario = TestUtils.startWithTool(toolId) {
-            navController = it.findNavController()!!
+            appNavigator = it.findNavigator()!!
         }
     }
 
@@ -118,7 +118,7 @@ open class ToolTestBase(
         volume = TestUtils.mute()
         if (packageName == null) {
             scenario = TestUtils.startWithTool(toolId) {
-                navController = it.findNavController()!!
+                appNavigator = it.findNavigator()!!
             }
         } else {
             clearAppData(packageName)

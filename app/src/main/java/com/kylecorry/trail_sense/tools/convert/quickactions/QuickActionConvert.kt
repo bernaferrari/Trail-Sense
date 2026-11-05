@@ -17,12 +17,12 @@ class QuickActionConvert(btn: QuickActionButtonView, host: TrailSenseDestination
 
     override fun onClick() {
         super.onClick()
-        host.findNavController().openTool(Tools.CONVERT)
+        host.findNavigator().openTool(Tools.CONVERT)
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().openTool(Tools.CONVERT)
+        host.findNavigator().openTool(Tools.CONVERT)
         return true
     }
 }

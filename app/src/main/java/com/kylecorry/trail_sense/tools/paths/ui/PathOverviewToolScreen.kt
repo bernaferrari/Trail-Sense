@@ -107,7 +107,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLaye
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
-import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseAppNavigation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.ColorScaleContent
@@ -272,7 +272,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
     private val beaconNavigator: IBeaconNavigator by lazy {
         BeaconNavigator(
             BeaconService(host.requireContext()),
-            NavControllerAppNavigation(host.findNavController()),
+            TrailSenseAppNavigation(host.findNavigator()),
             navigator
         )
     }
@@ -880,7 +880,7 @@ private class PathOverviewController(private val host: TrailSenseDestinationHost
         host.lifecycleOwner.lifecycleScope.launch {
             navigator.navigateAlongPath(selectedPath, follow)
             onMain {
-                host.findNavController().navigate(
+                host.findNavigator().navigate(
                     R.id.action_navigation,
                     Bundle().apply {
                         putBoolean(BeaconNavigator.ARG_NAVIGATION_STARTED, true)

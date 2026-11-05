@@ -71,7 +71,7 @@ object GeoJsonFeatureClickHandler {
                     layer?.openFeature?.invoke(
                         feature,
                         host.requireContext(),
-                        host.findNavController()
+                        host.findNavigator()
                     )
                 }
 

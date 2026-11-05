@@ -49,7 +49,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.plugins.domain.PluginResourceServiceDetails
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
@@ -104,7 +104,7 @@ internal fun ExperimentationContent() {
                         description = stringResource(R.string.experimentation_what_is_a_plugin),
                         actionLabel = stringResource(R.string.experimentation_find_plugins),
                         onAction = {
-                            context.findComponentActivity()?.findNavController()
+                            context.findComponentActivity()?.findNavigator()
                                 ?.navigate(R.id.pluginsSettingsFragment)
                         },
                         // The same optical centre as the other empty screens.

@@ -87,7 +87,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
@@ -164,7 +164,6 @@ import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.extensions.promptIfUnsavedChanges
 import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
@@ -548,9 +547,9 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    override fun findNavController(): NavController {
-        return requireMainActivity().getRootNavController()
-            ?: error("Root NavController is not available")
+    override fun findNavigator(): TrailSenseNavigator {
+        return requireMainActivity().navigator
+            ?: error("Root TrailSenseNavigator is not available")
     }
 
     override fun toast(message: CharSequence, short: Boolean) {
@@ -712,7 +711,7 @@ class TrailSenseComposeDestinationHost(
             DestinationContent(requireArguments().getString(ARG_DESTINATION), destinationHost, modifier)
             layerSheet?.Content(
                 requireContext(),
-                { findNavController().navigateWithAnimation(it) },
+                { findNavigator().navigate(it) },
                 Modifier.fillMaxSize()
             )
             photoImportDialog?.Content()
@@ -804,7 +803,7 @@ class TrailSenseComposeDestinationHost(
             notes = notesRepo.getNotes(),
             lifecycleOwner = lifecycleOwner,
             onAdd = {
-                findNavController().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
+                findNavigator().navigate(R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate)
             },
             onEdit = ::editNote,
             onDelete = ::deleteNote,
@@ -874,7 +873,7 @@ class TrailSenseComposeDestinationHost(
             initialSelectedMode = selectedFlashlightMode,
             onSelectedModeChanged = { selectedFlashlightMode = it },
             onOpenScreenFlashlight = {
-                findNavController().navigate(R.id.action_flashlight_to_screen_flashlight)
+                findNavigator().navigate(R.id.action_flashlight_to_screen_flashlight)
             }
         )
     }
@@ -884,7 +883,7 @@ class TrailSenseComposeDestinationHost(
         BatteryToolScreen(
             onShowHistory = ::showBatteryHistory,
             onOpenPowerSettings = {
-                findNavController().navigate(R.id.action_settings_to_power_settings)
+                findNavigator().navigate(R.id.action_settings_to_power_settings)
             }
         )
     }
@@ -894,13 +893,13 @@ class TrailSenseComposeDestinationHost(
         ToolsScreen(
             pinnedToolIds = pinnedToolManager.pinnedIds.value,
             onToolClick = { tool ->
-                findNavController().navigateWithAnimation(tool.navAction)
+                findNavigator().navigate(tool.navAction)
             },
             onToolLongClick = { tool ->
                 showToolActions(tool)
             },
             onSettingsClick = {
-                findNavController().navigate(R.id.action_settings)
+                findNavigator().navigate(R.id.action_settings)
             },
             onSearchFocusRequestChanged = {
                 focusSearchRequest = it
@@ -1869,7 +1868,7 @@ class TrailSenseComposeDestinationHost(
             guides = Guides.guides(requireContext()),
             onOpenGuide = {
                 tryOrNothing {
-                    findNavController().navigate(
+                    findNavigator().navigate(
                         R.id.action_guideListFragment_to_guideFragment,
                         Bundle().apply {
                             putString("guide_name", it.name)
@@ -1885,11 +1884,11 @@ class TrailSenseComposeDestinationHost(
     internal fun Diagnostics() {
         DiagnosticsScreen(
             onShowSensorDetails = {
-                findNavController().navigate(R.id.action_diagnostics_to_sensor_details)
+                findNavigator().navigate(R.id.action_diagnostics_to_sensor_details)
             },
             onShowDiagnostic = {
                 DiagnosticAlerter(requireContext()).alert(it) { action ->
-                    action.action(requireContext(), findNavController())
+                    action.action(requireContext(), findNavigator())
                 }
             },
             onExportLogs = {
@@ -1902,7 +1901,7 @@ class TrailSenseComposeDestinationHost(
     internal fun ErrorHandler() {
         val toolId = requireArguments().getLong("tool_id", 0L)
         val errorDetails = requireArguments().getString("error").orEmpty()
-        val navController = findNavController()
+        val appNavigator = findNavigator()
         ErrorHandlerScreen(
             toolId = toolId,
             onEmail = {
@@ -1930,13 +1929,13 @@ class TrailSenseComposeDestinationHost(
                 )
             },
             onReopenTool = {
-                navController.openTool(toolId)
+                appNavigator.openTool(toolId)
             },
             onRestartApp = {
                 CurrentApp.restart(requireContext())
             },
             onOpenSettings = {
-                navController.openTool(Tools.SETTINGS)
+                appNavigator.openTool(Tools.SETTINGS)
             }
         )
     }
@@ -2158,7 +2157,7 @@ class TrailSenseComposeDestinationHost(
                             stringResource(R.string.location_not_mocked)
                         },
                         onClick = {
-                            findNavController().navigateWithAnimation(
+                            findNavigator().navigate(
                                 R.id.action_privacy_settings_to_gps_calibration
                             )
                         },
@@ -2206,7 +2205,7 @@ class TrailSenseComposeDestinationHost(
                                     )
                                 },
                                 onClick = {
-                                    findNavController().navigate(item.destination)
+                                    findNavigator().navigate(item.destination)
                                 },
                                 position = position,
                                 animateEntrance = false
@@ -3208,7 +3207,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun openPluginDetails(plugin: Plugin) {
-        findNavController().navigateWithAnimation(
+        findNavigator().navigate(
             R.id.pluginDetailsFragment,
             Bundle().apply {
                 putString("package_id", plugin.packageId)
@@ -3239,10 +3238,10 @@ class TrailSenseComposeDestinationHost(
                 getString(R.string.pin) -> pinnedToolManager.pin(tool.id)
                 getString(R.string.tool_user_guide_title) -> UserGuideUtils.showGuide(
                     requireContext(),
-                    findNavController(),
+                    findNavigator(),
                     tool.guideId!!
                 )
-                getString(R.string.settings) -> findNavController().navigateWithAnimation(tool.settingsNavAction!!)
+                getString(R.string.settings) -> findNavigator().navigate(tool.settingsNavAction!!)
                 getString(R.string.add_to_homescreen) -> addToHomescreen(tool)
             }
         }
@@ -3319,7 +3318,7 @@ class TrailSenseComposeDestinationHost(
     private fun showNoteQR(note: Note) {
         CustomUiUtils.showQR(
             requireContext(),
-            findNavController(),
+            findNavigator(),
             note.title ?: getString(android.R.string.untitled),
             NoteQREncoder().encode(note)
         )
@@ -3344,7 +3343,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun editNote(note: Note) {
-        findNavController().navigate(
+        findNavigator().navigate(
             R.id.action_fragmentToolNotes_to_fragmentToolNotesCreate,
             Bundle().apply {
                 putLong("edit_note_id", note.id)
@@ -3361,7 +3360,7 @@ class TrailSenseComposeDestinationHost(
             notesRepo.addNote(note)
         }
         withContext(Dispatchers.Main) {
-            findNavController().navigateUp()
+            findNavigator().navigateUp()
         }
     }
 
@@ -3528,7 +3527,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun openSurvivalGuideChapter(chapterResource: Int) {
-        findNavController().navigateWithAnimation(
+        findNavigator().navigate(
             R.id.fragmentToolSurvivalGuideReader,
             Bundle().apply {
                 putInt("chapter_resource_id", chapterResource)
@@ -3537,7 +3536,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     private fun openSurvivalGuideSearchResult(result: SurvivalGuideSearchResult) {
-        findNavController().navigateWithAnimation(
+        findNavigator().navigate(
             R.id.fragmentToolSurvivalGuideReader,
             Bundle().apply {
                 putInt("chapter_resource_id", result.chapter.resource)

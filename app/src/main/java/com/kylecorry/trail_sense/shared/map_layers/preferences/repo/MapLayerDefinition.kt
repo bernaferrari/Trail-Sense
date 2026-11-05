@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.repo
 
 import android.content.Context
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
@@ -48,6 +48,6 @@ data class MapLayerDefinition(
     val shouldMultiply: Boolean = false,
     val geoJsonSource: (() -> GeoJsonSource)? = null,
     val tileSource: (() -> TileSource)? = null,
-    val openFeature: ((feature: GeoJsonFeature, context: Context, navController: NavController) -> Unit)? = null,
+    val openFeature: ((feature: GeoJsonFeature, context: Context, appNavigator: TrailSenseNavigator) -> Unit)? = null,
     val layer: (() -> ILayer)? = null
 )

@@ -174,7 +174,7 @@ private class ViewVectorMapController(private val host: TrailSenseDestinationHos
             DeleteMapCommand(host.requireContext(), service).execute(map)
             if (withContext(Dispatchers.IO) { service.getVectorMap(map.id) } == null) {
                 onMain {
-                    host.findNavController().popBackStack()
+                    host.findNavigator().popBackStack()
                 }
             } else {
                 loadMap()

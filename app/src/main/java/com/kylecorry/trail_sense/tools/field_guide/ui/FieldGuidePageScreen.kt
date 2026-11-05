@@ -132,7 +132,7 @@ private class FieldGuidePageController(private val host: TrailSenseDestinationHo
 
     fun editPage() {
         val current = page ?: return
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", current.id)
@@ -142,7 +142,7 @@ private class FieldGuidePageController(private val host: TrailSenseDestinationHo
 
     fun openSightings() {
         val current = page ?: return
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.sightingListFragment,
             Bundle().apply {
                 putLong("page_id", current.id)

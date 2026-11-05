@@ -6,10 +6,9 @@ import android.os.Build
 import android.os.Bundle
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.shared.extensions.getLongProperty
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.quickactions.QuickActionPlaceBeacon
@@ -39,7 +38,7 @@ object BeaconsToolRegistration : ToolRegistration {
             val bundle = Bundle().apply {
                 putParcelable("initial_location", geo)
             }
-            activity.findNavController()?.navigate(
+            activity.findNavigator()?.navigate(
                 R.id.beacon_list,
                 bundle
             )
@@ -53,7 +52,7 @@ object BeaconsToolRegistration : ToolRegistration {
             val bundle = Bundle().apply {
                 putLong("beacon_id", beaconId)
             }
-            activity.findNavController()?.navigate(
+            activity.findNavigator()?.navigate(
                 R.id.beaconDetailsFragment,
                 bundle
             )
@@ -113,10 +112,10 @@ object BeaconsToolRegistration : ToolRegistration {
                     MAP_LAYER_BEACONS,
                     context.getString(R.string.beacons),
                     description = context.getString(R.string.map_layer_beacons_description),
-                    openFeature = { feature, _, navController ->
+                    openFeature = { feature, _, appNavigator ->
                         val beaconId =
                             feature.getLongProperty(BeaconGeoJsonSource.PROPERTY_BEACON_ID)
-                        navController.navigateWithAnimation(
+                        appNavigator.navigate(
                             R.id.beaconDetailsFragment,
                             Bundle().apply {
                                 beaconId?.let {

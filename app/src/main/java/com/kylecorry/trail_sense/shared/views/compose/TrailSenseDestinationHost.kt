@@ -9,7 +9,7 @@ import android.util.Size
 import android.view.View
 import androidx.annotation.StringRes
 import androidx.lifecycle.LifecycleOwner
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
@@ -30,7 +30,7 @@ interface TrailSenseDestinationHost {
     fun getString(@StringRes resId: Int): String
     fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String
     fun startActivity(intent: Intent)
-    fun findNavController(): NavController
+    fun findNavigator(): TrailSenseNavigator
     fun toast(message: CharSequence, short: Boolean = true)
     fun inBackground(
         state: BackgroundMinimumState = BackgroundMinimumState.Resumed,

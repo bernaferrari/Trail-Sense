@@ -291,14 +291,14 @@ private class SignalFinderController(private val host: TrailSenseDestinationHost
 
     fun navigateToTower(tower: ApproximateCoordinate) {
         navigator.navigateTo(tower.coordinate, host.getString(R.string.cell_tower))
-        host.findNavController().openTool(Tools.NAVIGATION)
+        host.findNavigator().openTool(Tools.NAVIGATION)
     }
 
     fun createBeacon(tower: ApproximateCoordinate) {
         val bundle = Bundle().apply {
             putParcelable("initial_location", GeoUri(tower.coordinate))
         }
-        host.findNavController().navigate(R.id.placeBeaconFragment, bundle)
+        host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
     }
 }
 

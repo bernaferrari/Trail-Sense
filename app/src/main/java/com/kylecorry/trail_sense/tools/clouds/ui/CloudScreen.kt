@@ -173,7 +173,7 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
     fun showGuide() {
         UserGuideUtils.showGuide(
             host.requireContext(),
-            host.findNavController(),
+            host.findNavigator(),
             R.raw.guide_tool_clouds
         )
     }
@@ -220,11 +220,11 @@ private class CloudController(private val host: TrailSenseDestinationHost) {
     }
 
     fun addManual() {
-        host.findNavController().navigate(R.id.action_cloud_to_cloud_picker)
+        host.findNavigator().navigate(R.id.action_cloud_to_cloud_picker)
     }
 
     private fun openCloudPicker(uri: Uri) {
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.action_cloud_to_cloud_picker,
             Bundle().apply {
                 putParcelable("image", uri)

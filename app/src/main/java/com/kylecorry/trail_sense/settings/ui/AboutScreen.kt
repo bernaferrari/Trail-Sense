@@ -46,7 +46,6 @@ import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.Trail
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -64,7 +63,7 @@ fun AboutToolScreen(host: TrailSenseDestinationHost) {
             val intent = Intents.email(host.getString(R.string.email), host.getString(R.string.app_name))
             host.startActivity(Intent.createChooser(intent, host.getString(R.string.pref_email_title)))
         },
-        onLicenses = { host.findNavController().navigateWithAnimation(R.id.licenseFragment) }
+        onLicenses = { host.findNavigator().navigate(R.id.licenseFragment) }
     )
 }
 

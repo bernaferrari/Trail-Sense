@@ -285,14 +285,14 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
         val bundle = Bundle().apply {
             putLong("destination", beaconId)
         }
-        host.findNavController().openTool(Tools.NAVIGATION, bundle)
+        host.findNavigator().openTool(Tools.NAVIGATION, bundle)
     }
 
     fun editBeacon() {
         val bundle = Bundle().apply {
             putLong("edit_beacon", beaconId)
         }
-        host.findNavController().navigate(R.id.action_beacon_details_to_beacon_edit, bundle)
+        host.findNavigator().navigate(R.id.action_beacon_details_to_beacon_edit, bundle)
     }
 
     fun shareBeacon() {
@@ -312,7 +312,7 @@ private class BeaconDetailsController(private val host: TrailSenseDestinationHos
                     withContext(Dispatchers.IO) {
                         beaconRepo.deleteBeacon(BeaconEntity.from(beacon))
                     }
-                    host.findNavController().navigateUp()
+                    host.findNavigator().navigateUp()
                 }
             }
         }

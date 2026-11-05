@@ -394,7 +394,7 @@ private class PlaceBeaconController(private val host: TrailSenseDestinationHost)
             }
 
             backCallback?.remove()
-            host.findNavController().navigateUp()
+            host.findNavigator().navigateUp()
         }
     }
 }

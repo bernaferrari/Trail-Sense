@@ -11,7 +11,7 @@ import com.kylecorry.andromeda.exceptions.StackTraceBugReportGenerator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -57,7 +57,7 @@ class TrailSenseExceptionHandler(
                 return false
             }
 
-            val currentNavId = activity.findNavController()?.currentDestination?.id ?: return false
+            val currentNavId = activity.findNavigator()?.currentDestination?.id ?: return false
             val tools = Tools.getTools(activity)
             val selectedTool = tools.firstOrNull { it.isOpen(currentNavId) } ?: return false
 

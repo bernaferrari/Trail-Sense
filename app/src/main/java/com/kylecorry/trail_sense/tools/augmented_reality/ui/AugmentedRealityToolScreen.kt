@@ -74,7 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.system.Resources
@@ -140,12 +140,12 @@ import kotlin.math.hypot
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 fun openAugmentedReality(
-    navController: NavController,
+    appNavigator: TrailSenseNavigator,
     mode: ARMode = ARMode.Normal,
     enableCamera: Boolean = true,
     extras: Bundle? = null
 ) {
-    navController.navigate(
+    appNavigator.navigate(
         R.id.augmentedRealityFragment, Bundle().apply {
             putLong("mode", mode.id)
             putBoolean("camera_enabled", enableCamera)

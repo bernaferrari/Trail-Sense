@@ -39,7 +39,6 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
@@ -135,7 +134,7 @@ private class SightingListController(private val host: TrailSenseDestinationHost
     }
 
     fun createSighting() {
-        host.findNavController().navigateWithAnimation(
+        host.findNavigator().navigate(
             R.id.createFieldGuideSightingFragment,
             Bundle().apply {
                 putLong("page_id", pageId)
@@ -144,7 +143,7 @@ private class SightingListController(private val host: TrailSenseDestinationHost
     }
 
     private fun editSighting(sighting: Sighting) {
-        host.findNavController().navigateWithAnimation(
+        host.findNavigator().navigate(
             R.id.createFieldGuideSightingFragment,
             Bundle().apply {
                 putLong("page_id", pageId)
@@ -182,7 +181,7 @@ private class SightingListController(private val host: TrailSenseDestinationHost
             BeaconOwner.FieldGuide,
             elevation = sighting.altitude
         )
-        host.findNavController().openTool(Tools.NAVIGATION)
+        host.findNavigator().openTool(Tools.NAVIGATION)
     }
 
     private fun createBeacon(sighting: Sighting) {
@@ -196,7 +195,7 @@ private class SightingListController(private val host: TrailSenseDestinationHost
                 )
             )
         }
-        host.findNavController().navigateWithAnimation(R.id.placeBeaconFragment, bundle)
+        host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
     }
 }
 

@@ -178,7 +178,7 @@ private class PhotoMapsController(
     private fun openGuide() {
         UserGuideUtils.openGuide(
             host.requireContext(),
-            host.findNavController(),
+            host.findNavigator(),
             R.raw.guide_tool_offline_maps
         )
     }
@@ -201,7 +201,7 @@ private class PhotoMapsController(
         host.inBackground {
             map?.let {
                 DeleteMapCommand(host.requireContext(), service).execute(it)
-                host.findNavController().popBackStack()
+                host.findNavigator().popBackStack()
             }
         }
     }

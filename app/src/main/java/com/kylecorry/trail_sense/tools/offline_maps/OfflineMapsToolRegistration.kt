@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
@@ -42,7 +42,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
         val bundle = Bundle().apply {
             putParcelable("map_intent_uri", intentUri)
         }
-        activity.findNavController()?.navigate(R.id.mapListFragment, bundle)
+        activity.findNavigator()?.navigate(R.id.mapListFragment, bundle)
         true
     }
 

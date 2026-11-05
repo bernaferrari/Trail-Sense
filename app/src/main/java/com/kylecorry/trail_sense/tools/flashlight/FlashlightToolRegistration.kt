@@ -77,7 +77,7 @@ object FlashlightToolRegistration : ToolRegistration {
                 ToolVolumeAction(
                     ToolVolumeActionPriority.High,
                     { context, _, host ->
-                        host.findNavController().currentDestination?.id == R.id.fragmentToolScreenFlashlight &&
+                        host.findNavigator().currentDestination?.id == R.id.fragmentToolScreenFlashlight &&
                             UserPreferences(context).flashlight.controlScreenFlashlightWithVolumeButtons
                     },
                     { ScreenFlashlightBrightnessVolumeAction(it as? ScreenFlashlightController) }

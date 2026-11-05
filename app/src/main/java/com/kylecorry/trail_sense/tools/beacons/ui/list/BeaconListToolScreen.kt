@@ -84,7 +84,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.Resources
@@ -202,7 +202,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     private val gps by lazy { sensorService.getGPS() }
     private val prefs by lazy { UserPreferences(host.requireContext()) }
 
-    private lateinit var navController: NavController
+    private lateinit var appNavigator: TrailSenseNavigator
     private val sensorService by lazy { SensorService(host.requireContext()) }
     private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val beaconService by lazy { BeaconService(host.requireContext()) }
@@ -292,7 +292,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             )
         }
 
-        navController = host.findNavController()
+        appNavigator = host.findNavigator()
 
         sort = prefs.beacons.beaconSort
         sortMenuText = host.getString(R.string.sort_by, getSortString(sort))
@@ -328,7 +328,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
                     else -> {
                         if (!manager.up()) {
                             remove()
-                            navController.navigateUp()
+                            appNavigator.navigateUp()
                         }
                     }
                 }
@@ -601,7 +601,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
         initialLocation?.let { bundle.putParcelable("initial_location", it) }
         editingBeaconId?.let { bundle.putLong("edit_beacon", it) }
 
-        navController.navigate(
+        appNavigator.navigate(
             R.id.action_beaconListFragment_to_placeBeaconFragment,
             bundle
         )
@@ -619,7 +619,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
         val bundle = Bundle().apply {
             putLong("beacon_id", id)
         }
-        navController.navigate(
+        appNavigator.navigate(
             R.id.action_beacon_list_to_beaconDetailsFragment,
             bundle
         )
@@ -628,7 +628,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
     private fun navigate(beacon: Beacon) {
         val navigator = Navigator.getInstance(host.requireContext())
         navigator.navigateTo(beacon)
-        navController.navigate(R.id.action_navigation)
+        appNavigator.navigate(R.id.action_navigation)
     }
 
     private fun deleteCurrentGroup() {
@@ -739,7 +739,7 @@ private class BeaconListController(private val host: TrailSenseDestinationHost) 
             val command = NavigateToNearestCellSignal(host.requireContext())
             if (command.execute()) {
                 onMain {
-                    navController.navigate(R.id.action_navigation)
+                    appNavigator.navigate(R.id.action_navigation)
                 }
             } else {
                 onMain {

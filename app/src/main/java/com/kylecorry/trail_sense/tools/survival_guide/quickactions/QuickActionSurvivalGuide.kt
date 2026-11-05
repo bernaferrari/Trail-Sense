@@ -17,12 +17,12 @@ class QuickActionSurvivalGuide(btn: QuickActionButtonView, host: TrailSenseDesti
 
     override fun onClick() {
         super.onClick()
-        host.findNavController().openTool(Tools.SURVIVAL_GUIDE)
+        host.findNavigator().openTool(Tools.SURVIVAL_GUIDE)
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().openTool(Tools.SURVIVAL_GUIDE)
+        host.findNavigator().openTool(Tools.SURVIVAL_GUIDE)
         return true
     }
 }

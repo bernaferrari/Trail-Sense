@@ -4,7 +4,7 @@ import android.content.Context
 import android.text.util.Linkify
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
 class ShowMapsDisclaimerCommand(
     private val context: Context,
-    private val navController: NavController
+    private val appNavigator: TrailSenseNavigator
 ) : Command {
     override fun execute() {
         val message = context.getString(R.string.photo_map_disclaimer).toSpannable()
@@ -27,10 +27,10 @@ class ShowMapsDisclaimerCommand(
             cancelText = context.getString(R.string.tool_user_guide_title),
             shownValue = true
         ) { showUserGuide, _ ->
-            if (showUserGuide && navController.currentDestination != null) {
+            if (showUserGuide && appNavigator.currentDestination != null) {
                 UserGuideUtils.showGuide(
                     context,
-                    navController,
+                    appNavigator,
                     R.raw.guide_tool_offline_maps
                 )
             }

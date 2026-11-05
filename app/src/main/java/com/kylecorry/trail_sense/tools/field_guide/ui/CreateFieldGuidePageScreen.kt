@@ -206,7 +206,7 @@ private class CreateFieldGuidePageController(private val host: TrailSenseDestina
             repo.add(page)
             onMain {
                 backCallback?.remove()
-                host.findNavController().navigateUp()
+                host.findNavigator().navigateUp()
             }
         }
     }

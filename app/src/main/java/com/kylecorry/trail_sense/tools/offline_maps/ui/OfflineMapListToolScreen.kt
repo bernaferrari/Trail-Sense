@@ -98,7 +98,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
@@ -275,7 +274,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
             override fun handleOnBackPressed() {
                 if (!manager.up()) {
                     remove()
-                    host.findNavController().navigateUp()
+                    host.findNavigator().navigateUp()
                 }
             }
         }
@@ -476,7 +475,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
     private fun view(map: IMap) {
         when (map) {
             is MapGroup -> manager.open(map.id)
-            is PhotoMap -> host.findNavController().navigate(
+            is PhotoMap -> host.findNavigator().navigate(
                 R.id.action_mapList_to_maps,
                 Bundle().apply {
                     putLong("mapId", map.id)
@@ -493,7 +492,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
                     )
                     return
                 }
-                host.findNavController().navigateWithAnimation(
+                host.findNavigator().navigate(
                     R.id.offlineMapViewFragment,
                     Bundle().apply {
                         putLong("offline_map_file_id", map.id)
@@ -600,7 +599,7 @@ private class OfflineMapListController(private val host: TrailSenseDestinationHo
 
                 manager.refresh(true)
                 when (map) {
-                    is PhotoMap -> host.findNavController().navigate(
+                    is PhotoMap -> host.findNavigator().navigate(
                         R.id.action_mapList_to_maps,
                         Bundle().apply {
                             putLong("mapId", map.id)

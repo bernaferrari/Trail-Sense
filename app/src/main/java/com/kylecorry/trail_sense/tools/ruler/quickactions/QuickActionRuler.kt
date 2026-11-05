@@ -88,7 +88,7 @@ class QuickActionRuler(
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().openTool(Tools.RULER)
+        host.findNavigator().openTool(Tools.RULER)
         return true
     }
 

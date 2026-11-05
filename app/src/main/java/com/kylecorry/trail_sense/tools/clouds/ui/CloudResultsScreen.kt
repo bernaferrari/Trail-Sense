@@ -197,7 +197,7 @@ private class CloudResultsController(private val host: TrailSenseDestinationHost
             readings.forEach {
                 repo.add(it)
             }
-            host.findNavController().navigateUp()
+            host.findNavigator().navigateUp()
         }
     }
 

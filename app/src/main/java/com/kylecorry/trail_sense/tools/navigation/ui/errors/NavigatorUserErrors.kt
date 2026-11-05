@@ -40,9 +40,9 @@ class NavigatorUserErrors(
             TrailIcons.Satellite,
             host.getString(R.string.set)
         ) {
-            val navController = host.findNavController()
+            val appNavigator = host.findNavigator()
             banner.dismiss(ErrorBannerReason.LocationNotSet)
-            navController.navigate(R.id.calibrateGPSFragment)
+            appNavigator.navigate(R.id.calibrateGPSFragment)
         },
         GPSDiagnosticScanner.GPS_TIMED_OUT to UserError(
             ErrorBannerReason.GPSTimeout,

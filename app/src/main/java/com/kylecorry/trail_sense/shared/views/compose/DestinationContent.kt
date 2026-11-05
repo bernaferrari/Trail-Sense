@@ -93,7 +93,7 @@ fun DestinationContent(
             // --- Simple / no-arg screens (tools and misc) ---
             DESTINATION_LEVEL -> LevelScreen()
             DESTINATION_WHISTLE -> WhistleScreen(
-                onAudioUnavailable = { findNavController().navigateUp() }
+                onAudioUnavailable = { findNavigator().navigateUp() }
             )
             DESTINATION_LIGHT_METER -> LightMeterScreen()
             DESTINATION_CONVERT -> ConvertScreen()
@@ -166,7 +166,7 @@ fun DestinationContent(
                 onOpenGuide = {
                     UserGuideUtils.showGuide(
                         requireContext(),
-                        findNavController(),
+                        findNavigator(),
                         R.raw.guide_tool_cliff_height
                     )
                 }
@@ -181,7 +181,7 @@ fun DestinationContent(
                 pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
                 onNavigateUp = {
                     tryOrNothing {
-                        findNavController().navigateUp()
+                        findNavigator().navigateUp()
                     }
                 }
             )

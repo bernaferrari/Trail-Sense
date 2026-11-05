@@ -236,7 +236,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
                         onClick = {
                             UserGuideUtils.showGuide(
                                 host.requireContext(),
-                                host.findNavController(),
+                                host.findNavigator(),
                                 R.raw.guide_tool_settings
                             )
                         },
@@ -548,7 +548,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
 
     private fun showLocationUnsetError() {
         val activity = host.mainActivity
-        val navController = host.findNavController()
+        val appNavigator = host.findNavigator()
         val error = UserError(
             ErrorBannerReason.LocationNotSet,
             getString(R.string.location_not_set) + "\n" +
@@ -557,7 +557,7 @@ private class ThermometerSettingsController(private val host: TrailSenseDestinat
             getString(R.string.set)
         ) {
             activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
-            navController.navigate(R.id.calibrateGPSFragment)
+            appNavigator.navigate(R.id.calibrateGPSFragment)
         }
         activity.errorBanner.report(error)
     }

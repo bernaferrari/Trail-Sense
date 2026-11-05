@@ -212,7 +212,7 @@ private class CreateItemController(private val host: TrailSenseDestinationHost) 
             }
 
             backCallback?.remove()
-            host.findNavController().popBackStack()
+            host.findNavigator().popBackStack()
         }
     }
 

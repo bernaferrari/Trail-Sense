@@ -210,7 +210,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
     fun onResume() {
         if (table == null) {
             displayDate = LocalDate.now()
-            ShowTideDisclaimerCommand(host.requireContext(), host.findNavController()) {
+            ShowTideDisclaimerCommand(host.requireContext(), host.findNavigator()) {
                 loadTideTable()
             }.execute()
         } else {
@@ -226,7 +226,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
 
     fun openTideList() {
         table = null
-        host.findNavController().navigate(R.id.action_tides_to_tideList)
+        host.findNavigator().navigate(R.id.action_tides_to_tideList)
     }
 
     fun onDisplayDateSelected(date: LocalDate) {
@@ -262,7 +262,7 @@ private class TidesController(private val host: TrailSenseDestinationHost) {
                     host.getString(R.string.calibrate_new_tide)
                 )
                 if (!cancelled) {
-                    host.findNavController().navigate(R.id.action_tides_to_tideList)
+                    host.findNavigator().navigate(R.id.action_tides_to_tideList)
                 }
                 return@launch
             }

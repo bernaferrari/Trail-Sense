@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.os.Bundle
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 
 class ViewPathCommand(
-    private val navController: NavController
+    private val appNavigator: TrailSenseNavigator
 ) : IPathCommand {
 
     override fun execute(path: Path) {
@@ -14,7 +14,7 @@ class ViewPathCommand(
     }
 
     fun execute(id: Long) {
-        navController.navigate(R.id.action_backtrack_to_path, Bundle().apply {
+        appNavigator.navigate(R.id.action_backtrack_to_path, Bundle().apply {
             putLong("path_id", id)
         })
     }

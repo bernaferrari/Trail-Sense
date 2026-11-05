@@ -8,7 +8,6 @@ import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.quickactions.TopicQuickAction
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 
@@ -24,7 +23,7 @@ class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().navigateWithAnimation(R.id.fragmentToolPedometer)
+        host.findNavigator().navigate(R.id.fragmentToolPedometer)
         return true
     }
 

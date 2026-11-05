@@ -189,7 +189,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
     }
 
     fun addItem() {
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.action_action_inventory_to_createItemFragment,
             Bundle().apply {
                 putLong("pack_id", packId)
@@ -257,7 +257,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
                         itemRepo.deletePack(pack)
                     }
                     withContext(Dispatchers.Main) {
-                        host.findNavController().popBackStack()
+                        host.findNavigator().popBackStack()
                     }
                 }
             }
@@ -297,7 +297,7 @@ private class PackItemListController(private val host: TrailSenseDestinationHost
             putLong("edit_item_id", item.id)
             putLong("pack_id", packId)
         }
-        host.findNavController().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
+        host.findNavigator().navigate(R.id.action_action_inventory_to_createItemFragment, bundle)
     }
 
     fun add(item: PackItem) {

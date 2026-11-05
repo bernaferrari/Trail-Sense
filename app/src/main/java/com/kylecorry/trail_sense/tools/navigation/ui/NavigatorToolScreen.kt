@@ -90,7 +90,6 @@ import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.openTool
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.safeRoundToInt
@@ -168,12 +167,12 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     private val views = createNavigatorViews(
         host.requireContext(),
         onNorthReferenceSettingsClick = {
-            host.findNavController().navigate(R.id.calibrateCompassFragment)
+            host.findNavigator().navigate(R.id.calibrateCompassFragment)
         },
         requestCameraPermission = { callback -> host.requestCamera(callback) },
         onCameraPermissionDenied = { host.alertNoCameraPermission() },
         onOpenBeacon = { beaconId ->
-            host.findNavController().navigateWithAnimation(
+            host.findNavigator().navigate(
                 R.id.beaconDetailsFragment,
                 Bundle().apply {
                     putLong("beacon_id", beaconId)
@@ -352,7 +351,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         }
         layerSheet.Content(
             host.requireContext(),
-            { host.findNavController().navigateWithAnimation(it) }
+            { host.findNavigator().navigate(it) }
         )
     }
 
@@ -467,7 +466,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
         }
 
         views.onBeaconClick = {
-            host.findNavController().openTool(Tools.BEACONS)
+            host.findNavigator().openTool(Tools.BEACONS)
         }
 
         views.onBeaconLongClick = {
@@ -481,9 +480,9 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
                 // Straight to the editor, as the map and the field guide do: Save and Back return here. Going
                 // through the Places list left the location in its arguments, so saving reopened a blank editor
                 // and every Save made another copy.
-                host.findNavController().navigateWithAnimation(R.id.placeBeaconFragment, bundle)
+                host.findNavigator().navigate(R.id.placeBeaconFragment, bundle)
             } else {
-                host.findNavController().navigateWithAnimation(R.id.placeBeaconFragment)
+                host.findNavigator().navigate(R.id.placeBeaconFragment)
             }
         }
 
@@ -562,7 +561,7 @@ private class NavigatorController(private val host: TrailSenseDestinationHost) {
     }
 
     fun displayAccuracyTips() {
-        host.findNavController().navigate(R.id.calibrateCompassFragment)
+        host.findNavigator().navigate(R.id.calibrateCompassFragment)
     }
 
     private fun pickLocationFormat(

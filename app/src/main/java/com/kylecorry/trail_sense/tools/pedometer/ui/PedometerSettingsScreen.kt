@@ -339,7 +339,7 @@ private fun PedometerSettingsContent(
                 SettingsActionRow(
                     label = stringResource(R.string.estimate_stride_length),
                     onClick = {
-                        host.findNavController().navigate(
+                        host.findNavigator().navigate(
                             R.id.action_calibrate_pedometer_to_estimate_stride_length
                         )
                     },

@@ -44,7 +44,7 @@ class QuickActionLowPowerMode(button: QuickActionButtonView, host: TrailSenseDes
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().openTool(Tools.BATTERY)
+        host.findNavigator().openTool(Tools.BATTERY)
         return true
     }
 }

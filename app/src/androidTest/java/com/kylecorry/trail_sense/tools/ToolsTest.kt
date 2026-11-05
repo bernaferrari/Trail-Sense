@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools
 
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -37,7 +37,7 @@ class ToolsTest : ToolTestBase(0L) {
         // Restart the app with Navigation tool (default)
         scenario.close()
         scenario = TestUtils.startWithTool(Tools.NAVIGATION) {
-            navController = it.findNavController()!!
+            appNavigator = it.findNavigator()!!
         }
 
         // Wait for the tool to load
@@ -46,7 +46,7 @@ class ToolsTest : ToolTestBase(0L) {
         // Verify navigation tool is open
         isTrue {
             Tools.getTool(TestUtils.context, Tools.NAVIGATION)!!
-                .isOpen(navController.currentDestination?.id ?: 0)
+                .isOpen(appNavigator.currentDestination?.id ?: 0)
         }
     }
 

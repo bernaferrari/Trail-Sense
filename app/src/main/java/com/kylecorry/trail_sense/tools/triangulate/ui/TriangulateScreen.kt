@@ -142,7 +142,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.from
-import com.kylecorry.trail_sense.shared.navigation.NavControllerAppNavigation
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseAppNavigation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -202,7 +202,7 @@ private class TriangulateController(
 
     private val formatService by lazy { FormatService.getInstance(host.requireContext()) }
     private val prefs by lazy { UserPreferences(host.requireContext()) }
-    private val appNavigation by lazy { NavControllerAppNavigation(host.findNavController()) }
+    private val appNavigation by lazy { TrailSenseAppNavigation(host.findNavigator()) }
     private val navigator by lazy { Navigator.getInstance(host.requireContext()) }
 
     private var location: Coordinate? = null

@@ -207,7 +207,7 @@ private class PackListController(private val host: TrailSenseDestinationHost) {
             val bundle = Bundle().apply {
                 putLong("pack_id", packId)
             }
-            host.findNavController().navigate(R.id.action_pack_to_pack_items, bundle)
+            host.findNavigator().navigate(R.id.action_pack_to_pack_items, bundle)
         }
     }
 

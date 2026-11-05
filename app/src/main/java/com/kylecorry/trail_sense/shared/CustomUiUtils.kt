@@ -38,7 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.google.android.material.snackbar.Snackbar
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -520,19 +520,19 @@ object CustomUiUtils {
         title: String,
         qr: String
     ) {
-        showQR(host.requireContext(), host.findNavController(), title, qr)
+        showQR(host.requireContext(), host.findNavigator(), title, qr)
     }
 
     fun showQR(
         context: Context,
-        navController: NavController,
+        appNavigator: TrailSenseNavigator,
         title: String,
         qr: String
     ) {
         if (qr.length > QR_SHARE_MAX_LENGTH) {
             Alerts.toast(context, context.getString(R.string.qr_text_too_long))
         }
-        navController.navigate(
+        appNavigator.navigate(
             R.id.viewQrFragment,
             Bundle().apply {
                 putString("qr_title", title)

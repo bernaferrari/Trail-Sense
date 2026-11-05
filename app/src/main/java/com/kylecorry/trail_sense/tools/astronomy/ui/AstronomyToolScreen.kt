@@ -256,7 +256,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                 views.displayDate.date.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
             }
             openAugmentedReality(
-                host.findNavController(),
+                host.findNavigator(),
                 ARMode.Astronomy,
                 enableCamera = prefs.astronomy.startCameraIn3DView,
                 Bundle().apply {
@@ -634,7 +634,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
 
         if (gps is MockedGPS && prefs.gps.locationOverride == Coordinate.zero) {
             val activity = host.mainActivity
-            val navController = host.findNavController()
+            val appNavigator = host.findNavigator()
             val error = UserError(
                 ErrorBannerReason.LocationNotSet,
                 host.getString(R.string.location_not_set),
@@ -642,7 +642,7 @@ private class AstronomyController(private val host: TrailSenseDestinationHost) {
                 host.getString(R.string.set)
             ) {
                 activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
-                navController.navigate(R.id.calibrateGPSFragment)
+                appNavigator.navigate(R.id.calibrateGPSFragment)
             }
             activity.errorBanner.report(error)
             gpsErrorShown = true

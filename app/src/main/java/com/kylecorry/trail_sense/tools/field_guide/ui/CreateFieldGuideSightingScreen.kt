@@ -201,7 +201,7 @@ private class CreateFieldGuideSightingController(private val host: TrailSenseDes
                 repo.addSighting(sighting)
                 onMain {
                     backCallback?.remove()
-                    host.findNavController().navigateUp()
+                    host.findNavigator().navigateUp()
                 }
             }
         }

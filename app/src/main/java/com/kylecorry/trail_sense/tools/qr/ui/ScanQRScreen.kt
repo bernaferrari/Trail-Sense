@@ -199,7 +199,7 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
                     host.getString(R.string.saved_to_note),
                     action = host.getString(R.string.view)
                 ) {
-                    host.findNavController().navigate(
+                    host.findNavigator().navigate(
                         R.id.fragmentToolNotesCreate,
                         Bundle().apply {
                             putLong("edit_note_id", id)
@@ -235,7 +235,7 @@ private class ScanQRController(private val host: TrailSenseDestinationHost) {
                 host.getString(R.string.beacon_created),
                 action = host.getString(R.string.view)
             ) {
-                host.findNavController().navigate(
+                host.findNavigator().navigate(
                     R.id.beaconDetailsFragment,
                     Bundle().apply {
                         putLong("beacon_id", id)

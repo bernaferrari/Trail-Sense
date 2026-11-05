@@ -29,7 +29,6 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
@@ -83,7 +82,7 @@ private class NavigationSettingsController(private val host: TrailSenseDestinati
     fun LayerSheet() {
         layerSheet.Content(
             host.requireContext(),
-            { host.findNavController().navigateWithAnimation(it) }
+            { host.findNavigator().navigate(it) }
         )
     }
 

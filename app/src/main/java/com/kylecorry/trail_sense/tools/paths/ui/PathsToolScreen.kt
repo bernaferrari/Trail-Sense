@@ -311,7 +311,7 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
             override fun handleOnBackPressed() {
                 if (!manager.up()) {
                     remove()
-                    host.findNavController().navigateUp()
+                    host.findNavigator().navigateUp()
                 }
             }
         }
@@ -510,12 +510,12 @@ private class PathsController(private val host: TrailSenseDestinationHost) {
     }
 
     private fun showPath(path: Path) {
-        val command = ViewPathCommand(host.findNavController())
+        val command = ViewPathCommand(host.findNavigator())
         command.execute(path)
     }
 
     private fun showPath(id: Long) {
-        val command = ViewPathCommand(host.findNavController())
+        val command = ViewPathCommand(host.findNavigator())
         command.execute(id)
     }
 

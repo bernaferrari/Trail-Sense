@@ -19,18 +19,18 @@ class QuickActionUserGuide(btn: QuickActionButtonView, host: TrailSenseDestinati
     override fun onClick() {
         super.onClick()
         val activeTool = Tools.getTools(context).firstOrNull {
-            it.isOpen(host.findNavController().currentDestination?.id ?: 0)
+            it.isOpen(host.findNavigator().currentDestination?.id ?: 0)
         }
         if (activeTool?.guideId != null) {
-            UserGuideUtils.showGuide(context, host.findNavController(), activeTool.guideId)
+            UserGuideUtils.showGuide(context, host.findNavigator(), activeTool.guideId)
         } else {
-            UserGuideUtils.showGuide(context, host.findNavController(), R.raw.guide_tool_tools)
+            UserGuideUtils.showGuide(context, host.findNavigator(), R.raw.guide_tool_tools)
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().openTool(Tools.USER_GUIDE)
+        host.findNavigator().openTool(Tools.USER_GUIDE)
         return true
     }
 }

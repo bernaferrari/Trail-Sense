@@ -21,7 +21,7 @@ object Share {
     ) {
         val locationSenders = mapOf(
             ShareAction.Copy to LocationCopy(host.requireContext()),
-            ShareAction.QR to LocationQRSender(host.requireContext(), host.findNavController()),
+            ShareAction.QR to LocationQRSender(host.requireContext(), host.findNavigator()),
             ShareAction.Maps to LocationGeoSender(host.requireContext()),
             ShareAction.Send to LocationSharesheet(host.requireContext())
         )

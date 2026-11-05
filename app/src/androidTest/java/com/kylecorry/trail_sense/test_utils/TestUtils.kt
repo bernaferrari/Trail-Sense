@@ -30,7 +30,7 @@ import com.kylecorry.trail_sense.main.TrailSenseApplicationInitializer
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.settings.migrations.PreferenceMigrator
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
@@ -221,11 +221,11 @@ object TestUtils {
         scenario.onActivity { activity ->
             onActivityCallback(activity)
             if (toolId == 0L) {
-                activity.findNavController()!!.navigate(R.id.action_experimental_tools)
+                activity.findNavigator()!!.navigate(R.id.action_experimental_tools)
             } else {
                 val tool = Tools.getTool(context, toolId)
                 tool?.let {
-                    activity.findNavController()!!.navigate(tool.navAction)
+                    activity.findNavigator()!!.navigate(tool.navAction)
                 }
             }
         }

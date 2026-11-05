@@ -320,7 +320,7 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
     fun showHelp() {
         UserGuideUtils.showGuide(
             host.requireContext(),
-            host.findNavController(),
+            host.findNavigator(),
             R.raw.guide_tool_tides
         )
     }
@@ -333,7 +333,7 @@ private class CreateTideController(private val host: TrailSenseDestinationHost) 
             }
 
             backCallback?.remove()
-            host.findNavController().navigateUp()
+            host.findNavigator().navigateUp()
         }
     }
 

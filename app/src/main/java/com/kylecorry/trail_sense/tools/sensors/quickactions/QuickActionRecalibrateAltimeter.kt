@@ -16,7 +16,6 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import kotlinx.coroutines.launch
@@ -89,14 +88,14 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSen
             }
 
             else -> {
-                host.findNavController().navigateWithAnimation(R.id.calibrateAltimeterFragment)
+                host.findNavigator().navigate(R.id.calibrateAltimeterFragment)
             }
         }
     }
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().navigateWithAnimation(R.id.calibrateAltimeterFragment)
+        host.findNavigator().navigate(R.id.calibrateAltimeterFragment)
         return true
     }
 }

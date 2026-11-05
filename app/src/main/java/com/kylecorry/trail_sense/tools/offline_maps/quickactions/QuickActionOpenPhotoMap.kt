@@ -30,7 +30,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().navigate(R.id.mapListFragment)
+        host.findNavigator().navigate(R.id.mapListFragment)
         return true
     }
 
@@ -52,7 +52,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
                 job.join()
                 if (wasSuccessful) {
                     if (id != 0L) {
-                        host.findNavController()
+                        host.findNavigator()
                             .navigate(
                                 R.id.photoMapsFragment,
                                 Bundle().apply {
@@ -61,7 +61,7 @@ class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDes
                                 }
                             )
                     } else {
-                        host.findNavController().navigate(R.id.mapListFragment)
+                        host.findNavigator().navigate(R.id.mapListFragment)
                     }
                 }
             }

@@ -7,7 +7,6 @@ import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
@@ -56,7 +55,7 @@ class ImportPackingListCommand(private val host: TrailSenseDestinationHost) : Co
             val bundle = Bundle().apply {
                 putLong("pack_id", packId)
             }
-            host.findNavController().navigateWithAnimation(R.id.packItemListFragment, bundle)
+            host.findNavigator().navigate(R.id.packItemListFragment, bundle)
         }
     }
 }

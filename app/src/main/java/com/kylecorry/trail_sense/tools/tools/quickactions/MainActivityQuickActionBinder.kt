@@ -31,9 +31,9 @@ class MainActivityQuickActionBinder(
 
         val selected = prefs.toolQuickActions.sorted()
 
-        val navController = host.findNavController()
+        val appNavigator = host.findNavigator()
         val tools = Tools.getTools(host.requireContext())
-        val currentDestination = navController.currentDestination?.id ?: 0
+        val currentDestination = appNavigator.currentDestination?.id ?: 0
         val activeTools = tools
             .filter { it.isOpen(currentDestination) || it.settingsNavAction == currentDestination }
 

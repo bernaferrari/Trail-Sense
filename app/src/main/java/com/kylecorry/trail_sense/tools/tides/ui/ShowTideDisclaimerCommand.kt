@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.tides.ui
 import android.content.Context
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
@@ -11,7 +11,7 @@ import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
 class ShowTideDisclaimerCommand(
     private val context: Context,
-    private val navController: NavController,
+    private val appNavigator: TrailSenseNavigator,
     private val onAgree: () -> Unit
 ) :
     Command {
@@ -40,7 +40,7 @@ class ShowTideDisclaimerCommand(
             if (showGuide) {
                 UserGuideUtils.openGuide(
                     context,
-                    navController,
+                    appNavigator,
                     R.raw.guide_tool_tides
                 )
             } else {

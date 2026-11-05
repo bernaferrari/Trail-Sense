@@ -3,23 +3,22 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.IdRes
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 
 data class ToolDiagnosticAction(
     val name: String,
-    val action: (context: Context, navController: NavController) -> Unit
+    val action: (context: Context, appNavigator: TrailSenseNavigator) -> Unit
 ) {
     companion object {
         fun navigate(
             @IdRes to: Int,
             title: String
         ): ToolDiagnosticAction {
-            return ToolDiagnosticAction(title) { _, navController ->
-                navController.navigateWithAnimation(to)
+            return ToolDiagnosticAction(title) { _, appNavigator ->
+                appNavigator.navigate(to)
             }
         }
 

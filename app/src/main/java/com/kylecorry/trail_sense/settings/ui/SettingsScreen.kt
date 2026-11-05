@@ -66,7 +66,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.Sensors
 import com.kylecorry.trail_sense.shared.icons.trail.Theme
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.Visible
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -99,7 +98,7 @@ fun SettingsToolScreen(host: TrailSenseDestinationHost) {
         version = Package.getVersionName(host.requireContext()),
         pluginsEnabled = plugins.arePluginsEnabled(),
         onBack = { host.mainActivity.onBackPressedDispatcher.onBackPressed() },
-        onNavigate = { host.findNavController().navigateWithAnimation(it) },
+        onNavigate = { host.findNavigator().navigate(it) },
         appearance = {
             val context = host.requireContext()
             val prefs = remember { com.kylecorry.trail_sense.shared.UserPreferences(context) }

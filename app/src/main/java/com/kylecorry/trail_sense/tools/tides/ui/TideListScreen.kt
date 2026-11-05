@@ -145,7 +145,7 @@ private class TideListController(private val host: TrailSenseDestinationHost) {
     }
 
     fun editTide(tide: TideTable) {
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.action_tideList_to_createTide,
             Bundle().apply {
                 putLong("edit_tide_id", tide.id)
@@ -154,12 +154,12 @@ private class TideListController(private val host: TrailSenseDestinationHost) {
     }
 
     fun createTide() {
-        host.findNavController().navigate(R.id.action_tideList_to_createTide)
+        host.findNavigator().navigate(R.id.action_tideList_to_createTide)
     }
 
     fun selectTide(tide: TideTable) {
         prefs.tides.lastTide = tide.id
-        host.findNavController().navigateUp()
+        host.findNavigator().navigateUp()
     }
 
     private fun getTideTitle(tide: TideTable): String {

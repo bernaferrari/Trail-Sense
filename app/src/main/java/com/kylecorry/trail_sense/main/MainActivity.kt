@@ -45,8 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavOptions
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.DynamicColorsOptions
 import androidx.compose.ui.graphics.toArgb
@@ -69,9 +69,7 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseComposeNavHost
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseComposeNavigator
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavGraph
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavDisplay
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
 import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
@@ -90,8 +88,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     var isRunning = false
         private set
 
-    private val navController: NavController?
-        get() = rootNavController
+    /** The app's Navigation 3 back stack. */
+    val navigator: TrailSenseNavigator?
+        get() = rootNavigator
 
     val errorBanner by lazy { ErrorBannerState(this) }
     private val quickActionsSheet by lazy { QuickActionSheetState(this) }
@@ -101,8 +100,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
 
     private val themeProvider = ThemeProvider()
-    private var rootNavController: NavController? = null
-    private var composeNavigator: TrailSenseComposeNavigator? = null
+    private var rootNavigator: TrailSenseNavigator? = null
     private var activeDestinationHost: TrailSenseDestinationHost? = null
 
     private val permissions = mutableListOf(
@@ -183,7 +181,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             ) {
                 MainActivityContent(
                     errorBanner = errorBanner,
-                    navigator = composeNavigator ?: error("Compose navigator is not initialized"),
+                    navigator = rootNavigator ?: error("Navigator is not initialized"),
                     quickActionsSheet = quickActionsSheet,
                     bottomNavigation = bottomNavigation,
                     nightColorFilter = useNightColorFilter,
@@ -208,38 +206,22 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     private fun setupNavController() {
-        val navController = NavController(this)
-        val navigator = TrailSenseComposeNavigator()
-        navController.setLifecycleOwner(this)
-        navController.setOnBackPressedDispatcher(onBackPressedDispatcher)
-        navController.setViewModelStore(viewModelStore)
-        navController.navigatorProvider.addNavigator(navigator)
-        rootNavController = navController
-        composeNavigator = navigator
-    }
-
-    fun getRootNavController(): NavController? {
-        return rootNavController
+        rootNavigator = TrailSenseNavigator(this)
     }
 
     /**
      * Update the bottom nav selection based on the current navigation destination
      */
     private fun updateBottomNavSelection() {
-        val currentNavId = navController?.currentDestination?.id
+        val nav = navigator ?: return
+        val currentNavId = nav.currentDestination?.id ?: 0
         val tools = Tools.getTools(this)
-        val selectedTool = tools.firstOrNull { it.isOpen(currentNavId ?: 0) }
-        // If the tool appears in the bottom nav, select it. Otherwise, select the Tools tab
-        val idToSelect = if (selectedTool != null) {
-            val isToolPinnedToNav = bottomNavigation.contains(selectedTool.navAction)
-            if (isToolPinnedToNav) {
-                selectedTool.navAction
-            } else {
-                R.id.action_experimental_tools
-            }
-        } else {
-            R.id.action_experimental_tools
-        }
+        val selectedTool = tools.firstOrNull { it.isOpen(currentNavId) }
+        // A tool pinned to the bar lights its own tab. Any other screen keeps the tab it was opened from lit (the
+        // nearest bar destination below it on the stack), and Tools when there is none.
+        val idToSelect = selectedTool?.navAction?.takeIf { bottomNavigation.contains(it) }
+            ?: nav.backStack.lastOrNull { bottomNavigation.contains(it.destinationId) }?.destinationId
+            ?: R.id.action_experimental_tools
 
         bottomNavigation.selectedItemId = idToSelect
 
@@ -355,7 +337,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             appInitialized = true
             updateBottomNavigation()
 
-            navController?.addOnDestinationChangedListener { _, _, _ ->
+            navigator?.addOnDestinationChangedListener { _, _, _ ->
                 quickActionsSheet.close()
                 updateBottomNavSelection()
             }
@@ -409,12 +391,13 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         errorBanner.dismissAll()
 
         if (shouldReloadNavigation) {
-            navController?.navigate(
+            navigator?.navigate(
                 bottomNavigation.selectedItemId,
                 null,
-                NavOptions.Builder().setPopUpTo(
-                    navController?.currentDestination?.id ?: R.id.action_experimental_tools, true
-                ).build()
+                TrailSenseNavOptions(
+                    popUpTo = navigator?.currentDestination?.id ?: R.id.action_experimental_tools,
+                    popUpToInclusive = true
+                )
             )
         }
 
@@ -449,7 +432,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         if (intent.action == TrailSenseExceptionHandler.ACTION_TOOL_ERROR) {
             val toolId = intent.getLongExtra(TrailSenseExceptionHandler.EXTRA_TOOL_ID, 0L)
             val error = intent.getStringExtra(TrailSenseExceptionHandler.EXTRA_ERROR) ?: ""
-            navController?.navigate(
+            navigator?.navigate(
                 R.id.fragmentToolErrorHandler,
                 Bundle().apply {
                     putLong("tool_id", toolId)
@@ -463,10 +446,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             val toolId = intent.getLongExtra("tool_id", -1)
             val tool = Tools.getTool(this, toolId)
             if (tool != null) {
-                if (navController?.currentDestination?.id != tool.navAction) {
-                    navController?.navigate(tool.navAction)
+                if (navigator?.currentDestination?.id != tool.navAction) {
+                    navigator?.navigate(tool.navAction)
                 }
-                // The tab that owns the tool: its own tab when pinned, otherwise Tools
                 updateBottomNavSelection()
             }
             return
@@ -476,7 +458,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             val destination = intent.getIntExtra("destination", 0)
             val args = intent.getBundleExtra("arguments")
             if (destination != 0) {
-                navController?.navigate(destination, args)
+                navigator?.navigate(destination, args)
             }
             return
         }
@@ -503,10 +485,9 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             "page",
             bottomNavigation.items.firstOrNull()?.id ?: R.id.action_experimental_tools
         )
-        if (savedInstanceState.containsKey("navigation")) {
-            tryOrNothing {
-                val bundle = savedInstanceState.getBundle("navigation_arguments")
-                navController?.navigate(savedInstanceState.getInt("navigation"), bundle)
+        tryOrNothing {
+            if (navigator?.restoreState(savedInstanceState.getBundle("navigation")) == true) {
+                navGraphInitialized = true
             }
         }
     }
@@ -515,11 +496,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
         super.onSaveInstanceState(outState)
         tryOrLog {
             outState.putInt("page", bottomNavigation.selectedItemId)
-            navController?.currentBackStackEntry?.arguments?.let {
-                outState.putBundle("navigation_arguments", it)
-            }
-            navController?.currentDestination?.id?.let {
-                outState.putInt("navigation", it)
+            navigator?.saveState()?.let {
+                outState.putBundle("navigation", it)
             }
         }
     }
@@ -543,7 +521,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
     }
 
     private fun getVolumeAction(): VolumeAction? {
-        val navigationId = navController?.currentDestination?.id
+        val navigationId = navigator?.currentDestination?.id
         val host = activeDestinationHost ?: return null
         val tools = Tools.getTools(this)
 
@@ -656,7 +634,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 
     fun onBottomNavigationItemSelected(itemId: Int) {
         if (itemId == R.id.action_experimental_tools &&
-            navController?.currentDestination?.id == R.id.action_experimental_tools &&
+            navigator?.currentDestination?.id == R.id.action_experimental_tools &&
             !quickActionsSheet.isOpen()
         ) {
             val toolsHost = activeDestinationHost as? ToolSearchFocusable
@@ -665,23 +643,25 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
             }
         }
 
-        val nav = navController ?: return
+        val nav = navigator ?: return
         if (nav.currentDestination?.id != itemId) {
             nav.navigate(
                 itemId,
                 null,
-                NavOptions.Builder()
-                    .setLaunchSingleTop(true)
-                    .setPopUpTo(nav.graph.startDestinationId, false)
-                    .build()
+                TrailSenseNavOptions(
+                    popUpTo = nav.startDestinationId,
+                    launchSingleTop = true
+                )
             )
         }
         bottomNavigation.selectedItemId = itemId
     }
 
     private fun initializeNavGraph(startDestination: Int) {
-        val nav = navController ?: return
-        nav.graph = TrailSenseNavGraph.create(nav, startDestination)
+        val nav = navigator ?: return
+        if (nav.backStack.isEmpty()) {
+            nav.setStartDestination(startDestination)
+        }
     }
 
     private fun onPowerSavingModeChanged(data: Bundle): Boolean {
@@ -780,7 +760,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever {
 @Composable
 private fun MainActivityContent(
     errorBanner: ErrorBannerState,
-    navigator: TrailSenseComposeNavigator,
+    navigator: TrailSenseNavigator,
     quickActionsSheet: QuickActionSheetState,
     bottomNavigation: MainBottomNavigationState,
     nightColorFilter: Boolean,
@@ -821,7 +801,7 @@ private fun MainActivityContent(
                     .fillMaxSize()
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    TrailSenseComposeNavHost(
+                    TrailSenseNavDisplay(
                         navigator = navigator,
                         isTabRoot = { bottomNavigation.contains(it) },
                         modifier = Modifier.fillMaxSize()

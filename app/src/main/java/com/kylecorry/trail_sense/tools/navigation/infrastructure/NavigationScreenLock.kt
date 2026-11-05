@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
 import android.app.Activity
-import androidx.navigation.NavController
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.findNavController
+import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import java.lang.ref.WeakReference
 
 class NavigationScreenLock(private val alwaysLock: Boolean = false) {
@@ -19,7 +19,7 @@ class NavigationScreenLock(private val alwaysLock: Boolean = false) {
 
     private var activityReference: WeakReference<Activity>? = null
     private var selfDestinationId: Int? = null
-    private val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+    private val listener = TrailSenseNavigator.OnDestinationChangedListener { _, destination, _ ->
         if (destination.id != selfDestinationId) {
             releaseLock(activityReference?.get() ?: return@OnDestinationChangedListener)
         }
@@ -61,16 +61,16 @@ class NavigationScreenLock(private val alwaysLock: Boolean = false) {
 
     private fun removeNavigationListener(activity: Activity) {
         val mainActivity = activity as? MainActivity ?: return
-        val navController = mainActivity.findNavController() ?: return
-        navController.removeOnDestinationChangedListener(listener)
+        val appNavigator = mainActivity.findNavigator() ?: return
+        appNavigator.removeOnDestinationChangedListener(listener)
     }
 
     private fun addNavigationListener(activity: Activity) {
         val weakActivity = WeakReference(activity)
         val mainActivity = weakActivity.get() as? MainActivity ?: return
-        val navController = mainActivity.findNavController()
-        selfDestinationId = navController?.currentDestination?.id
-        navController?.addOnDestinationChangedListener(listener)
+        val appNavigator = mainActivity.findNavigator()
+        selfDestinationId = appNavigator?.currentDestination?.id
+        appNavigator?.addOnDestinationChangedListener(listener)
     }
 
 }

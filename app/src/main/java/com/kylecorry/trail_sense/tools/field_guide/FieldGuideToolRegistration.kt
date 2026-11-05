@@ -8,7 +8,6 @@ import com.kylecorry.trail_sense.shared.extensions.getLongProperty
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
-import com.kylecorry.trail_sense.shared.navigateWithAnimation
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import com.kylecorry.trail_sense.tools.field_guide.map_layers.FieldGuideSightingGeoJsonSource
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -49,10 +48,10 @@ object FieldGuideToolRegistration : ToolRegistration {
                             defaultValue = false
                         )
                     ),
-                    openFeature = { feature, _, navController ->
+                    openFeature = { feature, _, appNavigator ->
                         val fieldGuidePageId =
                             feature.getLongProperty(FieldGuideSightingGeoJsonSource.PROPERTY_PAGE_ID)
-                        navController.navigateWithAnimation(
+                        appNavigator.navigate(
                             R.id.fieldGuidePageFragment,
                             Bundle().apply {
                                 fieldGuidePageId?.let {

@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import androidx.annotation.IdRes
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrDefault
@@ -21,6 +19,7 @@ import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -128,38 +127,9 @@ fun ICanvasDrawer.textDimensions(str: String, lineSpacing: Float): Pair<Float, F
     return maxWidth to totalTextHeight + totalSpacing
 }
 
-fun NavController.navigateWithAnimation(
-    @IdRes resId: Int,
-    args: Bundle? = null
-) {
-    val animationsEnabled = Settings.Global.getFloat(
-        context.contentResolver,
-        Settings.Global.ANIMATOR_DURATION_SCALE,
-        1f
-    ) > 0f
-    if (!animationsEnabled) {
-        navigate(resId, args)
-        return
-    }
-
-    try {
-        val builder = NavOptions.Builder()
-            .setEnterAnim(R.anim.slide_in_right)
-            .setExitAnim(R.anim.slide_out_left)
-            .setPopEnterAnim(R.anim.slide_in_left)
-            .setPopExitAnim(R.anim.slide_out_right)
-
-        val options = builder.build()
-        navigate(resId, args, options)
-    } catch (e: Exception) {
-        // If for some reason the animation fails, just navigate without it
-        navigate(resId, args)
-    }
-}
-
-fun NavController.openTool(toolId: Long, args: Bundle? = null) {
+fun TrailSenseNavigator.openTool(toolId: Long, args: Bundle? = null) {
     val navId = Tools.getTool(context, toolId)?.navAction ?: return
-    navigateWithAnimation(navId, args)
+    navigate(navId, args)
 }
 
 inline fun List<Float>.forEachLine(action: (x1: Float, y1: Float, x2: Float, y2: Float) -> Unit) {

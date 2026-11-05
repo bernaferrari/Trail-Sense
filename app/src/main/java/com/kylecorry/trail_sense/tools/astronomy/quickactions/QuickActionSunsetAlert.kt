@@ -37,7 +37,7 @@ class QuickActionSunsetAlert(btn: QuickActionButtonView, host: TrailSenseDestina
 
     override fun onLongClick(): Boolean {
         super.onLongClick()
-        host.findNavController().openTool(Tools.ASTRONOMY)
+        host.findNavigator().openTool(Tools.ASTRONOMY)
         return true
     }
 

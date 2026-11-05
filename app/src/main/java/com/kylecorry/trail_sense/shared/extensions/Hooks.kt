@@ -9,8 +9,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
-import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.kylecorry.andromeda.core.sensors.IAltimeter
 import com.kylecorry.andromeda.core.sensors.ISpeedometer
@@ -211,31 +209,6 @@ fun ReactiveComponent.useMainActivity(): MainActivity {
     return useActivity() as MainActivity
 }
 
-fun <T> T.useNavController(): NavController where T : ReactiveComponent, T : Fragment {
-    return useMemo(useRootView()) { findNavController() }
-}
-
-fun <T> T.useBackPressedCallback(
-    vararg values: Any?,
-    callback: OnBackPressedCallback.() -> Boolean
-) where T : Fragment, T : ReactiveComponent {
-    val navController = useNavController()
-    val listenerRef = useRef<OnBackPressedCallback?>(null)
-    useEffect(*values) {
-        listenerRef.current?.remove()
-        listenerRef.current = onBackPressed {
-            val consumed = callback()
-            if (!consumed) {
-                remove()
-                navController.popBackStack()
-            }
-        }
-    }
-    useDestroyEffect {
-        listenerRef.current?.remove()
-    }
-}
-
 fun <T> T.useBottomSheetBackPressedCallback(
     vararg values: Any?,
     callback: OnBackPressedCallback.() -> Boolean
@@ -260,21 +233,6 @@ fun <T> T.useBottomSheetBackPressedCallback(
     }
     useDestroyEffect {
         listenerRef.current?.remove()
-    }
-}
-
-fun <T> T.useUnsavedChangesPrompt(hasChanges: Boolean) where T : Fragment, T : ReactiveComponent {
-    val activity = useActivity() as? FragmentActivity
-    useBackPressedCallback(hasChanges, activity) {
-        if (hasChanges && activity != null) {
-            CustomUiUtils.confirmDiscardChanges(activity) {
-                remove()
-                activity.onBackPressedDispatcher.onBackPressed()
-            }
-            true
-        } else {
-            false
-        }
     }
 }
 

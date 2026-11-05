@@ -2,10 +2,9 @@ package com.kylecorry.trail_sense.shared.navigation
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.EaseOutCubic
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -16,18 +15,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
-import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -36,132 +26,119 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeDestinationHost
 
+/**
+ * Draws the [TrailSenseNavigator]'s back stack with Navigation 3. Each entry keeps its saved state (scroll position,
+ * collapsed bar, typed text) while it is on the stack, so coming back from a sub-page returns to where you were;
+ * popped entries drop theirs. System back and predictive back pop the stack.
+ */
 @Composable
-fun TrailSenseComposeNavHost(
-    navigator: TrailSenseComposeNavigator,
+fun TrailSenseNavDisplay(
+    navigator: TrailSenseNavigator,
     modifier: Modifier = Modifier,
     isTabRoot: (Int) -> Boolean = { false }
 ) {
-    if (!navigator.isReady) {
-        return
-    }
-    val backStack by navigator.backStack.collectAsState()
-    val current = backStack.lastOrNull() ?: return
-    val depth = backStack.size
+    val backStack = navigator.backStack
+    if (backStack.isEmpty()) return
+    val current = backStack.last()
     val activityForBack = LocalContext.current.findMainActivity()
     // Screens opened from another one get a back arrow (TrailSensePage reads it); a tab's first screen doesn't.
-    val back: (() -> Unit)? = if (!isTabRoot(current.destination.id) && depth > 1 && activityForBack != null) {
+    val back: (() -> Unit)? = if (!isTabRoot(current.destinationId) && backStack.size > 1 && activityForBack != null) {
         { activityForBack.onBackPressedDispatcher.onBackPressed() }
     } else {
         null
     }
-    // Each entry keeps its saved state (scroll position, collapsed bar, typed text) while it is on the back stack, so
-    // coming back from a sub-page returns to where you were instead of the top; popped entries drop theirs.
-    val saveableStateHolder = rememberSaveableStateHolder()
-    val savedEntries = remember { mutableSetOf<String>() }
-    LaunchedEffect(backStack) {
-        val ids = backStack.map { it.id }.toSet()
-        savedEntries.filter { it !in ids }.forEach {
-            saveableStateHolder.removeState(it)
-            savedEntries.remove(it)
-        }
-    }
-    var lastDepth by remember { mutableIntStateOf(depth) }
-    val forward = depth >= lastDepth
-    SideEffect { lastDepth = depth }
-    // The family's shared-axis motion: forward slides in from the right over a fade, back slides from the left;
-    // switching tabs (same depth, a new root) fades through.
-    AnimatedContent(
-        targetState = current,
-        contentKey = { it.id },
-        transitionSpec = {
-            val sameDepth = isTabRoot(targetState.destination.id) && isTabRoot(initialState.destination.id)
-            if (sameDepth) {
-                fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(90))
-            } else {
-                val direction = if (forward) 1 else -1
-                (slideInHorizontally(tween(320, easing = EaseOutCubic)) { it / 6 * direction } +
-                        fadeIn(tween(220, delayMillis = 40))) togetherWith
-                        (slideOutHorizontally(tween(320, easing = EaseOutCubic)) { -it / 10 * direction } +
-                                fadeOut(tween(120)))
-            }
-        },
-        label = "destinations",
-        modifier = modifier
-    ) { entry ->
     CompositionLocalProvider(LocalTrailSenseBack provides back) {
-    key(entry.id) {
-    SideEffect { savedEntries.add(entry.id) }
-    saveableStateHolder.SaveableStateProvider(entry.id) {
-        val context = LocalContext.current
-        val activity = context.findMainActivity()
-        if (activity != null) {
-            val rootView = LocalView.current
-            // Each screen lives on its own lifecycle: it follows the activity's, and ends when the screen leaves, so
-            // observers a screen registers (LiveData, sensors) stop with it instead of firing into a dead screen.
-            val parentLifecycleOwner = LocalLifecycleOwner.current
-            val lifecycleOwner = remember(entry.id) { DestinationLifecycleOwner(parentLifecycleOwner) }
-            DisposableEffect(lifecycleOwner) {
-                onDispose { lifecycleOwner.destroy() }
+        NavDisplay(
+            backStack = backStack,
+            modifier = modifier,
+            onBack = { navigator.popBackStack() },
+            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+            // The family's shared-axis motion: forward slides in from the right over a fade, back slides from the
+            // left; switching tabs (a new root) fades through.
+            transitionSpec = { if (navigator.lastChangeWasTabSwitch) fadeThrough() else slide(1) },
+            popTransitionSpec = { slide(-1) },
+            predictivePopTransitionSpec = { slide(-1) },
+            entryProvider = { route ->
+                NavEntry(route, contentKey = route.key) { TrailSenseRouteContent(it) }
             }
-            val permissionAction = remember { mutableStateOf<(() -> Unit)?>(null) }
-            val permissionLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.RequestMultiplePermissions()
-            ) {
-                val action = permissionAction.value
-                permissionAction.value = null
-                action?.invoke()
-            }
-            // Stable per entry: a fresh Bundle each recomposition would rebuild the screen's host (and its sensors)
-            // on every frame of a transition.
-            val arguments = remember(entry.id) { entry.arguments ?: Bundle() }
-            val host = remember(entry.id, activity, rootView, lifecycleOwner, arguments) {
-                TrailSenseComposeDestinationHost(
-                    context = context,
-                    activity = activity,
-                    rootView = rootView,
-                    arguments = arguments,
-                    lifecycleOwner = lifecycleOwner
-                ) { permissions, action ->
-                    permissionAction.value = action
-                    permissionLauncher.launch(permissions)
-                }
-            }
+        )
+    }
+}
 
-            DisposableEffect(host) {
-                host.onStart()
-                onDispose {
-                    host.onStop()
-                    host.cleanupReactiveEffects()
-                }
-            }
+private fun fadeThrough(): ContentTransform =
+    fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(90))
 
-            DisposableEffect(host, lifecycleOwner) {
-                val observer = LifecycleEventObserver { _, event ->
-                    when (event) {
-                        Lifecycle.Event.ON_RESUME -> host.onResume()
-                        Lifecycle.Event.ON_PAUSE -> host.onPause()
-                        else -> Unit
-                    }
-                }
-                lifecycleOwner.lifecycle.addObserver(observer)
-                onDispose {
-                    lifecycleOwner.lifecycle.removeObserver(observer)
-                }
-            }
+private fun slide(direction: Int): ContentTransform =
+    (slideInHorizontally(tween(320, easing = EaseOutCubic)) { it / 6 * direction } +
+            fadeIn(tween(220, delayMillis = 40))) togetherWith
+            (slideOutHorizontally(tween(320, easing = EaseOutCubic)) { -it / 10 * direction } +
+                    fadeOut(tween(120)))
 
-            CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner) {
-                host.Content(
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+/** One screen: its own lifecycle, permission launcher and destination host, then the screen itself. */
+@Composable
+private fun TrailSenseRouteContent(route: TrailSenseRoute) {
+    val context = LocalContext.current
+    val activity = context.findMainActivity() ?: return
+    val rootView = LocalView.current
+    // Each screen lives on its own lifecycle: it follows the activity's, and ends when the screen leaves, so
+    // observers a screen registers (LiveData, sensors) stop with it instead of firing into a dead screen.
+    val parentLifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = remember(route.key) { DestinationLifecycleOwner(parentLifecycleOwner) }
+    DisposableEffect(lifecycleOwner) {
+        onDispose { lifecycleOwner.destroy() }
+    }
+    val permissionAction = remember { mutableStateOf<(() -> Unit)?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        val action = permissionAction.value
+        permissionAction.value = null
+        action?.invoke()
+    }
+    val host = remember(route.key, activity, rootView, lifecycleOwner) {
+        TrailSenseComposeDestinationHost(
+            context = context,
+            activity = activity,
+            rootView = rootView,
+            arguments = route.arguments,
+            lifecycleOwner = lifecycleOwner
+        ) { permissions, action ->
+            permissionAction.value = action
+            permissionLauncher.launch(permissions)
         }
     }
+
+    DisposableEffect(host) {
+        host.onStart()
+        onDispose {
+            host.onStop()
+            host.cleanupReactiveEffects()
+        }
     }
+
+    DisposableEffect(host, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> host.onResume()
+                Lifecycle.Event.ON_PAUSE -> host.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
+
+    CompositionLocalProvider(LocalLifecycleOwner provides lifecycleOwner) {
+        host.Content(modifier = Modifier.fillMaxSize())
     }
 }
 

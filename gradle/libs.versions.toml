@@ -28,7 +28,6 @@ ksp = "2.3.12"
 composeBom = "2026.06.00"
 composeMultiplatform = "1.12.0-alpha02"
 material3Compose = "1.5.0-alpha22"
-navVersion = "2.10.2"
 nav3 = "1.0.1"
 lifecycleVersion = "2.11.0"
 material = "1.14.0"
@@ -122,9 +121,6 @@ mapsforge-map-android = { module = "com.github.kylecorry31.mapsforge:mapsforge-m
 mapsforge-map-reader = { module = "com.github.kylecorry31.mapsforge:mapsforge-map-reader", version.ref = "mapsforge" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navVersion" }
-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navVersion" }
-navigation-runtime-ktx = { module = "androidx.navigation:navigation-runtime-ktx", version.ref = "navVersion" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3" }
 orion = { module = "com.kylecorry:orion", version.ref = "orion" }

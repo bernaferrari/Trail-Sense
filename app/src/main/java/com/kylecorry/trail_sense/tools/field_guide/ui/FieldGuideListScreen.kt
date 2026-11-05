@@ -291,7 +291,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
     }
 
     fun createPage(tag: FieldGuidePageTag?) {
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("classification_id", tag?.id ?: 0L)
@@ -300,7 +300,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
     }
 
     fun editPage(page: FieldGuidePage) {
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.createFieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", page.id)
@@ -309,7 +309,7 @@ private class FieldGuideController(private val host: TrailSenseDestinationHost) 
     }
 
     fun viewPage(page: FieldGuidePage) {
-        host.findNavController().navigate(
+        host.findNavigator().navigate(
             R.id.fieldGuidePageFragment,
             Bundle().apply {
                 putLong("page_id", page.id)
