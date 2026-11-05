@@ -6,6 +6,7 @@ import android.graphics.PointF
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -36,7 +37,7 @@ open class EnhancedImageView(
         action()
     }
 
-    private var backgroundColorOverride: Int? = null
+    private var backgroundColorOverride by mutableStateOf<Int?>(null)
     protected lateinit var drawer: ICanvasDrawer
     private var isSetup = false
     private var renderVersion by mutableIntStateOf(0)

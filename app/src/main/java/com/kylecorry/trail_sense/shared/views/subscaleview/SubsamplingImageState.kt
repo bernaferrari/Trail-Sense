@@ -340,10 +340,10 @@ class SubsamplingImageState(context: Context) {
         }
         if (!hasTransform) {
             applyPendingOrInitialTransform()
-            return
+        } else {
+            applyPending()
+            refreshTiles()
         }
-        applyPending()
-        refreshTiles()
         invalidate()
     }
 
