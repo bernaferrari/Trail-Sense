@@ -120,3 +120,18 @@ fun PixelImage.interpolate(x: Float, y: Float): Int? {
     }
     return result
 }
+
+/** Reduces each RGB channel to the given number of evenly spaced values. */
+fun PixelImage.quantize(levels: Int): PixelImage {
+    require(levels in 2..256)
+    fun channel(value: Int): Int {
+        val bucket = (value * (levels - 1) + 127) / 255
+        return (bucket * 255 + (levels - 1) / 2) / (levels - 1)
+    }
+    return map { color ->
+        val red = channel((color ushr 16) and 0xff)
+        val green = channel((color ushr 8) and 0xff)
+        val blue = channel(color and 0xff)
+        (color and -0x1000000) or (red shl 16) or (green shl 8) or blue
+    }
+}
