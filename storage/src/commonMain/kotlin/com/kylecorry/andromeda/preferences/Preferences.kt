@@ -47,3 +47,10 @@ fun Preferences.putIntArray(key: String, value: List<Int>) = putString(key, valu
 fun Preferences.getIntArray(key: String): List<Int>? = getString(key)?.split(",")?.mapNotNull(String::toIntOrNull)
 fun Preferences.putLongArray(key: String, value: List<Long>) = putString(key, value.joinToString(","))
 fun Preferences.getLongArray(key: String): List<Long>? = getString(key)?.split(",")?.mapNotNull(String::toLongOrNull)
+
+fun Preferences.putOrRemoveFloat(key: String, value: Float?) {
+    if (value == null) remove(key) else putFloat(key, value)
+}
+fun Preferences.putOrRemoveCoordinate(key: String, value: Coordinate?) {
+    if (value == null) remove(key) else putCoordinate(key, value)
+}

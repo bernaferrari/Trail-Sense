@@ -43,3 +43,29 @@ fun Preferences.duration(key: String, default: kotlin.time.Duration, saveDefault
 inline fun <reified T : Enum<T>> Preferences.enum(key: String, default: T, saveDefault: Boolean = false) =
     value(key, default, { name -> getString(name)?.let { value -> enumValues<T>().find { it.name == value } } },
         { name, value -> putString(name, value.name) }, saveDefault)
+
+/** Persists a value using an explicit integer mapping, suitable for stable serialized IDs. */
+fun <T : Any> Preferences.intMapping(key: String, default: T, mappings: Map<Int, T>, saveDefault: Boolean = false) =
+    mappedValue(key, default, mappings, Preferences::getInt, Preferences::putInt, saveDefault)
+
+/** Persists a value using an explicit string mapping. */
+fun <T : Any> Preferences.stringMapping(key: String, default: T, mappings: Map<String, T>, saveDefault: Boolean = false) =
+    mappedValue(key, default, mappings, Preferences::getString, Preferences::putString, saveDefault)
+
+private fun <K : Any, T : Any> Preferences.mappedValue(
+    key: String,
+    default: T,
+    mappings: Map<K, T>,
+    read: Preferences.(String) -> K?,
+    write: Preferences.(String, K) -> Unit,
+    saveDefault: Boolean,
+): ReadWriteProperty<Any?, T> = object : ReadWriteProperty<Any?, T> {
+    override fun getValue(thisRef: Any?, property: KProperty<*>): T {
+        val stored = read(key)
+        if (stored == null && saveDefault) mappings.entries.firstOrNull { it.value == default }?.key?.let { write(key, it) }
+        return mappings[stored] ?: default
+    }
+    override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+        mappings.entries.firstOrNull { it.value == value }?.key?.let { write(key, it) }
+    }
+}
