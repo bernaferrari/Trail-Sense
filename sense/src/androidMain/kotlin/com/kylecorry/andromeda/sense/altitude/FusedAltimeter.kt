@@ -7,7 +7,9 @@ import com.kylecorry.andromeda.core.sensors.AbstractSensor
 import com.kylecorry.andromeda.core.sensors.IAltimeter
 import com.kylecorry.andromeda.core.time.Throttle
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 import com.kylecorry.andromeda.sense.barometer.IBarometer
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.andromeda.sense.location.filters.GPSPassThroughAltitudeFilter
@@ -39,7 +41,7 @@ import java.time.Instant
 class FusedAltimeter(
     private val gps: IGPS,
     private val barometer: IBarometer,
-    private val cache: IPreferences,
+    private val cache: Preferences,
     private val useContinuousCalibration: Boolean = true,
     private val gpsFilter: IGPSAltitudeFilter = GPSPassThroughAltitudeFilter(),
     private val recalibrationInterval: Duration = Duration.ofHours(1),
@@ -247,13 +249,13 @@ class FusedAltimeter(
 
     private fun isSeaLevelPressureExpired(): Boolean {
         val time = cache.getInstant(LAST_SEA_LEVEL_PRESSURE_TIME_KEY) ?: return true
-        val timeSinceReading = Duration.between(time, Instant.now())
+        val timeSinceReading = Duration.between(time.toJavaInstant(), Instant.now())
         return timeSinceReading > recalibrationInterval || timeSinceReading.isNegative
     }
 
     private fun getTimeSinceLastGPSUsed(): Duration? {
         val time = cache.getInstant(LAST_GPS_USED_TIME_KEY) ?: return null
-        return Duration.between(time, Instant.now())
+        return Duration.between(time.toJavaInstant(), Instant.now())
     }
 
     private fun setLastSeaLevelPressure(
@@ -265,11 +267,11 @@ class FusedAltimeter(
 
         // Only update the time if the gaussian GPS was used - this prevents only using the barometer over the long term
         if (isBaseline) {
-            cache.putInstant(LAST_SEA_LEVEL_PRESSURE_TIME_KEY, Instant.now())
+            cache.putInstant(LAST_SEA_LEVEL_PRESSURE_TIME_KEY, Instant.now().toKotlinInstant())
         }
 
         if (wasGPSUsed) {
-            cache.putInstant(LAST_GPS_USED_TIME_KEY, Instant.now())
+            cache.putInstant(LAST_GPS_USED_TIME_KEY, Instant.now().toKotlinInstant())
         }
     }
 
@@ -292,7 +294,7 @@ class FusedAltimeter(
          * Clear the cached calibration data
          * @param cache The cache to clear from
          */
-        fun clearCachedCalibration(cache: IPreferences) {
+        fun clearCachedCalibration(cache: Preferences) {
             cache.remove(LAST_SEA_LEVEL_PRESSURE_KEY)
             cache.remove(LAST_SEA_LEVEL_PRESSURE_TIME_KEY)
             cache.remove(LAST_GPS_USED_TIME_KEY)

@@ -5,8 +5,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.kylecorry.andromeda.preferences.IPreferences
-import com.kylecorry.andromeda.preferences.SharedPreferences
+import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.andromeda.preferences.preferences
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -14,7 +16,7 @@ import java.time.LocalTime
 
 abstract class DailyJobReceiver(
     private val tolerance: Duration = Duration.ofMinutes(30),
-    private val getPreferences: (Context) -> IPreferences = { SharedPreferences(it) }
+    private val getPreferences: (Context) -> Preferences = { preferences(it) }
 ) : BroadcastReceiver() {
 
     private val lock = Any()
@@ -23,7 +25,7 @@ abstract class DailyJobReceiver(
         synchronized(lock) {
             val now = LocalDateTime.now()
             val cache = getPreferences(context)
-            val lastRun = cache.getLocalDate(getLastRunKey(context))
+            val lastRun = cache.getLocalDate(getLastRunKey(context))?.toJavaLocalDate()
             val shouldSend = isEnabled(context) && lastRun != now.toLocalDate()
 
             val sendTime = LocalDate.now().atTime(getScheduledTime(context))
@@ -42,7 +44,7 @@ abstract class DailyJobReceiver(
                     "ScheduledJobReceiver",
                     "${this::class.java.simpleName} received a broadcast and executed"
                 )
-                cache.putLocalDate(getLastRunKey(context), now.toLocalDate())
+                cache.putLocalDate(getLastRunKey(context), now.toLocalDate().toKotlinLocalDate())
                 execute(context)
                 setAlarm(context, tomorrowSendTime)
             }

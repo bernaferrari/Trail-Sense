@@ -7,8 +7,10 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.kylecorry.andromeda.core.system.Wakelocks
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.preferences.IPreferences
-import com.kylecorry.andromeda.preferences.SharedPreferences
+import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.andromeda.preferences.preferences
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -19,7 +21,7 @@ abstract class DailyWorker(
     params: WorkerParameters,
     private val tolerance: Duration = Duration.ofMinutes(30),
     private val wakelockDuration: Duration? = null,
-    private val getPreferences: (Context) -> IPreferences = { SharedPreferences(it) }
+    private val getPreferences: (Context) -> Preferences = { preferences(it) }
 ) : CoroutineWorker(context, params) {
 
     private val lock = Any()
@@ -42,7 +44,7 @@ abstract class DailyWorker(
             val jobState = synchronized(lock) {
                 val now = LocalDateTime.now()
                 val cache = getPreferences(context)
-                val lastRun = cache.getLocalDate(getLastRunKey(context))
+                val lastRun = cache.getLocalDate(getLastRunKey(context))?.toJavaLocalDate()
                 val shouldSend = isEnabled(context) && lastRun != now.toLocalDate()
 
                 val sendTime = LocalDate.now().atTime(getScheduledTime(context))
@@ -61,7 +63,7 @@ abstract class DailyWorker(
                         javaClass.simpleName,
                         "Received a broadcast and executed"
                     )
-                    cache.putLocalDate(getLastRunKey(context), now.toLocalDate())
+                    cache.putLocalDate(getLastRunKey(context), now.toLocalDate().toKotlinLocalDate())
                     return@synchronized true to tomorrowSendTime
                 }
 
