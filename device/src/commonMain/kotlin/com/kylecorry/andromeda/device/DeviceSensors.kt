@@ -55,6 +55,9 @@ class DeviceSensors {
     fun acceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.acceleration(interval, accuracy)
 
+    fun compass(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowCompass(magneticHeading(interval, accuracy), scope)
+
     /** Magnetic heading in degrees clockwise from magnetic north. */
     fun magneticHeading(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.magneticHeading(interval, accuracy)
