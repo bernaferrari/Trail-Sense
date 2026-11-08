@@ -16,7 +16,11 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { api(project(":exceptions-android")) }
+        androidMain.dependencies {
+            implementation(project(":core"))
+            implementation(project(":files"))
+            implementation(libs.androidx.core.ktx)
+        }
     }
 }
 group = "com.kylecorry.andromeda"
