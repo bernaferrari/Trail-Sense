@@ -5,6 +5,7 @@ import com.kylecorry.luna.topics.BaseTopic
 import com.kylecorry.luna.topics.Subscriber
 import com.kylecorry.luna.topics.Topic
 import java.time.Instant
+import kotlin.time.toJavaInstant
 
 abstract class AbstractSensor : BaseTopic(), ISensor {
 
@@ -42,9 +43,9 @@ abstract class AbstractSensor : BaseTopic(), ISensor {
         eventTime = Instant.now()
     }
 
-    protected fun setEventTimeFrom(sensor: ISensor) {
+    protected fun setEventTimeFrom(sensor: Sensor) {
         eventTimeElapsedNanos = sensor.eventTimeElapsedNanos
-        eventTime = sensor.eventTime
+        eventTime = sensor.timestamp.toJavaInstant()
     }
 
     protected fun resetSessionMetadata() {
