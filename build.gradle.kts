@@ -21,6 +21,7 @@ plugins {
 
 subprojects {
     if (name in setOf(
+        "clipboard",
         "background",
         "pdf",
         "camera",
