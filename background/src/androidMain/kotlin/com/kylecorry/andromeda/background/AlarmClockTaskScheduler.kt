@@ -2,9 +2,9 @@ package com.kylecorry.andromeda.background
 
 import android.app.PendingIntent
 import android.content.Context
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.toJavaDuration
+import java.time.Instant as JavaInstant
 
 /**
  * Schedules an alarm clock
@@ -23,18 +23,10 @@ class AlarmClockTaskScheduler(
     override fun once(delay: Duration) {
         Alarms.setAlarmClock(
             context,
-            Instant.now().plus(delay),
+            JavaInstant.now().plus(delay.toJavaDuration()),
             task(),
             viewTask
         )
-    }
-
-    override fun once(time: Instant) {
-        once(Duration.between(Instant.now(), time))
-    }
-
-    override fun start() {
-        once()
     }
 
     override fun cancel() {

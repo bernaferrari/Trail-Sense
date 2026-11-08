@@ -5,8 +5,7 @@ import android.os.Bundle
 import androidx.work.*
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.toMap
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 import java.util.concurrent.TimeUnit
 
 /**
@@ -36,7 +35,7 @@ class WorkTaskScheduler(
             .Builder(task).apply {
                 addTag(uniqueId)
                 if (delay > Duration.ZERO) {
-                    setInitialDelay(delay.toMillis(), TimeUnit.MILLISECONDS)
+                    setInitialDelay(delay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
                 }
                 if (constraints != null) {
                     setConstraints(constraints)
@@ -57,27 +56,19 @@ class WorkTaskScheduler(
         )
     }
 
-    override fun once(time: Instant) {
-        once(Duration.between(Instant.now(), time))
-    }
-
-    override fun start() {
-        once()
-    }
-
     override fun interval(period: Duration, initialDelay: Duration) {
         val workManager = WorkManager.getInstance(context.applicationContext)
 
         val request = PeriodicWorkRequest
             .Builder(
                 task,
-                period.toMillis(),
+                period.inWholeMilliseconds,
                 TimeUnit.MILLISECONDS,
-                (flexDuration ?: period).toMillis(),
+                (flexDuration ?: period).inWholeMilliseconds,
                 TimeUnit.MILLISECONDS
             ).apply {
                 addTag(uniqueId)
-                setInitialDelay(initialDelay.toMillis(), TimeUnit.MILLISECONDS)
+                setInitialDelay(initialDelay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
                 if (constraints != null) {
                     setConstraints(constraints)
                 }
@@ -95,10 +86,6 @@ class WorkTaskScheduler(
             ExistingPeriodicWorkPolicy.UPDATE,
             request
         )
-    }
-
-    override fun interval(period: Duration, start: Instant) {
-        interval(period, Duration.between(Instant.now(), start))
     }
 
     override fun cancel() {

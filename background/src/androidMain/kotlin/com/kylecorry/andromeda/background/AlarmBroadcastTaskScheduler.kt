@@ -5,9 +5,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.toJavaDuration
+import java.time.Instant as JavaInstant
 
 /**
  * Uses the AlarmManager and Broadcast Receivers to scheduler work. Useful for work that needs to run at an exact time.
@@ -24,7 +25,7 @@ class AlarmBroadcastTaskScheduler(
     private val uniqueId: Int,
     private val exact: Boolean = true,
     private val allowWhileIdle: Boolean = false,
-    private val inexactWindow: Duration = Duration.ofMinutes(10),
+    private val inexactWindow: Duration = 10.minutes,
     private val isWindowCentered: Boolean = false,
     private val intentExtras: Bundle? = null
 ) :
@@ -35,35 +36,23 @@ class AlarmBroadcastTaskScheduler(
         cancel()
         Alarms.set(
             context,
-            Instant.now().plus(delay),
+            JavaInstant.now().plus(delay.toJavaDuration()),
             createPendingIntent(),
             exact,
             allowWhileIdle,
-            inexactWindow,
+            inexactWindow.toJavaDuration(),
             isWindowCentered
         )
-    }
-
-    override fun once(time: Instant) {
-        once(Duration.between(Instant.now(), time))
-    }
-
-    override fun start() {
-        once()
     }
 
     override fun interval(period: Duration, initialDelay: Duration) {
         cancel()
         Alarms.setRepeating(
             context,
-            Instant.now().plus(initialDelay),
-            period,
+            JavaInstant.now().plus(initialDelay.toJavaDuration()),
+            period.toJavaDuration(),
             createPendingIntent()
         )
-    }
-
-    override fun interval(period: Duration, start: Instant) {
-        interval(period, Duration.between(Instant.now(), start))
     }
 
     override fun cancel() {

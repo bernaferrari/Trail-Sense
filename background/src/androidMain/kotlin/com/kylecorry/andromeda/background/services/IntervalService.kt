@@ -9,6 +9,7 @@ import com.kylecorry.andromeda.core.system.BroadcastReceiverTopic
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.ITimer
 import java.time.Duration
+import kotlin.time.toKotlinDuration
 
 /**
  * A base service for running a background task on an interval.
@@ -93,7 +94,7 @@ abstract class IntervalService(
             if (useOneTimeWorkers) {
                 oneTimeWorker.start()
             } else {
-                periodicWorker.interval(period)
+                periodicWorker.interval(period.toKotlinDuration())
             }
         }
         return START_STICKY
@@ -119,7 +120,7 @@ abstract class IntervalService(
         timer.once(Duration.ZERO)
         if (useOneTimeWorkers) {
             oneTimeWorker.cancel()
-            oneTimeWorker.once(period)
+            oneTimeWorker.once(period.toKotlinDuration())
         }
         return true
     }

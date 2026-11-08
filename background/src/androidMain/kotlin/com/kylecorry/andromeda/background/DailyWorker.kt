@@ -1,6 +1,7 @@
 package com.kylecorry.andromeda.background
 
 import android.content.Context
+import kotlin.time.toKotlinInstant
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -127,7 +128,7 @@ abstract class DailyWorker(
     private fun setAlarm(context: Context, time: LocalDateTime) {
         val scheduler = getScheduler(context)
         scheduler.cancel()
-        scheduler.once(time.atZone(java.time.ZoneId.systemDefault()).toInstant())
+        scheduler.once(time.atZone(java.time.ZoneId.systemDefault()).toInstant().toKotlinInstant())
         Log.d(
             javaClass.simpleName,
             "Scheduled the next run for $time"

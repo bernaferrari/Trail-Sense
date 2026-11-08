@@ -8,6 +8,7 @@ import androidx.work.WorkerParameters
 import com.kylecorry.andromeda.core.system.Wakelocks
 import com.kylecorry.andromeda.core.tryOrDefault
 import java.time.Duration
+import kotlin.time.toKotlinDuration
 import java.time.LocalDateTime
 
 // TODO: Prevent it from running too frequently
@@ -68,7 +69,7 @@ abstract class IntervalWorker(
     private fun setAlarm(context: Context, delay: Duration) {
         val scheduler = getScheduler(context)
         scheduler.cancel()
-        scheduler.once(delay)
+        scheduler.once(delay.toKotlinDuration())
         Log.d(
             javaClass.simpleName,
             "Scheduled the next run for ${LocalDateTime.now().plus(delay)}"

@@ -3,6 +3,7 @@ package com.kylecorry.andromeda.background
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
+import kotlin.time.toKotlinInstant
 import android.content.Intent
 import android.util.Log
 import com.kylecorry.andromeda.preferences.Preferences
@@ -91,7 +92,7 @@ abstract class DailyJobReceiver(
     private fun setAlarm(context: Context, time: LocalDateTime) {
         val scheduler = getScheduler(context)
         scheduler.cancel()
-        scheduler.once(time.atZone(java.time.ZoneId.systemDefault()).toInstant())
+        scheduler.once(time.atZone(java.time.ZoneId.systemDefault()).toInstant().toKotlinInstant())
         Log.d(
             "ScheduledJobReceiver",
             "${this::class.java.simpleName} schedule the next alarm for $time"
