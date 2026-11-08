@@ -1,14 +1,15 @@
 package com.kylecorry.andromeda.sense.location
 
-import android.os.SystemClock
-import com.kylecorry.andromeda.core.sensors.IAltimeter
-import com.kylecorry.andromeda.core.sensors.ISensor
-import com.kylecorry.andromeda.core.sensors.ISpeedometer
+import com.kylecorry.andromeda.core.time.monotonicNanos
+import com.kylecorry.andromeda.core.sensors.Altimeter
+import com.kylecorry.andromeda.core.sensors.Sensor
+import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-interface IGPS : ISensor, IAltimeter, ISpeedometer {
+interface IGPS : Sensor, Altimeter, Speedometer {
     /**
      * The location
      */
@@ -54,10 +55,10 @@ interface IGPS : ISensor, IAltimeter, ISpeedometer {
  * Determines if there is a recent location fix
  * @param maxFixAge the age at which a fix is considered lost
  */
-fun IGPS.hasFix(maxFixAge: Duration = Duration.ofSeconds(30)): Boolean {
+fun IGPS.hasFix(maxFixAge: Duration = 30.seconds): Boolean {
     if (!hasValidReading) {
         return false
     }
 
-    return SystemClock.elapsedRealtimeNanos() - eventTimeElapsedNanos <= maxFixAge.toNanos()
+    return monotonicNanos() - eventTimeElapsedNanos <= maxFixAge.inWholeNanoseconds
 }

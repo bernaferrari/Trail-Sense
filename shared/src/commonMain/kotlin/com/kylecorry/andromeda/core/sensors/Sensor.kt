@@ -16,3 +16,17 @@ interface Sensor {
     fun start(subscriber: SensorSubscriber)
     fun stop(subscriber: SensorSubscriber? = null)
 }
+
+suspend fun Sensor.read(until: () -> Boolean = { true }) {
+    kotlinx.coroutines.suspendCancellableCoroutine<Unit> { continuation ->
+        val listener: SensorSubscriber = {
+            if (!continuation.isActive) false else if (until()) {
+                continuation.resumeWith(Result.success(Unit))
+                false
+            } else true
+        }
+        continuation.invokeOnCancellation { unsubscribe(listener) }
+        subscribe(listener)
+        if (!continuation.isActive) unsubscribe(listener)
+    }
+}

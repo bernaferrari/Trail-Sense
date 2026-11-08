@@ -11,13 +11,19 @@ kotlin {
         minSdk = 24
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
-    sourceSets.androidMain { kotlin.srcDir("src/jvmMain/kotlin") }
     jvm {
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
+    applyDefaultHierarchyTemplate()
+    sourceSets {
+        val jvmSharedMain by creating { dependsOn(commonMain.get()) }
+        jvmSharedMain.kotlin.srcDir("src/jvmSharedMain/kotlin")
+        jvmMain { dependsOn(jvmSharedMain) }
+        androidMain { dependsOn(jvmSharedMain) }
+    }
     sourceSets.commonMain.dependencies {
         api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
         api("com.kylecorry:sol:19.4.0")

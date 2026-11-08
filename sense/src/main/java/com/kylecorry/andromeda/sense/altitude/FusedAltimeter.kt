@@ -2,6 +2,7 @@ package com.kylecorry.andromeda.sense.altitude
 
 import android.util.Log
 import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.andromeda.core.sensors.read
 import com.kylecorry.andromeda.core.sensors.AbstractSensor
 import com.kylecorry.andromeda.core.sensors.IAltimeter
 import com.kylecorry.andromeda.core.time.Throttle
@@ -19,6 +20,7 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Pressure
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
+import kotlin.time.toKotlinDuration
 import java.time.Instant
 
 /**
@@ -232,7 +234,7 @@ class FusedAltimeter(
     }
 
     private fun hasGPSFix(): Boolean {
-        return gps.hasFix(maxGPSFixAge)
+        return gps.hasFix(maxGPSFixAge.toKotlinDuration())
     }
 
     private fun hasFilteredGPSFix(): Boolean {
