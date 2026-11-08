@@ -13,6 +13,7 @@ import platform.AVFAudio.AVAudioEngine
 import platform.AVFAudio.AVAudioFormat
 import platform.AVFAudio.AVAudioPCMBuffer
 import platform.AVFAudio.AVAudioPlayerNode
+import platform.AVFAudio.AVAudioPlayerNodeCompletionDataConsumed
 import platform.AVFAudio.AVAudioPlayerNodeCompletionDataPlayedBack
 import kotlin.coroutines.resume
 
@@ -41,7 +42,7 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
         samples.forEachIndexed { index, sample -> channel[index] = sample.toFloat() / 32768f }
         suspendCancellableCoroutine { continuation ->
             continuation.invokeOnCancellation { if (!closed.value) player.stop() }
-            player.scheduleBuffer(buffer, completionCallbackType = AVAudioPlayerNodeCompletionDataPlayedBack) {
+            player.scheduleBuffer(buffer, completionCallbackType = AVAudioPlayerNodeCompletionDataConsumed) {
                 if (closed.value) continuation.cancel(CancellationException("PCM output is closed"))
                 else if (continuation.isActive) continuation.resume(Unit)
             }
@@ -51,6 +52,18 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
 
     actual suspend fun drain() = mutex.withLock {
         check(!closed.value) { "PCM output is closed" }
+        // A silent frame acts as a playback fence after all previously scheduled buffers.
+        val fence = requireNotNull(AVAudioPCMBuffer(pCMFormat = format, frameCapacity = 1u))
+        fence.frameLength = 1u
+        requireNotNull(fence.floatChannelData)[0]!![0] = 0f
+        suspendCancellableCoroutine { continuation ->
+            continuation.invokeOnCancellation { if (!closed.value) player.stop() }
+            player.scheduleBuffer(fence, completionCallbackType = AVAudioPlayerNodeCompletionDataPlayedBack) {
+                if (closed.value) continuation.cancel(CancellationException("PCM output is closed"))
+                else if (continuation.isActive) continuation.resume(Unit)
+            }
+            player.play()
+        }
     }
 
     actual override fun close() {
