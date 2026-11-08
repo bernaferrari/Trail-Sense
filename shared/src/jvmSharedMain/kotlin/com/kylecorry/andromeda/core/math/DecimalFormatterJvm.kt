@@ -4,12 +4,12 @@ import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import java.text.DecimalFormat
 import java.util.concurrent.ConcurrentHashMap
 
-object DecimalFormatter {
+actual object DecimalFormatter {
 
     private val formatterMap = ConcurrentHashMap<Int, DecimalFormat>()
     private val strictFormatterMap = ConcurrentHashMap<Int, DecimalFormat>()
 
-    fun format(number: Number, decimalPlaces: Int, strict: Boolean = true): String {
+    actual fun format(number: Number, decimalPlaces: Int, strict: Boolean): String {
         if (number.toDouble().isNaN() || number.toDouble().isInfinite()){
             return "-"
         }
@@ -17,7 +17,7 @@ object DecimalFormatter {
         val cache = if (strict) strictFormatterMap else formatterMap
         val existing = cache[decimalPlaces]
         if (existing != null){
-            return existing.format(n)
+            return synchronized(existing) { existing.format(n) }
         }
         if (decimalPlaces <= 0){
             val formatter = DecimalFormat("#")
