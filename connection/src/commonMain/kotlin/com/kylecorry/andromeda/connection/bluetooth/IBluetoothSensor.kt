@@ -4,6 +4,6 @@ interface IBluetoothSensor {
     val messages: List<BluetoothMessage>
     val isConnected: Boolean
 
-    // TODO: Make this a suspend function
+    /** Returns false when disconnected; a successful call does not confirm remote delivery. */
     fun write(data: String): Boolean
 }
