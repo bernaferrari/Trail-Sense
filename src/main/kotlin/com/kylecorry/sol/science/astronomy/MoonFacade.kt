@@ -4,7 +4,6 @@ import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.astronomy.locators.Moon
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
-import com.kylecorry.sol.science.astronomy.rst.RobustRiseSetTransitTimeCalculator
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
 import com.kylecorry.sol.units.Bearing
@@ -13,10 +12,12 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import java.time.Duration
 import java.time.ZonedDateTime
+import kotlinx.datetime.toKotlinTimeZone
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
 internal object MoonFacade {
     private val moon = Moon()
-    private val riseSetTransitCalculator = RobustRiseSetTransitTimeCalculator()
 
     fun getMoonEvents(
         date: ZonedDateTime,
@@ -24,13 +25,12 @@ internal object MoonFacade {
         withRefraction: Boolean = false,
         withParallax: Boolean = false
     ): RiseSetTransitTimes {
-        return riseSetTransitCalculator.calculate(
-            moon,
-            date,
-            location,
-            0.125,
-            withRefraction,
-            withParallax
+        val times = MoonCalculationModel.events(
+            date.toInstant().toKotlinInstant(), date.zone.toKotlinTimeZone(), location, withRefraction, withParallax
+        )
+        return RiseSetTransitTimes(
+            times.rise?.toJavaInstant()?.atZone(date.zone), times.transit?.toJavaInstant()?.atZone(date.zone),
+            times.set?.toJavaInstant()?.atZone(date.zone)
         )
     }
 
@@ -55,23 +55,7 @@ internal object MoonFacade {
         withRefraction: Boolean = false,
         withParallax: Boolean = false
     ): CelestialObservation {
-        val ut = time.toUniversalTime()
-        val distance = moon.getDistance(ut)
-        val horizonCoordinate = JvmAstroUtils.getLocation(
-            moon,
-            ut,
-            location,
-            withRefraction,
-            withParallax,
-            distance
-        )
-        val diameter = moon.getAngularDiameter(ut, location, distance)
-        return CelestialObservation(
-            Bearing.from(horizonCoordinate.azimuth.toFloat()),
-            horizonCoordinate.altitude.toFloat(),
-            diameter.toFloat(),
-            distance = distance
-        )
+        return MoonCalculationModel.position(time.toInstant().toKotlinInstant(), location, withRefraction, withParallax)
     }
 
     fun getNextMoonset(

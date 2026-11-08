@@ -2,15 +2,16 @@ package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.science.astronomy.locators.Planet
 import com.kylecorry.sol.science.astronomy.locators.PlanetLocator
-import com.kylecorry.sol.science.astronomy.rst.RobustRiseSetTransitTimeCalculator
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import java.time.ZonedDateTime
+import kotlinx.datetime.toKotlinTimeZone
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
 internal object PlanetFacade {
-    private val riseSetTransitCalculator = RobustRiseSetTransitTimeCalculator()
 
     fun getPlanetPosition(
         planet: Planet,
@@ -19,24 +20,8 @@ internal object PlanetFacade {
         withRefraction: Boolean = false,
         withParallax: Boolean = false
     ): CelestialObservation {
-        val ut = time.toUniversalTime()
-        val locator = PlanetLocator(planet)
-        val horizonCoordinate = JvmAstroUtils.getLocation(
-            locator,
-            ut,
-            location,
-            withRefraction,
-            withParallax
-        )
-        val distance = locator.getDistance(ut)
-        val diameter = locator.getAngularDiameter(ut)
-        val magnitude = locator.getMagnitude(ut)
-        return CelestialObservation(
-            Bearing.from(horizonCoordinate.azimuth.toFloat()),
-            horizonCoordinate.altitude.toFloat(),
-            diameter.toFloat(),
-            magnitude.toFloat(),
-            distance
+        return PlanetCalculationModel.position(
+            planet, time.toInstant().toKotlinInstant(), location, withRefraction, withParallax
         )
     }
 
@@ -47,13 +32,13 @@ internal object PlanetFacade {
         withRefraction: Boolean = false,
         withParallax: Boolean = false
     ): RiseSetTransitTimes {
-        return riseSetTransitCalculator.calculate(
-            PlanetLocator(planet),
-            date,
-            location,
-            0.0,
-            withRefraction,
-            withParallax
+        val times = PlanetCalculationModel.events(
+            planet, date.toInstant().toKotlinInstant(), date.zone.toKotlinTimeZone(), location,
+            withRefraction, withParallax
+        )
+        return RiseSetTransitTimes(
+            times.rise?.toJavaInstant()?.atZone(date.zone), times.transit?.toJavaInstant()?.atZone(date.zone),
+            times.set?.toJavaInstant()?.atZone(date.zone)
         )
     }
 }
