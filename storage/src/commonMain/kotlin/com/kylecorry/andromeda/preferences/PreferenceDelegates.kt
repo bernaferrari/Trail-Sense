@@ -31,3 +31,15 @@ fun Preferences.double(key: String, default: Double = 0.0, saveDefault: Boolean 
     value(key, default, Preferences::getDouble, Preferences::putDouble, saveDefault)
 fun Preferences.boolean(key: String, default: Boolean = false, saveDefault: Boolean = false) =
     value(key, default, Preferences::getBoolean, Preferences::putBoolean, saveDefault)
+
+fun Preferences.coordinate(key: String, default: com.kylecorry.sol.units.Coordinate, saveDefault: Boolean = false) =
+    value(key, default, Preferences::getCoordinate, Preferences::putCoordinate, saveDefault)
+fun Preferences.localDate(key: String, default: kotlinx.datetime.LocalDate, saveDefault: Boolean = false) =
+    value(key, default, Preferences::getLocalDate, Preferences::putLocalDate, saveDefault)
+fun Preferences.instant(key: String, default: kotlin.time.Instant, saveDefault: Boolean = false) =
+    value(key, default, Preferences::getInstant, Preferences::putInstant, saveDefault)
+fun Preferences.duration(key: String, default: kotlin.time.Duration, saveDefault: Boolean = false) =
+    value(key, default, Preferences::getDuration, Preferences::putDuration, saveDefault)
+inline fun <reified T : Enum<T>> Preferences.enum(key: String, default: T, saveDefault: Boolean = false) =
+    value(key, default, { name -> getString(name)?.let { value -> enumValues<T>().find { it.name == value } } },
+        { name, value -> putString(name, value.name) }, saveDefault)

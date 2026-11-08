@@ -42,3 +42,8 @@ class Preferences(val settings: Settings = Settings()) {
     fun putDuration(key: String, value: Duration) = putLong(key, value.inWholeMilliseconds)
     fun getDuration(key: String): Duration? = getLong(key)?.milliseconds
 }
+
+fun Preferences.putIntArray(key: String, value: List<Int>) = putString(key, value.joinToString(","))
+fun Preferences.getIntArray(key: String): List<Int>? = getString(key)?.split(",")?.mapNotNull(String::toIntOrNull)
+fun Preferences.putLongArray(key: String, value: List<Long>) = putString(key, value.joinToString(","))
+fun Preferences.getLongArray(key: String): List<Long>? = getString(key)?.split(",")?.mapNotNull(String::toLongOrNull)
