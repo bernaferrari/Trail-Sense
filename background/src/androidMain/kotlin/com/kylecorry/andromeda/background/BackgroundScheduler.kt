@@ -19,3 +19,17 @@ fun backgroundScheduler(context: Context, identifier: String, worker: Class<out 
         }
         override fun cancel() { WorkManager.getInstance(context).cancelUniqueWork(identifier) }
     }
+
+/** Schedules recurring WorkManager work; Android reschedules it automatically. */
+fun periodicBackgroundScheduler(context: Context, identifier: String, worker: Class<out ListenableWorker>): PeriodicBackgroundScheduler =
+    object : PeriodicBackgroundScheduler {
+        override fun interval(period: kotlin.time.Duration, initialDelay: kotlin.time.Duration) {
+            requirePeriodicSchedule(period, initialDelay)
+            val request = androidx.work.PeriodicWorkRequest.Builder(worker, period.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+                .setInitialDelay(initialDelay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+                .build()
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(identifier, androidx.work.ExistingPeriodicWorkPolicy.UPDATE, request)
+        }
+        override fun onTaskStarted() = Unit
+        override fun cancel() { WorkManager.getInstance(context).cancelUniqueWork(identifier) }
+    }
