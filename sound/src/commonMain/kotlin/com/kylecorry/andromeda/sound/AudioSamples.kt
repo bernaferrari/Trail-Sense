@@ -17,7 +17,9 @@ fun pcm16ToFloat(bytes: ByteArray): FloatArray {
 /** Generates little-endian signed 16-bit PCM from normalized sample values. */
 fun generatePcm16(sampleRate: Int, durationSeconds: Float, sample: (Int) -> Double): ByteArray {
     require(sampleRate > 0 && durationSeconds >= 0 && durationSeconds.isFinite())
-    val count = (sampleRate * durationSeconds).toInt()
+    val sampleCount = sampleRate.toDouble() * durationSeconds
+    require(sampleCount <= Int.MAX_VALUE / 2)
+    val count = sampleCount.toInt()
     return ByteArray(count * 2).also { bytes ->
         repeat(count) { index ->
             val value = (sample(index).coerceIn(-1.0, 1.0) * 32767).toInt()
