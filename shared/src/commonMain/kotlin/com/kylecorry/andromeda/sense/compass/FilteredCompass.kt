@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.sense.compass
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.sol.math.filters.IFilter
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
@@ -12,7 +12,7 @@ import com.kylecorry.sol.units.Bearing
  * @param filter the filter to use to smooth the bearing
  */
 class FilteredCompass(private val compass: ICompass, private val filter: IFilter) :
-    AbstractSensor(),
+    SharedSensor(),
     ICompass {
 
     override val bearing: Bearing

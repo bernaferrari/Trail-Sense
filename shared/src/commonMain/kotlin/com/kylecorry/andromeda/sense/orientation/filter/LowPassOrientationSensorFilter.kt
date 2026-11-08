@@ -1,5 +1,7 @@
 package com.kylecorry.andromeda.sense.orientation.filter
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.QuaternionMath
 
@@ -13,7 +15,7 @@ class LowPassOrientationSensorFilter(
             _current.copyOf()
         }
 
-    private val lock = Any()
+    private val lock = SynchronizedObject()
     private val _current = Quaternion.zero.toFloatArray()
     private val _last = Quaternion.zero.toFloatArray()
 

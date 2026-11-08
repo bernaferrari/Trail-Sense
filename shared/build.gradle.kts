@@ -13,6 +13,7 @@ kotlin {
         api("com.kylecorry:sol:19.4.0")
         implementation("io.github.pdvrieze.xmlutil:core:1.0.2")
         implementation("io.ktor:ktor-client-cio:3.6.1")
+        implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
     }
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))
