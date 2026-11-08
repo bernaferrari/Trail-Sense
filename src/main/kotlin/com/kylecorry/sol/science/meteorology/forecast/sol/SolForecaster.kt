@@ -27,6 +27,7 @@ import com.kylecorry.sol.units.Temperature
 import java.time.Duration
 import java.time.Instant
 import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
 internal object SolForecaster : Forecaster {
     private val HISTORY_DURATION_NO_CHANGE_MAX = Duration.ofHours(8)
@@ -221,6 +222,6 @@ internal object SolForecaster : Forecaster {
 
         val arrivalTime = ArrivalTimeCalculator.getArrivalTime(time, now, filteredClouds)
 
-        return listOf(now.copy(time = arrivalTime), after)
+        return listOf(now.copy(time = arrivalTime?.toKotlinInstant()), after)
     }
 }

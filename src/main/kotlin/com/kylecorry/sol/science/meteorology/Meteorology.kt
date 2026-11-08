@@ -21,7 +21,6 @@ import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.TimeUnits
 import java.time.Duration
 import java.time.Instant
-import kotlin.time.toJavaInstant
 import java.time.LocalDate
 import java.time.Month
 import java.time.ZonedDateTime
@@ -149,8 +148,8 @@ object Meteorology {
         location: Coordinate = Coordinate.zero,
         source: ForecastSource = ForecastSource.Sol
     ): List<WeatherForecast> {
-        val pressureObservations = pressures.map { WeatherObservation.Pressure(it.time.toJavaInstant(), it.value) }
-        val cloudObservations = clouds.map { WeatherObservation.CloudGenus(it.time.toJavaInstant(), it.value) }
+        val pressureObservations = pressures.map { WeatherObservation.Pressure(it.time, it.value) }
+        val cloudObservations = clouds.map { WeatherObservation.CloudGenus(it.time, it.value) }
         return forecast(
             pressureObservations + cloudObservations,
             dailyTemperatureRange,

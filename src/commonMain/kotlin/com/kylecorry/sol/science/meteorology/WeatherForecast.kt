@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology
 
-import java.time.Instant
+import kotlin.time.Instant
 
 data class WeatherForecast(
     val time: Instant?,

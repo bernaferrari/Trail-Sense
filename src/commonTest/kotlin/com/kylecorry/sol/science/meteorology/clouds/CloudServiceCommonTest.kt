@@ -1,9 +1,9 @@
 package com.kylecorry.sol.science.meteorology.clouds
 
 import com.kylecorry.sol.science.meteorology.Precipitation
+import com.kylecorry.sol.science.meteorology.observation.WeatherObservation
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.sol.units.Reading
 import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,7 +13,10 @@ class CloudServiceCommonTest {
     @Test
     fun predictsPrecipitationRangeFromCloudTime() {
         val observed = Instant.parse("2025-01-01T00:00:00.123456789Z")
-        val range = CloudPrecipitationCalculator().getPrecipitationTime(listOf(Reading(CloudGenus.Cirrus, observed)))!!
+        val reading = WeatherObservation.CloudGenus(observed, CloudGenus.Cirrus).asReading()
+        assertEquals(CloudGenus.Cirrus, reading.value)
+        assertEquals(observed, reading.time)
+        val range = CloudPrecipitationCalculator().getPrecipitationTime(listOf(reading))!!
         assertEquals(Instant.parse("2025-01-01T12:00:00.123456789Z"), range.start)
         assertEquals(Instant.parse("2025-01-02T00:00:00.123456789Z"), range.end)
     }

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toKotlinInstant
 
 internal class ZambrettiForecasterTest {
 
@@ -53,5 +54,5 @@ internal class ZambrettiForecasterTest {
         )
 
     private fun pressure(hpa: Float, time: Instant) =
-        WeatherObservation.Pressure(time, Pressure.hpa(hpa))
+        WeatherObservation.Pressure(time.toKotlinInstant(), Pressure.hpa(hpa))
 }

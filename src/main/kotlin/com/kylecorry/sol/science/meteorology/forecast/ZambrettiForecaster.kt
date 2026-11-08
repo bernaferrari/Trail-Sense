@@ -17,6 +17,8 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Temperature
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 import java.time.ZonedDateTime
 
 internal object ZambrettiForecaster : Forecaster {
@@ -93,7 +95,7 @@ internal object ZambrettiForecaster : Forecaster {
     ): List<WeatherForecast> {
         val pressures = observations
             .filterIsInstance<WeatherObservation.Pressure>()
-            .filter { it.time <= time }
+            .filter { it.time.toJavaInstant() <= time }
             .sortedBy { it.time }
             .map { it.asReading() }
 
@@ -101,7 +103,7 @@ internal object ZambrettiForecaster : Forecaster {
         val tendency = ForecastHelper.getTendency(pressures, pressureChangeThreshold)
         val windDirection = observations
             .filterIsInstance<WeatherObservation.WindDirection>()
-            .filter { it.time in time.minus(Duration.ofHours(3))..time }
+            .filter { it.time.toJavaInstant() in time.minus(Duration.ofHours(3))..time }
             .sortedBy { it.time }
             .map { it.value }
             .lastOrNull()
@@ -136,14 +138,14 @@ internal object ZambrettiForecaster : Forecaster {
         val zAdjusted = (z + windAdjustment + seasonAdjustment).coerceIn(1.0, 32.0)
 
         val current = WeatherForecast(
-            time.toInstant(),
+            time.toInstant().toKotlinInstant(),
             getCurrentConditions(zAdjusted, dailyTemperatureRange),
             system = getPressureSystem(pressure),
             tendency = tendency
         )
 
         val later = WeatherForecast(
-            time.toInstant().plusHours(12),
+            time.toInstant().plusHours(12).toKotlinInstant(),
             getLaterConditions(zAdjusted, dailyTemperatureRange)
         )
 

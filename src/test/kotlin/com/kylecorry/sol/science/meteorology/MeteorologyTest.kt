@@ -1283,7 +1283,7 @@ class MeteorologyTest {
             vararg conditions: WeatherCondition
         ): WeatherForecast {
             return WeatherForecast(
-                time,
+                time.toKotlinInstant(),
                 conditions.toList(),
                 front,
                 system,

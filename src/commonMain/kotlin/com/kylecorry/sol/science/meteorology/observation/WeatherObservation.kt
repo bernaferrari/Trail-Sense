@@ -3,8 +3,7 @@ package com.kylecorry.sol.science.meteorology.observation
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Speed
-import java.time.Instant
-import kotlin.time.toKotlinInstant
+import kotlin.time.Instant
 
 sealed class WeatherObservation<T>(
     val time: Instant,
@@ -23,7 +22,7 @@ sealed class WeatherObservation<T>(
         WeatherObservation<com.kylecorry.sol.science.meteorology.clouds.CloudGenus?>(time, value)
 
     fun asReading(): Reading<T> {
-        return Reading(value, time.toKotlinInstant())
+        return Reading(value, time)
     }
 
 }
