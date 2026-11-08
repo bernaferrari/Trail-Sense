@@ -23,6 +23,9 @@ class DeviceSensors {
     fun pressure(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.pressure(interval, accuracy)
 
+    fun accelerometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowAccelerometer(acceleration(interval, accuracy), scope)
+
     /** Acceleration including gravity, in meters per second squared. */
     fun acceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.acceleration(interval, accuracy)
