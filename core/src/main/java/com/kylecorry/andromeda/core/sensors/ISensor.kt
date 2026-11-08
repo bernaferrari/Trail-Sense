@@ -3,24 +3,27 @@ package com.kylecorry.andromeda.core.sensors
 import com.kylecorry.luna.topics.ITopic
 import com.kylecorry.luna.topics.Subscriber
 import java.time.Instant
+import kotlin.time.toKotlinInstant
 
-interface ISensor : ITopic {
+interface ISensor : ITopic, Sensor {
 
-    val quality: Quality
+    override val quality: Quality
 
-    val hasValidReading: Boolean
+    override val hasValidReading: Boolean
 
     /**
      * The time of the latest reading, in nanoseconds. 0 if there hasn't been a reading.
      */
-    val eventTimeElapsedNanos: Long
+    override val eventTimeElapsedNanos: Long
 
     /**
      * The wall clock time of the latest reading, or Instant.EPOCH if there hasn't been a reading
      */
     val eventTime: Instant
 
-    fun start(subscriber: Subscriber)
+    override val timestamp: kotlin.time.Instant get() = eventTime.toKotlinInstant()
 
-    fun stop(subscriber: Subscriber?)
+    override fun start(subscriber: Subscriber)
+
+    override fun stop(subscriber: Subscriber?)
 }

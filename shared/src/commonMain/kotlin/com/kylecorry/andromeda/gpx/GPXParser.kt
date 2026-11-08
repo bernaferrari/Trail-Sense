@@ -75,7 +75,7 @@ object GPXParser {
         val name = node.children.firstOrNull { it.tag.lowercase() == "name" }?.text
         val comment = node.children.firstOrNull { it.tag.lowercase() == "cmt" }?.text
         val description = node.children.firstOrNull { it.tag.lowercase() == "desc" }?.text
-        val id = node.children.firstOrNull { it.tag.lowercase() == "number" }?.text?.toLongOrNull()
+        val id = node.children.firstOrNull { it.tag.lowercase() == "number" }?.text?.replace(',', '.')?.toLongOrNull()
         val type = node.children.firstOrNull { it.tag.lowercase() == "type" }?.text
         val extensions = node.children.firstOrNull { it.tag.lowercase() == "extensions" }
         val colorHex = extensions?.children?.firstOrNull { it.tag.lowercase() == "color" }?.text
@@ -101,7 +101,7 @@ object GPXParser {
         val comment = node.children.firstOrNull { it.tag.lowercase() == "cmt" }?.text
         val description = node.children.firstOrNull { it.tag.lowercase() == "desc" }?.text
         val number =
-            node.children.firstOrNull { it.tag.lowercase() == "number" }?.text?.toLongOrNull()
+            node.children.firstOrNull { it.tag.lowercase() == "number" }?.text?.replace(',', '.')?.toLongOrNull()
         val type = node.children.firstOrNull { it.tag.lowercase() == "type" }?.text
         val source = node.children.firstOrNull { it.tag.lowercase() == "src" }?.text
 
@@ -121,15 +121,15 @@ object GPXParser {
             return null
         }
         val lat =
-            if (node.attributes.containsKey("lat")) node.attributes["lat"]?.toDoubleOrNull() else null
+            if (node.attributes.containsKey("lat")) node.attributes["lat"]?.replace(',', '.')?.toDoubleOrNull()?.takeIf { it.isFinite() } else null
         val lon =
-            if (node.attributes.containsKey("lon")) node.attributes["lon"]?.toDoubleOrNull() else null
+            if (node.attributes.containsKey("lon")) node.attributes["lon"]?.replace(',', '.')?.toDoubleOrNull()?.takeIf { it.isFinite() } else null
         val name = node.children.firstOrNull { it.tag.lowercase() == "name" }?.text
         val desc = node.children.firstOrNull { it.tag.lowercase() == "desc" }?.text
         val comment = node.children.firstOrNull { it.tag.lowercase() == "cmt" }?.text
         val type = node.children.firstOrNull { it.tag.lowercase() == "type" }?.text
         val time = node.children.firstOrNull { it.tag.lowercase() == "time" }?.text
-        var ele = node.children.firstOrNull { it.tag.lowercase() == "ele" }?.text?.toFloatOrNull()
+        var ele = node.children.firstOrNull { it.tag.lowercase() == "ele" }?.text?.replace(',', '.')?.toFloatOrNull()?.takeIf { it.isFinite() }
         val symbol = node.children.firstOrNull { it.tag.lowercase() == "sym" }?.text
         val extensions = node.children.firstOrNull { it.tag.lowercase() == "extensions" }
         val group =
@@ -142,7 +142,7 @@ object GPXParser {
             val elevationRegex = Regex("ele=([0-9.]+)")
             val elevationMatch = elevationRegex.find(desc)
             if (elevationMatch != null) {
-                ele = elevationMatch.groupValues[1].toFloatOrNull()
+                ele = elevationMatch.groupValues[1].replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
             }
         }
 
