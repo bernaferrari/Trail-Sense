@@ -17,7 +17,7 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies { api(project(":shared")); implementation(compose.runtime) }
         androidMain.dependencies { implementation(project(":core")); implementation(project(":bitmaps")); implementation(project(":permissions")); implementation(libs.androidx.camera.camera2); implementation(libs.androidx.camera.lifecycle); api("androidx.camera:camera-compose:1.6.2"); implementation(libs.androidx.core.ktx) }
     }
 }

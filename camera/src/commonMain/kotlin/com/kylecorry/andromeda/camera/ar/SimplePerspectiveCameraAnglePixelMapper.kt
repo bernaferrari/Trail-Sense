@@ -1,6 +1,5 @@
 package com.kylecorry.andromeda.camera.ar
 
-import android.graphics.RectF
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.Vector2
@@ -21,7 +20,7 @@ class SimplePerspectiveCameraAnglePixelMapper : CameraAnglePixelMapper {
     override fun getAngle(
         x: Float,
         y: Float,
-        imageRect: RectF,
+        imageRect: ImageBounds,
         fieldOfView: Size
     ): Vector2 {
         // TODO: Inverse perspective?
@@ -31,7 +30,7 @@ class SimplePerspectiveCameraAnglePixelMapper : CameraAnglePixelMapper {
     override fun getPixel(
         angleX: Float,
         angleY: Float,
-        imageRect: RectF,
+        imageRect: ImageBounds,
         fieldOfView: Size,
         distance: Float?
     ): PixelCoordinate {
@@ -43,14 +42,14 @@ class SimplePerspectiveCameraAnglePixelMapper : CameraAnglePixelMapper {
         }
 
         // Perspective matrix multiplication - written out to avoid unnecessary allocations and calculations
-        val fy = imageRect.height() / 2f / Trigonometry.tanDegrees(fieldOfView.height / 2)
-        val fx = imageRect.width() / 2f / Trigonometry.tanDegrees(fieldOfView.width / 2)
+        val fy = imageRect.height / 2f / Trigonometry.tanDegrees(fieldOfView.height / 2)
+        val fx = imageRect.width / 2f / Trigonometry.tanDegrees(fieldOfView.width / 2)
 
         val x = fx * world.x
         val y = fy * world.y
 
-        val screenX = x / world.z + imageRect.centerX()
-        val screenY = -y / world.z + imageRect.centerY()
+        val screenX = x / world.z + imageRect.centerX
+        val screenY = -y / world.z + imageRect.centerY
 
         return PixelCoordinate(screenX, screenY)
     }

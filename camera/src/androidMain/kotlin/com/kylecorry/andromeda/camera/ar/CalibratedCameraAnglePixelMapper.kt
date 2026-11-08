@@ -1,7 +1,6 @@
 package com.kylecorry.andromeda.camera.ar
 
 import android.graphics.Rect
-import android.graphics.RectF
 import com.kylecorry.andromeda.camera.ICamera
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.MathExtensions.toRadians
@@ -38,7 +37,7 @@ class CalibratedCameraAnglePixelMapper(
     override fun getAngle(
         x: Float,
         y: Float,
-        imageRect: RectF,
+        imageRect: ImageBounds,
         fieldOfView: Size
     ): Vector2 {
         // TODO: Figure out how to do this
@@ -111,7 +110,7 @@ class CalibratedCameraAnglePixelMapper(
     override fun getPixel(
         angleX: Float,
         angleY: Float,
-        imageRect: RectF,
+        imageRect: ImageBounds,
         fieldOfView: Size,
         distance: Float?
     ): PixelCoordinate {
@@ -157,10 +156,10 @@ class CalibratedCameraAnglePixelMapper(
 
         // Unzoom the output image
         val zoom = getZoom()
-        val rectLeft = imageRect.centerX() - zoom * imageRect.width() / 2f
-        val rectWidth = zoom * imageRect.width()
-        val rectTop = imageRect.centerY() - zoom * imageRect.height() / 2f
-        val rectHeight = zoom * imageRect.height()
+        val rectLeft = imageRect.centerX - zoom * imageRect.width / 2f
+        val rectWidth = zoom * imageRect.width
+        val rectTop = imageRect.centerY - zoom * imageRect.height / 2f
+        val rectHeight = zoom * imageRect.height
 
         // Scale to the output image dimensions
         val pctX = activeX / activeArray.width()

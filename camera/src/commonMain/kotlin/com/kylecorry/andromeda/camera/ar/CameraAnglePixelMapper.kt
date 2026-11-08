@@ -1,6 +1,5 @@
 package com.kylecorry.andromeda.camera.ar
 
-import android.graphics.RectF
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.geometry.Size
@@ -17,7 +16,7 @@ interface CameraAnglePixelMapper {
     fun getAngle(
         x: Float,
         y: Float,
-        imageRect: RectF,
+        imageRect: ImageBounds,
         fieldOfView: Size
     ): Vector2
 
@@ -33,7 +32,7 @@ interface CameraAnglePixelMapper {
     fun getPixel(
         angleX: Float,
         angleY: Float,
-        imageRect: RectF,
+        imageRect: ImageBounds,
         fieldOfView: Size,
         distance: Float? = null
     ): PixelCoordinate
