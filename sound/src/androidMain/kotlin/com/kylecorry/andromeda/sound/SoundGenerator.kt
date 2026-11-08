@@ -12,15 +12,8 @@ class SoundGenerator {
         sampleGenerator: (i: Int) -> Double
     ): AudioTrack {
         // Adapted from https://stackoverflow.com/questions/2413426/playing-an-arbitrary-tone-with-android
-        val size = (durationSeconds * sampleRate).toInt()
-        val sound = ByteArray(2 * size)
-
-        for (i in 0 until size) {
-            val sample = sampleGenerator(i)
-            val pcmSound = (sample * 32767).toInt()
-            sound[i * 2] = (pcmSound and 0x00ff).toByte()
-            sound[i * 2 + 1] = ((pcmSound and 0xff00) shr 8).toByte()
-        }
+        val sound = generatePcm16(sampleRate, durationSeconds, sampleGenerator)
+        val size = sound.size / 2
 
         val track = AudioTrack.Builder()
             .setAudioAttributes(
