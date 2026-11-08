@@ -2,8 +2,8 @@ package com.kylecorry.andromeda.pickers.material
 
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.kylecorry.sol.time.Time.toZonedDateTime
 import java.time.LocalDate
+import java.time.ZoneId
 
 object MaterialPickers {
 
@@ -14,7 +14,7 @@ object MaterialPickers {
         onDatePick: (date: LocalDate?) -> Unit
     ) {
         val builder = MaterialDatePicker.Builder.datePicker()
-            .setSelection(default.atStartOfDay().toZonedDateTime().toEpochSecond() * 1000)
+            .setSelection(default.atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000)
 
         if (dayViewDecorator != null) {
             builder.setDayViewDecorator(dayViewDecorator.toMaterialDayViewDecorator())
