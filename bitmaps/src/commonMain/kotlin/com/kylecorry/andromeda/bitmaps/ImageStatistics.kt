@@ -3,8 +3,6 @@ package com.kylecorry.andromeda.bitmaps
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-enum class ImageChannel { Red, Green, Blue, Alpha, RgbAverage }
-
 data class ChannelStatistics(val minimum: Double, val maximum: Double, val mean: Double, val standardDeviation: Double)
 
 data class ImagePoint(val x: Double, val y: Double)
@@ -12,16 +10,16 @@ data class ImagePoint(val x: Double, val y: Double)
 /** Bounds use inclusive left/top and exclusive right/bottom coordinates. */
 data class ImageBounds(val left: Int, val top: Int, val right: Int, val bottom: Int)
 
-private fun Int.channelValue(channel: ImageChannel): Double = when (channel) {
-    ImageChannel.Red -> ((this ushr 16) and 255).toDouble()
-    ImageChannel.Green -> ((this ushr 8) and 255).toDouble()
-    ImageChannel.Blue -> (this and 255).toDouble()
-    ImageChannel.Alpha -> ((this ushr 24) and 255).toDouble()
-    ImageChannel.RgbAverage -> (((this ushr 16) and 255) + ((this ushr 8) and 255) + (this and 255)) / 3.0
+private fun Int.channelValue(channel: ColorChannel?): Double = when (channel) {
+    ColorChannel.Red -> ((this ushr 16) and 255).toDouble()
+    ColorChannel.Green -> ((this ushr 8) and 255).toDouble()
+    ColorChannel.Blue -> (this and 255).toDouble()
+    ColorChannel.Alpha -> ((this ushr 24) and 255).toDouble()
+    null -> (((this ushr 16) and 255) + ((this ushr 8) and 255) + (this and 255)) / 3.0
 }
 
 /** Computes population statistics for one channel over the image. */
-fun PixelImage.statistics(channel: ImageChannel = ImageChannel.RgbAverage): ChannelStatistics {
+fun PixelImage.statistics(channel: ColorChannel? = null): ChannelStatistics {
     var minimum = Double.POSITIVE_INFINITY
     var maximum = Double.NEGATIVE_INFINITY
     var mean = 0.0
@@ -38,7 +36,7 @@ fun PixelImage.statistics(channel: ImageChannel = ImageChannel.RgbAverage): Chan
 }
 
 /** Returns the intensity-weighted center, or the origin for an entirely black channel. */
-fun PixelImage.moment(channel: ImageChannel = ImageChannel.RgbAverage): ImagePoint {
+fun PixelImage.moment(channel: ColorChannel? = null): ImagePoint {
     var total = 0.0
     var x = 0.0
     var y = 0.0
@@ -54,7 +52,7 @@ fun PixelImage.moment(channel: ImageChannel = ImageChannel.RgbAverage): ImagePoi
 /** Finds four-connected regions at or above [threshold], largest bounding boxes first. */
 fun PixelImage.findBlobs(
     threshold: Double,
-    channel: ImageChannel = ImageChannel.RgbAverage,
+    channel: ColorChannel? = null,
     maxBlobs: Int = Int.MAX_VALUE,
 ): List<ImageBounds> {
     require(threshold.isFinite() && maxBlobs >= 0)
