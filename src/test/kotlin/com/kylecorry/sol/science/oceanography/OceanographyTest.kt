@@ -7,8 +7,8 @@ import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.science.oceanography.waterlevel.*
-import com.kylecorry.sol.time.Time
-import com.kylecorry.sol.time.Time.roundNearestMinute
+import com.kylecorry.sol.time.JvmTime
+import com.kylecorry.sol.time.JvmTime.roundNearestMinute
 import com.kylecorry.sol.units.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -190,9 +190,9 @@ internal class OceanographyTest {
         val utcLowLunitidalInterval =
             Oceanography.getMeanLunitidalInterval(lows.map { it.toInstant().toKotlinInstant() }, timeZone = lows.first().zone.toKotlinTimeZone())?.toJavaDuration() ?: Duration.ZERO
 
-        println("Local lunitidal interval: ${Time.hours(localLunitidalInterval).roundPlaces(2)}")
-        println("UTC lunitidal interval: ${Time.hours(utcLunitidalInterval).roundPlaces(2)}")
-        println("UTC low lunitidal interval: ${Time.hours(utcLowLunitidalInterval).roundPlaces(2)}")
+        println("Local lunitidal interval: ${JvmTime.hours(localLunitidalInterval).roundPlaces(2)}")
+        println("UTC lunitidal interval: ${JvmTime.hours(utcLunitidalInterval).roundPlaces(2)}")
+        println("UTC low lunitidal interval: ${JvmTime.hours(utcLowLunitidalInterval).roundPlaces(2)}")
         println()
 
         val calculators = listOf(

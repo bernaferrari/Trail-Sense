@@ -4,9 +4,9 @@ import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.algebra.Algebra
 import com.kylecorry.sol.science.astronomy.corrections.EclipticObliquity
 import com.kylecorry.sol.science.astronomy.corrections.LongitudinalNutation
-import com.kylecorry.sol.time.Time
-import com.kylecorry.sol.time.Time.toUTCLocal
-import com.kylecorry.sol.time.Time.utc
+import com.kylecorry.sol.time.JvmTime
+import com.kylecorry.sol.time.JvmTime.toUTCLocal
+import com.kylecorry.sol.time.JvmTime.utc
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlin.time.toKotlinInstant
 import kotlin.time.toJavaInstant
@@ -114,7 +114,7 @@ fun Duration.toRadians(): Double {
 }
 
 fun degreesToTime(degrees: Double): Duration {
-    return Time.hours(degrees / 15)
+    return JvmTime.hours(degrees / 15)
 }
 
 fun dmsToTime(degrees: Int, minutes: Int, seconds: Number): Duration {

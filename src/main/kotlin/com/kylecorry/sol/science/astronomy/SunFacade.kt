@@ -15,8 +15,8 @@ import com.kylecorry.sol.science.astronomy.units.fromJulianDay
 import com.kylecorry.sol.science.astronomy.units.toJulianDay
 import com.kylecorry.sol.science.astronomy.units.toLocal
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
-import com.kylecorry.sol.time.Time.atEndOfDay
-import com.kylecorry.sol.time.Time.atStartOfDay
+import com.kylecorry.sol.time.JvmTime.atEndOfDay
+import com.kylecorry.sol.time.JvmTime.atStartOfDay
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import java.time.Duration

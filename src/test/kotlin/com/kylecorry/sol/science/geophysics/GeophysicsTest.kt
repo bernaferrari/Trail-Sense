@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.geophysics
 
 import assertk.assertThat
 import assertk.assertions.isCloseTo
-import com.kylecorry.sol.time.Time.toUTC
+import com.kylecorry.sol.time.JvmTime.toUTC
 import com.kylecorry.sol.units.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

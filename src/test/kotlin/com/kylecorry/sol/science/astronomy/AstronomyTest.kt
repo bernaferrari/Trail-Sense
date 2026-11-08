@@ -16,7 +16,7 @@ import com.kylecorry.sol.science.shared.Season
 import com.kylecorry.sol.tests.assertDate
 import com.kylecorry.sol.tests.assertDuration
 import com.kylecorry.sol.tests.parametrized
-import com.kylecorry.sol.time.Time.duration
+import com.kylecorry.sol.time.JvmTime.duration
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.CoordinateLongConverter
 import com.kylecorry.sol.units.Distance

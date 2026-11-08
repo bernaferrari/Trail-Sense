@@ -1,7 +1,7 @@
 package com.kylecorry.sol.science.astronomy.units
 
 import com.kylecorry.sol.math.algebra.Algebra
-import com.kylecorry.sol.time.Time
+import com.kylecorry.sol.time.JvmTime
 import java.time.LocalDate
 
 internal fun GreenwichSiderealTime.toUniversalTime(date: LocalDate): UniversalTime {
@@ -28,6 +28,6 @@ internal fun GreenwichSiderealTime.toUniversalTime(date: LocalDate): UniversalTi
 
         val ut = 0.99727 * a
 
-        val duration = Time.hours(ut)
+        val duration = JvmTime.hours(ut)
         return UniversalTime.of(date, duration.toLocalTime())
     }

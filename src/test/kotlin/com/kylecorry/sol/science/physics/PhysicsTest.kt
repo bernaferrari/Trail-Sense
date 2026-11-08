@@ -60,22 +60,22 @@ class PhysicsTest {
         // .308 winchester, BC 0.474
         val expectedTrajectory = listOf(
             Triple(
-                0f, // Time
+                0f, // JvmTime
                 Vector2(0f, -1.5f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             ),
             Triple(
-                0.12f, // Time
+                0.12f, // JvmTime
                 Vector2(100f, 0f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             ),
             Triple(
-                0.24f, // Time
+                0.24f, // JvmTime
                 Vector2(200f, -4.1f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             ),
             Triple(
-                0.38f, // Time
+                0.38f, // JvmTime
                 Vector2(300f, -14.8f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             )
@@ -104,7 +104,7 @@ class PhysicsTest {
 
             assertEquals(
                 expected.first, actual.time, 0.05f,
-                "Time did not match for $expected"
+                "JvmTime did not match for $expected"
             )
 
             // These values are so high because drag is not accounted for yet

@@ -18,7 +18,7 @@ import java.time.temporal.Temporal
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
-object Time {
+object JvmTime {
 
     fun hours(hours: Double): Duration {
         val minutes = hours * 60

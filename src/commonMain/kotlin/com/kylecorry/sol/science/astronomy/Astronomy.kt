@@ -23,7 +23,7 @@ import com.kylecorry.sol.science.astronomy.stars.StarReading
 import com.kylecorry.sol.science.astronomy.stars.StarLocationCalculator
 import com.kylecorry.sol.science.astronomy.stars.PlateSolver
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
-import com.kylecorry.sol.time.TimeZoneLocations
+import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.science.astronomy.sun.SolarRadiationCalculator
 import com.kylecorry.sol.science.geophysics.VerticalDeflectionModel
 import com.kylecorry.sol.units.Bearing
@@ -186,8 +186,7 @@ object Astronomy {
                    minMatches: Int = 5, minMagnitude: Float = 4f) = PlateSolver(
         tolerance, minMatches, minMagnitude, if (approximateLocation == null) PlateSolver.UNKNOWN_LOCATION_ZENITH_OFFSET
         else PlateSolver.DEFAULT_MAX_ZENITH_OFFSET
-    ).solve(readings, time, approximateLocation ?: TimeZoneLocations.getLocation(timeZone.id)
-        ?: Coordinate(0.0, timeZone.offsetAt(time).totalSeconds / 240.0))
+    ).solve(readings, time, approximateLocation ?: Time.getLocationFromTimeZone(timeZone))
 
     private fun nextEvent(time: Instant, zone: TimeZone, rise: Boolean,
                           events: (Instant) -> RiseSetTransitTimes): Instant? {

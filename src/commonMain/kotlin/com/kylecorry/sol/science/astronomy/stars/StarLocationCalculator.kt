@@ -14,7 +14,7 @@ import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.astronomy.units.SiderealCalculator
 import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.Geofence
-import com.kylecorry.sol.time.TimeZoneLocations
+import com.kylecorry.sol.time.Time
 import kotlinx.datetime.offsetAt
 import com.kylecorry.sol.units.Coordinate
 import kotlin.math.cos
@@ -217,8 +217,7 @@ internal class StarLocationCalculator {
     }
 
     private fun locationFromZone(reading: StarReading): Coordinate =
-        TimeZoneLocations.getLocation(reading.timeZone.id)
-            ?: Coordinate(0.0, reading.timeZone.offsetAt(reading.time).totalSeconds / 240.0)
+        Time.getLocationFromTimeZone(reading.timeZone)
 
     private fun constrainLatitude(latitude: Double): Double {
         return latitude.coerceIn(-90.0, 90.0)

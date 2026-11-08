@@ -1,25 +1,25 @@
 package com.kylecorry.sol.time
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.time.Time.atEndOfDay
-import com.kylecorry.sol.time.Time.atStartOfDay
-import com.kylecorry.sol.time.Time.daysUntil
-import com.kylecorry.sol.time.Time.duration
-import com.kylecorry.sol.time.Time.getClosestFutureTime
-import com.kylecorry.sol.time.Time.getClosestPastTime
-import com.kylecorry.sol.time.Time.getClosestTime
-import com.kylecorry.sol.time.Time.hoursUntil
-import com.kylecorry.sol.time.Time.isInPast
-import com.kylecorry.sol.time.Time.isOlderThan
-import com.kylecorry.sol.time.Time.middle
-import com.kylecorry.sol.time.Time.plusHours
-import com.kylecorry.sol.time.Time.plusMillis
-import com.kylecorry.sol.time.Time.roundNearestMinute
-import com.kylecorry.sol.time.Time.toEpochMillis
-import com.kylecorry.sol.time.Time.toUTC
-import com.kylecorry.sol.time.Time.toUTCLocal
-import com.kylecorry.sol.time.Time.toZonedDateTime
-import com.kylecorry.sol.time.Time.utc
+import com.kylecorry.sol.time.JvmTime.atEndOfDay
+import com.kylecorry.sol.time.JvmTime.atStartOfDay
+import com.kylecorry.sol.time.JvmTime.daysUntil
+import com.kylecorry.sol.time.JvmTime.duration
+import com.kylecorry.sol.time.JvmTime.getClosestFutureTime
+import com.kylecorry.sol.time.JvmTime.getClosestPastTime
+import com.kylecorry.sol.time.JvmTime.getClosestTime
+import com.kylecorry.sol.time.JvmTime.hoursUntil
+import com.kylecorry.sol.time.JvmTime.isInPast
+import com.kylecorry.sol.time.JvmTime.isOlderThan
+import com.kylecorry.sol.time.JvmTime.middle
+import com.kylecorry.sol.time.JvmTime.plusHours
+import com.kylecorry.sol.time.JvmTime.plusMillis
+import com.kylecorry.sol.time.JvmTime.roundNearestMinute
+import com.kylecorry.sol.time.JvmTime.toEpochMillis
+import com.kylecorry.sol.time.JvmTime.toUTC
+import com.kylecorry.sol.time.JvmTime.toUTCLocal
+import com.kylecorry.sol.time.JvmTime.toZonedDateTime
+import com.kylecorry.sol.time.JvmTime.utc
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import org.junit.jupiter.api.Assertions.*
@@ -43,7 +43,7 @@ class TimeTest {
     )
     fun hours(hours: Double, expectedStr: String) {
         val expected = Duration.parse(expectedStr)
-        val actual = Time.hours(hours)
+        val actual = JvmTime.hours(hours)
         assertDurationEquals(expected, actual, Duration.ofSeconds(1))
     }
 
@@ -165,7 +165,7 @@ class TimeTest {
         val actual = duration(1, 2, 3)
         assertEquals(expected, actual)
 
-        assertEquals(Duration.ZERO, Time.duration())
+        assertEquals(Duration.ZERO, JvmTime.duration())
     }
 
     @Test
@@ -197,7 +197,7 @@ class TimeTest {
         val zone = ZoneId.of("America/New_York")
         val year = 2022
 
-        val times = Time.getDaylightSavingsTransitions(zone, year)
+        val times = JvmTime.getDaylightSavingsTransitions(zone, year)
         assertEquals(
             times, listOf(
                 zdt(2022, Month.MARCH, 13, 2, zone = zone) to Duration.ofHours(1),
@@ -211,7 +211,7 @@ class TimeTest {
         val zone = ZoneId.of("Asia/Shanghai")
         val year = 2022
 
-        val times = Time.getDaylightSavingsTransitions(zone, year)
+        val times = JvmTime.getDaylightSavingsTransitions(zone, year)
         assertEquals(
             times, listOf<Pair<ZonedDateTime, Duration>>()
         )
@@ -220,19 +220,19 @@ class TimeTest {
     @Test
     fun isDaylightSavings() {
         val time = zdt(2022, Month.MARCH, 13, 2, zone = ZoneId.of("America/New_York"))
-        assertTrue(Time.isDaylightSavings(time))
+        assertTrue(JvmTime.isDaylightSavings(time))
 
         val time2 = zdt(2022, Month.NOVEMBER, 6, 2, zone = ZoneId.of("America/New_York"))
-        assertFalse(Time.isDaylightSavings(time2))
+        assertFalse(JvmTime.isDaylightSavings(time2))
     }
 
     @Test
     fun getDaylightSavings() {
         val time = zdt(2022, Month.MARCH, 13, 2, zone = ZoneId.of("America/New_York"))
-        assertEquals(Duration.ofHours(1), Time.getDaylightSavings(time))
+        assertEquals(Duration.ofHours(1), JvmTime.getDaylightSavings(time))
 
         val time2 = zdt(2022, Month.NOVEMBER, 6, 2, zone = ZoneId.of("America/New_York"))
-        assertEquals(Duration.ofHours(0), Time.getDaylightSavings(time2))
+        assertEquals(Duration.ofHours(0), JvmTime.getDaylightSavings(time2))
     }
 
     @Test
@@ -358,7 +358,7 @@ class TimeTest {
     fun hoursBetween() {
         val start = zdt(2020, Month.JANUARY, 1, 12)
         val end = zdt(2020, Month.JANUARY, 1, 13)
-        val actual = Time.hoursBetween(start, end)
+        val actual = JvmTime.hoursBetween(start, end)
         assertEquals(1f, actual)
     }
 
@@ -366,7 +366,7 @@ class TimeTest {
     fun getReadingsDate() {
         val date = LocalDate.of(2020, Month.JANUARY, 1)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(date, ZoneId.systemDefault(), step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(date, ZoneId.systemDefault(), step) { it.toEpochSecond() }
         assertEquals(25, readings.size)
         val end = date
             .atTime(LocalTime.MAX)
@@ -386,7 +386,7 @@ class TimeTest {
         val date = LocalDate.of(2020, Month.JANUARY, 1)
         val step = Duration.ofHours(1)
         val readings =
-            Time.getReadings(date, ZoneId.systemDefault(), step, false) { it.toEpochSecond() }
+            JvmTime.getReadings(date, ZoneId.systemDefault(), step, false) { it.toEpochSecond() }
         assertEquals(24, readings.size)
         val end = date
             .atTime(23, 0)
@@ -406,7 +406,7 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 2, 30)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(start, end, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step) { it.toEpochSecond() }
 
         val expected = listOf(
             start,
@@ -424,7 +424,7 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 2, 30)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(start, end, step, false) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step, false) { it.toEpochSecond() }
 
         val expected = listOf(
             start,
@@ -440,7 +440,7 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 2)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(start, end, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step) { it.toEpochSecond() }
 
         val expected = listOf(start, start.plusHours(1), end)
 
@@ -451,7 +451,7 @@ class TimeTest {
     fun getReadingsStartEqualsEnd() {
         val time = zdt(2020, Month.JANUARY, 1, 0)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(time, time, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(time, time, step) { it.toEpochSecond() }
 
         assertEquals(listOf(time.toInstant()), readings.map { it.time.toJavaInstant() })
     }
@@ -460,7 +460,7 @@ class TimeTest {
     fun getReadingsNoStepWithAlwaysIncludeEnd() {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 23)
-        val readings = Time.getReadings(start, end, Duration.ZERO, true) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, Duration.ZERO, true) { it.toEpochSecond() }
         assertEquals(0, readings.size)
     }
 
@@ -469,7 +469,7 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 23)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(start, end, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step) { it.toEpochSecond() }
         assertEquals(24, readings.size)
         val startInstant = start.toInstant()
         val endInstant = end.toInstant()
@@ -484,7 +484,7 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2019, Month.DECEMBER, 30, 0)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(start, end, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step) { it.toEpochSecond() }
         assertEquals(0, readings.size)
     }
 
@@ -493,7 +493,7 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 23)
         val step = Duration.ZERO
-        val readings = Time.getReadings(start, end, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step) { it.toEpochSecond() }
         assertEquals(0, readings.size)
     }
 
@@ -502,14 +502,14 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 23)
         val step = Duration.ofHours(-1)
-        val readings = Time.getReadings(start, end, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step) { it.toEpochSecond() }
         assertEquals(0, readings.size)
     }
 
     @Test
     fun getYearlyValues() {
         val year = 2020
-        val values = Time.getYearlyValues(year) { it.dayOfYear.toLong() }
+        val values = JvmTime.getYearlyValues(year) { it.dayOfYear.toLong() }
         assertEquals(366, values.size)
         assertEquals(LocalDate.of(year, Month.JANUARY, 1) to 1L, values.first())
         assertEquals(LocalDate.of(year, Month.DECEMBER, 31) to 366L, values.last())
@@ -520,7 +520,7 @@ class TimeTest {
         val start = zdt(2020, Month.JANUARY, 1, 0)
         val end = zdt(2020, Month.JANUARY, 1, 23)
         val step = Duration.ofHours(1)
-        val readings = Time.getReadings(start, end, step) { it.toEpochSecond() }
+        val readings = JvmTime.getReadings(start, end, step) { it.toEpochSecond() }
         val duration = readings.duration()
         assertEquals(Duration.ofHours(23), duration)
 
@@ -619,8 +619,8 @@ class TimeTest {
         "-20, -1.3333",
     )
     fun getSolarTimeOffset(longitude: Double, offset: Double) {
-        val expected = Time.hours(offset)
-        assertDurationEquals(expected, Time.getSolarTimeOffset(longitude), Duration.ofMinutes(1))
+        val expected = JvmTime.hours(offset)
+        assertDurationEquals(expected, JvmTime.getSolarTimeOffset(longitude), Duration.ofMinutes(1))
     }
 
     @ParameterizedTest
@@ -640,7 +640,7 @@ class TimeTest {
         "-1.3333, -20",
     )
     fun getLongitudeFromSolarTimeOffset(offset: Double, longitude: Double) {
-        assertEquals(longitude, Time.getLongitudeFromSolarTimeOffset(Time.hours(offset)), 0.001)
+        assertEquals(longitude, JvmTime.getLongitudeFromSolarTimeOffset(JvmTime.hours(offset)), 0.001)
     }
 
     @ParameterizedTest
@@ -663,7 +663,7 @@ class TimeTest {
     )
     fun getApproximateTimeZone(longitude: Double, offset: String) {
         val expected = ZoneId.of(offset)
-        val actual = Time.getApproximateTimeZone(Coordinate(0.0, longitude))
+        val actual = JvmTime.getApproximateTimeZone(Coordinate(0.0, longitude))
         assertEquals(expected, actual)
     }
 

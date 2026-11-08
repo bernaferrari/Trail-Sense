@@ -1,10 +1,10 @@
 package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.time.Time.atEndOfDay
-import com.kylecorry.sol.time.Time.atStartOfDay
-import com.kylecorry.sol.time.Time.getClosestFutureTime
-import com.kylecorry.sol.time.Time.getClosestPastTime
+import com.kylecorry.sol.time.JvmTime.atEndOfDay
+import com.kylecorry.sol.time.JvmTime.atStartOfDay
+import com.kylecorry.sol.time.JvmTime.getClosestFutureTime
+import com.kylecorry.sol.time.JvmTime.getClosestPastTime
 import com.kylecorry.sol.units.Coordinate
 import java.time.Duration
 import java.time.ZonedDateTime

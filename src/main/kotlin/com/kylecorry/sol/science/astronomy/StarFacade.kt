@@ -8,7 +8,7 @@ import com.kylecorry.sol.science.astronomy.stars.StarLocationCalculator
 import com.kylecorry.sol.science.astronomy.stars.StarReading
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
-import com.kylecorry.sol.time.Time
+import com.kylecorry.sol.time.JvmTime
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -61,7 +61,7 @@ internal object StarFacade {
         return PlateSolver(tolerance, minMatches, minMagnitude, maxZenithOffset).solve(
             readings,
             time.toInstant().toKotlinInstant(),
-            approximateLocation ?: Time.getLocationFromTimeZone(time.zone)
+            approximateLocation ?: JvmTime.getLocationFromTimeZone(time.zone)
         )
     }
 
