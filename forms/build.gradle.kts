@@ -23,7 +23,6 @@ kotlin {
             api(compose.foundation)
             api(compose.material3)
         }
-        androidMain.dependencies { api(project(":forms-android")) }
     }
 }
 group = "com.kylecorry.andromeda"

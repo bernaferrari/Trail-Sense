@@ -23,23 +23,26 @@ fun FormColumn(modifier: Modifier = Modifier, scrollable: Boolean = false, conte
 fun FormTextField(
     value: String, onValueChange: (String) -> Unit, label: String,
     modifier: Modifier = Modifier, placeholder: String? = null,
-    enabled: Boolean = true, singleLine: Boolean = true
+    enabled: Boolean = true, singleLine: Boolean = true, error: String? = null
 ) {
     OutlinedTextField(
         value = value, onValueChange = onValueChange, modifier = modifier.fillMaxWidth(),
         label = { Text(label) }, placeholder = placeholder?.let { { Text(it) } },
-        enabled = enabled, singleLine = singleLine
+        enabled = enabled, singleLine = singleLine, isError = error != null,
+        supportingText = error?.let { { Text(it) } }
     )
 }
 
 @Composable
 fun FormNumberField(
     value: String, onValueChange: (String) -> Unit, label: String,
-    modifier: Modifier = Modifier, allowDecimals: Boolean = true, allowNegative: Boolean = true, enabled: Boolean = true
+    modifier: Modifier = Modifier, allowDecimals: Boolean = true, allowNegative: Boolean = false,
+    enabled: Boolean = true, placeholder: String? = null, error: String? = null
 ) {
     OutlinedTextField(
         value = value, onValueChange = onValueChange, modifier = modifier.fillMaxWidth(),
-        label = { Text(label) }, enabled = enabled, singleLine = true,
+        label = { Text(label) }, placeholder = placeholder?.let { { Text(it) } },
+        enabled = enabled, singleLine = true, isError = error != null, supportingText = error?.let { { Text(it) } },
         keyboardOptions = KeyboardOptions(keyboardType = if (allowNegative) KeyboardType.Text else if (allowDecimals) KeyboardType.Decimal else KeyboardType.Number)
     )
 }
@@ -84,8 +87,8 @@ fun <T> FormDropdown(
 }
 
 @Composable
-fun FormButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
-    Button(onClick = onClick, modifier = modifier, enabled = enabled) { Text(label) }
+fun FormButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, colors: ButtonColors = ButtonDefaults.buttonColors()) {
+    Button(onClick = onClick, modifier = modifier, enabled = enabled, colors = colors) { Text(label) }
 }
 
 @Composable
