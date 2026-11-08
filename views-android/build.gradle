@@ -35,7 +35,6 @@ android {
 dependencies {
     implementation project(':core')
     implementation project(':canvas')
-    implementation project(':pickers')
     implementation libs.androidx.core.ktx
     implementation libs.androidx.lifecycle.runtime.ktx
     implementation libs.flexbox
