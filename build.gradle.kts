@@ -19,7 +19,7 @@ plugins {
 }
 
 subprojects {
-    if (name == "shared" || name == "device" || name == "storage" || name == "compression") return@subprojects
+    if (name == "shared" || name == "device" || name == "storage" || name == "compression" || name == "csv") return@subprojects
     val artifactId = project.name
 
     plugins.apply("com.android.library")
