@@ -20,7 +20,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":speech"))
-            implementation(compose.runtime)
+            api(compose.runtime)
         }
         androidMain.dependencies { implementation(compose.ui) }
         val desktopAppleMain by creating { dependsOn(commonMain.get()) }
