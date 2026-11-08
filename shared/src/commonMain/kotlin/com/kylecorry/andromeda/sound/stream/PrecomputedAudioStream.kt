@@ -44,8 +44,8 @@ class PrecomputedAudioStream(
                 val norm = i / blendSamples.toFloat()
                 val startVal = buffer[i]
                 val endVal = buffer[totalSamples - blendSamples + i]
-                val a = cos(norm * Math.PI / 2)
-                val b = sin(norm * Math.PI / 2)
+                val a = cos(norm * kotlin.math.PI / 2)
+                val b = sin(norm * kotlin.math.PI / 2)
                 buffer[i] = (a * endVal + b * startVal).toFloat()
             }
 

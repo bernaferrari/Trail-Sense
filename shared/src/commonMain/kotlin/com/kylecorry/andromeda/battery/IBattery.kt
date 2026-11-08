@@ -1,9 +1,9 @@
 package com.kylecorry.andromeda.battery
 
-import com.kylecorry.andromeda.core.sensors.ISensor
-import com.kylecorry.andromeda.core.sensors.IThermometer
+import com.kylecorry.andromeda.core.sensors.Sensor
+import com.kylecorry.andromeda.core.sensors.Thermometer
 
-interface IBattery : ISensor, IThermometer {
+interface IBattery : Sensor, Thermometer {
     val percent: Float
     val capacity: Float
     val maxCapacity: Float
