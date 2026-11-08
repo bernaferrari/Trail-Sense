@@ -17,7 +17,10 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {
+            api(project(":shared"))
+            api("io.github.yuroyami:kitepdf-pdf:0.13.0")
+        }
         androidMain.dependencies { implementation(project(":core")); implementation(project(":wkt")); implementation(project(":compression")); implementation(libs.androidx.core.ktx) }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
