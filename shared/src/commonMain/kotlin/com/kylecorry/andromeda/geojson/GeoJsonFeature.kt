@@ -1,12 +1,11 @@
 package com.kylecorry.andromeda.geojson
 
-import com.google.gson.annotations.SerializedName
 
 data class GeoJsonFeature(
-    @SerializedName(FIELD_ID) val id: Any?,
-    @SerializedName(FIELD_GEOMETRY) val geometry: GeoJsonGeometry?,
-    @SerializedName(FIELD_PROPERTIES) val properties: Map<String, Any?>? = null,
-    @SerializedName(FIELD_BBOX) override val boundingBox: GeoJsonBoundingBox? = null
+    val id: Any?,
+    val geometry: GeoJsonGeometry?,
+    val properties: Map<String, Any?>? = null,
+    override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonObject {
     override val type = TYPE
 

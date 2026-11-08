@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    api project(':shared')
     implementation project(':json')
     api libs.sol
     implementation libs.gson
