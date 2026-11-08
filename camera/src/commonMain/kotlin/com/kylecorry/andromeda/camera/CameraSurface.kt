@@ -46,6 +46,12 @@ interface PhotoCamera {
     val manualFocusSupported: Boolean
     /** Sets a lens position from 0 (near) to 1 (far), or null to resume autofocus. */
     fun setFocus(position: Float?)
+    /** Whether focus or exposure metering can be targeted within the preview. */
+    val meteringSupported: Boolean
+    /** Targets a preview point using normalized coordinates (0..1), measured from the top left. */
+    fun focusAt(x: Float, y: Float)
+    /** Clears targeted focus and metering. */
+    fun resetFocusAndMetering()
     /** Captures an encoded image. */
     suspend fun capture(): ByteArray
     fun setZoom(ratio: Float)

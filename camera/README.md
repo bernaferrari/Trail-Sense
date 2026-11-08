@@ -13,3 +13,5 @@ The calibrated mapper supports both angle-to-pixel and pixel-to-angle conversion
 `manualFocusSupported` indicates whether the camera can set its lens position. `setFocus(position)` selects a position from near (0) to far (1); these positions do not represent fixed physical distances. Pass null to resume autofocus. Desktop reports manual focus as unavailable.
 
 `manualExposure` reports supported shutter-duration and ISO ranges when the camera supports manual exposure. `setManualExposure(duration, iso)` sets both together; pass null for both to return to automatic exposure. Desktop reports manual exposure as unavailable.
+
+When `meteringSupported` is true, `focusAt(x, y)` targets a point in the displayed preview using normalized coordinates from its top-left corner. `resetFocusAndMetering()` clears the target; Android restores its previous behavior and iOS selects continuous automatic focus and exposure where supported. Android also clears the target automatically after its platform timeout. Desktop does not expose this control.

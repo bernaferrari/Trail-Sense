@@ -363,6 +363,28 @@ class Camera(
         camera?.cameraControl?.enableTorch(isOn)
     }
 
+    private fun sharedMeteringAction(x: Float, y: Float): FocusMeteringAction {
+        val size = checkNotNull(previewState?.size) { "Camera preview is unavailable" }
+        check(size.width > 0 && size.height > 0) { "Camera preview is not laid out" }
+        val rect = checkNotNull(getPreviewRect(false)) { "Camera preview is unavailable" }
+        val point = SurfaceOrientedMeteringPointFactory(rect.width(), rect.height())
+            .createPoint(x * size.width - rect.left, y * size.height - rect.top)
+        return FocusMeteringAction.Builder(point).build()
+    }
+
+    internal val sharedMeteringSupported: Boolean
+        get() = try {
+            camera?.cameraInfo?.isFocusMeteringSupported(sharedMeteringAction(0.5f, 0.5f)) == true
+        } catch (_: IllegalStateException) { false }
+
+    internal fun focusAt(x: Float, y: Float) {
+        require(x.isFinite() && x in 0f..1f && y.isFinite() && y in 0f..1f)
+        val current = checkNotNull(camera) { "Camera is unavailable" }
+        val action = sharedMeteringAction(x, y)
+        check(current.cameraInfo.isFocusMeteringSupported(action)) { "Focus and metering are unavailable" }
+        current.cameraControl.startFocusAndMetering(action)
+    }
+
     override fun stopFocusAndMetering() {
         tryOrNothing {
             camera?.cameraControl?.cancelFocusAndMetering()

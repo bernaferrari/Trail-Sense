@@ -56,6 +56,9 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
             override fun setManualExposure(duration: kotlin.time.Duration?, iso: Int?) = camera.setSharedManualExposure(duration, iso)
             override val manualFocusSupported: Boolean get() = camera.manualFocusSupported
             override fun setFocus(position: Float?) = camera.setSharedFocus(position)
+            override val meteringSupported: Boolean get() = camera.sharedMeteringSupported
+            override fun focusAt(x: Float, y: Float) = camera.focusAt(x, y)
+            override fun resetFocusAndMetering() = camera.stopFocusAndMetering()
             override suspend fun capture(): ByteArray {
                 val output = ByteArrayOutputStream()
                 check(camera.takePhoto(output)) { "Camera capture failed" }
