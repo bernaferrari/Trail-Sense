@@ -1,5 +1,6 @@
 package com.kylecorry.sol.science.astronomy.eclipse.lunar
 
+import com.kylecorry.sol.science.astronomy.eclipse.EclipseResult
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.arithmetic.Arithmetic.power
 import com.kylecorry.sol.math.geometry.Circle
@@ -15,12 +16,8 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-internal data class LunarEclipseResult(
-    val start: Instant, val end: Instant, val magnitude: Float, val obscuration: Float, val maximum: Instant
-)
-
 internal class LunarEclipseModel(private val total: Boolean) {
-    fun next(after: Instant, location: Coordinate, zone: TimeZone): LunarEclipseResult? {
+    fun next(after: Instant, location: Coordinate, zone: TimeZone): EclipseResult? {
         var search = after - 20.days
         repeat(100) {
             val parameters = LunarEclipseParameterModel().getNextLunarEclipseModelParameters(search)
@@ -47,7 +44,7 @@ internal class LunarEclipseModel(private val total: Boolean) {
     private fun visibleEclipse(
         start: Instant, end: Instant, parameters: LunarEclipseModelParameters, magnitude: Double,
         location: Coordinate, zone: TimeZone
-    ): LunarEclipseResult? {
+    ): EclipseResult? {
         fun isUp(time: Instant) = MoonCalculationModel.position(time, location, true, true).altitude > 0
         val upAtStart = isUp(start)
         val upAtEnd = isUp(end)
@@ -62,7 +59,7 @@ internal class LunarEclipseModel(private val total: Boolean) {
         val visibleEnd = if (upAtEnd) end else nextEvent(start, zone, location, false) ?: end
         if (visibleStart >= visibleEnd || visibleStart !in start..end || visibleEnd !in start..end) return null
         val maximum = (start + (end - start) / 2).coerceIn(visibleStart, visibleEnd)
-        return LunarEclipseResult(visibleStart, visibleEnd, magnitude.toFloat(), obscuration, maximum)
+        return EclipseResult(visibleStart, visibleEnd, magnitude.toFloat(), obscuration, maximum)
     }
 
     private fun nextEvent(start: Instant, zone: TimeZone, location: Coordinate, rise: Boolean): Instant? {
