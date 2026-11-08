@@ -12,10 +12,22 @@ actual fun imageClassifier(
     modelPath: String,
     prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,
+    options: ClassifierOptions,
 ): ImageClassifier {
     val model = TfLiteModelCreateFromFile(modelPath)
     require(model != null && !model.isNull) { "Unable to load model: $modelPath" }
-    val interpreter = try { TfLiteInterpreterCreate(model, null) } finally { TfLiteModelDelete(model) }
+    val interpreterOptions = TfLiteInterpreterOptionsCreate()
+    if (interpreterOptions == null || interpreterOptions.isNull) {
+        TfLiteModelDelete(model)
+        error("Unable to create TensorFlow Lite options")
+    }
+    val interpreter = try {
+        TfLiteInterpreterOptionsSetNumThreads(interpreterOptions, options.numThreads)
+        TfLiteInterpreterCreate(model, interpreterOptions)
+    } finally {
+        TfLiteInterpreterOptionsDelete(interpreterOptions)
+        TfLiteModelDelete(model)
+    }
     require(interpreter != null && !interpreter.isNull) { "Unable to create TensorFlow Lite interpreter" }
     try {
         check(TfLiteInterpreterAllocateTensors(interpreter) == 0) { "Unable to allocate tensors" }
@@ -50,7 +62,7 @@ actual fun imageClassifier(
                         destination.get(result)
                     }
                 }
-                decodeOutput(result)
+                decodeOutput(result).let { if (options.applySoftmax) it.softmax() else it }
             }
             override fun close() = synchronized(lock) {
                 if (!closed) {

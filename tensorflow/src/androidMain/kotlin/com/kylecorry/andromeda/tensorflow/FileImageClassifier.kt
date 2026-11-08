@@ -14,11 +14,12 @@ actual fun imageClassifier(
     modelPath: String,
     prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,
+    options: ClassifierOptions,
 ): ImageClassifier {
     val model = FileInputStream(modelPath).use { stream ->
         stream.channel.map(FileChannel.MapMode.READ_ONLY, 0, stream.channel.size())
     }
-    val interpreter = Interpreter(model)
+    val interpreter = Interpreter(model, Interpreter.Options().setNumThreads(options.numThreads))
     try {
         require(interpreter.inputTensorCount == 1 && interpreter.outputTensorCount == 1) { "Expected a model with one input and one output" }
         val inputSize = interpreter.getInputTensor(0).numBytes()
@@ -40,7 +41,7 @@ actual fun imageClassifier(
                 output.rewind()
                 val result = ByteArray(outputSize)
                 output.get(result)
-                decodeOutput(result)
+                decodeOutput(result).let { if (options.applySoftmax) it.softmax() else it }
             }
             override fun close() = synchronized(lock) {
                 if (!closed) {

@@ -19,7 +19,7 @@ class JvmImageClassifierTest {
         }, { bytes ->
             val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder())
             List(bytes.size / 4) { buffer.float }
-        })
+        }, ClassifierOptions(numThreads = 2))
         val image = PixelImage(1, 1, intArrayOf(0))
         assertEquals(listOf(3f, 9f), classifier.classify(image).take(2))
         classifier.close()
