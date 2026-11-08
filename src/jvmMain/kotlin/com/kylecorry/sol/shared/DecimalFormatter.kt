@@ -5,12 +5,12 @@ import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import java.text.DecimalFormat
 import java.util.concurrent.ConcurrentHashMap
 
-internal object DecimalFormatter {
+internal actual object DecimalFormatter {
 
     private val formatterMap = ConcurrentHashMap<Int, DecimalFormat>()
     private val strictFormatterMap = ConcurrentHashMap<Int, DecimalFormat>()
 
-    fun format(number: Number, decimalPlaces: Int, strict: Boolean = true): String {
+    actual fun format(number: Number, decimalPlaces: Int, strict: Boolean): String {
         if (number.toDouble().isNaN() || number.toDouble().isInfinite()) {
             return "-"
         }

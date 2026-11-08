@@ -41,8 +41,8 @@ object CartesianConversion {
      * @return Array of cartesian coordinates [x, y, z]
      */
     fun fromLatLon(inputCoordinates: DoubleArray, a: Double, b: Double): DoubleArray {
-        val lat = Math.toRadians(inputCoordinates[0])
-        val lon = Math.toRadians(inputCoordinates[1])
+        val lat = (inputCoordinates[0] * kotlin.math.PI / 180.0)
+        val lon = (inputCoordinates[1] * kotlin.math.PI / 180.0)
         val height = inputCoordinates[2]
 
         val e2 = (a.pow(2) - b.pow(2)) / a.pow(2)
@@ -82,7 +82,7 @@ object CartesianConversion {
             v = a / sqrt(1 - e2 * sin(lat).pow(2))
             val newLat = atan((z + e2 * v * sin(lat)) / p)
 
-            delta = abs(Math.toDegrees(lat - newLat))
+            delta = abs((lat - newLat) * 180.0 / kotlin.math.PI)
             lat = newLat
             iterations++
         }
@@ -93,7 +93,7 @@ object CartesianConversion {
 
         val height = (p / cos(lat)) - v
 
-        return doubleArrayOf(Math.toDegrees(lat), Math.toDegrees(lon), height)
+        return doubleArrayOf((lat * 180.0 / kotlin.math.PI), (lon * 180.0 / kotlin.math.PI), height)
     }
 
     /**

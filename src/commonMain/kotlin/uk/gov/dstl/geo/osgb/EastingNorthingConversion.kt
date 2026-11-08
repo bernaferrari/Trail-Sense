@@ -55,11 +55,11 @@ object EastingNorthingConversion {
         lat0: Double,
         lon0: Double
     ): DoubleArray {
-        val lat = Math.toRadians(inputCoordinates[0])
-        val lon = Math.toRadians(inputCoordinates[1])
+        val lat = (inputCoordinates[0] * kotlin.math.PI / 180.0)
+        val lon = (inputCoordinates[1] * kotlin.math.PI / 180.0)
 
-        val lat0Rad = Math.toRadians(lat0)
-        val lon0Rad = Math.toRadians(lon0)
+        val lat0Rad = (lat0 * kotlin.math.PI / 180.0)
+        val lon0Rad = (lon0 * kotlin.math.PI / 180.0)
 
         val e2 = (a.pow(2) - b.pow(2)) / a.pow(2)
 
@@ -134,8 +134,8 @@ object EastingNorthingConversion {
         val n2 = n.pow(2)
         val n3 = n.pow(3)
 
-        val lat0 = Math.toRadians(lat0Degrees)
-        val lon0 = Math.toRadians(lon0Degrees)
+        val lat0 = (lat0Degrees * kotlin.math.PI / 180.0)
+        val lon0 = (lon0Degrees * kotlin.math.PI / 180.0)
 
         var m = 0.0
         var latPrime = lat0
@@ -193,8 +193,8 @@ object EastingNorthingConversion {
         var lat = latPrime - vii * dE.pow(2) + viii * dE.pow(4) - ix * dE.pow(6)
         var lon = lon0 + x * dE - xi * dE.pow(3) + xii * dE.pow(5) - xiiA * dE.pow(7)
 
-        lat = Math.toDegrees(lat)
-        lon = Math.toDegrees(lon)
+        lat = (lat * 180.0 / kotlin.math.PI)
+        lon = (lon * 180.0 / kotlin.math.PI)
 
         return doubleArrayOf(lat, lon)
     }

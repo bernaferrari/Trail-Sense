@@ -284,7 +284,9 @@ object NationalGrid {
         for (gs in GRID_SQUARES.values) {
             if (gs.inside(en)) {
                 val offset = gs.offsetEastingNorthing(en)
-                return String.format("%s %05.0f %05.0f", gs.reference, offset[0], offset[1])
+                val easting = kotlin.math.round(offset[0]).toLong().toString().padStart(5, '0')
+                val northing = kotlin.math.round(offset[1]).toLong().toString().padStart(5, '0')
+                return "${gs.reference} $easting $northing"
             }
         }
         return null

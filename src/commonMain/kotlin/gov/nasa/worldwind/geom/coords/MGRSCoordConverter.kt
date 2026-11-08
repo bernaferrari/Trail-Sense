@@ -127,7 +127,7 @@ internal class MGRSCoordConverter {
             i++ /* skip any leading blanks */
         }
         var j: Int = i
-        while (i < MGRSString.length && Character.isDigit(MGRSString[i])) {
+        while (i < MGRSString.length && MGRSString[i].isDigit()) {
             i++
         }
         num_digits = i - j
@@ -138,7 +138,7 @@ internal class MGRSCoordConverter {
         } else error_code = error_code or MGRS_STRING_ERROR.toLong()
         j = i
 
-        while (i < MGRSString.length && Character.isLetter(MGRSString[i])) {
+        while (i < MGRSString.length && MGRSString[i].isLetter()) {
             i++
         }
         num_letters = i - j
@@ -155,7 +155,7 @@ internal class MGRSCoordConverter {
                 error_code or MGRS_STRING_ERROR.toLong()
         } else error_code = error_code or MGRS_STRING_ERROR.toLong()
         j = i
-        while (i < MGRSString.length && Character.isDigit(MGRSString[i])) {
+        while (i < MGRSString.length && MGRSString[i].isDigit()) {
             i++
         }
         num_digits = i - j
@@ -208,7 +208,7 @@ internal class MGRSCoordConverter {
             i++
         }
         val j: Int = i
-        while (i < MGRSString.length && Character.isDigit(MGRSString[i])) {
+        while (i < MGRSString.length && MGRSString[i].isDigit()) {
             i++
         }
         val num_digits: Int = i - j
@@ -679,7 +679,7 @@ internal class MGRSCoordConverter {
         var Northing = Northing
         val error_code = MGRS_NO_ERROR.toLong()
 
-        if (Zone != 0L) this.mgrsString = String.format("%02d", Zone)
+        if (Zone != 0L) this.mgrsString = Zone.toString().padStart(2, '0')
         else this.mgrsString = "  "
 
         var j = 0

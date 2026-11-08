@@ -3,7 +3,6 @@ package com.kylecorry.sol.science.geography.formatting
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.shared.toDoubleCompat
 import com.kylecorry.sol.units.Coordinate
-import java.util.*
 import kotlin.math.abs
 
 class DegreesDecimalMinutesCoordinateFormat(private val precision: Int = 3) : CoordinateFormat {
@@ -29,12 +28,12 @@ class DegreesDecimalMinutesCoordinateFormat(private val precision: Int = 3) : Co
         var latitudeDecimal = 0.0
         latitudeDecimal += matches.groupValues[1].toDouble()
         latitudeDecimal += (matches.groupValues[2].toDoubleCompat() ?: 0.0) / 60
-        latitudeDecimal *= if (matches.groupValues[3].lowercase(Locale.getDefault()) == "n") 1 else -1
+        latitudeDecimal *= if (matches.groupValues[3].lowercase() == "n") 1 else -1
 
         var longitudeDecimal = 0.0
         longitudeDecimal += matches.groupValues[4].toDouble()
         longitudeDecimal += (matches.groupValues[5].toDoubleCompat() ?: 0.0) / 60
-        longitudeDecimal *= if (matches.groupValues[6].lowercase(Locale.getDefault()) == "e") 1 else -1
+        longitudeDecimal *= if (matches.groupValues[6].lowercase() == "e") 1 else -1
 
         if (Coordinate.isValidLatitude(latitudeDecimal) && Coordinate.isValidLongitude(
                 longitudeDecimal

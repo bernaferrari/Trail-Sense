@@ -504,9 +504,9 @@ object Geography {
         val a2: Double
         if (sinDegrees(referenceB.longitude - referenceA.longitude) > 0) {
             a1 = selfToReferenceBearingA.inverse().value.toDouble().toRadians() - initialBearing
-            a2 = 2 * Math.PI - finalBearing - selfToReferenceBearingB.inverse().value.toDouble().toRadians()
+            a2 = 2 * kotlin.math.PI - finalBearing - selfToReferenceBearingB.inverse().value.toDouble().toRadians()
         } else {
-            a1 = selfToReferenceBearingA.inverse().value.toDouble().toRadians() - (2 * Math.PI - initialBearing)
+            a1 = selfToReferenceBearingA.inverse().value.toDouble().toRadians() - (2 * kotlin.math.PI - initialBearing)
             a2 = finalBearing - selfToReferenceBearingB.inverse().value.toDouble().toRadians()
         }
 

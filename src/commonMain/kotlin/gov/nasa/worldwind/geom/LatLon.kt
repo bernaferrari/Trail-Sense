@@ -54,8 +54,8 @@ open class LatLon {
     }
 
     override fun toString(): String {
-        val las = String.format("Lat %7.4f\u00B0", this.latitude.degrees)
-        val los = String.format("Lon %7.4f\u00B0", this.longitude.degrees)
+        val las = "Lat ${com.kylecorry.sol.shared.DecimalFormatter.format(this.latitude.degrees, 4).padStart(7)}\u00B0"
+        val los = "Lon ${com.kylecorry.sol.shared.DecimalFormatter.format(this.longitude.degrees, 4).padStart(7)}\u00B0"
         return "($las, $los)"
     }
 
