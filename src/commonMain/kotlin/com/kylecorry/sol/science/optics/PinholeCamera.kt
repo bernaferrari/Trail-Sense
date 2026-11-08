@@ -51,7 +51,7 @@ data class PinholeCamera(
         private const val UNDISTORT_ITERATIONS = 6
 
         fun fromVerticalFieldOfView(width: Int, height: Int, degrees: Double): PinholeCamera {
-            val f = (height / 2.0) / tan(Math.toRadians(degrees / 2))
+            val f = (height / 2.0) / tan((degrees / 2 * kotlin.math.PI / 180.0))
             return PinholeCamera(width, height, f)
         }
     }
