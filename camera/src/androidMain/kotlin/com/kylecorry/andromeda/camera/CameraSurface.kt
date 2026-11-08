@@ -1,6 +1,7 @@
 package com.kylecorry.andromeda.camera
 
 import androidx.camera.core.ImageCapture
+import androidx.core.content.ContextCompat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -9,20 +10,43 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.flow
+import kotlin.time.Clock
 import com.kylecorry.andromeda.camera.ar.calibrationSource
 
 @Composable
-actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit) {
+actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit, frameAnalysis: Boolean) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val preview = rememberCameraPreviewState()
     val currentReady = rememberUpdatedState(onReady)
     val currentError = rememberUpdatedState(onError)
-    val camera = remember(context, owner, preview) {
-        Camera(context, owner, previewState = preview, analyze = false, captureSettings = ImageCaptureSettings())
+    val frames = remember(context, owner, preview, frameAnalysis) {
+        MutableSharedFlow<CameraFrame>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    }
+    val camera = remember(context, owner, preview, frameAnalysis) {
+        Camera(
+            context, owner, previewState = preview, analyze = frameAnalysis,
+            captureSettings = ImageCaptureSettings(),
+            onAnalysisFrame = if (!frameAnalysis) null else { image ->
+                if (frames.subscriptionCount.value > 0) {
+                    val bitmap = image.toBitmap()
+                    try {
+                        val pixels = IntArray(bitmap.width * bitmap.height)
+                        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+                        frames.tryEmit(CameraFrame(bitmap.width, bitmap.height, pixels, Clock.System.now(), image.imageInfo.rotationDegrees))
+                    } finally { bitmap.recycle() }
+                }
+            },
+            onAnalysisError = { error -> ContextCompat.getMainExecutor(context).execute { currentError.value(error) } },
+        )
     }
     val controller = remember(camera) {
         object : PhotoCamera {
+            override val frames = if (frameAnalysis) frames.asSharedFlow() else flow { error("Frame analysis is disabled") }
             override val calibration = camera.calibrationSource()
             override val zoom: CameraZoom?
                 get() = camera.zoom?.let { CameraZoom(it.ratio, it.ratioRange.start, it.ratioRange.end) }

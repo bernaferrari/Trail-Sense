@@ -49,6 +49,8 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Range
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asExecutor
 import java.io.File
 import java.io.OutputStream
 import java.time.Duration
@@ -71,6 +73,8 @@ class Camera(
     private val shouldStabilizePreview: Boolean = true,
     @param:AspectRatio.Ratio
     private val targetAspectRatio: Int = AspectRatio.RATIO_DEFAULT,
+    private val onAnalysisFrame: ((ImageProxy) -> Unit)? = null,
+    private val onAnalysisError: (Throwable) -> Unit = {},
 ) : AbstractSensor(), ICamera {
 
     override val image: ImageProxy?
@@ -162,11 +166,19 @@ class Camera(
                 setOutputImageFormat(if (useYUV) OUTPUT_IMAGE_FORMAT_YUV_420_888 else OUTPUT_IMAGE_FORMAT_RGBA_8888)
             }.build()
 
-            imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { image ->
-                _image = image
-                _hasValidReading = true
-                setEventTimeToNow()
-                notifyListeners()
+            val analyzerExecutor = if (onAnalysisFrame != null) Dispatchers.Default.asExecutor()
+                else ContextCompat.getMainExecutor(context)
+            imageAnalysis.setAnalyzer(analyzerExecutor) { image ->
+                if (onAnalysisFrame != null) {
+                    try { onAnalysisFrame.invoke(image) }
+                    catch (error: Exception) { onAnalysisError(error) }
+                    finally { image.close() }
+                } else {
+                    _image = image
+                    _hasValidReading = true
+                    setEventTimeToNow()
+                    notifyListeners()
+                }
             }
 
             if (captureSettings != null) {

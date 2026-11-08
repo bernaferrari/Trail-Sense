@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.kashif.cameraK.compose.CameraPreviewView
 import com.kashif.cameraK.compose.rememberCameraKState
@@ -19,18 +20,49 @@ import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
+import kotlin.time.Clock
 
 @Composable
-internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit) {
+internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit, frameAnalysis: Boolean) {
     val configuration = remember { CameraConfiguration(directory = Directory.DOCUMENTS) }
     val state by rememberCameraKState(configuration)
     val ready = state as? CameraKState.Ready
     val currentReady = rememberUpdatedState(onReady)
     val currentError = rememberUpdatedState(onError)
     val controller = ready?.controller
-    val adapter = remember(controller) {
+    val scope = rememberCoroutineScope()
+    val frames = remember(controller, frameAnalysis) {
+        MutableSharedFlow<CameraFrame>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    }
+    LaunchedEffect(controller, frameAnalysis, frames) {
+        if (controller != null && frameAnalysis) frames.subscriptionCount.collectLatest { count ->
+            if (count > 0) {
+                try {
+                    val analyzer = startCameraFrameAnalysis(
+                        controller, scope,
+                        onFrame = { width, height, argb -> frames.tryEmit(CameraFrame(width, height, argb, Clock.System.now())) },
+                        onError = { error -> currentError.value(error) },
+                    )
+                    try { awaitCancellation() } finally { analyzer.close() }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    currentError.value(error)
+                }
+            }
+        }
+    }
+    val adapter = remember(controller, frameAnalysis, frames) {
         controller?.let { camera ->
             object : PhotoCamera {
+                override val frames = if (frameAnalysis) frames.asSharedFlow() else flow { error("Frame analysis is disabled") }
                 override val calibration = cameraCalibrationSource(camera)
                 override val zoom: CameraZoom
                     get() {
