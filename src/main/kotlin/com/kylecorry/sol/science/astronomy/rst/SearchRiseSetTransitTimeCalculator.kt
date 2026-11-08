@@ -1,7 +1,7 @@
 package com.kylecorry.sol.science.astronomy.rst
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.science.astronomy.AstroSearch
+import com.kylecorry.sol.science.astronomy.JvmAstroSearch as AstroSearch
 import com.kylecorry.sol.science.astronomy.AstroUtils
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator

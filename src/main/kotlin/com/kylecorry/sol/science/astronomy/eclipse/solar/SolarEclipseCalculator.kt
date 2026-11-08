@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.astronomy.eclipse.solar
 
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.arithmetic.Arithmetic.square
-import com.kylecorry.sol.science.astronomy.AstroSearch
+import com.kylecorry.sol.science.astronomy.JvmAstroSearch as AstroSearch
 import com.kylecorry.sol.science.astronomy.eclipse.Eclipse
 import com.kylecorry.sol.science.astronomy.eclipse.EclipseCalculator
 import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator

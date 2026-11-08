@@ -1,9 +1,9 @@
 package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.time.Time.middle
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 internal object AstroSearch {
 
@@ -26,8 +26,8 @@ internal object AstroSearch {
         var iterations = 0
         var wasFound = predicate(right)
 
-        while (Duration.between(left, right) > precision && iterations < MAX_ITERATIONS) {
-            val mid = left.plusMillis((right.toEpochMilli() - left.toEpochMilli()) / 2)
+        while ((right - left) > precision && iterations < MAX_ITERATIONS) {
+            val mid = left + ((right.toEpochMilliseconds() - left.toEpochMilliseconds()) / 2).milliseconds
             if (predicate(mid)) {
                 wasFound = true
                 right = mid
@@ -58,8 +58,8 @@ internal object AstroSearch {
         var iterations = 0
         var wasFound = predicate(left)
 
-        while (Duration.between(left, right) > precision && iterations < MAX_ITERATIONS) {
-            val mid = left.plusMillis((right.toEpochMilli() - left.toEpochMilli()) / 2)
+        while ((right - left) > precision && iterations < MAX_ITERATIONS) {
+            val mid = left + ((right.toEpochMilliseconds() - left.toEpochMilliseconds()) / 2).milliseconds
             if (predicate(mid)) {
                 wasFound = true
                 left = mid
@@ -88,10 +88,10 @@ internal object AstroSearch {
         var left = range.start
         var right = range.end
         var iterations = 0
-        while (Duration.between(left, right) > precision && iterations < MAX_ITERATIONS) {
-            val remaining = Duration.between(left, right).toMillis()
-            val midLeft = left.plusMillis(remaining / 3)
-            val midRight = left.plusMillis(remaining * 2 / 3)
+        while ((right - left) > precision && iterations < MAX_ITERATIONS) {
+            val remaining = (right - left).inWholeMilliseconds
+            val midLeft = left + (remaining / 3).milliseconds
+            val midRight = left + (remaining * 2 / 3).milliseconds
             val valueLeft = producer(midLeft)
             val valueRight = producer(midRight)
             if (valueLeft < valueRight) {
@@ -122,7 +122,7 @@ internal object AstroSearch {
     fun findEvent(
         range: Range<Instant>,
         precision: Duration,
-        start: Instant = range.middle(),
+        start: Instant = range.start + (range.end - range.start) / 2,
         predicate: (Instant) -> Boolean
     ): Instant? {
         var left = start
@@ -130,7 +130,7 @@ internal object AstroSearch {
         var iterations = 0
 
         // An upper bound just to be safe
-        val maxIterations = 2 * (Duration.between(range.start, range.end).toMillis() / precision.toMillis()).toInt()
+        val maxIterations = 2 * ((range.end - range.start).inWholeMilliseconds / precision.inWholeMilliseconds).toInt()
 
         while ((left >= range.start || right <= range.end) && iterations < maxIterations) {
             if (left >= range.start && predicate(left)) {
