@@ -1,6 +1,9 @@
 package com.kylecorry.andromeda.permissions
 
-enum class AppPermission { Camera, Location, CoarseLocation, BackgroundLocation, Microphone, Bluetooth }
+enum class AppPermission {
+    Camera, Location, CoarseLocation, BackgroundLocation, Microphone, Bluetooth,
+    Notifications, Motion, Gallery, ReadContacts, ReadStorage, WriteStorage
+}
 enum class PermissionStatus { NotDetermined, NotGranted, Granted, Denied, DeniedAlways }
 
 /** The app must declare the corresponding Android permissions and iOS usage descriptions. */

@@ -24,6 +24,11 @@ kotlin {
                 implementation("dev.icerock.moko:permissions-location:0.20.1")
                 implementation("dev.icerock.moko:permissions-microphone:0.20.1")
                 implementation("dev.icerock.moko:permissions-bluetooth:0.20.1")
+                implementation("dev.icerock.moko:permissions-notifications:0.20.1")
+                implementation("dev.icerock.moko:permissions-motion:0.20.1")
+                implementation("dev.icerock.moko:permissions-gallery:0.20.1")
+                implementation("dev.icerock.moko:permissions-contacts:0.20.1")
+                implementation("dev.icerock.moko:permissions-storage:0.20.1")
             }
         }
         androidMain { dependsOn(mobileMain) }

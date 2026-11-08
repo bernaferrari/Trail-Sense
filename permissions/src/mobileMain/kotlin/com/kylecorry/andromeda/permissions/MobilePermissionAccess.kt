@@ -7,6 +7,12 @@ import dev.icerock.moko.permissions.PermissionState
 import dev.icerock.moko.permissions.PermissionsController
 import dev.icerock.moko.permissions.bluetooth.BLUETOOTH_LE
 import dev.icerock.moko.permissions.camera.CAMERA
+import dev.icerock.moko.permissions.contacts.READ_CONTACTS
+import dev.icerock.moko.permissions.gallery.GALLERY
+import dev.icerock.moko.permissions.motion.MOTION
+import dev.icerock.moko.permissions.notifications.REMOTE_NOTIFICATION
+import dev.icerock.moko.permissions.storage.STORAGE
+import dev.icerock.moko.permissions.storage.WRITE_STORAGE
 import dev.icerock.moko.permissions.location.BACKGROUND_LOCATION
 import dev.icerock.moko.permissions.location.COARSE_LOCATION
 import dev.icerock.moko.permissions.location.LOCATION
@@ -39,5 +45,11 @@ internal class MobilePermissionAccess(private val controller: PermissionsControl
         AppPermission.BackgroundLocation -> Permission.BACKGROUND_LOCATION
         AppPermission.Microphone -> Permission.RECORD_AUDIO
         AppPermission.Bluetooth -> Permission.BLUETOOTH_LE
+        AppPermission.Notifications -> Permission.REMOTE_NOTIFICATION
+        AppPermission.Motion -> Permission.MOTION
+        AppPermission.Gallery -> Permission.GALLERY
+        AppPermission.ReadContacts -> Permission.READ_CONTACTS
+        AppPermission.ReadStorage -> Permission.STORAGE
+        AppPermission.WriteStorage -> Permission.WRITE_STORAGE
     }
 }
