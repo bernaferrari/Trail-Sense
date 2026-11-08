@@ -10,7 +10,7 @@ data class ImagePoint(val x: Double, val y: Double)
 /** Bounds use inclusive left/top and exclusive right/bottom coordinates. */
 data class ImageBounds(val left: Int, val top: Int, val right: Int, val bottom: Int)
 
-private fun Int.channelValue(channel: ColorChannel?): Double = when (channel) {
+internal fun Int.channelValue(channel: ColorChannel?): Double = when (channel) {
     ColorChannel.Red -> ((this ushr 16) and 255).toDouble()
     ColorChannel.Green -> ((this ushr 8) and 255).toDouble()
     ColorChannel.Blue -> (this and 255).toDouble()
