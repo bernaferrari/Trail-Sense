@@ -21,6 +21,7 @@ plugins {
 
 subprojects {
     if (name in setOf(
+        "speech",
         "signal",
         "clipboard",
         "background",

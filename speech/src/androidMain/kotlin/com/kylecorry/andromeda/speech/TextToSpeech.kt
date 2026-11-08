@@ -9,13 +9,13 @@ class TextToSpeech(private val context: Context) : ITextToSpeech {
 
     private var tts: TTS? = null
 
-    override fun speak(text: String, locale: Locale?) {
+    override fun speak(text: String, locale: String?) {
         cancel()
         tts = TTS(
             context
         ) { status ->
             if (status != TTS.ERROR) {
-                tts?.language = locale ?: Locale.getDefault()
+                tts?.language = locale?.let(Locale::forLanguageTag) ?: Locale.getDefault()
                 tts?.speak(
                     text,
                     TTS.QUEUE_FLUSH,
