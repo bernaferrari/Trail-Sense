@@ -11,12 +11,14 @@ buildscript {
 }
 
 plugins {
+    kotlin("multiplatform") version "2.4.21" apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
     id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 subprojects {
+    if (name == "shared") return@subprojects
     val artifactId = project.name
 
     plugins.apply("com.android.library")

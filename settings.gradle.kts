@@ -59,3 +59,5 @@ include(":bitmaps")
 include(":ipc")
 include(":net")
 include(":geojson")
+
+include(":shared")
