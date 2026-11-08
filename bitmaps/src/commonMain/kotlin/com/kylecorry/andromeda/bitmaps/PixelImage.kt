@@ -46,3 +46,34 @@ class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
 
     fun replaceColor(from: Int, to: Int): PixelImage = map { if (it == from) to else it }
 }
+
+/** Converts RGB to grayscale while preserving alpha. */
+fun PixelImage.grayscale(): PixelImage = map { color ->
+    val red = (color ushr 16) and 0xff
+    val green = (color ushr 8) and 0xff
+    val blue = color and 0xff
+    val gray = (0.299f * red + 0.587f * green + 0.114f * blue).toInt().coerceIn(0, 255)
+    (color and -0x1000000) or (gray shl 16) or (gray shl 8) or gray
+}
+
+/** Counts pixels in each of the 256 grayscale luminance buckets. */
+fun PixelImage.luminanceHistogram(): IntArray {
+    val histogram = IntArray(256)
+    for (color in pixels) {
+        val red = (color ushr 16) and 0xff
+        val green = (color ushr 8) and 0xff
+        val blue = color and 0xff
+        val luminance = (0.299f * red + 0.587f * green + 0.114f * blue).toInt().coerceIn(0, 255)
+        histogram[luminance]++
+    }
+    return histogram
+}
+
+/** Replaces each pixel with black or white based on normalized luminance. */
+fun PixelImage.threshold(luminance: Float): PixelImage {
+    require(luminance in 0f..1f)
+    return grayscale().map { color ->
+        val value = if ((color and 0xff) / 255f >= luminance) 0x00ffffff else 0
+        (color and -0x1000000) or value
+    }
+}
