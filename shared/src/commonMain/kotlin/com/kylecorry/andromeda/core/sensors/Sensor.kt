@@ -1,5 +1,6 @@
 package com.kylecorry.andromeda.core.sensors
 
+import kotlinx.atomicfu.atomic
 import kotlin.time.Instant
 
 typealias SensorSubscriber = () -> Boolean
@@ -19,9 +20,12 @@ interface Sensor {
 
 suspend fun Sensor.read(until: () -> Boolean = { true }) {
     kotlinx.coroutines.suspendCancellableCoroutine<Unit> { continuation ->
+        val completed = atomic(false)
         val listener: SensorSubscriber = {
-            if (!continuation.isActive) false else if (until()) {
-                continuation.resumeWith(Result.success(Unit))
+            if (!continuation.isActive || completed.value) false else if (until()) {
+                if (completed.compareAndSet(expect = false, update = true)) {
+                    continuation.resumeWith(Result.success(Unit))
+                }
                 false
             } else true
         }
