@@ -17,7 +17,7 @@ import kotlin.math.roundToInt
 
 class Torch(private val context: Context) : ITorch {
     private val cameraService by lazy { getCameraManager(context) }
-    private val cameraId by lazy { getRearCameraId(context) }
+    internal val cameraId by lazy { getRearCameraId(context) }
 
     override val brightnessLevels: Int
         @SuppressLint("NewApi")
