@@ -20,6 +20,13 @@ fun Instant.toJulianCenturies(): Double = JulianDay.centuries(this)
 fun fromJulianDay(julianDay: Double): Instant = JulianDay.from(julianDay)
 fun LocalTime.toDuration(): Duration = hour.hours + minute.minutes + second.seconds + nanosecond.nanoseconds
 fun LocalTime.toDecimalHours(): Double = toDuration().inWholeNanoseconds / 3600000000000.0
+fun Duration.toLocalTime(): LocalTime {
+    val dayNanos = 86400000000000L
+    val nanos = ((inWholeNanoseconds % dayNanos) + dayNanos) % dayNanos
+    val second = nanos / 1000000000L
+    return LocalTime((second / 3600).toInt(), ((second / 60) % 60).toInt(), (second % 60).toInt(),
+        (nanos % 1000000000L).toInt())
+}
 fun Duration.toDecimal(): Double = inWholeMilliseconds / 3600000.0
 fun Duration.toDegrees(): Double = toDecimal() * 15
 fun Duration.toRadians(): Double = toDegrees().toRadians()

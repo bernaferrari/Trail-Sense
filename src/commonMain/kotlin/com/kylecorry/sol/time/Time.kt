@@ -32,9 +32,12 @@ object Time {
         hours.hours + minutes.minutes + seconds.seconds
     fun Instant.isInPast(): Boolean = this < Clock.System.now()
     fun Instant.isOlderThan(duration: Duration): Boolean = this < Clock.System.now() - duration
-    fun Instant.hoursUntil(other: Instant): Float = (other - this).inWholeSeconds / 3600f
+    fun Instant.hoursUntil(other: Instant): Float = secondsBetween(this, other) / 3600f
+    fun LocalDate.daysUntil(other: LocalDate): Long = other.toEpochDays().toLong() - toEpochDays()
     fun Instant.plusHours(hours: Long): Instant = this + hours.hours
-    fun hoursBetween(first: Instant, second: Instant): Float = (second - first).inWholeSeconds / 3600f
+    fun hoursBetween(first: Instant, second: Instant): Float = secondsBetween(first, second) / 3600f
+    private fun secondsBetween(first: Instant, second: Instant): Long = second.epochSeconds - first.epochSeconds -
+        if (second.nanosecondsOfSecond < first.nanosecondsOfSecond) 1 else 0
     fun getClosestPastTime(time: Instant, times: List<Instant?>): Instant? = times.filterNotNull().filter { it < time }.maxOrNull()
     fun getClosestFutureTime(time: Instant, times: List<Instant?>): Instant? = times.filterNotNull().filter { it > time }.minOrNull()
     fun getClosestTime(time: Instant, times: List<Instant?>): Instant? =
