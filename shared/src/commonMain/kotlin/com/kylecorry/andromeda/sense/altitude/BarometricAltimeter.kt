@@ -1,16 +1,15 @@
 package com.kylecorry.andromeda.sense.altitude
 
-import android.hardware.SensorManager
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.IAltimeter
-import com.kylecorry.andromeda.sense.barometer.Barometer
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.sense.barometer.IBarometer
+import kotlin.math.pow
 import com.kylecorry.sol.units.Pressure
 
 class BarometricAltimeter(
     private val barometer: IBarometer,
-    var seaLevelPressure: Pressure = Pressure.hpa(SensorManager.PRESSURE_STANDARD_ATMOSPHERE)
-) : AbstractSensor(), IAltimeter {
+    var seaLevelPressure: Pressure = Pressure.hpa(1013.25f)
+) : SharedSensor(), Altimeter {
 
     override fun startImpl() {
         barometer.start(this::onSensorUpdate)
@@ -21,7 +20,7 @@ class BarometricAltimeter(
     }
 
     override val altitude: Float
-        get() = SensorManager.getAltitude(seaLevelPressure.hpa().value, barometer.pressure)
+        get() = 44330f * (1f - (barometer.pressure / seaLevelPressure.hpa().value).pow(0.19029495f))
 
     override val hasValidReading: Boolean
         get() = barometer.hasValidReading
