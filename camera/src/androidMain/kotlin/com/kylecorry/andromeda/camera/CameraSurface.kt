@@ -59,6 +59,14 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
             override val meteringSupported: Boolean get() = camera.sharedMeteringSupported
             override fun focusAt(x: Float, y: Float) = camera.focusAt(x, y)
             override fun resetFocusAndMetering() = camera.stopFocusAndMetering()
+            override val stabilizationSupport: CameraStabilizationSupport
+                get() = CameraStabilizationSupport(camera.isOpticalStabilizationSupported(), camera.isVideoStabilizationSupported())
+            override fun setStabilization(optical: Boolean, preview: Boolean) {
+                val support = stabilizationSupport
+                require(!optical || support.optical) { "Optical stabilization is unavailable" }
+                require(!preview || support.preview) { "Preview stabilization is unavailable" }
+                camera.setStabilization(optical, preview)
+            }
             override suspend fun capture(): ByteArray {
                 val output = ByteArrayOutputStream()
                 check(camera.takePhoto(output)) { "Camera capture failed" }

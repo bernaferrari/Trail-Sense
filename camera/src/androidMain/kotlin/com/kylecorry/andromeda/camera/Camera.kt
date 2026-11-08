@@ -586,15 +586,13 @@ class Camera(
     }
 
     override fun isOpticalStabilizationSupported(): Boolean {
-        return getCharacteristic(CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION)?.any {
-            it != CameraMetadata.LENS_OPTICAL_STABILIZATION_MODE_OFF
-        } == true
+        return getCharacteristic(CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION)
+            ?.contains(CameraMetadata.LENS_OPTICAL_STABILIZATION_MODE_ON) == true
     }
 
     override fun isVideoStabilizationSupported(): Boolean {
-        return getCharacteristic(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES)?.any {
-            it != CameraMetadata.CONTROL_VIDEO_STABILIZATION_MODE_OFF
-        } == true
+        return getCharacteristic(CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES)
+            ?.contains(CameraMetadata.CONTROL_VIDEO_STABILIZATION_MODE_ON) == true
     }
 
     override fun getPreviewRect(cropToView: Boolean): RectF? {

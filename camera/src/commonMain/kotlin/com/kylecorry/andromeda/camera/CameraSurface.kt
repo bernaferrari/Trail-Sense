@@ -18,6 +18,9 @@ data class CameraExposure(val value: Float, val minimum: Float, val maximum: Flo
 /** Supported manual exposure duration and ISO ranges. */
 data class ManualExposureRange(val duration: ClosedRange<Duration>, val iso: IntRange)
 
+/** Independently configurable optical and preview video stabilization. */
+data class CameraStabilizationSupport(val optical: Boolean, val preview: Boolean)
+
 /** An analysis frame with row-major ARGB pixels. Rotation is clockwise degrees when reported. */
 class CameraFrame(
     val width: Int,
@@ -52,6 +55,10 @@ interface PhotoCamera {
     fun focusAt(x: Float, y: Float)
     /** Clears targeted focus and metering. */
     fun resetFocusAndMetering()
+    /** Stabilization controls available for the current camera and preview. */
+    val stabilizationSupport: CameraStabilizationSupport
+    /** Enables or disables the supported optical and preview stabilization controls. */
+    fun setStabilization(optical: Boolean, preview: Boolean)
     /** Captures an encoded image. */
     suspend fun capture(): ByteArray
     fun setZoom(ratio: Float)

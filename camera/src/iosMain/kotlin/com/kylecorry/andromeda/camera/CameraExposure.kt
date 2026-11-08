@@ -138,3 +138,13 @@ internal actual fun resetCameraMetering(camera: CameraController) {
         device.unlockForConfiguration()
     }
 }
+
+internal actual fun cameraStabilizationSupport(camera: CameraController): CameraStabilizationSupport =
+    CameraStabilizationSupport(optical = false, preview = camera.getCameraPreviewLayer()?.connection?.isVideoStabilizationSupported() == true)
+
+internal actual fun setCameraStabilization(camera: CameraController, optical: Boolean, preview: Boolean) {
+    require(!optical) { "Optical stabilization is not independently configurable on iOS" }
+    val connection = checkNotNull(camera.getCameraPreviewLayer()?.connection) { "Camera preview is unavailable" }
+    require(!preview || connection.isVideoStabilizationSupported()) { "Preview stabilization is unavailable" }
+    connection.preferredVideoStabilizationMode = if (preview) AVCaptureVideoStabilizationModeAuto else AVCaptureVideoStabilizationModeOff
+}

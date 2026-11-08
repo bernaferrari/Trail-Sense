@@ -83,6 +83,8 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
                 override val meteringSupported: Boolean get() = cameraMeteringSupported(camera)
                 override fun focusAt(x: Float, y: Float) = focusCameraAt(camera, x, y)
                 override fun resetFocusAndMetering() = resetCameraMetering(camera)
+                override val stabilizationSupport: CameraStabilizationSupport get() = cameraStabilizationSupport(camera)
+                override fun setStabilization(optical: Boolean, preview: Boolean) = setCameraStabilization(camera, optical, preview)
                 override suspend fun capture(): ByteArray = when (val result = camera.takePictureToFile()) {
                     is ImageCaptureResult.Success -> result.byteArray
                     is ImageCaptureResult.SuccessWithFile -> {

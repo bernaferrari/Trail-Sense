@@ -14,3 +14,6 @@ internal expect fun setCameraManualExposure(camera: CameraController, duration: 
 internal expect fun cameraMeteringSupported(camera: CameraController): Boolean
 internal expect fun focusCameraAt(camera: CameraController, x: Float, y: Float)
 internal expect fun resetCameraMetering(camera: CameraController)
+
+internal expect fun cameraStabilizationSupport(camera: CameraController): CameraStabilizationSupport
+internal expect fun setCameraStabilization(camera: CameraController, optical: Boolean, preview: Boolean)
