@@ -22,7 +22,6 @@ kotlin {
             api(compose.runtime)
             api(compose.foundation)
         }
-        androidMain.dependencies { api(project(":list-android")) }
     }
 }
 group = "com.kylecorry.andromeda"
