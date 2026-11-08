@@ -5,22 +5,22 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.InflaterInputStream
 
-object CompressionUtils {
+
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    fun getShort(stream: InputStream, line: Int, closeStream: Boolean = true): Short? {
+    fun CompressionUtils.getShort(stream: InputStream, line: Int, closeStream: Boolean = true): Short? {
         val bytes =
             getBytes(stream, line, Short.SIZE_BYTES, closeStream = closeStream) ?: return null
         return bytes.toShort()
     }
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    fun getInt(stream: InputStream, line: Int, closeStream: Boolean = true): Int? {
+    fun CompressionUtils.getInt(stream: InputStream, line: Int, closeStream: Boolean = true): Int? {
         val bytes = getBytes(stream, line, Int.SIZE_BYTES, closeStream = closeStream) ?: return null
         return bytes.toInt()
     }
 
-    fun getByte(
+    fun CompressionUtils.getByte(
         stream: InputStream,
         line: Int,
         numBits: Int = Byte.SIZE_BITS,
@@ -50,7 +50,7 @@ object CompressionUtils {
         return bytes.bitsToByte(numBits, startingOffset)
     }
 
-    fun getBytes(
+    fun CompressionUtils.getBytes(
         stream: InputStream,
         line: Int,
         bytesPerLine: Int,
@@ -73,4 +73,3 @@ object CompressionUtils {
         return value
     }
 
-}
