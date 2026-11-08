@@ -20,11 +20,16 @@ kotlin {
     sourceSets {
         val jvmSharedMain by creating {
             dependsOn(commonMain.get())
-            dependencies { api(libs.luna); implementation(project(":wkt")); implementation(project(":compression")) }
+            dependencies { api(libs.luna); implementation(project(":compression")) }
         }
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {
+            api(project(":shared"))
+            implementation(project(":wkt"))
+        }
+        iosMain.dependencies { implementation("io.github.yuroyami:kitepdf-pdf:0.13.0") }
+        commonTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx) }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
