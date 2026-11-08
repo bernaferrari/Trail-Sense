@@ -70,7 +70,7 @@ namespace renderscript {
                 if (distance <= mTolerance) {
                     if (mInterpolate) {
                         // Interpolate color if within tolerance
-                        float ratio = 1.0f - distance / mTolerance;
+                        float ratio = mTolerance == 0.0f ? 1.0f : 1.0f - distance / mTolerance;
                         auto r = static_cast<uint8_t>((float) v.r +
                                                       ratio * (float) (mReplacementColor.r - v.r));
                         auto g = static_cast<uint8_t>((float) v.g +
