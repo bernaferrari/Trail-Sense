@@ -6,8 +6,10 @@ import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
 import com.ksensor.plugins.sensors.motion.createMotionPlugin
 import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
 import com.ksensor.plugins.states.system.createSystemPlugin
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -17,17 +19,25 @@ internal class MobileDeviceBackend : DeviceBackend {
     val positioning by lazy { createPositioningPlugin() }
     val system by lazy { createSystemPlugin() }
 
-    override fun pressure(interval: Duration, accuracy: SensorAccuracy) = environment.barometer(SensorConfig(
+    override fun pressure(interval: Duration, accuracy: SensorAccuracy) = environment.barometer(config(interval, accuracy)).map { reading ->
+        val factor = if (reading.platform == PlatformType.iOS) 10f else 1f
+        Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
+    }
+
+    override fun location(interval: Duration, accuracy: SensorAccuracy) = positioning.location(config(interval, accuracy)).mapNotNull { reading ->
+        val latitude = reading.data.latitude ?: return@mapNotNull null
+        val longitude = reading.data.longitude ?: return@mapNotNull null
+        Reading(LocationReading(Coordinate(latitude, longitude), reading.data.altitude), Instant.fromEpochMilliseconds(reading.timestamp))
+    }
+
+    private fun config(interval: Duration, accuracy: SensorAccuracy) = SensorConfig(
         intervalMs = interval.inWholeMilliseconds,
         accuracy = when (accuracy) {
             SensorAccuracy.PowerSave -> SensorConfig.Accuracy.POWER_SAVE
             SensorAccuracy.Balanced -> SensorConfig.Accuracy.BALANCED
             SensorAccuracy.HighPrecision -> SensorConfig.Accuracy.HIGH_PRECISION
         }
-    )).map { reading ->
-        val factor = if (reading.platform == PlatformType.iOS) 10f else 1f
-        Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
-    }
+    )
 }
 
 internal actual fun createDeviceBackend(): DeviceBackend = MobileDeviceBackend()
