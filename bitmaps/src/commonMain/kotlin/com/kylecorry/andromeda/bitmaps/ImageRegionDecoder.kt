@@ -1,7 +1,9 @@
 package com.kylecorry.andromeda.bitmaps
 
 /** Decodes rectangular regions of an encoded image. Close the decoder when finished. */
-expect class ImageRegionDecoder(bytes: ByteArray) : AutoCloseable {
+expect class ImageRegionDecoder : AutoCloseable {
+    constructor(bytes: ByteArray)
+    constructor(path: String)
     val width: Int
     val height: Int
     /** Region coordinates use the source image's top-left origin and must be fully inside it. */

@@ -2,10 +2,13 @@ package com.kylecorry.andromeda.bitmaps
 
 import java.awt.Rectangle
 import java.io.ByteArrayInputStream
+import java.io.File
 import javax.imageio.ImageIO
+import javax.imageio.stream.ImageInputStream
 
-actual class ImageRegionDecoder actual constructor(bytes: ByteArray) : AutoCloseable {
-    private val input = requireNotNull(ImageIO.createImageInputStream(ByteArrayInputStream(bytes))) { "Unable to open image" }
+actual class ImageRegionDecoder private constructor(private val input: ImageInputStream) : AutoCloseable {
+    actual constructor(bytes: ByteArray) : this(requireNotNull(ImageIO.createImageInputStream(ByteArrayInputStream(bytes))) { "Unable to open image" })
+    actual constructor(path: String) : this(requireNotNull(ImageIO.createImageInputStream(File(path))) { "Unable to open image" })
     private val reader = ImageIO.getImageReaders(input).asSequence().firstOrNull() ?: run {
         input.close()
         throw IllegalArgumentException("Unable to decode image")

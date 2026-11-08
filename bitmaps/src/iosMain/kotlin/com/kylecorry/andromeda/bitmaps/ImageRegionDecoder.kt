@@ -9,20 +9,21 @@ import platform.Foundation.NSData
 import platform.Foundation.create
 import platform.UIKit.UIImage
 
-actual class ImageRegionDecoder actual constructor(bytes: ByteArray) : AutoCloseable {
-    private val image: CGImageRef
-    private var closed = false
-    actual val width: Int
-    actual val height: Int
+private fun retainedImage(image: UIImage?): CGImageRef =
+    CGImageRetain(requireNotNull(image?.CGImage) { "Unable to decode image" }) ?: error("Unable to retain image")
 
-    init {
-        require(bytes.isNotEmpty()) { "Unable to decode image" }
-        val data = bytes.usePinned { NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()) }
-        image = CGImageRetain(requireNotNull(UIImage.imageWithData(data)?.CGImage) { "Unable to decode image" })
-            ?: error("Unable to retain image")
-        width = CGImageGetWidth(image).toInt()
-        height = CGImageGetHeight(image).toInt()
-    }
+private fun imageFromBytes(bytes: ByteArray): CGImageRef {
+    require(bytes.isNotEmpty()) { "Unable to decode image" }
+    val data = bytes.usePinned { NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()) }
+    return retainedImage(UIImage.imageWithData(data))
+}
+
+actual class ImageRegionDecoder private constructor(private val image: CGImageRef) : AutoCloseable {
+    actual constructor(bytes: ByteArray) : this(imageFromBytes(bytes))
+    actual constructor(path: String) : this(retainedImage(UIImage.imageWithContentsOfFile(path)))
+    private var closed = false
+    actual val width: Int = CGImageGetWidth(image).toInt()
+    actual val height: Int = CGImageGetHeight(image).toInt()
 
     actual fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage {
         check(!closed) { "Image decoder is closed" }

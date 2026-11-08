@@ -3,9 +3,12 @@ package com.kylecorry.andromeda.bitmaps
 import android.graphics.BitmapRegionDecoder
 import android.graphics.Rect
 
-actual class ImageRegionDecoder actual constructor(bytes: ByteArray) : AutoCloseable {
+actual class ImageRegionDecoder private constructor(private val decoder: BitmapRegionDecoder) : AutoCloseable {
     @Suppress("DEPRECATION")
-    private val decoder = requireNotNull(BitmapRegionDecoder.newInstance(bytes, 0, bytes.size, false)) { "Unable to decode image" }
+    actual constructor(bytes: ByteArray) : this(requireNotNull(BitmapRegionDecoder.newInstance(bytes, 0, bytes.size, false)) { "Unable to decode image" })
+
+    @Suppress("DEPRECATION")
+    actual constructor(path: String) : this(requireNotNull(BitmapRegionDecoder.newInstance(path, false)) { "Unable to decode image" })
     private var closed = false
     actual val width: Int = decoder.width
     actual val height: Int = decoder.height
