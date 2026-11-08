@@ -37,7 +37,10 @@ internal class MobileDeviceBackend : DeviceBackend {
             StateData.BatteryStatus.BatteryHealth.COLD -> BatteryHealth.Cold
             else -> BatteryHealth.Unknown
         }
-        Reading(BatteryReading(state.levelPercent, charging, health, state.temperatureC), Instant.fromEpochMilliseconds(reading.timestamp))
+        val details = platformBatteryDetails(state.levelPercent)
+        Reading(BatteryReading(state.levelPercent, charging, health, state.temperatureC,
+            details.voltageVolts, details.currentMilliamps, details.chargeMilliampHours,
+            details.fullChargeMilliampHours, details.chargingMethod), Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
     override fun ambientTemperature(interval: Duration, accuracy: SensorAccuracy) = platformAmbientTemperature(interval)
@@ -93,3 +96,12 @@ val DeviceSensors.system get() = (backend as MobileDeviceBackend).system
 
 internal expect fun platformAmbientTemperature(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>
 internal expect fun platformRelativeHumidity(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>
+
+internal data class BatteryDetails(
+    val voltageVolts: Float? = null,
+    val currentMilliamps: Float? = null,
+    val chargeMilliampHours: Float? = null,
+    val fullChargeMilliampHours: Float? = null,
+    val chargingMethod: com.kylecorry.andromeda.battery.BatteryChargingMethod? = null,
+)
+internal expect fun platformBatteryDetails(percent: Int?): BatteryDetails

@@ -31,7 +31,9 @@ internal actual fun createDeviceBackend(): DeviceBackend = object : DeviceBacken
                 battery.isPowerOnLine -> BatteryChargingStatus.NotCharging
                 else -> BatteryChargingStatus.Unknown
             }
-            emit(Reading(BatteryReading(percent, status, null, null), Clock.System.now()))
+            emit(Reading(BatteryReading(percent, status, null, null,
+                voltageVolts = battery?.voltage?.takeIf { it > 0 }?.toFloat(),
+                currentMilliamps = battery?.amperage?.takeIf { it != 0.0 }?.toFloat()), Clock.System.now()))
             delay(30_000)
         }
     }.flowOn(Dispatchers.IO)

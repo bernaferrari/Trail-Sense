@@ -2,6 +2,7 @@ package com.kylecorry.andromeda.device
 
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.andromeda.battery.BatteryHealth
+import com.kylecorry.andromeda.battery.BatteryChargingMethod
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
@@ -28,7 +29,12 @@ data class BatteryReading(
     val percent: Int?,
     val chargingStatus: BatteryChargingStatus,
     val health: BatteryHealth?,
-    val temperatureCelsius: Float?
+    val temperatureCelsius: Float?,
+    val voltageVolts: Float? = null,
+    val currentMilliamps: Float? = null,
+    val chargeMilliampHours: Float? = null,
+    val fullChargeMilliampHours: Float? = null,
+    val chargingMethod: BatteryChargingMethod? = null,
 )
 
 /** Cross-platform device observations. */
