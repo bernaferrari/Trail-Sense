@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    api project(':shared')
     implementation libs.androidx.core.ktx
     coreLibraryDesugaring libs.desugar
     testImplementation libs.junit
