@@ -7,6 +7,7 @@ import com.kylecorry.sol.science.astronomy.corrections.LongitudinalNutation
 import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.time.Time.toUTCLocal
 import com.kylecorry.sol.time.Time.utc
+import kotlinx.datetime.toKotlinLocalDateTime
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -26,22 +27,8 @@ fun UniversalTime.toJulianCenturies(): Double {
     return (toJulianDay() - JD_2000) / 36525.0
 }
 
-fun UniversalTime.toJulianDay(includeTime: Boolean = true): Double {
-    var Y = year.toDouble()
-    var M = month.value.toDouble()
-    val D =
-        dayOfMonth.toDouble() + if (includeTime) toLocalTime().toDecimalHours() / 24.0 else 0.0
-
-    if (M <= 2) {
-        Y--
-        M += 12
-    }
-
-    val A = floor(Y / 100)
-    val B = 2 - A + floor(A / 4)
-
-    return floor(365.25 * (Y + 4716)) + floor(30.6001 * (M + 1)) + D + B - 1524.5
-}
+fun UniversalTime.toJulianDay(includeTime: Boolean = true): Double =
+    JulianDay.of(toKotlinLocalDateTime(), includeTime)
 
 internal fun UniversalTime.jd0(): Double {
     val Y = (year - 1).toDouble()
