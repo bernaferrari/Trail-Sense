@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.signal
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 
 
-internal class NrCellSignalDistanceCalculator(private val subcarrierSpacingExponent: Int = 0) :
+class NrCellSignalDistanceCalculator(private val subcarrierSpacingExponent: Int = 0) :
     CellSignalDistanceCalculator {
 
     private val binDistance = 78.125f / (Arithmetic.power(2, subcarrierSpacingExponent))

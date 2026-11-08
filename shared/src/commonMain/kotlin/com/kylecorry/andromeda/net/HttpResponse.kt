@@ -6,7 +6,7 @@ class HttpResponse(
     val content: ByteArray?
 ) {
     fun contentAsString(): String? {
-        return content?.toString(Charsets.UTF_8)
+        return content?.decodeToString()
     }
 
     fun isSuccessful(): Boolean {

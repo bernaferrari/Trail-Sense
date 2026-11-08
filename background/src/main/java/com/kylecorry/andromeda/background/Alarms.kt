@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.core.content.getSystemService
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.sol.time.Time.toEpochMillis
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime

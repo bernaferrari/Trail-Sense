@@ -7,7 +7,6 @@ import android.content.Intent
 import android.util.Log
 import com.kylecorry.andromeda.preferences.IPreferences
 import com.kylecorry.andromeda.preferences.SharedPreferences
-import com.kylecorry.sol.time.Time.toZonedDateTime
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -90,7 +89,7 @@ abstract class DailyJobReceiver(
     private fun setAlarm(context: Context, time: LocalDateTime) {
         val scheduler = getScheduler(context)
         scheduler.cancel()
-        scheduler.once(time.toZonedDateTime().toInstant())
+        scheduler.once(time.atZone(java.time.ZoneId.systemDefault()).toInstant())
         Log.d(
             "ScheduledJobReceiver",
             "${this::class.java.simpleName} schedule the next alarm for $time"

@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.signal
 
 import com.kylecorry.andromeda.core.sensors.Quality
-import java.time.Instant
+import kotlin.time.Instant
 
 data class CellSignal(
     val id: String,

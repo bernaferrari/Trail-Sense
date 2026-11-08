@@ -29,6 +29,7 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.permissions.Permissions
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toKotlinInstant
 
 class CellSignalSensor(
     private val context: Context,
@@ -248,7 +249,7 @@ class CellSignalSensor(
                     it.quality,
                     it.network,
                     it.isRegistered,
-                    it.time,
+                    it.time.toKotlinInstant(),
                     it.timingDistanceMeters,
                     it.timingDistanceErrorMeters?.plus(
                         (it.timingDistanceMeters ?: 0f) * pathLossFactor
