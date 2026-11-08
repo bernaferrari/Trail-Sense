@@ -1,15 +1,14 @@
 package com.kylecorry.andromeda.sense.level
 
-import android.view.Surface
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationUtils
 
 class Level(
     private val orientationSensor: IOrientationSensor,
-    var surfaceRotation: Int = Surface.ROTATION_0,
+    var surfaceRotation: Int = 0,
 ) :
-    AbstractSensor(), ILevel {
+    SharedSensor(), ILevel {
 
     private val rotationMatrix = FloatArray(16)
     private val orientation = FloatArray(3)
