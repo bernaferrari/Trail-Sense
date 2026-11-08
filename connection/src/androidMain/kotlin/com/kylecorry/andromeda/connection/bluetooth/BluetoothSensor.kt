@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import com.kylecorry.andromeda.core.sensors.AbstractSensor
 import java.io.IOException
-import java.time.Instant
+import kotlin.time.Clock
 import kotlin.concurrent.thread
 
 // TODO: Improve the use of threads here
@@ -60,7 +60,7 @@ class BluetoothSensor(
     override fun write(data: String): Boolean {
         if (!isConnected) return false
         device.write(data)
-        return false
+        return true
     }
 
     private fun startInputListener() {
@@ -69,7 +69,7 @@ class BluetoothSensor(
                 synchronized(device) {
                     try {
                         val recv = device.readLine()
-                        val message = BluetoothMessage(recv, Instant.now())
+                        val message = BluetoothMessage(recv, Clock.System.now())
                         val lastMessages = _messages.toMutableList()
                         lastMessages.add(message)
                         while (lastMessages.size > messageHistoryLength) {
