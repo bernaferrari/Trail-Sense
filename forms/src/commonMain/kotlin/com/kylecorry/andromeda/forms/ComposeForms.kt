@@ -68,14 +68,15 @@ fun FormCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: St
 @Composable
 fun <T> FormDropdown(
     selected: T?, options: List<T>, label: String, optionLabel: (T) -> String,
-    onSelected: (T) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true
+    onSelected: (T) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
+    selectedLabel: (T) -> String = optionLabel
 ) {
     var expanded by remember { mutableStateOf(false) }
     Column(modifier) {
         Text(label, style = MaterialTheme.typography.labelMedium)
         Box {
             OutlinedButton(onClick = { expanded = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-                Text(selected?.let(optionLabel) ?: label)
+                Text(selected?.let(selectedLabel) ?: label)
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 options.forEach { option ->
@@ -100,10 +101,11 @@ fun FormLoading(modifier: Modifier = Modifier) { CircularProgressIndicator(modif
 @Composable
 fun <T> FormUnitField(
     value: String, onValueChange: (String) -> Unit, unit: T?, units: List<T>,
-    label: String, unitLabel: (T) -> String, onUnitChange: (T) -> Unit, modifier: Modifier = Modifier
+    label: String, unitLabel: (T) -> String, onUnitChange: (T) -> Unit, modifier: Modifier = Modifier,
+    unitShortLabel: (T) -> String = unitLabel, enabled: Boolean = true, placeholder: String? = null
 ) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        FormNumberField(value, onValueChange, label, modifier = Modifier.weight(1f))
-        FormDropdown(unit, units, label, unitLabel, onUnitChange, modifier = Modifier.weight(1f))
+        FormNumberField(value, onValueChange, label, modifier = Modifier.weight(1f), allowNegative = true, enabled = enabled, placeholder = placeholder)
+        FormDropdown(unit, units, label, unitLabel, onUnitChange, modifier = Modifier.weight(1f), enabled = enabled, selectedLabel = unitShortLabel)
     }
 }
