@@ -1,5 +1,7 @@
 plugins {
     kotlin("multiplatform")
+    id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.android.kotlin.multiplatform.library")
     id("com.vanniktech.maven.publish")
 }
@@ -16,7 +18,11 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { api(project(":widgets-android")) }
+        androidMain.dependencies {
+            api("androidx.glance:glance-appwidget:1.2.0")
+            implementation(project(":core"))
+            implementation(libs.androidx.core.ktx)
+        }
     }
 }
 group = "com.kylecorry.andromeda"
