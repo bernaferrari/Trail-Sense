@@ -28,4 +28,23 @@ class GeospatialPDFTest {
         assertEquals(10.0, metadata.points[0].second.latitude)
         assertEquals(40.0, metadata.points[1].second.longitude)
     }
+
+    @Test fun createsAndParsesObjectsWithGaps() {
+        fun name(value: String) = PDFValue.PDFName(value)
+        val objects = listOf(
+            PDFValue.PDFObject(1, content = listOf(PDFValue.PDFDictionary(mapOf(
+                name("Type") to name("Catalog"), name("Pages") to PDFValue.PDFIndirectObject(3)
+            )))),
+            PDFValue.PDFObject(3, content = listOf(PDFValue.PDFDictionary(mapOf(
+                name("Type") to name("Pages"), name("Kids") to PDFValue.PDFArray(listOf(PDFValue.PDFIndirectObject(5))),
+                name("Count") to PDFValue.PDFNumber(1)
+            )))),
+            PDFValue.PDFObject(5, content = listOf(PDFValue.PDFDictionary(mapOf(
+                name("Type") to name("Page"), name("Parent") to PDFValue.PDFIndirectObject(3),
+                name("MediaBox") to PDFValue.PDFArray(listOf(0, 0, 100, 100).map { PDFValue.PDFNumber(it) })
+            ))))
+        )
+        assertEquals(listOf(1, 3, 5), parsePDF(createPDF(objects)).map { it.id })
+    }
+
 }
