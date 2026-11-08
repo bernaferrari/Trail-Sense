@@ -23,6 +23,7 @@ kotlin {
             api("com.mikepenz:multiplatform-markdown-renderer-coil3:0.39.2")
             implementation("io.coil-kt.coil3:coil-compose:3.6.3")
             implementation("io.coil-kt.coil3:coil-network-ktor3:3.6.3")
+            implementation("io.ktor:ktor-client-cio:3.6.1")
             api(compose.foundation)
         }
     }

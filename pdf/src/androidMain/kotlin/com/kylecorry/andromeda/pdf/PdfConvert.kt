@@ -3,10 +3,9 @@ package com.kylecorry.andromeda.pdf
 import android.content.Context
 import android.graphics.Color
 import android.graphics.pdf.PdfDocument
-import android.graphics.pdf.PdfDocument.PageInfo
-import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -35,77 +34,40 @@ object PdfConvert {
         textSize: Float = 6f,
         margins: Int = 50
     ) {
-        val textView = TextView(context)
-        textView.text = text
-        textView.setTextColor(Color.BLACK)
-        textView.textSize = textSize
-        toPdf(textView, out, margins)
-    }
-
-    fun toPdf(textView: TextView, out: OutputStream, margins: Int = 50) {
+        require(margins >= 0 && margins * 2 < 595 && margins * 2 < 842)
+        require(textSize > 0)
         val document = PdfDocument()
-        val pageInfo = PageInfo.Builder(595, 842, 1).create()
-        val text = textView.text
-        textView.layoutParams = ViewGroup.LayoutParams(
-            pageInfo.pageWidth - margins * 2,
-            pageInfo.pageHeight - margins * 2
-        )
-
-        val widthSpec =
-            View.MeasureSpec.makeMeasureSpec(
-                pageInfo.pageWidth - margins * 2,
-                View.MeasureSpec.EXACTLY
-            )
-        val heightSpec =
-            View.MeasureSpec.makeMeasureSpec(
-                pageInfo.pageHeight - margins * 2,
-                View.MeasureSpec.EXACTLY
-            )
-        textView.measure(widthSpec, heightSpec)
-
-        textView.layout(0, 0, textView.measuredWidth, textView.measuredHeight)
-
-        var startPos = 0
-        var endPos = text.length
-
-        do {
-            endPos = getLastVisibleCharPos(textView, pageInfo, text, startPos, endPos, margins)
-            textView.text = text.subSequence(startPos, endPos)
-            textView.onPreDraw()
-
-            // Step 3: Draw the text to the page
-            val page = document.startPage(pageInfo)
-            val canvas = page.canvas
-            canvas.translate(margins.toFloat(), margins.toFloat())
-            textView.draw(canvas)
-            document.finishPage(page)
-
-            // Step 4: Update the start and end positions
-            startPos = endPos
-            endPos = text.length
-        } while (startPos < text.length)
-
-        document.writeTo(out)
-    }
-
-
-    private fun getLastVisibleCharPos(
-        textView: TextView,
-        pageInfo: PageInfo,
-        text: CharSequence,
-        startPos: Int,
-        endPos: Int,
-        margins: Int
-    ): Int {
-        textView.text = text.subSequence(startPos, endPos)
-        textView.onPreDraw()
-        var line = textView.layout.getLineForVertical(pageInfo.pageHeight - margins * 2)
-
-        while (line > 0 && textView.layout.getLineBottom(line) > pageInfo.pageHeight - margins * 2) {
-            line--
+        val paint = TextPaint().apply {
+            color = Color.BLACK
+            this.textSize = textSize * context.resources.displayMetrics.scaledDensity
         }
-
-        return startPos + textView.layout.getLineEnd(line)
+        val width = 595 - margins * 2
+        val height = 842 - margins * 2
+        try {
+            val layout = StaticLayout.Builder.obtain(text, 0, text.length, paint, width)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .build()
+            var firstLine = 0
+            var pageNumber = 1
+            do {
+                var endLine = firstLine
+                val top = layout.getLineTop(firstLine)
+                while (endLine < layout.lineCount &&
+                    (endLine == firstLine || layout.getLineBottom(endLine) - top <= height)) {
+                    endLine++
+                }
+                val page = document.startPage(PdfDocument.PageInfo.Builder(595, 842, pageNumber++).create())
+                page.canvas.save()
+                page.canvas.clipRect(margins, margins, 595 - margins, 842 - margins)
+                page.canvas.translate(margins.toFloat(), (margins - top).toFloat())
+                layout.draw(page.canvas)
+                page.canvas.restore()
+                document.finishPage(page)
+                firstLine = endLine
+            } while (firstLine < layout.lineCount)
+            document.writeTo(out)
+        } finally {
+            document.close()
+        }
     }
-
 }

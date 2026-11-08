@@ -23,6 +23,9 @@ kotlin {
             api(compose.runtime)
             api(compose.foundation)
             api(compose.material3)
+            api("io.coil-kt.coil3:coil-compose:3.6.3")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.6.3")
+            implementation("io.ktor:ktor-client-cio:3.6.1")
         }
         androidMain.dependencies { api(project(":views-android")) }
     }
