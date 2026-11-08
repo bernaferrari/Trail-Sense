@@ -14,9 +14,22 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
+    applyDefaultHierarchyTemplate()
     sourceSets {
+        val mobileMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation("dev.icerock.moko:permissions:0.20.1")
+                implementation("dev.icerock.moko:permissions-camera:0.20.1")
+                implementation("dev.icerock.moko:permissions-location:0.20.1")
+                implementation("dev.icerock.moko:permissions-microphone:0.20.1")
+                implementation("dev.icerock.moko:permissions-bluetooth:0.20.1")
+            }
+        }
+        androidMain { dependsOn(mobileMain) }
+        iosMain { dependsOn(mobileMain) }
         commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx) }
+        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); api("androidx.activity:activity:1.8.1") }
     }
 }
 group = "com.kylecorry.andromeda"
