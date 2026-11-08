@@ -22,6 +22,7 @@ kotlin {
         androidMain.dependencies {
             implementation(project(":permissions"))
             implementation(libs.androidx.core.ktx)
+            implementation("io.github.shadadman:ksensor-core:9.40.0")
         }
         iosMain.dependencies { implementation("com.swmansion:pulsar-kmp:0.1.0") }
     }
