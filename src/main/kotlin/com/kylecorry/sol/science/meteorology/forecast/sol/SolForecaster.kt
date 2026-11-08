@@ -26,6 +26,7 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toJavaInstant
 
 internal object SolForecaster : Forecaster {
     private val HISTORY_DURATION_NO_CHANGE_MAX = Duration.ofHours(8)
@@ -101,7 +102,7 @@ internal object SolForecaster : Forecaster {
         }
 
         // Try to figure out what the current conditions are based on past predictions
-        val times = pressures.map { it.time } + clouds.map { it.time }
+        val times = pressures.map { it.time.toJavaInstant() } + clouds.map { it.time.toJavaInstant() }
         var startTime = Time.getClosestPastTime(time, times)
         val minTime = time.minus(HISTORY_DURATION_NO_CHANGE_MAX)
         val maxIterations = times.size
@@ -159,14 +160,14 @@ internal object SolForecaster : Forecaster {
         val oldest = time.minus(HISTORY_DURATION_MAX)
         val cloudsUpToDateTime = time.minus(CLOUDS_UP_TO_DATE_DURATION)
         val filteredPressures = pressures
-            .filter { it.time in oldest..time }
+            .filter { it.time.toJavaInstant() in oldest..time }
             .sortedBy { it.time }
         var filteredClouds = clouds
-            .filter { it.time in oldest..time }
+            .filter { it.time.toJavaInstant() in oldest..time }
             .sortedBy { it.time }
 
         // Don't look at clouds if none were logged in the last 24 hours
-        if (filteredClouds.none { it.time >= cloudsUpToDateTime }) {
+        if (filteredClouds.none { it.time.toJavaInstant() >= cloudsUpToDateTime }) {
             filteredClouds = emptyList()
         }
 

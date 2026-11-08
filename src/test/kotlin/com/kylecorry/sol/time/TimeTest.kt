@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import java.time.*
+import kotlin.time.toJavaInstant
 
 class TimeTest {
 
@@ -375,9 +376,9 @@ class TimeTest {
             .atZone(ZoneId.systemDefault())
 
         assertEquals(start.toEpochSecond(), readings.first().value)
-        assertEquals(start.toInstant(), readings.first().time)
+        assertEquals(start.toInstant(), readings.first().time.toJavaInstant())
         assertEquals(end.toEpochSecond(), readings.last().value)
-        assertEquals(end.toInstant(), readings.last().time)
+        assertEquals(end.toInstant(), readings.last().time.toJavaInstant())
     }
 
     @Test
@@ -395,9 +396,9 @@ class TimeTest {
             .atZone(ZoneId.systemDefault())
 
         assertEquals(start.toEpochSecond(), readings.first().value)
-        assertEquals(start.toInstant(), readings.first().time)
+        assertEquals(start.toInstant(), readings.first().time.toJavaInstant())
         assertEquals(end.toEpochSecond(), readings.last().value)
-        assertEquals(end.toInstant(), readings.last().time)
+        assertEquals(end.toInstant(), readings.last().time.toJavaInstant())
     }
 
     @Test
@@ -414,7 +415,7 @@ class TimeTest {
             end
         )
 
-        assertEquals(expected.map { it.toInstant() }, readings.map { it.time })
+        assertEquals(expected.map { it.toInstant() }, readings.map { it.time.toJavaInstant() })
         assertEquals(expected.map { it.toEpochSecond() }, readings.map { it.value })
     }
 
@@ -431,7 +432,7 @@ class TimeTest {
             start.plusHours(2)
         )
 
-        assertEquals(expected.map { it.toInstant() }, readings.map { it.time })
+        assertEquals(expected.map { it.toInstant() }, readings.map { it.time.toJavaInstant() })
     }
 
     @Test
@@ -443,7 +444,7 @@ class TimeTest {
 
         val expected = listOf(start, start.plusHours(1), end)
 
-        assertEquals(expected.map { it.toInstant() }, readings.map { it.time })
+        assertEquals(expected.map { it.toInstant() }, readings.map { it.time.toJavaInstant() })
     }
 
     @Test
@@ -452,7 +453,7 @@ class TimeTest {
         val step = Duration.ofHours(1)
         val readings = Time.getReadings(time, time, step) { it.toEpochSecond() }
 
-        assertEquals(listOf(time.toInstant()), readings.map { it.time })
+        assertEquals(listOf(time.toInstant()), readings.map { it.time.toJavaInstant() })
     }
 
     @Test
@@ -472,9 +473,9 @@ class TimeTest {
         assertEquals(24, readings.size)
         val startInstant = start.toInstant()
         val endInstant = end.toInstant()
-        assertEquals(startInstant, readings.first().time)
+        assertEquals(startInstant, readings.first().time.toJavaInstant())
         assertEquals(start.toEpochSecond(), readings.first().value)
-        assertEquals(endInstant, readings.last().time)
+        assertEquals(endInstant, readings.last().time.toJavaInstant())
         assertEquals(end.toEpochSecond(), readings.last().value)
     }
 

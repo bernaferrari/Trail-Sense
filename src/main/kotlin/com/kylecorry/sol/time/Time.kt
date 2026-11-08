@@ -5,6 +5,8 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toKotlinInstant
+import kotlin.time.toJavaInstant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -176,7 +178,7 @@ object Time {
         var time = start
         var hasRecordedEnd = false
         while (time <= end) {
-            readings.add(Reading(valueFn(time), time.toInstant()))
+            readings.add(Reading(valueFn(time), time.toInstant().toKotlinInstant()))
             if (time == end) {
                 hasRecordedEnd = true
             }
@@ -184,7 +186,7 @@ object Time {
         }
 
         if (!hasRecordedEnd && alwaysIncludeEnd && !start.isAfter(end)) {
-            readings.add(Reading(valueFn(end), end.toInstant()))
+            readings.add(Reading(valueFn(end), end.toInstant().toKotlinInstant()))
         }
 
         return readings
@@ -208,7 +210,7 @@ object Time {
     fun List<Reading<*>>.duration(): Duration {
         val start = minByOrNull { it.time } ?: return Duration.ZERO
         val end = maxByOrNull { it.time } ?: return Duration.ZERO
-        return Duration.between(start.time, end.time)
+        return Duration.between(start.time.toJavaInstant(), end.time.toJavaInstant())
     }
 
     fun isDaylightSavings(time: ZonedDateTime): Boolean {

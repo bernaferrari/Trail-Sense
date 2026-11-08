@@ -11,6 +11,7 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import java.time.Duration
+import kotlin.time.toJavaInstant
 
 internal object ForecastHelper {
 
@@ -67,13 +68,13 @@ internal object ForecastHelper {
 
         val pressure = pressures.last()
 
-        val targetTime = pressure.time.minus(Duration.ofHours(3))
+        val targetTime = pressure.time.toJavaInstant().minus(Duration.ofHours(3))
         val lastPressure = pressures.minBy {
             if (it == pressure) {
                 Long.MAX_VALUE
             } else {
                 Duration.between(
-                    it.time,
+                    it.time.toJavaInstant(),
                     targetTime
                 ).abs().seconds
             }
@@ -81,7 +82,7 @@ internal object ForecastHelper {
         return Meteorology.getTendency(
             lastPressure.value,
             pressure.value,
-            Duration.between(lastPressure.time, pressure.time),
+            Duration.between(lastPressure.time.toJavaInstant(), pressure.time.toJavaInstant()),
             threshold
         )
     }

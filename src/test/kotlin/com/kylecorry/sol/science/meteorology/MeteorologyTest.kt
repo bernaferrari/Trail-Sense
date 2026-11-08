@@ -14,6 +14,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.*
+import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.hours
 import java.util.stream.Stream
 
 class MeteorologyTest {
@@ -1167,7 +1169,7 @@ class MeteorologyTest {
                     pressures(
                         1024f,
                         1023f
-                    ).map { it.copy(time = it.time.minus(Duration.ofHours(6))) } + pressures(
+                    ).map { it.copy(time = it.time - 6.hours) } + pressures(
                         1022f,
                         1022f
                     ),
@@ -1188,7 +1190,7 @@ class MeteorologyTest {
                         1022f,
                         1022f
                     ),
-                    clouds(CloudGenus.Stratus).map { it.copy(time = it.time.minus(Duration.ofHours(6))) },
+                    clouds(CloudGenus.Stratus).map { it.copy(time = it.time - 6.hours) },
                     null,
                     weather(
                         null,
@@ -1203,11 +1205,11 @@ class MeteorologyTest {
                 Arguments.of(
                     emptyList<Reading<Pressure>>(),
                     listOf(
-                        Reading(CloudGenus.Cirrus, weatherTime.minus(Duration.ofHours(26))),
-                        Reading(CloudGenus.Altocumulus, weatherTime.minus(Duration.ofHours(25))),
+                        Reading(CloudGenus.Cirrus, weatherTime.minus(Duration.ofHours(26)).toKotlinInstant()),
+                        Reading(CloudGenus.Altocumulus, weatherTime.minus(Duration.ofHours(25)).toKotlinInstant()),
                         Reading(
                             CloudGenus.Stratus,
-                            weatherTime.minus(Duration.ofHours(24)).minusSeconds(1)
+                            weatherTime.minus(Duration.ofHours(24)).minusSeconds(1).toKotlinInstant()
                         )
                     ),
                     null,
@@ -1223,7 +1225,7 @@ class MeteorologyTest {
                 Arguments.of(
                     pressures(1030f, 1030f),
                     listOf(
-                        Reading(CloudGenus.Stratus, weatherTime.minus(Duration.ofHours(4)))
+                        Reading(CloudGenus.Stratus, weatherTime.minus(Duration.ofHours(4)).toKotlinInstant())
                     ),
                     null,
                     weatherAt(
@@ -1241,8 +1243,8 @@ class MeteorologyTest {
                 // Ignores pressures older than 48 hours
                 Arguments.of(
                     listOf(
-                        Reading(Pressure.hpa(1027f), weatherTime.minus(Duration.ofHours(52))),
-                        Reading(Pressure.hpa(1030f), weatherTime.minus(Duration.ofHours(49)))
+                        Reading(Pressure.hpa(1027f), weatherTime.minus(Duration.ofHours(52)).toKotlinInstant()),
+                        Reading(Pressure.hpa(1030f), weatherTime.minus(Duration.ofHours(49)).toKotlinInstant())
                     ),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -1307,15 +1309,15 @@ class MeteorologyTest {
         private fun pressures(last: Float, now: Float): List<Reading<Pressure>> {
             val time = weatherTime
             return listOf(
-                Reading(Pressure.hpa(last), time.minus(Duration.ofHours(3))),
-                Reading(Pressure.hpa(now), time)
+                Reading(Pressure.hpa(last), time.minus(Duration.ofHours(3)).toKotlinInstant()),
+                Reading(Pressure.hpa(now), time.toKotlinInstant())
             )
         }
 
         private fun clouds(vararg clouds: CloudGenus?): List<Reading<CloudGenus?>> {
             var time = weatherTime.minusSeconds(clouds.size.toLong())
             return clouds.map {
-                val r = Reading(it, time)
+                val r = Reading(it, time.toKotlinInstant())
                 time = time.plusSeconds(1)
                 r
             }
