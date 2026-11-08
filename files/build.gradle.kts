@@ -29,6 +29,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":storage"))
             implementation("io.ktor:ktor-http:3.6.1")
+            api("no.synth:kmp-zip-okio:2.1.0")
         }
         androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.documentfile) }
     }
