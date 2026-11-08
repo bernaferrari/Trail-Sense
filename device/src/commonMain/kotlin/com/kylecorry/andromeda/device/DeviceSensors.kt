@@ -42,6 +42,9 @@ class DeviceSensors {
     fun angularVelocity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.angularVelocity(interval, accuracy)
 
+    fun magnetometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowMagnetometer(magneticField(interval, accuracy), scope)
+
     /** Magnetic field in microteslas. */
     fun magneticField(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.magneticField(interval, accuracy)
