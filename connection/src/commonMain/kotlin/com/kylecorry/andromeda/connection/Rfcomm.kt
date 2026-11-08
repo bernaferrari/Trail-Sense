@@ -21,3 +21,19 @@ expect suspend fun connectRfcomm(
     service: Uuid,
     security: RfcommSecurity = RfcommSecurity.Secure,
 ): RfcommConnection
+
+/** Standard Bluetooth Serial Port Profile service identifier. */
+val SerialPortService: Uuid = Uuid.parse("00001101-0000-1000-8000-00805f9b34fb")
+
+data class PairedBluetoothDevice(val address: String, val name: String?)
+data class RfcommPeer(val device: PairedBluetoothDevice, val connection: RfcommConnection)
+
+/** Returns bonded Bluetooth Classic devices when supported by the platform. */
+expect fun pairedBluetoothDevices(): List<PairedBluetoothDevice>
+
+/** Waits for one incoming RFCOMM connection. Cancellation closes the listening socket. */
+expect suspend fun acceptRfcomm(
+    name: String,
+    service: Uuid,
+    security: RfcommSecurity = RfcommSecurity.Secure,
+): RfcommPeer

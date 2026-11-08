@@ -76,3 +76,43 @@ private class AndroidRfcommConnection(private val socket: BluetoothSocket) : Rfc
         if (closed.compareAndSet(false, true)) socket.close()
     }
 }
+
+@SuppressLint("MissingPermission")
+@Suppress("DEPRECATION")
+actual fun pairedBluetoothDevices(): List<PairedBluetoothDevice> =
+    BluetoothAdapter.getDefaultAdapter()?.bondedDevices?.map { PairedBluetoothDevice(it.address, it.name) }.orEmpty()
+
+@SuppressLint("MissingPermission")
+@Suppress("DEPRECATION")
+actual suspend fun acceptRfcomm(name: String, service: Uuid, security: RfcommSecurity): RfcommPeer {
+    require(name.isNotBlank())
+    val adapter = checkNotNull(BluetoothAdapter.getDefaultAdapter()) { "Bluetooth is unavailable" }
+    val uuid = UUID.fromString(service.toString())
+    val server = when (security) {
+        RfcommSecurity.Secure -> adapter.listenUsingRfcommWithServiceRecord(name, uuid)
+        RfcommSecurity.Insecure -> adapter.listenUsingInsecureRfcommWithServiceRecord(name, uuid)
+    }
+    return suspendCancellableCoroutine { continuation ->
+        val task = CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val socket = server.accept()
+                val peer = try {
+                    val device = socket.remoteDevice
+                    RfcommPeer(PairedBluetoothDevice(device.address, device.name), AndroidRfcommConnection(socket))
+                } catch (error: Throwable) {
+                    runCatching { socket.close() }
+                    throw error
+                }
+                continuation.resume(peer) { _, value, _ -> runCatching { value.connection.close() } }
+            } catch (error: Throwable) {
+                continuation.resumeWithException(error)
+            } finally {
+                runCatching { server.close() }
+            }
+        }
+        continuation.invokeOnCancellation {
+            runCatching { server.close() }
+            task.cancel()
+        }
+    }
+}
