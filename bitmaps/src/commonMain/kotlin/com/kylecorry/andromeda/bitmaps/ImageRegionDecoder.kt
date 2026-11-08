@@ -1,5 +1,7 @@
 package com.kylecorry.andromeda.bitmaps
 
+import kotlin.math.roundToInt
+
 /** Decodes rectangular regions of an encoded image. Close the decoder when finished. */
 expect class ImageRegionDecoder : AutoCloseable {
     constructor(bytes: ByteArray)
@@ -58,4 +60,19 @@ fun ImageRegionDecoder.decodeWrappedRegion(
         if (startX < endX) copyPart(startX.toInt(), (startX - left.toLong()).toInt(), (endX - startX).toInt())
     }
     return PixelImage(width, height, output)
+}
+
+/** Samples a pixel without decoding the whole image; returns null for coordinates outside it. */
+fun ImageRegionDecoder.samplePixel(x: Float, y: Float, interpolate: Boolean = true): Int? {
+    if (!x.isFinite() || !y.isFinite() || x < 0f || y < 0f || x > width - 1 || y > height - 1) return null
+    if (!interpolate) {
+        val pixelX = x.roundToInt().coerceIn(0, width - 1)
+        val pixelY = y.roundToInt().coerceIn(0, height - 1)
+        return decode(pixelX, pixelY, 1, 1).pixels[0]
+    }
+    val left = x.toInt()
+    val top = y.toInt()
+    val columns = minOf(2, width - left)
+    val rows = minOf(2, height - top)
+    return decode(left, top, columns, rows).interpolate(x - left, y - top)
 }
