@@ -3,6 +3,7 @@ package com.kylecorry.andromeda.device
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
+import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.units.Coordinate
@@ -151,6 +152,11 @@ class DeviceSensors {
     fun mslAltimeter(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
         FlowAltimeter(mslAltitude(interval, accuracy), scope)
 
+    /** GNSS satellite details where the platform provides them. */
+    fun satelliteStatus(): Flow<Reading<List<Satellite>>> = platformSatelliteStatus()
+
+    fun satelliteStatusSensor(scope: CoroutineScope) = FlowSatelliteStatus(satelliteStatus(), scope)
+
     fun gps(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
         FlowGPS(location(interval, accuracy), scope)
 
@@ -177,3 +183,4 @@ internal interface DeviceBackend {
 }
 
 internal expect fun createDeviceBackend(): DeviceBackend
+internal expect fun platformSatelliteStatus(): Flow<Reading<List<Satellite>>>

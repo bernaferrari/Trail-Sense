@@ -5,6 +5,8 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Thermometer
 import com.kylecorry.andromeda.sense.hygrometer.IHygrometer
 import com.kylecorry.andromeda.sense.light.ILightSensor
+import com.kylecorry.andromeda.sense.location.ISatelliteStatusSensor
+import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.andromeda.sense.pedometer.IPedometer
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +48,13 @@ abstract class FlowMeasurement<T>(
 class FlowAltimeter(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
     FlowMeasurement<Float>(readings, scope, 0f), Altimeter {
     override val altitude: Float get() = value
+}
+
+/** Adapts GNSS status readings to the shared satellite sensor contract. */
+class FlowSatelliteStatus(readings: Flow<Reading<List<Satellite>>>, scope: CoroutineScope) :
+    FlowMeasurement<List<Satellite>>(readings, scope, emptyList()), ISatelliteStatusSensor {
+    override val satelliteDetails: List<Satellite>? get() = value.takeIf { hasValidReading }
+    override val satellites: Int? get() = satelliteDetails?.count { it.usedInFix }
 }
 
 class FlowLightSensor(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
