@@ -22,6 +22,13 @@ plugins {
 subprojects {
     if (name in setOf(
         "speech",
+        "forms",
+        "fragments",
+        "list",
+        "pickers",
+        "views",
+        "widgets",
+        "tensorflow",
         "alerts",
         "notify",
         "exceptions",
