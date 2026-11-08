@@ -20,52 +20,7 @@ plugins {
 }
 
 subprojects {
-    if (name in setOf(
-        "speech",
-        "forms",
-        "fragments",
-        "list",
-        "pickers",
-        "views",
-        "widgets",
-        "tensorflow",
-        "alerts",
-        "notify",
-        "exceptions",
-        "markdown",
-        "canvas",
-        "signal",
-        "bitmaps",
-        "clipboard",
-        "background",
-        "pdf",
-        "camera",
-        "battery",
-        "torch",
-        "qr",
-        "sms",
-        "print",
-        "permissions",
-        "connection",
-        "ipc",
-        "core",
-        "sense",
-        "preferences",
-        "files",
-        "sound",
-        "haptics",
-        "shared",
-        "device",
-        "storage",
-        "compression",
-        "csv",
-        "wkt",
-        "geojson",
-        "xml",
-        "gpx",
-        "net",
-        "json",
-    )) return@subprojects
+    if (!name.endsWith("-android")) return@subprojects
     val artifactId = project.name
 
     plugins.apply("com.android.library")
