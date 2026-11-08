@@ -1,6 +1,7 @@
 package com.kylecorry.sol.science.astronomy.navigation
 
 import com.kylecorry.sol.math.Vector3Precise
+import com.kylecorry.sol.math.trigonometry.Trigonometry
 import kotlin.math.acos
 
 internal data class CatalogPair(val separation: Double, val first: Int, val second: Int)
@@ -9,7 +10,7 @@ internal data class CatalogPair(val separation: Double, val first: Int, val seco
  * Every pair of catalog bodies sorted by angular separation, for finding pairs that match an
  * observed separation
  */
-internal class CatalogPairs(val catalog: List<BodyPosition>, minSeparation: Double, maxSeparation: Double) {
+internal class CatalogPairs(val catalog: List<Vector3Precise>, minSeparation: Double, maxSeparation: Double) {
     private val pairs: List<CatalogPair>
     private val separations: DoubleArray
 
@@ -17,7 +18,7 @@ internal class CatalogPairs(val catalog: List<BodyPosition>, minSeparation: Doub
         val all = mutableListOf<CatalogPair>()
         for (i in catalog.indices) {
             for (j in i + 1 until catalog.size) {
-                val d = CatalogMatcher.angle(catalog[i].vector, catalog[j].vector)
+                val d = CatalogMatcher.angle(catalog[i], catalog[j])
                 if (d in minSeparation..maxSeparation) all.add(CatalogPair(d, i, j))
             }
         }
@@ -35,17 +36,17 @@ internal class CatalogPairs(val catalog: List<BodyPosition>, minSeparation: Doub
         /**
          * @return the index of the closest body and its distance in degrees
          */
-        fun nearest(vector: Vector3Precise, catalog: List<BodyPosition>): Pair<Int, Double> {
+        fun nearest(vector: Vector3Precise, catalog: List<Vector3Precise>): Pair<Int, Double> {
             var bestIndex = -1
             var bestDot = -2.0
             for (i in catalog.indices) {
-                val d = vector.dot(catalog[i].vector)
+                val d = vector.dot(catalog[i])
                 if (d > bestDot) {
                     bestDot = d
                     bestIndex = i
                 }
             }
-            return bestIndex to Math.toDegrees(acos(bestDot.coerceIn(-1.0, 1.0)))
+            return bestIndex to Trigonometry.toDegrees(acos(bestDot.coerceIn(-1.0, 1.0)))
         }
 
         private fun lowerBound(values: DoubleArray, target: Double): Int {

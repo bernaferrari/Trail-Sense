@@ -2,6 +2,7 @@ package com.kylecorry.sol.science.astronomy.navigation
 
 import com.kylecorry.sol.math.Vector3Precise
 import com.kylecorry.sol.math.geometry.Rotation
+import com.kylecorry.sol.math.trigonometry.Trigonometry
 import kotlin.math.acos
 import kotlin.math.sqrt
 
@@ -14,11 +15,12 @@ import kotlin.math.sqrt
  * @param maxZenithOffset rotations that put up further than this (degrees) from the catalog's zenith are rejected
  * @param inlierTolerance the maximum distance (degrees) between an observation and a body to count as a match
  */
-internal class CatalogMatcher(
-    val catalog: List<BodyPosition>,
+internal class CatalogMatcher<T>(
+    val catalog: List<T>,
     private val up: Vector3Precise?,
     private val maxZenithOffset: Double,
-    private val inlierTolerance: Double
+    private val inlierTolerance: Double,
+    vectorOf: (T) -> Vector3Precise
 ) {
 
     class Hypothesis(val rotation: Rotation, val score: Int, val residual: Double) {
@@ -30,7 +32,8 @@ internal class CatalogMatcher(
 
     data class Match(val index: Int, val catalogIndex: Int, val distance: Double)
 
-    private val pairs = CatalogPairs(catalog, MIN_SEPARATION, MAX_SEPARATION)
+    private val catalogVectors = catalog.map(vectorOf)
+    private val pairs = CatalogPairs(catalogVectors, MIN_SEPARATION, MAX_SEPARATION)
 
     fun getPairs(separation: Double, tolerance: Double): List<CatalogPair> {
         if (separation < MIN_SEPARATION) return emptyList()
@@ -42,7 +45,7 @@ internal class CatalogMatcher(
      */
     fun getHypotheses(vectors: List<Vector3Precise>, a: Int, b: Int, pair: CatalogPair): List<Hypothesis> {
         return listOf(pair.first to pair.second, pair.second to pair.first).mapNotNull { (from, to) ->
-            Rotation.triad(vectors[a], vectors[b], catalog[from].vector, catalog[to].vector)
+            Rotation.triad(vectors[a], vectors[b], catalogVectors[from], catalogVectors[to])
                 ?.takeIf { isConsistentWithUp(it) }
                 ?.let { score(vectors, it) }
         }
@@ -57,17 +60,17 @@ internal class CatalogMatcher(
         tolerance: Double = inlierTolerance
     ): List<Match> {
         return vectors.mapIndexedNotNull { index, vector ->
-            val (nearest, distance) = CatalogPairs.nearest(rotation.rotate(vector), catalog)
+            val (nearest, distance) = CatalogPairs.nearest(rotation.rotate(vector), catalogVectors)
             if (nearest >= 0 && distance <= tolerance) Match(index, nearest, distance) else null
         }.groupBy { it.catalogIndex }.map { group -> group.value.minBy { it.distance } }
     }
 
     fun fitRotation(vectors: List<Vector3Precise>, matches: List<Match>): Rotation {
-        return Rotation.fit(matches.map { vectors[it.index] }, matches.map { catalog[it.catalogIndex].vector })
+        return Rotation.fit(matches.map { vectors[it.index] }, matches.map { catalogVectors[it.catalogIndex] })
     }
 
     fun rms(vectors: List<Vector3Precise>, matches: List<Match>, rotation: Rotation): Double {
-        return rms(matches.map { vectors[it.index] }, matches.map { catalog[it.catalogIndex].vector }, rotation)
+        return rms(matches.map { vectors[it.index] }, matches.map { catalogVectors[it.catalogIndex] }, rotation)
     }
 
     /**
@@ -93,7 +96,7 @@ internal class CatalogMatcher(
         var score = 0
         var residual = 0.0
         for (vector in vectors) {
-            val distance = CatalogPairs.nearest(rotation.rotate(vector), catalog).second
+            val distance = CatalogPairs.nearest(rotation.rotate(vector), catalogVectors).second
             if (distance <= inlierTolerance) {
                 score++
                 residual += distance
@@ -108,7 +111,7 @@ internal class CatalogMatcher(
         private const val INLIER_RMS_SCALE = 4.0
 
         fun angle(a: Vector3Precise, b: Vector3Precise): Double {
-            return Math.toDegrees(acos((a.dot(b) / (a.magnitude() * b.magnitude())).coerceIn(-1.0, 1.0)))
+            return Trigonometry.toDegrees(acos((a.dot(b) / (a.magnitude() * b.magnitude())).coerceIn(-1.0, 1.0)))
         }
 
         fun rms(rays: List<Vector3Precise>, targets: List<Vector3Precise>, rotation: Rotation): Double {

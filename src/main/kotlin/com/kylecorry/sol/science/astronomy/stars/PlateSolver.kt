@@ -3,6 +3,7 @@ package com.kylecorry.sol.science.astronomy.stars
 import com.kylecorry.sol.math.Vector3Precise
 import com.kylecorry.sol.math.geometry.Rotation
 import com.kylecorry.sol.science.astronomy.navigation.CatalogMatcher
+import com.kylecorry.sol.science.astronomy.navigation.BodyPosition
 import com.kylecorry.sol.science.astronomy.navigation.HorizonVectors
 import com.kylecorry.sol.science.astronomy.navigation.SkyCatalog
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
@@ -38,13 +39,15 @@ internal class PlateSolver(
         val vectors = readings.map { HorizonVectors.toVector(it.azimuth.value.toDouble(), it.altitude.toDouble()) }
         val inlierTolerance = (tolerance * INLIER_DEGREES_PER_TOLERANCE).coerceAtLeast(MIN_INLIER_TOLERANCE)
         // The readings' up is the zenith at the true location, which must be near the approximate one
-        val matcher = CatalogMatcher(catalog, HorizonVectors.up, maxZenithOffset, inlierTolerance)
+        val matcher = CatalogMatcher(catalog, HorizonVectors.up, maxZenithOffset, inlierTolerance) { it.vector }
         val best = findBestHypothesis(vectors, matcher)
             ?.takeIf { it.score >= minMatches.coerceAtMost(readings.size) }
         return best?.let { refine(readings, vectors, matcher, it.rotation, inlierTolerance) }.orEmpty()
     }
 
-    private fun findBestHypothesis(vectors: List<Vector3Precise>, matcher: CatalogMatcher): CatalogMatcher.Hypothesis? {
+    private fun findBestHypothesis(
+        vectors: List<Vector3Precise>, matcher: CatalogMatcher<BodyPosition>
+    ): CatalogMatcher.Hypothesis? {
         var best: CatalogMatcher.Hypothesis? = null
         for (a in vectors.indices) {
             for (b in a + 1 until vectors.size) {
@@ -62,7 +65,7 @@ internal class PlateSolver(
         vectors: List<Vector3Precise>,
         a: Int,
         b: Int,
-        matcher: CatalogMatcher
+        matcher: CatalogMatcher<BodyPosition>
     ): List<CatalogMatcher.Hypothesis> {
         val observed = CatalogMatcher.angle(vectors[a], vectors[b])
         return matcher.getPairs(observed, observed * tolerance + MIN_PAIR_TOLERANCE).flatMap { pair ->
@@ -73,7 +76,7 @@ internal class PlateSolver(
     private fun refine(
         readings: List<CelestialObservation>,
         vectors: List<Vector3Precise>,
-        matcher: CatalogMatcher,
+        matcher: CatalogMatcher<BodyPosition>,
         initialRotation: Rotation,
         inlierTolerance: Double
     ): List<DetectedStar> {
