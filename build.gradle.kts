@@ -12,6 +12,7 @@ buildscript {
 
 plugins {
     kotlin("multiplatform") version "2.4.21" apply false
+    kotlin("plugin.serialization") version "2.4.21" apply false
     id("com.android.kotlin.multiplatform.library") version "9.4.1" apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
@@ -19,7 +20,7 @@ plugins {
 }
 
 subprojects {
-    if (name == "shared" || name == "device" || name == "storage" || name == "compression" || name == "csv" || name == "wkt" || name == "geojson" || name == "xml" || name == "gpx" || name == "net") return@subprojects
+    if (name == "shared" || name == "device" || name == "storage" || name == "compression" || name == "csv" || name == "wkt" || name == "geojson" || name == "xml" || name == "gpx" || name == "net" || name == "json") return@subprojects
     val artifactId = project.name
 
     plugins.apply("com.android.library")

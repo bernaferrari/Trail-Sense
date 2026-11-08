@@ -1,5 +1,6 @@
 package com.kylecorry.andromeda.json
 
+import kotlinx.serialization.Serializable
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -10,7 +11,7 @@ class JsonConvertTest {
     fun toJson() {
         val obj = TestClass(1, 1.2, "test")
         val json = JsonConvert.toJson(obj)
-        assertEquals("{\"other\":1.2,\"something\":1,\"thing\":\"test\"}", json)
+        assertEquals("{\"something\":1,\"other\":1.2,\"thing\":\"test\"}", json)
     }
 
     @Test
@@ -21,6 +22,7 @@ class JsonConvertTest {
         assertEquals(expected, obj)
     }
 
+    @Serializable
     data class TestClass(val something: Int, val other: Double, val thing: String)
 
 }
