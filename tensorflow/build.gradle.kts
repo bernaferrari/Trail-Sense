@@ -20,6 +20,14 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
+        jvmMain.dependencies {
+            implementation("org.bytedeco:tensorflow-lite:2.21.0-1.5.14")
+            listOf("linux-arm64", "linux-x86_64", "macosx-arm64", "macosx-x86_64", "windows-x86_64").forEach { platform ->
+                runtimeOnly("org.bytedeco:tensorflow-lite:2.21.0-1.5.14:$platform")
+                runtimeOnly("org.bytedeco:javacpp:1.5.14:$platform")
+            }
+        }
+        jvmTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies {
             implementation(project(":core"))
             api(libs.tensorflow.lite.support)
