@@ -1,5 +1,7 @@
 package com.kylecorry.andromeda.bitmaps
 
+enum class ImageInterpolation { Nearest, Bilinear, Bicubic }
+
 /** An ARGB image that can be processed without a platform bitmap. */
 class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
     init {
@@ -25,12 +27,22 @@ class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
             this[if (horizontal) width - 1 - x else x, if (vertical) height - 1 - y else y]
         })
 
-    fun resize(width: Int, height: Int): PixelImage {
+    fun resize(width: Int, height: Int, interpolation: ImageInterpolation = ImageInterpolation.Nearest): PixelImage {
         require(width > 0 && height > 0 && width.toLong() * height <= Int.MAX_VALUE)
         return PixelImage(width, height, IntArray(width * height) { index ->
-            val x = (index % width).toLong() * this.width / width
-            val y = (index / width).toLong() * this.height / height
-            this[x.toInt(), y.toInt()]
+            val x = index % width
+            val y = index / width
+            if (interpolation == ImageInterpolation.Nearest) {
+                this[((x.toLong() * this.width) / width).toInt(), ((y.toLong() * this.height) / height).toInt()]
+            } else {
+                val sourceX = ((x + 0.5) * this.width / width - 0.5).coerceIn(0.0, this.width - 1.0)
+                val sourceY = ((y + 0.5) * this.height / height - 0.5).coerceIn(0.0, this.height - 1.0)
+                when (interpolation) {
+                    ImageInterpolation.Bilinear -> interpolate(sourceX.toFloat(), sourceY.toFloat())!!
+                    ImageInterpolation.Bicubic -> interpolateBicubic(sourceX, sourceY)
+                    ImageInterpolation.Nearest -> error("Unreachable")
+                }
+            }
         })
     }
 
@@ -70,6 +82,26 @@ class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
             }
         }
     }
+}
+
+private fun PixelImage.interpolateBicubic(x: Double, y: Double): Int {
+    val left = kotlin.math.floor(x).toInt()
+    val top = kotlin.math.floor(y).toInt()
+    val dx = x - left
+    val dy = y - top
+    fun cubic(a: Double, b: Double, c: Double, d: Double, fraction: Double): Double =
+        b + 0.5 * fraction * (c - a + fraction * (2 * a - 5 * b + 4 * c - d + fraction * (3 * (b - c) + d - a)))
+    var color = 0
+    for (shift in 0..24 step 8) {
+        fun row(offset: Int): Double {
+            val sampleY = (top + offset).coerceIn(0, height - 1)
+            fun sample(column: Int): Double = ((this[(left + column).coerceIn(0, width - 1), sampleY] ushr shift) and 255).toDouble()
+            return cubic(sample(-1), sample(0), sample(1), sample(2), dx)
+        }
+        val channel = kotlin.math.round(cubic(row(-1), row(0), row(1), row(2), dy)).toInt().coerceIn(0, 255)
+        color = color or (channel shl shift)
+    }
+    return color
 }
 
 /** Converts RGB to grayscale while preserving alpha. */
