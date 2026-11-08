@@ -15,7 +15,10 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {
+            api(project(":shared"))
+            implementation("io.github.g0dkar:qrcode-kotlin:4.5.0")
+        }
         androidMain.dependencies { implementation(libs.androidx.core.ktx); implementation(libs.zxing) }
     }
 }
