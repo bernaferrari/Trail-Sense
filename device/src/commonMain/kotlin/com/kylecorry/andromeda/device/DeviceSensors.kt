@@ -62,6 +62,9 @@ class DeviceSensors {
 
     fun battery(): Flow<Reading<BatteryReading>> = backend.battery()
 
+    fun gps(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowGPS(location(interval, accuracy), scope)
+
     fun location(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<LocationReading>> =
         backend.location(interval, accuracy)
 }

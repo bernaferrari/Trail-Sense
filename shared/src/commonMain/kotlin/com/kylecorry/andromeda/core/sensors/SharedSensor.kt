@@ -3,6 +3,8 @@ package com.kylecorry.andromeda.core.sensors
 import com.kylecorry.andromeda.core.time.monotonicNanos
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
+import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 
 abstract class SharedSensor : Sensor {
@@ -38,7 +40,8 @@ abstract class SharedSensor : Sensor {
         listeners.filterNot { it() }.forEach(::unsubscribe)
     }
     protected fun setEventTime(time: Instant) {
-        eventTimeElapsedNanos = monotonicNanos()
+        val age = (Clock.System.now() - time).coerceAtLeast(Duration.ZERO)
+        eventTimeElapsedNanos = monotonicNanos() - age.inWholeNanoseconds
         timestamp = time
     }
     protected fun setEventTimeFrom(sensor: Sensor) {
