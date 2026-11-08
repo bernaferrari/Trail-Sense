@@ -18,6 +18,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         api(project(":shared"))
         api("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
+        api("com.squareup.okio:okio:3.18.2")
     }
 }
 
