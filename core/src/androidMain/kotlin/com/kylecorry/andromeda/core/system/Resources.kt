@@ -5,13 +5,10 @@ import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import android.text.format.DateFormat
 import android.util.TypedValue
-import android.view.MenuItem
-import android.widget.PopupMenu
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.annotation.MenuRes
 import androidx.annotation.StyleRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -73,16 +70,7 @@ object Resources {
         return ResourcesCompat.getDrawable(context.resources, drawableId, null)
     }
 
-    fun menuItems(context: Context, @MenuRes id: Int): List<MenuItem> {
-        val items = mutableListOf<MenuItem>()
-        val p = PopupMenu(context, null)
-        p.menuInflater.inflate(id, p.menu)
-        val menu = p.menu
-        for (i in 0 until menu.size) {
-            items.add(menu[i])
-        }
-        return items
-    }
+
 
     fun getLocale(context: Context): Locale {
         val config = context.applicationContext.resources.configuration

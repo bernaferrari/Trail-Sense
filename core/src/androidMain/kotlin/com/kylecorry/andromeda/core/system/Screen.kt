@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.Point
 import android.os.Build
 import android.util.Size
-import android.view.View
 import android.view.Window
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -42,23 +41,10 @@ object Screen {
         }
     }
 
-    fun heightCm(view: View): Float {
-        return heightIn(view) * 2.54f
-    }
-
-    fun heightIn(view: View): Float {
-        val dpi = ydpi(view.context)
-        return view.height / dpi
-    }
-
-    fun widthCm(view: View): Float {
-        return widthIn(view) * 2.54f
-    }
-
-    fun widthIn(view: View): Float {
-        val dpi = xdpi(view.context)
-        return view.width / dpi
-    }
+    fun heightCm(context: Context, pixels: Float): Float = heightIn(context, pixels) * 2.54f
+    fun heightIn(context: Context, pixels: Float): Float = pixels / ydpi(context)
+    fun widthCm(context: Context, pixels: Float): Float = widthIn(context, pixels) * 2.54f
+    fun widthIn(context: Context, pixels: Float): Float = pixels / xdpi(context)
 
     fun dpi(context: Context): Float {
         return context.resources.displayMetrics.densityDpi.toFloat()
