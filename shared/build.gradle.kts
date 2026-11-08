@@ -1,5 +1,6 @@
 plugins {
     kotlin("multiplatform")
+    id("com.vanniktech.maven.publish")
 }
 
 kotlin {
@@ -13,4 +14,10 @@ kotlin {
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))
     }
+}
+
+group = "com.kylecorry.andromeda"
+version = "25.1.1"
+mavenPublishing {
+    coordinates("com.kylecorry.andromeda", "shared", "25.1.1")
 }

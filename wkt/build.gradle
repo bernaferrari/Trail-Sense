@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    api project(':shared')
     implementation project(':core')
     coreLibraryDesugaring libs.desugar
     testRuntimeOnly libs.junit.platform.launcher
