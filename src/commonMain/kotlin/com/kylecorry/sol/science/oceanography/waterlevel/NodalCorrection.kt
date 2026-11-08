@@ -1,5 +1,6 @@
 package com.kylecorry.sol.science.oceanography.waterlevel
 
+import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.oceanography.TideConstituent
 import kotlin.math.atan
 import kotlin.math.atan2
@@ -15,8 +16,8 @@ import kotlin.math.sin
  */
 internal class NodalCorrection private constructor(nodeDegrees: Double, perigeeDegrees: Double) {
 
-    private val n = Math.toRadians(nodeDegrees)
-    private val p = Math.toRadians(perigeeDegrees)
+    private val n = Trigonometry.toRadians(nodeDegrees)
+    private val p = Trigonometry.toRadians(perigeeDegrees)
 
     /**
      * @return the factor f and the angle u in degrees
@@ -70,7 +71,7 @@ internal class NodalCorrection private constructor(nodeDegrees: Double, perigeeD
 
             Base.Q1 -> Pair(
                 hypot(1 + 0.188 * cosN, 0.188 * sinN),
-                Math.toDegrees(atan(0.189 * sinN / (1 + 0.189 * cosN)))
+                Trigonometry.toDegrees(atan(0.189 * sinN / (1 + 0.189 * cosN)))
             )
 
             Base.MM -> Pair(1 - 0.130 * cosN, 0.0)
@@ -82,7 +83,7 @@ internal class NodalCorrection private constructor(nodeDegrees: Double, perigeeD
     }
 
     private fun polar(sinPart: Double, cosPart: Double): Pair<Double, Double> {
-        return Pair(hypot(sinPart, cosPart), Math.toDegrees(atan2(sinPart, cosPart)))
+        return Pair(hypot(sinPart, cosPart), Trigonometry.toDegrees(atan2(sinPart, cosPart)))
     }
 
     private enum class Base { M2, K1, K2, O1, Q1, OO1, J1, M1, MM, MF, L2, M3 }

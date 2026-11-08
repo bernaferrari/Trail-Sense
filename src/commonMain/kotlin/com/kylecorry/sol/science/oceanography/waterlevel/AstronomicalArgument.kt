@@ -21,7 +21,7 @@ internal class AstronomicalArgument private constructor(epochSeconds: Double) {
         moon = 218.3164 + 13.17639648 * t
         sun = 280.4661 + 0.98564736 * t
         perigee = 83.3535 + 0.11140353 * t
-        val hours = (epochSeconds - Math.floor(days) * SECONDS_PER_DAY) / 3600.0
+        val hours = (epochSeconds - kotlin.math.floor(days) * SECONDS_PER_DAY) / 3600.0
         lunarTime = 15.0 * hours - moon + sun
     }
 
