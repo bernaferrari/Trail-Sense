@@ -1,5 +1,7 @@
 package com.kylecorry.andromeda.device
 
+import com.kylecorry.andromeda.battery.BatteryChargingStatus
+import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
@@ -11,6 +13,12 @@ import kotlin.time.Duration.Companion.seconds
 enum class SensorAccuracy { PowerSave, Balanced, HighPrecision }
 
 data class LocationReading(val coordinate: Coordinate, val altitudeMeters: Double?)
+data class BatteryReading(
+    val percent: Int?,
+    val chargingStatus: BatteryChargingStatus,
+    val health: BatteryHealth?,
+    val temperatureCelsius: Float?
+)
 
 /** Cross-platform device observations. */
 class DeviceSensors {
@@ -30,11 +38,14 @@ class DeviceSensors {
     fun acceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.acceleration(interval, accuracy)
 
+    fun battery(): Flow<Reading<BatteryReading>> = backend.battery()
+
     fun location(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<LocationReading>> =
         backend.location(interval, accuracy)
 }
 
 internal interface DeviceBackend {
+    fun battery(): Flow<Reading<BatteryReading>>
     fun pressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
     fun location(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<LocationReading>>
     fun acceleration(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>

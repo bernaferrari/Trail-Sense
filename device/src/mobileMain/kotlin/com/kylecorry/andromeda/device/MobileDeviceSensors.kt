@@ -2,6 +2,9 @@ package com.kylecorry.andromeda.device
 
 import com.ksensor.core.PlatformType
 import com.ksensor.core.SensorConfig
+import com.ksensor.core.model.StateData
+import com.kylecorry.andromeda.battery.BatteryChargingStatus
+import com.kylecorry.andromeda.battery.BatteryHealth
 import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
 import com.ksensor.plugins.sensors.motion.createMotionPlugin
 import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
@@ -20,6 +23,26 @@ internal class MobileDeviceBackend : DeviceBackend {
     val positioning by lazy { createPositioningPlugin() }
     val system by lazy { createSystemPlugin() }
     private val accelerationFactor by lazy { accelerationScale() }
+
+    override fun battery() = system.battery().observe().map { reading ->
+        val state = reading.data
+        val charging = when (state.chargingState) {
+            StateData.BatteryStatus.ChargingState.UNKNOWN -> BatteryChargingStatus.Unknown
+            StateData.BatteryStatus.ChargingState.DISCHARGING -> BatteryChargingStatus.Discharging
+            StateData.BatteryStatus.ChargingState.CHARGING -> BatteryChargingStatus.Charging
+            StateData.BatteryStatus.ChargingState.FULL -> BatteryChargingStatus.Full
+        }
+        val health = when (state.health) {
+            null -> null
+            StateData.BatteryStatus.BatteryHealth.GOOD -> BatteryHealth.Good
+            StateData.BatteryStatus.BatteryHealth.OVERHEAT -> BatteryHealth.Overheat
+            StateData.BatteryStatus.BatteryHealth.DEAD -> BatteryHealth.Dead
+            StateData.BatteryStatus.BatteryHealth.OVER_VOLTAGE -> BatteryHealth.OverVoltage
+            StateData.BatteryStatus.BatteryHealth.COLD -> BatteryHealth.Cold
+            else -> BatteryHealth.Unknown
+        }
+        Reading(BatteryReading(state.levelPercent, charging, health, state.temperatureC), Instant.fromEpochMilliseconds(reading.timestamp))
+    }
 
     override fun pressure(interval: Duration, accuracy: SensorAccuracy) = environment.barometer(config(interval, accuracy)).map { reading ->
         val factor = if (reading.platform == PlatformType.iOS) 10f else 1f
