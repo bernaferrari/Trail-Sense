@@ -1,5 +1,7 @@
 plugins {
     kotlin("multiplatform")
+    id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.android.kotlin.multiplatform.library")
     id("com.vanniktech.maven.publish")
 }
@@ -16,7 +18,7 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(project(":bitmaps")); implementation(project(":permissions")); implementation(libs.androidx.camera.camera2); implementation(libs.androidx.camera.lifecycle); implementation(libs.androidx.camera.view); implementation(libs.androidx.core.ktx) }
+        androidMain.dependencies { implementation(project(":core")); implementation(project(":bitmaps")); implementation(project(":permissions")); implementation(libs.androidx.camera.camera2); implementation(libs.androidx.camera.lifecycle); api("androidx.camera:camera-compose:1.6.2"); implementation(libs.androidx.core.ktx) }
     }
 }
 group = "com.kylecorry.andromeda"

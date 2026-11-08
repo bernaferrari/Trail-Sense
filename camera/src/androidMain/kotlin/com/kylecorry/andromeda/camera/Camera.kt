@@ -34,7 +34,7 @@ import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.lifecycle.LifecycleOwner
@@ -63,7 +63,7 @@ class Camera(
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,
     private val isBackCamera: Boolean = true,
-    private val previewView: PreviewView? = null,
+    private val previewState: CameraPreviewState? = null,
     private val analyze: Boolean = true,
     private val targetResolution: Size? = null,
     private val useYUV: Boolean = false,
@@ -117,8 +117,6 @@ class Camera(
         get() = _hasValidReading
 
     private var cachedFOV: Pair<Float, Float>? = null
-    private var cachedFullPreviewSize: Size? = null
-    private var cachedCroppedPreviewSize: Size? = null
 
     @OptIn(androidx.camera.camera2.interop.ExperimentalCamera2Interop::class)
     override fun startImpl() {
@@ -196,13 +194,13 @@ class Camera(
                     if (isBackCamera) CameraSelector.DEFAULT_BACK_CAMERA else CameraSelector.DEFAULT_FRONT_CAMERA
             }
 
-            preview?.setSurfaceProvider(previewView?.surfaceProvider)
+            preview?.setSurfaceProvider { request -> previewState?.surfaceRequest = request }
 
             camera = cameraProvider?.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector ?: CameraSelector.DEFAULT_BACK_CAMERA,
                 *listOfNotNull(
-                    if (previewView != null) preview else null,
+                    if (previewState != null) preview else null,
                     if (analyze) imageAnalysis else null,
                     imageCapture
                 ).toTypedArray()
@@ -256,6 +254,7 @@ class Camera(
 
     override fun stopImpl() {
         cameraProvider?.unbindAll()
+        previewState?.surfaceRequest = null
         cameraProvider = null
         cameraProviderFuture?.cancel(true)
         cameraProviderFuture = null
@@ -292,8 +291,10 @@ class Camera(
     }
 
     override fun startFocusAndMetering(point: PixelCoordinate) {
-        val meteringPoint =
-            previewView?.meteringPointFactory?.createPoint(point.x, point.y) ?: return
+        val rect = getPreviewRect(false) ?: return
+        if (rect.width() <= 0f || rect.height() <= 0f) return
+        val meteringPoint = SurfaceOrientedMeteringPointFactory(rect.width(), rect.height())
+            .createPoint(point.x - rect.left, point.y - rect.top)
         val action = FocusMeteringAction.Builder(meteringPoint).build()
 
         tryOrNothing {
@@ -496,110 +497,27 @@ class Camera(
     }
 
     override fun getPreviewRect(cropToView: Boolean): RectF? {
-        return tryOrDefault(null) {
-            val size = getPreviewSize(cropToView) ?: return@tryOrDefault null
-            val previewX = previewView?.x ?: 0f
-            val previewY = previewView?.y ?: 0f
-            val left = when (previewView?.scaleType) {
-                PreviewView.ScaleType.FILL_START, PreviewView.ScaleType.FIT_START -> 0
-                PreviewView.ScaleType.FILL_CENTER, PreviewView.ScaleType.FIT_CENTER -> {
-                    (previewView.width - size.width) / 2
-                }
-
-                PreviewView.ScaleType.FILL_END, PreviewView.ScaleType.FIT_END -> {
-                    previewView.width - size.width
-                }
-
-                else -> 0
-            }
-            val top = when (previewView?.scaleType) {
-                PreviewView.ScaleType.FILL_START, PreviewView.ScaleType.FIT_START -> 0
-                PreviewView.ScaleType.FILL_CENTER, PreviewView.ScaleType.FIT_CENTER -> {
-                    (previewView.height - size.height) / 2
-                }
-
-                PreviewView.ScaleType.FILL_END, PreviewView.ScaleType.FIT_END -> {
-                    previewView.height - size.height
-                }
-
-                else -> 0
-            }
-            RectF(
-                previewX + left,
-                previewY + top,
-                previewX + left + size.width,
-                previewY + top + size.height
-            )
-        }
+        val bounds = previewState?.size ?: return null
+        val previewSize = getPreviewSize(cropToView) ?: return null
+        val left = (bounds.width - previewSize.width) / 2f
+        val top = (bounds.height - previewSize.height) / 2f
+        return RectF(left, top, left + previewSize.width, top + previewSize.height)
     }
 
     override fun getPreviewSize(cropToView: Boolean): Size? {
-        // TODO: When should this be reset?
-        if (cropToView && cachedCroppedPreviewSize != null) {
-            return cachedCroppedPreviewSize
-        } else if (!cropToView && cachedFullPreviewSize != null) {
-            return cachedFullPreviewSize
-        }
-
-        val size = tryOrDefault(null) {
-            val resolution = preview?.resolutionInfo?.resolution ?: return@tryOrDefault null
-            val rotation = preview?.resolutionInfo?.rotationDegrees ?: return@tryOrDefault null
-            val rotated = if (rotation == 90 || rotation == 270) {
-                Size(resolution.height, resolution.width)
-            } else {
-                resolution
-            }
-            val viewSize =
-                previewView?.let { Size(it.width, it.height) } ?: return@tryOrDefault null
-
-            when (previewView.scaleType) {
-                PreviewView.ScaleType.FILL_START, PreviewView.ScaleType.FILL_CENTER, PreviewView.ScaleType.FILL_END -> {
-                    if (cropToView) {
-                        viewSize
-                    } else {
-                        // Calculate the size of the preview after it's been scaled to fill the preview
-                        val ratioBitmap = rotated.width.toFloat() / rotated.height.toFloat()
-                        val ratioMax = viewSize.width.toFloat() / viewSize.height.toFloat()
-                        var finalWidth = viewSize.width
-                        var finalHeight = viewSize.height
-                        if (ratioMax > ratioBitmap) {
-                            finalHeight = (viewSize.width.toFloat() / ratioBitmap).toInt()
-                        } else {
-                            finalWidth = (viewSize.height.toFloat() * ratioBitmap).toInt()
-                        }
-                        Size(finalWidth, finalHeight)
-                    }
-                }
-
-                PreviewView.ScaleType.FIT_START, PreviewView.ScaleType.FIT_CENTER, PreviewView.ScaleType.FIT_END -> {
-                    // If it is smaller than the view, return the view size
-                    if (rotated.width <= viewSize.width && rotated.height <= viewSize.height) {
-                        return@tryOrDefault viewSize
-                    }
-
-                    // TODO: Extract this to a method
-                    // Otherwise it gets scaled to fit the view
-                    val ratioBitmap = rotated.width.toFloat() / rotated.height.toFloat()
-                    val ratioMax = viewSize.width.toFloat() / viewSize.height.toFloat()
-                    var finalWidth = viewSize.width
-                    var finalHeight = viewSize.height
-                    if (ratioMax > ratioBitmap) {
-                        finalWidth = (viewSize.height.toFloat() * ratioBitmap).toInt()
-                    } else {
-                        finalHeight = (viewSize.width.toFloat() / ratioBitmap).toInt()
-                    }
-                    Size(finalWidth, finalHeight)
-                }
-            }
-        }
-
-        if (cropToView) {
-            cachedCroppedPreviewSize = size
-        } else {
-            cachedFullPreviewSize = size
-        }
-
-        return size
+        val bounds = previewState?.size ?: return null
+        if (bounds.width <= 0 || bounds.height <= 0) return null
+        val info = preview?.resolutionInfo ?: return null
+        val resolution = info.resolution
+        val rotated = if (info.rotationDegrees == 90 || info.rotationDegrees == 270) {
+            Size(resolution.height, resolution.width)
+        } else resolution
+        if (rotated.width <= 0 || rotated.height <= 0) return null
+        val widthScale = bounds.width.toFloat() / rotated.width
+        val heightScale = bounds.height.toFloat() / rotated.height
+        val scale = if (previewState.fill) maxOf(widthScale, heightScale) else minOf(widthScale, heightScale)
+        return if (cropToView && previewState.fill) Size(bounds.width, bounds.height)
+        else Size((rotated.width * scale).toInt(), (rotated.height * scale).toInt())
     }
 
     override fun getPreviewFOV(cropToView: Boolean): Pair<Float, Float>? {
