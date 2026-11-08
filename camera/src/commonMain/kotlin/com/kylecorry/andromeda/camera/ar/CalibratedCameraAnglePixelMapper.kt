@@ -2,9 +2,12 @@ package com.kylecorry.andromeda.camera.ar
 
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.MathExtensions.toRadians
+import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.math.geometry.Size
+import kotlin.math.abs
+import kotlin.math.atan
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.sin
@@ -38,16 +41,56 @@ class CalibratedCameraAnglePixelMapper(
         calibrationId = camera.calibrationId
     }
 
-    private var zoom: Float = 1f
-
     override fun getAngle(
         x: Float,
         y: Float,
         imageRect: ImageBounds,
         fieldOfView: Size
     ): Vector2 {
-        // TODO: Figure out how to do this
-        return fallback.getAngle(x, y, imageRect, fieldOfView)
+        val projection = projection() ?: return fallback.getAngle(x, y, imageRect, fieldOfView)
+        val zoom = getZoom()
+        if (!zoom.isFinite() || imageRect.width <= 0f || imageRect.height <= 0f) {
+            return fallback.getAngle(x, y, imageRect, fieldOfView)
+        }
+        val intrinsic = projection.intrinsic
+        val active = projection.active
+        val left = imageRect.centerX - zoom * imageRect.width / 2f
+        val top = imageRect.centerY - zoom * imageRect.height / 2f
+        val correctedX = active.left + (x - left) / (zoom * imageRect.width) * active.width
+        val correctedY = active.bottom - (y - top) / (zoom * imageRect.height) * active.height
+        val corrected = Vector2(correctedX, correctedY)
+        val point = if (applyDistortionCorrection && projection.distortion != null) {
+            invertDistortion(corrected, projection.preActive, intrinsic[2], intrinsic[3], projection.distortion)
+                ?: return fallback.getAngle(x, y, imageRect, fieldOfView)
+        } else corrected
+        return Vector2(
+            atan((point.x - intrinsic[2]) / intrinsic[0]).toDegrees(),
+            atan((point.y - intrinsic[3]) / intrinsic[1]).toDegrees(),
+        )
+    }
+
+    private data class Projection(
+        val intrinsic: FloatArray,
+        val preActive: ImageBounds,
+        val active: ImageBounds,
+        val distortion: FloatArray?,
+    )
+
+    private fun projection(): Projection? {
+        if (camera.calibrationId != calibrationId) invalidateCalibration()
+        val intrinsic = getCalibration() ?: return null
+        val active = getActiveArraySize() ?: return null
+        val preActive = getPreActiveArraySize() ?: active
+        if (intrinsic.size < 5 || (0..3).any { !intrinsic[it].isFinite() } ||
+            intrinsic[0] <= 0f || intrinsic[1] <= 0f ||
+            active.width <= 0f || active.height <= 0f ||
+            !active.width.isFinite() || !active.height.isFinite()) return null
+        val correction = if (applyDistortionCorrection) getDistortion()?.takeIf {
+            it.size >= 5 && (0..4).all { index -> it[index].isFinite() } &&
+                max(intrinsic[2] - preActive.left, preActive.right - intrinsic[2]) > 0f &&
+                max(intrinsic[3] - preActive.top, preActive.bottom - intrinsic[3]) > 0f
+        } else null
+        return Projection(intrinsic, preActive, active, correction)
     }
 
     private fun getCalibration(): FloatArray? {
@@ -55,6 +98,7 @@ class CalibratedCameraAnglePixelMapper(
             val calibration =
                 camera.intrinsicCalibration(onlyUseEstimated = !useManufacturerCalibration)
                     ?: return null
+            if (calibration.size < 5) return null
             val rotation = camera.sensorRotationDegrees
             this.calibration = if (rotation == 90 || rotation == 270) {
                 floatArrayOf(
@@ -113,7 +157,6 @@ class CalibratedCameraAnglePixelMapper(
         fieldOfView: Size,
         distance: Float?
     ): PixelCoordinate {
-        if (camera.calibrationId != calibrationId) invalidateCalibration()
         // TODO: Factor in pose translation (just add it to the world position?)
         val world = toCartesian(angleX, angleY, distance ?: 1f)
 
@@ -122,15 +165,11 @@ class CalibratedCameraAnglePixelMapper(
             return linear.getPixel(angleX, angleY, imageRect, fieldOfView, distance)
         }
 
-        val calibration = getCalibration()
-        val preActiveArray = getPreActiveArraySize() ?: getActiveArraySize()
-        val activeArray = getActiveArraySize()
-        val distortion = getDistortion()
-
-        if (calibration == null || calibration.size < 5 || preActiveArray == null || activeArray == null ||
-            activeArray.width <= 0f || activeArray.height <= 0f) {
-            return fallback.getPixel(angleX, angleY, imageRect, fieldOfView, distance)
-        }
+        val projection = projection() ?: return fallback.getPixel(angleX, angleY, imageRect, fieldOfView, distance)
+        val calibration = projection.intrinsic
+        val preActiveArray = projection.preActive
+        val activeArray = projection.active
+        val distortion = projection.distortion
 
         val fx = calibration[0]
         val fy = calibration[1]
@@ -142,7 +181,7 @@ class CalibratedCameraAnglePixelMapper(
         val preY = fy * (world.y / world.z) + cy
 
         // Correct for distortion
-        val corrected = if (applyDistortionCorrection && distortion != null && distortion.size >= 5) {
+        val corrected = if (applyDistortionCorrection && distortion != null) {
             undistort(preX, preY, preActiveArray, cx, cy, distortion)
         } else {
             Vector2(preX, preY)
@@ -157,6 +196,7 @@ class CalibratedCameraAnglePixelMapper(
 
         // Unzoom the output image
         val zoom = getZoom()
+        if (!zoom.isFinite()) return fallback.getPixel(angleX, angleY, imageRect, fieldOfView, distance)
         val rectLeft = imageRect.centerX - zoom * imageRect.width / 2f
         val rectWidth = zoom * imageRect.width
         val rectTop = imageRect.centerY - zoom * imageRect.height / 2f
@@ -196,6 +236,39 @@ class CalibratedCameraAnglePixelMapper(
             normalizedY * radialDistortion + distortion[3] * (rSquared + 2 * normalizedX * normalizedY) + distortion[4] * (2 * normalizedY * normalizedY)
 
         return Vector2(xc * sizeX + cx, yc * sizeY + cy)
+    }
+
+    /** Inverts the distortion polynomial used by the forward projection. */
+    private fun invertDistortion(
+        target: Vector2,
+        activeArray: ImageBounds,
+        cx: Float,
+        cy: Float,
+        distortion: FloatArray,
+    ): Vector2? {
+        var x = target.x
+        var y = target.y
+        val tolerance = max(0.001f, max(abs(x), abs(y)) * 0.000001f)
+        repeat(15) {
+            val value = undistort(x, y, activeArray, cx, cy, distortion)
+            val errorX = value.x - target.x
+            val errorY = value.y - target.y
+            if (!errorX.isFinite() || !errorY.isFinite()) return null
+            if (abs(errorX) < tolerance && abs(errorY) < tolerance) return Vector2(x, y)
+            val stepX = max(0.05f, abs(x) * 0.0001f)
+            val stepY = max(0.05f, abs(y) * 0.0001f)
+            val dx = undistort(x + stepX, y, activeArray, cx, cy, distortion)
+            val dy = undistort(x, y + stepY, activeArray, cx, cy, distortion)
+            val a = (dx.x - value.x) / stepX
+            val b = (dy.x - value.x) / stepY
+            val c = (dx.y - value.y) / stepX
+            val d = (dy.y - value.y) / stepY
+            val determinant = a * d - b * c
+            if (!determinant.isFinite() || abs(determinant) < 1e-8f) return null
+            x -= (d * errorX - b * errorY) / determinant
+            y -= (a * errorY - c * errorX) / determinant
+        }
+        return null
     }
 
     private fun toCartesian(
