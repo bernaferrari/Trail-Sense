@@ -10,6 +10,7 @@ kotlin {
     jvmToolchain(17)
     sourceSets.commonMain.dependencies {
         api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+        api("com.kylecorry:sol:19.4.0")
         implementation("io.github.pdvrieze.xmlutil:core:1.0.2")
     }
     sourceSets.commonTest.dependencies {

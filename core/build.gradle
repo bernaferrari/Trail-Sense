@@ -37,6 +37,7 @@ android {
 }
 
 dependencies {
+    api project(':shared')
     implementation libs.androidx.core.ktx
     implementation libs.kotlinx.coroutines.android
     implementation libs.androidx.lifecycle.livedata.core.ktx

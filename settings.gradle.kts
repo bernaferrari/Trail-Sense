@@ -61,3 +61,12 @@ include(":net")
 include(":geojson")
 
 include(":shared")
+
+// Prefer the adjacent multiplatform Sol checkout when developing both libraries together.
+if (file("../sol/settings.gradle.kts").exists()) {
+    includeBuild("../sol") {
+        dependencySubstitution {
+            substitute(module("com.kylecorry:sol")).using(project(":"))
+        }
+    }
+}
