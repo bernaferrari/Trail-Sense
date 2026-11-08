@@ -21,6 +21,7 @@ kotlin {
             implementation(project(":permissions"))
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.androidx.core.ktx)
+            implementation("io.github.shadadman:ksensor-core:9.40.0")
         }
     }
 }
