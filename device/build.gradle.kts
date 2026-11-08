@@ -18,6 +18,7 @@ kotlin {
     applyDefaultHierarchyTemplate()
     sourceSets {
         commonTest.dependencies { implementation(kotlin("test")) }
+        jvmMain.dependencies { implementation("com.github.oshi:oshi-core:6.11.1") }
         commonMain.dependencies {
             api(project(":shared"))
             api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
