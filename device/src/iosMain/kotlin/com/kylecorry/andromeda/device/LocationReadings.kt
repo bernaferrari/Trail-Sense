@@ -4,9 +4,11 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flowOn
 import platform.CoreLocation.*
 import platform.Foundation.*
 import platform.darwin.NSObject
@@ -55,4 +57,4 @@ internal actual fun platformLocation(interval: Duration, accuracy: SensorAccurac
         manager.delegate = null
         delegate.hashCode() // Keep the weak Core Location delegate alive until collection ends.
     }
-}
+}.flowOn(Dispatchers.Main)
