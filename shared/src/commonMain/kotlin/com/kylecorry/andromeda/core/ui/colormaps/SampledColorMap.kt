@@ -1,7 +1,5 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
-import android.graphics.Color
-import com.kylecorry.andromeda.core.ui.Colors
 
 open class SampledColorMap(
     samples: Map<Float, Int>,
@@ -30,7 +28,7 @@ open class SampledColorMap(
 
     private fun getInterpolatedColor(percent: Float, samples: List<Map.Entry<Float, Int>>): Int {
         if (samples.isEmpty()) {
-            return Color.BLACK
+            return PackedColor.BLACK
         }
         if (samples.size == 1) {
             return samples[0].value
@@ -48,6 +46,6 @@ open class SampledColorMap(
         val range = upper.key - lower.key
         val relativePercent = if (range == 0f) 0f else (clampedPercent - lower.key) / range
 
-        return Colors.interpolate(lower.value, upper.value, relativePercent)
+        return PackedColor.interpolate(lower.value, upper.value, relativePercent)
     }
 }

@@ -1,6 +1,5 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
-import com.kylecorry.andromeda.core.ui.Colors
 import kotlin.math.min
 
 open class RgbInterpolationColorMap(private val colors: Array<Int>) : ColorMap {
@@ -17,6 +16,6 @@ open class RgbInterpolationColorMap(private val colors: Array<Int>) : ColorMap {
         val startPercent = index.toFloat() / (colors.size - 1)
         val endPercent = (index + 1).toFloat() / (colors.size - 1)
         val percentInColor = (percent - startPercent) / (endPercent - startPercent)
-        return Colors.interpolate(start, end, percentInColor)
+        return PackedColor.interpolate(start, end, percentInColor)
     }
 }
