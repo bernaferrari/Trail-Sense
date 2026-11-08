@@ -15,7 +15,10 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {
+            api(project(":shared"))
+            api("eu.iamkonstantin.kotlin:gadulka:1.14.0")
+        }
         androidMain.dependencies { implementation(project(":core")); implementation(project(":permissions")); implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android) }
     }
 }
