@@ -4,8 +4,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 object JsonConvert {
-    inline fun <reified T> toJson(value: T): String = Json.encodeToString(value)
-    inline fun <reified T> fromJson(json: String): T? = runCatching { Json.decodeFromString<T>(json) }.getOrNull()
+    val format = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+    inline fun <reified T> toJson(value: T): String = format.encodeToString(value)
+    inline fun <reified T> fromJson(json: String): T? = runCatching { format.decodeFromString<T>(json) }.getOrNull()
 }
 
 inline fun <reified T> T.toJson(): String = JsonConvert.toJson(this)
