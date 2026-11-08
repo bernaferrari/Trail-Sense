@@ -1,11 +1,12 @@
 package com.kylecorry.sol.science.astronomy
 
 import kotlin.time.toKotlinInstant
+import kotlin.time.toJavaInstant
+import kotlinx.datetime.toKotlinTimeZone
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
 import com.kylecorry.sol.science.astronomy.locators.Sun
-import com.kylecorry.sol.science.astronomy.rst.RobustRiseSetTransitTimeCalculator
 import com.kylecorry.sol.science.astronomy.sun.SolarRadiationCalculator
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.EclipticCoordinate
@@ -27,7 +28,6 @@ internal object SunFacade {
 
     private val sun = Sun()
     private val radiation = SolarRadiationCalculator()
-    private val riseSetTransitCalculator = RobustRiseSetTransitTimeCalculator()
 
     fun getSunEvents(
         date: ZonedDateTime,
@@ -37,20 +37,14 @@ internal object SunFacade {
         withParallax: Boolean = false
     ): RiseSetTransitTimes {
 
-        val altitude = when (mode) {
-            SunTimesMode.Actual -> -0.8333
-            SunTimesMode.Civil -> -6.0
-            SunTimesMode.Nautical -> -12.0
-            SunTimesMode.Astronomical -> -18.0
-        }
-
-        return riseSetTransitCalculator.calculate(
-            sun,
-            date,
-            location,
-            altitude,
-            withRefraction,
-            withParallax
+        val result = SunCalculationModel.events(
+            date.toInstant().toKotlinInstant(), date.zone.toKotlinTimeZone(), location, mode,
+            withRefraction, withParallax
+        )
+        return RiseSetTransitTimes(
+            result.rise?.toJavaInstant()?.atZone(date.zone),
+            result.transit?.toJavaInstant()?.atZone(date.zone),
+            result.set?.toJavaInstant()?.atZone(date.zone)
         )
     }
 
@@ -60,23 +54,7 @@ internal object SunFacade {
         withRefraction: Boolean = false,
         withParallax: Boolean = false
     ): CelestialObservation {
-        val ut = time.toUniversalTime()
-        val distance = sun.getDistance(ut)
-        val horizonCoordinate = JvmAstroUtils.getLocation(
-            sun,
-            ut,
-            location,
-            withRefraction,
-            withParallax,
-            distance
-        )
-        val diameter = sun.getAngularDiameter(ut, distance)
-        return CelestialObservation(
-            Bearing.from(horizonCoordinate.azimuth.toFloat()),
-            horizonCoordinate.altitude.toFloat(),
-            diameter.toFloat(),
-            distance = distance
-        )
+        return SunCalculationModel.position(time.toInstant().toKotlinInstant(), location, withRefraction, withParallax)
     }
 
     fun getNextSunset(
@@ -310,10 +288,6 @@ internal object SunFacade {
     }
 
     fun getSolarLongitude(date: ZonedDateTime): Float {
-        val coords = sun.getCoordinates(date.toUniversalTime())
-        return EclipticCoordinate.fromEquatorial(
-            coords,
-            date.toUniversalTime().toJulianCenturies()
-        ).eclipticLongitude.toFloat()
+        return SunCalculationModel.longitude(date.toInstant().toKotlinInstant())
     }
 }
