@@ -18,10 +18,15 @@ fun pdfPrinter(): PdfPrinter = PdfPrinter { pdf, jobName ->
     check(NSThread.isMainThread) { "The print dialog must be presented on the main thread" }
     require(pdf.isNotEmpty())
     val data = pdf.usePinned { NSData.create(bytes = it.addressOf(0), length = pdf.size.toULong()) }
+    presentPrintItem(data, jobName)
+}
+
+@OptIn(ExperimentalForeignApi::class)
+internal fun presentPrintItem(item: Any, jobName: String) {
     val controller = UIPrintInteractionController.sharedPrintController
     val info = UIPrintInfo.printInfo().apply { this.jobName = jobName }
     controller.printInfo = info
-    controller.printingItem = data
+    controller.printingItem = item
     if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         val view = UIApplication.sharedApplication.keyWindow?.rootViewController?.view
             ?: error("No window is available to present the print dialog")
