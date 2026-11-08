@@ -6,8 +6,7 @@ import com.kylecorry.sol.science.meteorology.WeatherForecast
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.science.meteorology.clouds.CloudPrecipitationCalculator
 import com.kylecorry.sol.units.Reading
-import java.time.Instant
-import kotlin.time.toJavaInstant
+import kotlin.time.Instant
 
 internal object ArrivalTimeCalculator {
     fun getArrivalTime(
@@ -36,6 +35,6 @@ internal object ArrivalTimeCalculator {
 
         val cloudIndicatedArrivalRange = CloudPrecipitationCalculator().getPrecipitationTime(clouds)
 
-        return cloudIndicatedArrivalRange?.let { (it.start + (it.end - it.start) / 2).toJavaInstant() }
+        return cloudIndicatedArrivalRange?.let { it.start + (it.end - it.start) / 2 }
     }
 }

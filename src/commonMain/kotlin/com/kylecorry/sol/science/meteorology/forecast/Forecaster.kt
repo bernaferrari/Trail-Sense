@@ -5,14 +5,15 @@ import com.kylecorry.sol.science.meteorology.WeatherForecast
 import com.kylecorry.sol.science.meteorology.observation.WeatherObservation
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Temperature
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.Clock
 
 internal interface Forecaster {
 
     fun forecast(
         observations: List<WeatherObservation<*>>,
         dailyTemperatureRange: Range<Temperature>? = null,
-        time: Instant = Instant.now(),
+        time: Instant = Clock.System.now(),
         pressureChangeThreshold: Float = 1.5f,
         pressureStormChangeThreshold: Float = 2f,
         location: Coordinate = Coordinate.zero

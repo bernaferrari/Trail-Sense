@@ -15,8 +15,8 @@ import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Temperature
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinInstant
 import java.time.ZonedDateTime
@@ -95,7 +95,7 @@ internal object ZambrettiForecaster : Forecaster {
     ): List<WeatherForecast> {
         val pressures = observations
             .filterIsInstance<WeatherObservation.Pressure>()
-            .filter { it.time.toJavaInstant() <= time }
+            .filter { it.time <= time }
             .sortedBy { it.time }
             .map { it.asReading() }
 
@@ -103,7 +103,7 @@ internal object ZambrettiForecaster : Forecaster {
         val tendency = ForecastHelper.getTendency(pressures, pressureChangeThreshold)
         val windDirection = observations
             .filterIsInstance<WeatherObservation.WindDirection>()
-            .filter { it.time.toJavaInstant() in time.minus(Duration.ofHours(3))..time }
+            .filter { it.time in (time - 3.hours)..time }
             .sortedBy { it.time }
             .map { it.value }
             .lastOrNull()
@@ -114,7 +114,7 @@ internal object ZambrettiForecaster : Forecaster {
             tendency,
             windDirection,
             dailyTemperatureRange,
-            time.toZonedDateTime(),
+            time.toJavaInstant().toZonedDateTime(),
             pressureChangeThreshold
         )
 

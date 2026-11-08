@@ -19,20 +19,18 @@ import com.kylecorry.sol.science.meteorology.forecast.sol.predictors.Thunderstor
 import com.kylecorry.sol.science.meteorology.forecast.sol.predictors.WeatherPredictor
 import com.kylecorry.sol.science.meteorology.forecast.sol.predictors.WindPredictor
 import com.kylecorry.sol.science.meteorology.observation.WeatherObservation
-import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
-import java.time.Duration
-import java.time.Instant
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
+import kotlin.time.Clock
 
 internal object SolForecaster : Forecaster {
-    private val HISTORY_DURATION_NO_CHANGE_MAX = Duration.ofHours(8)
-    private val HISTORY_DURATION_MAX = Duration.ofHours(48)
-    private val CLOUDS_UP_TO_DATE_DURATION = Duration.ofHours(24)
+    private val HISTORY_DURATION_NO_CHANGE_MAX = 8.hours
+    private val HISTORY_DURATION_MAX = 48.hours
+    private val CLOUDS_UP_TO_DATE_DURATION = 24.hours
     private val lowPressureLaterPredictor = LowPressureLaterPredictor()
     private val highPressureLaterPredictor = HighPressureLaterPredictor()
 
@@ -69,7 +67,7 @@ internal object SolForecaster : Forecaster {
         pressures: List<Reading<Pressure>>,
         clouds: List<Reading<CloudGenus?>>,
         dailyTemperatureRange: Range<Temperature>? = null,
-        time: Instant = Instant.now(),
+        time: Instant = Clock.System.now(),
         pressureChangeThreshold: Float = 1.5f,
         pressureStormChangeThreshold: Float = 2f
     ): List<WeatherForecast> {
@@ -103,12 +101,12 @@ internal object SolForecaster : Forecaster {
         }
 
         // Try to figure out what the current conditions are based on past predictions
-        val times = pressures.map { it.time.toJavaInstant() } + clouds.map { it.time.toJavaInstant() }
-        var startTime = Time.getClosestPastTime(time, times)
+        val times = pressures.map { it.time } + clouds.map { it.time }
+        var startTime = times.filter { it < time }.maxOrNull()
         val minTime = time.minus(HISTORY_DURATION_NO_CHANGE_MAX)
         val maxIterations = times.size
         var i = 0
-        while (startTime != null && startTime.isAfter(minTime) && i < maxIterations) {
+        while (startTime != null && startTime > minTime && i < maxIterations) {
             val previous = forecastHelper(
                 pressures,
                 clouds,
@@ -130,7 +128,7 @@ internal object SolForecaster : Forecaster {
                 return forecast.withCurrentConditions(conditions)
             }
 
-            val newTime = Time.getClosestPastTime(startTime, times)
+            val newTime = times.filter { it < startTime }.maxOrNull()
             check(startTime != newTime)
             startTime = newTime
             i++
@@ -153,7 +151,7 @@ internal object SolForecaster : Forecaster {
         pressures: List<Reading<Pressure>>,
         clouds: List<Reading<CloudGenus?>>,
         dailyTemperatureRange: Range<Temperature>? = null,
-        time: Instant = Instant.now(),
+        time: Instant = Clock.System.now(),
         pressureChangeThreshold: Float = 1.5f,
         weatherPredictors: List<Pair<WeatherCondition, WeatherPredictor>>,
         afterWeatherPredictors: List<Pair<WeatherCondition, WeatherPredictor>>,
@@ -161,14 +159,14 @@ internal object SolForecaster : Forecaster {
         val oldest = time.minus(HISTORY_DURATION_MAX)
         val cloudsUpToDateTime = time.minus(CLOUDS_UP_TO_DATE_DURATION)
         val filteredPressures = pressures
-            .filter { it.time.toJavaInstant() in oldest..time }
+            .filter { it.time in oldest..time }
             .sortedBy { it.time }
         var filteredClouds = clouds
-            .filter { it.time.toJavaInstant() in oldest..time }
+            .filter { it.time in oldest..time }
             .sortedBy { it.time }
 
         // Don't look at clouds if none were logged in the last 24 hours
-        if (filteredClouds.none { it.time.toJavaInstant() >= cloudsUpToDateTime }) {
+        if (filteredClouds.none { it.time >= cloudsUpToDateTime }) {
             filteredClouds = emptyList()
         }
 
@@ -222,6 +220,6 @@ internal object SolForecaster : Forecaster {
 
         val arrivalTime = ArrivalTimeCalculator.getArrivalTime(time, now, filteredClouds)
 
-        return listOf(now.copy(time = arrivalTime?.toKotlinInstant()), after)
+        return listOf(now.copy(time = arrivalTime), after)
     }
 }

@@ -1,7 +1,7 @@
 package com.kylecorry.sol.science.meteorology.forecast
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.science.meteorology.Meteorology
+import com.kylecorry.sol.science.meteorology.PressureModel
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureSystem
 import com.kylecorry.sol.science.meteorology.PressureTendency
@@ -10,8 +10,7 @@ import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
-import java.time.Duration
-import kotlin.time.toJavaInstant
+import kotlin.time.Duration.Companion.hours
 
 internal object ForecastHelper {
 
@@ -49,9 +48,9 @@ internal object ForecastHelper {
     }
 
     fun getPressureSystem(pressure: Pressure): PressureSystem? {
-        return if (Meteorology.isHighPressure(pressure)) {
+        return if (PressureModel.isHigh(pressure)) {
             PressureSystem.High
-        } else if (Meteorology.isLowPressure(pressure)) {
+        } else if (PressureModel.isLow(pressure)) {
             PressureSystem.Low
         } else {
             null
@@ -68,23 +67,17 @@ internal object ForecastHelper {
 
         val pressure = pressures.last()
 
-        val targetTime = pressure.time.toJavaInstant().minus(Duration.ofHours(3))
+        val targetTime = pressure.time - 3.hours
         val lastPressure = pressures.minBy {
             if (it == pressure) {
                 Long.MAX_VALUE
             } else {
-                Duration.between(
-                    it.time.toJavaInstant(),
-                    targetTime
-                ).abs().seconds
+                (targetTime - it.time).absoluteValue.inWholeSeconds
             }
         }
-        return Meteorology.getTendency(
-            lastPressure.value,
-            pressure.value,
-            Duration.between(lastPressure.time.toJavaInstant(), pressure.time.toJavaInstant()),
-            threshold
-        )
+        val seconds = pressure.time.epochSeconds - lastPressure.time.epochSeconds -
+            if (pressure.time.nanosecondsOfSecond < lastPressure.time.nanosecondsOfSecond) 1 else 0
+        return PressureModel.tendency(lastPressure.value, pressure.value, seconds, threshold)
     }
 
     private fun getPrecipitationType(temperatures: Range<Temperature>?): WeatherCondition? {

@@ -47,7 +47,7 @@ internal class ZambrettiForecasterTest {
         ZambrettiForecaster.forecast(
             observations,
             null,
-            time,
+            time.toKotlinInstant(),
             0.5f,
             2f,
             location

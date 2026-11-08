@@ -9,9 +9,8 @@ import com.kylecorry.sol.science.meteorology.forecast.ForecastHelper
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
-import java.time.Duration
-import java.time.Instant
-import kotlin.time.toJavaInstant
+import kotlin.time.Instant
+import kotlin.time.Duration.Companion.hours
 
 internal object SolForecastFactorCalculator {
     private val cloudPrecipitationCalculator = CloudPrecipitationCalculator()
@@ -45,7 +44,7 @@ internal object SolForecastFactorCalculator {
             null
         }
         val lastCloud = clouds.lastOrNull()?.takeIf {
-            Duration.between(it.time.toJavaInstant(), time).abs() <= Duration.ofHours(3)
+            (time - it.time).absoluteValue <= 3.hours
         }
         return SolForecastFactors(
             tendency,

@@ -21,6 +21,7 @@ import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.TimeUnits
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.toKotlinInstant
 import java.time.LocalDate
 import java.time.Month
 import java.time.ZonedDateTime
@@ -56,47 +57,14 @@ object Meteorology {
         return Pressure.hpa(adjustedPressure).convertTo(pressure.units)
     }
 
-    fun isHighPressure(pressure: Pressure): Boolean {
-        return pressure.hpa().value >= 1022.689
-    }
+    fun isHighPressure(pressure: Pressure): Boolean = PressureModel.isHigh(pressure)
 
-    fun isLowPressure(pressure: Pressure): Boolean {
-        return pressure.hpa().value <= 1009.144
-    }
+    fun isLowPressure(pressure: Pressure): Boolean = PressureModel.isLow(pressure)
 
-    /**
-     * Calculates the tendency
-     * @param last The last pressure reading (hPa)
-     * @param current The current pressure reading (hPa)
-     * @param duration The duration between the last and current pressure reading
-     * @param changeThreshold The change threshold (hPa / hr)
-     * @return The pressure tendency (hPa / hr)
-     */
+    /** Calculates the pressure tendency in hPa per hour. */
     fun getTendency(
         last: Pressure, current: Pressure, duration: Duration, changeThreshold: Float
-    ): PressureTendency {
-        val diff = current.hpa().value - last.hpa().value
-        val dt = duration.seconds
-
-        if (dt == 0L) {
-            return PressureTendency(PressureCharacteristic.Steady, 0f)
-        }
-
-        val changeAmt = (diff / dt) * 60 * 60
-
-        val fastThreshold = changeThreshold + 2 / 3f
-
-        val characteristic = when {
-            changeAmt <= -fastThreshold -> PressureCharacteristic.FallingFast
-            changeAmt <= -changeThreshold -> PressureCharacteristic.Falling
-            changeAmt >= fastThreshold -> PressureCharacteristic.RisingFast
-            changeAmt >= changeThreshold -> PressureCharacteristic.Rising
-            else -> PressureCharacteristic.Steady
-        }
-
-        return PressureTendency(characteristic, changeAmt)
-
-    }
+    ): PressureTendency = PressureModel.tendency(last, current, duration.seconds, changeThreshold)
 
     /**
      * Forecast the weather in the next few hours
@@ -194,7 +162,7 @@ object Meteorology {
         return forecaster.forecast(
             observations.sortedBy { it.time },
             dailyTemperatureRange,
-            time,
+            time.toKotlinInstant(),
             pressureChangeThreshold,
             pressureStormChangeThreshold,
             location
