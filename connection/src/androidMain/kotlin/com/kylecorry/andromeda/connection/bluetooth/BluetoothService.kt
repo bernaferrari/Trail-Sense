@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import androidx.core.content.getSystemService
 import com.kylecorry.andromeda.permissions.Permissions
+import com.juul.kable.Peripheral
 import java.util.UUID
 
 class BluetoothService(private val context: Context) {
@@ -42,9 +43,8 @@ class BluetoothService(private val context: Context) {
         return InsecureBluetoothDevice(context, address, uuid)
     }
 
-    fun getGattDevice(address: String): BluetoothGattDevice {
-        return BluetoothGattDevice(context, address)
-    }
+    /** Creates a Kable BLE peripheral for an Android Bluetooth address. Close it when finished. */
+    fun getGattDevice(address: String): Peripheral = Peripheral(address)
 
     companion object {
         val DEFAULT_SERIAL_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
