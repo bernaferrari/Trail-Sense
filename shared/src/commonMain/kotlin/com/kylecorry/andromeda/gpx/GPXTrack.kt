@@ -1,6 +1,5 @@
 package com.kylecorry.andromeda.gpx
 
-import androidx.annotation.ColorInt
 
 data class GPXTrack(
     val name: String? = null,
@@ -8,7 +7,7 @@ data class GPXTrack(
     val id: Long? = null,
     val description: String? = null,
     val comment: String? = null,
-    @param:ColorInt val color: Int? = null,
+    val color: Int? = null,
     val lineStyle: String? = null,
     val group: String? = null,
     val segments: List<GPXTrackSegment> = emptyList()

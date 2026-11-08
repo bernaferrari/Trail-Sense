@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.gpx
 import com.kylecorry.sol.units.Coordinate
 import org.junit.Assert.*
 import org.junit.Test
-import java.time.Instant
+import kotlin.time.Instant
 
 class GPXParserTest {
     @Test

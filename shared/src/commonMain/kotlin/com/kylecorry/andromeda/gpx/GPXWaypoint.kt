@@ -1,8 +1,7 @@
 package com.kylecorry.andromeda.gpx
 
-import androidx.annotation.ColorInt
 import com.kylecorry.sol.units.Coordinate
-import java.time.Instant
+import kotlin.time.Instant
 
 data class GPXWaypoint(
     val coordinate: Coordinate,
@@ -14,5 +13,5 @@ data class GPXWaypoint(
     val time: Instant? = null,
     val group: String? = null,
     val symbol: String? = null,
-    @param:ColorInt val color: Int? = null
+    val color: Int? = null
 )
