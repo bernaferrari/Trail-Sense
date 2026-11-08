@@ -44,7 +44,32 @@ class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
         return PixelImage(newWidth.toInt(), newHeight.toInt(), result)
     }
 
-    fun replaceColor(from: Int, to: Int): PixelImage = map { if (it == from) to else it }
+    /** Replaces colors within an RGBA distance, optionally fading the replacement toward the tolerance boundary. */
+    fun replaceColor(from: Int, to: Int, tolerance: Float = 0f, interpolate: Boolean = false): PixelImage {
+        require(tolerance.isFinite() && tolerance >= 0f)
+        return map { color ->
+            var distanceSquared = 0
+            for (shift in 0..24 step 8) {
+                val difference = ((color ushr shift) and 255) - ((from ushr shift) and 255)
+                distanceSquared += difference * difference
+            }
+            val distance = kotlin.math.sqrt(distanceSquared.toFloat())
+            when {
+                distance > tolerance -> color
+                !interpolate || tolerance == 0f -> to
+                else -> {
+                    val ratio = 1f - distance / tolerance
+                    var replacement = 0
+                    for (shift in 0..24 step 8) {
+                        val original = (color ushr shift) and 255
+                        val target = (to ushr shift) and 255
+                        replacement = replacement or ((original + ratio * (target - original)).toInt().coerceIn(0, 255) shl shift)
+                    }
+                    replacement
+                }
+            }
+        }
+    }
 }
 
 /** Converts RGB to grayscale while preserving alpha. */
@@ -75,6 +100,28 @@ fun PixelImage.threshold(luminance: Float): PixelImage {
     return grayscale().map { color ->
         val value = if ((color and 0xff) / 255f >= luminance) 0x00ffffff else 0
         (color and -0x1000000) or value
+    }
+}
+
+/** Thresholds one channel, or average RGB when [channel] is null, on the 0–255 scale. */
+fun PixelImage.threshold(value: Float, binary: Boolean, channel: ColorChannel? = null): PixelImage {
+    require(value.isFinite())
+    return map { color ->
+        val above = color.channelValue(channel) > value
+        if (above && !binary) color else {
+            val replacement = if (above) 255 else 0
+            if (channel == null) {
+                (color and -0x1000000) or (replacement * 0x010101)
+            } else {
+                val shift = when (channel) {
+                    ColorChannel.Red -> 16
+                    ColorChannel.Green -> 8
+                    ColorChannel.Blue -> 0
+                    ColorChannel.Alpha -> 24
+                }
+                (color and (255 shl shift).inv()) or (replacement shl shift)
+            }
+        }
     }
 }
 
