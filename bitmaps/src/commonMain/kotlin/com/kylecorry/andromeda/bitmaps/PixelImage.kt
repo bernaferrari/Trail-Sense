@@ -77,3 +77,46 @@ fun PixelImage.threshold(luminance: Float): PixelImage {
         (color and -0x1000000) or value
     }
 }
+
+/** Applies an odd square convolution kernel to ARGB channels with clamped edges. */
+fun PixelImage.convolve(kernel: FloatArray): PixelImage {
+    val side = kotlin.math.sqrt(kernel.size.toDouble()).toInt()
+    require(side > 0 && side % 2 == 1 && side * side == kernel.size)
+    val radius = side / 2
+    return PixelImage(width, height, IntArray(pixels.size) { index ->
+        val x = index % width
+        val y = index / width
+        val channels = FloatArray(4)
+        for (ky in 0 until side) for (kx in 0 until side) {
+            val pixel = this[(x + kx - radius).coerceIn(0, width - 1), (y + ky - radius).coerceIn(0, height - 1)]
+            val weight = kernel[ky * side + kx]
+            channels[0] += ((pixel ushr 24) and 0xff) * weight
+            channels[1] += ((pixel ushr 16) and 0xff) * weight
+            channels[2] += ((pixel ushr 8) and 0xff) * weight
+            channels[3] += (pixel and 0xff) * weight
+        }
+        (channels[0].toInt().coerceIn(0, 255) shl 24) or
+            (channels[1].toInt().coerceIn(0, 255) shl 16) or
+            (channels[2].toInt().coerceIn(0, 255) shl 8) or channels[3].toInt().coerceIn(0, 255)
+    })
+}
+
+/** Returns the bilinearly interpolated ARGB value, or null outside the image. */
+fun PixelImage.interpolate(x: Float, y: Float): Int? {
+    if (!x.isFinite() || !y.isFinite() || x < 0f || y < 0f || x > width - 1 || y > height - 1) return null
+    val left = x.toInt()
+    val top = y.toInt()
+    val right = (left + 1).coerceAtMost(width - 1)
+    val bottom = (top + 1).coerceAtMost(height - 1)
+    val dx = x - left
+    val dy = y - top
+    val values = intArrayOf(this[left, top], this[right, top], this[left, bottom], this[right, bottom])
+    val weights = floatArrayOf((1f - dx) * (1f - dy), dx * (1f - dy), (1f - dx) * dy, dx * dy)
+    var result = 0
+    for (shift in 0..24 step 8) {
+        var channel = 0f
+        for (i in 0..3) channel += ((values[i] ushr shift) and 0xff) * weights[i]
+        result = result or (channel.toInt().coerceIn(0, 255) shl shift)
+    }
+    return result
+}
