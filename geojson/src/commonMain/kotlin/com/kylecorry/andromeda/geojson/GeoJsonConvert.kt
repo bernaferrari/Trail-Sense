@@ -47,12 +47,18 @@ object GeoJsonConvert {
     }
     private fun jsonValue(value: Any?): JsonElement = when (value) {
         null -> JsonNull
+        is JsonElement -> value
         is String -> JsonPrimitive(value)
         is Number -> JsonPrimitive(value)
         is Boolean -> JsonPrimitive(value)
         is Map<*, *> -> JsonObject(value.entries.associate { it.key.toString() to jsonValue(it.value) })
         is Iterable<*> -> JsonArray(value.map(::jsonValue))
         is Array<*> -> JsonArray(value.map(::jsonValue))
+        is IntArray -> JsonArray(value.map(::JsonPrimitive))
+        is LongArray -> JsonArray(value.map(::JsonPrimitive))
+        is FloatArray -> JsonArray(value.map(::JsonPrimitive))
+        is DoubleArray -> JsonArray(value.map(::JsonPrimitive))
+        is BooleanArray -> JsonArray(value.map(::JsonPrimitive))
         else -> error("Unsupported GeoJSON property value: ${value::class.simpleName}")
     }
     private fun encode(obj: GeoJsonObject): JsonObject = buildJsonObject {
