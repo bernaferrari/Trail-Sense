@@ -22,6 +22,7 @@ plugins {
 subprojects {
     if (name in setOf(
         "speech",
+        "exceptions",
         "markdown",
         "canvas",
         "signal",
