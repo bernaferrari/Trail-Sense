@@ -1,6 +1,5 @@
 package com.kylecorry.andromeda.device
 
-import com.ksensor.core.PlatformType
 import com.ksensor.core.SensorConfig
 import com.ksensor.core.model.StateData
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
@@ -43,10 +42,8 @@ internal class MobileDeviceBackend : DeviceBackend {
         Reading(BatteryReading(state.levelPercent, charging, health, state.temperatureC), Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
-    override fun pressure(interval: Duration, accuracy: SensorAccuracy) = environment.barometer(config(interval, accuracy)).map { reading ->
-        val factor = if (reading.platform == PlatformType.iOS) 10f else 1f
-        Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
-    }
+    override fun pressure(interval: Duration, accuracy: SensorAccuracy) =
+        platformPressure(interval, accuracy)
 
     override fun angularVelocity(interval: Duration, accuracy: SensorAccuracy) =
         platformAngularVelocity(interval, accuracy)
@@ -75,6 +72,7 @@ internal class MobileDeviceBackend : DeviceBackend {
 
 internal actual fun createDeviceBackend(): DeviceBackend = MobileDeviceBackend()
 
+internal expect fun platformPressure(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Float>>
 internal expect fun platformAcceleration(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
 internal expect fun platformAngularVelocity(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
 internal expect fun platformMagneticField(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>

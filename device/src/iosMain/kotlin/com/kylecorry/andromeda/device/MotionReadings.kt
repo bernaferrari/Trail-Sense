@@ -1,6 +1,7 @@
 package com.kylecorry.andromeda.device
 
 import com.ksensor.core.SensorConfig
+import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
 import com.ksensor.plugins.sensors.motion.createMotionPlugin
 import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
 import com.kylecorry.sol.math.Vector3
@@ -9,6 +10,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration
 import kotlin.time.Instant
+
+internal actual fun platformPressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> =
+    createEnvironmentPlugin().barometer(config(interval, accuracy)).map { reading ->
+        Reading(reading.data.pressure * 10f, Instant.fromEpochMilliseconds(reading.timestamp))
+    }
 
 internal actual fun platformAcceleration(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>> =
     createMotionPlugin().accelerometer(config(interval, accuracy)).map { reading ->
