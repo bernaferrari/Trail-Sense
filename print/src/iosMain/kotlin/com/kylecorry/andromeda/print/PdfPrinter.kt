@@ -27,6 +27,11 @@ internal fun presentPrintItem(item: Any, jobName: String) {
     val info = UIPrintInfo.printInfo().apply { this.jobName = jobName }
     controller.printInfo = info
     controller.printingItem = item
+    presentPrintController(controller)
+}
+
+@OptIn(ExperimentalForeignApi::class)
+internal fun presentPrintController(controller: UIPrintInteractionController) {
     if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
         val view = UIApplication.sharedApplication.keyWindow?.rootViewController?.view
             ?: error("No window is available to present the print dialog")

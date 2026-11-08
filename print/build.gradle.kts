@@ -16,6 +16,7 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")); api(project(":bitmaps")) }
+        commonTest.dependencies { implementation(kotlin("test")) }
         jvmMain.dependencies { implementation("org.apache.pdfbox:pdfbox:3.0.6") }
         androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.print) }
     }
