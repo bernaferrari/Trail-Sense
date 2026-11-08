@@ -19,6 +19,7 @@ kotlin {
             api(project(":shared"))
             api("eu.iamkonstantin.kotlin:gadulka:1.14.0")
         }
+        iosMain.dependencies { implementation("io.github.piotrprus:audio-capture:0.1.0") }
         androidMain.dependencies { implementation(project(":core")); implementation(project(":permissions")); implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android) }
     }
 }
