@@ -9,10 +9,8 @@ import com.ksensor.plugins.sensors.motion.createMotionPlugin
 import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
 import com.ksensor.plugins.states.system.createSystemPlugin
 import com.kylecorry.sol.math.Vector3
-import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -54,11 +52,8 @@ internal class MobileDeviceBackend : DeviceBackend {
     override fun acceleration(interval: Duration, accuracy: SensorAccuracy) =
         platformAcceleration(interval, accuracy)
 
-    override fun location(interval: Duration, accuracy: SensorAccuracy) = positioning.location(config(interval, accuracy)).mapNotNull { reading ->
-        val latitude = reading.data.latitude ?: return@mapNotNull null
-        val longitude = reading.data.longitude ?: return@mapNotNull null
-        Reading(LocationReading(Coordinate(latitude, longitude), reading.data.altitude), Instant.fromEpochMilliseconds(reading.timestamp))
-    }
+    override fun location(interval: Duration, accuracy: SensorAccuracy) =
+        platformLocation(interval, accuracy)
 
     private fun config(interval: Duration, accuracy: SensorAccuracy) = SensorConfig(
         intervalMs = interval.inWholeMilliseconds,
@@ -72,6 +67,7 @@ internal class MobileDeviceBackend : DeviceBackend {
 
 internal actual fun createDeviceBackend(): DeviceBackend = MobileDeviceBackend()
 
+internal expect fun platformLocation(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<LocationReading>>
 internal expect fun platformPressure(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Float>>
 internal expect fun platformAcceleration(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
 internal expect fun platformAngularVelocity(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>

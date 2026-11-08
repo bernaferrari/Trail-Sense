@@ -12,7 +12,18 @@ import kotlin.time.Duration.Companion.seconds
 
 enum class SensorAccuracy { PowerSave, Balanced, HighPrecision }
 
-data class LocationReading(val coordinate: Coordinate, val altitudeMeters: Double?)
+/** Altitude uses the platform location datum; mslAltitudeMeters is mean sea level where available. */
+data class LocationReading(
+    val coordinate: Coordinate,
+    val altitudeMeters: Double?,
+    val horizontalAccuracyMeters: Float? = null,
+    val verticalAccuracyMeters: Float? = null,
+    val speedMetersPerSecond: Float? = null,
+    val bearingDegrees: Float? = null,
+    val speedAccuracyMetersPerSecond: Float? = null,
+    val bearingAccuracyDegrees: Float? = null,
+    val mslAltitudeMeters: Double? = null
+)
 data class BatteryReading(
     val percent: Int?,
     val chargingStatus: BatteryChargingStatus,

@@ -31,7 +31,10 @@ kotlin {
                 api("io.github.shadadman:ksensor-states-system:9.40.0")
             }
         }
-        androidMain { dependsOn(mobileMain) }
+        androidMain {
+            dependsOn(mobileMain)
+            dependencies { implementation(libs.androidx.core.ktx) }
+        }
         iosMain { dependsOn(mobileMain) }
     }
 }
