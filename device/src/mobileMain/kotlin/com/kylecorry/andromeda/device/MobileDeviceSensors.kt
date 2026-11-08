@@ -22,7 +22,6 @@ internal class MobileDeviceBackend : DeviceBackend {
     val environment by lazy { createEnvironmentPlugin() }
     val positioning by lazy { createPositioningPlugin() }
     val system by lazy { createSystemPlugin() }
-    private val accelerationFactor by lazy { accelerationScale() }
 
     override fun battery() = system.battery().observe().map { reading ->
         val state = reading.data
@@ -49,22 +48,14 @@ internal class MobileDeviceBackend : DeviceBackend {
         Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
-    override fun angularVelocity(interval: Duration, accuracy: SensorAccuracy) = motion.gyroscope(config(interval, accuracy)).map { reading ->
-        val value = reading.data.values
-        val scale = (180.0 / kotlin.math.PI).toFloat()
-        Reading(Vector3(value.x * scale, value.y * scale, value.z * scale), Instant.fromEpochMilliseconds(reading.timestamp))
-    }
+    override fun angularVelocity(interval: Duration, accuracy: SensorAccuracy) =
+        platformAngularVelocity(interval, accuracy)
 
-    override fun magneticField(interval: Duration, accuracy: SensorAccuracy) = positioning.magnetometer(config(interval, accuracy)).map { reading ->
-        val value = reading.data.values
-        Reading(Vector3(value.x, value.y, value.z), Instant.fromEpochMilliseconds(reading.timestamp))
-    }
+    override fun magneticField(interval: Duration, accuracy: SensorAccuracy) =
+        platformMagneticField(interval, accuracy)
 
-    override fun acceleration(interval: Duration, accuracy: SensorAccuracy) = motion.accelerometer(config(interval, accuracy)).map { reading ->
-        val scale = accelerationFactor
-        val value = reading.data.values
-        Reading(Vector3(value.x * scale, value.y * scale, value.z * scale), Instant.fromEpochMilliseconds(reading.timestamp))
-    }
+    override fun acceleration(interval: Duration, accuracy: SensorAccuracy) =
+        platformAcceleration(interval, accuracy)
 
     override fun location(interval: Duration, accuracy: SensorAccuracy) = positioning.location(config(interval, accuracy)).mapNotNull { reading ->
         val latitude = reading.data.latitude ?: return@mapNotNull null
@@ -84,7 +75,9 @@ internal class MobileDeviceBackend : DeviceBackend {
 
 internal actual fun createDeviceBackend(): DeviceBackend = MobileDeviceBackend()
 
-internal expect fun accelerationScale(): Float
+internal expect fun platformAcceleration(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
+internal expect fun platformAngularVelocity(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
+internal expect fun platformMagneticField(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
 
 /** Access to platform sensor plugins on Android and iOS. */
 val DeviceSensors.motion get() = (backend as MobileDeviceBackend).motion
