@@ -61,6 +61,7 @@ include(":net")
 include(":geojson")
 
 include(":shared")
+include(":device")
 
 // Prefer the adjacent multiplatform Sol checkout when developing both libraries together.
 if (file("../sol/settings.gradle.kts").exists()) {
