@@ -32,7 +32,7 @@ kotlin {
         }
         jvmMain { dependsOn(desktopAppleMain) }
         iosMain { dependsOn(desktopAppleMain) }
-        androidMain.dependencies { implementation(project(":core")); implementation(project(":bitmaps")); implementation(project(":permissions")); implementation(libs.androidx.camera.camera2); implementation(libs.androidx.camera.lifecycle); api("androidx.camera:camera-compose:1.6.2"); implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.11.0"); implementation(libs.androidx.core.ktx) }
+        androidMain.dependencies { implementation(project(":core")); implementation(project(":permissions")); implementation(libs.androidx.camera.camera2); implementation(libs.androidx.camera.lifecycle); api("androidx.camera:camera-compose:1.6.2"); implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.11.0"); implementation(libs.androidx.core.ktx) }
     }
 }
 group = "com.kylecorry.andromeda"
