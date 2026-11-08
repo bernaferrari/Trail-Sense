@@ -1,6 +1,7 @@
 package com.kylecorry.andromeda.sense
 
-import com.kylecorry.andromeda.core.sensors.ISensor
+import com.kylecorry.andromeda.core.sensors.Sensor
+import com.kylecorry.andromeda.core.sensors.read
 import com.kylecorry.andromeda.core.tryOrLog
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -9,17 +10,18 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 suspend fun readAll(
-    sensors: List<ISensor>,
-    timeout: Duration = Duration.ofMinutes(1),
+    sensors: List<Sensor>,
+    timeout: Duration = 1.minutes,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     onlyIfInvalid: Boolean = false,
     forceStopOnCompletion: Boolean = false
 ) = withContext(dispatcher) {
     try {
-        withTimeoutOrNull(timeout.toMillis()) {
+        withTimeoutOrNull(timeout.inWholeMilliseconds) {
             val jobs = mutableListOf<Job>()
             for (sensor in sensors) {
                 if (!onlyIfInvalid || !sensor.hasValidReading) {

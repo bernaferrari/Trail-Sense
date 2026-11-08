@@ -4,29 +4,6 @@ import android.os.Bundle
 import android.util.Range
 import com.kylecorry.luna.specifications.Specification
 
-inline fun tryOrNothing(block: () -> Unit) {
-    try {
-        block()
-    } catch (_: Exception) {
-    }
-}
-
-inline fun tryOrLog(block: () -> Unit) {
-    try {
-        block()
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}
-
-inline fun <T> tryOrDefault(default: T, block: () -> T): T {
-    return try {
-        block()
-    } catch (e: Exception) {
-        default
-    }
-}
-
 fun <T : Comparable<T>> List<T>.rangeOrNull(): Range<T>? {
     val min = minOrNull() ?: return null
     val max = maxOrNull() ?: return null

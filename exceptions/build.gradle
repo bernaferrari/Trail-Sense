@@ -34,6 +34,7 @@ android {
 }
 
 dependencies {
+    api project(':shared')
     implementation project(path: ':core')
     implementation project(path: ':alerts')
     implementation project(path: ':files')
