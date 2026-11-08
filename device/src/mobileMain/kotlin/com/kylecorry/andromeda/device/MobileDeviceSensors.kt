@@ -40,6 +40,9 @@ internal class MobileDeviceBackend : DeviceBackend {
         Reading(BatteryReading(state.levelPercent, charging, health, state.temperatureC), Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
+    override fun ambientTemperature(interval: Duration, accuracy: SensorAccuracy) = platformAmbientTemperature(interval)
+    override fun relativeHumidity(interval: Duration, accuracy: SensorAccuracy) = platformRelativeHumidity(interval)
+
     override fun illuminance(interval: Duration, accuracy: SensorAccuracy) =
         environment.light(config(interval, accuracy)).map { Reading(it.data.illuminance, Instant.fromEpochMilliseconds(it.timestamp)) }
 
@@ -87,3 +90,6 @@ val DeviceSensors.motion get() = (backend as MobileDeviceBackend).motion
 val DeviceSensors.environment get() = (backend as MobileDeviceBackend).environment
 val DeviceSensors.positioning get() = (backend as MobileDeviceBackend).positioning
 val DeviceSensors.system get() = (backend as MobileDeviceBackend).system
+
+internal expect fun platformAmbientTemperature(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>
+internal expect fun platformRelativeHumidity(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>

@@ -7,9 +7,13 @@ import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration
 import kotlin.time.Instant
+
+internal actual fun platformAmbientTemperature(interval: Duration): Flow<Reading<Float>> = emptyFlow()
+internal actual fun platformRelativeHumidity(interval: Duration): Flow<Reading<Float>> = emptyFlow()
 
 internal actual fun platformPressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> =
     createEnvironmentPlugin().barometer(config(interval, accuracy)).map { reading ->

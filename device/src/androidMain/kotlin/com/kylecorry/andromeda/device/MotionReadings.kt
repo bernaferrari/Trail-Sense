@@ -15,6 +15,11 @@ import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Duration
 
+internal actual fun platformAmbientTemperature(interval: Duration): Flow<Reading<Float>> =
+    sensorEvents(Sensor.TYPE_AMBIENT_TEMPERATURE, interval).map { Reading(it.value[0], it.time) }
+internal actual fun platformRelativeHumidity(interval: Duration): Flow<Reading<Float>> =
+    sensorEvents(Sensor.TYPE_RELATIVE_HUMIDITY, interval).map { Reading(it.value[0], it.time) }
+
 internal actual fun platformPressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> =
     sensorEvents(Sensor.TYPE_PRESSURE, interval).map { Reading(it.value[0], it.time) }
 internal actual fun platformAcceleration(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>> =

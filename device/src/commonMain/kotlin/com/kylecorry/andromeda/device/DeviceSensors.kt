@@ -66,6 +66,14 @@ class DeviceSensors {
     fun illuminance(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.illuminance(interval, accuracy)
 
+    /** Ambient temperature in degrees Celsius, where supported. */
+    fun ambientTemperature(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+        backend.ambientTemperature(interval, accuracy)
+
+    /** Relative humidity in percent, where supported. */
+    fun relativeHumidity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+        backend.relativeHumidity(interval, accuracy)
+
     /** Cumulative step count reported by the platform. */
     fun steps(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Int>> =
         backend.steps(interval, accuracy)
@@ -83,6 +91,8 @@ class DeviceSensors {
 
 internal interface DeviceBackend {
     fun illuminance(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
+    fun ambientTemperature(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
+    fun relativeHumidity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
     fun steps(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Int>>
     fun proximity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Boolean>>
     fun battery(): Flow<Reading<BatteryReading>>
