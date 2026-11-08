@@ -1,6 +1,7 @@
 package com.kylecorry.sol.science.meteorology.forecast
 
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
+import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.science.meteorology.PressureSystem
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.meteorology.forecast.sol.SolForecaster
@@ -20,7 +21,9 @@ class SolForecasterCommonTest {
             WeatherObservation.Pressure(time - 3.hours, Pressure.hpa(1025f)),
             WeatherObservation.Pressure(time, Pressure.hpa(1025f))
         )
-        val forecast = ZambrettiForecaster.forecast(observations, null, time, 0.5f, 2f, Coordinate.zero)
+        val forecast = Meteorology.forecast(
+            observations, null, time = time, source = ForecastSource.Zambretti
+        )
         assertEquals(listOf(WeatherCondition.Clear), forecast.first().conditions)
     }
 

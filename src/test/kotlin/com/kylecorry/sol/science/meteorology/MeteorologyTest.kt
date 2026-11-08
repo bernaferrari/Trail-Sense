@@ -15,6 +15,9 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.*
 import kotlin.time.toKotlinInstant
+import kotlin.time.toKotlinDuration
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinMonth
 import kotlin.time.Duration.Companion.hours
 import java.util.stream.Stream
 
@@ -50,7 +53,7 @@ class MeteorologyTest {
         now: WeatherForecast,
         then: WeatherForecast
     ) {
-        val weather = Meteorology.forecast(pressures, clouds, temperatures, time = weatherTime)
+        val weather = Meteorology.forecast(pressures, clouds, temperatures, time = weatherTime.toKotlinInstant())
         assertEquals(now, weather.first())
         assertEquals(then, weather.last())
     }
@@ -64,7 +67,7 @@ class MeteorologyTest {
         threshold: Float,
         expectedTendency: PressureTendency
     ) {
-        val tendency = Meteorology.getTendency(Pressure.hpa(lastHpa), Pressure.hpa(currentHpa), duration, threshold)
+        val tendency = Meteorology.getTendency(Pressure.hpa(lastHpa), Pressure.hpa(currentHpa), duration.toKotlinDuration(), threshold)
         assertEquals(expectedTendency, tendency)
     }
 
@@ -110,7 +113,7 @@ class MeteorologyTest {
     @ParameterizedTest
     @MethodSource("provideLightningStrikes")
     fun lightningStrikes(lightning: Instant, thunder: Instant, expected: Float) {
-        val distance = Meteorology.getLightningStrikeDistance(lightning, thunder)
+        val distance = Meteorology.getLightningStrikeDistance(lightning.toKotlinInstant(), thunder.toKotlinInstant())
         assertEquals(expected, distance, 0.5f)
     }
 
@@ -126,7 +129,7 @@ class MeteorologyTest {
     fun seasons(expected: Season, isNorth: Boolean, date: LocalDate) {
         val season = Meteorology.getSeason(
             Coordinate(if (isNorth) 1.0 else -1.0, 0.0),
-            ZonedDateTime.of(date, LocalTime.MIN, ZoneId.systemDefault())
+            date.toKotlinLocalDate()
         )
         assertEquals(expected, season)
     }
@@ -521,8 +524,8 @@ class MeteorologyTest {
 
         for ((classification, temperatures, precipitation) in tests) {
             val climate = Meteorology.getKoppenGeigerClimateClassification(
-                temperatures,
-                precipitation
+                temperatures.mapKeys { it.key.toKotlinMonth() },
+                precipitation.mapKeys { it.key.toKotlinMonth() }
             )
             assertEquals(classification, climate.code)
         }

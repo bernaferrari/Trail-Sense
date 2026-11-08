@@ -19,12 +19,11 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.TimeUnits
-import java.time.Duration
-import java.time.Instant
-import kotlin.time.toKotlinInstant
-import java.time.LocalDate
-import java.time.Month
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlin.time.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.pow
@@ -64,7 +63,10 @@ object Meteorology {
     /** Calculates the pressure tendency in hPa per hour. */
     fun getTendency(
         last: Pressure, current: Pressure, duration: Duration, changeThreshold: Float
-    ): PressureTendency = PressureModel.tendency(last, current, duration.seconds, changeThreshold)
+    ): PressureTendency = duration.toComponents { seconds, nanoseconds ->
+        val floorSeconds = if (nanoseconds < 0) seconds - 1 else seconds
+        PressureModel.tendency(last, current, floorSeconds, changeThreshold)
+    }
 
     /**
      * Forecast the weather in the next few hours
@@ -112,7 +114,7 @@ object Meteorology {
         dailyTemperatureRange: Range<Temperature>?,
         pressureChangeThreshold: Float = 0.5f,
         pressureStormChangeThreshold: Float = 2f,
-        time: Instant = Instant.now(),
+        time: Instant = Clock.System.now(),
         location: Coordinate = Coordinate.zero,
         source: ForecastSource = ForecastSource.Sol
     ): List<WeatherForecast> {
@@ -149,7 +151,7 @@ object Meteorology {
         dailyTemperatureRange: Range<Temperature>?,
         pressureChangeThreshold: Float = 0.5f,
         pressureStormChangeThreshold: Float = 2f,
-        time: Instant = Instant.now(),
+        time: Instant = Clock.System.now(),
         location: Coordinate = Coordinate.zero,
         source: ForecastSource = ForecastSource.Sol
     ): List<WeatherForecast> {
@@ -162,7 +164,7 @@ object Meteorology {
         return forecaster.forecast(
             observations.sortedBy { it.time },
             dailyTemperatureRange,
-            time.toKotlinInstant(),
+            time,
             pressureChangeThreshold,
             pressureStormChangeThreshold,
             location
@@ -267,13 +269,13 @@ object Meteorology {
      */
     fun getLightningStrikeDistance(lightning: Instant, thunder: Instant): Float {
         val speedOfSound = 343f
-        val duration = Duration.between(lightning, thunder)
+        val duration = (thunder - lightning)
 
-        if (duration.isNegative || duration.isZero) {
+        if (duration <= Duration.ZERO) {
             return 0f
         }
 
-        val seconds = duration.toMillis() / 1000f
+        val seconds = duration.inWholeMilliseconds / 1000f
         return speedOfSound * seconds
     }
 
@@ -304,14 +306,14 @@ object Meteorology {
         return (temp0 * temp2 - temp1 * temp1) / (temp0 + temp2 - 2 * temp1)
     }
 
-    fun getSeason(location: Coordinate, date: ZonedDateTime): Season {
+    fun getSeason(location: Coordinate, date: LocalDate): Season {
         val north = location.isNorthernHemisphere
-        val d = date.toLocalDate()
+        val d = date
         return when {
-            d >= LocalDate.of(d.year, 12, 1) -> if (north) Season.Winter else Season.Summer
-            d >= LocalDate.of(d.year, 9, 1) -> if (north) Season.Fall else Season.Spring
-            d >= LocalDate.of(d.year, 6, 1) -> if (north) Season.Summer else Season.Winter
-            d >= LocalDate.of(d.year, 3, 1) -> if (north) Season.Spring else Season.Fall
+            d >= LocalDate(d.year, 12, 1) -> if (north) Season.Winter else Season.Summer
+            d >= LocalDate(d.year, 9, 1) -> if (north) Season.Fall else Season.Spring
+            d >= LocalDate(d.year, 6, 1) -> if (north) Season.Summer else Season.Winter
+            d >= LocalDate(d.year, 3, 1) -> if (north) Season.Spring else Season.Fall
             else -> if (north) Season.Winter else Season.Summer
         }
     }
@@ -382,10 +384,7 @@ object Meteorology {
         temperatures: Map<Month, Temperature>,
         precipitation: Map<Month, Distance>
     ): KoppenGeigerClimateClassification {
-        return KoppenGeigerClimateClassifier.classify(
-            temperatures.mapKeys { kotlinx.datetime.Month.entries[it.key.value - 1] },
-            precipitation.mapKeys { kotlinx.datetime.Month.entries[it.key.value - 1] }
-        )
+        return KoppenGeigerClimateClassifier.classify(temperatures, precipitation)
     }
 
 
