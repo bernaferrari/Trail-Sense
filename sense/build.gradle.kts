@@ -15,7 +15,7 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":device")) }
+        commonMain.dependencies { api(project(":device")); api(project(":storage")) }
         androidMain.dependencies { implementation(project(":core")); implementation(project(":permissions")); implementation(project(":preferences")); implementation(libs.androidx.core.ktx) }
     }
 }

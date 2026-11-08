@@ -1,29 +1,35 @@
 package com.kylecorry.andromeda.sense.altitude
 
-import android.util.Log
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.read
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.IAltimeter
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.time.Throttle
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.preferences.Preferences
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.andromeda.sense.barometer.IBarometer
 import com.kylecorry.andromeda.sense.location.IGPS
 import com.kylecorry.andromeda.sense.location.filters.GPSPassThroughAltitudeFilter
 import com.kylecorry.andromeda.sense.location.filters.IGPSAltitudeFilter
 import com.kylecorry.andromeda.sense.location.hasFix
-import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Pressure
 import kotlinx.coroutines.withTimeoutOrNull
-import java.time.Duration
-import kotlin.time.toKotlinDuration
-import java.time.Instant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A sensor that uses the GPS and barometer to calculate altitude.
@@ -34,7 +40,7 @@ import java.time.Instant
  * @param gpsFilter The filter to use for the GPS altitude
  * @param recalibrationInterval The interval to recalibrate the sensor
  * @param useMSLAltitude True if the sensor should use the MSL altitude from the GPS, otherwise it will use the GPS altitude
- * @param shouldLog True if the sensor should log to logcat for debugging purposes
+ * @param logger Optional callback for debug information
  * @param maxGPSFixAge The maximum age of the GPS fix before it is considered too old to use
  * @param recalibrationTimeout The maximum time to wait for the GPS when recalibrating. If exceeded, the expired sea level pressure continues to be used and recalibration is retried later.
  */
@@ -44,22 +50,15 @@ class FusedAltimeter(
     private val cache: Preferences,
     private val useContinuousCalibration: Boolean = true,
     private val gpsFilter: IGPSAltitudeFilter = GPSPassThroughAltitudeFilter(),
-    private val recalibrationInterval: Duration = Duration.ofHours(1),
+    private val recalibrationInterval: Duration = 1.hours,
     private val useMSLAltitude: Boolean = true,
-    private val shouldLog: Boolean = false,
-    private val maxGPSFixAge: Duration = Duration.ofSeconds(30),
-    private val recalibrationTimeout: Duration = Duration.ofSeconds(30)
-) : AbstractSensor(), IAltimeter {
+    private val logger: ((String) -> Unit)? = null,
+    private val maxGPSFixAge: Duration = 30.seconds,
+    private val recalibrationTimeout: Duration = 30.seconds,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+) : SharedSensor(), Altimeter {
 
-    private val updateTimer = CoroutineTimer {
-        val success = onDefault {
-            update()
-        }
-        if (success) {
-            setEventTimeFrom(barometer)
-            notifyListeners()
-        }
-    }
+    private var updateJob: Job? = null
 
     private var fusedAltitude: Float? = null
 
@@ -70,7 +69,7 @@ class FusedAltimeter(
         get() = fusedAltitude != null
 
     private var hasPendingGPSUpdate = false
-    private val recalibrationThrottle = Throttle(RECALIBRATION_RETRY_INTERVAL.toMillis())
+    private val recalibrationThrottle = Throttle(RECALIBRATION_RETRY_INTERVAL.inWholeMilliseconds)
 
     override fun startImpl() {
         fusedAltitude = null
@@ -80,11 +79,21 @@ class FusedAltimeter(
             gps.start(this::onGPSUpdate)
         }
         barometer.start(this::onBarometerUpdate)
-        updateTimer.interval(UPDATE_FREQUENCY)
+        updateJob = scope.launch(start = CoroutineStart.LAZY) {
+            while (isActive) {
+                if (update()) {
+                    setEventTimeFrom(barometer)
+                    notifyListeners()
+                }
+                delay(UPDATE_FREQUENCY)
+            }
+        }
+        updateJob?.start()
     }
 
     override fun stopImpl() {
-        updateTimer.stop()
+        updateJob?.cancel()
+        updateJob = null
         gps.stop(this::onGPSUpdate)
         barometer.stop(this::onBarometerUpdate)
     }
@@ -152,11 +161,11 @@ class FusedAltimeter(
                     .coerceIn(MIN_ALPHA, MAX_ALPHA)
 
             // The weight increases over time (up to a maximum at MAX_TIME_FOR_WEIGHT hours)
-            val timeSinceLastGPSUsed = getTimeSinceLastGPSUsed()?.seconds?.toFloat() ?: 0f
+            val timeSinceLastGPSUsed = getTimeSinceLastGPSUsed()?.inWholeSeconds?.toFloat() ?: 0f
             val timeWeight = Interpolation.map(
                 timeSinceLastGPSUsed,
                 0f,
-                MAX_TIME_FOR_WEIGHT.seconds.toFloat(),
+                MAX_TIME_FOR_WEIGHT.inWholeSeconds.toFloat(),
                 0f,
                 MAX_ALPHA_TIME
             ).coerceIn(0f, MAX_ALPHA_TIME)
@@ -181,17 +190,14 @@ class FusedAltimeter(
             wasGPSUsed = gpsWeight > 0
         )
 
-        if (shouldLog) {
-            Log.d(
-                "FusedAltimeter",
+        logger?.invoke(
                 "ALT: ${DecimalFormatter.format(altitude, 2, true)}, " +
                         "GPS: ${DecimalFormatter.format(getGPSAltitude(), 2, true)}, " +
                         "BAR: ${DecimalFormatter.format(barometer.pressure, 2, true)}, " +
                         "SEA: ${DecimalFormatter.format(seaLevel.value, 2, true)}, " +
                         "ALPHA: ${DecimalFormatter.format(gpsWeight, 3, true)}, " +
                         "ERR: ${DecimalFormatter.format(gpsError, 2, true)}"
-            )
-        }
+        )
 
         // When continuous calibration is enabled, ensure a GPS fix before notifying listeners
         return if (useContinuousCalibration) {
@@ -217,7 +223,7 @@ class FusedAltimeter(
 
         gpsFilter.reset()
 
-        withTimeoutOrNull(timeout?.toMillis() ?: Long.MAX_VALUE) {
+        withTimeoutOrNull(timeout?.inWholeMilliseconds ?: Long.MAX_VALUE) {
             gps.read {
                 onGPSUpdate()
                 gpsFilter.hasValidReading
@@ -236,7 +242,7 @@ class FusedAltimeter(
     }
 
     private fun hasGPSFix(): Boolean {
-        return gps.hasFix(maxGPSFixAge.toKotlinDuration())
+        return gps.hasFix(maxGPSFixAge)
     }
 
     private fun hasFilteredGPSFix(): Boolean {
@@ -249,13 +255,13 @@ class FusedAltimeter(
 
     private fun isSeaLevelPressureExpired(): Boolean {
         val time = cache.getInstant(LAST_SEA_LEVEL_PRESSURE_TIME_KEY) ?: return true
-        val timeSinceReading = Duration.between(time.toJavaInstant(), Instant.now())
-        return timeSinceReading > recalibrationInterval || timeSinceReading.isNegative
+        val timeSinceReading = Clock.System.now() - time
+        return timeSinceReading > recalibrationInterval || timeSinceReading.isNegative()
     }
 
     private fun getTimeSinceLastGPSUsed(): Duration? {
         val time = cache.getInstant(LAST_GPS_USED_TIME_KEY) ?: return null
-        return Duration.between(time.toJavaInstant(), Instant.now())
+        return Clock.System.now() - time
     }
 
     private fun setLastSeaLevelPressure(
@@ -267,11 +273,11 @@ class FusedAltimeter(
 
         // Only update the time if the gaussian GPS was used - this prevents only using the barometer over the long term
         if (isBaseline) {
-            cache.putInstant(LAST_SEA_LEVEL_PRESSURE_TIME_KEY, Instant.now().toKotlinInstant())
+            cache.putInstant(LAST_SEA_LEVEL_PRESSURE_TIME_KEY, Clock.System.now())
         }
 
         if (wasGPSUsed) {
-            cache.putInstant(LAST_GPS_USED_TIME_KEY, Instant.now().toKotlinInstant())
+            cache.putInstant(LAST_GPS_USED_TIME_KEY, Clock.System.now())
         }
     }
 
@@ -285,10 +291,10 @@ class FusedAltimeter(
         private const val MIN_ALPHA = 0.9f
         private const val MAX_ALPHA = 0.99f
         private const val MAX_ALPHA_TIME = 0.4f
-        private val MAX_TIME_FOR_WEIGHT = Duration.ofHours(2)
+        private val MAX_TIME_FOR_WEIGHT = 2.hours
         private const val MAX_GPS_ERROR = 5f
-        private val UPDATE_FREQUENCY = Duration.ofMillis(200)
-        private val RECALIBRATION_RETRY_INTERVAL = Duration.ofMinutes(5)
+        private val UPDATE_FREQUENCY = 200.milliseconds
+        private val RECALIBRATION_RETRY_INTERVAL = 5.minutes
 
         /**
          * Clear the cached calibration data
