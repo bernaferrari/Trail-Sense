@@ -1,3 +1,5 @@
+@file:Suppress("ComplexCondition")
+
 package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.math.Range

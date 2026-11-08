@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.kylecorry.sol.science.astronomy.units
 
 import com.kylecorry.sol.math.MathExtensions.toRadians

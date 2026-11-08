@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength", "ReturnCount", "LoopWithTooManyJumpStatements")
+
 package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.math.Range

@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package com.kylecorry.sol.science.oceanography
 
 import com.kylecorry.sol.math.Range

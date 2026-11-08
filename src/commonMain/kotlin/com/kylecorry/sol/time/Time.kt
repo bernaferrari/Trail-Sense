@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength", "ReturnCount")
+
 package com.kylecorry.sol.time
 
 import com.kylecorry.sol.math.Range
