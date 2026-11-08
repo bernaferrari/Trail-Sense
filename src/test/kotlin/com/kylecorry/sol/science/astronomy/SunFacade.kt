@@ -11,7 +11,7 @@ import com.kylecorry.sol.science.astronomy.sun.SolarRadiationCalculator
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.EclipticCoordinate
 import com.kylecorry.sol.science.astronomy.units.toJulianCenturies
-import com.kylecorry.sol.science.astronomy.units.fromJulianDay
+import com.kylecorry.sol.science.astronomy.units.fromJulianDayJvm
 import com.kylecorry.sol.science.astronomy.units.toJulianDay
 import com.kylecorry.sol.science.astronomy.units.toLocal
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime

@@ -56,7 +56,7 @@ fun Instant.toUniversalTime(): UniversalTime {
     return utc().toUniversalTime()
 }
 
-fun fromJulianDay(jd: Double): UniversalTime =
+fun fromJulianDayJvm(jd: Double): UniversalTime =
     LocalDateTime.ofInstant(JulianDay.from(jd).toJavaInstant(), ZoneOffset.UTC)
 
 fun UniversalTime.toLocal(zone: ZoneId): ZonedDateTime {
@@ -113,19 +113,19 @@ fun Duration.toRadians(): Double {
     return toDegrees().toRadians()
 }
 
-fun degreesToTime(degrees: Double): Duration {
+fun degreesToTimeJvm(degrees: Double): Duration {
     return JvmTime.hours(degrees / 15)
 }
 
-fun dmsToTime(degrees: Int, minutes: Int, seconds: Number): Duration {
+fun dmsToTimeJvm(degrees: Int, minutes: Int, seconds: Number): Duration {
     val d = degrees + minutes / 60.0 + seconds.toDouble() / 3600.0
-    return degreesToTime(d)
+    return degreesToTimeJvm(d)
 }
 
-fun timeToAngle(hours: Number, minutes: Number, seconds: Number): Double {
-    return timeToDecimal(hours, minutes, seconds) * 15
+fun timeToAngleJvm(hours: Number, minutes: Number, seconds: Number): Double {
+    return timeToDecimalJvm(hours, minutes, seconds) * 15
 }
 
-fun timeToDecimal(hours: Number, minutes: Number, seconds: Number): Double {
+fun timeToDecimalJvm(hours: Number, minutes: Number, seconds: Number): Double {
     return hours.toDouble() + minutes.toDouble() / 60.0 + seconds.toDouble() / 3600.0
 }

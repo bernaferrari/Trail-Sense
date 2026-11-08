@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.science.astronomy.locators.Moon
 import com.kylecorry.sol.science.astronomy.locators.Sun
-import com.kylecorry.sol.science.astronomy.units.fromJulianDay
+import com.kylecorry.sol.science.astronomy.units.fromJulianDayJvm
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -13,7 +13,7 @@ class AstroUtilsTest {
 //    fun hourToAngle() {
 //        assertEquals(
 //            Math.toDegrees(2.4213389045),
-//            Astro.timeToAngle(9, 14, 55.8),
+//            Astro.timeToAngleJvm(9, 14, 55.8),
 //            0.00000001
 //        )
 //    }
@@ -93,14 +93,14 @@ class AstroUtilsTest {
 
     @Test
     fun solarCoordinates() {
-        val coords = Sun().getCoordinates(fromJulianDay(2448908.5))
+        val coords = Sun().getCoordinates(fromJulianDayJvm(2448908.5))
         assertEquals(-7.7853035, coords.declination, 0.0001)
         assertEquals(198.381404, coords.rightAscension, 0.0001)
     }
 
     @Test
     fun lunarCoordinates() {
-        val coords = Moon().getCoordinates(fromJulianDay(2448724.5))
+        val coords = Moon().getCoordinates(fromJulianDayJvm(2448724.5))
         assertEquals(13.7652847499, coords.declination, 0.001)
         assertEquals(134.6971088, coords.rightAscension, 0.001)
     }
