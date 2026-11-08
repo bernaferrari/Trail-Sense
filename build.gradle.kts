@@ -20,7 +20,33 @@ plugins {
 }
 
 subprojects {
-    if (name in setOf("battery", "torch", "qr", "sms", "print", "permissions", "connection", "ipc", "core", "sense", "preferences", "files", "sound") || name == "haptics" || name == "shared" || name == "device" || name == "storage" || name == "compression" || name == "csv" || name == "wkt" || name == "geojson" || name == "xml" || name == "gpx" || name == "net" || name == "json") return@subprojects
+    if (name in setOf(
+        "battery",
+        "torch",
+        "qr",
+        "sms",
+        "print",
+        "permissions",
+        "connection",
+        "ipc",
+        "core",
+        "sense",
+        "preferences",
+        "files",
+        "sound",
+        "haptics",
+        "shared",
+        "device",
+        "storage",
+        "compression",
+        "csv",
+        "wkt",
+        "geojson",
+        "xml",
+        "gpx",
+        "net",
+        "json",
+    )) return@subprojects
     val artifactId = project.name
 
     plugins.apply("com.android.library")
