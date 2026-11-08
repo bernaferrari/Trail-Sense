@@ -4,6 +4,9 @@ import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.RingBuffer
 import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.oceanography.Tide
+import com.kylecorry.sol.science.oceanography.high
+import com.kylecorry.sol.science.oceanography.low
+import com.kylecorry.sol.science.oceanography.toJavaZonedDateTime
 import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.units.Coordinate
 import java.time.Duration
@@ -44,15 +47,15 @@ class LunitidalWaterLevelCalculator(
         check(previous != next)
 
         val calculator = if (previous.isHigh == next.isHigh) {
-            val low = getLowTideEstimate(previous.time, next.time)
+            val low = getLowTideEstimate(previous.toJavaZonedDateTime(), next.toJavaZonedDateTime())
             if (low.isBefore(zonedTime)) {
                 getCalculator(
                     Tide.low(low, waterLevelRange?.start),
-                    Tide.high(next.time, waterLevelRange?.end)
+                    Tide.high(next.time, waterLevelRange?.end, next.timeZone)
                 )
             } else {
                 getCalculator(
-                    Tide.high(previous.time, waterLevelRange?.end),
+                    Tide.high(previous.time, waterLevelRange?.end, previous.timeZone),
                     Tide.low(low, waterLevelRange?.start)
                 )
             }
@@ -76,7 +79,7 @@ class LunitidalWaterLevelCalculator(
     }
 
     private fun getCalculator(previous: Tide, next: Tide): IWaterLevelCalculator {
-        require(previous.time.isBefore(next.time))
+        require(previous.time < next.time)
         require(previous.isHigh != next.isHigh)
         synchronized(this) {
             if (cachedCalculator != null && cachedCalculatorTideStart == previous && cachedCalculatorTideEnd == next) {

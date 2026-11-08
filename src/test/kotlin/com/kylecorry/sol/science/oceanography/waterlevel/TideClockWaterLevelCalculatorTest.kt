@@ -1,5 +1,8 @@
 package com.kylecorry.sol.science.oceanography.waterlevel
 
+import com.kylecorry.sol.science.oceanography.high
+import com.kylecorry.sol.science.oceanography.low
+
 import com.kylecorry.sol.science.oceanography.Tide
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest

@@ -1,5 +1,8 @@
 package com.kylecorry.sol.science.oceanography
 
+import com.kylecorry.sol.science.oceanography.high
+import com.kylecorry.sol.science.oceanography.low
+
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
 import com.kylecorry.sol.math.statistics.Statistics
@@ -174,8 +177,8 @@ internal class OceanographyTest {
             )
         }
 
-        val highs = source.filter { it.isHigh }.map { it.time }
-        val lows = source.filter { !it.isHigh }.map { it.time }
+        val highs = source.filter { it.isHigh }.map { it.toJavaZonedDateTime() }
+        val lows = source.filter { !it.isHigh }.map { it.toJavaZonedDateTime() }
         val localLunitidalInterval = Oceanography.getMeanLunitidalInterval(highs, location) ?: Duration.ZERO
         val localLowLunitidalInterval = Oceanography.getMeanLunitidalInterval(lows, location) ?: Duration.ZERO
         val utcLunitidalInterval =
@@ -227,11 +230,11 @@ internal class OceanographyTest {
 
 
         for (i in tides.indices) {
-            val tide = tides[i].time.roundNearestMinute()
+            val tide = tides[i].toJavaZonedDateTime().roundNearestMinute()
             val refTide =
                 references.filter { it.isHigh == tides[i].isHigh }
-                    .minByOrNull { Duration.between(it.time, tide).abs() }!!
-            val d = Duration.between(refTide.time, tide).abs()
+                    .minByOrNull { Duration.between(it.toJavaZonedDateTime(), tide).abs() }!!
+            val d = Duration.between(refTide.toJavaZonedDateTime(), tide).abs()
             deltas.add(d.toMinutes().toFloat())
         }
 
