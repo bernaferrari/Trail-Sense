@@ -1,7 +1,5 @@
 package com.kylecorry.sol.science.astronomy.meteors
 
-import java.time.ZonedDateTime
-
 enum class MeteorShower(val solarLongitude: Float, val rate: Int, val activeDays: Int) {
     Quadrantids(283.3f, 120, 20),
     Lyrids(32.4f, 18, 10),
@@ -14,9 +12,3 @@ enum class MeteorShower(val solarLongitude: Float, val rate: Int, val activeDays
     Ursids(270.5f, 10, 10)
 }
 
-data class MeteorShowerPeak(
-    val shower: MeteorShower,
-    val start: ZonedDateTime,
-    val peak: ZonedDateTime,
-    val end: ZonedDateTime
-)
