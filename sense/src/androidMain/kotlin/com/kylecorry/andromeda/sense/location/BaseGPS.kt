@@ -89,12 +89,12 @@ abstract class BaseGPS(
             false
         )
 
-        val builder = LocationRequestCompat.Builder(requestConfig.frequency.toMillis())
+        val builder = LocationRequestCompat.Builder(requestConfig.frequency.inWholeMilliseconds)
             .setQuality(requestConfig.powerUsage.toLocationRequestQuality())
             .setMinUpdateDistanceMeters(requestConfig.minimumDistance.meters().value)
 
         if (requestConfig.minimumFrequency != null) {
-            builder.setMinUpdateIntervalMillis(requestConfig.minimumFrequency.toMillis())
+            builder.setMinUpdateIntervalMillis(requestConfig.minimumFrequency.inWholeMilliseconds)
         }
 
         if (requestConfig.maximumUpdates != null) {
@@ -102,11 +102,11 @@ abstract class BaseGPS(
         }
 
         if (requestConfig.maximumUpdateDelay != null) {
-            builder.setMaxUpdateDelayMillis(requestConfig.maximumUpdateDelay.toMillis())
+            builder.setMaxUpdateDelayMillis(requestConfig.maximumUpdateDelay.inWholeMilliseconds)
         }
 
         if (requestConfig.maximumDuration != null) {
-            builder.setDurationMillis(requestConfig.maximumDuration.toMillis())
+            builder.setDurationMillis(requestConfig.maximumDuration.inWholeMilliseconds)
         }
 
         val request = builder.build()

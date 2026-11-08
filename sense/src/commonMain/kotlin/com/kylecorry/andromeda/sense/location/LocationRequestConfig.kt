@@ -1,10 +1,11 @@
 package com.kylecorry.andromeda.sense.location
 
 import com.kylecorry.sol.units.Distance
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class LocationRequestConfig(
-    val frequency: Duration = Duration.ofSeconds(20),
+    val frequency: Duration = 20.seconds,
     val minimumDistance: Distance = Distance.meters(0f),
     val minimumFrequency: Duration? = null,
     val maximumUpdateDelay: Duration? = null,
