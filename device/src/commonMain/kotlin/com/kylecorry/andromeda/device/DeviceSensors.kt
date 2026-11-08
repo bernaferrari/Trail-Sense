@@ -9,6 +9,7 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -140,6 +141,15 @@ class DeviceSensors {
     /** Whether an object is close to the device, where supported. */
     fun proximity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Boolean>> =
         backend.proximity(interval, accuracy)
+
+    /** Mean-sea-level altitude in meters, when the platform supplies it. */
+    fun mslAltitude(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+        location(interval, accuracy).mapNotNull { reading ->
+            reading.value.mslAltitudeMeters?.let { Reading(it.toFloat(), reading.time) }
+        }
+
+    fun mslAltimeter(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowAltimeter(mslAltitude(interval, accuracy), scope)
 
     fun gps(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
         FlowGPS(location(interval, accuracy), scope)

@@ -1,5 +1,6 @@
 package com.kylecorry.andromeda.device
 
+import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Thermometer
 import com.kylecorry.andromeda.sense.hygrometer.IHygrometer
@@ -39,6 +40,12 @@ abstract class FlowMeasurement<T>(
         collection?.cancel()
         collection = null
     }
+}
+
+/** Adapts altitude readings in meters to the shared altimeter contract. */
+class FlowAltimeter(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
+    FlowMeasurement<Float>(readings, scope, 0f), Altimeter {
+    override val altitude: Float get() = value
 }
 
 class FlowLightSensor(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
