@@ -20,6 +20,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":shared"))
             api(project(":forms"))
+            api("io.github.vinceglb:filekit-dialogs-compose:0.16.0")
             api(compose.runtime)
             api(compose.foundation)
             api(compose.material3)
