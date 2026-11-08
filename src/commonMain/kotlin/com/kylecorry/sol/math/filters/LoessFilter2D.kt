@@ -9,7 +9,6 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
-import kotlin.math.ulp
 
 // Based on org.apache.commons.math.analysis.interpolation.LoessInterpolator
 // from http://commons.apache.org/math/
@@ -256,7 +255,7 @@ class LoessFilter2D(
 
     companion object {
         // The resolution of the normalized Y values
-        private val NOISE = 1f.ulp
+        private val NOISE = floatUlp(1f)
 
         // The smallest variance of the weighted x values (relative to the squared max distance) that a slope is fit to
         private const val MIN_RELATIVE_VARIANCE = 1e-5

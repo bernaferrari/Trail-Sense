@@ -7,7 +7,6 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.sqrt
-import kotlin.math.ulp
 
 // Based on org.apache.commons.math.analysis.interpolation.LoessInterpolator
 // from http://commons.apache.org/math/
@@ -294,7 +293,7 @@ class LoessFilter(
         val result = ys.toFloatArray()
         val residuals = FloatArray(xs.size)
         val robustnessWeights = FloatArray(xs.size) { 1f }
-        val noise = ys.maxOf { abs(it) }.ulp
+        val noise = floatUlp(ys.maxOf { abs(it) })
     }
 
     /**
