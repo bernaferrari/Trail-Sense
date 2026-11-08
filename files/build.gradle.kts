@@ -31,6 +31,7 @@ kotlin {
             implementation("io.ktor:ktor-http:3.6.1")
             api("no.synth:kmp-zip-okio:2.1.0")
         }
+        jvmTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.documentfile) }
     }
 }
