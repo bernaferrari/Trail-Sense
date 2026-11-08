@@ -1,0 +1,106 @@
+package com.kylecorry.andromeda.forms
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun FormColumn(modifier: Modifier = Modifier, scrollable: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+    val scroll = if (scrollable) modifier.verticalScroll(rememberScrollState()) else modifier
+    Column(scroll, verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+}
+
+@Composable
+fun FormTextField(
+    value: String, onValueChange: (String) -> Unit, label: String,
+    modifier: Modifier = Modifier, placeholder: String? = null,
+    enabled: Boolean = true, singleLine: Boolean = true
+) {
+    OutlinedTextField(
+        value = value, onValueChange = onValueChange, modifier = modifier.fillMaxWidth(),
+        label = { Text(label) }, placeholder = placeholder?.let { { Text(it) } },
+        enabled = enabled, singleLine = singleLine
+    )
+}
+
+@Composable
+fun FormNumberField(
+    value: String, onValueChange: (String) -> Unit, label: String,
+    modifier: Modifier = Modifier, allowDecimals: Boolean = true, allowNegative: Boolean = true, enabled: Boolean = true
+) {
+    OutlinedTextField(
+        value = value, onValueChange = onValueChange, modifier = modifier.fillMaxWidth(),
+        label = { Text(label) }, enabled = enabled, singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = if (allowNegative) KeyboardType.Text else if (allowDecimals) KeyboardType.Decimal else KeyboardType.Number)
+    )
+}
+
+@Composable
+fun FormSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    Row(modifier.fillMaxWidth().toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = null, enabled = enabled)
+    }
+}
+
+@Composable
+fun FormCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    Row(modifier.fillMaxWidth().toggleable(checked, enabled = enabled, role = Role.Checkbox, onValueChange = onCheckedChange),
+        verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(checked = checked, onCheckedChange = null, enabled = enabled)
+        Text(label, modifier = Modifier.padding(start = 8.dp))
+    }
+}
+
+@Composable
+fun <T> FormDropdown(
+    selected: T?, options: List<T>, label: String, optionLabel: (T) -> String,
+    onSelected: (T) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(modifier) {
+        Text(label, style = MaterialTheme.typography.labelMedium)
+        Box {
+            OutlinedButton(onClick = { expanded = true }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+                Text(selected?.let(optionLabel) ?: label)
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(text = { Text(optionLabel(option)) }, onClick = { expanded = false; onSelected(option) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FormButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    Button(onClick = onClick, modifier = modifier, enabled = enabled) { Text(label) }
+}
+
+@Composable
+fun FormLabel(text: String, modifier: Modifier = Modifier) { Text(text, modifier) }
+
+@Composable
+fun FormLoading(modifier: Modifier = Modifier) { CircularProgressIndicator(modifier) }
+
+@Composable
+fun <T> FormUnitField(
+    value: String, onValueChange: (String) -> Unit, unit: T?, units: List<T>,
+    label: String, unitLabel: (T) -> String, onUnitChange: (T) -> Unit, modifier: Modifier = Modifier
+) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        FormNumberField(value, onValueChange, label, modifier = Modifier.weight(1f))
+        FormDropdown(unit, units, label, unitLabel, onUnitChange, modifier = Modifier.weight(1f))
+    }
+}
