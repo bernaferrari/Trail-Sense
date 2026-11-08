@@ -86,6 +86,10 @@ class DeviceSensors {
     fun linearAcceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.linearAcceleration(interval, accuracy)
 
+    /** Gyroscope with an integrated relative orientation. */
+    fun gyroscope(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowGyroscope(angularVelocity(interval, accuracy), scope)
+
     /** Angular velocity in degrees per second. */
     fun angularVelocity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.angularVelocity(interval, accuracy)

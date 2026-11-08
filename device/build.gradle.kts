@@ -21,6 +21,7 @@ kotlin {
         jvmMain.dependencies { implementation("com.github.oshi:oshi-core:6.11.1") }
         commonMain.dependencies {
             api(project(":shared"))
+            implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
             api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
         }
         val mobileMain by creating {

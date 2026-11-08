@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.SystemClock
 import com.ksensor.core.context.KSensorContext
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.math.Quaternion
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 
 internal actual fun platformGravity(interval: Duration): Flow<Reading<Vector3>> =
     sensorReadings(Sensor.TYPE_GRAVITY, interval, 1f)
@@ -65,7 +67,8 @@ private fun sensorEvents(type: Int, interval: Duration): Flow<Reading<FloatArray
     val sensor = manager.getDefaultSensor(type) ?: run { close(); return@callbackFlow }
     val listener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
-            trySend(Reading(event.values.copyOf(), Clock.System.now()))
+            val age = (SystemClock.elapsedRealtimeNanos() - event.timestamp).coerceAtLeast(0).nanoseconds
+            trySend(Reading(event.values.copyOf(), Clock.System.now() - age))
         }
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
     }
