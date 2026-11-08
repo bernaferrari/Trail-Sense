@@ -75,6 +75,18 @@ class DeviceSensors {
 
     fun battery(): Flow<Reading<BatteryReading>> = backend.battery()
 
+    fun lightSensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowLightSensor(illuminance(interval, accuracy), scope)
+
+    fun hygrometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowHygrometer(relativeHumidity(interval, accuracy), scope)
+
+    fun thermometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowThermometer(ambientTemperature(interval, accuracy), scope)
+
+    fun pedometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowPedometer(steps(interval, accuracy), scope)
+
     /** Ambient illuminance in lux, where supported. */
     fun illuminance(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.illuminance(interval, accuracy)
