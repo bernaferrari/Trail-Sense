@@ -26,7 +26,10 @@ kotlin {
                 implementation(libs.androidx.espresso.core)
             }
         }
-        commonMain.dependencies { api(project(":storage")) }
+        commonMain.dependencies {
+            api(project(":storage"))
+            implementation("io.ktor:ktor-http:3.6.1")
+        }
         androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.documentfile) }
     }
 }
