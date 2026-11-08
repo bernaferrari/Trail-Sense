@@ -24,10 +24,10 @@ kotlin {
             api(compose.foundation)
             api(compose.material3)
             api("io.coil-kt.coil3:coil-compose:3.6.3")
+            api("io.github.panpf.zoomimage:zoomimage-compose-coil3:1.7.0")
             implementation("io.coil-kt.coil3:coil-network-ktor3:3.6.3")
             implementation("io.ktor:ktor-client-cio:3.6.1")
         }
-        androidMain.dependencies { api(project(":views-android")) }
     }
 }
 group = "com.kylecorry.andromeda"
