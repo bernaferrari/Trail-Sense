@@ -1,6 +1,9 @@
 package com.kylecorry.sol.science.astronomy.locators
 
 import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.moon.MoonPhaseTimeCalculator
+import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
+import com.kylecorry.sol.science.astronomy.stars.STAR_CATALOG
 import com.kylecorry.sol.science.astronomy.sun.SolarRadiationCalculator
 import com.kylecorry.sol.science.astronomy.units.SiderealCalculator
 import com.kylecorry.sol.units.Coordinate
@@ -8,8 +11,20 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Instant
+import kotlin.time.Duration.Companion.minutes
 
 class SunModelCommonTest {
+    @Test
+    fun calculatesNewMoonAndStarPosition() {
+        val newMoon = MoonPhaseTimeCalculator.getNewMoon(0.0)
+        assertTrue((newMoon - Instant.parse("2000-01-06T18:14:00Z")).absoluteValue < 5.minutes)
+        assertEquals(MoonTruePhase.New, MoonPhaseModel().getPhase(newMoon).phase)
+        val star = STAR_CATALOG.first()
+        val coordinates = StarPositionModel(star).getCoordinates(Instant.parse("2000-01-01T12:00:00Z"))
+        assertEquals(29.090431118059698, coordinates.declination, 0.000001)
+        assertEquals(2.0969161856756404, coordinates.rightAscension, 0.000001)
+    }
+
     @Test
     fun calculatesSolarRadiation() {
         val calculator = SolarRadiationCalculator()

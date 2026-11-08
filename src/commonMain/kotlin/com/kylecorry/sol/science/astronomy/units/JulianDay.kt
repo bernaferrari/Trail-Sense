@@ -3,6 +3,7 @@ package com.kylecorry.sol.science.astronomy.units
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toInstant
 import kotlin.math.floor
 import kotlin.time.Instant
 
@@ -23,4 +24,45 @@ internal object JulianDay {
     }
 
     fun centuries(instant: Instant): Double = (of(instant.toLocalDateTime(TimeZone.UTC)) - JD_2000) / 36525.0
+
+    fun from(jd: Double): Instant {
+        val f = (jd + 0.5) % 1
+        val z = (jd + 0.5) - f
+
+        val a = if (z < 2299161) {
+            z
+        } else {
+            val alpha = floor((z - 1867216.25) / 36524.25)
+            z + 1 + alpha - floor(alpha / 4)
+
+    }
+
+    val b = a + 1524
+    val c = floor((b - 122.1) / 365.25)
+    val d = floor(365.25 * c)
+    val e = floor((b - d) / 30.6001)
+    val day = b - d - floor(30.6001 * e) + f
+
+    val dayOfMonth = floor(day).toInt()
+    val hours = (day - dayOfMonth) * 24
+    val hour = floor(hours).toInt()
+    val minutes = (hours - hour) * 60
+    val minute = floor(minutes).toInt()
+    val seconds = floor((minutes - minute) * 60).toInt()
+    val month = if (e < 14) {
+        e - 1
+    } else {
+        e - 13
+    }.toInt()
+
+    val year = if (month > 2) {
+        c - 4716
+    } else {
+        c - 4715
+    }.toInt()
+
+    return LocalDateTime(year, month, dayOfMonth, hour, minute, seconds).toInstant(TimeZone.UTC)
+
+    }
+
 }

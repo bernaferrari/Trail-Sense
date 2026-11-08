@@ -4,8 +4,11 @@ import com.kylecorry.sol.math.algebra.Algebra.polynomial
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
 import com.kylecorry.sol.science.astronomy.corrections.TerrestrialTime
-import com.kylecorry.sol.science.astronomy.units.UniversalTime
-import com.kylecorry.sol.science.astronomy.units.fromJulianDay
+import kotlin.time.Instant
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import com.kylecorry.sol.science.astronomy.units.JulianDay
 
 internal object MoonPhaseTimeCalculator {
 
@@ -36,7 +39,7 @@ internal object MoonPhaseTimeCalculator {
         return getMeanPhaseJulianEphemerisDay(k, k / 1236.85)
     }
 
-    fun getNewMoon(k: Double): UniversalTime {
+    fun getNewMoon(k: Double): Instant {
         val parameters = getParameters(k)
         val eccentricity = parameters.eccentricity
         val sunMeanAnomaly = parameters.sunMeanAnomaly
@@ -75,8 +78,9 @@ internal object MoonPhaseTimeCalculator {
             it[0] * sinDegrees(it[1] + it[2] * k + it[3] * t2)
         }
 
-        val terrestrialTime = fromJulianDay(parameters.meanJulianEphemerisDay + correction + planetaryCorrection)
-        return terrestrialTime.minusSeconds(TerrestrialTime.getDeltaT(terrestrialTime.year).toLong())
+        val terrestrialTime = JulianDay.from(parameters.meanJulianEphemerisDay + correction + planetaryCorrection)
+        val year = terrestrialTime.toLocalDateTime(TimeZone.UTC).year
+        return terrestrialTime - TerrestrialTime.getDeltaT(year).toLong().seconds
     }
 
     private fun getMeanPhaseJulianEphemerisDay(k: Double, t: Double): Double {
