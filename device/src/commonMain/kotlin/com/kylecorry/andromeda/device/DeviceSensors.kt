@@ -1,5 +1,6 @@
 package com.kylecorry.andromeda.device
 
+import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,10 @@ class DeviceSensors {
     fun pressure(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.pressure(interval, accuracy)
 
+    /** Acceleration including gravity, in meters per second squared. */
+    fun acceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+        backend.acceleration(interval, accuracy)
+
     fun location(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<LocationReading>> =
         backend.location(interval, accuracy)
 }
@@ -29,6 +34,7 @@ class DeviceSensors {
 internal interface DeviceBackend {
     fun pressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
     fun location(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<LocationReading>>
+    fun acceleration(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
 }
 
 internal expect fun createDeviceBackend(): DeviceBackend

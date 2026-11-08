@@ -6,6 +6,7 @@ import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
 import com.ksensor.plugins.sensors.motion.createMotionPlugin
 import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
 import com.ksensor.plugins.states.system.createSystemPlugin
+import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.flow.map
@@ -18,10 +19,17 @@ internal class MobileDeviceBackend : DeviceBackend {
     val environment by lazy { createEnvironmentPlugin() }
     val positioning by lazy { createPositioningPlugin() }
     val system by lazy { createSystemPlugin() }
+    private val accelerationFactor by lazy { accelerationScale() }
 
     override fun pressure(interval: Duration, accuracy: SensorAccuracy) = environment.barometer(config(interval, accuracy)).map { reading ->
         val factor = if (reading.platform == PlatformType.iOS) 10f else 1f
         Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
+    }
+
+    override fun acceleration(interval: Duration, accuracy: SensorAccuracy) = motion.accelerometer(config(interval, accuracy)).map { reading ->
+        val scale = accelerationFactor
+        val value = reading.data.values
+        Reading(Vector3(value.x * scale, value.y * scale, value.z * scale), Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
     override fun location(interval: Duration, accuracy: SensorAccuracy) = positioning.location(config(interval, accuracy)).mapNotNull { reading ->
@@ -41,6 +49,8 @@ internal class MobileDeviceBackend : DeviceBackend {
 }
 
 internal actual fun createDeviceBackend(): DeviceBackend = MobileDeviceBackend()
+
+internal expect fun accelerationScale(): Float
 
 /** Access to platform sensor plugins on Android and iOS. */
 val DeviceSensors.motion get() = (backend as MobileDeviceBackend).motion
