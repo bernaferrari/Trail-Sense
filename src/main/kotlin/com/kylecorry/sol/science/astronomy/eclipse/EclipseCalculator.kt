@@ -4,7 +4,7 @@ import com.kylecorry.sol.units.Coordinate
 import java.time.Instant
 
 internal interface EclipseCalculator {
-    fun getNextEclipse(after: Instant, location: Coordinate): Eclipse?
+    fun getNextEclipse(after: Instant, location: Coordinate): JvmEclipse?
 
     fun getMagnitude(time: Instant, location: Coordinate): Float?
 

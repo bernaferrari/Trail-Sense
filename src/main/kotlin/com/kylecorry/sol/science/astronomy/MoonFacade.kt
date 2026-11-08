@@ -24,11 +24,11 @@ internal object MoonFacade {
         location: Coordinate,
         withRefraction: Boolean = false,
         withParallax: Boolean = false
-    ): RiseSetTransitTimes {
+    ): JvmRiseSetTransitTimes {
         val times = MoonCalculationModel.events(
             date.toInstant().toKotlinInstant(), date.zone.toKotlinTimeZone(), location, withRefraction, withParallax
         )
-        return RiseSetTransitTimes(
+        return JvmRiseSetTransitTimes(
             times.rise?.toJavaInstant()?.atZone(date.zone), times.transit?.toJavaInstant()?.atZone(date.zone),
             times.set?.toJavaInstant()?.atZone(date.zone)
         )

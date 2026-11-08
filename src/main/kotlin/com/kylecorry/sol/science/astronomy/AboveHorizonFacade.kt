@@ -15,7 +15,7 @@ internal object AboveHorizonFacade {
         time: ZonedDateTime,
         nextRiseOffset: Duration,
         isUpPredicate: (Coordinate, ZonedDateTime) -> Boolean,
-        riseSetTransitTimesProducer: (Coordinate, ZonedDateTime) -> RiseSetTransitTimes
+        riseSetTransitTimesProducer: (Coordinate, ZonedDateTime) -> JvmRiseSetTransitTimes
     ): Range<ZonedDateTime>? {
         // If it is up, use the last rise to the next set
         // If it is down and is less than nextRiseOffset from the next rise, use the next rise to the next set

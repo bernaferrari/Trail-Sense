@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.astronomy.stars
 
-import com.kylecorry.sol.science.astronomy.Astronomy
+import com.kylecorry.sol.science.astronomy.JvmAstronomy
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -35,7 +35,7 @@ class PlateSolverTest {
                 )
             }
             val guess = location.plus(500_000.0, Bearing.from(random.nextDouble(0.0, 360.0).toFloat()))
-            val detected = Astronomy.plateSolve(readings, time, guess)
+            val detected = JvmAstronomy.plateSolve(readings, time, guess)
             total += readings.size
             identified += detected.size
             correct += detected.count { d -> stars[readings.indexOf(d.reading)].first == d.star }
@@ -46,7 +46,7 @@ class PlateSolverTest {
 
     private fun visibleStars(location: Coordinate, time: ZonedDateTime, maxMagnitude: Float) =
         STAR_CATALOG.filter { it.magnitude <= maxMagnitude }
-            .map { it to Astronomy.getStarPosition(it, time, location, true) }
+            .map { it to JvmAstronomy.getStarPosition(it, time, location, true) }
             .filter { it.second.altitude > 0 }
 
     private fun randomLocation(): Coordinate {

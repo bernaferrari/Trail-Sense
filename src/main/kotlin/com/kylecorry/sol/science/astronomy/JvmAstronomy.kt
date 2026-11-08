@@ -1,12 +1,12 @@
 package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.science.astronomy.eclipse.Eclipse
+import com.kylecorry.sol.science.astronomy.eclipse.JvmEclipse
 import com.kylecorry.sol.science.astronomy.eclipse.EclipseType
 import com.kylecorry.sol.science.astronomy.eclipse.LunarEclipseShadow
 import com.kylecorry.sol.science.astronomy.locators.Planet
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
-import com.kylecorry.sol.science.astronomy.meteors.MeteorShowerPeak
+import com.kylecorry.sol.science.astronomy.meteors.JvmMeteorShowerPeak
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
 import com.kylecorry.sol.science.astronomy.navigation.SkyImage
 import com.kylecorry.sol.science.astronomy.navigation.StarIdentification
@@ -24,14 +24,14 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZonedDateTime
 
-object Astronomy {
+object JvmAstronomy {
     fun getSunEvents(
         date: ZonedDateTime,
         location: Coordinate,
         mode: SunTimesMode = SunTimesMode.Actual,
         withRefraction: Boolean = false,
         withParallax: Boolean = false
-    ): RiseSetTransitTimes {
+    ): JvmRiseSetTransitTimes {
         return SunFacade.getSunEvents(date, location, mode, withRefraction, withParallax)
     }
 
@@ -166,7 +166,7 @@ object Astronomy {
         location: Coordinate,
         withRefraction: Boolean = false,
         withParallax: Boolean = false
-    ): RiseSetTransitTimes {
+    ): JvmRiseSetTransitTimes {
         return MoonFacade.getMoonEvents(date, location, withRefraction, withParallax)
     }
 
@@ -284,7 +284,7 @@ object Astronomy {
         location: Coordinate,
         type: EclipseType,
         maxSearch: Duration? = null
-    ): Eclipse? {
+    ): JvmEclipse? {
         return EclipseFacade.getNextEclipse(time, location, type, maxSearch)
     }
 
@@ -305,7 +305,7 @@ object Astronomy {
         return EclipseFacade.getLunarEclipseShadow(time, location, withRefraction, withParallax)
     }
 
-    fun getMeteorShower(location: Coordinate, date: ZonedDateTime): MeteorShowerPeak? {
+    fun getMeteorShower(location: Coordinate, date: ZonedDateTime): JvmMeteorShowerPeak? {
         return MeteorFacade.getMeteorShower(location, date)
     }
 
@@ -316,7 +316,7 @@ object Astronomy {
     fun getActiveMeteorShowers(
         location: Coordinate,
         date: ZonedDateTime
-    ): List<MeteorShowerPeak> {
+    ): List<JvmMeteorShowerPeak> {
         return MeteorFacade.getActiveMeteorShowers(location, date)
     }
 
@@ -441,7 +441,7 @@ object Astronomy {
         location: Coordinate,
         withRefraction: Boolean = false,
         withParallax: Boolean = false
-    ): RiseSetTransitTimes {
+    ): JvmRiseSetTransitTimes {
         return PlanetFacade.getPlanetEvents(planet, date, location, withRefraction, withParallax)
     }
 }

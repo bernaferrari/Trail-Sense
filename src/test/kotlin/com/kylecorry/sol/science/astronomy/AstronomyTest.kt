@@ -55,7 +55,7 @@ class AstronomyTest {
     )
     fun isSuperMoonTrue(time: String, expected: Boolean) {
         val date = ZonedDateTime.parse(time)
-        val actual = Astronomy.isSuperMoon(date)
+        val actual = JvmAstronomy.isSuperMoon(date)
         assertEquals(expected, actual)
     }
 
@@ -65,13 +65,13 @@ class AstronomyTest {
     )
     fun canGetMoonDistance(time: String, expected: Float) {
         val date = ZonedDateTime.parse(time)
-        val position = Astronomy.getMoonPosition(date, Coordinate.zero)
+        val position = JvmAstronomy.getMoonPosition(date, Coordinate.zero)
         assertEquals(expected, position.distance!!.value, 1f)
     }
 
     @Test
     fun canGetSunAngularDiameter() {
-        val position = Astronomy.getSunPosition(
+        val position = JvmAstronomy.getSunPosition(
             ZonedDateTime.parse("2015-02-15T00:00:00Z"),
             Coordinate(0.0, 0.0)
         )
@@ -82,14 +82,14 @@ class AstronomyTest {
     @Test
     fun canGetSunDistance() {
         val date = ZonedDateTime.parse("2015-02-15T00:00:00Z")
-        val position = Astronomy.getSunPosition(date, Coordinate.zero)
+        val position = JvmAstronomy.getSunPosition(date, Coordinate.zero)
 
         assertEquals(147740816f, position.distance!!.value, 1f)
     }
 
     @Test
     fun canGetMoonAngularDiameter() {
-        val position = Astronomy.getMoonPosition(
+        val position = JvmAstronomy.getMoonPosition(
             ZonedDateTime.parse("2015-02-15T00:00:00Z"),
             Coordinate.zero
         )
@@ -199,7 +199,7 @@ class AstronomyTest {
         val coordinate = Coordinate(latitude, longitude)
         val lookupDate = ZonedDateTime.parse(date)
 
-        val sunEvents = Astronomy.getSunEvents(lookupDate, coordinate, SunTimesMode.Actual, true)
+        val sunEvents = JvmAstronomy.getSunEvents(lookupDate, coordinate, SunTimesMode.Actual, true)
 
         if (rise != null) {
             assertDate(
@@ -242,7 +242,7 @@ class AstronomyTest {
         val coordinate = Coordinate(latitude, longitude)
         val datetime = ZonedDateTime.parse(time)
 
-        val actual = Astronomy.getSunPosition(datetime, coordinate, true)
+        val actual = JvmAstronomy.getSunPosition(datetime, coordinate, true)
 
         assertEquals(altitude, actual.altitude, 0.05f)
     }
@@ -256,7 +256,7 @@ class AstronomyTest {
     fun getSunAzimuth(latitude: Double, longitude: Double, date: String, expected: Float) {
         val coordinate = Coordinate(latitude, longitude)
         val datetime = ZonedDateTime.parse(date)
-        val position = Astronomy.getSunPosition(datetime, coordinate)
+        val position = JvmAstronomy.getSunPosition(datetime, coordinate)
         assertEquals(expected, position.azimuth.value, 0.5f)
     }
 
@@ -299,7 +299,7 @@ class AstronomyTest {
                 )
             )
         ) {
-            val sunset = Astronomy.getNextSunset(
+            val sunset = JvmAstronomy.getNextSunset(
                 ZonedDateTime.of(
                     it[0] as LocalDateTime,
                     ZoneId.of(it[2] as String)
@@ -345,7 +345,7 @@ class AstronomyTest {
                 )
             )
         ) {
-            val sunrise = Astronomy.getNextSunrise(
+            val sunrise = JvmAstronomy.getNextSunrise(
                 ZonedDateTime.of(
                     it[0] as LocalDateTime,
                     ZoneId.of(it[2] as String)
@@ -403,7 +403,7 @@ class AstronomyTest {
                 ZoneId.of(case.zone)
             )
 
-            val expected = RiseSetTransitTimes(
+            val expected = JvmRiseSetTransitTimes(
                 if (case.rise != null) date.withHour(case.rise.hour)
                     .withMinute(case.rise.minute) else null,
                 if (case.transit != null) date.withHour(case.transit.hour)
@@ -412,7 +412,7 @@ class AstronomyTest {
                     .withMinute(case.set.minute) else null
             )
 
-            val actual = Astronomy.getMoonEvents(date, case.location)
+            val actual = JvmAstronomy.getMoonEvents(date, case.location)
             assertRst(expected, actual)
         }
     }
@@ -423,7 +423,7 @@ class AstronomyTest {
         "40.7128, -74.0060, 2020-09-13T21:58:00-04, -28.0"
     )
     fun getMoonAltitude(latitude: Double, longitude: Double, time: String, altitude: Float) {
-        val actual = Astronomy.getMoonPosition(
+        val actual = JvmAstronomy.getMoonPosition(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude),
             true
@@ -437,7 +437,7 @@ class AstronomyTest {
         "40.7128, -74.0060, 2020-09-13T21:58:00-04, 360.0"
     )
     fun getMoonAzimuth(latitude: Double, longitude: Double, time: String, azimuth: Float) {
-        val actual = Astronomy.getMoonPosition(
+        val actual = JvmAstronomy.getMoonPosition(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude)
         )
@@ -451,7 +451,7 @@ class AstronomyTest {
         "76.7667, -18.6667, 2020-09-08T12:00:00-01, ",
     )
     fun getNextMoonset(latitude: Double, longitude: Double, time: String, moonset: String?) {
-        val actual = Astronomy.getNextMoonset(
+        val actual = JvmAstronomy.getNextMoonset(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude)
         )
@@ -469,7 +469,7 @@ class AstronomyTest {
         "76.7667, -18.6667, 2020-09-08T12:00:00-01, ",
     )
     fun getNextMoonrise(latitude: Double, longitude: Double, time: String, moonrise: String?) {
-        val actual = Astronomy.getNextMoonrise(
+        val actual = JvmAstronomy.getNextMoonrise(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude)
         )
@@ -500,7 +500,7 @@ class AstronomyTest {
     ) {
         val tolerance = 0.5f
 
-        val actual = Astronomy.getMoonPhase(ZonedDateTime.parse(date))
+        val actual = JvmAstronomy.getMoonPhase(ZonedDateTime.parse(date))
         assertMoonPhases(
             MoonPhase(phase, illumination, angle, ageDays),
             actual,
@@ -514,7 +514,7 @@ class AstronomyTest {
         "40.7128, -74.0060, 2020-09-13T23:00:00-04, false"
     )
     fun isSunUp(latitude: Double, longitude: Double, time: String, isUp: Boolean) {
-        val actual = Astronomy.isSunUp(
+        val actual = JvmAstronomy.isSunUp(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude)
         )
@@ -528,7 +528,7 @@ class AstronomyTest {
         "40.7128, -74.0060, 2020-09-13T21:58:00-04, false"
     )
     fun isMoonUp(latitude: Double, longitude: Double, time: String, isUp: Boolean) {
-        val actual = Astronomy.isMoonUp(
+        val actual = JvmAstronomy.isMoonUp(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude)
         )
@@ -555,7 +555,7 @@ class AstronomyTest {
         visualMagnitude: Float?,
         distance: Float,
     ) {
-        val actual = Astronomy.getPlanetPosition(
+        val actual = JvmAstronomy.getPlanetPosition(
             Planet.entries.first { it.order == planet },
             ZonedDateTime.parse(time),
             Coordinate(41.97640, -71.65340),
@@ -592,7 +592,7 @@ class AstronomyTest {
         shower: MeteorShower?,
         peak: String?
     ) {
-        val actual = Astronomy.getMeteorShower(
+        val actual = JvmAstronomy.getMeteorShower(
             Coordinate(latitude, longitude),
             ZonedDateTime.parse(time)
         )
@@ -643,7 +643,7 @@ class AstronomyTest {
         shower1: MeteorShower?,
         shower2: MeteorShower?
     ) {
-        val actual = Astronomy.getActiveMeteorShowers(Coordinate(latitude, longitude), ZonedDateTime.parse(time))
+        val actual = JvmAstronomy.getActiveMeteorShowers(Coordinate(latitude, longitude), ZonedDateTime.parse(time))
         val expected = listOfNotNull(shower1, shower2)
         println(actual)
         assertEquals(expected.size, actual.size)
@@ -678,7 +678,7 @@ class AstronomyTest {
         "-40.7128, -74.0060, 2021-12-31T23:59:00-05, Summer",
     )
     fun getAstronomicalSeason(latitude: Double, longitude: Double, time: String, season: Season) {
-        val actual = Astronomy.getSeason(
+        val actual = JvmAstronomy.getSeason(
             Coordinate(latitude, longitude),
             ZonedDateTime.parse(time)
         )
@@ -701,7 +701,7 @@ class AstronomyTest {
             ZoneId.of(expected.zone)
         )
 
-        val e = RiseSetTransitTimes(
+        val e = JvmRiseSetTransitTimes(
             if (expected.rise != null) date.withHour(expected.rise.hour)
                 .withMinute(expected.rise.minute) else null,
             if (expected.transit != null) date.withHour(expected.transit.hour)
@@ -710,7 +710,7 @@ class AstronomyTest {
                 .withMinute(expected.set.minute) else null
         )
 
-        val actual = Astronomy.getSunEvents(date, expected.location)
+        val actual = JvmAstronomy.getSunEvents(date, expected.location)
         assertRst(e, actual)
     }
 
@@ -721,7 +721,7 @@ class AstronomyTest {
         @ConvertWith(CoordinateLongConverter::class) location: Coordinate,
         expected: Duration
     ) {
-        val length = Astronomy.getDaylightLength(date, location)
+        val length = JvmAstronomy.getDaylightLength(date, location)
         assertDuration(expected, length, Duration.ofMinutes(1))
     }
 
@@ -750,7 +750,7 @@ class AstronomyTest {
         val time = ZonedDateTime.parse(timeString)
         val expectedStart = expectedStartString?.let { ZonedDateTime.parse(it) }
         val expectedEnd = expectedEndString?.let { ZonedDateTime.parse(it) }
-        val times = Astronomy.getSunAboveHorizonTimes(location, time)
+        val times = JvmAstronomy.getSunAboveHorizonTimes(location, time)
         assertDate(expectedStart, times?.start, Duration.ofMinutes(1))
         assertDate(expectedEnd, times?.end, Duration.ofMinutes(1))
     }
@@ -780,7 +780,7 @@ class AstronomyTest {
         val time = ZonedDateTime.parse(timeString)
         val expectedStart = expectedStartString?.let { ZonedDateTime.parse(it) }
         val expectedEnd = expectedEndString?.let { ZonedDateTime.parse(it) }
-        val times = Astronomy.getMoonAboveHorizonTimes(location, time)
+        val times = JvmAstronomy.getMoonAboveHorizonTimes(location, time)
         assertDate(expectedStart, times?.start, Duration.ofMinutes(1))
         assertDate(expectedEnd, times?.end, Duration.ofMinutes(1))
     }
@@ -797,7 +797,7 @@ class AstronomyTest {
         time: String,
         expected: Float
     ) {
-        val actual = Astronomy.getMoonZenithAngleOfBrightLimb(
+        val actual = JvmAstronomy.getMoonZenithAngleOfBrightLimb(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude)
         )
@@ -811,7 +811,7 @@ class AstronomyTest {
         "2026-01-01T00:00:00Z, -92.6",
     )
     fun getMoonPositionAngleOfBrightLimb(time: String, expected: Float) {
-        val actual = Astronomy.getMoonPositionAngleOfBrightLimb(ZonedDateTime.parse(time))
+        val actual = JvmAstronomy.getMoonPositionAngleOfBrightLimb(ZonedDateTime.parse(time))
 
         assertEquals(expected, actual, 0.1f)
     }
@@ -828,7 +828,7 @@ class AstronomyTest {
         time: String,
         expected: Float
     ) {
-        val actual = Astronomy.getMoonParallacticAngle(
+        val actual = JvmAstronomy.getMoonParallacticAngle(
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude)
         )
@@ -850,7 +850,7 @@ class AstronomyTest {
     ) {
         val location = Coordinate(41.8240, -71.4128)
         val time = ZonedDateTime.parse(timeString)
-        val shadow = Astronomy.getLunarEclipseShadow(time, location)
+        val shadow = JvmAstronomy.getLunarEclipseShadow(time, location)
 
         assertEquals(expectedShadowAzimuth, shadow.umbra.azimuth.value, 0.0001f)
         assertEquals(expectedShadowAltitude, shadow.umbra.altitude, 0.0001f)
@@ -879,7 +879,7 @@ class AstronomyTest {
     ) {
         val location = Coordinate(41.8240, -71.4128)
         val time = ZonedDateTime.parse(timeString)
-        val shadow = Astronomy.getLunarEclipseShadow(
+        val shadow = JvmAstronomy.getLunarEclipseShadow(
             time,
             location,
             withRefraction = true,
@@ -902,7 +902,7 @@ class AstronomyTest {
 //    fun solarEclipsePerformance() {
 //        val start = ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
 //        performanceTest(1000) {
-//            Astronomy.getNextEclipse(start, Coordinate(0.0, 0.0), EclipseType.Solar, Duration.ofDays(365))
+//            JvmAstronomy.getNextEclipse(start, Coordinate(0.0, 0.0), EclipseType.Solar, Duration.ofDays(365))
 //        }
 //    }
 
@@ -910,7 +910,7 @@ class AstronomyTest {
 //    fun lunarEclipsePerformance() {
 //        val start = ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
 //        performanceTest(1000) {
-//            Astronomy.getNextEclipse(start, Coordinate(0.0, 0.0), EclipseType.PartialLunar, Duration.ofDays(365))
+//            JvmAstronomy.getNextEclipse(start, Coordinate(0.0, 0.0), EclipseType.PartialLunar, Duration.ofDays(365))
 //        }
 //    }
 
@@ -929,7 +929,7 @@ class AstronomyTest {
         altitude: Float
     ) {
         val star = STAR_CATALOG.find { it.name == name } ?: fail("Star not found")
-        val actual = Astronomy.getStarPosition(
+        val actual = JvmAstronomy.getStarPosition(
             star,
             ZonedDateTime.parse(time),
             Coordinate(latitude, longitude),
@@ -945,7 +945,7 @@ class AstronomyTest {
         "67.92, 1324.8"
     )
     fun canGetZenithDistance(altitude: Float, expected: Float) {
-        val actual = Astronomy.getZenithDistance(altitude).convertTo(DistanceUnits.NauticalMiles).value
+        val actual = JvmAstronomy.getZenithDistance(altitude).convertTo(DistanceUnits.NauticalMiles).value
         assertEquals(expected, actual, 0.1f)
     }
 
@@ -964,19 +964,19 @@ class AstronomyTest {
         val location = Coordinate(42.0, -72.0)
         val time = ZonedDateTime.of(2024, 12, 3, 0, 0, 0, 0, ZoneId.of("America/New_York"))
         val stars = STAR_CATALOG.asSequence().filter { it.magnitude < 2.5 }.map { star ->
-            val altitude = Astronomy.getStarPosition(star, time, location, true).altitude
-            val distance = Astronomy.getZenithDistance(altitude)
+            val altitude = JvmAstronomy.getStarPosition(star, time, location, true).altitude
+            val distance = JvmAstronomy.getZenithDistance(altitude)
             star to distance
         }.sortedBy { it.second.value }
             .map { it.first }
             .take(numberOfStars).toList()
 
         val readings = stars.map {
-            val position = Astronomy.getStarPosition(it, time, location, true)
+            val position = JvmAstronomy.getStarPosition(it, time, location, true)
             StarReading(it, position.altitude, null, time)
         }
 
-        val actual = Astronomy.getLocationFromStars(readings, Coordinate(40.0, -70.0))
+        val actual = JvmAstronomy.getLocationFromStars(readings, Coordinate(40.0, -70.0))
 
         if (hasFix) {
             assertNotNull(actual)
@@ -1003,21 +1003,21 @@ class AstronomyTest {
         val altitudeBias = if (numberOfStars > 2) 1f else 0f
         val azimuthBias = if (numberOfStars > 2) 3f else 0f
         val stars = STAR_CATALOG.asSequence().filter { it.magnitude < 2.5 }.map { star ->
-            val altitude = Astronomy.getStarPosition(star, time, location, true).altitude
-            val distance = Astronomy.getZenithDistance(altitude)
+            val altitude = JvmAstronomy.getStarPosition(star, time, location, true).altitude
+            val distance = JvmAstronomy.getZenithDistance(altitude)
             star to distance
         }.sortedBy { it.second.value }
             .map { it.first }
             .take(numberOfStars).toList()
 
         val readings = stars.map {
-            val position = Astronomy.getStarPosition(it, time, location, true)
+            val position = JvmAstronomy.getStarPosition(it, time, location, true)
             val altitude = position.altitude + altitudeBias
             val azimuth = position.azimuth.value + azimuthBias
             StarReading(it, altitude, azimuth, time)
         }
 
-        val actual = Astronomy.getLocationFromStars(readings)
+        val actual = JvmAstronomy.getLocationFromStars(readings)
 
         if (hasFix) {
             assertNotNull(actual)
@@ -1033,11 +1033,11 @@ class AstronomyTest {
         val location = Coordinate(42.0, -72.0)
         val actualStars = CONSTELLATIONS.first { it.name == "Orion" }.starEdges.flatMap { listOf(it.first, it.second) }.distinct()
         val readings = actualStars.map {
-            val position = Astronomy.getStarPosition(it, time, location, true)
+            val position = JvmAstronomy.getStarPosition(it, time, location, true)
             CelestialObservation(position.azimuth, position.altitude)
         }
 
-        val stars = Astronomy.plateSolve(readings, time).map { it.star }
+        val stars = JvmAstronomy.plateSolve(readings, time).map { it.star }
 
         // Verify that the solver found the correct stars
         // TODO: This isn't doing a good job when there are more stars in the catalog
@@ -1061,8 +1061,8 @@ class AstronomyTest {
     }
 
     private fun assertRst(
-        expected: RiseSetTransitTimes,
-        actual: RiseSetTransitTimes,
+        expected: JvmRiseSetTransitTimes,
+        actual: JvmRiseSetTransitTimes,
         maxDifference: Duration = Duration.ofMinutes(1)
     ) {
         assertDate(expected.rise, actual.rise, maxDifference)
@@ -1093,7 +1093,7 @@ class AstronomyTest {
         val datetime = ZonedDateTime.parse(date)
         val location = Coordinate(latitude, longitude)
 
-        val actual = Astronomy.getNextEclipse(datetime, location, type)
+        val actual = JvmAstronomy.getNextEclipse(datetime, location, type)
 
         if (start == null || end == null) {
             assertNull(actual)

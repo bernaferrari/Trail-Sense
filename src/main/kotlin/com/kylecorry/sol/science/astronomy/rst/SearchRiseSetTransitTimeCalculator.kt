@@ -1,7 +1,7 @@
 package com.kylecorry.sol.science.astronomy.rst
 
 import com.kylecorry.sol.science.astronomy.JvmAstroUtils
-import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
+import com.kylecorry.sol.science.astronomy.JvmRiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.locators.JvmCelestialLocator
 import com.kylecorry.sol.units.Coordinate
 import java.time.ZonedDateTime
@@ -17,12 +17,12 @@ internal class SearchRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculato
         standardAltitude: Double,
         withRefraction: Boolean,
         withParallax: Boolean
-    ): RiseSetTransitTimes {
+    ): JvmRiseSetTransitTimes {
         val times = SearchRiseSetModel().calculate(
             JvmAstroUtils.commonLocator(locator), date.toLocalDate().toKotlinLocalDate(),
             date.zone.toKotlinTimeZone(), location, standardAltitude, withRefraction, withParallax
         )
-        return RiseSetTransitTimes(
+        return JvmRiseSetTransitTimes(
             times.rise?.toJavaInstant()?.atZone(date.zone),
             times.transit?.toJavaInstant()?.atZone(date.zone),
             times.set?.toJavaInstant()?.atZone(date.zone)

@@ -34,13 +34,13 @@ internal object SunFacade {
         mode: SunTimesMode = SunTimesMode.Actual,
         withRefraction: Boolean = false,
         withParallax: Boolean = false
-    ): RiseSetTransitTimes {
+    ): JvmRiseSetTransitTimes {
 
         val result = SunCalculationModel.events(
             date.toInstant().toKotlinInstant(), date.zone.toKotlinTimeZone(), location, mode,
             withRefraction, withParallax
         )
-        return RiseSetTransitTimes(
+        return JvmRiseSetTransitTimes(
             result.rise?.toJavaInstant()?.atZone(date.zone),
             result.transit?.toJavaInstant()?.atZone(date.zone),
             result.set?.toJavaInstant()?.atZone(date.zone)

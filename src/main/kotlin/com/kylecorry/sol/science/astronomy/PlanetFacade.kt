@@ -31,12 +31,12 @@ internal object PlanetFacade {
         location: Coordinate,
         withRefraction: Boolean = false,
         withParallax: Boolean = false
-    ): RiseSetTransitTimes {
+    ): JvmRiseSetTransitTimes {
         val times = PlanetCalculationModel.events(
             planet, date.toInstant().toKotlinInstant(), date.zone.toKotlinTimeZone(), location,
             withRefraction, withParallax
         )
-        return RiseSetTransitTimes(
+        return JvmRiseSetTransitTimes(
             times.rise?.toJavaInstant()?.atZone(date.zone), times.transit?.toJavaInstant()?.atZone(date.zone),
             times.set?.toJavaInstant()?.atZone(date.zone)
         )

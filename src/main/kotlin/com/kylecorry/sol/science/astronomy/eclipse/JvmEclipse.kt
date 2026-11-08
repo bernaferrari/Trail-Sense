@@ -3,7 +3,7 @@ package com.kylecorry.sol.science.astronomy.eclipse
 import java.time.Duration
 import java.time.Instant
 
-data class Eclipse(
+data class JvmEclipse(
     val start: Instant,
     val end: Instant,
     val magnitude: Float,

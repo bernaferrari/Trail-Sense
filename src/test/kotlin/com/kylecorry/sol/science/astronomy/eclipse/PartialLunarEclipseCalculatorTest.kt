@@ -16,7 +16,7 @@ class PartialLunarEclipseCalculatorTest {
         val date = ZonedDateTime.of(LocalDateTime.of(2030, 6, 15, 0, 0), ZoneId.of("UTC"))
         val location = Coordinate(20.0, -16.0)
 
-        var eclipse: Eclipse? = null
+        var eclipse: JvmEclipse? = null
         assertDoesNotThrow {
             eclipse = calculator.getNextEclipse(date.toInstant(), location)
         }

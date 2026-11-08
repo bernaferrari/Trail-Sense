@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.astronomy.stars
 
-import com.kylecorry.sol.science.astronomy.Astronomy
+import com.kylecorry.sol.science.astronomy.JvmAstronomy
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -25,7 +25,7 @@ class StarLocationCalculatorTest {
             val readings = visibleStars(location, time, 2.5f).filter { it.second.altitude > 15 }.shuffled(random).take(5)
                 .map { (star, position) -> StarReading(star, position.altitude, null, time) }
             val guess = location.plus(800_000.0, Bearing.from(random.nextDouble(0.0, 360.0).toFloat()))
-            Astronomy.getLocationFromStars(readings, guess)!!.distanceTo(location)
+            JvmAstronomy.getLocationFromStars(readings, guess)!!.distanceTo(location)
         }.sorted()
         assertTrue(errors.last() < 100f, "Worst error ${errors.last()} m")
     }
@@ -38,7 +38,7 @@ class StarLocationCalculatorTest {
             val readings = visibleStars(location, time, 2.5f).filter { it.second.altitude > 15 }.shuffled(random).take(6)
                 .map { (star, position) -> StarReading(star, position.altitude + gaussian(0.05), null, time) }
             val guess = location.plus(800_000.0, Bearing.from(random.nextDouble(0.0, 360.0).toFloat()))
-            Astronomy.getLocationFromStars(readings, guess)!!.distanceTo(location) / 1000f
+            JvmAstronomy.getLocationFromStars(readings, guess)!!.distanceTo(location) / 1000f
         }.sorted()
         assertTrue(errors[errors.size / 2] < 10f, "Median error ${errors[errors.size / 2]} km")
         assertTrue(errors.last() < 50f, "Worst error ${errors.last()} km")
@@ -46,7 +46,7 @@ class StarLocationCalculatorTest {
 
     private fun visibleStars(location: Coordinate, time: ZonedDateTime, maxMagnitude: Float) =
         STAR_CATALOG.filter { it.magnitude <= maxMagnitude }
-            .map { it to Astronomy.getStarPosition(it, time, location, true) }
+            .map { it to JvmAstronomy.getStarPosition(it, time, location, true) }
             .filter { it.second.altitude > 0 }
 
     private fun randomLocation(): Coordinate {

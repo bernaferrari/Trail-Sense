@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.astronomy
 
-import com.kylecorry.sol.science.astronomy.eclipse.Eclipse
+import com.kylecorry.sol.science.astronomy.eclipse.JvmEclipse
 import com.kylecorry.sol.science.astronomy.eclipse.EclipseType
 import com.kylecorry.sol.science.astronomy.eclipse.LunarEclipseShadow
 import com.kylecorry.sol.science.astronomy.eclipse.lunar.LunarEclipseShadowCalculator
@@ -17,7 +17,7 @@ internal object EclipseFacade {
         location: Coordinate,
         type: EclipseType,
         maxSearch: Duration? = null
-    ): Eclipse? {
+    ): JvmEclipse? {
         val calculator = when (type) {
             EclipseType.PartialLunar -> PartialLunarEclipseCalculator()
             EclipseType.TotalLunar -> TotalLunarEclipseCalculator()
