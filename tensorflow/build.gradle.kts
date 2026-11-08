@@ -11,12 +11,15 @@ kotlin {
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
     jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
-    iosArm64()
-    iosSimulatorArm64()
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.compilations.getByName("main").cinterops.create("tflite") {
+            defFile(project.file("src/nativeInterop/cinterop/tflite.def"))
+            includeDirs(project.file("src/nativeInterop/cinterop"))
+        }
+    }
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
-        iosMain.dependencies { implementation("dev.kursor.ktensorflow:ktensorflow-core:2.0") }
         androidMain.dependencies {
             implementation(project(":core"))
             api(libs.tensorflow.lite.support)

@@ -1,16 +1,19 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+
 package com.kylecorry.andromeda.tensorflow
 
-import dev.kursor.ktensorflow.Interpreter
-import dev.kursor.ktensorflow.InterpreterOptions
-import dev.kursor.ktensorflow.ModelDesc
-import dev.kursor.ktensorflow.run
+import com.kylecorry.andromeda.tensorflow.litert.*
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import platform.Foundation.NSLock
 
 /**
- * Loads a single-input, single-output TensorFlow Lite model from a filesystem path.
- * The app must link TensorFlow Lite using the `dev.kursor.ktensorflow.link` version 2.0
- * Gradle plugin and CocoaPods.
+ * Loads a single-input, single-output `.tflite` model from a filesystem path.
+ * Link the TensorFlowLite product from Google's LiteRT Swift package into the iOS app;
+ * Kotlin frameworks consuming this module must be static so the app can link the C runtime.
+ * The model file must remain unchanged until the classifier is closed.
  * [prepareInput] and [decodeOutput] must match the model's tensor types and quantization.
  */
 fun imageClassifier(
@@ -18,25 +21,56 @@ fun imageClassifier(
     prepareInput: (ImagePixels) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,
 ): ImageClassifier {
-    val interpreter = Interpreter(ModelDesc.PathInBundle(modelPath), InterpreterOptions())
+    val model = requireNotNull(TfLiteModelCreateFromFile(modelPath)) { "Unable to load model: $modelPath" }
+    val interpreter = TfLiteInterpreterCreate(model, null)
+    TfLiteModelDelete(model)
+    requireNotNull(interpreter) { "Unable to create TensorFlow Lite interpreter" }
     try {
-        val metadata = interpreter.getModelMeta()
-        require(metadata.inputData.size == 1 && metadata.outputData.size == 1) { "Expected a model with one input and one output" }
-        val inputSize = metadata.inputData.single().totalByteSize
-        val outputSize = metadata.outputData.single().totalByteSize
-        require(inputSize > 0 && outputSize > 0) { "Variable-sized tensors are not supported" }
+        check(TfLiteInterpreterAllocateTensors(interpreter) == 0) { "Unable to allocate tensors" }
+        require(TfLiteInterpreterGetInputTensorCount(interpreter) == 1 && TfLiteInterpreterGetOutputTensorCount(interpreter) == 1) {
+            "Expected a model with one input and one output"
+        }
+        val input = requireNotNull(TfLiteInterpreterGetInputTensor(interpreter, 0))
+        val output = requireNotNull(TfLiteInterpreterGetOutputTensor(interpreter, 0))
+        val inputSize = TfLiteTensorByteSize(input)
+        val outputSize = TfLiteTensorByteSize(output)
+        require(inputSize > 0u && inputSize <= Int.MAX_VALUE.toULong() && outputSize > 0u && outputSize <= Int.MAX_VALUE.toULong()) {
+            "Unsupported tensor size"
+        }
+        val lock = NSLock()
+        var closed = false
         return object : ImageClassifier {
             override suspend fun classify(image: ImagePixels): List<Float> = withContext(Dispatchers.Default) {
-                val input = prepareInput(image)
-                require(input.size == inputSize) { "Expected $inputSize input bytes, got ${input.size}" }
-                val output = ByteArray(outputSize)
-                interpreter.run(input, output)
-                decodeOutput(output)
+                val bytes = prepareInput(image)
+                require(bytes.size.toULong() == inputSize) { "Expected $inputSize input bytes, got ${bytes.size}" }
+                val result = ByteArray(outputSize.toInt())
+                lock.lock()
+                try {
+                    check(!closed) { "Classifier is closed" }
+                    check(bytes.usePinned { TfLiteTensorCopyFromBuffer(input, it.addressOf(0), inputSize) } == 0) { "Unable to copy input tensor" }
+                    check(TfLiteInterpreterInvoke(interpreter) == 0) { "TensorFlow Lite inference failed" }
+                    val currentOutput = requireNotNull(TfLiteInterpreterGetOutputTensor(interpreter, 0))
+                    check(TfLiteTensorByteSize(currentOutput) == outputSize) { "Variable-sized output tensors are not supported" }
+                    check(result.usePinned { TfLiteTensorCopyToBuffer(currentOutput, it.addressOf(0), outputSize) } == 0) { "Unable to copy output tensor" }
+                } finally {
+                    lock.unlock()
+                }
+                decodeOutput(result)
             }
-            override fun close() = interpreter.close()
+            override fun close() {
+                lock.lock()
+                try {
+                    if (!closed) {
+                        closed = true
+                        TfLiteInterpreterDelete(interpreter)
+                    }
+                } finally {
+                    lock.unlock()
+                }
+            }
         }
     } catch (error: Throwable) {
-        interpreter.close()
+        TfLiteInterpreterDelete(interpreter)
         throw error
     }
 }

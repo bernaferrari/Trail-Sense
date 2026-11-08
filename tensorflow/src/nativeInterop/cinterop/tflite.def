@@ -1,0 +1,2 @@
+headers = tflite.h
+package = com.kylecorry.andromeda.tensorflow.litert
