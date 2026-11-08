@@ -1,20 +1,9 @@
 package com.kylecorry.andromeda.pdf
 
-import com.kylecorry.luna.streams.readText
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.io.OutputStream
-
-sealed interface PDFValue {
+interface PDFValue {
 
     fun toByteArray(): ByteArray {
-        return toString().toByteArray()
-    }
-
-    fun write(output: OutputStream): Long {
-        val bytes = toByteArray()
-        output.write(bytes)
-        return bytes.size.toLong()
+        return toString().encodeToByteArray()
     }
 
     class PDFObject(val id: Int, val generation: Int = 0, val content: List<PDFValue>) : PDFValue {
@@ -62,31 +51,18 @@ sealed interface PDFValue {
         }
 
         override fun toByteArray(): ByteArray {
-            val bytes = ByteArrayOutputStream()
-            bytes.write("$id $generation obj\n".toByteArray())
-            for (value in content) {
-                value.write(bytes)
-                bytes.write("\n".toByteArray())
+            val parts = buildList {
+                add("$id $generation obj\n".encodeToByteArray())
+                content.forEach { value ->
+                    add(value.toByteArray())
+                    add("\n".encodeToByteArray())
+                }
+                add("endobj\n".encodeToByteArray())
             }
-            bytes.write("endobj\n".toByteArray())
-            return bytes.toByteArray()
-        }
-
-        override fun write(output: OutputStream): Long {
-            var byteCount = 0L
-            val header = "$id $generation obj\n".toByteArray()
-            val separator = "\n".toByteArray()
-            val footer = "endobj\n".toByteArray()
-            output.write(header)
-            byteCount += header.size
-            for (value in content) {
-                byteCount += value.write(output)
-                output.write(separator)
-                byteCount += separator.size
-            }
-            output.write(footer)
-            byteCount += footer.size
-            return byteCount
+            val result = ByteArray(parts.sumOf { it.size })
+            var offset = 0
+            parts.forEach { part -> part.copyInto(result, offset); offset += part.size }
+            return result
         }
     }
 
@@ -106,53 +82,9 @@ sealed interface PDFValue {
         }
 
         override fun toByteArray(): ByteArray {
-            return "stream\n".toByteArray() + content + "\nendstream".toByteArray()
+            return "stream\n".encodeToByteArray() + content + "\nendstream".encodeToByteArray()
         }
 
-        override fun write(output: OutputStream): Long {
-            var byteCount = 0L
-            val header = "stream\n".toByteArray()
-            val footer = "\nendstream".toByteArray()
-            output.write(header)
-            byteCount += header.size
-            output.write(content)
-            byteCount += content.size
-            output.write(footer)
-            byteCount += footer.size
-            return byteCount
-        }
-    }
-
-    class PDFInputStream(val stream: InputStream) : PDFValue {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is PDFInputStream) return false
-            return stream == other.stream
-        }
-
-        override fun hashCode(): Int {
-            return stream.hashCode()
-        }
-
-        override fun toString(): String {
-            return "stream\n${stream.readText()}\nendstream"
-        }
-
-        override fun toByteArray(): ByteArray {
-            return "stream\n".toByteArray() + stream.readBytes() + "\nendstream".toByteArray()
-        }
-
-        override fun write(output: OutputStream): Long {
-            var byteCount = 0L
-            val header = "stream\n".toByteArray()
-            val footer = "\nendstream".toByteArray()
-            output.write(header)
-            byteCount += header.size
-            byteCount += stream.copyTo(output)
-            output.write(footer)
-            byteCount += footer.size
-            return byteCount
-        }
     }
 
     class PDFName(_name: String) : PDFValue {

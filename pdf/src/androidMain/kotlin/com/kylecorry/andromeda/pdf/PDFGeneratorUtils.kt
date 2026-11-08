@@ -44,8 +44,8 @@ fun stream(bytes: ByteArray): PDFValue.PDFStream {
     return PDFValue.PDFStream(bytes)
 }
 
-fun stream(stream: InputStream): PDFValue.PDFInputStream {
-    return PDFValue.PDFInputStream(stream)
+fun stream(stream: InputStream): PDFInputStream {
+    return PDFInputStream(stream)
 }
 
 fun stream(string: String): PDFValue.PDFStream {
