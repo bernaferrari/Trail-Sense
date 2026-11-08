@@ -10,15 +10,15 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import java.util.stream.Stream
 
 class PhysicsTest {
 
     @ParameterizedTest
     @MethodSource("provideFallHeights")
-    fun fallHeight(time: Duration, heightMeters: Float) {
-        val actualHeight = Physics.fallHeight(time)
+    fun fallHeight(time: Long, heightMeters: Float) {
+        val actualHeight = Physics.fallHeight(time.seconds)
         assertEquals(heightMeters, actualHeight.meters().value, 0.0001f)
     }
 
@@ -159,9 +159,9 @@ class PhysicsTest {
         @JvmStatic
         fun provideFallHeights(): Stream<Arguments> {
             return Stream.of(
-                Arguments.of(Duration.ZERO, 0f),
-                Arguments.of(Duration.ofSeconds(1), 4.905f),
-                Arguments.of(Duration.ofSeconds(2), 19.62f),
+                Arguments.of(0L, 0f),
+                Arguments.of(1L, 4.905f),
+                Arguments.of(2L, 19.62f),
             )
         }
     }

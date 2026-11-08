@@ -8,7 +8,8 @@ import com.kylecorry.sol.science.geology.ReferenceEllipsoid
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.Clock
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.sqrt
@@ -28,12 +29,12 @@ object Geophysics {
     fun getGeomagneticDeclination(
         coordinate: Coordinate,
         altitude: Float? = null,
-        time: Long = System.currentTimeMillis()
+        time: Long = Clock.System.now().toEpochMilliseconds()
     ): Float {
         val geoField = worldMagneticModel.getVector(
             coordinate,
             Distance.meters(altitude ?: 0f),
-            Instant.ofEpochMilli(time)
+            Instant.fromEpochMilliseconds(time)
         )
         return atan2(geoField.y, geoField.x).toDegrees()
     }
@@ -41,12 +42,12 @@ object Geophysics {
     fun getGeomagneticInclination(
         coordinate: Coordinate,
         altitude: Float? = null,
-        time: Long = System.currentTimeMillis()
+        time: Long = Clock.System.now().toEpochMilliseconds()
     ): Float {
         val geoField = worldMagneticModel.getVector(
             coordinate,
             Distance.meters(altitude ?: 0f),
-            Instant.ofEpochMilli(time)
+            Instant.fromEpochMilliseconds(time)
         )
         return atan2(geoField.z, hypot(geoField.x, geoField.y)).toDegrees()
     }
@@ -54,12 +55,12 @@ object Geophysics {
     fun getGeomagneticField(
         coordinate: Coordinate,
         altitude: Float? = null,
-        time: Long = System.currentTimeMillis()
+        time: Long = Clock.System.now().toEpochMilliseconds()
     ): Vector3 {
         val geoField = worldMagneticModel.getVector(
             coordinate,
             Distance.meters(altitude ?: 0f),
-            Instant.ofEpochMilli(time)
+            Instant.fromEpochMilliseconds(time)
         )
         return Vector3(geoField.x * 0.001f, geoField.y * 0.001f, geoField.z * 0.001f)
     }

@@ -23,7 +23,8 @@ import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
-import java.time.Instant
+import kotlin.time.Instant
+import kotlin.time.Clock
 import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.cos
@@ -41,12 +42,12 @@ internal class SphericalHarmonics(
     private val schmidtQuasiNormFactors =
         computeSchmidtQuasiNormFactors(gCoefficients.size)
 
-    private val baseTimeMillis = baseTime?.toEpochMilli()
+    private val baseTimeMillis = baseTime?.toEpochMilliseconds()
 
     fun getVector(
         coordinate: Coordinate,
         altitude: Distance = Distance.meters(0f),
-        time: Instant = Instant.now(),
+        time: Instant = Clock.System.now(),
     ): Vector3 {
         return calculate(
             coordinate,
@@ -110,7 +111,7 @@ internal class SphericalHarmonics(
     fun getScalar(
         coordinate: Coordinate,
         altitude: Distance = Distance.meters(0f),
-        time: Instant = Instant.now(),
+        time: Instant = Clock.System.now(),
     ): Float {
         return calculate(
             coordinate,
@@ -156,7 +157,7 @@ internal class SphericalHarmonics(
             mGcLatitudeRad: Float
         ) -> T
     ): T {
-        val timeMillis = time.toEpochMilli()
+        val timeMillis = time.toEpochMilliseconds()
 
         // Workaround to handle poles
         val gdLongitudeDeg = coordinate.longitude.toFloat()

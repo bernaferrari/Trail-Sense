@@ -21,7 +21,7 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
-import java.time.Duration
+import kotlin.time.Duration
 import kotlin.math.absoluteValue
 
 object Physics {
@@ -29,7 +29,7 @@ object Physics {
     private val solver = RungeKutta4thOrderSolver()
 
     fun fallHeight(time: Duration, gravity: Float = Geophysics.GRAVITY): Distance {
-        val seconds = time.toMillis() / 1000f
+        val seconds = time.inWholeMilliseconds / 1000f
         return Distance.from(0.5f * gravity * seconds * seconds, DistanceUnits.Meters)
     }
 

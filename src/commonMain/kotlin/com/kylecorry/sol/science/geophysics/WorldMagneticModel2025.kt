@@ -1,11 +1,9 @@
 package com.kylecorry.sol.science.geophysics
 
-import com.kylecorry.sol.time.Time.toUTC
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
 
 internal object WorldMagneticModel2025 {
-    val BASE_TIME: Instant? = LocalDate.of(2025, 1, 1).atStartOfDay().toUTC().toInstant()
+    val BASE_TIME: Instant? = Instant.parse("2025-01-01T00:00:00Z")
 
     val G_COEFFICIENTS = arrayOf(
         floatArrayOf(0.0f),
