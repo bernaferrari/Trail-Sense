@@ -78,9 +78,15 @@ class DeviceSensors {
     fun orientationSensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
         FlowOrientationSensor(attitude(interval, accuracy), scope)
 
+    fun gravitySensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowAccelerometer(gravity(interval, accuracy), scope)
+
     /** Gravity acceleration in meters per second squared. */
     fun gravity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.gravity(interval, accuracy)
+
+    fun linearAccelerometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowAccelerometer(linearAcceleration(interval, accuracy), scope)
 
     /** Acceleration excluding gravity, in meters per second squared. */
     fun linearAcceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
