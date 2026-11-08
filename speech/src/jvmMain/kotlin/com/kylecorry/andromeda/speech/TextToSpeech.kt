@@ -34,32 +34,13 @@ class TextToSpeech : ITextToSpeech {
     }
 }
 
-private data class MacVoice(val name: String, val language: String)
-
-private val macVoices: List<MacVoice> by lazy {
-    runCatching {
-        val process = ProcessBuilder("say", "-v", "?").redirectErrorStream(true).start()
-        val expression = Regex("^(.+?)\\s{2,}([A-Za-z]{2,3}[_-][A-Za-z0-9_-]+)\\s+#.*$")
-        val voices = process.inputStream.bufferedReader().useLines { lines ->
-            lines.mapNotNull { line ->
-                expression.matchEntire(line)?.let { MacVoice(it.groupValues[1].trim(), it.groupValues[2].replace('_', '-')) }
-            }.toList()
-        }
-        process.waitFor()
-        voices
-    }.getOrDefault(emptyList())
-}
-
 private fun startSpeechProcess(locale: String?): Process {
     val os = System.getProperty("os.name").lowercase(Locale.ROOT)
     val commands: List<List<String>>
     val environment = mutableMapOf<String, String>()
     when {
         os.contains("mac") -> {
-            val tag = locale?.replace('_', '-')
-            val voice = if (tag == null) null else macVoices.firstOrNull { it.language.equals(tag, true) }
-                ?: macVoices.firstOrNull { it.language.substringBefore('-').equals(tag.substringBefore('-'), true) }
-            commands = listOf(listOf("say") + if (voice == null) emptyList() else listOf("-v", voice.name))
+            commands = listOf(listOf("say") + if (locale == null) emptyList() else listOf("-v", locale))
         }
         os.contains("win") -> {
             if (locale != null) environment["ANDROMEDA_SPEECH_LOCALE"] = locale
