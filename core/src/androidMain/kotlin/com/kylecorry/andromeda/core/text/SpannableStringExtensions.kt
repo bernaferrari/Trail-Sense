@@ -10,6 +10,7 @@ import androidx.annotation.ColorInt
 import androidx.core.text.inSpans
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors
+import com.kylecorry.andromeda.core.ui.setImageColor
 
 inline fun SpannableStringBuilder.align(
     alignment: Layout.Alignment,
