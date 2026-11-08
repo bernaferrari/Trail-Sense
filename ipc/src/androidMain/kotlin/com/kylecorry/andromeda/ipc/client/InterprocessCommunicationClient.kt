@@ -14,6 +14,8 @@ import com.kylecorry.andromeda.ipc.CODE_INTERNAL_ERROR
 import com.kylecorry.andromeda.ipc.CODE_SERVICE_UNAVAILABLE
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationResponse
+import com.kylecorry.andromeda.ipc.toBundle
+import com.kylecorry.andromeda.ipc.toIpcHeaders
 import com.kylecorry.andromeda.ipc.PROPERTY_CODE
 import com.kylecorry.andromeda.ipc.PROPERTY_HEADERS
 import com.kylecorry.andromeda.ipc.PROPERTY_PAYLOAD
@@ -108,18 +110,19 @@ class InterprocessCommunicationClient(
             val message = Message.obtain()
             val bundle = message.data
             bundle.putString(PROPERTY_ROUTE, path)
-            bundle.putBundle(PROPERTY_HEADERS, request.headers)
+            bundle.putBundle(PROPERTY_HEADERS, request.headers.toBundle())
             bundle.putByteArray(PROPERTY_PAYLOAD, request.payload)
 
             val replyHandler = object : Handler(looper) {
                 override fun handleMessage(msg: Message) {
-                    it.resume(
+                    val result = runCatching {
                         InterprocessCommunicationResponse(
                             msg.data.getInt(PROPERTY_CODE, CODE_INTERNAL_ERROR),
-                            msg.data.getBundle(PROPERTY_HEADERS) ?: bundleOf(),
+                            (msg.data.getBundle(PROPERTY_HEADERS) ?: bundleOf()).toIpcHeaders(),
                             msg.data.getByteArray(PROPERTY_PAYLOAD)
                         )
-                    )
+                    }
+                    if (it.isActive) it.resumeWith(result)
                 }
             }
 
@@ -128,7 +131,7 @@ class InterprocessCommunicationClient(
             messenger?.send(message) ?: it.resume(
                 InterprocessCommunicationResponse(
                     CODE_SERVICE_UNAVAILABLE,
-                    bundleOf(),
+                    emptyMap(),
                     null
                 )
             )

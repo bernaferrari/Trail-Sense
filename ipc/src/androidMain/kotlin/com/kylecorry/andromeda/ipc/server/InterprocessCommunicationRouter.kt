@@ -9,8 +9,11 @@ import android.os.Message
 import android.os.Messenger
 import android.util.Log
 import androidx.core.os.bundleOf
+import com.kylecorry.andromeda.ipc.CODE_INTERNAL_ERROR
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationResponse
+import com.kylecorry.andromeda.ipc.toBundle
+import com.kylecorry.andromeda.ipc.toIpcHeaders
 import com.kylecorry.andromeda.ipc.PROPERTY_CODE
 import com.kylecorry.andromeda.ipc.PROPERTY_HEADERS
 import com.kylecorry.andromeda.ipc.PROPERTY_PAYLOAD
@@ -19,6 +22,7 @@ import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import java.io.Closeable
 
 class InterprocessCommunicationRouter(
@@ -52,18 +56,24 @@ class InterprocessCommunicationRouter(
 
                 scope.launch {
                     runner.enqueue {
-                        val response =
+                        val response = try {
                             action(
                                 applicationContext, InterprocessCommunicationRequest(
-                                    data.getBundle(PROPERTY_HEADERS) ?: bundleOf(),
+                                    (data.getBundle(PROPERTY_HEADERS) ?: bundleOf()).toIpcHeaders(),
                                     data.getByteArray(PROPERTY_PAYLOAD)
                                 )
                             )
+                        } catch (error: CancellationException) {
+                            throw error
+                        } catch (error: Exception) {
+                            Log.e("InterprocessCommunicationRouter", "Request failed", error)
+                            InterprocessCommunicationResponse(CODE_INTERNAL_ERROR)
+                        }
                         if (replyTo != null) {
                             val reply = Message.obtain()
                             val bundle = reply.data
                             bundle.putInt(PROPERTY_CODE, response.code)
-                            bundle.putBundle(PROPERTY_HEADERS, response.headers)
+                            bundle.putBundle(PROPERTY_HEADERS, response.headers.toBundle())
                             bundle.putByteArray(PROPERTY_PAYLOAD, response.payload)
                             try {
                                 replyTo.send(reply)
