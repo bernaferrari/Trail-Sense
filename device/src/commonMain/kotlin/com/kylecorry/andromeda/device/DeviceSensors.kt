@@ -38,6 +38,14 @@ class DeviceSensors {
     fun acceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.acceleration(interval, accuracy)
 
+    /** Angular velocity in degrees per second. */
+    fun angularVelocity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+        backend.angularVelocity(interval, accuracy)
+
+    /** Magnetic field in microteslas. */
+    fun magneticField(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+        backend.magneticField(interval, accuracy)
+
     fun battery(): Flow<Reading<BatteryReading>> = backend.battery()
 
     fun location(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<LocationReading>> =
@@ -46,6 +54,8 @@ class DeviceSensors {
 
 internal interface DeviceBackend {
     fun battery(): Flow<Reading<BatteryReading>>
+    fun angularVelocity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
+    fun magneticField(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
     fun pressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
     fun location(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<LocationReading>>
     fun acceleration(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>

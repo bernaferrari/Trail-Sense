@@ -49,6 +49,17 @@ internal class MobileDeviceBackend : DeviceBackend {
         Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
+    override fun angularVelocity(interval: Duration, accuracy: SensorAccuracy) = motion.gyroscope(config(interval, accuracy)).map { reading ->
+        val value = reading.data.values
+        val scale = (180.0 / kotlin.math.PI).toFloat()
+        Reading(Vector3(value.x * scale, value.y * scale, value.z * scale), Instant.fromEpochMilliseconds(reading.timestamp))
+    }
+
+    override fun magneticField(interval: Duration, accuracy: SensorAccuracy) = positioning.magnetometer(config(interval, accuracy)).map { reading ->
+        val value = reading.data.values
+        Reading(Vector3(value.x, value.y, value.z), Instant.fromEpochMilliseconds(reading.timestamp))
+    }
+
     override fun acceleration(interval: Duration, accuracy: SensorAccuracy) = motion.accelerometer(config(interval, accuracy)).map { reading ->
         val scale = accelerationFactor
         val value = reading.data.values
