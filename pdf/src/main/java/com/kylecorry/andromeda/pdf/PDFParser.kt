@@ -1,5 +1,6 @@
 package com.kylecorry.andromeda.pdf
 
+import com.kylecorry.andromeda.compression.decompress
 import com.kylecorry.andromeda.compression.Zlib
 import com.kylecorry.luna.text.toIntCompat
 import com.kylecorry.luna.streams.forEachByte
