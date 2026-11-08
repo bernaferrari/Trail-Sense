@@ -7,8 +7,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import java.time.Duration
-import java.time.LocalDate
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlinx.datetime.LocalDate
 
 class MultiTriggerTest {
 
@@ -70,9 +71,9 @@ class MultiTriggerTest {
 
     private fun factors(): LifecycleEventFactors {
         return LifecycleEventFactors(
-            lengthOfDay = Duration.ofHours(12),
+            lengthOfDay = 12.hours,
             temperature = Range(Temperature.celsius(0f), Temperature.celsius(0f)),
-            date = LocalDate.now()
+            date = LocalDate(2025, 1, 1)
         )
     }
 }

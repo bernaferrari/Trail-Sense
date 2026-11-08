@@ -1,7 +1,7 @@
 package com.kylecorry.sol.science.ecology.triggers
 
 import com.kylecorry.sol.science.ecology.LifecycleEventFactors
-import java.time.Duration
+import kotlin.time.Duration
 
 class PhotoperiodTrigger(
     private val dayLength: Duration,

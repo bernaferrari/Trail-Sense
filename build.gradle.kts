@@ -62,6 +62,9 @@ kotlin {
     jvmToolchain(17)
 
     sourceSets {
+        commonMain.dependencies {
+            api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+        }
         commonTest.dependencies {
             implementation(kotlin("test"))
         }

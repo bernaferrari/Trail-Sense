@@ -10,8 +10,13 @@ import com.kylecorry.sol.units.Temperature
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.time.LocalDate
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
+import kotlinx.datetime.minus
 import kotlin.math.PI
 
 class EcologyTest {
@@ -139,9 +144,9 @@ class EcologyTest {
     fun cumulativeGDDAccumulatesOverDates() {
         val base = Temperature.celsius(0f)
         // Use a date right after the coldest day so accumulation starts from the query dates
-        val coldestDate = LocalDate.of(2023, 12, 31)
-        val startDate = LocalDate.of(2024, 1, 1)
-        val dates = listOf(startDate, startDate.plusDays(1), startDate.plusDays(2))
+        val coldestDate = LocalDate(2023, 12, 31)
+        val startDate = LocalDate(2024, 1, 1)
+        val dates = listOf(startDate, startDate.plus(1, DateTimeUnit.DAY), startDate.plus(2, DateTimeUnit.DAY))
 
         val result = Ecology.getCumulativeGrowingDegreeDays(
             dates,
@@ -177,8 +182,8 @@ class EcologyTest {
     fun cumulativeGDDResetsAnnually() {
         val base = Temperature.celsius(0f)
         // Two dates more than a year apart - the coldest day in the year prior should reset
-        val date1 = LocalDate.of(2024, 7, 1)
-        val date2 = LocalDate.of(2025, 7, 1)
+        val date1 = LocalDate(2024, 7, 1)
+        val date2 = LocalDate(2025, 7, 1)
 
         val result = Ecology.getCumulativeGrowingDegreeDays(
             listOf(date1, date2),
@@ -201,13 +206,13 @@ class EcologyTest {
             // Hits the temperature threshold twice (carryover from previous year + once at end of year)
             LifecycleEvent("event2", TemperatureTrigger(Temperature.celsius(5f), above = false)),
             // Hits the day length threshold once
-            LifecycleEvent("event3", PhotoperiodTrigger(Duration.ofHours(12), above = true)),
+            LifecycleEvent("event3", PhotoperiodTrigger(12.hours, above = true)),
             // Never reached
-            LifecycleEvent("event4", PhotoperiodTrigger(Duration.ofHours(100), above = true))
+            LifecycleEvent("event4", PhotoperiodTrigger(100.hours, above = true))
         )
 
-        val start = LocalDate.of(2024, 1, 1)
-        val end = LocalDate.of(2025, 1, 1)
+        val start = LocalDate(2024, 1, 1)
+        val end = LocalDate(2025, 1, 1)
 
         val result = Ecology.getLifecycleEventDates(
             events,
@@ -217,16 +222,16 @@ class EcologyTest {
         )
 
         assertEquals(4, result.size)
-        assertEquals(LocalDate.of(2024, 1, 1), result[0].first)
+        assertEquals(LocalDate(2024, 1, 1), result[0].first)
         assertEquals("event2", result[0].second.name)
 
-        assertEquals(LocalDate.of(2024, 3, 28), result[1].first)
+        assertEquals(LocalDate(2024, 3, 28), result[1].first)
         assertEquals("event3", result[1].second.name)
 
-        assertEquals(LocalDate.of(2024, 5, 19), result[2].first)
+        assertEquals(LocalDate(2024, 5, 19), result[2].first)
         assertEquals("event1", result[2].second.name)
 
-        assertEquals(LocalDate.of(2024, 10, 1), result[3].first)
+        assertEquals(LocalDate(2024, 10, 1), result[3].first)
         assertEquals("event2", result[3].second.name)
     }
 
@@ -235,12 +240,12 @@ class EcologyTest {
         val event = LifecycleEvent("bloom", CumulativeGrowingDegreeDaysTrigger(10f))
         val events = listOf(event)
 
-        val date = LocalDate.of(2024, 6, 1)
+        val date = LocalDate(2024, 6, 1)
 
         val result = Ecology.getLifecycleEventDates(
             events,
-            Range(date, date.minusDays(1)),
-            { Duration.ofHours(12) },
+            Range(date, date.minus(1, DateTimeUnit.DAY)),
+            { 12.hours },
             ::mockTemperatureProvider
         )
 
@@ -263,8 +268,8 @@ class EcologyTest {
 
         Ecology.getLifecycleEventDates(
             listOf(LifecycleEvent("event", trigger)),
-            Range(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)),
-            { Duration.ofHours(12) },
+            Range(LocalDate(2024, 1, 1), LocalDate(2024, 1, 2)),
+            { 12.hours },
             ::mockTemperatureProvider
         )
 
@@ -276,19 +281,19 @@ class EcologyTest {
     fun lifecycleEventDoesNotDuplicateEventsTriggeredOnStartDate() {
         val trigger = object : LifecycleEventTrigger {
             override fun isTriggered(factors: LifecycleEventFactors): Boolean {
-                return !factors.date.isBefore(LocalDate.of(2024, 1, 1))
+                return factors.date >= LocalDate(2024, 1, 1)
             }
         }
 
         val result = Ecology.getLifecycleEventDates(
             listOf(LifecycleEvent("event", trigger)),
-            Range(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 1, 2)),
-            { Duration.ofHours(12) },
+            Range(LocalDate(2024, 1, 1), LocalDate(2024, 1, 2)),
+            { 12.hours },
             ::mockTemperatureProvider
         )
 
         assertEquals(1, result.size)
-        assertEquals(LocalDate.of(2024, 1, 1), result[0].first)
+        assertEquals(LocalDate(2024, 1, 1), result[0].first)
         assertEquals("event", result[0].second.name)
     }
 
@@ -310,115 +315,115 @@ class EcologyTest {
     fun activePeriodsReturnsJan1ToEndWhenOnlyEndEvent() {
         val trigger = CumulativeGrowingDegreeDaysTrigger(1f)
         val events = listOf(
-            Pair(LocalDate.of(2024, 3, 15), LifecycleEvent("end", trigger))
+            Pair(LocalDate(2024, 3, 15), LifecycleEvent("end", trigger))
         )
 
         val result = Ecology.getActivePeriodsForYear(2024, events, "start", "end")
 
         assertEquals(1, result.size)
-        assertEquals(LocalDate.of(2024, 1, 1), result[0].start)
-        assertEquals(LocalDate.of(2024, 3, 15), result[0].end)
+        assertEquals(LocalDate(2024, 1, 1), result[0].start)
+        assertEquals(LocalDate(2024, 3, 15), result[0].end)
     }
 
     @Test
     fun activePeriodsReturnsStartToDec31WhenOnlyStartEvent() {
         val trigger = CumulativeGrowingDegreeDaysTrigger(1f)
         val events = listOf(
-            Pair(LocalDate.of(2024, 5, 20), LifecycleEvent("start", trigger))
+            Pair(LocalDate(2024, 5, 20), LifecycleEvent("start", trigger))
         )
 
         val result = Ecology.getActivePeriodsForYear(2024, events, "start", "end")
 
         assertEquals(1, result.size)
-        assertEquals(LocalDate.of(2024, 5, 20), result[0].start)
-        assertEquals(LocalDate.of(2024, 12, 31), result[0].end)
+        assertEquals(LocalDate(2024, 5, 20), result[0].start)
+        assertEquals(LocalDate(2024, 12, 31), result[0].end)
     }
 
     @Test
     fun activePeriodsReturnsStartToEndWhenBothExist() {
         val trigger = CumulativeGrowingDegreeDaysTrigger(1f)
         val events = listOf(
-            Pair(LocalDate.of(2024, 4, 1), LifecycleEvent("start", trigger)),
-            Pair(LocalDate.of(2024, 9, 30), LifecycleEvent("end", trigger))
+            Pair(LocalDate(2024, 4, 1), LifecycleEvent("start", trigger)),
+            Pair(LocalDate(2024, 9, 30), LifecycleEvent("end", trigger))
         )
 
         val result = Ecology.getActivePeriodsForYear(2024, events, "start", "end")
 
         assertEquals(1, result.size)
-        assertEquals(LocalDate.of(2024, 4, 1), result[0].start)
-        assertEquals(LocalDate.of(2024, 9, 30), result[0].end)
+        assertEquals(LocalDate(2024, 4, 1), result[0].start)
+        assertEquals(LocalDate(2024, 9, 30), result[0].end)
     }
 
     @Test
     fun activePeriodsReturnsMultiplePeriodsInYear() {
         val trigger = CumulativeGrowingDegreeDaysTrigger(1f)
         val events = listOf(
-            Pair(LocalDate.of(2024, 3, 1), LifecycleEvent("start", trigger)),
-            Pair(LocalDate.of(2024, 5, 15), LifecycleEvent("end", trigger)),
-            Pair(LocalDate.of(2024, 7, 1), LifecycleEvent("start", trigger)),
-            Pair(LocalDate.of(2024, 10, 31), LifecycleEvent("end", trigger))
+            Pair(LocalDate(2024, 3, 1), LifecycleEvent("start", trigger)),
+            Pair(LocalDate(2024, 5, 15), LifecycleEvent("end", trigger)),
+            Pair(LocalDate(2024, 7, 1), LifecycleEvent("start", trigger)),
+            Pair(LocalDate(2024, 10, 31), LifecycleEvent("end", trigger))
         )
 
         val result = Ecology.getActivePeriodsForYear(2024, events, "start", "end")
 
         assertEquals(2, result.size)
-        assertEquals(LocalDate.of(2024, 3, 1), result[0].start)
-        assertEquals(LocalDate.of(2024, 5, 15), result[0].end)
-        assertEquals(LocalDate.of(2024, 7, 1), result[1].start)
-        assertEquals(LocalDate.of(2024, 10, 31), result[1].end)
+        assertEquals(LocalDate(2024, 3, 1), result[0].start)
+        assertEquals(LocalDate(2024, 5, 15), result[0].end)
+        assertEquals(LocalDate(2024, 7, 1), result[1].start)
+        assertEquals(LocalDate(2024, 10, 31), result[1].end)
     }
 
     @Test
     fun activePeriodsFiltersOutEventsFromOtherYears() {
         val trigger = CumulativeGrowingDegreeDaysTrigger(1f)
         val events = listOf(
-            Pair(LocalDate.of(2023, 6, 1), LifecycleEvent("start", trigger)),
-            Pair(LocalDate.of(2024, 4, 1), LifecycleEvent("start", trigger)),
-            Pair(LocalDate.of(2024, 8, 1), LifecycleEvent("end", trigger)),
-            Pair(LocalDate.of(2025, 3, 1), LifecycleEvent("end", trigger))
+            Pair(LocalDate(2023, 6, 1), LifecycleEvent("start", trigger)),
+            Pair(LocalDate(2024, 4, 1), LifecycleEvent("start", trigger)),
+            Pair(LocalDate(2024, 8, 1), LifecycleEvent("end", trigger)),
+            Pair(LocalDate(2025, 3, 1), LifecycleEvent("end", trigger))
         )
 
         val result = Ecology.getActivePeriodsForYear(2024, events, "start", "end")
 
         assertEquals(1, result.size)
-        assertEquals(LocalDate.of(2024, 4, 1), result[0].start)
-        assertEquals(LocalDate.of(2024, 8, 1), result[0].end)
+        assertEquals(LocalDate(2024, 4, 1), result[0].start)
+        assertEquals(LocalDate(2024, 8, 1), result[0].end)
     }
 
     @Test
     fun activePeriodsIgnoresUnrelatedEvents() {
         val trigger = CumulativeGrowingDegreeDaysTrigger(1f)
         val events = listOf(
-            Pair(LocalDate.of(2024, 2, 1), LifecycleEvent("bloom", trigger)),
-            Pair(LocalDate.of(2024, 4, 1), LifecycleEvent("start", trigger)),
-            Pair(LocalDate.of(2024, 6, 1), LifecycleEvent("fruit", trigger)),
-            Pair(LocalDate.of(2024, 9, 1), LifecycleEvent("end", trigger))
+            Pair(LocalDate(2024, 2, 1), LifecycleEvent("bloom", trigger)),
+            Pair(LocalDate(2024, 4, 1), LifecycleEvent("start", trigger)),
+            Pair(LocalDate(2024, 6, 1), LifecycleEvent("fruit", trigger)),
+            Pair(LocalDate(2024, 9, 1), LifecycleEvent("end", trigger))
         )
 
         val result = Ecology.getActivePeriodsForYear(2024, events, "start", "end")
 
         assertEquals(1, result.size)
-        assertEquals(LocalDate.of(2024, 4, 1), result[0].start)
-        assertEquals(LocalDate.of(2024, 9, 1), result[0].end)
+        assertEquals(LocalDate(2024, 4, 1), result[0].start)
+        assertEquals(LocalDate(2024, 9, 1), result[0].end)
     }
 
     @Test
     fun activePeriodsHandlesEndBeforeStart() {
         val trigger = CumulativeGrowingDegreeDaysTrigger(1f)
         val events = listOf(
-            Pair(LocalDate.of(2024, 2, 1), LifecycleEvent("end", trigger)),
-            Pair(LocalDate.of(2024, 10, 1), LifecycleEvent("start", trigger))
+            Pair(LocalDate(2024, 2, 1), LifecycleEvent("end", trigger)),
+            Pair(LocalDate(2024, 10, 1), LifecycleEvent("start", trigger))
         )
 
         val result = Ecology.getActivePeriodsForYear(2024, events, "start", "end")
 
         assertEquals(2, result.size)
         // First period: Jan 1 to Feb 1 (end event closes implicit start)
-        assertEquals(LocalDate.of(2024, 1, 1), result[0].start)
-        assertEquals(LocalDate.of(2024, 2, 1), result[0].end)
+        assertEquals(LocalDate(2024, 1, 1), result[0].start)
+        assertEquals(LocalDate(2024, 2, 1), result[0].end)
         // Second period: Oct 1 to Dec 31 (start event with no end)
-        assertEquals(LocalDate.of(2024, 10, 1), result[1].start)
-        assertEquals(LocalDate.of(2024, 12, 31), result[1].end)
+        assertEquals(LocalDate(2024, 10, 1), result[1].start)
+        assertEquals(LocalDate(2024, 12, 31), result[1].end)
     }
 
     private fun mockTemperatureProvider(date: LocalDate): Range<Temperature> {
@@ -442,6 +447,6 @@ class EcologyTest {
         val verticalShift = 12f
         val wave = SineWave(amplitude, frequency, phaseShift, verticalShift)
         val minutes = wave.calculate(2 * PI.toFloat() * dayOfYear.toFloat() / 365f) * 60
-        return Duration.ofMinutes(minutes.toLong())
+        return minutes.toLong().minutes
     }
 }

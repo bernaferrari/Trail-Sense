@@ -2,8 +2,11 @@ package com.kylecorry.sol.science.ecology
 
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Temperature
-import java.time.Duration
-import java.time.LocalDate
+import kotlin.time.Duration
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
+import kotlinx.datetime.minus
 
 object Ecology {
 
@@ -47,16 +50,16 @@ object Ecology {
         val earliestDate = dates.minOrNull() ?: return emptyList()
 
         // Search the full year prior to the first date for the lowest temperature
-        var startDate = earliestDate.minusYears(1)
+        var startDate = earliestDate.minus(1, DateTimeUnit.YEAR)
         var lowestTemperature = temperatureProvider(startDate)
-        var currentDate = startDate.plusDays(1)
+        var currentDate = startDate.plus(1, DateTimeUnit.DAY)
         while (currentDate < earliestDate) {
             val temperature = temperatureProvider(currentDate)
             if (temperature.start.celsius().value < lowestTemperature.start.celsius().value) {
                 lowestTemperature = temperature
                 startDate = currentDate
             }
-            currentDate = currentDate.plusDays(1)
+            currentDate = currentDate.plus(1, DateTimeUnit.DAY)
         }
 
         // Calculate from that day forward (reset every year)
@@ -65,8 +68,8 @@ object Ecology {
         val queue = dates.toMutableSet()
         var cumulative = 0f
         while (queue.isNotEmpty()) {
-            if (currentDate >= startDate.plusYears(1)) {
-                startDate = startDate.plusYears(1)
+            if (currentDate >= startDate.plus(1, DateTimeUnit.YEAR)) {
+                startDate = startDate.plus(1, DateTimeUnit.YEAR)
                 cumulative = 0f
             }
             cumulative += getGrowingDegreeDays(
@@ -79,7 +82,7 @@ object Ecology {
                 queue.remove(currentDate)
                 gdd.add(Pair(currentDate, cumulative))
             }
-            currentDate = currentDate.plusDays(1)
+            currentDate = currentDate.plus(1, DateTimeUnit.DAY)
         }
         return gdd
     }
@@ -92,7 +95,7 @@ object Ecology {
     ): List<Pair<LocalDate, LifecycleEvent>> {
         val lifecycleEvents = mutableListOf<Pair<LocalDate, LifecycleEvent>>()
         val hits = mutableSetOf<LifecycleEvent>()
-        var date = dateRange.start.minusYears(1)
+        var date = dateRange.start.minus(1, DateTimeUnit.YEAR)
         events.forEach { it.trigger.reset() }
         while (date <= dateRange.end) {
             val temperature = temperatureProvider(date)
@@ -125,7 +128,7 @@ object Ecology {
                 }
             }
 
-            date = date.plusDays(1)
+            date = date.plus(1, DateTimeUnit.DAY)
         }
         return lifecycleEvents.sortedBy { it.first }
     }
@@ -137,7 +140,7 @@ object Ecology {
         activeEnd: String
     ): List<Range<LocalDate>> {
         val activePeriods = mutableListOf<Range<LocalDate>>()
-        var startDate: LocalDate = LocalDate.of(year, 1, 1)
+        var startDate: LocalDate = LocalDate(year, 1, 1)
         var hasStartDate = false
         for (event in events.filter { it.first.year == year }) {
             if (event.second.name == activeEnd) {
@@ -150,7 +153,7 @@ object Ecology {
         }
 
         if (hasStartDate) {
-            activePeriods.add(Range(startDate, LocalDate.of(year, 12, 31)))
+            activePeriods.add(Range(startDate, LocalDate(year, 12, 31)))
         }
 
         return activePeriods

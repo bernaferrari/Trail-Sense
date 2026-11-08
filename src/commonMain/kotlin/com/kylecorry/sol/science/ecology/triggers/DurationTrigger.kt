@@ -1,8 +1,10 @@
 package com.kylecorry.sol.science.ecology.triggers
 
 import com.kylecorry.sol.science.ecology.LifecycleEventFactors
-import java.time.Duration
-import java.time.LocalDate
+import kotlin.time.Duration
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
 
 class DurationTrigger(
     private val baseTrigger: LifecycleEventTrigger,
@@ -15,7 +17,7 @@ class DurationTrigger(
     override fun isTriggered(factors: LifecycleEventFactors): Boolean {
         val isBaseTriggered = baseTrigger.isTriggered(factors)
         if (isBaseTriggered && triggerDate == null) {
-            triggerDate = factors.date.plusDays(duration.toDays())
+            triggerDate = factors.date.plus(duration.inWholeDays.toInt(), DateTimeUnit.DAY)
         }
         if (!isBaseTriggered && resetWhenBaseNotTriggered) {
             triggerDate = null

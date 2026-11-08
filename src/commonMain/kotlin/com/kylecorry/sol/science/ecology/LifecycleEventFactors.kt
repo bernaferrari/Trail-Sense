@@ -2,8 +2,8 @@ package com.kylecorry.sol.science.ecology
 
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Temperature
-import java.time.Duration
-import java.time.LocalDate
+import kotlin.time.Duration
+import kotlinx.datetime.LocalDate
 
 data class LifecycleEventFactors(
     val lengthOfDay: Duration,

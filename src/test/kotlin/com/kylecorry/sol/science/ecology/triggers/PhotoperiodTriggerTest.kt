@@ -6,8 +6,9 @@ import com.kylecorry.sol.units.Temperature
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import java.time.Duration
-import java.time.LocalDate
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlinx.datetime.LocalDate
 
 class PhotoperiodTriggerTest {
 
@@ -18,7 +19,7 @@ class PhotoperiodTriggerTest {
         "11, false"
     )
     fun aboveTriggeredWhenDayLengthIsAboveThreshold(dayLengthHours: Long, isTriggered: Boolean) {
-        val trigger = PhotoperiodTrigger(Duration.ofHours(12), above = true)
+        val trigger = PhotoperiodTrigger(12.hours, above = true)
         val factors = factors(dayLengthHours)
         assertEquals(isTriggered, trigger.isTriggered(factors))
     }
@@ -30,16 +31,16 @@ class PhotoperiodTriggerTest {
         "13, false"
     )
     fun belowTriggeredWhenDayLengthIsBelowThreshold(dayLengthHours: Long, isTriggered: Boolean) {
-        val trigger = PhotoperiodTrigger(Duration.ofHours(12), above = false)
+        val trigger = PhotoperiodTrigger(12.hours, above = false)
         val factors = factors(dayLengthHours)
         assertEquals(isTriggered, trigger.isTriggered(factors))
     }
 
     private fun factors(dayLengthHours: Long): LifecycleEventFactors {
         return LifecycleEventFactors(
-            lengthOfDay = Duration.ofHours(dayLengthHours),
+            lengthOfDay = dayLengthHours.hours,
             temperature = Range(Temperature.celsius(0f), Temperature.celsius(0f)),
-            date = LocalDate.now()
+            date = LocalDate(2025, 1, 1)
         )
     }
 }

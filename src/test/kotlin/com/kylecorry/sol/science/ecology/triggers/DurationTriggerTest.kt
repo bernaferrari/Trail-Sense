@@ -7,36 +7,38 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.time.LocalDate
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.days
+import kotlinx.datetime.LocalDate
 
 class DurationTriggerTest {
 
     @Test
     fun triggersAfterDurationFromBaseTriggerDate() {
-        val baseTrigger = DateThresholdTrigger(LocalDate.of(2024, 1, 2))
-        val trigger = DurationTrigger(baseTrigger, Duration.ofDays(2))
+        val baseTrigger = DateThresholdTrigger(LocalDate(2024, 1, 2))
+        val trigger = DurationTrigger(baseTrigger, 2.days)
 
-        assertFalse(trigger.isTriggered(factors(LocalDate.of(2024, 1, 1))))
-        assertFalse(trigger.isTriggered(factors(LocalDate.of(2024, 1, 2))))
-        assertFalse(trigger.isTriggered(factors(LocalDate.of(2024, 1, 3))))
-        assertTrue(trigger.isTriggered(factors(LocalDate.of(2024, 1, 4))))
+        assertFalse(trigger.isTriggered(factors(LocalDate(2024, 1, 1))))
+        assertFalse(trigger.isTriggered(factors(LocalDate(2024, 1, 2))))
+        assertFalse(trigger.isTriggered(factors(LocalDate(2024, 1, 3))))
+        assertTrue(trigger.isTriggered(factors(LocalDate(2024, 1, 4))))
     }
 
     @Test
     fun resetWhenBaseNotTriggeredClearsPendingTriggerDate() {
-        val baseTrigger = OneDayTrigger(LocalDate.of(2024, 1, 2))
-        val trigger = DurationTrigger(baseTrigger, Duration.ofDays(2), resetWhenBaseNotTriggered = true)
+        val baseTrigger = OneDayTrigger(LocalDate(2024, 1, 2))
+        val trigger = DurationTrigger(baseTrigger, 2.days, resetWhenBaseNotTriggered = true)
 
-        assertFalse(trigger.isTriggered(factors(LocalDate.of(2024, 1, 2))))
-        assertFalse(trigger.isTriggered(factors(LocalDate.of(2024, 1, 3))))
-        assertFalse(trigger.isTriggered(factors(LocalDate.of(2024, 1, 4))))
+        assertFalse(trigger.isTriggered(factors(LocalDate(2024, 1, 2))))
+        assertFalse(trigger.isTriggered(factors(LocalDate(2024, 1, 3))))
+        assertFalse(trigger.isTriggered(factors(LocalDate(2024, 1, 4))))
     }
 
     @Test
     fun resetCallsResetOnBaseTrigger() {
         val baseTrigger = ResetTrackingTrigger()
-        val trigger = DurationTrigger(baseTrigger, Duration.ofDays(1))
+        val trigger = DurationTrigger(baseTrigger, 1.days)
 
         trigger.reset()
 
@@ -45,7 +47,7 @@ class DurationTriggerTest {
 
     private fun factors(date: LocalDate): LifecycleEventFactors {
         return LifecycleEventFactors(
-            lengthOfDay = Duration.ofHours(12),
+            lengthOfDay = 12.hours,
             temperature = Range(Temperature.celsius(0f), Temperature.celsius(0f)),
             date = date
         )
