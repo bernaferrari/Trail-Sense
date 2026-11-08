@@ -52,6 +52,8 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
                 get() = camera.zoom?.let { CameraZoom(it.ratio, it.ratioRange.start, it.ratioRange.end) }
             override val exposure: CameraExposure? get() = camera.exposureCompensation
             override fun setExposure(value: Float) = camera.setExposureCompensation(value)
+            override val manualExposure: ManualExposureRange? get() = camera.manualExposureRange
+            override fun setManualExposure(duration: kotlin.time.Duration?, iso: Int?) = camera.setSharedManualExposure(duration, iso)
             override val manualFocusSupported: Boolean get() = camera.manualFocusSupported
             override fun setFocus(position: Float?) = camera.setSharedFocus(position)
             override suspend fun capture(): ByteArray {

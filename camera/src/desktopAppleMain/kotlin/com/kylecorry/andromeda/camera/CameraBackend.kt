@@ -76,6 +76,8 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
                     }
                 override val exposure: CameraExposure? get() = cameraExposure(camera)
                 override fun setExposure(value: Float) = setCameraExposure(camera, value)
+                override val manualExposure: ManualExposureRange? get() = cameraManualExposure(camera)
+                override fun setManualExposure(duration: kotlin.time.Duration?, iso: Int?) = setCameraManualExposure(camera, duration, iso)
                 override val manualFocusSupported: Boolean get() = cameraManualFocusSupported(camera)
                 override fun setFocus(position: Float?) = setCameraFocus(camera, position)
                 override suspend fun capture(): ByteArray = when (val result = camera.takePictureToFile()) {

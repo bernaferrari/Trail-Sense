@@ -60,6 +60,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.atan
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.nanoseconds
 
 
 class Camera(
@@ -112,6 +113,35 @@ class Camera(
         val step = checkNotNull(exposure.step)
         val index = (value / step).roundToInt()
         checkNotNull(camera).cameraControl.setExposureCompensationIndex(index)
+    }
+
+    internal val manualExposureRange: ManualExposureRange?
+        get() {
+            val modes = getCharacteristic(CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES) ?: return null
+            val capabilities = getCharacteristic(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: return null
+            if (CameraMetadata.CONTROL_AE_MODE_OFF !in modes ||
+                CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_MANUAL_SENSOR !in capabilities) return null
+            val shutter = getCharacteristic(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE) ?: return null
+            val sensitivity = getCharacteristic(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE) ?: return null
+            return ManualExposureRange(shutter.lower.nanoseconds..shutter.upper.nanoseconds, sensitivity.lower..sensitivity.upper)
+        }
+
+    @OptIn(ExperimentalCamera2Interop::class)
+    internal fun setSharedManualExposure(duration: kotlin.time.Duration?, iso: Int?) {
+        require((duration == null) == (iso == null)) { "Provide both duration and ISO, or neither" }
+        val control = checkNotNull(getCamera2Controller()) { "Camera is unavailable" }
+        val options = CaptureRequestOptions.Builder()
+        if (duration == null) {
+            options.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON)
+        } else {
+            val supported = checkNotNull(manualExposureRange) { "Manual exposure is unavailable" }
+            val sensitivity = checkNotNull(iso)
+            require(duration.isFinite() && duration in supported.duration && sensitivity in supported.iso)
+            options.setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF)
+            options.setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, duration.inWholeNanoseconds)
+            options.setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, sensitivity)
+        }
+        control.addCaptureRequestOptions(options.build())
     }
 
     internal val manualFocusSupported: Boolean

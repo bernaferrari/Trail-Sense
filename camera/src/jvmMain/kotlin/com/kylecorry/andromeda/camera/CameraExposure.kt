@@ -9,3 +9,7 @@ internal actual fun setCameraExposure(camera: CameraController, value: Float): U
 internal actual fun cameraManualFocusSupported(camera: CameraController): Boolean = false
 internal actual fun setCameraFocus(camera: CameraController, position: Float?): Unit =
     throw UnsupportedOperationException("Focus control is unavailable on desktop")
+
+internal actual fun cameraManualExposure(camera: CameraController): ManualExposureRange? = null
+internal actual fun setCameraManualExposure(camera: CameraController, duration: kotlin.time.Duration?, iso: Int?): Unit =
+    throw UnsupportedOperationException("Manual exposure is unavailable on desktop")

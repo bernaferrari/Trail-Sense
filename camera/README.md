@@ -11,3 +11,5 @@ The calibrated mapper supports both angle-to-pixel and pixel-to-angle conversion
 `PhotoCamera.exposure` reports exposure compensation and its supported EV range when available. `setExposure` applies an EV value; Android rounds to the nearest supported step, iOS uses the native continuous bias, and desktop reports the control as unavailable.
 
 `manualFocusSupported` indicates whether the camera can set its lens position. `setFocus(position)` selects a position from near (0) to far (1); these positions do not represent fixed physical distances. Pass null to resume autofocus. Desktop reports manual focus as unavailable.
+
+`manualExposure` reports supported shutter-duration and ISO ranges when the camera supports manual exposure. `setManualExposure(duration, iso)` sets both together; pass null for both to return to automatic exposure. Desktop reports manual exposure as unavailable.
