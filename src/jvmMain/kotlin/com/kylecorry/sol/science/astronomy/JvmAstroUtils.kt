@@ -22,6 +22,8 @@ internal object JvmAstroUtils {
         override fun getDistance(ut: Instant): Distance? = this@asCommon.getDistance(ut.asUniversalTime())
     }
 
+    internal fun commonLocator(locator: JvmCelestialLocator): ICelestialLocator = locator.asCommon()
+
     fun getAltitude(
         locator: JvmCelestialLocator, ut: UniversalTime, location: Coordinate,
         withRefraction: Boolean = false, withParallax: Boolean = false
