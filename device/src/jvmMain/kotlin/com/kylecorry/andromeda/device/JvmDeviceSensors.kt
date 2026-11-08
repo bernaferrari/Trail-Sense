@@ -37,6 +37,7 @@ internal actual fun createDeviceBackend(): DeviceBackend = object : DeviceBacken
             delay(30_000)
         }
     }.flowOn(Dispatchers.IO)
+    override fun magneticHeading(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> = emptyFlow()
     override fun ambientTemperature(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> = emptyFlow()
     override fun relativeHumidity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> = emptyFlow()
     override fun illuminance(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> = emptyFlow()

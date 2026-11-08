@@ -15,6 +15,16 @@ import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Duration
 
+internal actual fun platformMagneticHeading(interval: Duration): Flow<Reading<Float>> =
+    sensorEvents(Sensor.TYPE_ROTATION_VECTOR, interval).map { reading ->
+        val matrix = FloatArray(9)
+        val orientation = FloatArray(3)
+        SensorManager.getRotationMatrixFromVector(matrix, reading.value)
+        SensorManager.getOrientation(matrix, orientation)
+        val degrees = orientation[0] * (180f / kotlin.math.PI.toFloat())
+        Reading((degrees + 360f) % 360f, reading.time)
+    }
+
 internal actual fun platformAmbientTemperature(interval: Duration): Flow<Reading<Float>> =
     sensorEvents(Sensor.TYPE_AMBIENT_TEMPERATURE, interval).map { Reading(it.value[0], it.time) }
 internal actual fun platformRelativeHumidity(interval: Duration): Flow<Reading<Float>> =

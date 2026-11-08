@@ -43,6 +43,7 @@ internal class MobileDeviceBackend : DeviceBackend {
             details.fullChargeMilliampHours, details.chargingMethod), Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
+    override fun magneticHeading(interval: Duration, accuracy: SensorAccuracy) = platformMagneticHeading(interval)
     override fun ambientTemperature(interval: Duration, accuracy: SensorAccuracy) = platformAmbientTemperature(interval)
     override fun relativeHumidity(interval: Duration, accuracy: SensorAccuracy) = platformRelativeHumidity(interval)
 
@@ -105,3 +106,5 @@ internal data class BatteryDetails(
     val chargingMethod: com.kylecorry.andromeda.battery.BatteryChargingMethod? = null,
 )
 internal expect fun platformBatteryDetails(percent: Int?): BatteryDetails
+
+internal expect fun platformMagneticHeading(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>
