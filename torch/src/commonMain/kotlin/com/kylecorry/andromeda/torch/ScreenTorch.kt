@@ -1,5 +1,8 @@
 package com.kylecorry.andromeda.torch
 
+/** Returns screen brightness control when the platform has an active screen. */
+expect fun screenBrightness(): ScreenBrightness?
+
 /** Platform screen brightness control; a negative initial value can represent the system default. */
 interface ScreenBrightness {
     var brightness: Float

@@ -1,6 +1,9 @@
 package com.kylecorry.andromeda.torch
 
 import android.view.Window
+import com.ksensor.core.context.KSensorContext
+
+actual fun screenBrightness(): ScreenBrightness? = KSensorContext.getActivity()?.window?.let(::screenBrightness)
 
 fun screenBrightness(window: Window): ScreenBrightness = object : ScreenBrightness {
     override var brightness: Float
