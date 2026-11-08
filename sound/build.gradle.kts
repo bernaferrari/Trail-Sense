@@ -17,6 +17,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":shared"))
+            implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
             api("eu.iamkonstantin.kotlin:gadulka:1.14.0")
         }
         iosMain.dependencies { implementation("io.github.piotrprus:audio-capture:0.1.0") }
