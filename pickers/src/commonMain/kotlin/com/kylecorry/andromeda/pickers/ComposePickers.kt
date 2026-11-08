@@ -216,3 +216,11 @@ fun MultiIndexPickerDialog(
         confirmButton = { TextButton(onClick = { onResult(chosen) }) { Text(confirmLabel) } },
         dismissButton = { TextButton(onClick = { onResult(null) }) { Text(cancelLabel) } })
 }
+
+@Composable
+fun IndexPickerDialog(
+    title: String, items: List<String>, selected: Int?, onResult: (Int?) -> Unit,
+    cancelLabel: String = "Cancel"
+) {
+    ItemPickerDialog(title, items.indices.toList(), selected, { index -> items[index] }, onResult, cancelLabel)
+}
