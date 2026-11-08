@@ -1,9 +1,17 @@
 plugins {
     kotlin("multiplatform")
+    id("com.android.kotlin.multiplatform.library")
     id("com.vanniktech.maven.publish")
 }
 
 kotlin {
+    android {
+        namespace = "com.kylecorry.andromeda.shared"
+        compileSdk = 37
+        minSdk = 24
+        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
+    sourceSets.androidMain { kotlin.srcDir("src/jvmMain/kotlin") }
     jvm {
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
