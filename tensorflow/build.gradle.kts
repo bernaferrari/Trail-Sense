@@ -16,7 +16,12 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { api(project(":tensorflow-android")) }
+        androidMain.dependencies {
+            implementation(project(":core"))
+            api(libs.tensorflow.lite.support)
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.androidx.core.ktx)
+        }
     }
 }
 group = "com.kylecorry.andromeda"
