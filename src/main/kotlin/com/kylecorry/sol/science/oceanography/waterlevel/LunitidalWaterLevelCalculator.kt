@@ -32,10 +32,10 @@ class LunitidalWaterLevelCalculator(
     private var cachedCalculatorTideStart: Tide? = null
     private var cachedCalculatorTideEnd: Tide? = null
 
-    override fun calculate(instant: Instant, timeZone: TimeZone): Float {
-        val time = instant.toJavaInstant().atZone(ZoneId.of(timeZone.id))
-        val previous = getClosestTide(time, false)
-        val next = getClosestTide(time, true)
+    override fun calculate(time: Instant, timeZone: TimeZone): Float {
+        val zonedTime = time.toJavaInstant().atZone(ZoneId.of(timeZone.id))
+        val previous = getClosestTide(zonedTime, false)
+        val next = getClosestTide(zonedTime, true)
 
         if (previous == null || next == null) {
             return 0f
@@ -45,7 +45,7 @@ class LunitidalWaterLevelCalculator(
 
         val calculator = if (previous.isHigh == next.isHigh) {
             val low = getLowTideEstimate(previous.time, next.time)
-            if (low.isBefore(time)) {
+            if (low.isBefore(zonedTime)) {
                 getCalculator(
                     Tide.low(low, waterLevelRange?.start),
                     Tide.high(next.time, waterLevelRange?.end)
@@ -63,7 +63,7 @@ class LunitidalWaterLevelCalculator(
         val lowestLevel = waterLevelRange?.start ?: -1f
         val highestLevel = waterLevelRange?.end ?: 1f
 
-        val level = calculator.calculate(time).coerceIn(lowestLevel, highestLevel)
+        val level = calculator.calculate(zonedTime).coerceIn(lowestLevel, highestLevel)
         check(level.isFinite())
         check(level in lowestLevel..highestLevel)
         return level

@@ -2,14 +2,10 @@ package com.kylecorry.sol.science.oceanography.waterlevel
 
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
 import com.kylecorry.sol.science.oceanography.TideConstituent
-import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.units.Coordinate
-import java.time.Duration
-import java.time.ZonedDateTime
-import java.time.ZoneId
+import kotlin.time.Duration
 import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
 
 class HarmonicLunitidalWaterLevelCalculator(
     lunitidalInterval: Duration,
@@ -19,13 +15,13 @@ class HarmonicLunitidalWaterLevelCalculator(
     private val harmonic = TidalHarmonic(
         TideConstituent.M2,
         1f,
-        ((Time.hours(lunitidalInterval) - location.longitude / 15) * TideConstituent.M2.speed).toFloat()
+        ((lunitidalInterval.inWholeMilliseconds / 3600000.0 - location.longitude / 15) *
+            TideConstituent.M2.speed).toFloat()
     )
 
     private val harmonicCalculator = HarmonicWaterLevelCalculator(listOf(harmonic))
 
-    override fun calculate(instant: Instant, timeZone: TimeZone): Float {
-        val time = instant.toJavaInstant().atZone(ZoneId.of(timeZone.id))
-        return harmonicCalculator.calculate(time)
+    override fun calculate(time: Instant, timeZone: TimeZone): Float {
+        return harmonicCalculator.calculate(time, timeZone)
     }
 }

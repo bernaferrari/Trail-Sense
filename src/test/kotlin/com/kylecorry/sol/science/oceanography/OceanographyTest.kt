@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.Arguments
 import java.io.File
 import java.net.http.HttpClient
 import java.time.*
+import kotlin.time.toKotlinDuration
 import java.util.stream.Stream
 
 internal class OceanographyTest {
@@ -188,8 +189,8 @@ internal class OceanographyTest {
         println()
 
         val calculators = listOf(
-            "LUNITIDAL HARMONIC (LOCAL)" to HarmonicLunitidalWaterLevelCalculator(localLunitidalInterval, location),
-            "LUNITIDAL HARMONIC (UTC)" to HarmonicLunitidalWaterLevelCalculator(utcLunitidalInterval),
+            "LUNITIDAL HARMONIC (LOCAL)" to HarmonicLunitidalWaterLevelCalculator(localLunitidalInterval.toKotlinDuration(), location),
+            "LUNITIDAL HARMONIC (UTC)" to HarmonicLunitidalWaterLevelCalculator(utcLunitidalInterval.toKotlinDuration()),
             "TIDE CLOCK" to TideClockWaterLevelCalculator(Tide.high(highs.first()), TideConstituent.M2.speed),
             "LUNITIDAL (LOCAL)" to LunitidalWaterLevelCalculator(localLunitidalInterval, location),
             "LUNITIDAL (LOCAL; HIGH AND LOW)" to LunitidalWaterLevelCalculator(

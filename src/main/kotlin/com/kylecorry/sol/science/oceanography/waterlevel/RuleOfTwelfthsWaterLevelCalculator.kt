@@ -22,9 +22,9 @@ class RuleOfTwelfthsWaterLevelCalculator(
         Trigonometry.connect(firstVec, secondVec)
     }
 
-    override fun calculate(instant: Instant, timeZone: TimeZone): Float {
-        val time = instant.toJavaInstant().atZone(ZoneId.of(timeZone.id))
-        return wave.calculate(getX(time))
+    override fun calculate(time: Instant, timeZone: TimeZone): Float {
+        val zonedTime = time.toJavaInstant().atZone(ZoneId.of(timeZone.id))
+        return wave.calculate(getX(zonedTime))
     }
 
     private fun getX(time: ZonedDateTime): Float {

@@ -4,6 +4,7 @@ import com.kylecorry.sol.units.Coordinate
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import kotlin.time.toKotlinDuration
 import java.time.ZonedDateTime
 
 internal class HarmonicLunitidalWaterLevelCalculatorTest {
@@ -11,7 +12,7 @@ internal class HarmonicLunitidalWaterLevelCalculatorTest {
     @Test
     fun calculate() {
         val calculator = HarmonicLunitidalWaterLevelCalculator(
-            Duration.ofHours(2).plusMinutes(15),
+            Duration.ofHours(2).plusMinutes(15).toKotlinDuration(),
             Coordinate(42.0, -72.0)
         )
 
