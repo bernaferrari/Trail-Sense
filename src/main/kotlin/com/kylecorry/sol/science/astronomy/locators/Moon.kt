@@ -78,10 +78,10 @@ internal class Moon : ICelestialLocator {
                 127 * sinDegrees(meanLongitude - moonMeanAnomaly) -
                 115 * sinDegrees(meanLongitude + moonMeanAnomaly)
 
-        val apparentLongitude =
-            meanLongitude + moonLongitude / 1000000.0 + LongitudinalNutation.getNutationInLongitude(tt)
+        val apparentLongitude = meanLongitude + moonLongitude / 1000000.0 +
+            LongitudinalNutation.getNutationInLongitude(tt.toJulianCenturies())
         val eclipticLatitude = moonLatitude / 1000000.0
-        val eclipticObliquity = EclipticObliquity.getTrueObliquityOfEcliptic(tt)
+        val eclipticObliquity = EclipticObliquity.getTrueObliquityOfEcliptic(tt.toJulianCenturies())
 
         return EclipticCoordinate(eclipticLatitude, apparentLongitude).toEquatorial(
             eclipticObliquity

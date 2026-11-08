@@ -8,6 +8,7 @@ import com.kylecorry.sol.science.astronomy.rst.RobustRiseSetTransitTimeCalculato
 import com.kylecorry.sol.science.astronomy.sun.SolarRadiationCalculator
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.EclipticCoordinate
+import com.kylecorry.sol.science.astronomy.units.toJulianCenturies
 import com.kylecorry.sol.science.astronomy.units.fromJulianDay
 import com.kylecorry.sol.science.astronomy.units.toJulianDay
 import com.kylecorry.sol.science.astronomy.units.toLocal
@@ -293,7 +294,7 @@ internal object SunFacade {
             val coords = sun.getCoordinates(ut)
             val solarLon = EclipticCoordinate.fromEquatorial(
                 coords,
-                ut
+                ut.toJulianCenturies()
             ).eclipticLongitude
             correction = 58 * sinDegrees(longitude - solarLon)
             jd += correction
@@ -311,7 +312,7 @@ internal object SunFacade {
         val coords = sun.getCoordinates(date.toUniversalTime())
         return EclipticCoordinate.fromEquatorial(
             coords,
-            date.toUniversalTime()
+            date.toUniversalTime().toJulianCenturies()
         ).eclipticLongitude.toFloat()
     }
 }

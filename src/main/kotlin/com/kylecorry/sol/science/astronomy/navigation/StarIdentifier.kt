@@ -55,13 +55,11 @@ internal class StarIdentifier(private val settings: StarIdentifierSettings = Sta
         return Rotation.fit(rays, targets)
     }
 
-    private fun createMatcher(image: SkyImage, catalog: List<BodyPosition>): CatalogMatcher<BodyPosition> {
-        return CatalogMatcher(catalog, image.up, settings.maxZenithOffsetDegrees, settings.inlierToleranceDegrees) {
-            it.vector
-        }
+    private fun createMatcher(image: SkyImage, catalog: List<BodyPosition>): CatalogMatcher {
+        return CatalogMatcher(catalog, image.up, settings.maxZenithOffsetDegrees, settings.inlierToleranceDegrees)
     }
 
-    private fun findBestHypothesis(image: SkyImage, matcher: CatalogMatcher<BodyPosition>): FocalHypothesis? {
+    private fun findBestHypothesis(image: SkyImage, matcher: CatalogMatcher): FocalHypothesis? {
         val seeds = image.stars.sortedByDescending { it.brightness }.take(settings.seedCount)
         var best: FocalHypothesis? = null
         for (a in seeds.indices) {
@@ -81,7 +79,7 @@ internal class StarIdentifier(private val settings: StarIdentifierSettings = Sta
         seeds: List<ImageStar>,
         a: Int,
         b: Int,
-        matcher: CatalogMatcher<BodyPosition>
+        matcher: CatalogMatcher
     ): List<FocalHypothesis> {
         val f0 = image.camera.focalLength
         val observed = CatalogMatcher.angle(
@@ -106,7 +104,7 @@ internal class StarIdentifier(private val settings: StarIdentifierSettings = Sta
         image: SkyImage,
         initialCamera: PinholeCamera,
         initialRotation: Rotation,
-        matcher: CatalogMatcher<BodyPosition>
+        matcher: CatalogMatcher
     ): StarIdentification? {
         var camera = initialCamera
         var rays = getRays(image, camera)
@@ -141,7 +139,7 @@ internal class StarIdentifier(private val settings: StarIdentifierSettings = Sta
         image: SkyImage,
         start: PinholeCamera,
         matches: List<CatalogMatcher.Match>,
-        matcher: CatalogMatcher<BodyPosition>
+        matcher: CatalogMatcher
     ): PinholeCamera {
         val stars = matches.map { image.stars[it.index] }
         val targets = matches.map { matcher.catalog[it.catalogIndex].vector }

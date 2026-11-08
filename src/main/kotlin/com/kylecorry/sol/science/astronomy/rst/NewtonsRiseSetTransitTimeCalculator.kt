@@ -183,8 +183,8 @@ internal class NewtonsRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculat
     }
 
     private fun getApparentSiderealTime(ut: UniversalTime): Double {
-        val longitudeNutation = LongitudinalNutation.getNutationInLongitude(ut)
-        val eclipticObliquity = EclipticObliquity.getTrueObliquityOfEcliptic(ut)
+        val longitudeNutation = LongitudinalNutation.getNutationInLongitude(ut.toJulianCenturies())
+        val eclipticObliquity = EclipticObliquity.getTrueObliquityOfEcliptic(ut.toJulianCenturies())
         val meanSidereal = getMeanSiderealTime(ut)
         return meanSidereal + (longitudeNutation * cosDegrees(eclipticObliquity)) / 15.0
     }

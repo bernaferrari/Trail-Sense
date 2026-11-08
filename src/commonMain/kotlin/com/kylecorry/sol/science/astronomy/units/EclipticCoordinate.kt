@@ -31,13 +31,9 @@ internal class EclipticCoordinate(paramEclipticLatitude: Double, paramEclipticLo
 
     }
 
-    fun toEquatorial(ut: UniversalTime): EquatorialCoordinate {
-        return toEquatorial(getObliquityOfTheEcliptic(ut))
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as EclipticCoordinate
 
@@ -55,17 +51,17 @@ internal class EclipticCoordinate(paramEclipticLatitude: Double, paramEclipticLo
 
 
     companion object {
-        fun getObliquityOfTheEcliptic(ut: UniversalTime): Double {
+        fun getObliquityOfTheEcliptic(julianCenturies: Double): Double {
             val e0 = 23.439292
-            val t = ut.toJulianCenturies()
+            val t = julianCenturies
             return e0 - Algebra.polynomial(t, 0.0, 46.815, 0.0006, -0.00181) / 3600
         }
 
         fun fromEquatorial(
             equatorial: EquatorialCoordinate,
-            ut: UniversalTime
+            julianCenturies: Double
         ): EclipticCoordinate {
-            val e = getObliquityOfTheEcliptic(ut)
+            val e = getObliquityOfTheEcliptic(julianCenturies)
             val alpha = equatorial.rightAscension
             val delta = equatorial.declination
             val t0 = sinDegrees(delta) * cosDegrees(e)
@@ -83,7 +79,7 @@ internal class EclipticCoordinate(paramEclipticLatitude: Double, paramEclipticLo
             var lon = atan2(y, x).toDegrees()
 
             if (equatorial.isApparent) {
-                val omega = Algebra.polynomial(ut.toJulianCenturies(), 125.04, -1934.136)
+                val omega = Algebra.polynomial(julianCenturies, 125.04, -1934.136)
                 lon += 0.00569 + 0.00478 * sinDegrees(omega)
             }
 

@@ -11,6 +11,7 @@ import com.kylecorry.sol.science.astronomy.locators.Sun
 import com.kylecorry.sol.science.astronomy.units.HorizonCoordinate
 import com.kylecorry.sol.science.astronomy.units.UniversalTime
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
+import com.kylecorry.sol.science.astronomy.units.toSiderealTime
 import com.kylecorry.sol.units.Coordinate
 import java.time.Duration
 import java.time.Instant
@@ -169,8 +170,8 @@ internal class SolarEclipseCalculator(
         val coordinates = locator.getCoordinates(time)
         return HorizonCoordinate.fromEquatorial(
             coordinates,
-            time,
-            location,
+            time.toSiderealTime().atLongitude(location.longitude),
+            location.latitude,
             checkNotNull(locator.getDistance(time)) // Supplying the distance for parallax
         ).withRefraction()
     }

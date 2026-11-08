@@ -1,0 +1,132 @@
+package com.kylecorry.sol.science.astronomy.locators
+
+import com.kylecorry.sol.math.trigonometry.Trigonometry.toDegrees
+import com.kylecorry.sol.science.astronomy.units.JD_2000
+
+enum class Planet(
+    val order: Int,
+    internal val epoch: Double,
+    val orbitalPeriod: Double,
+    val radius: Double,
+    internal val eccentricity: Double,
+    internal val semimajorAxis: Double,
+    internal val angularDiameter: Double,
+    internal val visualMagnitude: Double,
+    internal val inclination: Double,
+    internal val eclipticLongitudeEpoch: Double,
+    internal val eclipticLongitudePerihelion: Double,
+    internal val eclipticLongitudeAscendingNodeEpoch: Double
+) {
+    Mercury(
+        1,
+        JD_2000,
+        0.240847,
+        2439.7,
+        0.205636,
+        0.3870993,
+        toDegrees(0.0, 0.0, 6.74),
+        -0.42,
+        7.004979,
+        252.250324,
+        77.457796,
+        48.330766
+    ),
+    Venus(
+        2,
+        JD_2000,
+        0.615197,
+        6051.8,
+        0.0067767,
+        0.723336,
+        toDegrees(0.0, 0.0, 16.92),
+        -4.40,
+        3.394676,
+        181.979100,
+        131.602467,
+        76.679843
+    ),
+    Earth(
+        3,
+        JD_2000,
+        1.000017,
+        6378.14,
+        0.0167112,
+        1.000003,
+        0.0,
+        0.0,
+        -0.000015,
+        100.464572,
+        102.937682,
+        0.0
+    ),
+    Mars(
+        4,
+        JD_2000,
+        1.880848,
+        3389.5,
+        0.093394,
+        1.523710,
+        toDegrees(0.0, 0.0, 9.36),
+        -1.52,
+        1.849691,
+        -4.553432,
+        -23.943630,
+        49.559539
+    ),
+    Jupiter(
+        5,
+        JD_2000,
+        11.862615,
+        69911.0,
+        0.048393,
+        5.202887,
+        toDegrees(0.0, 0.0, 196.74),
+        -9.40,
+        1.3043975,
+        34.396441,
+        14.728480,
+        100.473909
+    ),
+    Saturn(
+        6,
+        JD_2000,
+        29.447498,
+        58232.0,
+        0.053862,
+        9.536676,
+        toDegrees(0.0, 0.0, 165.60),
+        -8.88,
+        2.485992,
+        49.954244,
+        92.598878,
+        113.662424
+    ),
+    Uranus(
+        7,
+        JD_2000,
+        84.016846,
+        25362.0,
+        0.0472574,
+        19.189165,
+        toDegrees(0.0, 0.0, 65.80),
+        -7.19,
+        0.772638,
+        313.232810,
+        170.954276,
+        74.016925
+    ),
+    Neptune(
+        8,
+        JD_2000,
+        164.79132,
+        24622.0,
+        0.008590,
+        30.069923,
+        toDegrees(0.0, 0.0, 62.20),
+        -6.87,
+        1.770043,
+        -55.120030,
+        44.964762,
+        131.784226
+    ),
+}

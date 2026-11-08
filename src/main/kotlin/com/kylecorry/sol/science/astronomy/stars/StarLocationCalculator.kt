@@ -12,6 +12,7 @@ import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
+import com.kylecorry.sol.science.astronomy.units.toSiderealTime
 import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.Geofence
 import com.kylecorry.sol.time.Time
@@ -159,7 +160,8 @@ internal class StarLocationCalculator {
     private fun getZenithCircleIntersections(starReadings: List<StarReading>): List<Coordinate> {
         val zenithLocations = starReadings.map { reading ->
             val distance = Astronomy.getZenithDistance(reading.altitude)
-            val coordinate = reading.star.coordinate.getZenithCoordinate(reading.time.toUniversalTime())
+            val siderealTime = reading.time.toUniversalTime().toSiderealTime(true)
+            val coordinate = reading.star.coordinate.getZenithCoordinate(siderealTime)
             Geofence(coordinate, distance)
         }
         return Geography.trilaterate(zenithLocations).locations

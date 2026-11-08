@@ -2,17 +2,10 @@ package com.kylecorry.sol.science.astronomy.corrections
 
 import com.kylecorry.sol.math.algebra.Algebra.polynomial
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
-import com.kylecorry.sol.science.astronomy.units.UniversalTime
-import com.kylecorry.sol.science.astronomy.units.toJulianCenturies
 
 internal object EclipticObliquity {
-    fun getTrueObliquityOfEcliptic(ut: UniversalTime): Double {
-        return getMeanObliquityOfEcliptic(ut) + getNutationInObliquity(ut)
-    }
-
-    fun getMeanObliquityOfEcliptic(ut: UniversalTime): Double {
-        val julianCenturiesSinceJ2000 = ut.toJulianCenturies()
-        return getMeanObliquityOfEcliptic(julianCenturiesSinceJ2000)
+    fun getTrueObliquityOfEcliptic(julianCenturiesSinceJ2000: Double): Double {
+        return getMeanObliquityOfEcliptic(julianCenturiesSinceJ2000) + getNutationInObliquity(julianCenturiesSinceJ2000)
     }
 
     fun getMeanObliquityOfEcliptic(julianCenturiesSinceJ2000: Double): Double {
@@ -33,8 +26,7 @@ internal object EclipticObliquity {
         ) / 3600.0
     }
 
-    private fun getNutationInObliquity(ut: UniversalTime): Double {
-        val julianCenturiesSinceJ2000 = ut.toJulianCenturies()
+    private fun getNutationInObliquity(julianCenturiesSinceJ2000: Double): Double {
         val X0 = polynomial(julianCenturiesSinceJ2000, 297.85036, 445267.111480, -0.0019142, 1 / 189474.0)
         val X1 = polynomial(julianCenturiesSinceJ2000, 357.52772, 35999.050340, -0.0001603, -1 / 300000.0)
         val X2 = polynomial(julianCenturiesSinceJ2000, 134.96298, 477198.867398, 0.0086972, 1 / 56250.0)

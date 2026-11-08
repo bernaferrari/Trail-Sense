@@ -108,10 +108,11 @@ internal object AstroUtils {
         withRefraction: Boolean = false,
         distanceToBody: Distance? = null
     ): HorizonCoordinate {
+        val siderealTime = ut.toSiderealTime().atLongitude(location.longitude)
         val horizon = if (distanceToBody != null) {
-            HorizonCoordinate.fromEquatorial(coordinate, ut, location, distanceToBody)
+            HorizonCoordinate.fromEquatorial(coordinate, siderealTime, location.latitude, distanceToBody)
         } else {
-            HorizonCoordinate.fromEquatorial(coordinate, ut, location)
+            HorizonCoordinate.fromEquatorial(coordinate, siderealTime, location.latitude)
         }
         return if (withRefraction) {
             horizon.withRefraction()

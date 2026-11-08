@@ -8,6 +8,7 @@ import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.EquatorialCoordinate
 import com.kylecorry.sol.science.astronomy.units.HorizonCoordinate
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
+import com.kylecorry.sol.science.astronomy.units.toSiderealTime
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -74,10 +75,11 @@ internal class LunarEclipseShadowCalculator {
         distanceToMoon: Distance
     ): HorizonCoordinate {
         val ut = time.toUniversalTime()
+        val siderealTime = ut.toSiderealTime().atLongitude(location.longitude)
         val position = if (withParallax) {
-            HorizonCoordinate.fromEquatorial(shadowCoordinates, ut, location, distanceToMoon)
+            HorizonCoordinate.fromEquatorial(shadowCoordinates, siderealTime, location.latitude, distanceToMoon)
         } else {
-            HorizonCoordinate.fromEquatorial(shadowCoordinates, ut, location)
+            HorizonCoordinate.fromEquatorial(shadowCoordinates, siderealTime, location.latitude)
         }
 
         return if (withRefraction) {

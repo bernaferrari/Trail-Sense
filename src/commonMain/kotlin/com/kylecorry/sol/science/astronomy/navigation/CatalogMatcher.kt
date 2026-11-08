@@ -15,12 +15,11 @@ import kotlin.math.sqrt
  * @param maxZenithOffset rotations that put up further than this (degrees) from the catalog's zenith are rejected
  * @param inlierTolerance the maximum distance (degrees) between an observation and a body to count as a match
  */
-internal class CatalogMatcher<T>(
-    val catalog: List<T>,
+internal class CatalogMatcher(
+    val catalog: List<BodyPosition>,
     private val up: Vector3Precise?,
     private val maxZenithOffset: Double,
-    private val inlierTolerance: Double,
-    vectorOf: (T) -> Vector3Precise
+    private val inlierTolerance: Double
 ) {
 
     class Hypothesis(val rotation: Rotation, val score: Int, val residual: Double) {
@@ -32,7 +31,7 @@ internal class CatalogMatcher<T>(
 
     data class Match(val index: Int, val catalogIndex: Int, val distance: Double)
 
-    private val catalogVectors = catalog.map(vectorOf)
+    private val catalogVectors = catalog.map { it.vector }
     private val pairs = CatalogPairs(catalogVectors, MIN_SEPARATION, MAX_SEPARATION)
 
     fun getPairs(separation: Double, tolerance: Double): List<CatalogPair> {

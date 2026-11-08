@@ -11,7 +11,6 @@ import kotlin.math.sin
 /**
  * A celestial body's apparent direction as an East-North-Up unit vector
  */
-internal data class BodyPosition(val body: CelestialBody, val vector: Vector3Precise)
 
 internal object SkyCatalog {
 

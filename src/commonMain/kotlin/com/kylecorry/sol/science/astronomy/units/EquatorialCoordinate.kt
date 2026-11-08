@@ -17,16 +17,16 @@ internal class EquatorialCoordinate(
         return wrap(siderealTime.hours - rightAscensionHours, 0.0, 24.0)
     }
 
-    fun getZenithCoordinate(ut: UniversalTime): Coordinate {
+    fun getZenithCoordinate(siderealTime: SiderealTime): Coordinate {
         return Coordinate(
             declination,
-            Coordinate.toLongitude(-timeToAngle(getHourAngle(ut.toSiderealTime(true)), 0, 0))
+            Coordinate.toLongitude(-getHourAngle(siderealTime) * 15)
         )
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as EquatorialCoordinate
 

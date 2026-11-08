@@ -8,7 +8,6 @@ import com.kylecorry.sol.math.arithmetic.Arithmetic.wrap
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
 import com.kylecorry.sol.math.trigonometry.Trigonometry.tanDegrees
-import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import kotlin.math.acos
@@ -48,7 +47,7 @@ internal class HorizonCoordinate(paramAzimuth: Double, paramAltitude: Double) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other == null || this::class != other::class) return false
 
         other as HorizonCoordinate
 
@@ -103,18 +102,6 @@ internal class HorizonCoordinate(paramAzimuth: Double, paramAltitude: Double) {
 
         fun fromEquatorial(
             equatorial: EquatorialCoordinate,
-            ut: UniversalTime,
-            coordinate: Coordinate
-        ): HorizonCoordinate {
-            return fromEquatorial(
-                equatorial,
-                ut.toSiderealTime().atLongitude(coordinate.longitude),
-                coordinate.latitude
-            )
-        }
-
-        fun fromEquatorial(
-            equatorial: EquatorialCoordinate,
             siderealTime: SiderealTime,
             latitude: Double
         ): HorizonCoordinate {
@@ -139,20 +126,6 @@ internal class HorizonCoordinate(paramAzimuth: Double, paramAltitude: Double) {
             }
 
             return HorizonCoordinate(a, h)
-        }
-
-        fun fromEquatorial(
-            equatorial: EquatorialCoordinate,
-            ut: UniversalTime,
-            coordinate: Coordinate,
-            distanceToBody: Distance
-        ): HorizonCoordinate {
-            return fromEquatorial(
-                equatorial,
-                ut.toSiderealTime().atLongitude(coordinate.longitude),
-                coordinate.latitude,
-                distanceToBody
-            )
         }
 
         fun fromEquatorial(

@@ -18,7 +18,6 @@ import kotlin.math.floor
 
 typealias UniversalTime = LocalDateTime
 
-const val JD_2000 = 2451545.0
 
 /**
  * Julian centuries since 2000
@@ -71,8 +70,8 @@ internal fun UniversalTime.toSiderealTime(apparent: Boolean = false): GreenwichS
     val gst = t0 + 1.002738 * ut
 
     if (apparent) {
-        val nutation = LongitudinalNutation.getNutationInLongitude(this)
-        val obilquity = EclipticObliquity.getTrueObliquityOfEcliptic(this)
+        val nutation = LongitudinalNutation.getNutationInLongitude(this.toJulianCenturies())
+        val obilquity = EclipticObliquity.getTrueObliquityOfEcliptic(this.toJulianCenturies())
         val deltaPsi = (nutation * cos(obilquity.toRadians())) / 15
         return GreenwichSiderealTime(gst + deltaPsi)
     }
