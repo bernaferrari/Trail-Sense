@@ -1,7 +1,6 @@
 package com.kylecorry.andromeda.haptics
 
-import android.annotation.SuppressLint
-import java.time.Duration
+import kotlin.time.Duration
 
 interface IHapticMotor {
     /**
@@ -13,13 +12,11 @@ interface IHapticMotor {
     /**
      * Performs the specified haptic feedback
      */
-    @SuppressLint("MissingPermission")
     fun feedback(feedbackType: HapticFeedbackType)
 
     /**
      * Turns the vibrator off
      */
-    @SuppressLint("MissingPermission")
     fun off()
 
     /**

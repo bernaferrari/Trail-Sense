@@ -7,7 +7,9 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.content.getSystemService
 import com.kylecorry.andromeda.permissions.Permissions
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
 
 class HapticMotor(private val context: Context) : IHapticMotor {
 
@@ -16,7 +18,7 @@ class HapticMotor(private val context: Context) : IHapticMotor {
      * @param amplitude the amplitude between 0 and 255, or -1 for the default amplitude
      */
     override fun on(amplitude: Int) {
-        oneShot(Duration.ofDays(1).toMillis(), amplitude)
+        oneShot(1.days.inWholeMilliseconds, amplitude)
     }
 
     /**
@@ -42,7 +44,7 @@ class HapticMotor(private val context: Context) : IHapticMotor {
                 HapticFeedbackType.HeavyClick -> listOf(0, 1, 20, 21)
                 HapticFeedbackType.DoubleClick -> listOf(0, 30, 100, 30)
             }
-            pattern(vibrationPattern.map { Duration.ofMillis(it) })
+            pattern(vibrationPattern.map { it.milliseconds })
         }
     }
 
@@ -63,7 +65,7 @@ class HapticMotor(private val context: Context) : IHapticMotor {
      * @param amplitude the amplitude between 0 and 255, or -1 for the default amplitude
      */
     override fun once(onDuration: Duration, amplitude: Int) {
-        oneShot(onDuration.toMillis(), amplitude)
+        oneShot(onDuration.inWholeMilliseconds, amplitude)
     }
 
     /**
@@ -92,9 +94,9 @@ class HapticMotor(private val context: Context) : IHapticMotor {
         repeat: Boolean
     ) {
         if (amplitudes != null) {
-            waveform(durations.map { it.toMillis() }, amplitudes, if (repeat) 0 else -1)
+            waveform(durations.map { it.inWholeMilliseconds }, amplitudes, if (repeat) 0 else -1)
         } else {
-            waveform(durations.map { it.toMillis() }, if (repeat) 0 else -1)
+            waveform(durations.map { it.inWholeMilliseconds }, if (repeat) 0 else -1)
         }
     }
 
