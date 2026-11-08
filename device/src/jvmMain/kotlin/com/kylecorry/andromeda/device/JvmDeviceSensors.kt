@@ -35,6 +35,9 @@ internal actual fun createDeviceBackend(): DeviceBackend = object : DeviceBacken
             delay(30_000)
         }
     }.flowOn(Dispatchers.IO)
+    override fun illuminance(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> = emptyFlow()
+    override fun steps(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Int>> = emptyFlow()
+    override fun proximity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Boolean>> = emptyFlow()
     override fun angularVelocity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>> = emptyFlow()
     override fun magneticField(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>> = emptyFlow()
     override fun pressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> = emptyFlow()

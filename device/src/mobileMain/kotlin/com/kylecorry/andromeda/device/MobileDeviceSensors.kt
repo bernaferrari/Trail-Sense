@@ -40,6 +40,15 @@ internal class MobileDeviceBackend : DeviceBackend {
         Reading(BatteryReading(state.levelPercent, charging, health, state.temperatureC), Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
+    override fun illuminance(interval: Duration, accuracy: SensorAccuracy) =
+        environment.light(config(interval, accuracy)).map { Reading(it.data.illuminance, Instant.fromEpochMilliseconds(it.timestamp)) }
+
+    override fun steps(interval: Duration, accuracy: SensorAccuracy) =
+        motion.stepCounter(config(interval, accuracy)).map { Reading(it.data.steps, Instant.fromEpochMilliseconds(it.timestamp)) }
+
+    override fun proximity(interval: Duration, accuracy: SensorAccuracy) =
+        environment.proximity(config(interval, accuracy)).map { Reading(it.data.isNear, Instant.fromEpochMilliseconds(it.timestamp)) }
+
     override fun pressure(interval: Duration, accuracy: SensorAccuracy) =
         platformPressure(interval, accuracy)
 

@@ -62,6 +62,18 @@ class DeviceSensors {
 
     fun battery(): Flow<Reading<BatteryReading>> = backend.battery()
 
+    /** Ambient illuminance in lux, where supported. */
+    fun illuminance(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+        backend.illuminance(interval, accuracy)
+
+    /** Cumulative step count reported by the platform. */
+    fun steps(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Int>> =
+        backend.steps(interval, accuracy)
+
+    /** Whether an object is close to the device, where supported. */
+    fun proximity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Boolean>> =
+        backend.proximity(interval, accuracy)
+
     fun gps(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
         FlowGPS(location(interval, accuracy), scope)
 
@@ -70,6 +82,9 @@ class DeviceSensors {
 }
 
 internal interface DeviceBackend {
+    fun illuminance(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
+    fun steps(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Int>>
+    fun proximity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Boolean>>
     fun battery(): Flow<Reading<BatteryReading>>
     fun angularVelocity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
     fun magneticField(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
