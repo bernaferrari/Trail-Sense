@@ -1,4 +1,4 @@
-package com.kylecorry.andromeda.fragments
+package com.kylecorry.andromeda.navigation
 
 enum class VolumeButton {
     Up,
