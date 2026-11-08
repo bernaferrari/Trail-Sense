@@ -13,6 +13,7 @@ import androidx.core.os.bundleOf
 import com.kylecorry.andromeda.ipc.CODE_INTERNAL_ERROR
 import com.kylecorry.andromeda.ipc.CODE_SERVICE_UNAVAILABLE
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest
+import com.kylecorry.andromeda.ipc.IpcClient
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationResponse
 import com.kylecorry.andromeda.ipc.toBundle
 import com.kylecorry.andromeda.ipc.toIpcHeaders
@@ -20,19 +21,21 @@ import com.kylecorry.andromeda.ipc.PROPERTY_CODE
 import com.kylecorry.andromeda.ipc.PROPERTY_HEADERS
 import com.kylecorry.andromeda.ipc.PROPERTY_PAYLOAD
 import com.kylecorry.andromeda.ipc.PROPERTY_ROUTE
-import com.kylecorry.luna.concurrency.onDefault
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
-import java.io.Closeable
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.coroutines.resume
 
 class InterprocessCommunicationClient(
     private val context: Context,
     private val intent: Intent,
     private val looper: Looper = Looper.getMainLooper()
-) : Closeable {
+) : AutoCloseable, IpcClient {
     private var isBound = false
     private var isConnecting = false
     private var isBindingRegistered = false
@@ -83,7 +86,7 @@ class InterprocessCommunicationClient(
         }
     }
 
-    suspend fun waitUntilConnected(timeoutMillis: Long = 1000): Unit = onDefault {
+    suspend fun waitUntilConnected(timeoutMillis: Long = 1000): Unit = withContext(Dispatchers.Default) {
         var isNowConnected = false
         synchronized(lock) {
             if (!isConnecting && !isBound) {
@@ -102,9 +105,9 @@ class InterprocessCommunicationClient(
         }
     }
 
-    suspend fun send(
+    override suspend fun send(
         path: String,
-        request: InterprocessCommunicationRequest = InterprocessCommunicationRequest(),
+        request: InterprocessCommunicationRequest,
     ): InterprocessCommunicationResponse =
         suspendCancellableCoroutine {
             val message = Message.obtain()
@@ -140,8 +143,8 @@ class InterprocessCommunicationClient(
     suspend fun connectAndSend(
         route: String,
         request: InterprocessCommunicationRequest = InterprocessCommunicationRequest(),
-        connectTimeout: Duration = Duration.ofSeconds(10),
-        requestTimeout: Duration = Duration.ofMinutes(1),
+        connectTimeout: Duration = 10.seconds,
+        requestTimeout: Duration = 1.minutes,
         stayConnected: Boolean = false
     ): InterprocessCommunicationResponse {
         return try {
@@ -149,8 +152,8 @@ class InterprocessCommunicationClient(
             if (!success) {
                 throw IllegalStateException("Could not connect to service")
             }
-            waitUntilConnected(connectTimeout.toMillis())
-            withTimeout(requestTimeout.toMillis()) {
+            waitUntilConnected(connectTimeout.inWholeMilliseconds)
+            withTimeout(requestTimeout.inWholeMilliseconds) {
                 send(route, request)
             }
         } finally {

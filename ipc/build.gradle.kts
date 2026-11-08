@@ -16,7 +16,8 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android); api(libs.luna) }
+        commonTest.dependencies { implementation(kotlin("test")) }
+        androidMain.dependencies { implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android) }
     }
 }
 group = "com.kylecorry.andromeda"

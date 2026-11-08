@@ -8,7 +8,7 @@ abstract class InterprocessCommunicationService : Service() {
     abstract val router: InterprocessCommunicationRouter
 
     override fun onBind(intent: Intent?): IBinder? {
-        return router.bind(this)
+        return router.bind()
     }
 
     override fun onUnbind(intent: Intent?): Boolean {

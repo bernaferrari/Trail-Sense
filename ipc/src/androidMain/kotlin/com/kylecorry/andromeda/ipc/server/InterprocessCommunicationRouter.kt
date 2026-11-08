@@ -1,107 +1,91 @@
 package com.kylecorry.andromeda.ipc.server
 
-import android.content.Context
-import android.os.DeadObjectException
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.os.Messenger
+import android.os.RemoteException
 import android.util.Log
 import androidx.core.os.bundleOf
+import com.kylecorry.andromeda.ipc.CODE_BAD_REQUEST
 import com.kylecorry.andromeda.ipc.CODE_INTERNAL_ERROR
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationResponse
-import com.kylecorry.andromeda.ipc.toBundle
-import com.kylecorry.andromeda.ipc.toIpcHeaders
+import com.kylecorry.andromeda.ipc.IpcRouter
 import com.kylecorry.andromeda.ipc.PROPERTY_CODE
 import com.kylecorry.andromeda.ipc.PROPERTY_HEADERS
 import com.kylecorry.andromeda.ipc.PROPERTY_PAYLOAD
 import com.kylecorry.andromeda.ipc.PROPERTY_ROUTE
-import com.kylecorry.luna.concurrency.CoroutineQueueRunner
+import com.kylecorry.andromeda.ipc.toBundle
+import com.kylecorry.andromeda.ipc.toIpcHeaders
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CancellationException
-import java.io.Closeable
 
+/** Android Messenger adapter for a shared [IpcRouter]. */
 class InterprocessCommunicationRouter(
-    private val routes: Map<String, suspend (context: Context, request: InterprocessCommunicationRequest) -> InterprocessCommunicationResponse>,
+    private val router: IpcRouter,
     private val looper: Looper = Looper.getMainLooper(),
-    queueSize: Int = 256
-) : Closeable {
-
+    private val queueSize: Int = 256,
+) : AutoCloseable {
     private var messenger: Messenger? = null
+    private var scope: CoroutineScope? = null
 
-    private val scope = CoroutineScope(Dispatchers.Default)
-    private val runner = CoroutineQueueRunner(queueSize)
+    init { require(queueSize > 0) }
 
-    private fun createHandler(context: Context): Handler {
-        return object : Handler(looper) {
-            private val applicationContext = context.applicationContext
-
-            override fun handleMessage(msg: Message) {
-                val data = msg.data
-                val route = data.getString(PROPERTY_ROUTE) ?: run {
-                    super.handleMessage(msg)
-                    return
+    fun bind(): IBinder? {
+        unbind()
+        val workerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val queue = Channel<Message>(queueSize)
+        scope = workerScope
+        workerScope.launch {
+            for (message in queue) {
+                val data = message.data
+                val response = try {
+                    val route = data.getString(PROPERTY_ROUTE)
+                    if (route == null) InterprocessCommunicationResponse(CODE_BAD_REQUEST)
+                    else router.send(route, InterprocessCommunicationRequest(
+                        (data.getBundle(PROPERTY_HEADERS) ?: bundleOf()).toIpcHeaders(),
+                        data.getByteArray(PROPERTY_PAYLOAD),
+                    ))
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    Log.e("InterprocessCommunicationRouter", "Request failed", error)
+                    InterprocessCommunicationResponse(CODE_INTERNAL_ERROR)
                 }
-
-                val action = routes[route] ?: run {
-                    super.handleMessage(msg)
-                    return
+                val reply = Message.obtain().apply {
+                    data.putInt(PROPERTY_CODE, response.code)
+                    data.putBundle(PROPERTY_HEADERS, response.headers.toBundle())
+                    data.putByteArray(PROPERTY_PAYLOAD, response.payload)
                 }
-
-                val replyTo = msg.replyTo
-
-                scope.launch {
-                    runner.enqueue {
-                        val response = try {
-                            action(
-                                applicationContext, InterprocessCommunicationRequest(
-                                    (data.getBundle(PROPERTY_HEADERS) ?: bundleOf()).toIpcHeaders(),
-                                    data.getByteArray(PROPERTY_PAYLOAD)
-                                )
-                            )
-                        } catch (error: CancellationException) {
-                            throw error
-                        } catch (error: Exception) {
-                            Log.e("InterprocessCommunicationRouter", "Request failed", error)
-                            InterprocessCommunicationResponse(CODE_INTERNAL_ERROR)
-                        }
-                        if (replyTo != null) {
-                            val reply = Message.obtain()
-                            val bundle = reply.data
-                            bundle.putInt(PROPERTY_CODE, response.code)
-                            bundle.putBundle(PROPERTY_HEADERS, response.headers.toBundle())
-                            bundle.putByteArray(PROPERTY_PAYLOAD, response.payload)
-                            try {
-                                replyTo.send(reply)
-                            } catch (e: DeadObjectException) {
-                                Log.e(
-                                    "InterprocessCommunicationRouter",
-                                    "Caller is no longer online",
-                                    e
-                                )
-                            }
-                        }
-                    }
+                try {
+                    message.replyTo?.send(reply)
+                } catch (error: RemoteException) {
+                    Log.w("InterprocessCommunicationRouter", "Unable to send reply", error)
                 }
             }
         }
-    }
-
-    fun bind(context: Context): IBinder? {
-        messenger = Messenger(createHandler(context))
+        messenger = Messenger(object : Handler(looper) {
+            override fun handleMessage(msg: Message) {
+                // Copy the Message because Handler recycles it when this callback returns.
+                val copy = Message.obtain(msg)
+                workerScope.launch { queue.send(copy) }
+            }
+        })
         return messenger?.binder
     }
 
     fun unbind() {
         messenger = null
-        runner.cancel()
+        scope?.cancel()
+        scope = null
     }
 
-    override fun close() {
-        unbind()
-    }
+    override fun close() = unbind()
 }
