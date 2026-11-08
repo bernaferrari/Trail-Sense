@@ -31,6 +31,16 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
     val adapter = remember(controller) {
         controller?.let { camera ->
             object : PhotoCamera {
+                override val zoom: CameraZoom
+                    get() {
+                        val ratio = camera.getZoom()
+                        val maximum = camera.getMaxZoom()
+                        val lens = camera.getCameraLens()
+                        val deviceType = camera.getPreferredCameraDeviceType()
+                        val minimum = camera.getCameraCapabilities().allLenses
+                            .firstOrNull { it.lens == lens && it.deviceType == deviceType }?.minZoom ?: 1f
+                        return CameraZoom(ratio, minimum, maximum)
+                    }
                 override suspend fun capture(): ByteArray = when (val result = camera.takePictureToFile()) {
                     is ImageCaptureResult.Success -> result.byteArray
                     is ImageCaptureResult.SuccessWithFile -> {
@@ -40,7 +50,10 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
                     }
                     is ImageCaptureResult.Error -> throw result.exception
                 }
-                override fun setZoom(ratio: Float) = camera.setZoom(ratio)
+                override fun setZoom(ratio: Float) {
+                    require(ratio.isFinite() && ratio > 0f)
+                    camera.setZoom(ratio)
+                }
                 override fun setTorch(enabled: Boolean) = camera.setTorchMode(if (enabled) TorchMode.ON else TorchMode.OFF)
                 override fun setFlash(mode: CameraFlash) = camera.setFlashMode(when (mode) {
                     CameraFlash.Off -> FlashMode.OFF

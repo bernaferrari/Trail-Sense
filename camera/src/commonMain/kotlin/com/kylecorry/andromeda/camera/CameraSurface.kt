@@ -5,7 +5,12 @@ import androidx.compose.ui.Modifier
 
 enum class CameraFlash { Off, On, Auto }
 
+/** Current zoom ratio and the supported ratio range. */
+data class CameraZoom(val ratio: Float, val minimum: Float, val maximum: Float)
+
 interface PhotoCamera {
+    /** Current zoom information, or null when the platform cannot report it. */
+    val zoom: CameraZoom?
     /** Captures an encoded image. */
     suspend fun capture(): ByteArray
     fun setZoom(ratio: Float)

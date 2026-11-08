@@ -22,12 +22,17 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
     }
     val controller = remember(camera) {
         object : PhotoCamera {
+            override val zoom: CameraZoom?
+                get() = camera.zoom?.let { CameraZoom(it.ratio, it.ratioRange.start, it.ratioRange.end) }
             override suspend fun capture(): ByteArray {
                 val output = ByteArrayOutputStream()
                 check(camera.takePhoto(output)) { "Camera capture failed" }
                 return output.toByteArray()
             }
-            override fun setZoom(ratio: Float) = camera.setZoomRatio(ratio)
+            override fun setZoom(ratio: Float) {
+                require(ratio.isFinite() && ratio > 0f)
+                camera.setZoomRatio(ratio)
+            }
             override fun setTorch(enabled: Boolean) = camera.setTorch(enabled)
             override fun setFlash(mode: CameraFlash) = camera.setFlashMode(when (mode) {
                 CameraFlash.Off -> ImageCapture.FLASH_MODE_OFF
