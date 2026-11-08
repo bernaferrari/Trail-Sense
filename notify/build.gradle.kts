@@ -14,6 +14,9 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
+    sourceSets.commonMain.dependencies {
+        api("io.github.mirzemehdi:kmpnotifier-local:2.0.2")
+    }
     sourceSets.androidMain.dependencies {
         implementation(project(":core"))
         implementation(libs.androidx.core.ktx)
