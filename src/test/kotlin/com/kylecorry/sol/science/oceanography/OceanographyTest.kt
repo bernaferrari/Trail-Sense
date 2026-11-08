@@ -18,6 +18,9 @@ import java.io.File
 import java.net.http.HttpClient
 import java.time.*
 import kotlin.time.toKotlinDuration
+import kotlin.time.toKotlinInstant
+import kotlin.time.toJavaDuration
+import kotlinx.datetime.toKotlinTimeZone
 import java.util.stream.Stream
 
 internal class OceanographyTest {
@@ -26,7 +29,7 @@ internal class OceanographyTest {
         val location = Coordinate(42.0, -72.0)
         val time = ZonedDateTime.of(2026, 4, 17, 14, 53, 0, 0, ZoneId.of("America/New_York"))
 
-        val interval = Oceanography.getLunitidalInterval(time, location)
+        val interval = Oceanography.getLunitidalInterval(time.toInstant().toKotlinInstant(), location, time.zone.toKotlinTimeZone())?.toJavaDuration()
         assertEquals(Duration.ofMinutes(120), interval?.toMinutes()?.let { Duration.ofMinutes(it) })
     }
 
@@ -40,7 +43,7 @@ internal class OceanographyTest {
             ZonedDateTime.parse("2026-04-14T23:23:00-04:00[America/New_York]"),
         )
 
-        val interval = Oceanography.getMeanLunitidalInterval(highs, location)
+        val interval = Oceanography.getMeanLunitidalInterval(highs.map { it.toInstant().toKotlinInstant() }, location, highs.first().zone.toKotlinTimeZone())?.toJavaDuration()
 
         assertEquals(Duration.ofMinutes(30), interval?.toMinutes()?.let { Duration.ofMinutes(it) })
     }
@@ -55,7 +58,8 @@ internal class OceanographyTest {
 
         for (case in cases) {
             val tide =
-                Oceanography.getTidalRange(ZonedDateTime.of(case.first, ZoneId.of("America/New_York")))
+                Oceanography.getTidalRange(ZonedDateTime.of(case.first, ZoneId.of("America/New_York")).toInstant().toKotlinInstant(),
+                    ZoneId.of("America/New_York").toKotlinTimeZone())
             assertEquals(case.second, tide)
         }
 
@@ -179,12 +183,12 @@ internal class OceanographyTest {
 
         val highs = source.filter { it.isHigh }.map { it.toJavaZonedDateTime() }
         val lows = source.filter { !it.isHigh }.map { it.toJavaZonedDateTime() }
-        val localLunitidalInterval = Oceanography.getMeanLunitidalInterval(highs, location) ?: Duration.ZERO
-        val localLowLunitidalInterval = Oceanography.getMeanLunitidalInterval(lows, location) ?: Duration.ZERO
+        val localLunitidalInterval = Oceanography.getMeanLunitidalInterval(highs.map { it.toInstant().toKotlinInstant() }, location, highs.first().zone.toKotlinTimeZone())?.toJavaDuration() ?: Duration.ZERO
+        val localLowLunitidalInterval = Oceanography.getMeanLunitidalInterval(lows.map { it.toInstant().toKotlinInstant() }, location, lows.first().zone.toKotlinTimeZone())?.toJavaDuration() ?: Duration.ZERO
         val utcLunitidalInterval =
-            Oceanography.getMeanLunitidalInterval(highs) ?: Duration.ZERO
+            Oceanography.getMeanLunitidalInterval(highs.map { it.toInstant().toKotlinInstant() }, timeZone = highs.first().zone.toKotlinTimeZone())?.toJavaDuration() ?: Duration.ZERO
         val utcLowLunitidalInterval =
-            Oceanography.getMeanLunitidalInterval(lows) ?: Duration.ZERO
+            Oceanography.getMeanLunitidalInterval(lows.map { it.toInstant().toKotlinInstant() }, timeZone = lows.first().zone.toKotlinTimeZone())?.toJavaDuration() ?: Duration.ZERO
 
         println("Local lunitidal interval: ${Time.hours(localLunitidalInterval).roundPlaces(2)}")
         println("UTC lunitidal interval: ${Time.hours(utcLunitidalInterval).roundPlaces(2)}")
@@ -221,8 +225,9 @@ internal class OceanographyTest {
     ) {
         val tides = Oceanography.getTides(
             calculator,
-            start,
-            end,
+            start.toInstant().toKotlinInstant(),
+            end.toInstant().toKotlinInstant(),
+            start.zone.toKotlinTimeZone(),
             GoldenSearchExtremaFinder(30.0, 1.0)
         )
 
