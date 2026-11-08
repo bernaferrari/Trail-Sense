@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -36,7 +37,7 @@ sealed interface PlotLayer {
     data class Bounds(val upper: List<Vector2>, val lower: List<Vector2>, val color: Color) : PlotLayer { override val points get() = upper + lower }
     data class Band(val top: Float, val bottom: Float, val color: Color) : PlotLayer
     data class HorizontalLine(val value: Float, val color: Color, val width: Float = 2f) : PlotLayer
-    data class Markers(override val points: List<Vector2>, val image: ImageBitmap, val size: Float = 12f, val rotation: Float = 0f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
+    data class Markers(override val points: List<Vector2>, val image: ImageBitmap, val size: Float = 12f, val rotation: Float = 0f, val tint: Color? = null, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
     data class Label(val position: Vector2, val text: String, val color: Color, val size: Float = 12f) : PlotLayer
     data class Overlay(val draw: DrawScope.(PlotCoordinates) -> Unit) : PlotLayer
 }
@@ -77,9 +78,17 @@ fun Plot(
             val radius = 12.dp.toPx()
             val hit = layers.asReversed().firstNotNullOfOrNull { layer ->
                 val handler = layer.onPointClick ?: return@firstNotNullOfOrNull null
-                layer.points.minByOrNull { (coordinates.toPixel(it) - position).getDistance() }
-                    ?.takeIf { (coordinates.toPixel(it) - position).getDistance() <= radius }
-                    ?.let { handler to it }
+                val point = if (layer is PlotLayer.Bars) {
+                    layer.points.firstOrNull { point ->
+                        val a = coordinates.toPixel(Vector2(point.x - layer.width / 2, point.y))
+                        val b = coordinates.toPixel(Vector2(point.x + layer.width / 2, layer.baseline))
+                        position.x in minOf(a.x, b.x)..maxOf(a.x, b.x) && position.y in minOf(a.y, b.y)..maxOf(a.y, b.y)
+                    }
+                } else {
+                    layer.points.minByOrNull { (coordinates.toPixel(it) - position).getDistance() }
+                        ?.takeIf { (coordinates.toPixel(it) - position).getDistance() <= radius }
+                }
+                point?.let { handler to it }
             }
             if (hit != null) hit.first(hit.second) else onClick?.invoke(coordinates.toData(position))
         }
@@ -140,7 +149,7 @@ fun Plot(
                 is PlotLayer.Markers -> layer.points.forEach { point ->
                     val p = coordinates.toPixel(point)
                     val dimension = layer.size.dp.toPx().roundToInt()
-                    rotate(layer.rotation, p) { drawImage(layer.image, dstOffset = IntOffset((p.x - dimension / 2).roundToInt(), (p.y - dimension / 2).roundToInt()), dstSize = IntSize(dimension, dimension)) }
+                    rotate(layer.rotation, p) { drawImage(layer.image, dstOffset = IntOffset((p.x - dimension / 2).roundToInt(), (p.y - dimension / 2).roundToInt()), dstSize = IntSize(dimension, dimension), colorFilter = layer.tint?.let(ColorFilter::tint)) }
                 }
                 is PlotLayer.Label -> {
                     val text = measurer.measure(layer.text, TextStyle(color = layer.color, fontSize = layer.size.sp))
