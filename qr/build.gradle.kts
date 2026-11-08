@@ -14,12 +14,20 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
+    applyDefaultHierarchyTemplate()
     sourceSets {
+        val jvmSharedMain by creating {
+            dependsOn(commonMain.get())
+            dependencies { implementation(libs.zxing) }
+        }
+        jvmMain { dependsOn(jvmSharedMain) }
+        androidMain { dependsOn(jvmSharedMain) }
+        iosMain.dependencies { implementation("io.github.yuroyami:kiteqr:0.1.0") }
         commonMain.dependencies {
             api(project(":shared"))
             implementation("io.github.g0dkar:qrcode-kotlin:4.5.0")
         }
-        androidMain.dependencies { implementation(libs.androidx.core.ktx); implementation(libs.zxing) }
+        androidMain.dependencies { implementation(libs.androidx.core.ktx) }
     }
 }
 group = "com.kylecorry.andromeda"
