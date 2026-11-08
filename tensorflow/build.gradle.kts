@@ -16,6 +16,7 @@ kotlin {
     jvmToolchain(17)
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
+        iosMain.dependencies { implementation("dev.kursor.ktensorflow:ktensorflow-core:2.0") }
         androidMain.dependencies {
             implementation(project(":core"))
             api(libs.tensorflow.lite.support)
