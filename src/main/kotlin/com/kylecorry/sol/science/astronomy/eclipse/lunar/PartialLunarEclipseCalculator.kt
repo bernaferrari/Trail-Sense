@@ -1,19 +1,20 @@
 package com.kylecorry.sol.science.astronomy.eclipse.lunar
 
-import com.kylecorry.sol.math.arithmetic.Arithmetic.power
-import java.time.Duration
-import kotlin.math.sqrt
+import com.kylecorry.sol.science.astronomy.eclipse.Eclipse
+import com.kylecorry.sol.science.astronomy.eclipse.EclipseCalculator
+import com.kylecorry.sol.units.Coordinate
+import java.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
-internal class PartialLunarEclipseCalculator : AbstractUmbralLunarEclipseCalculator() {
-
-    override fun getMagnitudeThreshold(): Double {
-        return 0.0
+internal class PartialLunarEclipseCalculator : EclipseCalculator {
+    override fun getNextEclipse(after: Instant, location: Coordinate): Eclipse? {
+        val result = LunarEclipseModel(false).next(after.toKotlinInstant(), location, TimeZone.currentSystemDefault())
+            ?: return null
+        return Eclipse(result.start.toJavaInstant(), result.end.toJavaInstant(), result.magnitude,
+            result.obscuration, result.maximum.toJavaInstant())
     }
-
-    override fun getSemiDuration(parameters: LunarEclipseParameters): Duration {
-        val p = LUNAR_ECLIPSE_UMBRA_OUTER_CONTACT_RADIUS - parameters.umbralConeRadius
-        val minutes =
-            (60 / parameters.n) * sqrt(power(p, 2) - power(parameters.minDistanceFromCenter, 2))
-        return Duration.ofSeconds((minutes * 60).toLong())
-    }
+    override fun getMagnitude(time: Instant, location: Coordinate): Float? = null
+    override fun getObscuration(time: Instant, location: Coordinate): Float? = null
 }
