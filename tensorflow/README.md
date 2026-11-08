@@ -16,4 +16,6 @@ The app must also link the C++ standard library and Accelerate framework.
 
 The C API bindings target LiteRT 2.3.0. Only models with one fixed-size input tensor and one fixed-size output tensor are supported by this image-classification adapter.
 
-For common RGB models, `ImagePixels.rgbFloat32(mean, standardDeviation)`, `rgbUint8()`, and `rgbQuantized(...)` create input tensors. `decodeFloat32Tensor` and `decodeQuantizedTensor` decode outputs, and `softmax()` converts logits to probabilities. Choose normalization and quantization parameters from the model; these helpers do not resize or reorder images.
+For common RGB models, `PixelImage.rgbFloat32(mean, standardDeviation)`, `rgbUint8()`, and `rgbQuantized(...)` create input tensors. `decodeFloat32Tensor` and `decodeQuantizedTensor` decode outputs, and `softmax()` converts logits to probabilities. Choose normalization and quantization parameters from the model; these helpers do not resize or reorder images.
+
+`PixelImage.resizeForModel(width, height, mode)` prepares model dimensions using stretching, aspect-preserving padding, or center cropping. It uses the shared bitmap module and supports nearest, bilinear, and bicubic interpolation.

@@ -19,7 +19,7 @@ kotlin {
     }
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies { api(project(":shared")); api(project(":bitmaps")) }
         jvmMain.dependencies {
             implementation("org.bytedeco:tensorflow-lite:2.21.0-1.5.14")
             listOf("linux-arm64", "linux-x86_64", "macosx-arm64", "macosx-x86_64", "windows-x86_64").forEach { platform ->

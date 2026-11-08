@@ -1,5 +1,7 @@
 package com.kylecorry.andromeda.tensorflow
 
+import com.kylecorry.andromeda.bitmaps.PixelImage
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.Interpreter
@@ -10,7 +12,7 @@ import java.nio.channels.FileChannel
 
 actual fun imageClassifier(
     modelPath: String,
-    prepareInput: (ImagePixels) -> ByteArray,
+    prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,
 ): ImageClassifier {
     val model = FileInputStream(modelPath).use { stream ->
@@ -25,7 +27,7 @@ actual fun imageClassifier(
         val lock = Any()
         var closed = false
         return object : ImageClassifier {
-            override suspend fun classify(image: ImagePixels): List<Float> = withContext(Dispatchers.Default) {
+            override suspend fun classify(image: PixelImage): List<Float> = withContext(Dispatchers.Default) {
                 val bytes = prepareInput(image)
                 require(bytes.size == inputSize) { "Expected $inputSize input bytes, got ${bytes.size}" }
                 val input = ByteBuffer.allocateDirect(inputSize).order(ByteOrder.nativeOrder()).put(bytes).apply { rewind() }

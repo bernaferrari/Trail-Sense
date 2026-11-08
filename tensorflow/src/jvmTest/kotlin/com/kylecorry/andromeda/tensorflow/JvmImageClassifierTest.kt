@@ -1,5 +1,7 @@
 package com.kylecorry.andromeda.tensorflow
 
+import com.kylecorry.andromeda.bitmaps.PixelImage
+
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlinx.coroutines.runBlocking
@@ -18,7 +20,7 @@ class JvmImageClassifierTest {
             val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder())
             List(bytes.size / 4) { buffer.float }
         })
-        val image = ImagePixels(1, 1, intArrayOf(0))
+        val image = PixelImage(1, 1, intArrayOf(0))
         assertEquals(listOf(3f, 9f), classifier.classify(image).take(2))
         classifier.close()
         classifier.close()

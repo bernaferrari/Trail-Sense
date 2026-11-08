@@ -2,6 +2,8 @@
 
 package com.kylecorry.andromeda.tensorflow
 
+import com.kylecorry.andromeda.bitmaps.PixelImage
+
 import com.kylecorry.andromeda.tensorflow.litert.*
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
@@ -18,7 +20,7 @@ import platform.Foundation.NSLock
  */
 actual fun imageClassifier(
     modelPath: String,
-    prepareInput: (ImagePixels) -> ByteArray,
+    prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,
 ): ImageClassifier {
     val model = requireNotNull(TfLiteModelCreateFromFile(modelPath)) { "Unable to load model: $modelPath" }
@@ -40,7 +42,7 @@ actual fun imageClassifier(
         val lock = NSLock()
         var closed = false
         return object : ImageClassifier {
-            override suspend fun classify(image: ImagePixels): List<Float> = withContext(Dispatchers.Default) {
+            override suspend fun classify(image: PixelImage): List<Float> = withContext(Dispatchers.Default) {
                 val bytes = prepareInput(image)
                 require(bytes.size.toULong() == inputSize) { "Expected $inputSize input bytes, got ${bytes.size}" }
                 val result = ByteArray(outputSize.toInt())

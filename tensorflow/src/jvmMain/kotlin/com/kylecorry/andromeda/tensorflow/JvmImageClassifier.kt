@@ -1,5 +1,7 @@
 package com.kylecorry.andromeda.tensorflow
 
+import com.kylecorry.andromeda.bitmaps.PixelImage
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.bytedeco.javacpp.BytePointer
@@ -8,7 +10,7 @@ import org.bytedeco.tensorflowlite.global.tensorflowlite.*
 /** Loads a fixed-size, single-input, single-output TensorFlow Lite model from a file. */
 actual fun imageClassifier(
     modelPath: String,
-    prepareInput: (ImagePixels) -> ByteArray,
+    prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,
 ): ImageClassifier {
     val model = TfLiteModelCreateFromFile(modelPath)
@@ -29,7 +31,7 @@ actual fun imageClassifier(
         val lock = Any()
         var closed = false
         return object : ImageClassifier {
-            override suspend fun classify(image: ImagePixels): List<Float> = withContext(Dispatchers.Default) {
+            override suspend fun classify(image: PixelImage): List<Float> = withContext(Dispatchers.Default) {
                 val bytes = prepareInput(image)
                 require(bytes.size.toLong() == inputSize) { "Expected $inputSize input bytes, got ${bytes.size}" }
                 val result = ByteArray(outputSize.toInt())
