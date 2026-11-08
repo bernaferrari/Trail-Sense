@@ -19,9 +19,14 @@ kotlin {
         val jvmSharedMain by creating { dependsOn(commonMain.get()) }
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {
+            api(project(":shared"))
+            api(project(":core"))
+            api("com.squareup.okio:okio:3.18.2")
+            implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
+        }
+        commonTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies {
-            implementation(project(":core"))
             implementation(project(":files"))
             implementation(libs.androidx.core.ktx)
         }
