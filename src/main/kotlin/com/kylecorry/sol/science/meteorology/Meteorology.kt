@@ -414,7 +414,10 @@ object Meteorology {
         temperatures: Map<Month, Temperature>,
         precipitation: Map<Month, Distance>
     ): KoppenGeigerClimateClassification {
-        return KoppenGeigerClimateClassifier.classify(temperatures, precipitation)
+        return KoppenGeigerClimateClassifier.classify(
+            temperatures.mapKeys { kotlinx.datetime.Month.entries[it.key.value - 1] },
+            precipitation.mapKeys { kotlinx.datetime.Month.entries[it.key.value - 1] }
+        )
     }
 
 

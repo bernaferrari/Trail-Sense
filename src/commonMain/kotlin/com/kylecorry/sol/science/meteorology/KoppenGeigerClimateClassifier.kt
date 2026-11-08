@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.sumOfFloat
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Temperature
-import java.time.Month
+import kotlinx.datetime.Month
 
 internal object KoppenGeigerClimateClassifier {
 
@@ -170,16 +170,16 @@ internal object KoppenGeigerClimateClassifier {
     }
 
     private fun getPrecipitationList(precipitation: Map<Month, Distance>): List<Float> {
-        return precipitation.entries.sortedBy { it.key.value }
+        return precipitation.entries.sortedBy { it.key.ordinal }
             .map { it.value.convertTo(DistanceUnits.Millimeters).value }
     }
 
     private fun getTemperatureList(temperatures: Map<Month, Temperature>): List<Float> {
-        return temperatures.entries.sortedBy { it.key.value }.map { it.value.celsius().value }
+        return temperatures.entries.sortedBy { it.key.ordinal }.map { it.value.celsius().value }
     }
 
     private fun isSouthernHemisphere(temps: List<Float>): Boolean {
-        return months1.map { temps[it.value - 1] }.average() < months2.map { temps[it.value - 1] }.average()
+        return months1.map { temps[it.ordinal] }.average() < months2.map { temps[it.ordinal] }.average()
     }
 
     private fun getWinterMonths(isSouthernHemisphere: Boolean): List<Month> {
@@ -211,12 +211,12 @@ internal object KoppenGeigerClimateClassifier {
         val tMon10 = temperatures.count { it > 10f }
         val map = precipitation.sum()
         val pDry = precipitation.min()
-        val pSDry = summerMonths.minOf { precipitation[it.value - 1] }
-        val pSWet = summerMonths.maxOf { precipitation[it.value - 1] }
-        val pSTotal = summerMonths.sumOfFloat { precipitation[it.value - 1] }
-        val pWDry = winterMonths.minOf { precipitation[it.value - 1] }
-        val pWWet = winterMonths.maxOf { precipitation[it.value - 1] }
-        val pWTotal = winterMonths.sumOfFloat { precipitation[it.value - 1] }
+        val pSDry = summerMonths.minOf { precipitation[it.ordinal] }
+        val pSWet = summerMonths.maxOf { precipitation[it.ordinal] }
+        val pSTotal = summerMonths.sumOfFloat { precipitation[it.ordinal] }
+        val pWDry = winterMonths.minOf { precipitation[it.ordinal] }
+        val pWWet = winterMonths.maxOf { precipitation[it.ordinal] }
+        val pWTotal = winterMonths.sumOfFloat { precipitation[it.ordinal] }
         val pThreshold = if (pWTotal / map > 0.7f) {
             2 * mat
         } else if (pSTotal / map > 0.7f) {
