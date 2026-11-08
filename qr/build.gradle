@@ -31,6 +31,7 @@ android {
 }
 
 dependencies {
+    api project(':shared')
     implementation libs.androidx.core.ktx
     implementation libs.zxing
     coreLibraryDesugaring libs.desugar

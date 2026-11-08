@@ -48,6 +48,7 @@ android {
 }
 
 dependencies {
+    api project(':shared')
     implementation project(':core')
     implementation libs.androidx.core.ktx
     api libs.sol

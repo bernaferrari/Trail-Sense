@@ -4,7 +4,9 @@ plugins {
 }
 
 kotlin {
-    jvm()
+    jvm {
+        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
