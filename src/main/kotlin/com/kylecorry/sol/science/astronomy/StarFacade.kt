@@ -21,7 +21,7 @@ internal object StarFacade {
         location: Coordinate,
         withRefraction: Boolean = false
     ): CelestialObservation {
-        val horizonCoordinate = AstroUtils.getLocation(
+        val horizonCoordinate = JvmAstroUtils.getLocation(
             StarLocator(star),
             time.toUniversalTime(),
             location,

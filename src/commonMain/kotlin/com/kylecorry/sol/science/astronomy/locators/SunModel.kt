@@ -20,11 +20,11 @@ import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.pow
 
-internal class SunModel {
+internal class SunModel : ICelestialLocator {
 
     private val semiMajorAxisLen0 = 1.495985e8
 
-    fun getCoordinates(ut: Instant): EquatorialCoordinate {
+    override fun getCoordinates(ut: Instant): EquatorialCoordinate {
         val delta = TerrestrialTime.getDeltaT(ut.toLocalDateTime(TimeZone.UTC).year)
         val tt = ut + (delta * 1000).toLong().milliseconds
         val julianCenturiesSinceJ2000 = JulianDay.centuries(tt)
@@ -43,7 +43,7 @@ internal class SunModel {
         return EquatorialCoordinate(declination, rightAscension, true)
     }
 
-    fun getDistance(ut: Instant): Distance {
+    override fun getDistance(ut: Instant): Distance {
         val julianCenturiesSinceJ2000 = JulianDay.centuries(ut)
         val trueAnomaly = getTrueAnomaly(julianCenturiesSinceJ2000)
         val ecc = Algebra.polynomial(julianCenturiesSinceJ2000, 0.01675104, -0.0000418, -0.000000126)

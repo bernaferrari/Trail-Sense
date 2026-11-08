@@ -7,8 +7,8 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry.tanDegrees
 import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator
 import com.kylecorry.sol.science.astronomy.units.EquatorialCoordinate
 import com.kylecorry.sol.science.astronomy.units.HorizonCoordinate
-import com.kylecorry.sol.science.astronomy.units.UniversalTime
-import com.kylecorry.sol.science.astronomy.units.toSiderealTime
+import kotlin.time.Instant
+import com.kylecorry.sol.science.astronomy.units.SiderealCalculator
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -19,7 +19,7 @@ internal object AstroUtils {
 
     fun getAltitude(
         locator: ICelestialLocator,
-        ut: UniversalTime,
+        ut: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
         withParallax: Boolean = false
@@ -35,7 +35,7 @@ internal object AstroUtils {
 
     fun getAltitude(
         coordinate: EquatorialCoordinate,
-        ut: UniversalTime,
+        ut: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
         distanceToBody: Distance? = null
@@ -45,7 +45,7 @@ internal object AstroUtils {
 
     fun getAzimuth(
         locator: ICelestialLocator,
-        ut: UniversalTime,
+        ut: Instant,
         location: Coordinate,
         withParallax: Boolean = false
     ): Bearing {
@@ -62,7 +62,7 @@ internal object AstroUtils {
     @Suppress("LongParameterList")
     fun getLocation(
         locator: ICelestialLocator,
-        ut: UniversalTime,
+        ut: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
         withParallax: Boolean = false,
@@ -85,11 +85,11 @@ internal object AstroUtils {
 
     fun getParallacticAngle(
         locator: ICelestialLocator,
-        ut: UniversalTime,
+        ut: Instant,
         location: Coordinate
     ): Float {
         val coords = locator.getCoordinates(ut)
-        val hourAngle = coords.getHourAngle(ut.toSiderealTime().atLongitude(location.longitude)) * 15
+        val hourAngle = coords.getHourAngle(SiderealCalculator.at(ut).atLongitude(location.longitude)) * 15
         val latitude = location.latitude
         val declination = coords.declination
         val q = atan2(
@@ -103,12 +103,12 @@ internal object AstroUtils {
 
     private fun getLocation(
         coordinate: EquatorialCoordinate,
-        ut: UniversalTime,
+        ut: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
         distanceToBody: Distance? = null
     ): HorizonCoordinate {
-        val siderealTime = ut.toSiderealTime().atLongitude(location.longitude)
+        val siderealTime = SiderealCalculator.at(ut).atLongitude(location.longitude)
         val horizon = if (distanceToBody != null) {
             HorizonCoordinate.fromEquatorial(coordinate, siderealTime, location.latitude, distanceToBody)
         } else {

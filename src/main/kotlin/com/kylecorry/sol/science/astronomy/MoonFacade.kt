@@ -40,7 +40,7 @@ internal object MoonFacade {
         withRefraction: Boolean = false,
         withParallax: Boolean = false
     ): Float {
-        return AstroUtils.getAltitude(
+        return JvmAstroUtils.getAltitude(
             moon,
             time.toUniversalTime(),
             location,
@@ -57,7 +57,7 @@ internal object MoonFacade {
     ): CelestialObservation {
         val ut = time.toUniversalTime()
         val distance = moon.getDistance(ut)
-        val horizonCoordinate = AstroUtils.getLocation(
+        val horizonCoordinate = JvmAstroUtils.getLocation(
             moon,
             ut,
             location,
@@ -187,6 +187,6 @@ internal object MoonFacade {
      * The parallactic angle of the moon in degrees.
      */
     fun getMoonParallacticAngle(time: ZonedDateTime, location: Coordinate): Float {
-        return AstroUtils.getParallacticAngle(moon, time.toUniversalTime(), location)
+        return JvmAstroUtils.getParallacticAngle(moon, time.toUniversalTime(), location)
     }
 }

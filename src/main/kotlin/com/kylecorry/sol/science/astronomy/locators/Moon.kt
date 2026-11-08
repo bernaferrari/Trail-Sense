@@ -5,7 +5,7 @@ import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
-import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.JvmAstroUtils
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
 import com.kylecorry.sol.science.astronomy.moon.MoonPhaseTimeCalculator
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
@@ -23,7 +23,8 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 
-internal class Moon : ICelestialLocator {
+@Suppress("TooManyFunctions")
+internal class Moon : JvmCelestialLocator {
 
     private val sun = Sun()
     private val position = MoonPositionModel()
@@ -45,7 +46,7 @@ internal class Moon : ICelestialLocator {
         val distanceKm = (distance ?: getDistance(ut)).convertTo(DistanceUnits.Kilometers).value
         val s = 358743400 / distanceKm
         val sinPi = 6378.14 / distanceKm
-        val h = AstroUtils.getAltitude(this, ut, location, true).toDouble()
+        val h = JvmAstroUtils.getAltitude(this, ut, location, true).toDouble()
         return (s * (1 + sinDegrees(h) * sinPi)) * 0.000277778 * 2
     }
 
@@ -122,7 +123,7 @@ internal class Moon : ICelestialLocator {
     }
 
     fun getZenithAngleOfBrightLimb(date: UniversalTime, location: Coordinate): Float {
-        val parallacticAngle = AstroUtils.getParallacticAngle(this, date, location)
+        val parallacticAngle = JvmAstroUtils.getParallacticAngle(this, date, location)
         val moonPositionAngle = getPositionAngleOfBrightLimb(date)
         return (moonPositionAngle - parallacticAngle).toFloat()
     }

@@ -80,7 +80,7 @@ internal object MeteorFacade {
     ): CelestialObservation {
         val ut = time.toUniversalTime()
         val locator = MeteorShowerLocator(shower)
-        val horizonCoordinate = AstroUtils.getLocation(
+        val horizonCoordinate = JvmAstroUtils.getLocation(
             locator,
             ut,
             location

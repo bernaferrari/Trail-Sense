@@ -8,12 +8,12 @@ import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
-import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.JvmAstroUtils
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.corrections.EclipticObliquity
 import com.kylecorry.sol.science.astronomy.corrections.LongitudinalNutation
 import com.kylecorry.sol.science.astronomy.corrections.TerrestrialTime
-import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator
+import com.kylecorry.sol.science.astronomy.locators.JvmCelestialLocator
 import com.kylecorry.sol.science.astronomy.units.EquatorialCoordinate
 import com.kylecorry.sol.science.astronomy.units.GreenwichSiderealTime
 import com.kylecorry.sol.science.astronomy.units.UniversalTime
@@ -32,7 +32,7 @@ import kotlin.math.acos
 internal class NewtonsRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculator {
 
     override fun calculate(
-        locator: ICelestialLocator,
+        locator: JvmCelestialLocator,
         date: ZonedDateTime,
         location: Coordinate,
         standardAltitude: Double,
@@ -68,7 +68,7 @@ internal class NewtonsRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculat
     }
 
     private fun calculateHelper(
-        locator: ICelestialLocator,
+        locator: JvmCelestialLocator,
         date: ZonedDateTime,
         location: Coordinate,
         standardAltitude: Double,
@@ -150,7 +150,7 @@ internal class NewtonsRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculat
         standardAltitude: Double,
         withRefraction: Boolean,
         withParallax: Boolean,
-        locator: ICelestialLocator
+        locator: JvmCelestialLocator
     ): RiseSetTransitTimes {
         val ut = ut0hOnDate(date)
         val utYesterday = ut0hOnDate(date.minusDays(1))
@@ -359,7 +359,7 @@ internal class NewtonsRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculat
         val hourAngleDegrees =
             interpolatedCoordinate.getHourAngle(siderealTime.atLongitude(location.longitude)) * 15
         val altitudeDegrees =
-            AstroUtils.getAltitude(
+            JvmAstroUtils.getAltitude(
                 interpolatedCoordinate,
                 siderealTime.toUniversalTime(date),
                 location,

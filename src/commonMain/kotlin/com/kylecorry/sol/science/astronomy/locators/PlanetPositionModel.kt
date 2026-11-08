@@ -19,8 +19,8 @@ import kotlin.math.log10
 import kotlin.math.sqrt
 
 // Equations from Celestial Calculations by J. L. Lawrence chapter 8
-internal class PlanetPositionModel(private val planet: Planet) {
-    fun getCoordinates(ut: Instant): EquatorialCoordinate {
+internal class PlanetPositionModel(private val planet: Planet) : ICelestialLocator {
+    override fun getCoordinates(ut: Instant): EquatorialCoordinate {
         val planetPosition = getHeliocentricPosition(planet, ut)
         val earthPosition = getHeliocentricPosition(Planet.Earth, ut)
         val pLong = planetPosition.first.eclipticLongitude
@@ -59,7 +59,7 @@ internal class PlanetPositionModel(private val planet: Planet) {
         return coordinate.toEquatorial(EclipticCoordinate.getObliquityOfTheEcliptic(JulianDay.centuries(ut)))
     }
 
-    fun getDistance(ut: Instant): Distance {
+    override fun getDistance(ut: Instant): Distance {
         return Distance.kilometers(
             (149597871.0 * getDistanceAU(
                 getHeliocentricPosition(planet, ut),

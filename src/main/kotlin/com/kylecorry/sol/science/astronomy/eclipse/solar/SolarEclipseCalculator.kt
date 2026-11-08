@@ -5,7 +5,7 @@ import com.kylecorry.sol.math.arithmetic.Arithmetic.square
 import com.kylecorry.sol.science.astronomy.JvmAstroSearch as AstroSearch
 import com.kylecorry.sol.science.astronomy.eclipse.Eclipse
 import com.kylecorry.sol.science.astronomy.eclipse.EclipseCalculator
-import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator
+import com.kylecorry.sol.science.astronomy.locators.JvmCelestialLocator
 import com.kylecorry.sol.science.astronomy.locators.Moon
 import com.kylecorry.sol.science.astronomy.locators.Sun
 import com.kylecorry.sol.science.astronomy.units.HorizonCoordinate
@@ -163,7 +163,7 @@ internal class SolarEclipseCalculator(
      * @param location The location to get the coordinates at.
      */
     private fun getCoordinates(
-        locator: ICelestialLocator,
+        locator: JvmCelestialLocator,
         time: UniversalTime,
         location: Coordinate
     ): HorizonCoordinate {

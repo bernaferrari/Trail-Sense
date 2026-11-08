@@ -21,7 +21,7 @@ internal object PlanetFacade {
     ): CelestialObservation {
         val ut = time.toUniversalTime()
         val locator = PlanetLocator(planet)
-        val horizonCoordinate = AstroUtils.getLocation(
+        val horizonCoordinate = JvmAstroUtils.getLocation(
             locator,
             ut,
             location,

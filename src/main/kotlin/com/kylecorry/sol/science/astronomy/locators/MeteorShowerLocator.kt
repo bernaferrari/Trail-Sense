@@ -6,7 +6,7 @@ import com.kylecorry.sol.science.astronomy.units.UniversalTime
 import com.kylecorry.sol.science.astronomy.units.timeToAngle
 import com.kylecorry.sol.units.Distance
 
-internal class MeteorShowerLocator(private val shower: MeteorShower) : ICelestialLocator {
+internal class MeteorShowerLocator(private val shower: MeteorShower) : JvmCelestialLocator {
     override fun getCoordinates(ut: UniversalTime): EquatorialCoordinate {
         return when (shower) {
             MeteorShower.Quadrantids -> EquatorialCoordinate(49.7, timeToAngle(15, 20, 0))

@@ -18,10 +18,10 @@ import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-internal class MoonPositionModel {
+internal class MoonPositionModel : ICelestialLocator {
     private val sun = SunModel()
 
-    fun getCoordinates(ut: Instant): EquatorialCoordinate {
+    override fun getCoordinates(ut: Instant): EquatorialCoordinate {
         val delta = TerrestrialTime.getDeltaT(ut.toLocalDateTime(TimeZone.UTC).year)
         val tt = ut + (delta * 1000).toLong().milliseconds
         val julianCenturiesSinceJ2000 = JulianDay.centuries(tt)
@@ -116,7 +116,7 @@ internal class MoonPositionModel {
         )
     }
 
-    fun getDistance(ut: Instant): Distance {
+    override fun getDistance(ut: Instant): Distance {
         val delta = TerrestrialTime.getDeltaT(ut.toLocalDateTime(TimeZone.UTC).year)
         val tt = ut + (delta * 1000).toLong().milliseconds
         val julianCenturiesSinceJ2000 = JulianDay.centuries(tt)

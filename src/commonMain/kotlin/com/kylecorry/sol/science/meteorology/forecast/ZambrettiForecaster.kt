@@ -1,6 +1,7 @@
 package com.kylecorry.sol.science.meteorology.forecast
 
 import com.kylecorry.sol.math.Range
+import com.kylecorry.sol.science.astronomy.SeasonCalculator
 import com.kylecorry.sol.science.meteorology.PressureModel
 import com.kylecorry.sol.science.meteorology.PressureSystem
 import com.kylecorry.sol.science.meteorology.PressureTendency
@@ -15,7 +16,7 @@ import com.kylecorry.sol.units.Temperature
 import kotlin.time.Instant
 import kotlin.time.Duration.Companion.hours
 
-internal class ZambrettiForecaster(private val seasonAt: (Coordinate, Instant) -> Season) : Forecaster {
+internal object ZambrettiForecaster : Forecaster {
 
     private val conditions = mapOf(
         1 to Conditions(listOf(WeatherCondition.Clear), listOf(WeatherCondition.Clear)),
@@ -125,7 +126,7 @@ internal class ZambrettiForecaster(private val seasonAt: (Coordinate, Instant) -
     ): List<WeatherForecast> {
 
         val hpa = pressure.hpa().value
-        val season = seasonAt(location, time)
+        val season = SeasonCalculator.getSeason(location, time)
         val z = getZambrettiValue(hpa, tendency)
         val windAdjustment = getWindAdjustment(windDirection)
         val seasonAdjustment = getSeasonAdjustment(season, tendency, changeThreshold)

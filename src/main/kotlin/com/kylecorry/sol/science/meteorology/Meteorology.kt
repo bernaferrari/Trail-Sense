@@ -1,7 +1,6 @@
 package com.kylecorry.sol.science.meteorology
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.meteorology.clouds.CloudCover
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.science.meteorology.clouds.CloudLevel
@@ -23,8 +22,6 @@ import com.kylecorry.sol.units.TimeUnits
 import java.time.Duration
 import java.time.Instant
 import kotlin.time.toKotlinInstant
-import kotlin.time.toJavaInstant
-import java.time.ZoneId
 import java.time.LocalDate
 import java.time.Month
 import java.time.ZonedDateTime
@@ -158,9 +155,7 @@ object Meteorology {
     ): List<WeatherForecast> {
 
         val forecaster = when (source) {
-            ForecastSource.Zambretti -> ZambrettiForecaster { coordinate, instant ->
-                Astronomy.getSeason(coordinate, instant.toJavaInstant().atZone(ZoneId.systemDefault()))
-            }
+            ForecastSource.Zambretti -> ZambrettiForecaster
             ForecastSource.Sol -> SolForecaster
         }
 

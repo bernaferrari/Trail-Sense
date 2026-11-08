@@ -1,7 +1,7 @@
 package com.kylecorry.sol.science.astronomy.rst
 
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
-import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator
+import com.kylecorry.sol.science.astronomy.locators.JvmCelestialLocator
 import com.kylecorry.sol.units.Coordinate
 import java.time.ZonedDateTime
 
@@ -11,7 +11,7 @@ internal class RobustRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculato
     private val search = SearchRiseSetTransitTimeCalculator()
 
     override fun calculate(
-        locator: ICelestialLocator,
+        locator: JvmCelestialLocator,
         date: ZonedDateTime,
         location: Coordinate,
         standardAltitude: Double,

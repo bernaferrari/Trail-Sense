@@ -1,5 +1,6 @@
 package com.kylecorry.sol.science.astronomy
 
+import kotlin.time.toKotlinInstant
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
@@ -61,7 +62,7 @@ internal object SunFacade {
     ): CelestialObservation {
         val ut = time.toUniversalTime()
         val distance = sun.getDistance(ut)
-        val horizonCoordinate = AstroUtils.getLocation(
+        val horizonCoordinate = JvmAstroUtils.getLocation(
             sun,
             ut,
             location,
@@ -177,7 +178,7 @@ internal object SunFacade {
         withParallax: Boolean = false
     ): Double {
         return radiation.getRadiation(
-            date.toUniversalTime(),
+            date.toInstant().toKotlinInstant(),
             location,
             withRefraction = withRefraction,
             withParallax = withParallax
@@ -196,7 +197,7 @@ internal object SunFacade {
         withParallax: Boolean = false
     ): Double {
         return radiation.getRadiation(
-            date.toUniversalTime(),
+            date.toInstant().toKotlinInstant(),
             location,
             tilt,
             azimuth,

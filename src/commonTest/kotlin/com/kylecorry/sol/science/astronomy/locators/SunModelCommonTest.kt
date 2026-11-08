@@ -1,10 +1,34 @@
 package com.kylecorry.sol.science.astronomy.locators
 
+import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.sun.SolarRadiationCalculator
+import com.kylecorry.sol.science.astronomy.units.SiderealCalculator
+import com.kylecorry.sol.units.Coordinate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 
 class SunModelCommonTest {
+    @Test
+    fun calculatesSolarRadiation() {
+        val calculator = SolarRadiationCalculator()
+        assertTrue(calculator.getRadiation(Instant.parse("2025-03-20T12:00:00Z"), Coordinate.zero) > 0.5)
+        assertEquals(0.0, calculator.getRadiation(Instant.parse("2025-03-20T00:00:00Z"), Coordinate.zero))
+    }
+
+    @Test
+    fun calculatesSiderealTimeAndPlanetHorizonPosition() {
+        val sidereal = SiderealCalculator.at(Instant.parse("2010-02-07T23:30:00Z"))
+        assertEquals(8.698091, sidereal.hours, 0.0000005)
+        val horizon = AstroUtils.getLocation(
+            PlanetPositionModel(Planet.Jupiter), Instant.parse("2025-07-21T07:00:00Z"),
+            Coordinate(41.97640, -71.65340), withRefraction = true, withParallax = true
+        )
+        assertEquals(47.614472, horizon.azimuth, 0.5)
+        assertEquals(-8.95975, horizon.altitude, 0.4)
+    }
+
     @Test
     fun calculatesPlanetDistance() {
         val distance = PlanetPositionModel(Planet.Jupiter).getDistance(Instant.parse("2025-07-21T07:00:00Z"))

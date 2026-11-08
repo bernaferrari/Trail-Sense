@@ -2,9 +2,9 @@ package com.kylecorry.sol.science.astronomy.rst
 
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.astronomy.JvmAstroSearch as AstroSearch
-import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.JvmAstroUtils
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
-import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator
+import com.kylecorry.sol.science.astronomy.locators.JvmCelestialLocator
 import com.kylecorry.sol.science.astronomy.units.toUniversalTime
 import com.kylecorry.sol.time.Time.atStartOfDay
 import com.kylecorry.sol.units.Coordinate
@@ -16,7 +16,7 @@ import java.time.ZonedDateTime
 
 internal class SearchRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculator {
     override fun calculate(
-        locator: ICelestialLocator,
+        locator: JvmCelestialLocator,
         date: ZonedDateTime,
         location: Coordinate,
         standardAltitude: Double,
@@ -110,7 +110,7 @@ internal class SearchRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculato
 
     private fun getAltitude(searchParameters: SearchParameters, time: Long): Float {
         val ut = LocalDateTime.ofEpochSecond(time / 1000, 0, ZoneOffset.UTC)
-        return AstroUtils.getAltitude(
+        return JvmAstroUtils.getAltitude(
             searchParameters.locator,
             ut,
             searchParameters.location,
@@ -121,7 +121,7 @@ internal class SearchRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculato
 
     private fun getAltitude(searchParameters: SearchParameters, time: ZonedDateTime): Float {
         val ut = time.toUniversalTime()
-        return AstroUtils.getAltitude(
+        return JvmAstroUtils.getAltitude(
             searchParameters.locator,
             ut,
             searchParameters.location,
@@ -131,7 +131,7 @@ internal class SearchRiseSetTransitTimeCalculator : IRiseSetTransitTimeCalculato
     }
 
     private data class SearchParameters(
-        val locator: ICelestialLocator,
+        val locator: JvmCelestialLocator,
         val location: Coordinate,
         val standardAltitude: Double,
         val withRefraction: Boolean,

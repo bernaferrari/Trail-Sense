@@ -6,7 +6,7 @@ import com.kylecorry.sol.units.Distance
 import java.time.ZoneOffset
 import kotlin.time.toKotlinInstant
 
-internal class Sun : ICelestialLocator {
+internal class Sun : JvmCelestialLocator {
     private val model = SunModel()
     override fun getCoordinates(ut: UniversalTime): EquatorialCoordinate = model.getCoordinates(ut.asInstant())
     override fun getDistance(ut: UniversalTime): Distance = model.getDistance(ut.asInstant())

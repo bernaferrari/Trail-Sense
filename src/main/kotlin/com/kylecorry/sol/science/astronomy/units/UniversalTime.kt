@@ -8,6 +8,8 @@ import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.time.Time.toUTCLocal
 import com.kylecorry.sol.time.Time.utc
 import kotlinx.datetime.toKotlinLocalDateTime
+import kotlin.time.toKotlinInstant
+import java.time.ZoneOffset
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -38,33 +40,8 @@ internal fun UniversalTime.jd0(): Double {
     return floor(365.25 * (Y + 4716)) + B - 1094.5 // Regular julian day - 1
 }
 
-internal fun UniversalTime.toSiderealTime(apparent: Boolean = false): GreenwichSiderealTime {
-    val jd = toJulianDay(false)
-    val jd0 = jd0()
-
-    val days = jd - jd0
-
-    val t = (jd0 - 2415020.0) / 36525.0
-
-    val r = Algebra.polynomial(t, 6.6460656, 2400.051262, 0.00002581)
-
-    val b = 24 - r + 24 * (year - 1900)
-
-    val t0 = 0.0657098 * days - b
-
-    val ut = toLocalTime().toDecimalHours()
-
-    val gst = t0 + 1.002738 * ut
-
-    if (apparent) {
-        val nutation = LongitudinalNutation.getNutationInLongitude(this.toJulianCenturies())
-        val obilquity = EclipticObliquity.getTrueObliquityOfEcliptic(this.toJulianCenturies())
-        val deltaPsi = (nutation * cos(obilquity.toRadians())) / 15
-        return GreenwichSiderealTime(gst + deltaPsi)
-    }
-
-    return GreenwichSiderealTime(gst)
-}
+internal fun UniversalTime.toSiderealTime(apparent: Boolean = false): GreenwichSiderealTime =
+    SiderealCalculator.at(toInstant(ZoneOffset.UTC).toKotlinInstant(), apparent)
 
 fun ZonedDateTime.toUniversalTime(): UniversalTime {
     return toUTCLocal()

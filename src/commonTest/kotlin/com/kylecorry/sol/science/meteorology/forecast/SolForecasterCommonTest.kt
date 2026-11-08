@@ -3,7 +3,6 @@ package com.kylecorry.sol.science.meteorology.forecast
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureSystem
 import com.kylecorry.sol.science.meteorology.WeatherCondition
-import com.kylecorry.sol.science.shared.Season
 import com.kylecorry.sol.science.meteorology.forecast.sol.SolForecaster
 import com.kylecorry.sol.science.meteorology.observation.WeatherObservation
 import com.kylecorry.sol.units.Coordinate
@@ -21,8 +20,7 @@ class SolForecasterCommonTest {
             WeatherObservation.Pressure(time - 3.hours, Pressure.hpa(1025f)),
             WeatherObservation.Pressure(time, Pressure.hpa(1025f))
         )
-        val forecast = ZambrettiForecaster { _, _ -> Season.Winter }
-            .forecast(observations, null, time, 0.5f, 2f, Coordinate.zero)
+        val forecast = ZambrettiForecaster.forecast(observations, null, time, 0.5f, 2f, Coordinate.zero)
         assertEquals(listOf(WeatherCondition.Clear), forecast.first().conditions)
     }
 

@@ -15,7 +15,7 @@ import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.hypot
 
-internal class StarLocator(private val star: Star) : ICelestialLocator {
+internal class StarLocator(private val star: Star) : JvmCelestialLocator {
     override fun getCoordinates(ut: UniversalTime): EquatorialCoordinate {
         val t = ut.toJulianCenturies()
 
