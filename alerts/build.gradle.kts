@@ -1,5 +1,7 @@
 plugins {
     kotlin("multiplatform")
+    id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.android.kotlin.multiplatform.library")
     id("com.vanniktech.maven.publish")
 }
@@ -15,8 +17,12 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { api(project(":alerts-android")); implementation(libs.androidx.appcompat) }
+        commonMain.dependencies {
+            api(project(":shared"))
+            api(compose.runtime)
+            api(compose.foundation)
+            api(compose.material3)
+        }
     }
 }
 group = "com.kylecorry.andromeda"

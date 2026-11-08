@@ -15,7 +15,6 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets.androidMain.dependencies {
-        implementation(project(":alerts"))
         implementation(libs.androidx.core.ktx)
     }
 }
