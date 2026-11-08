@@ -17,6 +17,7 @@ kotlin {
     jvmToolchain(17)
     sourceSets.commonMain.dependencies {
         api(project(":shared"))
+        api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
         api("io.github.shadadman:ksensor-sensors-motion:9.40.0")
         api("io.github.shadadman:ksensor-sensors-environment:9.40.0")
         api("io.github.shadadman:ksensor-sensors-positioning:9.40.0")

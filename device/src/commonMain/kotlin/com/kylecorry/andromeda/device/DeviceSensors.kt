@@ -1,5 +1,10 @@
 package com.kylecorry.andromeda.device
 
+import com.ksensor.core.SensorConfig
+import com.ksensor.core.PlatformType
+import com.kylecorry.sol.units.Reading
+import kotlinx.coroutines.flow.map
+import kotlin.time.Instant
 import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
 import com.ksensor.plugins.sensors.motion.createMotionPlugin
 import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
@@ -11,4 +16,10 @@ class DeviceSensors {
     val environment by lazy { createEnvironmentPlugin() }
     val positioning by lazy { createPositioningPlugin() }
     val system by lazy { createSystemPlugin() }
+
+    /** Atmospheric pressure in hectopascals. */
+    fun pressure(config: SensorConfig = SensorConfig.Default) = environment.barometer(config).map { reading ->
+        val factor = if (reading.platform == PlatformType.iOS) 10f else 1f
+        Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
+    }
 }
