@@ -33,7 +33,7 @@ internal class GravityZenithLocator(private val withRefraction: Boolean = true) 
                 .map { position -> position.vector }
             val rotation = Rotation.fit(rays, targets)
             val (azimuth, altitude) = HorizonVectors.fromVector(rotation.rotate(normalizedUp))
-            moved = Math.toRadians(90 - altitude) * Geology.EARTH_AVERAGE_RADIUS
+            moved = (90 - altitude) * kotlin.math.PI / 180 * Geology.EARTH_AVERAGE_RADIUS
             location = location.plus(moved, Bearing.from(azimuth.toFloat()))
             iteration++
         }

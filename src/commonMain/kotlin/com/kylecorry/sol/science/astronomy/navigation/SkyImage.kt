@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.astronomy.navigation
 
 import com.kylecorry.sol.math.Vector3Precise
 import com.kylecorry.sol.science.optics.PinholeCamera
-import java.time.ZonedDateTime
+import kotlin.time.Instant
 
 /**
  * A photo of the sky
@@ -13,5 +13,5 @@ data class SkyImage(
     val stars: List<ImageStar>,
     val camera: PinholeCamera,
     val up: Vector3Precise?,
-    val time: ZonedDateTime
+    val time: Instant
 )

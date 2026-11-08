@@ -13,6 +13,7 @@ import kotlin.random.Random
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import kotlin.time.toKotlinInstant
 
 /**
  * Generates star photos from the star catalog with lens, sensor and detection errors
@@ -79,7 +80,7 @@ class SyntheticSky(private val random: Random) {
         )
         val enuToDevice = deviceToEnu.inverse()
         val stars = mutableListOf<ImageStar>()
-        for (position in SkyCatalog.getPositions(SkyCatalog.getBodies(errors.limitingMagnitude), time, location, true, 0.0)) {
+        for (position in SkyCatalog.getPositions(SkyCatalog.getBodies(errors.limitingMagnitude), time.toInstant().toKotlinInstant(), location, true, 0.0)) {
             if (random.nextDouble() < errors.dropout) continue
             val (px, py) = camera.toPixel(enuToDevice.rotate(position.vector)) ?: continue
             val x = px + gaussian() * errors.pixelNoise
@@ -102,7 +103,7 @@ class SyntheticSky(private val random: Random) {
         val trueUp = enuToDevice.rotate(HorizonVectors.up)
         val noise = perpendicular(trueUp, errors.tiltNoiseDegrees * gaussian())
         val up = tilt(tilt(trueUp, gravityBias), noise)
-        return Photo(SkyImage(stars, nominalCamera, up, time), location, deviceToEnu)
+        return Photo(SkyImage(stars, nominalCamera, up, time.toInstant().toKotlinInstant()), location, deviceToEnu)
     }
 
     fun nearby(location: Coordinate, km: Double): Coordinate {

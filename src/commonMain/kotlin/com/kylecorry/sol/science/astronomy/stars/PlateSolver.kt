@@ -7,7 +7,7 @@ import com.kylecorry.sol.science.astronomy.navigation.HorizonVectors
 import com.kylecorry.sol.science.astronomy.navigation.SkyCatalog
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.units.Coordinate
-import java.time.ZonedDateTime
+import kotlin.time.Instant
 
 /**
  * Identifies stars from altitude / azimuth readings by matching pairs of readings to the catalog (see
@@ -29,7 +29,7 @@ internal class PlateSolver(
 
     fun solve(
         readings: List<CelestialObservation>,
-        time: ZonedDateTime,
+        time: Instant,
         approximateLocation: Coordinate
     ): List<DetectedStar> {
         if (readings.size < 2) return emptyList()

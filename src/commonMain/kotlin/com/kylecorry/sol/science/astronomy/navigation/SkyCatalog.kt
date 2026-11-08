@@ -1,11 +1,14 @@
 package com.kylecorry.sol.science.astronomy.navigation
 
 import com.kylecorry.sol.math.Vector3Precise
-import com.kylecorry.sol.science.astronomy.Astronomy
+import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.locators.StarPositionModel
+import com.kylecorry.sol.science.astronomy.locators.PlanetPositionModel
 import com.kylecorry.sol.science.astronomy.locators.Planet
 import com.kylecorry.sol.science.astronomy.stars.STAR_CATALOG
 import com.kylecorry.sol.units.Coordinate
-import java.time.ZonedDateTime
+import kotlin.time.Instant
+import kotlin.math.PI
 import kotlin.math.sin
 
 /**
@@ -35,29 +38,29 @@ internal object SkyCatalog {
 
     fun getPosition(
         body: CelestialBody,
-        time: ZonedDateTime,
+        time: Instant,
         location: Coordinate,
         withRefraction: Boolean = true
     ): BodyPosition {
         val observation = if (body.star != null) {
-            Astronomy.getStarPosition(body.star, time, location, withRefraction)
+            AstroUtils.getLocation(StarPositionModel(body.star), time, location, withRefraction)
         } else {
-            Astronomy.getPlanetPosition(checkNotNull(body.planet), time, location, withRefraction)
+            AstroUtils.getLocation(PlanetPositionModel(checkNotNull(body.planet)), time, location, withRefraction)
         }
         return BodyPosition(
             body,
-            HorizonVectors.toVector(observation.azimuth.value.toDouble(), observation.altitude.toDouble())
+            HorizonVectors.toVector(observation.azimuth.toFloat().toDouble(), observation.altitude.toFloat().toDouble())
         )
     }
 
     fun getPositions(
         bodies: List<CelestialBody>,
-        time: ZonedDateTime,
+        time: Instant,
         location: Coordinate,
         withRefraction: Boolean = true,
         minAltitude: Double = -90.0
     ): List<BodyPosition> {
-        val minZ = sin(Math.toRadians(minAltitude))
+        val minZ = sin(minAltitude * PI / 180)
         return bodies.map { getPosition(it, time, location, withRefraction) }.filter { it.vector.z >= minZ }
     }
 }

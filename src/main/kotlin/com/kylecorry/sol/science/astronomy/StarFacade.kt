@@ -13,6 +13,7 @@ import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import java.time.ZonedDateTime
+import kotlin.time.toKotlinInstant
 
 internal object StarFacade {
     fun getStarPosition(
@@ -59,7 +60,7 @@ internal object StarFacade {
         }
         return PlateSolver(tolerance, minMatches, minMagnitude, maxZenithOffset).solve(
             readings,
-            time,
+            time.toInstant().toKotlinInstant(),
             approximateLocation ?: Time.getLocationFromTimeZone(time.zone)
         )
     }
