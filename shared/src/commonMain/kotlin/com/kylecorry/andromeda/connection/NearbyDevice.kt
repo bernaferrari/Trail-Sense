@@ -1,8 +1,8 @@
 package com.kylecorry.andromeda.connection
 
-import com.kylecorry.andromeda.core.sensors.ISensor
+import com.kylecorry.andromeda.core.sensors.Sensor
 
-interface NearbyDevice : ISensor {
+interface NearbyDevice : Sensor {
     val name: String
     val address: String
     val isConnected: Boolean

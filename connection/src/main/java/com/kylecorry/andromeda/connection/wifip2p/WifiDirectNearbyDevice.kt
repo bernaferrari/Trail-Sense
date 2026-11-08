@@ -29,6 +29,7 @@ import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.time.Instant
+import kotlin.time.toKotlinInstant
 
 @Experimental
 class WifiDirectNearbyDevice(private val device: WifiP2pDevice, private val context: Context) :
@@ -165,7 +166,7 @@ class WifiDirectNearbyDevice(private val device: WifiP2pDevice, private val cont
             while (isConnected) {
                 socket.accept().use { client ->
                     client.getInputStream()?.use {
-                        _messages.add(NearbyDeviceMessage(Instant.now(), it.readBytes()))
+                        _messages.add(NearbyDeviceMessage(Instant.now().toKotlinInstant(), it.readBytes()))
                         setEventTimeToNow()
                         onMain {
                             notifyListeners()
