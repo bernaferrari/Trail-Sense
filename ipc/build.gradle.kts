@@ -15,7 +15,11 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {
+            api(project(":shared"))
+            implementation("io.ktor:ktor-network:3.6.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+        }
         commonTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies { implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android) }
     }
