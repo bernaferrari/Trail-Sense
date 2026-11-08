@@ -7,6 +7,7 @@ import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.science.oceanography.waterlevel.IWaterLevelCalculator
+import com.kylecorry.sol.science.oceanography.waterlevel.calculate
 import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance

@@ -2,19 +2,22 @@ package com.kylecorry.sol.science.oceanography.waterlevel
 
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
-import java.time.ZonedDateTime
+import kotlinx.datetime.TimeZone
+import kotlin.time.Instant
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
+@OptIn(ExperimentalAtomicApi::class)
 class HarmonicWaterLevelCalculator(private val harmonics: List<TidalHarmonic>) :
     IWaterLevelCalculator {
 
     private class NodalCorrections(val day: Long, val f: DoubleArray, val u: DoubleArray)
 
-    @Volatile
-    private var nodalCorrections: NodalCorrections? = null
+    private val nodalCorrections = AtomicReference<NodalCorrections?>(null)
 
-    override fun calculate(time: ZonedDateTime): Float {
+    override fun calculate(time: Instant, timeZone: TimeZone): Float {
         val nodal = getNodalCorrections(time)
-        val astronomical = AstronomicalArgument.at(time.toEpochSecond() + time.nano / 1e9)
+        val astronomical = AstronomicalArgument.at(time.epochSeconds + time.nanosecondsOfSecond / 1e9)
         var height = 0.0
         for (i in harmonics.indices) {
             val harmonic = harmonics[i]
@@ -26,9 +29,9 @@ class HarmonicWaterLevelCalculator(private val harmonics: List<TidalHarmonic>) :
     }
 
     // The nodal terms change slowly, so they are only recomputed when the day changes
-    private fun getNodalCorrections(time: ZonedDateTime): NodalCorrections {
-        val day = Math.floorDiv(time.toEpochSecond(), SECONDS_PER_DAY)
-        nodalCorrections?.let { if (it.day == day) return it }
+    private fun getNodalCorrections(time: Instant): NodalCorrections {
+        val day = time.epochSeconds.floorDiv(SECONDS_PER_DAY)
+        nodalCorrections.load()?.let { if (it.day == day) return it }
 
         val nodal = NodalCorrection.at(day * SECONDS_PER_DAY)
         val f = DoubleArray(harmonics.size)
@@ -38,7 +41,7 @@ class HarmonicWaterLevelCalculator(private val harmonics: List<TidalHarmonic>) :
             f[i] = nodalF
             u[i] = nodalU
         }
-        return NodalCorrections(day, f, u).also { nodalCorrections = it }
+        return NodalCorrections(day, f, u).also { nodalCorrections.store(it) }
     }
 
     private companion object {

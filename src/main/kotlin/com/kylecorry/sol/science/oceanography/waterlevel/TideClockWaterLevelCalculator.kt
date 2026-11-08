@@ -7,6 +7,10 @@ import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.TideConstituent
 import com.kylecorry.sol.time.Time.hoursBetween
 import java.time.ZonedDateTime
+import java.time.ZoneId
+import kotlinx.datetime.TimeZone
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 class TideClockWaterLevelCalculator(
     private val reference: Tide,
@@ -17,7 +21,8 @@ class TideClockWaterLevelCalculator(
 
     private val wave = getWave()
 
-    override fun calculate(time: ZonedDateTime): Float {
+    override fun calculate(instant: Instant, timeZone: TimeZone): Float {
+        val time = instant.toJavaInstant().atZone(ZoneId.of(timeZone.id))
         val t = hoursBetween(reference.time, time)
         return wave.calculate(t)
     }

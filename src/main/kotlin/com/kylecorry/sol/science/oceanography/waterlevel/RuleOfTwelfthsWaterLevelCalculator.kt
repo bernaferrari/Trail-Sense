@@ -5,6 +5,10 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.time.Time.hoursBetween
 import java.time.ZonedDateTime
+import java.time.ZoneId
+import kotlinx.datetime.TimeZone
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 class RuleOfTwelfthsWaterLevelCalculator(
     private val first: Tide,
@@ -18,7 +22,8 @@ class RuleOfTwelfthsWaterLevelCalculator(
         Trigonometry.connect(firstVec, secondVec)
     }
 
-    override fun calculate(time: ZonedDateTime): Float {
+    override fun calculate(instant: Instant, timeZone: TimeZone): Float {
+        val time = instant.toJavaInstant().atZone(ZoneId.of(timeZone.id))
         return wave.calculate(getX(time))
     }
 
