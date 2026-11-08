@@ -1,6 +1,7 @@
 package com.kylecorry.sol.science.meteorology.forecast
 
 import com.kylecorry.sol.science.meteorology.WeatherCondition
+import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.science.meteorology.observation.WeatherObservation
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Pressure
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.Instant
 import kotlin.time.toKotlinInstant
+import kotlin.time.toJavaInstant
+import java.time.ZoneId
 
 internal class ZambrettiForecasterTest {
 
@@ -44,7 +47,9 @@ internal class ZambrettiForecasterTest {
     }
 
     private fun forecast(observations: List<WeatherObservation<*>>) =
-        ZambrettiForecaster.forecast(
+        ZambrettiForecaster { coordinate, instant ->
+            Astronomy.getSeason(coordinate, instant.toJavaInstant().atZone(ZoneId.systemDefault()))
+        }.forecast(
             observations,
             null,
             time.toKotlinInstant(),

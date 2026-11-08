@@ -1,27 +1,21 @@
 package com.kylecorry.sol.science.meteorology.forecast
 
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.science.astronomy.Astronomy
-import com.kylecorry.sol.science.meteorology.Meteorology
+import com.kylecorry.sol.science.meteorology.PressureModel
 import com.kylecorry.sol.science.meteorology.PressureSystem
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.meteorology.WeatherForecast
 import com.kylecorry.sol.science.meteorology.observation.WeatherObservation
 import com.kylecorry.sol.science.shared.Season
-import com.kylecorry.sol.time.Time.plusHours
-import com.kylecorry.sol.time.Time.toZonedDateTime
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Temperature
 import kotlin.time.Instant
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
-import java.time.ZonedDateTime
 
-internal object ZambrettiForecaster : Forecaster {
+internal class ZambrettiForecaster(private val seasonAt: (Coordinate, Instant) -> Season) : Forecaster {
 
     private val conditions = mapOf(
         1 to Conditions(listOf(WeatherCondition.Clear), listOf(WeatherCondition.Clear)),
@@ -114,7 +108,7 @@ internal object ZambrettiForecaster : Forecaster {
             tendency,
             windDirection,
             dailyTemperatureRange,
-            time.toJavaInstant().toZonedDateTime(),
+            time,
             pressureChangeThreshold
         )
 
@@ -126,26 +120,26 @@ internal object ZambrettiForecaster : Forecaster {
         tendency: PressureTendency,
         windDirection: Bearing?,
         dailyTemperatureRange: Range<Temperature>?,
-        time: ZonedDateTime,
+        time: Instant,
         changeThreshold: Float
     ): List<WeatherForecast> {
 
         val hpa = pressure.hpa().value
-        val season = Astronomy.getSeason(location, time)
+        val season = seasonAt(location, time)
         val z = getZambrettiValue(hpa, tendency)
         val windAdjustment = getWindAdjustment(windDirection)
         val seasonAdjustment = getSeasonAdjustment(season, tendency, changeThreshold)
         val zAdjusted = (z + windAdjustment + seasonAdjustment).coerceIn(1.0, 32.0)
 
         val current = WeatherForecast(
-            time.toInstant().toKotlinInstant(),
+            time,
             getCurrentConditions(zAdjusted, dailyTemperatureRange),
             system = getPressureSystem(pressure),
             tendency = tendency
         )
 
         val later = WeatherForecast(
-            time.toInstant().plusHours(12).toKotlinInstant(),
+            time + 12.hours,
             getLaterConditions(zAdjusted, dailyTemperatureRange)
         )
 
@@ -189,9 +183,9 @@ internal object ZambrettiForecaster : Forecaster {
     }
 
     private fun getPressureSystem(pressure: Pressure): PressureSystem? {
-        return if (Meteorology.isHighPressure(pressure)) {
+        return if (PressureModel.isHigh(pressure)) {
             PressureSystem.High
-        } else if (Meteorology.isLowPressure(pressure)) {
+        } else if (PressureModel.isLow(pressure)) {
             PressureSystem.Low
         } else {
             null
