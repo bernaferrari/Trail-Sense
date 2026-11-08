@@ -3,6 +3,7 @@ package com.kylecorry.andromeda.device
 import com.ksensor.core.SensorConfig
 import com.ksensor.core.PlatformType
 import com.kylecorry.sol.units.Reading
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.map
 import kotlin.time.Instant
 import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
@@ -16,6 +17,10 @@ class DeviceSensors {
     val environment by lazy { createEnvironmentPlugin() }
     val positioning by lazy { createPositioningPlugin() }
     val system by lazy { createSystemPlugin() }
+
+    /** A barometer implementing Andromeda's shared sensor contract. */
+    fun barometer(scope: CoroutineScope, config: SensorConfig = SensorConfig.Default) =
+        FlowBarometer(pressure(config), scope)
 
     /** Atmospheric pressure in hectopascals. */
     fun pressure(config: SensorConfig = SensorConfig.Default) = environment.barometer(config).map { reading ->
