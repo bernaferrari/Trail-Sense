@@ -21,7 +21,13 @@ kotlin {
             api("com.juul.kable:kable-core:0.45.0")
         }
         jvmTest.dependencies { implementation(kotlin("test")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(project(":permissions")); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.core.ktx) }
+        androidMain.dependencies {
+            implementation(project(":core"))
+            implementation(project(":permissions"))
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.androidx.core.ktx)
+            implementation("io.github.shadadman:ksensor-core:9.40.0")
+        }
     }
 }
 group = "com.kylecorry.andromeda"

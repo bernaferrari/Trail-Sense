@@ -3,6 +3,14 @@ package com.kylecorry.andromeda.connection
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
+import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
+import com.ksensor.core.context.KSensorContext
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
@@ -11,6 +19,9 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -114,5 +125,42 @@ actual suspend fun acceptRfcomm(name: String, service: Uuid, security: RfcommSec
             runCatching { server.close() }
             task.cancel()
         }
+    }
+}
+
+@SuppressLint("MissingPermission")
+@Suppress("DEPRECATION")
+actual fun scanClassicBluetooth(): Flow<DiscoveredBluetoothDevice> = callbackFlow {
+    val context = KSensorContext.get()
+    val adapter = checkNotNull(BluetoothAdapter.getDefaultAdapter()) { "Bluetooth is unavailable" }
+    var started = false
+    val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    try {
+                        val device = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) ?: return
+                        val rssi = if (intent.hasExtra(BluetoothDevice.EXTRA_RSSI)) intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, 0).toInt() else null
+                        trySend(DiscoveredBluetoothDevice(device.address, device.name, rssi, device.bondState == BluetoothDevice.BOND_BONDED))
+                    } catch (error: SecurityException) {
+                        close(error)
+                    }
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> close()
+            }
+        }
+    }
+    val filter = IntentFilter().apply {
+        addAction(BluetoothDevice.ACTION_FOUND)
+        addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+    }
+    ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+    try {
+        started = adapter.startDiscovery()
+        if (!started) close(IllegalStateException("Unable to start Bluetooth discovery"))
+        awaitClose { }
+    } finally {
+        if (started) runCatching { adapter.cancelDiscovery() }
+        context.unregisterReceiver(receiver)
     }
 }

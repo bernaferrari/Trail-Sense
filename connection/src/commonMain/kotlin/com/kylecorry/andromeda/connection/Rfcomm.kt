@@ -1,6 +1,7 @@
 package com.kylecorry.andromeda.connection
 
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.flow.Flow
 
 /** A connected Bluetooth Classic byte stream. Close it when finished. */
 interface RfcommConnection : AutoCloseable {
@@ -26,6 +27,11 @@ expect suspend fun connectRfcomm(
 val SerialPortService: Uuid = Uuid.parse("00001101-0000-1000-8000-00805f9b34fb")
 
 data class PairedBluetoothDevice(val address: String, val name: String?)
+data class DiscoveredBluetoothDevice(val address: String, val name: String?, val rssi: Int?, val bonded: Boolean)
+
+/** Discovers Bluetooth Classic devices until the platform completes discovery or collection ends. */
+expect fun scanClassicBluetooth(): Flow<DiscoveredBluetoothDevice>
+
 data class RfcommPeer(val device: PairedBluetoothDevice, val connection: RfcommConnection)
 
 /** Returns bonded Bluetooth Classic devices when supported by the platform. */
