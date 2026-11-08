@@ -34,3 +34,6 @@ fun PixelImage.colorMatrix(matrix: FloatArray): PixelImage {
         result
     }
 }
+
+/** Applies a reusable per-channel lookup table. */
+fun PixelImage.lookup(table: LookupTable): PixelImage = lookup(table.red, table.green, table.blue, table.alpha)
