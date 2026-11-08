@@ -19,7 +19,7 @@ kotlin {
         val mobileMain by creating {
             dependsOn(commonMain.get())
             dependencies {
-                implementation("dev.icerock.moko:permissions:0.20.1")
+                api("dev.icerock.moko:permissions:0.20.1")
                 implementation("dev.icerock.moko:permissions-camera:0.20.1")
                 implementation("dev.icerock.moko:permissions-location:0.20.1")
                 implementation("dev.icerock.moko:permissions-microphone:0.20.1")

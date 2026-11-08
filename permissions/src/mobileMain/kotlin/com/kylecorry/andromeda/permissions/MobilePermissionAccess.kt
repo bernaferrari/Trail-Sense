@@ -18,6 +18,9 @@ import dev.icerock.moko.permissions.location.COARSE_LOCATION
 import dev.icerock.moko.permissions.location.LOCATION
 import dev.icerock.moko.permissions.microphone.RECORD_AUDIO
 
+/** Adapts a platform Moko permissions controller to the shared permission API. */
+fun permissionAccess(controller: PermissionsController): PermissionAccess = MobilePermissionAccess(controller)
+
 internal class MobilePermissionAccess(private val controller: PermissionsController) : PermissionAccess {
     override suspend fun status(permission: AppPermission): PermissionStatus = when (controller.getPermissionState(permission.native())) {
         PermissionState.NotDetermined -> PermissionStatus.NotDetermined
