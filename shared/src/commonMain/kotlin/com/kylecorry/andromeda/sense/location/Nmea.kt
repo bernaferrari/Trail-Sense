@@ -1,6 +1,5 @@
 package com.kylecorry.andromeda.sense.location
 
-import com.kylecorry.andromeda.core.tryOrDefault
 
 data class Nmea(val message: String) {
     val mslAltitude: Float?
@@ -12,10 +11,6 @@ data class Nmea(val message: String) {
                 return null
             }
 
-            val idx = 9
-            return tryOrDefault(null) {
-                val altitudeStr = message.split(",")[idx]
-                altitudeStr.toFloatOrNull()
-            }
+            return message.split(',').getOrNull(9)?.toFloatOrNull()
         }
 }
