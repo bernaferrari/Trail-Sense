@@ -15,7 +15,7 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies { implementation("io.ktor:ktor-client-cio:3.6.1") }
         jvmTest {
             kotlin.srcDir("src/test/java")
             dependencies {

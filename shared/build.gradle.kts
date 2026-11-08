@@ -25,10 +25,8 @@ kotlin {
         androidMain { dependsOn(jvmSharedMain) }
     }
     sourceSets.commonMain.dependencies {
-        api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
         api("com.kylecorry:sol:19.4.0")
-        implementation("io.github.pdvrieze.xmlutil:core:1.0.2")
-        implementation("io.ktor:ktor-client-cio:3.6.1")
+        api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
         implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
     }
     sourceSets.commonTest.dependencies {

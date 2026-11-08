@@ -25,7 +25,7 @@ kotlin {
         }
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies { api(project(":xml")); api("com.kylecorry:sol:19.4.0") }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
             dependencies {

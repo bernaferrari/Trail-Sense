@@ -14,8 +14,12 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
+    applyDefaultHierarchyTemplate()
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        val jvmSharedMain by creating { dependsOn(commonMain.get()) }
+        jvmMain { dependsOn(jvmSharedMain) }
+        androidMain { dependsOn(jvmSharedMain) }
+        commonMain.dependencies { api("com.kylecorry:sol:19.4.0"); implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") }
         jvmTest {
             kotlin.srcDir("src/test/java")
             dependencies {

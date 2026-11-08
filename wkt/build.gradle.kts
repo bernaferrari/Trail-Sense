@@ -14,8 +14,12 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
+    applyDefaultHierarchyTemplate()
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        val jvmSharedMain by creating { dependsOn(commonMain.get()) }
+        jvmMain { dependsOn(jvmSharedMain) }
+        androidMain { dependsOn(jvmSharedMain) }
+        commonMain.dependencies {  }
         jvmTest {
             kotlin.srcDir("src/test/java")
             dependencies {

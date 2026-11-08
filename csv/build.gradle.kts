@@ -23,7 +23,7 @@ kotlin {
         }
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {  }
         jvmTest {
             kotlin.srcDir("src/test/java")
             dependencies {

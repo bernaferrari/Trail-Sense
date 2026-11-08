@@ -21,7 +21,6 @@ kotlin {
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
         commonMain.dependencies {
-            api(project(":shared"))
             implementation("com.soywiz:korlibs-compression:6.0.0")
         }
         jvmTest {

@@ -26,7 +26,7 @@ kotlin {
         }
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies { api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
             dependencies {

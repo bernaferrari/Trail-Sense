@@ -25,7 +25,7 @@ kotlin {
         }
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies { implementation("io.github.pdvrieze.xmlutil:core:1.0.2") }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
             dependencies {
