@@ -1,0 +1,40 @@
+package com.kylecorry.andromeda.bitmaps
+
+import java.awt.Rectangle
+import java.io.ByteArrayInputStream
+import javax.imageio.ImageIO
+
+actual class ImageRegionDecoder actual constructor(bytes: ByteArray) : AutoCloseable {
+    private val input = requireNotNull(ImageIO.createImageInputStream(ByteArrayInputStream(bytes))) { "Unable to open image" }
+    private val reader = ImageIO.getImageReaders(input).asSequence().firstOrNull() ?: run {
+        input.close()
+        throw IllegalArgumentException("Unable to decode image")
+    }
+    private var closed = false
+    actual val width: Int
+    actual val height: Int
+
+    init {
+        try {
+            reader.input = input
+            width = reader.getWidth(0)
+            height = reader.getHeight(0)
+        } catch (error: Exception) {
+            reader.dispose()
+            input.close()
+            throw error
+        }
+    }
+
+    actual fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage {
+        check(!closed) { "Image decoder is closed" }
+        requireImageRegion(left, top, width, height, this.width, this.height)
+        val parameters = reader.defaultReadParam.apply { sourceRegion = Rectangle(left, top, width, height) }
+        val image = requireNotNull(reader.read(0, parameters)) { "Unable to decode image region" }
+        return PixelImage(width, height, image.getRGB(0, 0, width, height, null, 0, width))
+    }
+
+    actual override fun close() {
+        if (!closed) { closed = true; reader.dispose(); input.close() }
+    }
+}

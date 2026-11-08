@@ -17,25 +17,27 @@ actual fun decodeImage(bytes: ByteArray): PixelImage {
     val data = bytes.usePinned { NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()) }
     val image = CGImageRetain(requireNotNull(UIImage.imageWithData(data)?.CGImage) { "Unable to decode image" })
         ?: error("Unable to retain image")
+    try { return pixelImageFromCGImage(image) } finally { CGImageRelease(image) }
+}
+
+internal fun pixelImageFromCGImage(image: CGImageRef): PixelImage {
+    val width = CGImageGetWidth(image).toInt()
+    val height = CGImageGetHeight(image).toInt()
+    require(width > 0 && height > 0 && width.toLong() * height <= Int.MAX_VALUE / 4)
+    val rgba = ByteArray(width * height * 4)
+    val space = requireNotNull(CGColorSpaceCreateDeviceRGB())
     try {
-        val width = CGImageGetWidth(image).toInt()
-        val height = CGImageGetHeight(image).toInt()
-        require(width > 0 && height > 0 && width.toLong() * height <= Int.MAX_VALUE / 4)
-        val rgba = ByteArray(width * height * 4)
-        val space = requireNotNull(CGColorSpaceCreateDeviceRGB())
-        try {
-            rgba.usePinned { pinned ->
-                val context = requireNotNull(CGBitmapContextCreate(pinned.addressOf(0), width.toULong(), height.toULong(), 8u, (width * 4).toULong(), space, CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value or kCGBitmapByteOrder32Big))
-                try { CGContextDrawImage(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), image) } finally { CGContextRelease(context) }
-            }
-        } finally { CGColorSpaceRelease(space) }
-        return PixelImage(width, height, IntArray(width * height) { i ->
-            val offset = i * 4
-            val alpha = rgba[offset + 3].toInt() and 255
-            fun channel(index: Int): Int = if (alpha == 0) 0 else (((rgba[offset + index].toInt() and 255) * 255 + alpha / 2) / alpha).coerceAtMost(255)
-            (alpha shl 24) or (channel(0) shl 16) or (channel(1) shl 8) or channel(2)
-        })
-    } finally { CGImageRelease(image) }
+        rgba.usePinned { pinned ->
+            val context = requireNotNull(CGBitmapContextCreate(pinned.addressOf(0), width.toULong(), height.toULong(), 8u, (width * 4).toULong(), space, CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value or kCGBitmapByteOrder32Big))
+            try { CGContextDrawImage(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), image) } finally { CGContextRelease(context) }
+        }
+    } finally { CGColorSpaceRelease(space) }
+    return PixelImage(width, height, IntArray(width * height) { i ->
+        val offset = i * 4
+        val alpha = rgba[offset + 3].toInt() and 255
+        fun channel(index: Int): Int = if (alpha == 0) 0 else (((rgba[offset + index].toInt() and 255) * 255 + alpha / 2) / alpha).coerceAtMost(255)
+        (alpha shl 24) or (channel(0) shl 16) or (channel(1) shl 8) or channel(2)
+    })
 }
 
 actual fun PixelImage.encodePng(): ByteArray = encode { UIImagePNGRepresentation(it) }
