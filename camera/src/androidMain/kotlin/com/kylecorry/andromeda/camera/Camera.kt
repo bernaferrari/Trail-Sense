@@ -59,6 +59,7 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.atan
+import kotlin.math.roundToInt
 
 
 class Camera(
@@ -94,6 +95,24 @@ class Camera(
                 return null
             }
         }
+
+    internal val exposureCompensation: CameraExposure?
+        get() {
+            val state = camera?.cameraInfo?.exposureState ?: return null
+            if (!state.isExposureCompensationSupported) return null
+            val step = state.exposureCompensationStep.toFloat()
+            if (step <= 0f) return null
+            val range = state.exposureCompensationRange
+            return CameraExposure(state.exposureCompensationIndex * step, range.lower * step, range.upper * step, step)
+        }
+
+    internal fun setExposureCompensation(value: Float) {
+        val exposure = checkNotNull(exposureCompensation) { "Exposure compensation is unavailable" }
+        require(value.isFinite() && value in exposure.minimum..exposure.maximum)
+        val step = checkNotNull(exposure.step)
+        val index = (value / step).roundToInt()
+        checkNotNull(camera).cameraControl.setExposureCompensationIndex(index)
+    }
 
     override val sensorRotation: Float
         get() {

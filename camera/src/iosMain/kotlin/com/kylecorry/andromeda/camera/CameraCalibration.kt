@@ -22,13 +22,8 @@ internal actual fun cameraCalibrationSource(camera: CameraController): CameraCal
         val requested = camera.getPreferredCameraDeviceType()
         val key = lens to requested
         if (key != selectedKey || selectedDevice == null) {
-            val effectiveType = if (requested == CameraDeviceType.DEFAULT) CameraDeviceType.WIDE_ANGLE else requested
-            val matches = camera.getCameraCapabilities().allLenses.filter {
-                it.lens == lens && (effectiveType == CameraDeviceType.MACRO || it.deviceType == effectiveType)
-            }
             // Do not guess which physical device CameraK selected when there are multiple matches.
-            val id = matches.singleOrNull()?.id
-            selectedDevice = id?.let { AVCaptureDevice.deviceWithUniqueID(it) }
+            selectedDevice = selectedCameraDevice(camera)
             selectedKey = key
         }
         return selectedDevice

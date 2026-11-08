@@ -50,6 +50,8 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
             override val calibration = camera.calibrationSource()
             override val zoom: CameraZoom?
                 get() = camera.zoom?.let { CameraZoom(it.ratio, it.ratioRange.start, it.ratioRange.end) }
+            override val exposure: CameraExposure? get() = camera.exposureCompensation
+            override fun setExposure(value: Float) = camera.setExposureCompensation(value)
             override suspend fun capture(): ByteArray {
                 val output = ByteArrayOutputStream()
                 check(camera.takePhoto(output)) { "Camera capture failed" }

@@ -74,6 +74,8 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
                             .firstOrNull { it.lens == lens && it.deviceType == deviceType }?.minZoom ?: 1f
                         return CameraZoom(ratio, minimum, maximum)
                     }
+                override val exposure: CameraExposure? get() = cameraExposure(camera)
+                override fun setExposure(value: Float) = setCameraExposure(camera, value)
                 override suspend fun capture(): ByteArray = when (val result = camera.takePictureToFile()) {
                     is ImageCaptureResult.Success -> result.byteArray
                     is ImageCaptureResult.SuccessWithFile -> {
