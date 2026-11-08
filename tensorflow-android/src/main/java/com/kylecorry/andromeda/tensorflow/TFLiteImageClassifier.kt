@@ -49,10 +49,7 @@ class TensorflowImageClassifier(
 
         // TODO: Maybe keep the input / output buffers loaded
         val inputType = model.getInputTensor(0).dataType()
-        val input = TensorImage(inputType).also {
-            it.load(image)
-            imageProcessor.process(it)
-        }
+        val input = TensorImage(inputType).also { it.load(image) }.let(imageProcessor::process)
 
         val outputType = model.getOutputTensor(0).dataType()
         val outputShape = model.getOutputTensor(0).shape()
