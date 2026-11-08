@@ -1,5 +1,7 @@
 package com.kylecorry.sol.science.astronomy
 
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.toKotlinTimeZone
 import com.kylecorry.sol.science.astronomy.eclipse.EclipseType
 import com.kylecorry.sol.science.astronomy.locators.Moon
 import com.kylecorry.sol.science.astronomy.locators.Planet
@@ -973,7 +975,7 @@ class AstronomyTest {
 
         val readings = stars.map {
             val position = JvmAstronomy.getStarPosition(it, time, location, true)
-            StarReading(it, position.altitude, null, time)
+            StarReading(it, position.altitude, null, time.toInstant().toKotlinInstant(), time.zone.toKotlinTimeZone())
         }
 
         val actual = JvmAstronomy.getLocationFromStars(readings, Coordinate(40.0, -70.0))
@@ -1014,7 +1016,7 @@ class AstronomyTest {
             val position = JvmAstronomy.getStarPosition(it, time, location, true)
             val altitude = position.altitude + altitudeBias
             val azimuth = position.azimuth.value + azimuthBias
-            StarReading(it, altitude, azimuth, time)
+            StarReading(it, altitude, azimuth, time.toInstant().toKotlinInstant(), time.zone.toKotlinTimeZone())
         }
 
         val actual = JvmAstronomy.getLocationFromStars(readings)

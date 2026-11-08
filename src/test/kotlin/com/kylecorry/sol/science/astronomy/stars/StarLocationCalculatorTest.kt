@@ -1,5 +1,7 @@
 package com.kylecorry.sol.science.astronomy.stars
 
+import kotlin.time.toKotlinInstant
+import kotlinx.datetime.toKotlinTimeZone
 import com.kylecorry.sol.science.astronomy.JvmAstronomy
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -23,7 +25,7 @@ class StarLocationCalculatorTest {
             val location = randomLocation()
             val time = randomTime()
             val readings = visibleStars(location, time, 2.5f).filter { it.second.altitude > 15 }.shuffled(random).take(5)
-                .map { (star, position) -> StarReading(star, position.altitude, null, time) }
+                .map { (star, position) -> StarReading(star, position.altitude, null, time.toInstant().toKotlinInstant(), time.zone.toKotlinTimeZone()) }
             val guess = location.plus(800_000.0, Bearing.from(random.nextDouble(0.0, 360.0).toFloat()))
             JvmAstronomy.getLocationFromStars(readings, guess)!!.distanceTo(location)
         }.sorted()
@@ -36,7 +38,7 @@ class StarLocationCalculatorTest {
             val location = randomLocation()
             val time = randomTime()
             val readings = visibleStars(location, time, 2.5f).filter { it.second.altitude > 15 }.shuffled(random).take(6)
-                .map { (star, position) -> StarReading(star, position.altitude + gaussian(0.05), null, time) }
+                .map { (star, position) -> StarReading(star, position.altitude + gaussian(0.05), null, time.toInstant().toKotlinInstant(), time.zone.toKotlinTimeZone()) }
             val guess = location.plus(800_000.0, Bearing.from(random.nextDouble(0.0, 360.0).toFloat()))
             JvmAstronomy.getLocationFromStars(readings, guess)!!.distanceTo(location) / 1000f
         }.sorted()

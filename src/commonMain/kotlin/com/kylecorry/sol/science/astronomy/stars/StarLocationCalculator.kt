@@ -10,12 +10,12 @@ import com.kylecorry.sol.math.optimization.LeastSquaresOptimizer
 import com.kylecorry.sol.math.optimization.SimulatedAnnealingOptimizer
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
-import com.kylecorry.sol.science.astronomy.JvmAstronomy
-import com.kylecorry.sol.science.astronomy.units.toUniversalTime
-import com.kylecorry.sol.science.astronomy.units.toSiderealTime
+import com.kylecorry.sol.science.astronomy.Astronomy
+import com.kylecorry.sol.science.astronomy.units.SiderealCalculator
 import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.Geofence
-import com.kylecorry.sol.time.Time
+import com.kylecorry.sol.time.TimeZoneLocations
+import kotlinx.datetime.offsetAt
 import com.kylecorry.sol.units.Coordinate
 import kotlin.math.cos
 import kotlin.math.sin
@@ -60,14 +60,14 @@ internal class StarLocationCalculator {
                     it.star,
                     it.altitude + altitudeBias.toFloat(),
                     it.azimuth?.plus(azimuthBias.toFloat()),
-                    it.time
+                    it.time, it.timeZone
                 )
             }
 
             val location = getLocationFromStarsObservations(newStars, approximateLocation)
 
             newStars.mapIndexed { i, reading ->
-                val expectedPosition = JvmAstronomy.getStarPosition(
+                val expectedPosition = Astronomy.getStarPosition(
                     reading.star,
                     reading.time,
                     location,
@@ -83,7 +83,7 @@ internal class StarLocationCalculator {
                 it.star,
                 it.altitude + altitudeBias.toFloat(),
                 it.azimuth?.plus(azimuthBias.toFloat()),
-                it.time
+                it.time, it.timeZone
             )
         }, approximateLocation)
     }
@@ -92,14 +92,14 @@ internal class StarLocationCalculator {
         starReadings: List<StarReading>,
         approximateLocation: Coordinate?
     ): Coordinate {
-        val timezoneLocation = Time.getLocationFromTimeZone(starReadings.first().time.zone)
+        val timezoneLocation = locationFromZone(starReadings.first())
 
         var lat = constrainLatitude(approximateLocation?.latitude ?: timezoneLocation.latitude)
         var lon = approximateLocation?.longitude ?: timezoneLocation.longitude
 
         for (ignored in 0..<20) {
             val expectedAltitudes = starReadings.map {
-                JvmAstronomy.getStarPosition(it.star, it.time, Coordinate(lat, lon), true).altitude
+                Astronomy.getStarPosition(it.star, it.time, Coordinate(lat, lon), true).altitude
             }
 
             // Step 3: Determine lines of position
@@ -146,7 +146,7 @@ internal class StarLocationCalculator {
             return null
         }
 
-        val reference = approximateLocation ?: Time.getLocationFromTimeZone(starReadings.first().time.zone)
+        val reference = approximateLocation ?: locationFromZone(starReadings.first())
         val seeds = getZenithCircleIntersections(starReadings) + reference
         val fits = seeds.map { seed ->
             val location = fitAltitudes(starReadings, seed)
@@ -159,8 +159,8 @@ internal class StarLocationCalculator {
 
     private fun getZenithCircleIntersections(starReadings: List<StarReading>): List<Coordinate> {
         val zenithLocations = starReadings.map { reading ->
-            val distance = JvmAstronomy.getZenithDistance(reading.altitude)
-            val siderealTime = reading.time.toUniversalTime().toSiderealTime(true)
+            val distance = Astronomy.getZenithDistance(reading.altitude)
+            val siderealTime = SiderealCalculator.at(reading.time, true)
             val coordinate = reading.star.coordinate.getZenithCoordinate(siderealTime)
             Geofence(coordinate, distance)
         }
@@ -174,7 +174,7 @@ internal class StarLocationCalculator {
                 constrainLatitude(guess[0].toDouble()),
                 Coordinate.toLongitude(guess[1].toDouble())
             )
-            return JvmAstronomy.getStarPosition(reading.star, reading.time, location, true).altitude
+            return Astronomy.getStarPosition(reading.star, reading.time, location, true).altitude
         }
 
         val result = try {
@@ -204,7 +204,7 @@ internal class StarLocationCalculator {
         val location = Coordinate(constrainLatitude(lat), Coordinate.toLongitude(lon))
         return DoubleArray(starReadings.size) {
             val reading = starReadings[it]
-            reading.altitude.toDouble() - JvmAstronomy.getStarPosition(reading.star, reading.time, location, true).altitude
+            reading.altitude.toDouble() - Astronomy.getStarPosition(reading.star, reading.time, location, true).altitude
         }
     }
 
@@ -215,6 +215,10 @@ internal class StarLocationCalculator {
     private fun altitudeRms(starReadings: List<StarReading>, location: Coordinate): Double {
         return sqrt(altitudeCost(starReadings, location.latitude, location.longitude) / starReadings.size)
     }
+
+    private fun locationFromZone(reading: StarReading): Coordinate =
+        TimeZoneLocations.getLocation(reading.timeZone.id)
+            ?: Coordinate(0.0, reading.timeZone.offsetAt(reading.time).totalSeconds / 240.0)
 
     private fun constrainLatitude(latitude: Double): Double {
         return latitude.coerceIn(-90.0, 90.0)

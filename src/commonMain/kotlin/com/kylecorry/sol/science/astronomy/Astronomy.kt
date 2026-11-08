@@ -19,6 +19,8 @@ import com.kylecorry.sol.science.astronomy.navigation.StarIdentification
 import com.kylecorry.sol.science.astronomy.navigation.StarIdentifierSettings
 import com.kylecorry.sol.science.astronomy.rst.SearchRiseSetTimes
 import com.kylecorry.sol.science.astronomy.stars.Star
+import com.kylecorry.sol.science.astronomy.stars.StarReading
+import com.kylecorry.sol.science.astronomy.stars.StarLocationCalculator
 import com.kylecorry.sol.science.astronomy.stars.PlateSolver
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.time.TimeZoneLocations
@@ -119,6 +121,8 @@ object Astronomy {
     fun getColorTemperature(star: Star) = 4600f * ((1 / (0.92f * star.colorIndexBV + 1.7f)) +
         (1 / (0.92f * star.colorIndexBV + 0.62f)))
     fun getZenithDistance(altitude: Float) = Distance.nauticalMiles((90f - altitude) * 60)
+    fun getLocationFromStars(starReadings: List<StarReading>, approximateLocation: Coordinate? = null): Coordinate? =
+        StarLocationCalculator().getLocationFromStars(starReadings, approximateLocation)
     fun identifyStars(image: SkyImage, approximateLocation: Coordinate,
                       settings: StarIdentifierSettings = StarIdentifierSettings()): StarIdentification? =
         CelestialNavigationFacade.identifyStars(image, approximateLocation, settings)
