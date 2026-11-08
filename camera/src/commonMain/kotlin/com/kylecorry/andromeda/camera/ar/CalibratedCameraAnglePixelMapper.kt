@@ -1,7 +1,5 @@
 package com.kylecorry.andromeda.camera.ar
 
-import android.graphics.Rect
-import com.kylecorry.andromeda.camera.ICamera
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.Vector2
@@ -18,21 +16,29 @@ import kotlin.math.sin
  * @param applyDistortionCorrection Whether to apply distortion correction. Defaults to false.
  */
 class CalibratedCameraAnglePixelMapper(
-    private val camera: ICamera,
+    private val camera: CameraCalibrationSource,
     private val fallback: CameraAnglePixelMapper = LinearCameraAnglePixelMapper(),
     private val applyDistortionCorrection: Boolean = false,
     private val useManufacturerCalibration: Boolean = false
 ) : CameraAnglePixelMapper {
 
     private var calibration: FloatArray? = null
-    private var preActiveArray: Rect? = null
-    private var activeArray: Rect? = null
+    private var preActiveArray: ImageBounds? = null
+    private var activeArray: ImageBounds? = null
     private var distortion: FloatArray? = null
     private val linear = LinearCameraAnglePixelMapper()
+    private var calibrationId = camera.calibrationId
+
+    /** Clears cached metadata after a camera or calibration change. */
+    fun invalidateCalibration() {
+        calibration = null
+        preActiveArray = null
+        activeArray = null
+        distortion = null
+        calibrationId = camera.calibrationId
+    }
 
     private var zoom: Float = 1f
-    private var lastZoomTime = 0L
-    private val zoomRefreshInterval = 20L
 
     override fun getAngle(
         x: Float,
@@ -47,9 +53,9 @@ class CalibratedCameraAnglePixelMapper(
     private fun getCalibration(): FloatArray? {
         if (calibration == null) {
             val calibration =
-                camera.getIntrinsicCalibration(true, onlyUseEstimated = !useManufacturerCalibration)
+                camera.intrinsicCalibration(onlyUseEstimated = !useManufacturerCalibration)
                     ?: return null
-            val rotation = camera.sensorRotation.toInt()
+            val rotation = camera.sensorRotationDegrees
             this.calibration = if (rotation == 90 || rotation == 270) {
                 floatArrayOf(
                     calibration[1],
@@ -65,12 +71,12 @@ class CalibratedCameraAnglePixelMapper(
         return calibration
     }
 
-    private fun getPreActiveArraySize(): Rect? {
+    private fun getPreActiveArraySize(): ImageBounds? {
         if (preActiveArray == null) {
-            val activeArray = camera.getActiveArraySize(true) ?: return null
-            val rotation = camera.sensorRotation.toInt()
+            val activeArray = camera.activeArray(preCorrection = true) ?: return null
+            val rotation = camera.sensorRotationDegrees
             this.preActiveArray = if (rotation == 90 || rotation == 270) {
-                Rect(activeArray.top, activeArray.left, activeArray.bottom, activeArray.right)
+                ImageBounds(activeArray.top, activeArray.left, activeArray.bottom, activeArray.right)
             } else {
                 activeArray
             }
@@ -78,12 +84,12 @@ class CalibratedCameraAnglePixelMapper(
         return preActiveArray
     }
 
-    private fun getActiveArraySize(): Rect? {
+    private fun getActiveArraySize(): ImageBounds? {
         if (activeArray == null) {
-            val activeArray = camera.getActiveArraySize(false) ?: return null
-            val rotation = camera.sensorRotation.toInt()
+            val activeArray = camera.activeArray(preCorrection = false) ?: return null
+            val rotation = camera.sensorRotationDegrees
             this.activeArray = if (rotation == 90 || rotation == 270) {
-                Rect(activeArray.top, activeArray.left, activeArray.bottom, activeArray.right)
+                ImageBounds(activeArray.top, activeArray.left, activeArray.bottom, activeArray.right)
             } else {
                 activeArray
             }
@@ -93,19 +99,12 @@ class CalibratedCameraAnglePixelMapper(
 
     private fun getDistortion(): FloatArray? {
         if (distortion == null) {
-            distortion = camera.getDistortionCorrection()
+            distortion = camera.distortionCorrection()
         }
         return distortion
     }
 
-    private fun getZoom(): Float {
-        if (System.currentTimeMillis() - lastZoomTime < zoomRefreshInterval) {
-            return zoom
-        }
-        zoom = camera.zoom?.ratio?.coerceAtLeast(0.05f) ?: 1f
-        lastZoomTime = System.currentTimeMillis()
-        return zoom
-    }
+    private fun getZoom(): Float = camera.zoomRatio?.coerceAtLeast(0.05f) ?: 1f
 
     override fun getPixel(
         angleX: Float,
@@ -114,6 +113,7 @@ class CalibratedCameraAnglePixelMapper(
         fieldOfView: Size,
         distance: Float?
     ): PixelCoordinate {
+        if (camera.calibrationId != calibrationId) invalidateCalibration()
         // TODO: Factor in pose translation (just add it to the world position?)
         val world = toCartesian(angleX, angleY, distance ?: 1f)
 
@@ -127,7 +127,8 @@ class CalibratedCameraAnglePixelMapper(
         val activeArray = getActiveArraySize()
         val distortion = getDistortion()
 
-        if (calibration == null || preActiveArray == null || activeArray == null) {
+        if (calibration == null || calibration.size < 5 || preActiveArray == null || activeArray == null ||
+            activeArray.width <= 0f || activeArray.height <= 0f) {
             return fallback.getPixel(angleX, angleY, imageRect, fieldOfView, distance)
         }
 
@@ -141,7 +142,7 @@ class CalibratedCameraAnglePixelMapper(
         val preY = fy * (world.y / world.z) + cy
 
         // Correct for distortion
-        val corrected = if (applyDistortionCorrection && distortion != null) {
+        val corrected = if (applyDistortionCorrection && distortion != null && distortion.size >= 5) {
             undistort(preX, preY, preActiveArray, cx, cy, distortion)
         } else {
             Vector2(preX, preY)
@@ -152,7 +153,7 @@ class CalibratedCameraAnglePixelMapper(
         val activeY = corrected.y - activeArray.top
 
         // The y axis is inverted (TODO: Why?)
-        val invertedY = activeArray.height() - activeY
+        val invertedY = activeArray.height - activeY
 
         // Unzoom the output image
         val zoom = getZoom()
@@ -162,8 +163,8 @@ class CalibratedCameraAnglePixelMapper(
         val rectHeight = zoom * imageRect.height
 
         // Scale to the output image dimensions
-        val pctX = activeX / activeArray.width()
-        val pctY = invertedY / activeArray.height()
+        val pctX = activeX / activeArray.width
+        val pctY = invertedY / activeArray.height
         val pixelX = pctX * rectWidth + rectLeft
         val pixelY = pctY * rectHeight + rectTop
 
@@ -173,7 +174,7 @@ class CalibratedCameraAnglePixelMapper(
     private fun undistort(
         x: Float,
         y: Float,
-        activeArray: Rect,
+        activeArray: ImageBounds,
         cx: Float,
         cy: Float,
         distortion: FloatArray

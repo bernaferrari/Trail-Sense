@@ -2,6 +2,7 @@ package com.kylecorry.andromeda.camera
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.kylecorry.andromeda.camera.ar.CameraCalibrationSource
 
 enum class CameraFlash { Off, On, Auto }
 
@@ -9,6 +10,8 @@ enum class CameraFlash { Off, On, Auto }
 data class CameraZoom(val ratio: Float, val minimum: Float, val maximum: Float)
 
 interface PhotoCamera {
+    /** Sensor calibration metadata, when available. */
+    val calibration: CameraCalibrationSource?
     /** Current zoom information, or null when the platform cannot report it. */
     val zoom: CameraZoom?
     /** Captures an encoded image. */

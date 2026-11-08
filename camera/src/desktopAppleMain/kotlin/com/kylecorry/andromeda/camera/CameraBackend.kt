@@ -31,6 +31,7 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
     val adapter = remember(controller) {
         controller?.let { camera ->
             object : PhotoCamera {
+                override val calibration: com.kylecorry.andromeda.camera.ar.CameraCalibrationSource? = null
                 override val zoom: CameraZoom
                     get() {
                         val ratio = camera.getZoom()

@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import java.io.ByteArrayOutputStream
+import com.kylecorry.andromeda.camera.ar.calibrationSource
 
 @Composable
 actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit) {
@@ -22,6 +23,7 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
     }
     val controller = remember(camera) {
         object : PhotoCamera {
+            override val calibration = camera.calibrationSource()
             override val zoom: CameraZoom?
                 get() = camera.zoom?.let { CameraZoom(it.ratio, it.ratioRange.start, it.ratioRange.end) }
             override suspend fun capture(): ByteArray {

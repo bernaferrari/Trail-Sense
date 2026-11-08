@@ -279,11 +279,6 @@ class Camera(
 
     override fun setTorch(isOn: Boolean) {
         camera?.cameraControl?.enableTorch(isOn)
-        imageCapture?.flashMode = if (isOn) {
-            ImageCapture.FLASH_MODE_ON
-        } else {
-            ImageCapture.FLASH_MODE_OFF
-        }
     }
 
     override fun stopFocusAndMetering() {

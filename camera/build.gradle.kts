@@ -22,6 +22,7 @@ kotlin {
             api(project(":shared"))
             api(compose.foundation)
         }
+        commonTest.dependencies { implementation(kotlin("test")) }
         val desktopAppleMain by creating {
             dependsOn(commonMain.get())
             dependencies {
