@@ -157,6 +157,13 @@ class DeviceSensors {
 
     fun satelliteStatusSensor(scope: CoroutineScope) = FlowSatelliteStatus(satelliteStatus(), scope)
 
+    /** Monitor circular geofences while location is being collected. */
+    fun geofenceTransitions(
+        fences: List<Geofence>,
+        interval: Duration = 1.seconds,
+        accuracy: SensorAccuracy = SensorAccuracy.Balanced,
+    ): Flow<GeofenceTransition> = location(interval, accuracy).geofenceTransitions(fences)
+
     fun gps(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
         FlowGPS(location(interval, accuracy), scope)
 
