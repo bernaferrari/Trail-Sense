@@ -1,5 +1,7 @@
 package com.kylecorry.sol.science.astronomy.locators
 
+import com.kylecorry.sol.science.astronomy.eclipse.lunar.LunarEclipseParameterModel
+import com.kylecorry.sol.science.astronomy.eclipse.solar.SolarEclipseParameterModel
 import com.kylecorry.sol.science.astronomy.AstroUtils
 import com.kylecorry.sol.science.astronomy.moon.MoonPhaseTimeCalculator
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
@@ -14,6 +16,14 @@ import kotlin.time.Instant
 import kotlin.time.Duration.Companion.minutes
 
 class SunModelCommonTest {
+    @Test
+    fun calculatesEclipseTimes() {
+        val solar = SolarEclipseParameterModel().getNextSolarEclipseModelParameters(Instant.parse("2024-01-01T00:00:00Z"))
+        val lunar = LunarEclipseParameterModel().getNextLunarEclipseModelParameters(Instant.parse("2022-09-01T00:00:00Z"))
+        assertTrue((solar.maximum - Instant.parse("2024-04-08T18:18:00Z")).absoluteValue < 30.minutes)
+        assertTrue((lunar.maximum - Instant.parse("2022-11-08T11:00:00Z")).absoluteValue < 30.minutes)
+    }
+
     @Test
     fun calculatesNewMoonAndStarPosition() {
         val newMoon = MoonPhaseTimeCalculator.getNewMoon(0.0)
