@@ -5,7 +5,7 @@ import com.kylecorry.sol.units.Coordinate
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import java.time.Duration
+import kotlin.time.Duration.Companion.hours
 import java.time.ZonedDateTime
 
 internal class LunitidalWaterLevelCalculatorTest {
@@ -15,7 +15,7 @@ internal class LunitidalWaterLevelCalculatorTest {
         val location = Coordinate(42.0, -72.0)
         val range = Range(0f, 12f)
         val calculator = LunitidalWaterLevelCalculator(
-            Duration.ofHours(2),
+            2.hours,
             location,
             waterLevelRange = range
         )
@@ -47,9 +47,9 @@ internal class LunitidalWaterLevelCalculatorTest {
         val location = Coordinate(42.0, -72.0)
         val range = Range(0f, 12f)
         val calculator = LunitidalWaterLevelCalculator(
-            Duration.ofHours(2),
+            2.hours,
             location,
-            lowLunitidalInterval = Duration.ofHours(8),
+            lowLunitidalInterval = 8.hours,
             waterLevelRange = range
         )
 
@@ -78,7 +78,7 @@ internal class LunitidalWaterLevelCalculatorTest {
     @Test
     fun constructorRejectsDescendingWaterLevelRange() {
         assertThrows(IllegalArgumentException::class.java) {
-            LunitidalWaterLevelCalculator(Duration.ofHours(2), waterLevelRange = Range(12f, 0f))
+            LunitidalWaterLevelCalculator(2.hours, waterLevelRange = Range(12f, 0f))
         }
     }
 }

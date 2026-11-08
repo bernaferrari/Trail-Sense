@@ -199,15 +199,15 @@ internal class OceanographyTest {
             "LUNITIDAL HARMONIC (LOCAL)" to HarmonicLunitidalWaterLevelCalculator(localLunitidalInterval.toKotlinDuration(), location),
             "LUNITIDAL HARMONIC (UTC)" to HarmonicLunitidalWaterLevelCalculator(utcLunitidalInterval.toKotlinDuration()),
             "TIDE CLOCK" to TideClockWaterLevelCalculator(Tide.high(highs.first()), TideConstituent.M2.speed),
-            "LUNITIDAL (LOCAL)" to LunitidalWaterLevelCalculator(localLunitidalInterval, location),
+            "LUNITIDAL (LOCAL)" to LunitidalWaterLevelCalculator(localLunitidalInterval.toKotlinDuration(), location),
             "LUNITIDAL (LOCAL; HIGH AND LOW)" to LunitidalWaterLevelCalculator(
-                localLunitidalInterval,
+                localLunitidalInterval.toKotlinDuration(),
                 location,
-                localLowLunitidalInterval
+                localLowLunitidalInterval.toKotlinDuration()
             ),
             "LUNITIDAL (UTC)" to LunitidalWaterLevelCalculator(
-                utcLunitidalInterval,
-                lowLunitidalInterval = utcLowLunitidalInterval
+                utcLunitidalInterval.toKotlinDuration(),
+                lowLunitidalInterval = utcLowLunitidalInterval.toKotlinDuration()
             ),
         )
 
