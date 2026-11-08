@@ -24,7 +24,6 @@ import java.time.ZonedDateTime
 import kotlin.math.absoluteValue
 
 internal object SunFacade {
-    private const val MAX_SOLAR_LONGITUDE_REFINEMENT_ITERATIONS = 100
 
     private val sun = Sun()
     private val radiation = SolarRadiationCalculator()
@@ -218,73 +217,17 @@ internal object SunFacade {
         location: Coordinate,
         sunTimesMode: SunTimesMode
     ): Range<ZonedDateTime>? {
-        if (time == null) {
-            return null
-        }
-        val yesterday = getSunEvents(time.minusDays(1), location, sunTimesMode)
-        val today = getSunEvents(time, location, sunTimesMode)
-        val tomorrow = getSunEvents(time.plusDays(1), location, sunTimesMode)
-
-        val didNotSet = yesterday.set == null || today.set == null
-        val willNotRise = today.rise == null || tomorrow.rise == null
-
-        if (didNotSet || willNotRise) {
-            return if (!isSunUp(time, location) && today.rise == null) {
-                // Sun does not set
-                Range(time.atStartOfDay(), time.atEndOfDay())
-            } else {
-                null
-            }
-        }
-
-        val lastNight = Range(yesterday.set, today.rise)
-        val tonight = Range(today.set, tomorrow.rise)
-
-        val timeUntilLastNight = Duration.between(time, lastNight.end).abs()
-        val timeUntilTonight = Duration.between(time, tonight.start).abs()
-
-
-        return if (timeUntilLastNight < timeUntilTonight) {
-            lastNight
-        } else {
-            tonight
-        }
-
+        if (time == null) return null
+        val night = SunCalculationModel.closestNight(
+            time.toInstant().toKotlinInstant(), time.zone.toKotlinTimeZone(), location, sunTimesMode
+        ) ?: return null
+        return Range(night.start.toJavaInstant().atZone(time.zone), night.end.toJavaInstant().atZone(time.zone))
     }
 
     fun getNextTimeAtSolarLongitude(longitude: Float, today: ZonedDateTime): ZonedDateTime {
-        val threshold = 1f
-        var d = today
-        for (i in 0..365) {
-            val date = today.plusDays(i.toLong())
-            val sl = getSolarLongitude(date)
-            if (deltaAngle(longitude, sl).absoluteValue < threshold) {
-                d = date
-                break
-            }
-        }
-
-        var jd = d.toUniversalTime().toJulianDay()
-        var correction: Double
-        var iterations = 0
-
-        do {
-            val ut = fromJulianDay(jd)
-            val coords = sun.getCoordinates(ut)
-            val solarLon = EclipticCoordinate.fromEquatorial(
-                coords,
-                ut.toJulianCenturies()
-            ).eclipticLongitude
-            correction = 58 * sinDegrees(longitude - solarLon)
-            jd += correction
-            iterations++
-        } while (correction.absoluteValue > 0.00001 && iterations < MAX_SOLAR_LONGITUDE_REFINEMENT_ITERATIONS)
-
-        check(correction.absoluteValue <= 0.00001) {
-            "Solar longitude refinement did not converge within $MAX_SOLAR_LONGITUDE_REFINEMENT_ITERATIONS iterations"
-        }
-
-        return fromJulianDay(jd).toLocal(today.zone)
+        return SunCalculationModel.nextAtLongitude(
+            longitude, today.toInstant().toKotlinInstant(), today.zone.toKotlinTimeZone()
+        ).toJavaInstant().atZone(today.zone)
     }
 
     fun getSolarLongitude(date: ZonedDateTime): Float {
