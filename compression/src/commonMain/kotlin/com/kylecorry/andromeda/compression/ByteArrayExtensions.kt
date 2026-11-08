@@ -12,19 +12,20 @@ fun ByteArray.toShort(): Short {
 @Suppress("EXPERIMENTAL_UNSIGNED_LITERALS")
 fun ByteArray.toInt(): Int {
     if (size != Int.SIZE_BYTES) {
-        throw IllegalStateException("Byte array does not contain a short")
+        throw IllegalStateException("Byte array does not contain an int")
     }
 
     var intValue = 0u
     for (i in 0 until Int.SIZE_BYTES) {
-        intValue = intValue or get(i).toUByte().toUInt() shl 8 * (Int.SIZE_BYTES - i)
+        intValue = intValue or (get(i).toUByte().toUInt() shl (8 * (Int.SIZE_BYTES - 1 - i)))
     }
 
     return intValue.toInt()
 }
 
 fun ByteArray.bitsToInt(numBits: Int, startingOffsetBits: Int = 0): Int? {
-    if (numBits > Int.SIZE_BITS) throw IllegalArgumentException("Cannot read more than ${Int.SIZE_BITS} bits")
+    require(numBits in 0..Int.SIZE_BITS) { "Bit count must be between 0 and ${Int.SIZE_BITS}" }
+    require(startingOffsetBits >= 0) { "Bit offset must be nonnegative" }
     var currentByteIndex = startingOffsetBits / 8
     var currentBitIndex = startingOffsetBits % 8
 
