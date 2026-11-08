@@ -84,7 +84,7 @@ class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
     }
 }
 
-private fun PixelImage.interpolateBicubic(x: Double, y: Double): Int {
+internal fun PixelImage.interpolateBicubic(x: Double, y: Double): Int {
     val left = kotlin.math.floor(x).toInt()
     val top = kotlin.math.floor(y).toInt()
     val dx = x - left
