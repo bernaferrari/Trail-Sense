@@ -16,7 +16,7 @@ data class Quaternion(val x: Float, val y: Float, val z: Float, val w: Float) {
     private val arr = floatArrayOf(x, y, z, w)
 
     fun toFloatArray(): FloatArray {
-        return arr.clone()
+        return arr.copyOf()
     }
 
     operator fun times(other: Quaternion): Quaternion {
@@ -155,7 +155,7 @@ object QuaternionMath {
         )
         val sinP = 2 * (quat[W] * quat[Y] - quat[Z] * quat[X])
         val pitch = if (sinP.absoluteValue >= 1) {
-            (Math.PI / 2).withSign(sinP.toDouble()).toFloat()
+            (kotlin.math.PI / 2).withSign(sinP.toDouble()).toFloat()
         } else {
             asin(sinP)
         }

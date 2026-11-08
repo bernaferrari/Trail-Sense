@@ -52,7 +52,7 @@ class Rotation private constructor(private val values: DoubleArray) {
      */
     fun angle(): Double {
         val trace = values[0] + values[4] + values[8]
-        return Math.toDegrees(acos(((trace - 1) / 2).coerceIn(-1.0, 1.0)))
+        return (acos(((trace - 1) / 2).coerceIn(-1.0, 1.0)) * 180.0 / kotlin.math.PI)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -79,7 +79,7 @@ class Rotation private constructor(private val values: DoubleArray) {
          */
         fun fromAxisAngle(axis: Vector3Precise, degrees: Double): Rotation {
             val n = axis.normalize()
-            val t = Math.toRadians(degrees)
+            val t = (degrees * kotlin.math.PI / 180.0)
             val c = cos(t)
             val s = sin(t)
             val k = 1 - c

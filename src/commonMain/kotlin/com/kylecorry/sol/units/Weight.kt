@@ -1,5 +1,7 @@
 package com.kylecorry.sol.units
 
+import kotlin.jvm.JvmInline
+
 import kotlin.math.absoluteValue
 
 @JvmInline

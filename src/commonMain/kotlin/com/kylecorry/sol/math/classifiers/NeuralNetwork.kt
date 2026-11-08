@@ -239,7 +239,7 @@ class NeuralNetwork(
         }
 
         private fun randomMatrix(rows: Int, columns: Int): Matrix {
-            return Matrix.create(rows, columns) { _, _ -> Math.random().toFloat() }
+            return Matrix.create(rows, columns) { _, _ -> kotlin.random.Random.nextFloat() }
         }
 
         companion object {

@@ -1,5 +1,7 @@
 package com.kylecorry.sol.units
 
+import kotlin.jvm.JvmInline
+
 @JvmInline
 value class Distance private constructor(private val measure: Measure) : Comparable<Distance> {
     val value: Float

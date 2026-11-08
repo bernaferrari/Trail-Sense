@@ -1,6 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.3.0"
-    id("java-library")
+    kotlin("multiplatform") version "2.3.0"
     id("com.vanniktech.maven.publish") version "0.37.0"
     id("dev.detekt") version "2.0.0-alpha.5"
 }
@@ -50,14 +49,39 @@ repositories {
 
 dependencies {
     detektPlugins("com.kylecorry:orion:1.1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.4")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.14.4")
-    testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.4")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.14.4")
 }
 
-tasks.test {
+kotlin {
+    jvm {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
+    }
+    iosArm64()
+    iosSimulatorArm64()
+    jvmToolchain(17)
+
+    sourceSets {
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
+        jvmMain {
+            kotlin.srcDir("src/main/kotlin")
+        }
+        jvmTest {
+            kotlin.srcDir("src/test/kotlin")
+            dependencies {
+                implementation("org.junit.jupiter:junit-jupiter-api:5.14.4")
+                implementation("org.junit.jupiter:junit-jupiter-params:5.14.4")
+                implementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
+                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.4")
+                runtimeOnly("org.junit.platform:junit-platform-launcher:1.14.4")
+            }
+        }
+    }
+}
+
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
@@ -68,32 +92,18 @@ detekt {
 }
 
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-    setSource(files("src/main/kotlin"))
+    setSource(files("src/main/kotlin", "src/commonMain/kotlin"))
     include("**/*.kt", "**/*.kts")
     exclude("**/build/**")
     exclude("**/gov/nasa/worldwind/**")
-    classpath.setFrom(sourceSets.main.get().compileClasspath, sourceSets.main.get().output)
     jvmTarget = "11"
 }
 
 tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
-    setSource(files("src/main/kotlin"))
+    setSource(files("src/main/kotlin", "src/commonMain/kotlin"))
     include("**/*.kt", "**/*.kts")
     exclude("**/build/**")
     exclude("**/gov/nasa/worldwind/**")
-    classpath.setFrom(sourceSets.main.get().compileClasspath, sourceSets.main.get().output)
     jvmTarget = "11"
 }
 
-// Setup javadocs
-tasks.withType<Javadoc> {
-    // Add the sources to the javadoc task
-    source = sourceSets.main.get().allJava
-    classpath += files(sourceSets.main.get().compileClasspath)
-    // Only include public and protected classes
-    include("**/public/**", "**/protected/**")
-}
-
-kotlin {
-    jvmToolchain(11)
-}

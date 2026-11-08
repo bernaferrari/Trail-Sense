@@ -1,5 +1,7 @@
 package com.kylecorry.sol.math
 
+import kotlin.jvm.JvmInline
+
 import com.kylecorry.sol.math.algebra.Matrix
 import kotlin.math.sqrt
 

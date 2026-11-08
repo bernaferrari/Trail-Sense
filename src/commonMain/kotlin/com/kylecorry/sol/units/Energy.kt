@@ -1,5 +1,7 @@
 package com.kylecorry.sol.units
 
+import kotlin.jvm.JvmInline
+
 @JvmInline
 value class Energy private constructor(private val measure: Measure) {
     val value: Float

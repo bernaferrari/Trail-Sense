@@ -20,7 +20,7 @@ import kotlin.math.ln
 class LogisticRegressionClassifier(
     private val input: Int,
     private val output: Int,
-    private var weights: Matrix = Matrix.create(input, output) { _, _ -> Math.random().toFloat() }
+    private var weights: Matrix = Matrix.create(input, output) { _, _ -> kotlin.random.Random.nextFloat() }
 ) : IClassifier {
 
     override fun classify(x: List<Float>): List<Float> {

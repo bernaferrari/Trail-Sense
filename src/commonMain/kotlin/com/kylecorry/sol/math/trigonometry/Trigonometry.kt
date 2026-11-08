@@ -22,19 +22,19 @@ import kotlin.math.tan
 object Trigonometry {
 
     fun toRadians(angle: Double): Double {
-        return Math.toRadians(angle)
+        return (angle * kotlin.math.PI / 180.0)
     }
 
     fun toRadians(angle: Float): Float {
-        return Math.toRadians(angle.toDouble()).toFloat()
+        return (angle.toDouble() * kotlin.math.PI / 180.0).toFloat()
     }
 
     fun toDegrees(angle: Double): Double {
-        return Math.toDegrees(angle)
+        return (angle * 180.0 / kotlin.math.PI)
     }
 
     fun toDegrees(angle: Float): Float {
-        return Math.toDegrees(angle.toDouble()).toFloat()
+        return (angle.toDouble() * 180.0 / kotlin.math.PI).toFloat()
     }
 
     fun toDegrees(degrees: Double, minutes: Double = 0.0, seconds: Double = 0.0): Double {

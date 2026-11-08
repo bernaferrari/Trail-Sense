@@ -1,17 +1,17 @@
 package com.kylecorry.sol.math.interpolation
 
 import com.kylecorry.sol.math.Vector2
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * A newton interpolator that only uses the points surrounding the x to interpolate
  * rather than the points from the beginning.
  */
+@OptIn(ExperimentalAtomicApi::class)
 class LocalNewtonInterpolator(points: List<Vector2>, private val order: Int) : Interpolator {
     private val sortedPoints = points.sortedBy { it.x }
-    private var cachedPoints = emptyList<Vector2>()
-    private var cachedInterpolator: NewtonInterpolator? = null
-
-    private val lock = Any()
+    private val cache = AtomicReference<Pair<List<Vector2>, NewtonInterpolator>?>(null)
 
     override fun interpolate(x: Float): Float {
         if (sortedPoints.isEmpty()) {
@@ -49,13 +49,12 @@ class LocalNewtonInterpolator(points: List<Vector2>, private val order: Int) : I
         x: Float,
         points: List<Vector2>
     ): Float {
-        synchronized(lock) {
-            if (points != cachedPoints || cachedInterpolator == null) {
-                cachedPoints = points.toList()
-                cachedInterpolator = NewtonInterpolator(points, order)
-            }
-
-            return cachedInterpolator?.interpolate(x) ?: 0f
+        val current = cache.load()
+        val interpolator = if (current != null && current.first == points) {
+            current.second
+        } else {
+            NewtonInterpolator(points, order).also { cache.store(points.toList() to it) }
         }
+        return interpolator.interpolate(x)
     }
 }

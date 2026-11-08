@@ -1,5 +1,7 @@
 package com.kylecorry.sol.math.algebra
 
+import kotlin.jvm.JvmInline
+
 import com.kylecorry.sol.math.Vector
 import kotlin.math.sqrt
 
@@ -55,7 +57,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
     }
 
     fun clone(): Matrix {
-        return Matrix(rawData.clone())
+        return Matrix(rawData.copyOf())
     }
 
     fun setRow(row: Int, rowData: FloatArray) {

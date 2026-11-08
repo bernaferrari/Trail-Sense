@@ -1,5 +1,7 @@
 package com.kylecorry.sol.math
 
+import kotlin.jvm.JvmInline
+
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
