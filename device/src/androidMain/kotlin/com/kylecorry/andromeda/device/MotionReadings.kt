@@ -15,6 +15,11 @@ import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
 import kotlin.time.Duration
 
+internal actual fun platformGravity(interval: Duration): Flow<Reading<Vector3>> =
+    sensorReadings(Sensor.TYPE_GRAVITY, interval, 1f)
+internal actual fun platformLinearAcceleration(interval: Duration): Flow<Reading<Vector3>> =
+    sensorReadings(Sensor.TYPE_LINEAR_ACCELERATION, interval, 1f)
+
 internal actual fun platformMagneticHeading(interval: Duration): Flow<Reading<Float>> =
     sensorEvents(Sensor.TYPE_ROTATION_VECTOR, interval).map { reading ->
         val matrix = FloatArray(9)

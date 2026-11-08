@@ -62,6 +62,14 @@ class DeviceSensors {
     fun magneticHeading(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.magneticHeading(interval, accuracy)
 
+    /** Gravity acceleration in meters per second squared. */
+    fun gravity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+        backend.gravity(interval, accuracy)
+
+    /** Acceleration excluding gravity, in meters per second squared. */
+    fun linearAcceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+        backend.linearAcceleration(interval, accuracy)
+
     /** Angular velocity in degrees per second. */
     fun angularVelocity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.angularVelocity(interval, accuracy)
@@ -115,6 +123,8 @@ class DeviceSensors {
 }
 
 internal interface DeviceBackend {
+    fun gravity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
+    fun linearAcceleration(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
     fun magneticHeading(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
     fun illuminance(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
     fun ambientTemperature(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>
