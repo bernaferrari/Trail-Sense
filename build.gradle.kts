@@ -23,6 +23,7 @@ subprojects {
     if (name in setOf(
         "speech",
         "signal",
+        "bitmaps",
         "clipboard",
         "background",
         "pdf",
