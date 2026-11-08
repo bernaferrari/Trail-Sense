@@ -19,3 +19,5 @@ The C API bindings target LiteRT 2.3.0. Only models with one fixed-size input te
 For common RGB models, `PixelImage.rgbFloat32(mean, standardDeviation)`, `rgbUint8()`, and `rgbQuantized(...)` create input tensors. `decodeFloat32Tensor` and `decodeQuantizedTensor` decode outputs, and `softmax()` converts logits to probabilities. Choose normalization and quantization parameters from the model; these helpers do not resize or reorder images.
 
 `PixelImage.resizeForModel(width, height, mode)` prepares model dimensions using stretching, aspect-preserving padding, or center cropping. It uses the shared bitmap module and supports nearest, bilinear, and bicubic interpolation.
+
+For a standard single-input RGB model, `rgbImageClassifier(modelPath, RgbModelInput(...), outputEncoding)` combines resizing, normalization, tensor conversion, inference, and output decoding. Set the tensor formats and quantization values to match the model; use `imageClassifier` when its input or output needs custom handling.
