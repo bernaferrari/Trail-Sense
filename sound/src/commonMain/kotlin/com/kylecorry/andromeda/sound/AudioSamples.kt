@@ -49,3 +49,33 @@ fun amplitudeToDecibels(
     val high = referenceSoundPressure * 10f.pow(maximum / 20f)
     return 20f * log10((low + amplitude * (high - low)) / referenceSoundPressure)
 }
+
+/** Wraps little-endian PCM16 samples in a WAV container. */
+fun pcm16Wav(pcm: ByteArray, sampleRate: Int, channels: Int = 1): ByteArray {
+    require(sampleRate > 0 && channels in 1..32767 && pcm.size % (channels * 2) == 0)
+    require(pcm.size <= Int.MAX_VALUE - 44 && sampleRate.toLong() * channels * 2 <= Int.MAX_VALUE)
+    val result = ByteArray(44 + pcm.size)
+    fun text(offset: Int, value: String) = value.forEachIndexed { index, char -> result[offset + index] = char.code.toByte() }
+    fun write16(offset: Int, value: Int) {
+        result[offset] = value.toByte()
+        result[offset + 1] = (value ushr 8).toByte()
+    }
+    fun write32(offset: Int, value: Int) {
+        repeat(4) { result[offset + it] = (value ushr (it * 8)).toByte() }
+    }
+    text(0, "RIFF")
+    write32(4, 36 + pcm.size)
+    text(8, "WAVE")
+    text(12, "fmt ")
+    write32(16, 16)
+    write16(20, 1)
+    write16(22, channels)
+    write32(24, sampleRate)
+    write32(28, sampleRate * channels * 2)
+    write16(32, channels * 2)
+    write16(34, 16)
+    text(36, "data")
+    write32(40, pcm.size)
+    pcm.copyInto(result, 44)
+    return result
+}
