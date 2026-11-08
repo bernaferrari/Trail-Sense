@@ -28,6 +28,7 @@ kotlin {
         }
         commonMain.dependencies {
             api(project(":storage"))
+            api("io.github.vinceglb:filekit-core:0.16.0")
             implementation("io.ktor:ktor-http:3.6.1")
             api("no.synth:kmp-zip-okio:2.1.0")
         }
