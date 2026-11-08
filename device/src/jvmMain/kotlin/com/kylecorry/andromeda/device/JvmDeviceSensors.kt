@@ -6,5 +6,5 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlin.time.Duration
 
 internal actual fun createDeviceBackend(): DeviceBackend = object : DeviceBackend {
-    override fun pressure(interval: Duration): Flow<Reading<Float>> = emptyFlow()
+    override fun pressure(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>> = emptyFlow()
 }

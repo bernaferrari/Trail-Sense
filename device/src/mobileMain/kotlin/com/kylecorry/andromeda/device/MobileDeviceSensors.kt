@@ -17,7 +17,14 @@ internal class MobileDeviceBackend : DeviceBackend {
     val positioning by lazy { createPositioningPlugin() }
     val system by lazy { createSystemPlugin() }
 
-    override fun pressure(interval: Duration) = environment.barometer(SensorConfig(intervalMs = interval.inWholeMilliseconds)).map { reading ->
+    override fun pressure(interval: Duration, accuracy: SensorAccuracy) = environment.barometer(SensorConfig(
+        intervalMs = interval.inWholeMilliseconds,
+        accuracy = when (accuracy) {
+            SensorAccuracy.PowerSave -> SensorConfig.Accuracy.POWER_SAVE
+            SensorAccuracy.Balanced -> SensorConfig.Accuracy.BALANCED
+            SensorAccuracy.HighPrecision -> SensorConfig.Accuracy.HIGH_PRECISION
+        }
+    )).map { reading ->
         val factor = if (reading.platform == PlatformType.iOS) 10f else 1f
         Reading(reading.data.pressure * factor, Instant.fromEpochMilliseconds(reading.timestamp))
     }
