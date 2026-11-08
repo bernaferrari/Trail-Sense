@@ -1,5 +1,7 @@
 plugins {
     kotlin("multiplatform")
+    id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.android.kotlin.multiplatform.library")
     id("com.vanniktech.maven.publish")
 }
@@ -15,13 +17,13 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { implementation("org.jetbrains:markdown:0.7.18") }
-        androidMain.dependencies {
-            implementation(libs.androidx.core.ktx)
-            implementation(libs.markwon)
-            implementation(libs.markwon.linkify)
-            implementation(libs.markwon.image)
-            implementation(libs.markwon.simple)
+        commonMain.dependencies {
+            implementation("org.jetbrains:markdown:0.7.18")
+            api("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.2")
+            api("com.mikepenz:multiplatform-markdown-renderer-coil3:0.39.2")
+            implementation("io.coil-kt.coil3:coil-compose:3.6.3")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.6.3")
+            api(compose.foundation)
         }
     }
 }
