@@ -43,6 +43,7 @@ internal class MobileDeviceBackend : DeviceBackend {
             details.fullChargeMilliampHours, details.chargingMethod), Instant.fromEpochMilliseconds(reading.timestamp))
     }
 
+    override fun attitude(interval: Duration, accuracy: SensorAccuracy) = platformAttitude(interval)
     override fun gravity(interval: Duration, accuracy: SensorAccuracy) = platformGravity(interval)
     override fun linearAcceleration(interval: Duration, accuracy: SensorAccuracy) = platformLinearAcceleration(interval)
     override fun magneticHeading(interval: Duration, accuracy: SensorAccuracy) = platformMagneticHeading(interval)
@@ -110,6 +111,7 @@ internal data class BatteryDetails(
 internal expect fun platformBatteryDetails(percent: Int?): BatteryDetails
 
 internal expect fun platformMagneticHeading(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>
+internal expect fun platformAttitude(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<DeviceAttitude>>
 
 internal expect fun platformGravity(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
 internal expect fun platformLinearAcceleration(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Vector3>>

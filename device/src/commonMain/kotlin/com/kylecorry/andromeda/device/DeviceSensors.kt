@@ -4,6 +4,7 @@ import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
 import com.kylecorry.sol.math.Vector3
+import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.CoroutineScope
@@ -12,6 +13,14 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 enum class SensorAccuracy { PowerSave, Balanced, HighPrecision }
+
+/** Device-to-world orientation in the magnetic east–north–up frame. */
+data class DeviceAttitude(val orientation: Quaternion, val headingAccuracyDegrees: Float? = null)
+
+internal fun northWestUpToEastNorthUp(value: Quaternion): Quaternion {
+    val c = kotlin.math.sqrt(0.5f)
+    return Quaternion(c * (value.x - value.y), c * (value.x + value.y), c * (value.z + value.w), c * (value.w - value.z))
+}
 
 /** Altitude uses the platform location datum; mslAltitudeMeters is mean sea level where available. */
 data class LocationReading(
@@ -61,6 +70,13 @@ class DeviceSensors {
     /** Magnetic heading in degrees clockwise from magnetic north. */
     fun magneticHeading(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.magneticHeading(interval, accuracy)
+
+    /** Fused device attitude in the magnetic east–north–up frame, where available. */
+    fun attitude(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<DeviceAttitude>> =
+        backend.attitude(interval, accuracy)
+
+    fun orientationSensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+        FlowOrientationSensor(attitude(interval, accuracy), scope)
 
     /** Gravity acceleration in meters per second squared. */
     fun gravity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
@@ -123,6 +139,7 @@ class DeviceSensors {
 }
 
 internal interface DeviceBackend {
+    fun attitude(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<DeviceAttitude>>
     fun gravity(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
     fun linearAcceleration(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Vector3>>
     fun magneticHeading(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<Float>>

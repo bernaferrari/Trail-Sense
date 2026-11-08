@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlin.time.Duration
 
 internal actual fun createDeviceBackend(): DeviceBackend = object : DeviceBackend {
+    override fun attitude(interval: Duration, accuracy: SensorAccuracy): Flow<Reading<DeviceAttitude>> = emptyFlow()
     override fun battery(): Flow<Reading<BatteryReading>> = flow {
         val hardware = SystemInfo().hardware
         while (currentCoroutineContext().isActive) {

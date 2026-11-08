@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import com.ksensor.core.context.KSensorContext
 import com.kylecorry.sol.math.Vector3
+import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +20,15 @@ internal actual fun platformGravity(interval: Duration): Flow<Reading<Vector3>> 
     sensorReadings(Sensor.TYPE_GRAVITY, interval, 1f)
 internal actual fun platformLinearAcceleration(interval: Duration): Flow<Reading<Vector3>> =
     sensorReadings(Sensor.TYPE_LINEAR_ACCELERATION, interval, 1f)
+
+internal actual fun platformAttitude(interval: Duration): Flow<Reading<DeviceAttitude>> =
+    sensorEvents(Sensor.TYPE_ROTATION_VECTOR, interval).map { reading ->
+        val quaternion = FloatArray(4)
+        SensorManager.getQuaternionFromVector(quaternion, reading.value)
+        val accuracy = reading.value.getOrNull(4)?.takeIf { it.isFinite() && it >= 0f }
+            ?.let { it * (180f / kotlin.math.PI.toFloat()) }
+        Reading(DeviceAttitude(Quaternion(quaternion[1], quaternion[2], quaternion[3], quaternion[0]), accuracy), reading.time)
+    }
 
 internal actual fun platformMagneticHeading(interval: Duration): Flow<Reading<Float>> =
     sensorEvents(Sensor.TYPE_ROTATION_VECTOR, interval).map { reading ->
