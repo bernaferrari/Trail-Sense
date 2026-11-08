@@ -16,7 +16,11 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")); api(project(":device")) }
+        commonMain.dependencies {
+            api("com.kylecorry:sol:19.4.0")
+            api(project(":shared"))
+            api(project(":device"))
+        }
         androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx) }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")

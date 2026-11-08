@@ -12,7 +12,7 @@ import okio.use
 class CrashReportStore(
     private val path: Path,
     private val generator: BugReportGenerator = StackTraceReport,
-    private val fileSystem: FileSystem = FileSystem.SYSTEM,
+    private val fileSystem: FileSystem = defaultFileSystem(),
 ) {
     private val lock = SynchronizedObject()
     private val temporaryPath = path.parent?.resolve("${path.name}.pending") ?: "${path.name}.pending".toPath()

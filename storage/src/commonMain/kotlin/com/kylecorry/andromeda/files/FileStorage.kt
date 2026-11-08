@@ -8,7 +8,7 @@ import okio.buffer
 import okio.use
 
 /** A path-based file store using the platform filesystem or an injected filesystem. */
-class FileStorage(val root: Path, val fileSystem: FileSystem = FileSystem.SYSTEM) {
+class FileStorage(val root: Path, val fileSystem: FileSystem = defaultFileSystem()) {
     fun exists(path: String): Boolean = fileSystem.exists(root.resolve(path))
     fun metadata(path: String) = fileSystem.metadataOrNull(root.resolve(path))
     fun createFile(path: String) {

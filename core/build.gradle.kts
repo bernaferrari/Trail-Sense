@@ -20,7 +20,11 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")); implementation("io.ktor:ktor-http:3.6.1") }
+        commonMain.dependencies {
+            api("com.kylecorry:sol:19.4.0")
+            api(project(":shared"))
+            implementation("io.ktor:ktor-http:3.6.1")
+        }
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
             implementation(libs.kotlinx.coroutines.android)

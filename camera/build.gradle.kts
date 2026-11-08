@@ -19,6 +19,7 @@ kotlin {
     applyDefaultHierarchyTemplate()
     sourceSets {
         commonMain.dependencies {
+            api("com.kylecorry:sol:19.4.0")
             api(project(":shared"))
             api(compose.foundation)
         }

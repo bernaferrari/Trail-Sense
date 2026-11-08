@@ -15,7 +15,10 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies {
+            api("com.kylecorry:sol:19.4.0")
+            api(project(":shared"))
+        }
         commonTest.dependencies { implementation(kotlin("test")) }
     }
 }

@@ -15,7 +15,12 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":device")); api(project(":storage")); implementation("org.jetbrains.kotlinx:atomicfu:0.31.0") }
+        commonMain.dependencies {
+            api("com.kylecorry:sol:19.4.0")
+            api(project(":device"))
+            api(project(":storage"))
+            implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
+        }
         commonTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies { implementation(project(":core")); implementation(project(":permissions")); implementation(project(":preferences")); implementation(libs.androidx.core.ktx) }
     }

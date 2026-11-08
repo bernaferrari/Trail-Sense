@@ -20,6 +20,7 @@ kotlin {
         commonTest.dependencies { implementation(kotlin("test")) }
         jvmMain.dependencies { implementation("com.github.oshi:oshi-core:6.11.1") }
         commonMain.dependencies {
+            api("com.kylecorry:sol:19.4.0")
             api(project(":shared"))
             implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
             api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")

@@ -16,6 +16,8 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets.commonMain.dependencies {
+        api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+        api("com.kylecorry:sol:19.4.0")
         api(project(":shared"))
         api("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
         api("com.squareup.okio:okio:3.18.2")
