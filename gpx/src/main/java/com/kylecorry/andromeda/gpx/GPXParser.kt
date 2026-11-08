@@ -7,6 +7,8 @@ import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.luna.text.toLongCompat
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.ui.Colors
+import com.kylecorry.andromeda.xml.parse
+import com.kylecorry.andromeda.xml.write
 import com.kylecorry.andromeda.xml.XMLConvert
 import com.kylecorry.andromeda.xml.XMLNode
 import com.kylecorry.sol.units.Coordinate
