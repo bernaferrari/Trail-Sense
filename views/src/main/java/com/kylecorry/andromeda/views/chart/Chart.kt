@@ -21,7 +21,7 @@ import com.kylecorry.andromeda.views.chart.data.ChartLayer
 import com.kylecorry.andromeda.views.chart.label.ChartLabelFormatter
 import com.kylecorry.andromeda.views.chart.label.NumberChartLabelFormatter
 import com.kylecorry.sol.math.interpolation.Interpolation
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
