@@ -4,8 +4,9 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * A cache which stores values based on their location
@@ -19,7 +20,7 @@ class GeospatialCache<T>(
     private val size: Int? = null,
     private val cacheDuration: Duration? = null,
     private val removalStrategy: RemovalStrategy = RemovalStrategy.Furthest,
-    private val timeProvider: () -> Instant = { Instant.now() }
+    private val timeProvider: () -> Instant = { Clock.System.now() }
 ) {
 
     private val values: MutableMap<Coordinate, T> = mutableMapOf()
@@ -165,6 +166,7 @@ class GeospatialCache<T>(
         valuesToRemove.forEach {
             values.remove(it)
             lastAccessed.remove(it)
+            cachedAt.remove(it)
         }
     }
 
@@ -181,7 +183,7 @@ class GeospatialCache<T>(
             return false
         }
         val cachedAtTime = cachedAt[key] ?: return false
-        return Duration.between(cachedAtTime, timeProvider()) > cacheDuration
+        return timeProvider() - cachedAtTime > cacheDuration
     }
 
     enum class RemovalStrategy {

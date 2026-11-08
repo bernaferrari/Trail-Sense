@@ -6,8 +6,9 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class GeospatialCacheTest {
 
@@ -81,10 +82,10 @@ class GeospatialCacheTest {
 
     @Test
     fun getWithExpiration() = runBlocking {
-        var time = Instant.ofEpochMilli(0)
+        var time = Instant.fromEpochMilliseconds(0)
         val cache = GeospatialCache<Int>(
             Distance.meters(1000f),
-            cacheDuration = Duration.ofSeconds(1),
+            cacheDuration = 1.seconds,
             timeProvider = { time })
 
         // Put some values in the cache
@@ -94,24 +95,24 @@ class GeospatialCacheTest {
         assertEquals(0, cache.get(Coordinate(0.0, 0.0)))
 
         // Enter a second value
-        time += Duration.ofMillis(10)
+        time += 10.milliseconds
         cache.put(Coordinate(1.0, 1.0), 1)
 
         // Can't get the value after it expires
-        time += Duration.ofMillis(991)
+        time += 991.milliseconds
         assertNull(cache.get(Coordinate(0.0, 0.0)))
 
         // But can get the other value
         assertEquals(1, cache.get(Coordinate(1.0, 1.0)))
 
         // Can't get the value after it expires
-        time += Duration.ofMillis(10)
+        time += 10.milliseconds
         assertNull(cache.get(Coordinate(1.0, 1.0)))
     }
 
     @Test
     fun removesTheLastRecentlyUsedWhenOutOfSpace() = runBlocking {
-        var time = Instant.ofEpochMilli(0)
+        var time = Instant.fromEpochMilliseconds(0)
         val cache = GeospatialCache<Int>(
             Distance.meters(1000f),
             size = 3,
@@ -121,15 +122,15 @@ class GeospatialCacheTest {
 
         // Put some values in the cache
         cache.put(Coordinate(0.0, 0.0), 0)
-        time += Duration.ofMillis(1)
+        time += 1.milliseconds
         cache.put(Coordinate(1.0, 0.0), 1)
-        time += Duration.ofMillis(1)
+        time += 1.milliseconds
         cache.put(Coordinate(2.0, 0.0), 2)
 
         // Access the first value before entering the fourth
-        time += Duration.ofMillis(1)
+        time += 1.milliseconds
         cache.get(Coordinate(0.0, 0.0))
-        time += Duration.ofMillis(1)
+        time += 1.milliseconds
         cache.put(Coordinate(3.0, 0.0), 3)
 
         // Get the values
