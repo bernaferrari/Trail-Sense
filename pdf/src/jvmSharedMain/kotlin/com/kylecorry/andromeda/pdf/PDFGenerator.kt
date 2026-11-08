@@ -10,7 +10,7 @@ internal class PDFGenerator {
         val sortedObjects = objects.sortedBy { it.id }
         val writer = out.bufferedWriter()
         val xref = mutableListOf<Long>()
-        val root = sortedObjects.getByProperty("/Type", name("/Catalog")).first().reference
+        val root = sortedObjects.getByProperty("/Type", PDFValue.PDFName("/Catalog")).first().reference
         var size = 0L
         size += append(writer, "%PDF-1.3\n")
         writer.flush()

@@ -9,7 +9,7 @@ import java.io.OutputStream
 class PDFSerializer(private val ignoreStreams: Boolean = false) : ISerializer<List<PDFValue.PDFObject>> {
     override fun serialize(obj: List<PDFValue.PDFObject>, stream: OutputStream) {
         try {
-            PdfConvert.toPDF(obj, stream)
+            PDFGenerator().toPDF(obj, stream)
         } catch (e: Exception) {
             throw SerializationException(e.message ?: "Unknown error", e)
         }
@@ -17,7 +17,7 @@ class PDFSerializer(private val ignoreStreams: Boolean = false) : ISerializer<Li
 
     override fun deserialize(stream: InputStream): List<PDFValue.PDFObject> {
         return try {
-            PdfConvert.fromPDF(stream, ignoreStreams)
+            PDFParser().parse(stream, ignoreStreams)
         } catch (e: Exception) {
             throw DeserializationException(e.message ?: "Unknown error", e)
         }

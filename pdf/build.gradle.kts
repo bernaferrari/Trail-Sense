@@ -16,9 +16,16 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     jvmToolchain(17)
+    applyDefaultHierarchyTemplate()
     sourceSets {
+        val jvmSharedMain by creating {
+            dependsOn(commonMain.get())
+            dependencies { api(libs.luna); implementation(project(":wkt")); implementation(project(":compression")) }
+        }
+        jvmMain { dependsOn(jvmSharedMain) }
+        androidMain { dependsOn(jvmSharedMain) }
         commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(project(":wkt")); implementation(project(":compression")); implementation(libs.androidx.core.ktx) }
+        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx) }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
             dependencies { implementation(libs.junit); implementation(libs.androidx.junit); implementation(libs.androidx.espresso.core) }
