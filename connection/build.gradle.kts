@@ -17,8 +17,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":shared"))
+            implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
             api("com.juul.kable:kable-core:0.45.0")
         }
+        jvmTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies { implementation(project(":core")); implementation(project(":permissions")); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.core.ktx) }
     }
 }
