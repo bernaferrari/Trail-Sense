@@ -1,0 +1,325 @@
+package com.kylecorry.sol.science.astronomy.locators
+
+import com.kylecorry.sol.math.algebra.Algebra.polynomial
+import com.kylecorry.sol.math.arithmetic.Arithmetic
+import com.kylecorry.sol.math.trigonometry.Trigonometry
+import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
+import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
+import com.kylecorry.sol.science.astronomy.corrections.EclipticObliquity
+import com.kylecorry.sol.science.astronomy.corrections.LongitudinalNutation
+import com.kylecorry.sol.science.astronomy.corrections.TerrestrialTime
+import com.kylecorry.sol.science.astronomy.units.EclipticCoordinate
+import com.kylecorry.sol.science.astronomy.units.EquatorialCoordinate
+import com.kylecorry.sol.science.astronomy.units.JulianDay
+import com.kylecorry.sol.units.Distance
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.math.absoluteValue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
+
+internal class MoonPositionModel {
+    private val sun = SunModel()
+
+    fun getCoordinates(ut: Instant): EquatorialCoordinate {
+        val delta = TerrestrialTime.getDeltaT(ut.toLocalDateTime(TimeZone.UTC).year)
+        val tt = ut + (delta * 1000).toLong().milliseconds
+        val julianCenturiesSinceJ2000 = JulianDay.centuries(tt)
+
+        val meanLongitude = getMeanLongitude(julianCenturiesSinceJ2000)
+        val meanElongation = getMeanElongation(tt)
+        val sunMeanAnomaly = sun.getMeanAnomaly(tt)
+        val moonMeanAnomaly = getMeanAnomaly(tt)
+        val argumentOfLatitude = getArgumentOfLatitude(tt)
+
+        val adjustmentVenus = Trigonometry.normalizeAngle(119.75 + 131.849 * julianCenturiesSinceJ2000)
+        val adjustmentJupiter = Trigonometry.normalizeAngle(53.09 + 479264.29 * julianCenturiesSinceJ2000)
+        // The astronomical algorithms book does not specify what the 3rd adjustment is from
+        val adjustment3 = Trigonometry.normalizeAngle(313.45 + 481266.484 * julianCenturiesSinceJ2000)
+        val eccentricity = getEccentricity(julianCenturiesSinceJ2000)
+
+        var moonLongitude = getTableSum(
+            table47a(),
+            eccentricity,
+            meanElongation,
+            sunMeanAnomaly,
+            moonMeanAnomaly,
+            argumentOfLatitude
+        )
+        moonLongitude += 3958 * sinDegrees(adjustmentVenus) +
+                1962 * sinDegrees(meanLongitude - argumentOfLatitude) +
+                318 * sinDegrees(adjustmentJupiter)
+
+        var moonLatitude = getTableSum(
+            table47b(),
+            eccentricity,
+            meanElongation,
+            sunMeanAnomaly,
+            moonMeanAnomaly,
+            argumentOfLatitude
+        )
+
+        moonLatitude += -2235 * sinDegrees(meanLongitude) +
+                382 * sinDegrees(adjustment3) +
+                175 * sinDegrees(adjustmentVenus - argumentOfLatitude) +
+                175 * sinDegrees(adjustmentVenus + argumentOfLatitude) +
+                127 * sinDegrees(meanLongitude - moonMeanAnomaly) -
+                115 * sinDegrees(meanLongitude + moonMeanAnomaly)
+
+        val apparentLongitude = meanLongitude + moonLongitude / 1000000.0 +
+            LongitudinalNutation.getNutationInLongitude(JulianDay.centuries(tt))
+        val eclipticLatitude = moonLatitude / 1000000.0
+        val eclipticObliquity = EclipticObliquity.getTrueObliquityOfEcliptic(JulianDay.centuries(tt))
+
+        return EclipticCoordinate(eclipticLatitude, apparentLongitude).toEquatorial(
+            eclipticObliquity
+        )
+    }
+
+    @Suppress("LongParameterList")
+    private fun getTableSum(
+        table: Array<IntArray>,
+        eccentricity: Double,
+        meanElongation: Double,
+        sunMeanAnomaly: Double,
+        moonMeanAnomaly: Double,
+        argumentOfLatitude: Double
+    ): Double {
+        val eccentricitySquared = Arithmetic.square(eccentricity)
+        var sum = 0.0
+        for (row in table) {
+            val eTerm = when (row[1].absoluteValue) {
+                1 -> eccentricity
+                2 -> eccentricitySquared
+                else -> 1.0
+            }
+            sum += row[4] * eTerm * sinDegrees(
+                row[0] * meanElongation +
+                        row[1] * sunMeanAnomaly +
+                        row[2] * moonMeanAnomaly +
+                        row[3] * argumentOfLatitude
+            )
+        }
+        return sum
+    }
+
+    private fun getMeanLongitude(julianCenturiesSinceJ2000: Double): Double {
+        return Trigonometry.normalizeAngle(
+            polynomial(
+                julianCenturiesSinceJ2000,
+                218.3164477,
+                481267.88123421,
+                -0.0015786,
+                1 / 538841.0,
+                -1 / 65194000.0
+            )
+        )
+    }
+
+    fun getDistance(ut: Instant): Distance {
+        val delta = TerrestrialTime.getDeltaT(ut.toLocalDateTime(TimeZone.UTC).year)
+        val tt = ut + (delta * 1000).toLong().milliseconds
+        val julianCenturiesSinceJ2000 = JulianDay.centuries(tt)
+        val meanElongation = getMeanElongation(tt)
+        val argumentOfLatitude = getArgumentOfLatitude(tt)
+        val sunMeanAnomaly = sun.getMeanAnomaly(tt)
+        val moonMeanAnomaly = getMeanAnomaly(tt)
+        val eccentricity = polynomial(julianCenturiesSinceJ2000, 1.0, -0.002516, -0.0000075)
+        val eccentricitySquared = Arithmetic.square(eccentricity)
+        val t47a = table47a()
+        var distance = 0.0
+        for (row in t47a) {
+            val eTerm = when (row[1].absoluteValue) {
+                1 -> eccentricity
+                2 -> eccentricitySquared
+                else -> 1.0
+            }
+            distance += row[5] * eTerm * cosDegrees(
+                row[0] * meanElongation +
+                        row[1] * sunMeanAnomaly +
+                        row[2] * moonMeanAnomaly +
+                        row[3] * argumentOfLatitude
+            )
+        }
+        val distanceKm = 385000.56 + distance / 1000
+        return Distance.kilometers(distanceKm.toFloat())
+    }
+
+    fun getMeanAnomaly(ut: Instant): Double {
+        val julianCenturiesSinceJ2000 = JulianDay.centuries(ut)
+        return Trigonometry.normalizeAngle(
+            polynomial(
+                julianCenturiesSinceJ2000,
+                134.9633964,
+                477198.8675055,
+                0.0087414,
+                1 / 69699.0,
+                -1 / 14712000.0
+            )
+        )
+    }
+
+    fun getEccentricity(julianCenturiesSinceJ2000: Double): Double {
+        return polynomial(julianCenturiesSinceJ2000, 1.0, -0.002516, -0.0000074)
+    }
+
+    fun getMeanElongation(ut: Instant): Double {
+        val julianCenturiesSinceJ2000 = JulianDay.centuries(ut)
+        return Trigonometry.normalizeAngle(
+            polynomial(
+                julianCenturiesSinceJ2000,
+                297.8501921,
+                445267.1114034,
+                -0.0018819,
+                1 / 545868.0,
+                -1 / 113065000.0
+            )
+        )
+    }
+
+    private fun getArgumentOfLatitude(ut: Instant): Double {
+        val julianCenturiesSinceJ2000 = JulianDay.centuries(ut)
+        return Trigonometry.normalizeAngle(
+            polynomial(
+                julianCenturiesSinceJ2000,
+                93.2720950,
+                483202.0175233,
+                -0.0036539,
+                -1 / 3526000.0,
+                1 / 863310000.0
+            )
+        )
+    }
+
+    @Suppress("LongMethod")
+    private fun table47a(): Array<IntArray> {
+        return arrayOf(
+            intArrayOf(0, 0, 1, 0, 6288774, -20905355),
+            intArrayOf(2, 0, -1, 0, 1274027, -3699111),
+            intArrayOf(2, 0, 0, 0, 658314, -2955968),
+            intArrayOf(0, 0, 2, 0, 213618, -569925),
+            intArrayOf(0, 1, 0, 0, -185116, 48888),
+            intArrayOf(0, 0, 0, 2, -114332, -3149),
+            intArrayOf(2, 0, -2, 0, 58793, 246158),
+            intArrayOf(2, -1, -1, 0, 57066, -152138),
+            intArrayOf(2, 0, 1, 0, 53322, -170733),
+            intArrayOf(2, -1, 0, 0, 45758, -204586),
+            intArrayOf(0, 1, -1, 0, -40923, -129620),
+            intArrayOf(1, 0, 0, 0, -34720, 108743),
+            intArrayOf(0, 1, 1, 0, -30383, 104755),
+            intArrayOf(2, 0, 0, -2, 15327, 10321),
+            intArrayOf(0, 0, 1, 2, -12528, 0),
+            intArrayOf(0, 0, 1, -2, 10980, 79661),
+            intArrayOf(4, 0, -1, 0, 10675, -34782),
+            intArrayOf(0, 0, 3, 0, 10034, -23210),
+            intArrayOf(4, 0, -2, 0, 8548, -21636),
+            intArrayOf(2, 1, -1, 0, -7888, 24208),
+            intArrayOf(2, 1, 0, 0, -6766, 30824),
+            intArrayOf(1, 0, -1, 0, -5163, -8379),
+            intArrayOf(1, 1, 0, 0, 4987, -16675),
+            intArrayOf(2, -1, 1, 0, 4036, -12831),
+            intArrayOf(2, 0, 2, 0, 3994, -10445),
+            intArrayOf(4, 0, 0, 0, 3861, -11650),
+            intArrayOf(2, 0, -3, 0, 3665, 14403),
+            intArrayOf(0, 1, -2, 0, -2689, -7003),
+            intArrayOf(2, 0, -1, 2, -2602, 0),
+            intArrayOf(2, -1, -2, 0, 2390, 10056),
+            intArrayOf(1, 0, 1, 0, -2348, 6322),
+            intArrayOf(2, -2, 0, 0, 2236, -9884),
+            intArrayOf(0, 1, 2, 0, -2120, 5751),
+            intArrayOf(0, 2, 0, 0, -2069, 0),
+            intArrayOf(2, -2, -1, 0, 2048, -4950),
+            intArrayOf(2, 0, 1, -2, -1773, 4130),
+            intArrayOf(2, 0, 0, 2, -1595, 0),
+            intArrayOf(4, -1, -1, 0, 1215, -3958),
+            intArrayOf(0, 0, 2, 2, -1110, 0),
+            intArrayOf(3, 0, -1, 0, -892, 3258),
+            intArrayOf(2, 1, 1, 0, -810, 2616),
+            intArrayOf(4, -1, -2, 0, 759, -1897),
+            intArrayOf(0, 2, -1, 0, -713, -2117),
+            intArrayOf(2, 2, -1, 0, -700, 2354),
+            intArrayOf(2, 1, -2, 0, 691, 0),
+            intArrayOf(2, -1, 0, -2, 596, 0),
+            intArrayOf(4, 0, 1, 0, 549, -1423),
+            intArrayOf(0, 0, 4, 0, 537, -1117),
+            intArrayOf(4, -1, 0, 0, 520, -1571),
+            intArrayOf(1, 0, -2, 0, -487, -1739),
+            intArrayOf(2, 1, 0, -2, -399, 0),
+            intArrayOf(0, 0, 2, -2, -381, -4421),
+            intArrayOf(1, 1, 1, 0, 351, 0),
+            intArrayOf(3, 0, -2, 0, -340, 0),
+            intArrayOf(4, 0, -3, 0, 330, 0),
+            intArrayOf(2, -1, 2, 0, 327, 0),
+            intArrayOf(0, 2, 1, 0, -323, 1165),
+            intArrayOf(1, 1, -1, 0, 299, 0),
+            intArrayOf(2, 0, 3, 0, 294, 0),
+            intArrayOf(2, 0, -1, -2, 0, 8752)
+        )
+    }
+
+    @Suppress("LongMethod")
+    private fun table47b(): Array<IntArray> {
+        return arrayOf(
+            intArrayOf(0, 0, 0, 1, 5128122),
+            intArrayOf(0, 0, 1, 1, 280602),
+            intArrayOf(0, 0, 1, -1, 277693),
+            intArrayOf(2, 0, 0, -1, 173237),
+            intArrayOf(2, 0, -1, 1, 55413),
+            intArrayOf(2, 0, -1, -1, 46271),
+            intArrayOf(2, 0, 0, 1, 32573),
+            intArrayOf(0, 0, 2, 1, 17198),
+            intArrayOf(2, 0, 1, -1, 9266),
+            intArrayOf(0, 0, 2, -1, 8822),
+            intArrayOf(2, -1, 0, -1, 8216),
+            intArrayOf(2, 0, -2, -1, 4324),
+            intArrayOf(2, 0, 1, 1, 4200),
+            intArrayOf(2, 1, 0, -1, -3359),
+            intArrayOf(2, -1, -1, 1, 2463),
+            intArrayOf(2, -1, 0, 1, 2211),
+            intArrayOf(2, -1, -1, -1, 2065),
+            intArrayOf(0, 1, -1, -1, -1870),
+            intArrayOf(4, 0, -1, -1, 1828),
+            intArrayOf(0, 1, 0, 1, -1794),
+            intArrayOf(0, 0, 0, 3, -1749),
+            intArrayOf(0, 1, -1, 1, -1565),
+            intArrayOf(1, 0, 0, 1, -1491),
+            intArrayOf(0, 1, 1, 1, -1475),
+            intArrayOf(0, 1, 1, -1, -1410),
+            intArrayOf(0, 1, 0, -1, -1344),
+            intArrayOf(1, 0, 0, -1, -1335),
+            intArrayOf(0, 0, 3, 1, 1107),
+            intArrayOf(4, 0, 0, -1, 1021),
+            intArrayOf(4, 0, -1, 1, 833),
+            intArrayOf(0, 0, 1, -3, 777),
+            intArrayOf(4, 0, -2, 1, 671),
+            intArrayOf(2, 0, 0, -3, 607),
+            intArrayOf(2, 0, 2, -1, 596),
+            intArrayOf(2, -1, 1, -1, 491),
+            intArrayOf(2, 0, -2, 1, -451),
+            intArrayOf(0, 0, 3, -1, 439),
+            intArrayOf(2, 0, 2, 1, 422),
+            intArrayOf(2, 0, -3, -1, 421),
+            intArrayOf(2, 1, -1, 1, -366),
+            intArrayOf(2, 1, 0, 1, -351),
+            intArrayOf(4, 0, 0, 1, 331),
+            intArrayOf(2, -1, 1, 1, 315),
+            intArrayOf(2, -2, 0, -1, 302),
+            intArrayOf(0, 0, 1, 3, -283),
+            intArrayOf(2, 1, 1, -1, -229),
+            intArrayOf(1, 1, 0, -1, 223),
+            intArrayOf(1, 1, 0, 1, 223),
+            intArrayOf(0, 1, -2, -1, -220),
+            intArrayOf(2, 1, -1, -1, -220),
+            intArrayOf(1, 0, 1, 1, -185),
+            intArrayOf(2, -1, -2, -1, 181),
+            intArrayOf(0, 1, 2, 1, -177),
+            intArrayOf(4, 0, -2, -1, 176),
+            intArrayOf(4, -1, -1, -1, 166),
+            intArrayOf(1, 0, 1, -1, -164),
+            intArrayOf(4, 0, 1, -1, 132),
+            intArrayOf(1, 0, -1, -1, -119),
+            intArrayOf(4, -1, 0, -1, 115),
+            intArrayOf(2, -2, 0, 1, 107)
+        )
+    }
+}

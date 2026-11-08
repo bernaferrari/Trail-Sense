@@ -1,153 +1,16 @@
 package com.kylecorry.sol.science.astronomy.locators
 
-import com.kylecorry.sol.math.MathExtensions.toDegrees
-import com.kylecorry.sol.math.arithmetic.Arithmetic.square
-import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
-import com.kylecorry.sol.math.trigonometry.Trigonometry.normalizeAngle
-import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
-import com.kylecorry.sol.math.trigonometry.Trigonometry.tanDegrees
-import com.kylecorry.sol.science.astronomy.OrbitalMath
-import com.kylecorry.sol.science.astronomy.units.EclipticCoordinate
-import com.kylecorry.sol.science.astronomy.units.toJulianCenturies
 import com.kylecorry.sol.science.astronomy.units.EquatorialCoordinate
-import com.kylecorry.sol.science.astronomy.units.JD_2000
 import com.kylecorry.sol.science.astronomy.units.UniversalTime
-import com.kylecorry.sol.science.astronomy.units.toJulianDay
 import com.kylecorry.sol.units.Distance
-import kotlin.math.atan2
-import kotlin.math.log10
-import kotlin.math.sqrt
+import java.time.ZoneOffset
+import kotlin.time.toKotlinInstant
 
-// Equations from Celestial Calculations by J. L. Lawrence chapter 8
-internal class PlanetLocator(private val planet: Planet) : ICelestialLocator {
-    override fun getCoordinates(ut: UniversalTime): EquatorialCoordinate {
-        val planetPosition = getHeliocentricPosition(planet, ut)
-        val earthPosition = getHeliocentricPosition(Planet.Earth, ut)
-        val pLong = planetPosition.first.eclipticLongitude
-        val pLat = planetPosition.first.eclipticLatitude
-        val eLong = earthPosition.first.eclipticLongitude
-        val longDiffNode = pLong - planet.eclipticLongitudeAscendingNodeEpoch
-        val longitudeAdjustment = normalizeAngle(
-            planet.eclipticLongitudeAscendingNodeEpoch + atan2(
-                sinDegrees(longDiffNode) * cosDegrees(planet.inclination),
-                cosDegrees(longDiffNode)
-            ).toDegrees()
-        )
-        val pCosLat = planetPosition.second * cosDegrees(pLat)
-        val longDiffEarth = eLong - longitudeAdjustment
-        val geocentricEclipticLongitude = normalizeAngle(
-            if (planet.order <= Planet.Earth.order) {
-                180 + eLong + atan2(
-                    pCosLat * sinDegrees(longDiffEarth),
-                    earthPosition.second - pCosLat * cosDegrees(longDiffEarth)
-                ).toDegrees()
-            } else {
-                longitudeAdjustment + atan2(
-                    earthPosition.second * sinDegrees(longitudeAdjustment - eLong),
-                    pCosLat - earthPosition.second * cosDegrees(longDiffEarth)
-                ).toDegrees()
-            }
-        )
-        val geocentricEclipticLatitude = normalizeAngle(
-            atan2(
-                pCosLat * tanDegrees(pLat) *
-                    sinDegrees(geocentricEclipticLongitude - longitudeAdjustment),
-                earthPosition.second * sinDegrees(longitudeAdjustment - eLong)
-            ).toDegrees()
-        )
-        val coordinate = EclipticCoordinate(geocentricEclipticLatitude, geocentricEclipticLongitude)
-        return coordinate.toEquatorial(EclipticCoordinate.getObliquityOfTheEcliptic(ut.toJulianCenturies()))
-    }
-
-    override fun getDistance(ut: UniversalTime): Distance {
-        return Distance.kilometers(
-            (149597871.0 * getDistanceAU(
-                getHeliocentricPosition(planet, ut),
-                getHeliocentricPosition(Planet.Earth, ut)
-            )).toFloat()
-        )
-    }
-
-    fun getAngularDiameter(ut: UniversalTime): Double {
-        val distance = getDistanceAU(getHeliocentricPosition(planet, ut), getHeliocentricPosition(Planet.Earth, ut))
-        return planet.angularDiameter / distance
-    }
-
-    fun getMagnitude(ut: UniversalTime): Double {
-        val planetPosition = getHeliocentricPosition(planet, ut)
-        val earthPosition = getHeliocentricPosition(Planet.Earth, ut)
-        val geocentricPlanetPosition = getGeocentricPosition(planetPosition, earthPosition)
-        val distance = getDistanceAU(planetPosition, earthPosition)
-        val phaseAngle =
-            (1 + cosDegrees(geocentricPlanetPosition.eclipticLongitude - planetPosition.first.eclipticLongitude)) / 2
-        return planet.visualMagnitude + 5 * log10((planetPosition.second * distance) / sqrt(phaseAngle))
-    }
-
-    private fun getGeocentricPosition(
-        planetPosition: Pair<EclipticCoordinate, Double>,
-        earthPosition: Pair<EclipticCoordinate, Double>
-    ): EclipticCoordinate {
-        val pLong = planetPosition.first.eclipticLongitude
-        val pLat = planetPosition.first.eclipticLatitude
-        val eLong = earthPosition.first.eclipticLongitude
-        val longDiffNode = pLong - planet.eclipticLongitudeAscendingNodeEpoch
-        val longitudeAdjustment = normalizeAngle(
-            planet.eclipticLongitudeAscendingNodeEpoch + atan2(
-                sinDegrees(longDiffNode) * cosDegrees(planet.inclination),
-                cosDegrees(longDiffNode)
-            ).toDegrees()
-        )
-        val pCosLat = planetPosition.second * cosDegrees(pLat)
-        val longDiffEarth = eLong - longitudeAdjustment
-        val geocentricEclipticLongitude = normalizeAngle(
-            if (planet.order <= Planet.Earth.order) {
-                180 + eLong + atan2(
-                    pCosLat * sinDegrees(longDiffEarth),
-                    earthPosition.second - pCosLat * cosDegrees(longDiffEarth)
-                ).toDegrees()
-            } else {
-                longitudeAdjustment + atan2(
-                    earthPosition.second * sinDegrees(longitudeAdjustment - eLong),
-                    pCosLat - earthPosition.second * cosDegrees(longDiffEarth)
-                ).toDegrees()
-            }
-        )
-        val geocentricEclipticLatitude = normalizeAngle(
-            atan2(
-                pCosLat * tanDegrees(pLat) *
-                    sinDegrees(geocentricEclipticLongitude - longitudeAdjustment),
-                earthPosition.second * sinDegrees(longitudeAdjustment - eLong)
-            ).toDegrees()
-        )
-        return EclipticCoordinate(geocentricEclipticLatitude, geocentricEclipticLongitude)
-    }
-
-    private fun getDistanceAU(
-        planetPosition: Pair<EclipticCoordinate, Double>,
-        earthPosition: Pair<EclipticCoordinate, Double>
-    ): Double {
-        val longDiff = planetPosition.first.eclipticLongitude - earthPosition.first.eclipticLongitude
-        return sqrt(
-            square(earthPosition.second) + square(planetPosition.second) -
-                2 * earthPosition.second * planetPosition.second * cosDegrees(longDiff)
-        )
-    }
-
-    private fun getHeliocentricPosition(planet: Planet, ut: UniversalTime): Pair<EclipticCoordinate, Double> {
-        val meanAnomaly = OrbitalMath.getMeanAnomaly(
-            ut.toJulianDay() - planet.epoch,
-            OrbitalMath.EARTH_ORBITAL_PERIOD_DAYS * planet.orbitalPeriod,
-            planet.eclipticLongitudeEpoch,
-            planet.eclipticLongitudePerihelion
-        )
-        val trueAnomaly = OrbitalMath.estimateTrueAnomaly(planet.eccentricity, meanAnomaly)
-        val coordinate = OrbitalMath.getEclipticCoordinate(
-            trueAnomaly,
-            planet.eclipticLongitudePerihelion,
-            planet.eclipticLongitudeAscendingNodeEpoch,
-            planet.inclination
-        )
-        val radius = OrbitalMath.getRadius(trueAnomaly, planet.semimajorAxis, planet.eccentricity)
-        return Pair(coordinate, radius)
-    }
+internal class PlanetLocator(planet: Planet) : ICelestialLocator {
+    private val model = PlanetPositionModel(planet)
+    override fun getCoordinates(ut: UniversalTime): EquatorialCoordinate = model.getCoordinates(ut.asInstant())
+    override fun getDistance(ut: UniversalTime): Distance = model.getDistance(ut.asInstant())
+    fun getAngularDiameter(ut: UniversalTime): Double = model.getAngularDiameter(ut.asInstant())
+    fun getMagnitude(ut: UniversalTime): Double = model.getMagnitude(ut.asInstant())
+    private fun UniversalTime.asInstant() = toInstant(ZoneOffset.UTC).toKotlinInstant()
 }
