@@ -11,6 +11,7 @@ import com.kashif.cameraK.compose.CameraPreviewView
 import com.kashif.cameraK.compose.rememberCameraKState
 import com.kashif.cameraK.result.ImageCaptureResult
 import com.kashif.cameraK.state.CameraKState
+import com.kashif.cameraK.enums.FlashMode
 import com.kashif.cameraK.enums.TorchMode
 import com.kashif.cameraK.enums.Directory
 import com.kashif.cameraK.state.CameraConfiguration
@@ -41,6 +42,12 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
                 }
                 override fun setZoom(ratio: Float) = camera.setZoom(ratio)
                 override fun setTorch(enabled: Boolean) = camera.setTorchMode(if (enabled) TorchMode.ON else TorchMode.OFF)
+                override fun setFlash(mode: CameraFlash) = camera.setFlashMode(when (mode) {
+                    CameraFlash.Off -> FlashMode.OFF
+                    CameraFlash.On -> FlashMode.ON
+                    CameraFlash.Auto -> FlashMode.AUTO
+                })
+                override fun flip() = camera.toggleCameraLens()
             }
         }
     }

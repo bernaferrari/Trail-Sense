@@ -1,5 +1,6 @@
 package com.kylecorry.andromeda.camera
 
+import androidx.camera.core.ImageCapture
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -28,6 +29,12 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
             }
             override fun setZoom(ratio: Float) = camera.setZoomRatio(ratio)
             override fun setTorch(enabled: Boolean) = camera.setTorch(enabled)
+            override fun setFlash(mode: CameraFlash) = camera.setFlashMode(when (mode) {
+                CameraFlash.Off -> ImageCapture.FLASH_MODE_OFF
+                CameraFlash.On -> ImageCapture.FLASH_MODE_ON
+                CameraFlash.Auto -> ImageCapture.FLASH_MODE_AUTO
+            })
+            override fun flip() = camera.flipCamera()
         }
     }
     DisposableEffect(camera) {

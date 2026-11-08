@@ -236,6 +236,8 @@ class Camera(
         return builder.build()
     }
 
+    fun setFlashMode(mode: Int) { imageCapture?.flashMode = mode }
+
     override fun flipCamera() {
         cameraProvider?.let {
             cameraSelector?.let {
