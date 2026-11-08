@@ -1,37 +1,41 @@
 package com.kylecorry.andromeda.sense.accelerometer
 
-import android.opengl.Matrix
-import android.view.Surface
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationUtils
 import com.kylecorry.sol.math.Vector3
-import java.time.Duration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.math.min
 
 /**
  * An accelerometer which reports acceleration in the world frame (x is east, y is north, z is up)
  * @param accelerometer The accelerometer to use
  * @param orientation The orientation sensor to use
+ * @param scope Scope controlling sensor collection
  * @param interval The update interval
  * @param useTrueNorth True to use true north, false to use magnetic north
- * @param surfaceRotation The rotation of the surface (e.g. the display) in degrees
+ * @param surfaceRotation The display rotation: 0, 1, 2 or 3 quarter turns
  * @param useAROrientation True to use AR orientation, false to use compass orientation
  */
 class WorldAccelerometer(
     private val accelerometer: IAccelerometer,
     private val orientation: IOrientationSensor,
-    private val interval: Duration = Duration.ofMillis(20),
+    private val scope: CoroutineScope,
+    private val interval: Duration = 20.milliseconds,
     var useTrueNorth: Boolean = false,
-    var surfaceRotation: Int = Surface.ROTATION_0,
+    var surfaceRotation: Int = 0,
     var useAROrientation: Boolean = false
-) : IAccelerometer, AbstractSensor() {
+) : IAccelerometer, SharedSensor() {
 
     private val rotationMatrix = FloatArray(16)
     private val tempOrientation = FloatArray(3)
-    private val tempAcceleration4 = FloatArray(4)
 
     /**
      * The geomagnetic declination
@@ -46,28 +50,39 @@ class WorldAccelerometer(
     override val hasValidReading: Boolean
         get() = accelerometer.hasValidReading && orientation.hasValidReading
 
-    private val timer = CoroutineTimer {
-        update()
+    private var job: Job? = null
+
+    init {
+        require(interval.isFinite() && interval > Duration.ZERO)
     }
 
     override fun startImpl() {
-        accelerometer.start(this::onSensorUpdate)
-        orientation.start(this::onSensorUpdate)
-        timer.interval(interval)
+        job = scope.launch {
+            // A distinct listener per job keeps a cancelled job from unsubscribing a new one.
+            val listener = object : () -> Boolean {
+                override fun invoke() = true
+            }
+            try {
+                accelerometer.start(listener)
+                orientation.start(listener)
+                while (isActive) {
+                    update()
+                    delay(interval)
+                }
+            } finally {
+                accelerometer.stop(listener)
+                orientation.stop(listener)
+            }
+        }
     }
 
     override fun stopImpl() {
-        accelerometer.stop(this::onSensorUpdate)
-        orientation.stop(this::onSensorUpdate)
-        timer.stop()
+        job?.cancel()
+        job = null
     }
 
     override val quality: Quality
         get() = Quality.entries[min(accelerometer.quality.ordinal, orientation.quality.ordinal)]
-
-    private fun onSensorUpdate(): Boolean {
-        return true
-    }
 
     private fun update() {
         if (!hasValidReading) return
@@ -90,13 +105,12 @@ class WorldAccelerometer(
             )
         }
 
-        Matrix.invertM(rotationMatrix, 0, rotationMatrix, 0)
-        accelerometer.rawAcceleration.copyInto(tempAcceleration4)
-        Matrix.multiplyMV(tempAcceleration4, 0, rotationMatrix, 0, tempAcceleration4, 0)
-
-        rawAcceleration[0] = tempAcceleration4[0]
-        rawAcceleration[1] = tempAcceleration4[1]
-        rawAcceleration[2] = tempAcceleration4[2]
+        val source = accelerometer.rawAcceleration
+        for (row in 0..2) {
+            val offset = row * 4
+            rawAcceleration[row] = rotationMatrix[offset] * source[0] +
+                rotationMatrix[offset + 1] * source[1] + rotationMatrix[offset + 2] * source[2]
+        }
 
         val latest = if (accelerometer.eventTimeElapsedNanos >= orientation.eventTimeElapsedNanos) {
             accelerometer

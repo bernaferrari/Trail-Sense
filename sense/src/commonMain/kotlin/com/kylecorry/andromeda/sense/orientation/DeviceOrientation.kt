@@ -1,21 +1,15 @@
 package com.kylecorry.andromeda.sense.orientation
 
-import android.content.Context
-import android.hardware.SensorManager
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.andromeda.sense.accelerometer.GravitySensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.accelerometer.IAccelerometer
-import com.kylecorry.andromeda.sense.accelerometer.LowPassAccelerometer
 import kotlin.math.abs
 import kotlin.math.withSign
 
-// TODO: Use the quaternions from the other sensors
-class DeviceOrientation(
-    private val context: Context,
-    sensorDelay: Int = SensorManager.SENSOR_DELAY_GAME
-) : AbstractSensor() {
+/** Classifies the device orientation from a gravity or low-pass accelerometer. */
+class DeviceOrientation(private val accelerometer: IAccelerometer) : SharedSensor() {
     override fun startImpl() {
+        gotReading = false
+        resetSessionMetadata()
         accelerometer.start(this::onAccelerometer)
     }
 
@@ -28,13 +22,6 @@ class DeviceOrientation(
 
     var orientation: Orientation = Orientation.Flat
         private set
-
-    private val accelerometer: IAccelerometer by lazy {
-        if (Sensors.hasGravity(context)) GravitySensor(
-            context,
-            sensorDelay
-        ) else LowPassAccelerometer(context, sensorDelay)
-    }
 
     private var gotReading = false
 
