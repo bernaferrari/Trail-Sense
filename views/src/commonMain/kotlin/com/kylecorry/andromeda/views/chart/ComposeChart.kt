@@ -186,3 +186,13 @@ fun plotRange(values: Iterable<Float>, margin: Float = 0f, minimumRange: Float =
 }
 
 fun indexedPlotData(values: List<Float>): List<Vector2> = values.mapIndexed { index, value -> Vector2(index.toFloat(), value) }
+
+/** Maps readings to hours since [startTime] and a caller-selected value. */
+fun <T> plotReadings(
+    readings: List<com.kylecorry.sol.units.Reading<T>>,
+    startTime: kotlin.time.Instant? = null,
+    value: (T) -> Float,
+): List<Vector2> {
+    val start = startTime ?: readings.firstOrNull()?.time ?: return emptyList()
+    return readings.map { Vector2((it.time - start).inWholeMilliseconds / 3_600_000f, value(it.value)) }
+}
