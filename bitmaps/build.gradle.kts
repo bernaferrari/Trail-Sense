@@ -17,6 +17,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
         androidMain.dependencies { api(project(":bitmaps-android")) }
+        commonTest.dependencies { implementation(kotlin("test")) }
     }
 }
 group = "com.kylecorry.andromeda"

@@ -63,8 +63,8 @@ class YuvToRgbTask : public Task {
                 mStrideU = roundUpTo16(mStrideY >> 1u);
                 mStrideV = mStrideU;
                 mInY = reinterpret_cast<const uchar*>(input);
-                mInU = reinterpret_cast<const uchar*>(input + mStrideY * sizeY);
-                mInV = mInU + mStrideV * sizeY / 2;
+                mInV = reinterpret_cast<const uchar*>(input + mStrideY * sizeY);
+                mInU = mInV + mStrideV * sizeY / 2;
                 break;
         }
     }

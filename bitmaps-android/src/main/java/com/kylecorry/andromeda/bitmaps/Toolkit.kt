@@ -2248,14 +2248,6 @@ class LookupTable {
 }
 
 /**
- * The YUV formats supported by yuvToRgb.
- */
-enum class YuvFormat(val value: Int) {
-    NV21(0x11),
-    YV12(0x32315659),
-}
-
-/**
  * Define a range of data to process.
  *
  * This class is used to restrict a [Toolkit] operation to a rectangular subset of the input
