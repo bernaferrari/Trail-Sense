@@ -76,6 +76,8 @@ internal fun CameraSurfaceImpl(modifier: Modifier, onReady: (PhotoCamera?) -> Un
                     }
                 override val exposure: CameraExposure? get() = cameraExposure(camera)
                 override fun setExposure(value: Float) = setCameraExposure(camera, value)
+                override val manualFocusSupported: Boolean get() = cameraManualFocusSupported(camera)
+                override fun setFocus(position: Float?) = setCameraFocus(camera, position)
                 override suspend fun capture(): ByteArray = when (val result = camera.takePictureToFile()) {
                     is ImageCaptureResult.Success -> result.byteArray
                     is ImageCaptureResult.SuccessWithFile -> {

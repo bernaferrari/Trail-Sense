@@ -31,3 +31,26 @@ internal actual fun setCameraExposure(camera: CameraController, value: Float) {
         device.unlockForConfiguration()
     }
 }
+
+internal actual fun cameraManualFocusSupported(camera: CameraController): Boolean =
+    selectedCameraDevice(camera)?.lockingFocusWithCustomLensPositionSupported == true
+
+internal actual fun setCameraFocus(camera: CameraController, position: Float?) {
+    val device = checkNotNull(selectedCameraDevice(camera)) { "Focus control is unavailable" }
+    if (position != null) {
+        require(position.isFinite() && position in 0f..1f)
+        check(device.lockingFocusWithCustomLensPositionSupported) { "Manual focus is unavailable" }
+    }
+    val autoMode = if (position == null) when {
+        device.isFocusModeSupported(AVCaptureFocusModeContinuousAutoFocus) -> AVCaptureFocusModeContinuousAutoFocus
+        device.isFocusModeSupported(AVCaptureFocusModeAutoFocus) -> AVCaptureFocusModeAutoFocus
+        else -> error("Autofocus is unavailable")
+    } else null
+    check(device.lockForConfiguration(null)) { "Unable to configure camera focus" }
+    try {
+        if (position != null) device.setFocusModeLockedWithLensPosition(position, null)
+        else device.focusMode = checkNotNull(autoMode)
+    } finally {
+        device.unlockForConfiguration()
+    }
+}

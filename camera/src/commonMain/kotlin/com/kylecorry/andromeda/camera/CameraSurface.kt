@@ -34,6 +34,10 @@ interface PhotoCamera {
     val exposure: CameraExposure?
     /** Sets exposure compensation in EV, rounded to the nearest supported step where necessary. */
     fun setExposure(value: Float)
+    /** Whether this camera supports manually positioning its focus lens. */
+    val manualFocusSupported: Boolean
+    /** Sets a lens position from 0 (near) to 1 (far), or null to resume autofocus. */
+    fun setFocus(position: Float?)
     /** Captures an encoded image. */
     suspend fun capture(): ByteArray
     fun setZoom(ratio: Float)

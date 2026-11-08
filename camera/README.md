@@ -9,3 +9,5 @@ Set `frameAnalysis = true` on `CameraSurface` to enable the `PhotoCamera.frames`
 The calibrated mapper supports both angle-to-pixel and pixel-to-angle conversion. When distortion correction is enabled, inverse conversion solves the distortion polynomial numerically; invalid calibration or a non-converging solution uses the configured fallback mapper.
 
 `PhotoCamera.exposure` reports exposure compensation and its supported EV range when available. `setExposure` applies an EV value; Android rounds to the nearest supported step, iOS uses the native continuous bias, and desktop reports the control as unavailable.
+
+`manualFocusSupported` indicates whether the camera can set its lens position. `setFocus(position)` selects a position from near (0) to far (1); these positions do not represent fixed physical distances. Pass null to resume autofocus. Desktop reports manual focus as unavailable.

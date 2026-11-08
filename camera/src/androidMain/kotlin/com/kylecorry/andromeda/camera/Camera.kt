@@ -114,6 +114,27 @@ class Camera(
         checkNotNull(camera).cameraControl.setExposureCompensationIndex(index)
     }
 
+    internal val manualFocusSupported: Boolean
+        get() = (getCharacteristic(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE) ?: 0f) > 0f &&
+            getCharacteristic(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES)?.contains(CameraMetadata.CONTROL_AF_MODE_OFF) == true
+
+    internal fun setSharedFocus(position: Float?) {
+        if (position != null) {
+            require(position.isFinite() && position in 0f..1f)
+            check(manualFocusSupported) { "Manual focus is unavailable" }
+            setFocusDistancePercentage(position)
+            return
+        }
+        val modes = getCharacteristic(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES)
+            ?: error("Focus control is unavailable")
+        val mode = when {
+            CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE in modes -> CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+            CameraMetadata.CONTROL_AF_MODE_AUTO in modes -> CameraMetadata.CONTROL_AF_MODE_AUTO
+            else -> error("Autofocus is unavailable")
+        }
+        setCaptureRequestOption(CaptureRequest.CONTROL_AF_MODE, mode)
+    }
+
     override val sensorRotation: Float
         get() {
             return try {
