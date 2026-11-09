@@ -94,3 +94,7 @@ private fun parseOffset(text: String): UtcOffset {
     val minutes = if (digits.length > 2) digits.substring(2, 4).toInt() else 0
     return UtcOffset(hours = sign * hours, minutes = sign * minutes)
 }
+
+/** Asserts that [actual] is within [maxDifference] of the instant of [expected]. */
+fun assertDate(expected: ZonedTime?, actual: Instant?, maxDifference: Duration) =
+    assertDate(expected?.instant, actual, maxDifference)
