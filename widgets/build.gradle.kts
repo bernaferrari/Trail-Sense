@@ -17,7 +17,7 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        commonMain.dependencies { api(project(":shared")) }
+        commonMain.dependencies { api(project(":shared")); implementation(compose.runtime) }
         androidMain.dependencies {
             api("androidx.glance:glance-appwidget:1.2.0")
             implementation("androidx.activity:activity-compose:1.13.0")
