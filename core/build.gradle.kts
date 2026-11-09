@@ -29,7 +29,6 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.androidx.lifecycle.livedata.core.ktx)
-            api(libs.luna)
         }
         getByName("androidHostTest") {
             kotlin.srcDir("src/test/java")

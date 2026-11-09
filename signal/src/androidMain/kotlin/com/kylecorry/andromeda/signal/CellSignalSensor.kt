@@ -20,16 +20,21 @@ import android.telephony.TelephonyManager
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.math.MathUtils
-import com.kylecorry.luna.concurrency.SafeExecutor
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.AndroidTime
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.permissions.Permissions
-import java.time.Duration
 import java.time.Instant
 import kotlin.time.toKotlinInstant
+import java.util.concurrent.Executor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 internal class CellSignalSensor(
     private val context: Context,
@@ -42,13 +47,9 @@ internal class CellSignalSensor(
     private val telephony by lazy { context.getSystemService<TelephonyManager>() }
     private val executor by lazy { ContextCompat.getMainExecutor(context) }
     private val cellInfoExecutor by lazy {
-        SafeExecutor(executor) {
-            tryOrNothing {
-                Handler(Looper.getMainLooper()).post {
-                    updateCellInfo(emptyList())
-                }
-            }
-        }
+        Executor { task -> executor.execute {
+            try { task.run() } catch (_: Exception) { updateCellInfo(emptyList()) }
+        } }
     }
     private var isAlsoConnectedTo5g = false
     private var dbmSecondary5g: Int? = null
@@ -91,15 +92,8 @@ internal class CellSignalSensor(
     private var oldSignals = listOf<RawCellSignal>()
     private var hasReading = false
 
-    private val intervalometer = CoroutineTimer {
-        tryOrNothing {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && updateCellCache) {
-                updateCellInfoCache()
-            } else {
-                loadFromCache()
-            }
-        }
-    }
+    private val refreshScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var refreshJob: Job? = null
 
     @SuppressLint("MissingPermission")
     private fun updateCellInfoCache() {
@@ -296,7 +290,16 @@ internal class CellSignalSensor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && telephonyCallback != null) {
             telephony?.registerTelephonyCallback(executor, telephonyCallback)
         }
-        intervalometer.interval(Duration.ofSeconds(5))
+        refreshJob?.cancel()
+        refreshJob = refreshScope.launch {
+            while (isActive) {
+                tryOrNothing {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && updateCellCache) updateCellInfoCache()
+                    else loadFromCache()
+                }
+                delay(5_000)
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -317,7 +320,8 @@ internal class CellSignalSensor(
 
 
     override fun stopImpl() {
-        intervalometer.stop()
+        refreshJob?.cancel()
+        refreshJob = null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && telephonyCallback != null) {
             telephony?.unregisterTelephonyCallback(telephonyCallback)
         }

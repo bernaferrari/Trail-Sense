@@ -1,51 +1,59 @@
 package com.kylecorry.andromeda.widgets.tiles
 
 import android.service.quicksettings.Tile
-import com.kylecorry.luna.time.CoroutineTimer
-import java.time.Duration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-abstract class PollingTileService(private val interval: Duration = Duration.ofMillis(16)) :
-    AndromedaTileService() {
+/** Refreshes a quick-settings tile while the system is listening. */
+abstract class PollingTileService(private val interval: Duration = 1.seconds) : AndromedaTileService() {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var polling: Job? = null
 
-    private val stateChecker = CoroutineTimer {
-        val lastState = qsTile.state
-        val newState = when {
-            isOn() -> Tile.STATE_ACTIVE
-            isDisabled() -> Tile.STATE_UNAVAILABLE
-            isOff() -> Tile.STATE_INACTIVE
-            else -> lastState
-        }
-
-        if (lastState != newState) {
-            qsTile.state = newState
-            qsTile.updateTile()
-        }
-
-        onInterval()
-    }
+    init { require(interval.isFinite() && interval > Duration.ZERO) }
 
     abstract fun isOn(): Boolean
-
-    open fun isDisabled(): Boolean {
-        return false
-    }
-
-    open fun isOff(): Boolean {
-        return !isOn() && !isDisabled()
-    }
-
-    open fun onInterval() {
-
-    }
+    open fun isDisabled(): Boolean = false
+    open fun isOff(): Boolean = !isOn() && !isDisabled()
+    open fun onInterval() = Unit
 
     override fun onStartListening() {
         super.onStartListening()
-        stateChecker.interval(interval)
+        polling?.cancel()
+        polling = scope.launch {
+            while (isActive) {
+                val tile = qsTile
+                val newState = when {
+                    isOn() -> Tile.STATE_ACTIVE
+                    isDisabled() -> Tile.STATE_UNAVAILABLE
+                    isOff() -> Tile.STATE_INACTIVE
+                    else -> tile.state
+                }
+                if (tile.state != newState) {
+                    tile.state = newState
+                    tile.updateTile()
+                }
+                onInterval()
+                delay(interval)
+            }
+        }
     }
 
     override fun onStopListening() {
+        polling?.cancel()
+        polling = null
         super.onStopListening()
-        stateChecker.stop()
     }
 
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
+    }
 }
