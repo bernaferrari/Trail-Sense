@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.test_utils
 
+import android.view.accessibility.AccessibilityWindowInfo
 import java.util.regex.Pattern
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.views.TestView
@@ -243,6 +244,8 @@ object TestUtils {
     }
 
     fun openQuickActions() {
+        // The keyboard covers the bottom navigation
+        hideKeyboard()
         // Long pressing any bottom navigation tab opens the quick actions. The tabs have no tags, so the tab is the
         // long-clickable node lowest on the screen.
         waitFor {
@@ -254,6 +257,19 @@ object TestUtils {
         }
         waitFor {
             view(By.text(getString(R.string.quick_actions)))
+        }
+    }
+
+    fun isKeyboardVisible(): Boolean {
+        return InstrumentationRegistry.getInstrumentation().uiAutomation.windows.any {
+            it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+        }
+    }
+
+    fun hideKeyboard() {
+        if (isKeyboardVisible()) {
+            device.pressBack()
+            waitFor { if (isKeyboardVisible()) throw AssertionError("The keyboard is still visible") }
         }
     }
 

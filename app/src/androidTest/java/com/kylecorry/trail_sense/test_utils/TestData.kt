@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.toKotlinInstant
 import kotlin.time.toJavaInstant
 import androidx.test.platform.app.InstrumentationRegistry
@@ -35,6 +40,30 @@ object TestData {
      */
     fun clear() {
         AppDatabase.getInstance(context).clearAllTables()
+    }
+
+    /**
+     * Adds a visible offline map so the Map tool has something to draw (it shows an empty state otherwise).
+     * The map file is empty, which is enough for the map's layers and controls.
+     */
+    fun addOfflineMap(name: String): Long = runBlocking {
+        val files = getAppService<FileSubsystem>()
+        files.getDirectory("offline_maps", true)
+        val path = "offline_maps/${name.lowercase().replace(" ", "-")}.map"
+        files.get(path, true).writeBytes(ByteArray(0))
+        getAppService<MapService>().add(
+            VectorMap(
+                0,
+                name,
+                VectorMapFileType.Mapsforge,
+                path,
+                0,
+                kotlin.time.Clock.System.now(),
+                null,
+                null,
+                visible = true
+            )
+        )
     }
 
     fun addBeacon(

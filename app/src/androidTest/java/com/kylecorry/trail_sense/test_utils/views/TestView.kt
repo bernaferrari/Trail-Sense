@@ -9,6 +9,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.device
 import com.kylecorry.trail_sense.test_utils.byResId
+import com.kylecorry.trail_sense.test_utils.byResName
 import java.util.regex.Pattern
 
 class TestView(val uiObject: UiObject2)
@@ -40,21 +41,14 @@ fun viewWithResourceId(
  * @param index which match to use when several nodes share the tag (top to bottom)
  */
 fun id(resourceName: String, index: Int = 0): () -> TestView = {
-    view(
-        By.res(
-            AutomationLibrary.packageName ?: TestUtils.context.packageName,
-            resourceName
-        ),
-        index
-    )
+    view(byResName(resourceName), index)
 }
 
 /**
  * Looks up the [index]th clickable node inside the node tagged [resourceName], such as a row in a tagged list group.
  */
 fun clickableIn(resourceName: String, index: Int = 0): () -> TestView = {
-    val pkg = AutomationLibrary.packageName ?: TestUtils.context.packageName
-    view(By.clickable(true).hasAncestor(By.res(pkg, resourceName)), index)
+    view(By.clickable(true).hasAncestor(byResName(resourceName)), index)
 }
 
 /**
@@ -101,4 +95,25 @@ fun view(selector: BySelector, index: Int = 0): TestView {
 
 fun TestView.childWithIndex(index: Int = 0): TestView {
     return TestView(uiObject.children[index])
+}
+
+/**
+ * Looks up the radio row reading [text] in an options dialog, so it is not confused with the field or pill
+ * behind the dialog that shows the current choice.
+ */
+fun option(text: String): () -> TestView = {
+    val merged = By.checkable(true).text(text)
+    if (device.hasObject(merged)) {
+        view(merged)
+    } else {
+        view(By.checkable(true).hasDescendant(By.text(text)))
+    }
+}
+
+/**
+ * Looks up a Compose text field by its label. Sheets and dialogs are drawn in their own windows, which do not
+ * expose test tags as resource ids, so fields there are found by the label drawn inside them.
+ */
+fun field(label: String, index: Int = 0): () -> TestView = {
+    view(By.clazz("android.widget.EditText").hasDescendant(By.text(label)), index)
 }

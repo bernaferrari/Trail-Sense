@@ -245,7 +245,7 @@ object AutomationLibrary {
     }
 
     private fun getTexts(tag: String): List<String> {
-        val selector = By.res(packageName ?: TestUtils.context.packageName, tag)
+        val selector = byResName(tag)
         return TestUtils.device.findObjects(selector).map { it.allText() }
     }
 
