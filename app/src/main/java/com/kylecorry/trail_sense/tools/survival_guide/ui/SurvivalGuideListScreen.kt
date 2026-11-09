@@ -53,9 +53,9 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMarkdown
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
@@ -65,7 +65,6 @@ import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGui
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -229,12 +228,13 @@ private fun SurvivalGuideSummary(
                     .verticalScroll(rememberScrollState())
                     .testTag("summary_scroll")
             ) {
-                TrailSenseLinkedText(
-                    text = markdown.toMarkdown(summary),
+                TrailSenseMarkdown(
+                    markdown = summary,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("summary"),
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    service = markdown
                 )
             }
         }

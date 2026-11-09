@@ -2,9 +2,10 @@ package com.kylecorry.trail_sense.shared.text
 
 import android.graphics.Typeface
 import android.text.Layout
-import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.AlignmentSpan
+import android.text.style.LeadingMarginSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
@@ -18,16 +19,25 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
+import kotlin.math.roundToInt
 
 /**
  * Android spans for text drawn outside Compose (such as a PDF laid out with StaticLayout): weight, italics, relative
- * sizes, monospace, underline and strike-through, links and centered paragraphs.
+ * sizes, monospace, underline and strike-through, links, and centered or indented paragraphs. Compose breaks lines
+ * at paragraph styles by itself, so a newline is added where a paragraph starts or ends without one. [textSize] (in
+ * pixels) sizes the paragraphs' em indents.
  */
-fun AnnotatedString.toSpanned(): Spanned {
-    val spannable = SpannableString(text)
+fun AnnotatedString.toSpanned(textSize: Float): Spanned {
+    val breaks = paragraphBreaks()
+    val spannable = SpannableStringBuilder(text)
+    breaks.sortedDescending().forEach { spannable.insert(it, "\n") }
+    // Once the breaks are inserted, a range starts after the breaks at or before it and ends after those before it
     fun span(what: Any, start: Int, end: Int) {
-        if (end > start) spannable.setSpan(what, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val from = start + breaks.count { it <= start }
+        val to = end + breaks.count { it < end }
+        if (to > from) spannable.setSpan(what, from, to, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
     spanStyles.forEach { range ->
         val style = range.item
@@ -53,9 +63,30 @@ fun AnnotatedString.toSpanned(): Spanned {
         if (range.item.textAlign == TextAlign.Center) {
             span(AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER), range.start, range.end)
         }
+        range.item.textIndent?.let { indent ->
+            val first = indent.firstLine.toPixels(textSize)
+            val rest = indent.restLine.toPixels(textSize)
+            if (first > 0 || rest > 0) span(LeadingMarginSpan.Standard(first, rest), range.start, range.end)
+        }
     }
     getLinkAnnotations(0, length).forEach { range ->
         (range.item as? LinkAnnotation.Url)?.let { span(URLSpan(it.url), range.start, range.end) }
     }
     return spannable
+}
+
+/** The offsets where a paragraph style starts or ends without a newline next to it. */
+private fun AnnotatedString.paragraphBreaks(): Set<Int> {
+    val breaks = mutableSetOf<Int>()
+    paragraphStyles.forEach { range ->
+        if (range.start > 0 && text[range.start - 1] != '\n') breaks += range.start
+        if (range.end < length && text[range.end - 1] != '\n' && text[range.end] != '\n') breaks += range.end
+    }
+    return breaks
+}
+
+private fun TextUnit.toPixels(textSize: Float): Int = when (type) {
+    TextUnitType.Em -> (value * textSize).roundToInt()
+    TextUnitType.Sp -> value.roundToInt()
+    else -> 0
 }

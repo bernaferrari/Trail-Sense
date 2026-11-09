@@ -407,7 +407,7 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
             val parsed = markdown.toMarkdown(content)
             val uri = file.toUri()
             files.output(uri)?.use {
-                writePdf(parsed.toSpanned(), it)
+                writePdf(parsed.toSpanned(PDF_TEXT_SIZE), it)
             }
             withContext(Dispatchers.Main) {
                 printer.print(uri)
@@ -422,12 +422,14 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
 }
 
 /** Lays [text] out in small black type on A4 pages, the way the printed chapter looked. */
+private const val PDF_TEXT_SIZE = 8f
+
 private fun writePdf(text: CharSequence, output: java.io.OutputStream) {
     val pageWidth = 595
     val pageHeight = 842
     val margin = 36
     val paint = android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-        textSize = 8f
+        textSize = PDF_TEXT_SIZE
         color = android.graphics.Color.BLACK
     }
     val layout = android.text.StaticLayout.Builder

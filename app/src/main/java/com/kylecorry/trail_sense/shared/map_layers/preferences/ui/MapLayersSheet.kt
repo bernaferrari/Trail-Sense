@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -51,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMarkdown
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
@@ -775,9 +775,6 @@ private fun MapLayerAttributionRow(
     markdown: MarkdownService,
     modifier: Modifier = Modifier
 ) {
-    val text = remember(attribution) {
-        markdown.toMarkdown(attribution.longAttribution ?: attribution.attribution)
-    }
 
     Column(
         modifier = modifier
@@ -790,17 +787,12 @@ private fun MapLayerAttributionRow(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
-        MapLayerMarkdownText(text)
+        TrailSenseMarkdown(
+            markdown = attribution.longAttribution ?: attribution.attribution,
+            service = markdown
+        )
     }
     TrailSenseDivider()
-}
-
-@Composable
-private fun MapLayerMarkdownText(
-    text: CharSequence,
-    modifier: Modifier = Modifier
-) {
-    TrailSenseLinkedText(text = text, modifier = modifier)
 }
 
 private fun isMapLayerPreferenceEnabled(

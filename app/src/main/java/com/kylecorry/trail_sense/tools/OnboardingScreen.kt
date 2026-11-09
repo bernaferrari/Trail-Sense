@@ -56,7 +56,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -68,8 +67,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMarkdown
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
@@ -379,20 +377,22 @@ private fun OnboardingPageContents(
     contents: CharSequence,
     modifier: Modifier = Modifier
 ) {
-    val markdown = remember { DependencyRegistry.get<MarkdownService>() }
-    val parsed = remember(contents, markdown) {
-        if (contents is String) {
-            markdown.toMarkdown(contents)
-        } else {
-            contents
-        }
+    val style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+    if (contents is String) {
+        TrailSenseMarkdown(
+            markdown = contents,
+            modifier = modifier.testTag("page_contents"),
+            style = style,
+            textAlign = TextAlign.Start
+        )
+    } else {
+        TrailSenseLinkedText(
+            text = contents,
+            modifier = modifier.testTag("page_contents"),
+            style = style,
+            textAlign = TextAlign.Start
+        )
     }
-    TrailSenseLinkedText(
-        text = parsed,
-        modifier = modifier.testTag("page_contents"),
-        style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-        textAlign = TextAlign.Start
-    )
 }
 
 @Preview(showBackground = true)
