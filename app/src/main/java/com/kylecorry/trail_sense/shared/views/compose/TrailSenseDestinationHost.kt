@@ -43,11 +43,6 @@ interface TrailSenseDestinationHost : ScreenEffects {
     fun reloadTheme()
 }
 
-interface TrailSenseReactiveDestinationHost : TrailSenseDestinationHost {
-    val hookResetOnResume: Int
-    fun cleanupReactiveEffects()
-}
-
 /** This screen's route, as the type the screen was registered for. */
 inline fun <reified T : Route> TrailSenseDestinationHost.routeAs(): T = route as T
 
