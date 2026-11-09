@@ -23,3 +23,12 @@ kotlin {
 group = "com.kylecorry.andromeda"
 version = "25.1.1"
 mavenPublishing { coordinates("com.kylecorry.andromeda", "background", "25.1.1") }
+
+kotlin {
+    sourceSets.androidMain.dependencies {
+        implementation(project(":core"))
+        implementation(project(":storage"))
+        implementation(project(":permissions"))
+        api(libs.luna)
+    }
+}

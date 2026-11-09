@@ -53,3 +53,9 @@ tasks.withType<Test>().configureEach { useJUnitPlatform() }
 group = "com.kylecorry.andromeda"
 version = "25.1.1"
 mavenPublishing { coordinates("com.kylecorry.andromeda", "core", "25.1.1") }
+
+kotlin {
+    sourceSets.androidMain.dependencies {
+        api(libs.luna)
+    }
+}

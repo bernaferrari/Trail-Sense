@@ -24,3 +24,9 @@ kotlin {
 group = "com.kylecorry.andromeda"
 version = "25.1.1"
 mavenPublishing { coordinates("com.kylecorry.andromeda", "notify", "25.1.1") }
+
+kotlin {
+    sourceSets.androidMain.dependencies {
+        implementation(project(":core"))
+    }
+}
