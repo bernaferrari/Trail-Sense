@@ -1,6 +1,6 @@
 # TensorFlow image classification
 
-`imageClassifier` is available from common Kotlin on Android, iOS and JVM. It reads a model from a filesystem path; supply callbacks that encode the input and decode the output in the format expected by that model. `ClassifierOptions` controls inference threads and optional softmax. Close the classifier when finished. The model file must not change while the classifier is open.
+`imageClassifier` is available from common Kotlin on Android, iOS and JVM. It reads a model from a filesystem path; supply callbacks that encode the input and decode the output in the format expected by that model. `ClassifierOptions` controls inference threads, optional softmax, and Android NNAPI acceleration. Other platforms reject the NNAPI option. Close the classifier when finished. The model file must not change while the classifier is open.
 
 On JVM, the module includes TensorFlow Lite and native runtimes for macOS (Apple Silicon and Intel), Linux (ARM64 and x86-64), and Windows x86-64.
 

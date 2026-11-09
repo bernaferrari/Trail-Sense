@@ -1,6 +1,6 @@
 # Text to speech
 
-`ITextToSpeech` is shared across platforms. Construct the platform `TextToSpeech` implementation and pass it to shared code. Android requires a `Context`; iOS and JVM do not.
+Call `textToSpeech()` from common code to create a `SpeechSynthesizer`. Initialize KSensor's application context first on Android, or call the Android `textToSpeech(context)` overload. Call `close()` when finished.
 
 For Compose apps, the optional `speech-compose` module provides `rememberTextToSpeech()` in common code and cancels speech when the composable leaves composition.
 
