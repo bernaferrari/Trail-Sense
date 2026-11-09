@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons
 
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
@@ -260,14 +262,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     fun listIsSortedByDistanceFromTheCurrentLocation() {
         openWithSavedBeacons()
 
-        hasTextsInOrder(
-            com.kylecorry.andromeda.views.R.id.title,
-            listOf("Camp", "Trailheads", "Lake", "Summit")
-        )
-        hasTextsInOrder(
-            com.kylecorry.andromeda.views.R.id.description,
-            listOf("0.69 mi", "1 beacon", "14.86 mi", "40.41 mi")
-        )
+        hasTextsInVerticalOrder(listOf("Camp", "Trailheads", "Lake", "Summit"))
+        hasTextsInVerticalOrder(listOf("0.69 mi", "1 beacon", "14.86 mi", "40.41 mi"))
     }
 
     @Test
@@ -320,8 +316,10 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         click(string(R.string.navigate))
         clickOkIfShown()
 
-        hasText(R.id.navigation_sheet_title, "Summit")
-        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
+        // The navigation card: the destination and its distance
+        isVisible(desc(string(R.string.stop)))
+        hasText("Summit", exact = true)
+        hasText(Regex("40\\.41( mi)?"))
     }
 
     @Test
@@ -342,7 +340,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         clickOk()
 
         scrollToEnd(R.id.create_beacon_scroll)
-        click(toolbarButton(Side.Right))
+        click(id("create_beacon_save_btn"))
 
         // One mile north of 42, -72
         click("Mile north")

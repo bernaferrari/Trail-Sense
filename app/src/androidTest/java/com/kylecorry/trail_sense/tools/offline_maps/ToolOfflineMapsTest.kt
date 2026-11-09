@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
+import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService

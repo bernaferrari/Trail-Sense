@@ -221,6 +221,23 @@ object AutomationLibrary {
     /**
      * Verifies the texts of all of the visible Compose nodes with the given testTag, from top to bottom.
      */
+    /**
+     * Checks that every text is on screen and that they appear top to bottom in the given order. Compose rows have no
+     * shared id to collect, so the order comes from where each text is drawn.
+     */
+    fun hasTextsInVerticalOrder(texts: List<String>, waitForTime: Long? = null) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            val tops = texts.map { text ->
+                val node = TestUtils.device.findObject(By.text(text))
+                    ?: throw AssertionError("Text not found: $text")
+                node.visibleBounds.top
+            }
+            if (tops != tops.sorted()) {
+                throw AssertionError("Texts out of order: ${texts.zip(tops)}")
+            }
+        }
+    }
+
     fun hasTextsInOrder(tag: String, texts: List<String>, waitForTime: Long? = null) {
         waitFor(resolveWaitForTime(waitForTime)) {
             assertEquals(texts, getTexts(tag))

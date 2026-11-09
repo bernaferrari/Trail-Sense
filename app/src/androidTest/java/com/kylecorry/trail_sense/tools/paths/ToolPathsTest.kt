@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.paths
 
+import androidx.test.uiautomator.By
+import com.kylecorry.trail_sense.test_utils.views.view
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.views.clickableIn
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import android.net.Uri
 import androidx.test.uiautomator.Direction
 import com.kylecorry.luna.result.Result
@@ -343,12 +348,11 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         // Simplify
         click(toolbarButton(Side.Right))
         click("Simplify")
+        hasText(string(R.string.quality))
+        hasText("High", exact = true)
+        hasText("Moderate", exact = true)
+        click("Low", exact = true)
         hasText("will be deleted")
-        click(R.id.simplify_quality)
-        hasOptions("High", "Moderate", "Low")
-        click("Low")
-        clickOk()
-        hasText(R.id.simplify_quality, "Low")
         clickOk()
 
         // Export
@@ -504,13 +508,14 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText(R.id.play_bar_title, "On - 1m")
 
         // Wait for the path to be created
-        isVisible(com.kylecorry.andromeda.views.R.id.title, waitForTime = GPS_WAIT_FOR_TIMEOUT)
+        isVisible(clickableIn("paths_list"), waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
-        click(com.kylecorry.andromeda.views.R.id.title)
-        isVisible(R.id.stop_recording_btn)
+        click(clickableIn("paths_list"))
+        // The Compose path details have no stop recording button yet (main gap), so this looks up the tag it should use
+        isVisible(id("stop_recording_btn"))
 
-        click(R.id.stop_recording_btn)
-        not { isVisible(R.id.stop_recording_btn) }
+        click(id("stop_recording_btn"))
+        not { isVisible(id("stop_recording_btn")) }
 
         back()
         hasText(R.id.play_bar_title, "Off - 1m")
@@ -613,16 +618,16 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Durfee Short")
-        isVisible(R.id.to_start_btn)
+        hasText(string(R.string.path_direction_to_start), exact = true)
         click(string(R.string.path_direction_to_end))
 
         isVisible(R.id.navigation_title)
         assertFalse(PathNavigationStore().load()!!.reversed)
         hasText(R.id.navigation_sheet_title, "Durfee Short")
-        isVisible(R.id.navigation_progress)
+        isVisible({ view(By.clazz("android.widget.ProgressBar")) })
         // The route's distance is covered by PathRouteBuilderTest
-        hasText(R.id.navigation_primary_stat, Regex("\\d+(\\.\\d+)? mi"), childId = R.id.stat_value)
-        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
+        hasText(Regex("\\d+(\\.\\d+)?( mi)?"), exact = true)
+        isVisible(desc(string(R.string.stop)))
 
         // Following a different direction replaces the route
         backUntil { isVisible(R.id.path_scroll) }
@@ -642,7 +647,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Single Point")
 
         isVisible(R.id.path_scroll)
-        isNotVisible(R.id.follow_options)
+        not { hasText(string(R.string.path_direction_to_end), exact = true) }
         assertNull(PathNavigationStore().load())
     }
 
@@ -692,15 +697,12 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun hasTitlesInOrder(vararg titles: String) {
-        hasTextsInOrder(com.kylecorry.andromeda.views.R.id.title, titles.toList())
+        hasTextsInVerticalOrder(titles.toList())
     }
 
     private fun hasTitlesAndLengths(vararg paths: Pair<String, String>) {
         hasTitlesInOrder(*paths.map { it.first }.toTypedArray())
-        hasTextsInOrder(
-            com.kylecorry.andromeda.views.R.id.description,
-            paths.map { it.second }
-        )
+        hasTextsInVerticalOrder(paths.map { it.second })
     }
 
     // Exports saved paths to GPX and imports the result, to verify nothing is lost in the file.

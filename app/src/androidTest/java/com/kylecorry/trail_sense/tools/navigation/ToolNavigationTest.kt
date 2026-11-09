@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.navigation
 
+import java.util.regex.Pattern
+import androidx.test.uiautomator.By
+import com.kylecorry.trail_sense.test_utils.views.view
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -65,14 +69,13 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
             { click(R.id.linear_compass, waitForTime = 0) }
         )
 
-        hasText(R.id.navigation_sheet_title, Regex("\\d+° [NSEW]+"))
-        isVisible(R.id.navigation_arrow)
-        hasText(R.id.navigation_target_bearing, Regex("\\d+° [NSEW]+"))
-        hasText(R.id.navigation_tertiary_stat, string(R.string.navigation_facing), childId = R.id.stat_label)
-        hasText(R.id.navigation_tertiary_stat, Regex("\\d+° [NSEW]+"), childId = R.id.stat_value)
+        // The bearing is the destination's name, and the arrow points along it. The card no longer repeats the
+        // facing direction, which is the compass heading at the top of the screen.
+        hasText(Regex("\\d+° [NSEW]+"), exact = true)
+        isVisible(navigationArrow)
 
         cancelNavigation()
-        not { isVisible(R.id.navigation_sheet) }
+        not { isVisible(desc(string(R.string.stop))) }
     }
 
     private fun canNavigate() {
@@ -97,14 +100,14 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         hasText("Test Beacon")
         hasText(Regex("1.000000°,\\s+-1.000000°"))
         hasText("100 ft")
-        isVisible(R.id.navigation_arrow)
-        hasText(R.id.navigation_primary_stat, Regex("\\d+(\\.\\d+)? (ft|mi)"), childId = R.id.stat_value)
-        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
-        hasText(R.id.navigation_secondary_stat, Regex("Arrive \\d+:\\d+\\s(AM|PM)"), childId = R.id.stat_label)
-        hasText(R.id.navigation_tertiary_stat, Regex("\\d+ ft"), childId = R.id.stat_value)
+        isVisible(navigationArrow)
+        hasRemaining(Regex("\\d+(\\.\\d+)? (ft|mi)"))
+        // The arrival time needs a speed, so it is only checked when it is shown
+        optional { hasText(Regex("Arrive \\d+:\\d+\\s(AM|PM)")) }
+        hasText(Regex("\\d+ ft"), exact = true)
 
         // The notes are shown on the beacon
-        click(R.id.navigation_sheet_title)
+        click("Test Beacon", exact = true)
         hasText(R.id.beacon_title, "Test Beacon")
         hasText("Test Comment")
         back()
@@ -189,14 +192,16 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
 
         navigateToBeacon("Summit")
 
-        hasText(R.id.navigation_sheet_title, "Summit")
+        hasText("Summit", exact = true)
+        hasRemaining("40.41 mi")
+        hasText("1000 ft", exact = true)
+        isVisible(desc(string(R.string.navigation_remaining_gain)))
+
+        // The card keeps only what you need while walking: the coordinates and elevation are on the beacon
+        click("Summit", exact = true)
         hasText("42.500000°,  -71.500000°")
-        // Non-breaking spaces keep the elevation together if the subtitle wraps
-        hasText("(Ele. 1000 ft)")
-        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
-        hasText(R.id.navigation_tertiary_stat, "1000 ft", childId = R.id.stat_value)
-        hasText(R.id.navigation_tertiary_stat, string(R.string.navigation_remaining_gain), childId = R.id.stat_label)
-        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
+        hasText("1000 ft")
+        back()
     }
 
     @Test
@@ -204,16 +209,28 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         openWithSavedBeacons()
 
         navigateToBeacon("Summit")
-        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
+        hasRemaining("40.41 mi")
 
         cancelNavigation()
         not { hasText("Summit") }
 
         navigateToBeacon("Camp")
-        hasText(R.id.navigation_sheet_title, "Camp")
-        hasText(R.id.navigation_primary_stat, "0.69 mi", childId = R.id.stat_value)
+        hasText("Camp", exact = true)
+        hasRemaining("0.69 mi")
         not { hasText("Summit") }
     }
+
+    /** The navigation card's one number: the distance left, over its label. */
+    private fun hasRemaining(distance: String) {
+        hasDataPoint(distance, string(R.string.navigation_remaining))
+    }
+
+    private fun hasRemaining(distance: Regex) {
+        hasDataPoint(distance, string(R.string.navigation_remaining))
+    }
+
+    /** The arrow badge, which is read out as the bearing to the destination. */
+    private val navigationArrow = { view(By.desc(Pattern.compile("\\d+° [NSEW]+"))) }
 
     private fun cancelNavigation() {
         click(desc(string(R.string.stop)))

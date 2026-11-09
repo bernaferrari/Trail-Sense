@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.findNavigator
@@ -66,7 +67,7 @@ class ToolsTest : ToolTestBase(0L) {
         }
 
         // Removing the field guide repo will break the DI for the field guide tool
-        DependencyRegistry.services.remove(FieldGuideRepo::class.java.name)
+        DependencyRegistry.remove<FieldGuideRepo>()
         scenario = TestUtils.startWithTool(Tools.FIELD_GUIDE)
 
         isTrue { calledOriginalHandler }
@@ -74,25 +75,25 @@ class ToolsTest : ToolTestBase(0L) {
         hasText("Field Guide")
 
         // Settings
-        scrollUntil { click(R.id.open_settings) }
+        scrollUntil { click(string(R.string.settings), exact = true) }
         hasText("Units")
 
         back()
         hasText("An error occurred")
 
         // View error details
-        click(R.id.view_error_details)
+        click(string(R.string.view_error_details), exact = true)
         hasText("Build type")
         clickOk()
 
         // Other buttons
-        isVisible(R.id.email_developer)
-        isVisible(R.id.copy_error)
-        isVisible(R.id.restart_app)
+        hasText(string(R.string.pref_email_title), exact = true)
+        hasText(string(R.string.copy_error), exact = true)
+        hasText(string(R.string.restart_app), exact = true)
 
         // Fix the issue and reopen tool
         DependencyRegistry.addSingleton(FieldGuideRepo.getInstance(TestUtils.context))
-        click(R.id.reopen_tool)
+        click(string(R.string.reopen_tool), exact = true)
         hasText("Disclaimer")
     }
 }
