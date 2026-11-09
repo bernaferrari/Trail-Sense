@@ -19,7 +19,7 @@ class Angle : Comparable<Angle?> {
     val degrees: Double
 
     /**
-     * Retrieves the size of this angle in radians. This may be useful for `java.lang.Math` functions, which
+     * Retrieves the size of this angle in radians. This may be useful for `kotlin.math` functions, which
      * generally take radians as trigonometric arguments. This method may be faster that first obtaining the degrees and
      * then converting to radians.
      *

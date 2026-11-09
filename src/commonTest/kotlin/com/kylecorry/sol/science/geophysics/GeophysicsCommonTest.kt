@@ -15,7 +15,7 @@ class GeophysicsCommonTest {
 
     @Test
     fun magneticFieldAtKnownLocationAndDate() {
-        val time = Instant.parse("2025-01-01T00:00:00Z").toEpochMilliseconds()
+        val time = Instant.parse("2025-01-01T00:00:00Z")
         val location = Coordinate(80.0, 0.0)
         assertEquals(1.28f, Geophysics.getGeomagneticDeclination(location, 0f, time), 0.01f)
         assertEquals(83.21f, Geophysics.getGeomagneticInclination(location, 0f, time), 0.01f)

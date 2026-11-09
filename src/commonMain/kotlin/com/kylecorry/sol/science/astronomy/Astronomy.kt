@@ -119,9 +119,9 @@ object Astronomy {
     fun getMeteorShowerPosition(shower: MeteorShower, location: Coordinate, time: Instant) =
         MeteorModel.position(shower, location, time)
     fun getStarPosition(star: Star, time: Instant, location: Coordinate, withRefraction: Boolean = false):
-        com.kylecorry.sol.science.astronomy.units.CelestialObservation {
+        CelestialObservation {
         val position = AstroUtils.getLocation(StarPositionModel(star), time, location, withRefraction)
-        return com.kylecorry.sol.science.astronomy.units.CelestialObservation(
+        return CelestialObservation(
             Bearing.from(position.azimuth.toFloat()), position.altitude.toFloat(), visualMagnitude = star.magnitude
         )
     }

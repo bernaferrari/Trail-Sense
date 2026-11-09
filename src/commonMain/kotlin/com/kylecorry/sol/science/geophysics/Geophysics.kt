@@ -26,13 +26,6 @@ object Geophysics {
         deltaHCoefficients = WorldMagneticModel2025.DELTA_H
     )
 
-    @Deprecated(
-        "Use the kotlin.time.Instant overload",
-        ReplaceWith("getGeomagneticDeclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))", "kotlin.time.Instant")
-    )
-    fun getGeomagneticDeclination(coordinate: Coordinate, altitude: Float?, time: Long): Float =
-        getGeomagneticDeclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))
-
     fun getGeomagneticDeclination(
         coordinate: Coordinate,
         altitude: Float? = null,
@@ -46,13 +39,6 @@ object Geophysics {
         return atan2(geoField.y, geoField.x).toDegrees()
     }
 
-    @Deprecated(
-        "Use the kotlin.time.Instant overload",
-        ReplaceWith("getGeomagneticInclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))", "kotlin.time.Instant")
-    )
-    fun getGeomagneticInclination(coordinate: Coordinate, altitude: Float?, time: Long): Float =
-        getGeomagneticInclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))
-
     fun getGeomagneticInclination(
         coordinate: Coordinate,
         altitude: Float? = null,
@@ -65,13 +51,6 @@ object Geophysics {
         )
         return atan2(geoField.z, hypot(geoField.x, geoField.y)).toDegrees()
     }
-
-    @Deprecated(
-        "Use the kotlin.time.Instant overload",
-        ReplaceWith("getGeomagneticField(coordinate, altitude, Instant.fromEpochMilliseconds(time))", "kotlin.time.Instant")
-    )
-    fun getGeomagneticField(coordinate: Coordinate, altitude: Float?, time: Long): Vector3 =
-        getGeomagneticField(coordinate, altitude, Instant.fromEpochMilliseconds(time))
 
     fun getGeomagneticField(
         coordinate: Coordinate,
