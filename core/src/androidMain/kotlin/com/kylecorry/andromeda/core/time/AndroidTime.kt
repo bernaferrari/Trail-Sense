@@ -1,8 +1,9 @@
 package com.kylecorry.andromeda.core.time
 
 import android.os.SystemClock
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 object AndroidTime {
 
@@ -19,7 +20,7 @@ object AndroidTime {
      * @return the uptime
      */
     fun uptime(): Duration {
-        return Duration.ofMillis(uptimeMillis())
+        return uptimeMillis().milliseconds
     }
 
     /**
@@ -35,7 +36,7 @@ object AndroidTime {
      * @return the time since boot
      */
     fun timeSinceBoot(): Duration {
-        return Duration.ofMillis(millisSinceBoot())
+        return millisSinceBoot().milliseconds
     }
 
     /**
@@ -55,7 +56,7 @@ object AndroidTime {
      * @return the Instant
      */
     fun millisSinceBootToInstant(millisSinceBoot: Long): Instant {
-        return Instant.ofEpochMilli(millisSinceBootToTime(millisSinceBoot))
+        return Instant.fromEpochMilliseconds(millisSinceBootToTime(millisSinceBoot))
     }
 
 }

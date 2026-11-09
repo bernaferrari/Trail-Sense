@@ -25,8 +25,8 @@ import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.AndroidTime
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.permissions.AndroidPermissions
-import java.time.Instant
-import kotlin.time.toKotlinInstant
+import kotlin.time.Clock
+import kotlin.time.Instant
 import java.util.concurrent.Executor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +74,7 @@ internal class CellSignalSensor(
 
                 dbmSecondary5g = nrSignal?.dbm
                 levelSecondary5g = nrSignal?.level
-                timeSecondary5g = if (nrSignal != null) Instant.now() else null
+                timeSecondary5g = if (nrSignal != null) Clock.System.now() else null
                 updateSignals(notify = true)
             }
         }
@@ -243,7 +243,7 @@ internal class CellSignalSensor(
                     it.quality,
                     it.network,
                     it.isRegistered,
-                    it.time.toKotlinInstant(),
+                    it.time,
                     it.timingDistanceMeters,
                     it.timingDistanceErrorMeters?.plus(
                         (it.timingDistanceMeters ?: 0f) * pathLossFactor
@@ -268,7 +268,7 @@ internal class CellSignalSensor(
         return signals.filter { it.network != CellNetwork.Nr || !it.isConnected } + listOf(
             RawCellSignal(
                 connected5g?.id ?: "${connected?.id ?: "unknown"}-5g",
-                timeSecondary5g ?: connected5g?.time ?: connected?.time ?: Instant.now(),
+                timeSecondary5g ?: connected5g?.time ?: connected?.time ?: Clock.System.now(),
                 dbmSecondary5g ?: connected5g?.dbm ?: connected?.dbm ?: 0,
                 levelSecondary5g ?: connected5g?.level ?: connected?.level ?: 0,
                 CellNetwork.Nr,

@@ -12,7 +12,7 @@ import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.Range
 import java.io.File
 import java.io.OutputStream
-import java.time.Duration
+import kotlin.time.Duration
 
 interface ICamera : Sensor {
     val image: ImageProxy?

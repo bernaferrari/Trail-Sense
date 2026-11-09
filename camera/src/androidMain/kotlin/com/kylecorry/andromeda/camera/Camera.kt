@@ -53,7 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 import java.io.File
 import java.io.OutputStream
-import java.time.Duration
+import kotlin.time.Duration
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -127,7 +127,7 @@ class Camera(
         }
 
     @OptIn(ExperimentalCamera2Interop::class)
-    internal fun setSharedManualExposure(duration: kotlin.time.Duration?, iso: Int?) {
+    internal fun setSharedManualExposure(duration: Duration?, iso: Int?) {
         require((duration == null) == (iso == null)) { "Provide both duration and ISO, or neither" }
         val control = checkNotNull(getCamera2Controller()) { "Camera is unavailable" }
         val options = CaptureRequestOptions.Builder()
@@ -549,7 +549,7 @@ class Camera(
             return
         }
 
-        val nanos = exposureTime.toNanos()
+        val nanos = exposureTime.inWholeNanoseconds
         setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF)
         setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, nanos)
     }
@@ -570,7 +570,7 @@ class Camera(
     override fun getExposureTimeRange(): Range<Duration>? {
         val range =
             getCharacteristic(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE) ?: return null
-        return Range(Duration.ofNanos(range.lower), Duration.ofNanos(range.upper))
+        return Range(range.lower.nanoseconds, range.upper.nanoseconds)
     }
 
     override fun getSensitivityRange(): Range<Int>? {
