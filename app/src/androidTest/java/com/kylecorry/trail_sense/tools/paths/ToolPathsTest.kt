@@ -120,7 +120,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click(string(R.string.path), exact = true)
         input(string(R.string.name), "Empty Path")
         clickOk()
-        isVisible(R.id.path_title)
+        isVisible(id("path_menu_btn"))
         hasText("Empty Path")
         backUntil { isVisible(id("paths_title")) }
     }
@@ -261,7 +261,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Test Path")
 
         // Wait for the path to open
-        hasText(R.id.path_title, "Test Path")
+        isVisible(id("path_menu_btn"))
+        hasText("Test Path", exact = true)
 
         // Settings
         click(R.id.path_color)
@@ -283,14 +284,14 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText("0 ft")
         hasText("Distance")
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasText("1")
             hasText("Points")
             hasText("Easy")
             hasText("Difficulty")
         }
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasText("0 ft")
             hasText("Ascent")
         }
@@ -298,7 +299,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText("0 ft")
         hasText("Descent")
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasText(Regex("\\d+ ft"))
             hasText("Lowest point")
         }
@@ -306,26 +307,27 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText(Regex("\\d+ ft"))
         hasText("Highest point")
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             isVisible(R.id.chart)
         }
 
         // Add a point away from the first so the path can be followed
         TestUtils.setLocationOverride(Coordinate(42.04, -71.97))
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             click(R.id.add_point_btn)
         }
 
         not(waitForTime = GPS_WAIT_FOR_TIMEOUT) { hasText("Loading") }
 
-        scrollUntil(R.id.path_scroll, direction = Direction.UP) {
+        scrollUntil(direction = Direction.UP) {
             hasText("2")
         }
 
         // Navigate
-        click(string(R.string.path_direction_to_end))
+        scrollUntil { click(string(R.string.path_direction_to_end), exact = true) }
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         hasText("Test Path")
         back()
         back()
@@ -360,7 +362,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Export")
         hasText("trail-sense-")
         backUntil {
-            isVisible(R.id.path_title)
+            isVisible(id("path_menu_btn"))
         }
 
         // Hide / show
@@ -490,7 +492,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
         hasText(string(R.string.temporary))
         click("Recording")
-        hasText(R.id.path_title, "Recording")
+        isVisible(id("path_menu_btn"))
+        hasText("Recording", exact = true)
 
         click(toolbarButton(Side.Right))
         click(string(R.string.keep_forever))
@@ -521,7 +524,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         not { isVisible(id("stop_recording_btn")) }
 
         back()
-        hasText(R.id.play_bar_title, "Off - 1m")
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_off_title))
     }
 
     @Test
@@ -570,13 +573,14 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Durfee Short")
-        hasText(R.id.path_title, "Durfee Short")
+        isVisible(id("path_menu_btn"))
+        hasText("Durfee Short", exact = true)
 
         // Recorded from 17:20:52 to 17:36:23
         hasDataPoint("15m", string(R.string.duration))
         // 0.498 miles between the 39 recorded points
         hasDataPoint("0.5 mi", string(R.string.distance))
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint("39", string(R.string.points))
             hasDataPoint("Moderate", string(R.string.difficulty))
             hasDataPoint(Regex("\\d{1,2} ft"), string(R.string.ascent))
@@ -584,7 +588,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         }
 
         // The recorded elevations range from 522 ft to 590 ft
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint(Regex("5[2-4]\\d ft"), string(R.string.lowest_point_elevation))
         }
         hasDataPoint(Regex("5[7-9]\\d ft"), string(R.string.highest_point_elevation))
@@ -596,20 +600,22 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Sprague")
-        hasText(R.id.path_title, "Sprague")
+        isVisible(id("path_menu_btn"))
+        hasText("Sprague", exact = true)
         hasDataPoint("3.71 mi", string(R.string.distance))
         // The recording has no meaningful timestamps, so the duration is estimated from the pace
         hasDataPoint(Regex("1h \\d+m"), string(R.string.duration))
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint("90", string(R.string.points))
         }
         back()
 
         click("Mansfield")
-        hasText(R.id.path_title, "Mansfield")
+        isVisible(id("path_menu_btn"))
+        hasText("Mansfield", exact = true)
         hasDataPoint("4.91 mi", string(R.string.distance))
         // The raw recording climbs 2655 ft, the app smooths out elevation noise
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint("175", string(R.string.points))
             hasDataPoint(Regex("25\\d\\d ft"), string(R.string.ascent))
             hasDataPoint(Regex("-25\\d\\d ft"), string(R.string.descent))
@@ -621,22 +627,26 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Durfee Short")
-        hasText(string(R.string.path_direction_to_start), exact = true)
-        click(string(R.string.path_direction_to_end))
+        // The path overview is a Compose page without tags; its menu button marks it, and the navigate buttons are
+        // further down the page
+        scrollUntil { hasText(string(R.string.path_direction_to_start), exact = true) }
+        scrollUntil { click(string(R.string.path_direction_to_end), exact = true) }
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         assertFalse(PathNavigationStore().load()!!.reversed)
-        hasText(R.id.navigation_sheet_title, "Durfee Short")
+        hasText("Durfee Short", exact = true)
         isVisible({ view(By.clazz("android.widget.ProgressBar")) })
         // The route's distance is covered by PathRouteBuilderTest
         hasText(Regex("\\d+(\\.\\d+)?( mi)?"), exact = true)
         isVisible(desc(string(R.string.stop)))
 
         // Following a different direction replaces the route
-        backUntil { isVisible(R.id.path_scroll) }
-        click(string(R.string.path_direction_to_start))
+        backUntil { isVisible(id("path_menu_btn")) }
+        scrollUntil { click(string(R.string.path_direction_to_start), exact = true) }
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         assertTrue(PathNavigationStore().load()!!.reversed)
     }
 
@@ -649,7 +659,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
         click("Single Point")
 
-        isVisible(R.id.path_scroll)
+        isVisible(id("path_menu_btn"))
         not { hasText(string(R.string.path_direction_to_end), exact = true) }
         assertNull(PathNavigationStore().load())
     }
@@ -664,10 +674,11 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click(R.id.waypoint_menu_btn)
         click(string(R.string.path_navigation_follow_to_point))
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         assertNotNull(PathNavigationStore().load()!!.destinationPointId)
 
-        backUntil { isVisible(R.id.path_scroll) }
+        backUntil { isVisible(id("path_menu_btn")) }
         click(toolbarButton(Side.Right))
         click("Points")
         click(R.id.waypoint_menu_btn)
