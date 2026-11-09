@@ -62,8 +62,8 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
 
         // Verify the View in 3D button is visible and works
         if (Tools.isToolAvailable(TestUtils.context, Tools.AUGMENTED_REALITY)) {
-            // Wait for the toast do disappear
-            not {
+            // Wait for the disclaimer to disappear: it is a long snackbar now (with a learn more action), not a toast
+            not(waitForTime = 15000) {
                 hasText(
                     string(R.string.sunset_alerts_background_location_disclaimer)
                 )

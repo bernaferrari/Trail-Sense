@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ballistics
 
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
@@ -47,7 +48,8 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
 
         // The distance is in yards now (it was feet): 1 in at 100 yd is about 1 MOA, so 4 clicks of 1/4 MOA
         hasText(id("distance_to_target"), "yd")
-        hasText(id("adjustment_amount"), "Left 4 clicks\nDown 8 clicks")
+        // The adjustment is read out as one description over the drawn numbers
+        isVisible(desc("Left 4 clicks\nDown 8 clicks"))
     }
 
     private fun energy(){
