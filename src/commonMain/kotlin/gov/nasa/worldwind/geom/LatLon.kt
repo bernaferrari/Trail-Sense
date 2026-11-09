@@ -1,5 +1,8 @@
 package gov.nasa.worldwind.geom
 
+import com.kylecorry.sol.shared.DecimalFormatter
+import com.kylecorry.sol.shared.NumberLocale
+
 /**
  * Represents a point on the two-dimensional surface of a globe. Latitude is the degrees North and ranges between [-90,
  * 90], while longitude refers to degrees East, and ranges between (-180, 180].
@@ -54,8 +57,8 @@ open class LatLon {
     }
 
     override fun toString(): String {
-        val las = "Lat ${com.kylecorry.sol.shared.DecimalFormatter.format(this.latitude.degrees, 4).padStart(7)}\u00B0"
-        val los = "Lon ${com.kylecorry.sol.shared.DecimalFormatter.format(this.longitude.degrees, 4).padStart(7)}\u00B0"
+        val las = "Lat ${DecimalFormatter.format(latitude.degrees, 4, locale = NumberLocale.Invariant).padStart(7)}\u00B0"
+        val los = "Lon ${DecimalFormatter.format(longitude.degrees, 4, locale = NumberLocale.Invariant).padStart(7)}\u00B0"
         return "($las, $los)"
     }
 

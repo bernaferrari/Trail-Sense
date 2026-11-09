@@ -8,6 +8,7 @@ import com.kylecorry.sol.tests.arg
 
 import com.kylecorry.sol.science.geography.formatting.*
 import com.kylecorry.sol.units.Bearing
+import com.kylecorry.sol.shared.NumberLocale
 import com.kylecorry.sol.units.Coordinate
 
 class CoordinateFormatterTest {
@@ -87,7 +88,7 @@ class CoordinateFormatterTest {
     }
 
     private fun toDD(expected: String, coordinate: Coordinate, precision: Int) {
-        assertEquals(expected, DecimalDegreesCoordinateFormat(precision).toString(coordinate))
+        assertEquals(expected, DecimalDegreesCoordinateFormat(precision, NumberLocale.Invariant).toString(coordinate))
     }
 
     @Test

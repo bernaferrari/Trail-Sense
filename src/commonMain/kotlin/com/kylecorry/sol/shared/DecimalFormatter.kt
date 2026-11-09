@@ -4,8 +4,7 @@ import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import kotlin.math.abs
 
 /**
- * Formats numbers with a fixed, locale-independent decimal point ('.') and no grouping, so
- * formatted coordinates read and parse back the same on every platform and in every locale.
+ * Formats numbers without grouping, using the decimal separator, minus sign, and digits of a [NumberLocale].
  */
 internal object DecimalFormatter {
 
@@ -13,13 +12,39 @@ internal object DecimalFormatter {
      * @param decimalPlaces the maximum number of fraction digits (rounded half up)
      * @param strict when true, always shows [decimalPlaces] fraction digits; otherwise trailing
      * zeros are dropped. Zero is never shown with a minus sign.
+     * @param locale the locale whose number symbols are used, the user's locale by default
      * @return the formatted number, or "-" when it is not finite
      */
-    fun format(number: Number, decimalPlaces: Int, strict: Boolean = true): String {
+    fun format(
+        number: Number,
+        decimalPlaces: Int,
+        strict: Boolean = true,
+        locale: NumberLocale = NumberLocale.System
+    ): String {
         val value = number.toDouble()
         if (!value.isFinite()) {
             return "-"
         }
+        val invariant = formatInvariant(value, decimalPlaces, strict)
+        return if (locale == NumberLocale.Invariant) invariant else localize(invariant, DecimalSymbols.of(locale))
+    }
+
+    private fun localize(invariant: String, symbols: DecimalSymbols): String {
+        if (symbols == DecimalSymbols.Invariant) {
+            return invariant
+        }
+        return buildString(invariant.length + 2) {
+            for (char in invariant) {
+                when (char) {
+                    '-' -> append(symbols.minusSign)
+                    '.' -> append(symbols.decimalSeparator)
+                    else -> append(symbols.zeroDigit + (char - '0'))
+                }
+            }
+        }
+    }
+
+    private fun formatInvariant(value: Double, decimalPlaces: Int, strict: Boolean): String {
         val places = decimalPlaces.coerceAtLeast(0)
         val rounded = value.roundPlaces(places)
         val (integerDigits, fractionDigits) = plainDigits(abs(rounded))

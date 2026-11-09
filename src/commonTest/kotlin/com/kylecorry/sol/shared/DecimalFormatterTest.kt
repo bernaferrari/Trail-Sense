@@ -12,7 +12,39 @@ internal class DecimalFormatterTest {
     }
 
     private fun format(value: Number, places: Int, strict: Boolean, expected: String) {
-        assertEquals(expected, DecimalFormatter.format(value, places, strict))
+        assertEquals(expected, DecimalFormatter.format(value, places, strict, NumberLocale.Invariant))
+    }
+
+    @Test
+    fun formatUsesTheDecimalSeparatorOfTheLocale() {
+        val brazil = NumberLocale.Tag("pt-BR")
+        assertEquals("1,2", DecimalFormatter.format(1.155, 1, locale = brazil))
+        assertEquals("-1,2", DecimalFormatter.format(-1.155, 1, locale = brazil))
+        assertEquals("100", DecimalFormatter.format(100, 2, strict = false, locale = brazil))
+        assertEquals("0,00000010", DecimalFormatter.format(1.0E-7, 8, locale = brazil))
+        assertEquals("-", DecimalFormatter.format(Double.NaN, 2, locale = brazil))
+        assertEquals("1.2", DecimalFormatter.format(1.155, 1, locale = NumberLocale.Tag("en-US")))
+    }
+
+    @Test
+    fun formatDoesNotGroupDigits() {
+        assertEquals("1234567,5", DecimalFormatter.format(1234567.5, 1, locale = NumberLocale.Tag("de-DE")))
+        assertEquals("1234567.5", DecimalFormatter.format(1234567.5, 1, locale = NumberLocale.Tag("en-US")))
+    }
+
+    @Test
+    fun formatUsesTheSystemLocaleByDefault() {
+        val symbols = platformDecimalSymbols(languageTag = null)
+        val expected = "1${symbols.decimalSeparator}5".map {
+            if (it.isDigit()) symbols.zeroDigit + (it - '0') else it
+        }.joinToString("")
+        assertEquals(expected, DecimalFormatter.format(1.5, 1))
+        assertEquals(expected, DecimalFormatter.format(1.5, 1, locale = NumberLocale.System))
+    }
+
+    @Test
+    fun invariantIgnoresTheLocale() {
+        assertEquals("-1234567.5", DecimalFormatter.format(-1234567.5, 1, locale = NumberLocale.Invariant))
     }
 
     companion object {
