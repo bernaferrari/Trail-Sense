@@ -42,7 +42,8 @@ sealed interface PlotLayer {
     data class Overlay(val draw: DrawScope.(PlotCoordinates) -> Unit) : PlotLayer
 }
 
-class PlotCoordinates internal constructor(
+/** Converts between chart data and positions in the supplied drawing size. */
+class PlotCoordinates(
     val xRange: ClosedFloatingPointRange<Float>,
     val yRange: ClosedFloatingPointRange<Float>,
     val size: Size,
