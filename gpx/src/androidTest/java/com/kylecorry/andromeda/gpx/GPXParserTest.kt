@@ -40,7 +40,7 @@ class GPXParserTest {
 
     private fun testFromGPX(stream: Boolean = false) {
         val data = if (stream) {
-            GPXParser.parse(gpx.byteInputStream())
+            GPXParser.parse(gpx)
         } else {
             GPXParser.parse(gpx)
         }

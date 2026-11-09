@@ -3,13 +3,12 @@ package com.kylecorry.andromeda.gpx
 import com.kylecorry.sol.units.Coordinate
 import org.junit.Assert.*
 import org.junit.Test
-import java.io.ByteArrayOutputStream
-import java.time.Instant
+import kotlin.time.Instant
 
 class GPXSerializerTest {
     @Test
     fun deserialize() {
-        val data = GPXSerializer("").deserialize(gpx.byteInputStream())
+        val data = GpxSerializer("").deserialize(gpx.encodeToByteArray())
 
         val waypoints = listOf(
             GPXWaypoint(
@@ -246,10 +245,9 @@ class GPXSerializerTest {
         )
 
         val tracks = listOf(track1, track2)
-        val stream = ByteArrayOutputStream()
-        GPXSerializer("Trail Sense").serialize(GPXData(waypoints, tracks, listOf(route)), stream)
+        val result = GpxSerializer("Trail Sense").serialize(GPXData(waypoints, tracks, listOf(route)))
 
-        assertEquals(xml, stream.toString())
+        assertEquals(xml, result.decodeToString())
     }
 
 

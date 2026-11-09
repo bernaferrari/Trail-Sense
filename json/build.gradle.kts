@@ -20,12 +20,6 @@ kotlin {
     jvmToolchain(17)
     applyDefaultHierarchyTemplate()
     sourceSets {
-        val jvmSharedMain by creating {
-            dependsOn(commonMain.get())
-            dependencies { api(libs.luna); implementation(libs.gson) }
-        }
-        jvmMain { dependsOn(jvmSharedMain) }
-        androidMain { dependsOn(jvmSharedMain) }
         commonMain.dependencies { api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
