@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import kotlin.time.Duration.Companion.hours
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
@@ -10,8 +11,9 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
-import java.time.Duration
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class CreateTideViewModelTest {
 
@@ -34,7 +36,7 @@ class CreateTideViewModelTest {
     fun clockTableNeedsATimedTide() {
         val viewModel = newViewModel()
         val entry = viewModel.tideEntries.first()
-        viewModel.updateTideEntry(entry.copy(time = ZonedDateTime.now()))
+        viewModel.updateTideEntry(entry.copy(time = Clock.System.now()))
         val table = viewModel.getTide()
         assertTrue(viewModel.formIsValid())
         assertEquals(TideEstimator.Clock, table?.estimator)
@@ -45,12 +47,12 @@ class CreateTideViewModelTest {
     fun manualLocalIntervalNeedsIntervalAndLocation() {
         val viewModel = newViewModel()
         viewModel.estimateType = EstimateType.LunitidalIntervalManualLocal
-        viewModel.lunitidalInterval = Duration.ofHours(2)
+        viewModel.lunitidalInterval = 2.hours
         assertNull(viewModel.getTide())
         viewModel.location = Coordinate(1.0, 2.0)
         val table = viewModel.getTide()
         assertEquals(TideEstimator.LunitidalInterval, table?.estimator)
-        assertEquals(Duration.ofHours(2), table?.lunitidalInterval)
+        assertEquals(2.hours, table?.lunitidalInterval)
         assertFalse(table!!.lunitidalIntervalIsUtc)
     }
 

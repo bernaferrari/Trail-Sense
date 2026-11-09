@@ -11,11 +11,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
-import java.time.ZonedDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class PathGuidanceTargetTest {
     private val start = Coordinate(42.0, -72.0)
-    private val request = ARGuidanceRefreshRequest(mock(), start, ZonedDateTime.now())
+    private val request = ARGuidanceRefreshRequest(mock(), start, Clock.System.now())
 
     @Test
     fun pathTargetAdvancesWithLocation() = runBlocking {

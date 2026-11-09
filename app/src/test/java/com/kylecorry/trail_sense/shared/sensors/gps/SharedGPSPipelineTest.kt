@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.luna.time.ITimer
@@ -15,7 +16,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.modules.KalmanGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.MeanSeaLevelGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.SameFixGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.TimeoutGPSModule
-import java.time.Instant
+import kotlin.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -28,7 +29,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Duration
+import kotlin.time.Duration
 
 class SharedGPSPipelineTest {
     private val cache = InMemoryPreferences()
@@ -53,7 +54,7 @@ class SharedGPSPipelineTest {
     private fun cacheModule() = CacheGPSModule(cache, timeProvider) { 1 }
 
     private fun reading(seconds: Long, longitude: Double = 1.0) = ModularGPSData(
-        location = Coordinate(1.0, longitude), eventTime = Instant.EPOCH.plusSeconds(seconds),
+        location = Coordinate(1.0, longitude), eventTime = (Instant.fromEpochMilliseconds(0) + seconds.seconds),
         eventTimeElapsedNanos = seconds * 1_000_000_000,
         horizontalAccuracy = 10f, hasValidReading = true
     )
@@ -117,7 +118,7 @@ class SharedGPSPipelineTest {
     @Test
     fun startupPrepopulatesAnInaccurateBaseFixWithoutNotifying() = runBlocking<Unit> {
         val preferences = mock<IGPSPreferences> {
-            on { accuracyFilter }.thenReturn(GPSAccuracyFilter(16f, Duration.ofSeconds(8)))
+            on { accuracyFilter }.thenReturn(GPSAccuracyFilter(16f, 8.seconds))
         }
         val pipeline = SharedGPSPipeline(mock(), timeProvider) {
             GPSPipeline(listOf(
@@ -179,7 +180,7 @@ class SharedGPSPipelineTest {
         resume.complete(Unit)
         first.await()
         second.await()
-        assertEquals(listOf(Instant.EPOCH, reading(1).eventTime), previousTimes)
+        assertEquals(listOf(Instant.fromEpochMilliseconds(0), reading(1).eventTime), previousTimes)
         assertEquals(reading(2).eventTime, pipeline.reading.eventTime)
     }
 
@@ -197,7 +198,7 @@ class SharedGPSPipelineTest {
         assertEquals(fast.reading.location, slow.reading.location)
         // A delayed callback is rejected rather than rewinding the shared state.
         assertFalse(slow.update(reading(2, 1.001)))
-        assertEquals(Instant.EPOCH.plusSeconds(3), slow.reading.eventTime)
+        assertEquals((Instant.fromEpochMilliseconds(0) + 3.seconds), slow.reading.eventTime)
         assertEquals(fast.reading.location, slow.reading.location)
         // The slower subscription still delivers the shared fix once it catches up.
         assertTrue(slow.update(reading(3, 1.002)))

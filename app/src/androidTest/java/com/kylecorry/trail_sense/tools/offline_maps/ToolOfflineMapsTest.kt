@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
+import kotlin.time.Clock
 import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
@@ -247,7 +248,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
                 VectorMapFileType.Mapsforge,
                 path,
                 0,
-                Instant.now(),
+                Clock.System.now(),
                 null,
                 null,
                 visible = true

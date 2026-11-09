@@ -5,7 +5,7 @@ import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.luna.time.ITimer
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ class TimeoutGPSModuleTest {
     }
     private val timer = mock<ITimer>()
     private lateinit var fireTimeout: suspend () -> Unit
-    private val data = ModularGPSData(eventTime = Instant.EPOCH)
+    private val data = ModularGPSData(eventTime = Instant.fromEpochMilliseconds(0))
     private val notifications = mutableListOf<Boolean>()
     private val module: TimeoutGPSModule = TimeoutGPSModule(
         onTimeout = { acceptTimeout ->

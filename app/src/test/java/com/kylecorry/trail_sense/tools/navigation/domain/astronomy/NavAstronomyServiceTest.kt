@@ -6,16 +6,18 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlinx.datetime.TimeZone
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 internal class NavAstronomyServiceTest {
 
     private val location = Coordinate(0.0, 0.0)
 
     private fun astronomyAt(time: String) =
-        AstronomyService(Clock.fixed(Instant.parse(time), ZoneOffset.UTC))
+        AstronomyService(object : Clock {
+            override fun now(): Instant = Instant.parse(time)
+        }, TimeZone.UTC)
 
     @Test
     fun `sun is up at noon and down at midnight`() {

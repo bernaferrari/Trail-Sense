@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.sol.units.Bearing
@@ -14,8 +15,8 @@ import com.kylecorry.trail_sense.shared.sensors.gps.SpeedSource
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSKalmanState
 import com.kylecorry.trail_sense.shared.sensors.gps.age
 import com.kylecorry.trail_sense.shared.sensors.gps.durationSince
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -24,7 +25,7 @@ class CacheGPSModuleTest {
     private val preferences = InMemoryPreferences()
     private val fixTime = Instant.parse("2020-01-01T00:00:00Z")
     private var elapsedMillis = 110_000L
-    private var wallMillis = fixTime.toEpochMilli() + 10_000L
+    private var wallMillis = fixTime.toEpochMilliseconds() + 10_000L
     private val timeProvider = object : TimeProvider {
         override fun elapsedRealtime() = elapsedMillis
         override fun currentTimeMillis() = wallMillis
@@ -167,7 +168,7 @@ class CacheGPSModuleTest {
         val restored = reading()
         module.restore(restored)
         assertEquals(Coordinate.zero, restored.location)
-        assertEquals(Instant.EPOCH, restored.eventTime)
+        assertEquals(Instant.fromEpochMilliseconds(0), restored.eventTime)
         assertEquals(0L, restored.eventTimeElapsedNanos)
         assertEquals(0f, restored.altitude)
         assertEquals(0f, restored.speed.value)
@@ -183,11 +184,11 @@ class CacheGPSModuleTest {
         assertTrue(module.hasNewerReading(ModularGPSData()))
         assertFalse(module.hasNewerReading(candidate))
         assertFalse(module.hasNewerReading(reading().apply {
-            eventTime = fixTime.minusSeconds(60)
+            eventTime = (fixTime - 60.seconds)
             eventTimeElapsedNanos += 1_000_000_000
         }))
         assertTrue(module.hasNewerReading(reading().apply {
-            eventTime = fixTime.plusSeconds(60)
+            eventTime = (fixTime + 60.seconds)
             eventTimeElapsedNanos -= 1_000_000_000
         }))
     }
@@ -196,12 +197,12 @@ class CacheGPSModuleTest {
     fun estimatesTheElapsedTimeOfAFixFromAPreviousBoot() = runBlocking<Unit> {
         module.update(previous, reading())
         elapsedMillis = 5_000L
-        wallMillis = fixTime.toEpochMilli() + 60_000L
+        wallMillis = fixTime.toEpochMilliseconds() + 60_000L
 
         val restored = ModularGPSData()
         module(2).restore(restored)
         assertEquals(-55_000_000_000L, restored.eventTimeElapsedNanos)
-        assertEquals(Duration.ofSeconds(60), restored.age(timeProvider))
+        assertEquals(60.seconds, restored.age(timeProvider))
 
         // The estimate is saved, so it doesn't drift when read again
         wallMillis += 1
@@ -211,11 +212,11 @@ class CacheGPSModuleTest {
         assertEquals(restored.id, again.id)
 
         val live = reading().apply {
-            eventTime = fixTime.plusSeconds(61)
+            eventTime = (fixTime + 61.seconds)
             eventTimeElapsedNanos = 6_000_000_000
         }
         assertFalse(module(2).hasNewerReading(live))
-        assertEquals(Duration.ofSeconds(61), live.durationSince(restored))
+        assertEquals(61.seconds, live.durationSince(restored))
     }
 
     @Test
@@ -238,18 +239,18 @@ class CacheGPSModuleTest {
     fun estimatesTheElapsedTimeOfALegacyCache() = runBlocking<Unit> {
         preferences.putString(
             CacheGPSModule.LAST_GPS,
-            JsonConvert.toJson(GPSCacheData(latitude = 1.0, longitude = 2.0, updateTimeMillis = fixTime.toEpochMilli()))
+            JsonConvert.toJson(GPSCacheData(latitude = 1.0, longitude = 2.0, updateTimeMillis = fixTime.toEpochMilliseconds()))
         )
         val restored = ModularGPSData()
         module.restore(restored)
-        assertEquals(Duration.ofSeconds(10), restored.age(timeProvider))
+        assertEquals(10.seconds, restored.age(timeProvider))
     }
 
     @Test
     fun aFixFromTheFutureIsRestoredAsCurrent() = runBlocking<Unit> {
         module.update(previous, reading())
         elapsedMillis = 5_000L
-        wallMillis = fixTime.toEpochMilli() - 60_000L
+        wallMillis = fixTime.toEpochMilliseconds() - 60_000L
         val restored = ModularGPSData()
         module(2).restore(restored)
         assertEquals(Duration.ZERO, restored.age(timeProvider))

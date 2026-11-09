@@ -19,7 +19,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class MonitorWeatherCommandTest {
 
@@ -45,7 +45,7 @@ internal class MonitorWeatherCommandTest {
                 emptyList(),
                 emptyList(),
                 WeatherFront.Warm,
-                WeatherArrivalTime(Instant.now(), false),
+                WeatherArrivalTime(Clock.System.now(), false),
                 null,
                 emptyList()
             ),

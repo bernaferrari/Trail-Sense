@@ -12,14 +12,15 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.time.ZonedDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class BearingGuidanceTargetTest {
     private val context = mock<Context> {
         whenever(it.getString(R.string.bearing)).thenReturn("Bearing")
     }
     private val start = Coordinate(42.0, -72.0)
-    private val request = ARGuidanceRefreshRequest(context, start, ZonedDateTime.now())
+    private val request = ARGuidanceRefreshRequest(context, start, Clock.System.now())
 
     @Test
     fun lockedBearingUsesGeographicDestination() = runBlocking {

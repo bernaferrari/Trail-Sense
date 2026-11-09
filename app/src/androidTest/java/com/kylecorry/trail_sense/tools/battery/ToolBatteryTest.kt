@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.battery
 
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Clock
 import android.os.SystemClock
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
@@ -20,22 +24,20 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.Batter
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
 
 class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
 
     // The device was awake for 15 of the last 60 minutes
     override fun seedData() = runBlocking {
-        val elapsed = Duration.ofHours(1)
+        val elapsed = 1.hours
         BatteryRepo.getInstance(context).add(
             BatteryReading(
-                Instant.now().minus(elapsed),
+                Clock.System.now() - elapsed,
                 100f,
                 0f,
                 false,
-                Duration.ofMillis(SystemClock.uptimeMillis()).minusMinutes(15),
-                Duration.ofMillis(SystemClock.elapsedRealtime()).minus(elapsed)
+                SystemClock.uptimeMillis().milliseconds - 15.minutes,
+                SystemClock.elapsedRealtime().milliseconds - elapsed
             )
         )
     }

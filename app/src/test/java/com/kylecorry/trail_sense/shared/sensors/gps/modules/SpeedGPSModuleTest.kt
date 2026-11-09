@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
@@ -7,7 +9,7 @@ import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSPipeline
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
 import com.kylecorry.trail_sense.shared.sensors.gps.SpeedSource
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -17,7 +19,7 @@ class SpeedGPSModuleTest {
     private val previous = ModularGPSData()
 
     private fun reading(millis: Long, longitude: Double = 1.0, speed: Float = 0f) = ModularGPSData(
-        location = Coordinate(1.0, longitude), eventTime = Instant.EPOCH.plusMillis(millis),
+        location = Coordinate(1.0, longitude), eventTime = (Instant.fromEpochMilliseconds(0) + millis.milliseconds),
         eventTimeElapsedNanos = millis * 1_000_000,
         horizontalAccuracy = 1f,
         speed = Speed.from(speed, DistanceUnits.Meters, TimeUnits.Seconds)
@@ -116,7 +118,7 @@ class SpeedGPSModuleTest {
         module.update(previous, reading(0))
         // The fix time says 10 seconds passed, but only 5 seconds have elapsed
         val candidate = reading(5000, 1.001).apply {
-            eventTime = Instant.EPOCH.plusSeconds(10)
+            eventTime = (Instant.fromEpochMilliseconds(0) + 10.seconds)
             speedAccuracy = 0.2f
         }
         module.update(previous, candidate)

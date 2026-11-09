@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting.alerts
 
+import kotlin.time.Clock
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import java.time.Instant
+import kotlin.time.Instant
 import java.util.stream.Stream
 
 internal class WeatherAlertGeneratorTest {
@@ -40,7 +41,7 @@ internal class WeatherAlertGeneratorTest {
                 conditions,
                 emptyList(),
                 null,
-                WeatherArrivalTime(Instant.now(), false),
+                WeatherArrivalTime(Clock.System.now(), false),
                 TemperaturePrediction(
                     Temperature.zero,
                     Temperature.celsius(high),

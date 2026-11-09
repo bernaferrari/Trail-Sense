@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -9,7 +10,7 @@ import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSKalmanState
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
 import com.kylecorry.trail_sense.shared.sensors.gps.SpeedSource
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -36,7 +37,7 @@ class SameFixGPSModuleTest {
         quality = Quality.Good,
         hasValidReading = true,
         altitude = 9f,
-        eventTime = Instant.EPOCH.plusSeconds(1),
+        eventTime = (Instant.fromEpochMilliseconds(0) + 1.seconds),
         speed = Speed.from(10f, DistanceUnits.Meters, TimeUnits.Seconds),
         isTimedOut = true
     ).apply {
@@ -56,7 +57,7 @@ class SameFixGPSModuleTest {
         quality = Quality.Poor,
         hasValidReading = true,
         altitude = 18f,
-        eventTime = Instant.EPOCH.plusSeconds(seconds),
+        eventTime = (Instant.fromEpochMilliseconds(0) + seconds.seconds),
         speed = Speed.from(19f, DistanceUnits.Meters, TimeUnits.Seconds)
     ).apply { speedSource = SpeedSource.Provider }
 
@@ -95,7 +96,7 @@ class SameFixGPSModuleTest {
 
     @Test
     fun leavesTheFirstFixAlone() = runBlocking<Unit> {
-        val previous = ModularGPSData(eventTime = Instant.EPOCH.plusSeconds(1))
+        val previous = ModularGPSData(eventTime = (Instant.fromEpochMilliseconds(0) + 1.seconds))
         val candidate = reading(1)
         assertTrue(module.update(previous, candidate))
         assertEquals(Coordinate(3.0, 4.0), candidate.location)

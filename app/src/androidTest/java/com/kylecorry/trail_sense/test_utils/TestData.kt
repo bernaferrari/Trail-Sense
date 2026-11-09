@@ -92,7 +92,7 @@ object TestData {
             GpxSerializer("Trail Sense").deserialize(bytes)
         }
         return gpx.tracks[0].segments[0].points.map {
-            PathPoint(0, 0, it.coordinate, it.elevation, it.time?.toJavaInstant())
+            PathPoint(0, 0, it.coordinate, it.elevation, it.time)
         }
     }
 

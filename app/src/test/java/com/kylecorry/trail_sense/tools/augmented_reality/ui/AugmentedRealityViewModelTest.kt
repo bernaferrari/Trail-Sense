@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import java.time.ZonedDateTime
+import kotlin.time.Instant
 
 class AugmentedRealityViewModelTest {
 
@@ -22,12 +22,12 @@ class AugmentedRealityViewModelTest {
 
     @Test
     fun startsFromTheRouteAndUsesItsTimeOnce() {
-        val time = "2024-06-01T12:00-04:00"
+        val time = "2024-06-01T16:00:00Z"
         val viewModel = AugmentedRealityViewModel(ARMode.Astronomy.id, false, time, prefs)
 
         assertEquals(ARMode.Astronomy, viewModel.mode)
         assertFalse(viewModel.isCameraEnabled)
-        assertEquals(ZonedDateTime.parse(time), viewModel.consumeInitialTime())
+        assertEquals(Instant.parse(time), viewModel.consumeInitialTime())
         assertNull(viewModel.consumeInitialTime())
     }
 

@@ -10,7 +10,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class DistanceAlertCommandTest {
 
@@ -90,7 +90,7 @@ internal class DistanceAlertCommandTest {
     }
 
     private fun getOpenPeriod(steps: Long): StepTrackingPeriod {
-        val time = Instant.ofEpochMilli(100)
+        val time = Instant.fromEpochMilliseconds(100)
         return StepTrackingPeriod(
             0,
             time,

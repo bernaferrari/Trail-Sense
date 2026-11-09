@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 
 class FieldGuideViewModelsTest {
 
@@ -38,7 +38,7 @@ class FieldGuideViewModelsTest {
 
     @Test
     fun newSightingChangesOnlyWhenEdited() {
-        val now = LocalDateTime.of(2026, 11, 5, 12, 0)
+        val now = LocalDateTime(2026, 11, 5, 12, 0)
         val viewModel = CreateFieldGuideSightingViewModel(
             Route.CreateFieldGuideSighting(pageId = 1L),
             repo,

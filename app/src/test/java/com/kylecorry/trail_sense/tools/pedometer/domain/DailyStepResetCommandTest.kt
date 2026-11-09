@@ -10,7 +10,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class DailyStepResetCommandTest {
 
@@ -31,7 +31,7 @@ internal class DailyStepResetCommandTest {
     @Test
     fun resetsWhenEnabledAndNoResetToday() = runBlocking {
         // Arrange
-        val time = Instant.ofEpochMilli(100)
+        val time = Instant.fromEpochMilliseconds(100)
         whenever(prefs.resetDaily).thenReturn(true)
         whenever(stepTrackerService.getOpenStepTrackingPeriod()).thenReturn(
             StepTrackingPeriod(
@@ -53,7 +53,7 @@ internal class DailyStepResetCommandTest {
     @Test
     fun noResetWhenEnabledAndAlreadyResetToday() = runBlocking {
         // Arrange
-        val time = Instant.ofEpochMilli(100)
+        val time = Instant.fromEpochMilliseconds(100)
         whenever(prefs.resetDaily).thenReturn(true)
         whenever(stepTrackerService.getOpenStepTrackingPeriod()).thenReturn(
             StepTrackingPeriod(

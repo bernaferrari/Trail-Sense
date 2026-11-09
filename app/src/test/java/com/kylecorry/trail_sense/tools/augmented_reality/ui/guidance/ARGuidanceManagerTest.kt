@@ -11,12 +11,13 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
-import java.time.ZonedDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class ARGuidanceManagerTest {
 
     private val request = ARGuidanceRefreshRequest(
-        mock(), Coordinate(42.0, -72.0), ZonedDateTime.parse("2026-09-26T12:00:00Z")
+        mock(), Coordinate(42.0, -72.0), Instant.parse("2026-09-26T12:00:00Z")
     )
 
     @Test

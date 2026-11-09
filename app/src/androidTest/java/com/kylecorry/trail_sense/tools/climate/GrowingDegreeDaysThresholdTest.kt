@@ -57,7 +57,7 @@ class GrowingDegreeDaysThresholdTest {
             dates = dates,
             baseTemperature = baseTemperature,
             temperatureProvider = { kotlinDate ->
-                val date = kotlinDate.toJavaLocalDate()
+                val date = kotlinDate
                 val range = temperatures.firstOrNull { it.first == date }?.second
                     ?: temperatures.firstOrNull {
                         it.first.month == date.month && it.first.dayOfMonth == date.dayOfMonth

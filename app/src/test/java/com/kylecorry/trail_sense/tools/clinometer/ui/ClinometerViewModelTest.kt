@@ -1,16 +1,17 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
+import kotlin.time.Duration.Companion.milliseconds
 import com.kylecorry.sol.units.Distance
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlin.time.Instant
 
 class ClinometerViewModelTest {
 
-    private var time = Instant.ofEpochMilli(0)
+    private var time = Instant.fromEpochMilliseconds(0)
     private val viewModel = ClinometerViewModel(
         baselineDistance = { Distance.meters(20f) },
         now = { time }
@@ -56,7 +57,7 @@ class ClinometerViewModelTest {
         viewModel.startHold(angle = -5f, incline = -5f)
         // While held, the live reading shows
         assertEquals(15f, viewModel.displayedIncline(15f))
-        time = time.plusMillis(500)
+        time = (time + 500.milliseconds)
 
         assertEquals(ClinometerHoldResult.Sweep, viewModel.endHold(angle = 15f, incline = 15f))
 
@@ -68,7 +69,7 @@ class ClinometerViewModelTest {
     @Test
     fun aQuickSweepIsATap() {
         viewModel.startHold(angle = -5f, incline = -5f)
-        time = time.plusMillis(100)
+        time = (time + 100.milliseconds)
 
         assertEquals(ClinometerHoldResult.SingleAngle, viewModel.endHold(angle = 15f, incline = 15f))
         assertNull(viewModel.lockedIncline2)

@@ -1,13 +1,16 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
-import kotlin.time.toKotlinInstant
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.toJavaInstant
-import kotlin.time.Instant
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.science.shared.Season
 import com.kylecorry.sol.units.Coordinate
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -17,14 +20,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.time.Clock
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
-import java.util.TimeZone
+import kotlin.math.abs
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 /**
  * Checks the astronomy facade against well known published events, so a regression in how the
@@ -32,9 +34,9 @@ import java.util.TimeZone
  */
 internal class AstronomyServiceTest {
 
-    private val zone = ZoneId.of("America/New_York")
-    private lateinit var originalTimeZone: TimeZone
-    private val service = AstronomyService()
+    private val zone = TimeZone.of("America/New_York")
+    private lateinit var originalTimeZone: java.util.TimeZone
+    private val service = AstronomyService(timeZone = zone)
 
     // Near Boston, MA (sunrise and sunset published by timeanddate.com were used as the reference)
     private val boston = Coordinate(42.36, -71.06)
@@ -42,61 +44,61 @@ internal class AstronomyServiceTest {
 
     @BeforeEach
     fun setup() {
-        originalTimeZone = TimeZone.getDefault()
-        TimeZone.setDefault(TimeZone.getTimeZone(zone))
+        originalTimeZone = java.util.TimeZone.getDefault()
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(zone.id))
     }
 
     @AfterEach
     fun tearDown() {
-        TimeZone.setDefault(originalTimeZone)
+        java.util.TimeZone.setDefault(originalTimeZone)
     }
 
     // SUN
 
     @Test
     fun sunTimesOnTheSummerSolstice() {
-        val times = service.getSunTimes(boston, SunTimesMode.Actual, LocalDate.of(2025, 6, 21))
+        val times = service.getSunTimes(boston, SunTimesMode.Actual, LocalDate(2025, 6, 21))
 
-        assertTimeNear(LocalTime.of(5, 7), times.rise)
+        assertTimeNear(LocalTime(5, 7), times.rise)
         // Solar noon is late because of daylight saving time
-        assertTimeNear(LocalTime.of(12, 46), times.transit)
-        assertTimeNear(LocalTime.of(20, 25), times.set)
+        assertTimeNear(LocalTime(12, 46), times.transit)
+        assertTimeNear(LocalTime(20, 25), times.set)
     }
 
     @Test
     fun sunTimesOnTheWinterSolstice() {
-        val times = service.getSunTimes(boston, SunTimesMode.Actual, LocalDate.of(2025, 12, 21))
+        val times = service.getSunTimes(boston, SunTimesMode.Actual, LocalDate(2025, 12, 21))
 
-        assertTimeNear(LocalTime.of(7, 11), times.rise)
-        assertTimeNear(LocalTime.of(11, 42), times.transit)
-        assertTimeNear(LocalTime.of(16, 14), times.set)
+        assertTimeNear(LocalTime(7, 11), times.rise)
+        assertTimeNear(LocalTime(11, 42), times.transit)
+        assertTimeNear(LocalTime(16, 14), times.set)
     }
 
     @Test
     fun civilTwilightStartsBeforeSunrise() {
-        val date = LocalDate.of(2025, 6, 21)
+        val date = LocalDate(2025, 6, 21)
 
         val actual = service.getSunTimes(boston, SunTimesMode.Actual, date)
         val civil = service.getSunTimes(boston, SunTimesMode.Civil, date)
 
-        assertTimeNear(LocalTime.of(4, 33), civil.rise)
+        assertTimeNear(LocalTime(4, 33), civil.rise)
         assertTrue(civil.rise!! < actual.rise!!)
         assertTrue(civil.set!! > actual.set!!)
     }
 
     @Test
     fun lengthOfDayOnTheSolstices() {
-        val summer = service.getLengthOfDay(boston, SunTimesMode.Actual, LocalDate.of(2025, 6, 21))
-        val winter = service.getLengthOfDay(boston, SunTimesMode.Actual, LocalDate.of(2025, 12, 21))
+        val summer = service.getLengthOfDay(boston, SunTimesMode.Actual, LocalDate(2025, 6, 21))
+        val winter = service.getLengthOfDay(boston, SunTimesMode.Actual, LocalDate(2025, 12, 21))
 
-        assertDurationNear(Duration.ofHours(15).plusMinutes(18), summer)
-        assertDurationNear(Duration.ofHours(9).plusMinutes(3), winter)
+        assertDurationNear(15.hours + 18.minutes, summer)
+        assertDurationNear(9.hours + 3.minutes, winter)
     }
 
     @Test
     fun theSunIsUpDuringTheDayAndDownAtNight() {
-        val noon = ZonedDateTime.of(2025, 6, 21, 12, 0, 0, 0, zone)
-        val midnight = ZonedDateTime.of(2025, 6, 21, 0, 0, 0, 0, zone)
+        val noon = at(2025, 6, 21, 12, 0)
+        val midnight = at(2025, 6, 21, 0, 0)
 
         assertTrue(service.isSunUp(boston, noon))
         assertFalse(service.isSunUp(boston, midnight))
@@ -104,56 +106,56 @@ internal class AstronomyServiceTest {
 
     @Test
     fun nextSunriseAndSunsetAreRelativeToTheClock() {
-        val beforeSunrise = serviceAt(ZonedDateTime.of(2025, 6, 21, 3, 0, 0, 0, zone))
-        val afterSunset = serviceAt(ZonedDateTime.of(2025, 6, 21, 22, 0, 0, 0, zone))
+        val beforeSunrise = serviceAt(at(2025, 6, 21, 3, 0))
+        val afterSunset = serviceAt(at(2025, 6, 21, 22, 0))
 
         val sameDaySunrise = beforeSunrise.getNextSunrise(boston, SunTimesMode.Actual)
         val sameDaySunset = beforeSunrise.getNextSunset(boston, SunTimesMode.Actual)
         val nextDaySunrise = afterSunset.getNextSunrise(boston, SunTimesMode.Actual)
 
-        assertEquals(LocalDate.of(2025, 6, 21), sameDaySunrise!!.toLocalDate())
-        assertTimeNear(LocalTime.of(5, 7), sameDaySunrise.toLocalTime())
-        assertEquals(LocalDate.of(2025, 6, 21), sameDaySunset!!.toLocalDate())
-        assertTimeNear(LocalTime.of(20, 25), sameDaySunset.toLocalTime())
-        assertEquals(LocalDate.of(2025, 6, 22), nextDaySunrise!!.toLocalDate())
+        assertEquals(LocalDate(2025, 6, 21), sameDaySunrise!!.local().date)
+        assertTimeNear(LocalTime(5, 7), sameDaySunrise)
+        assertEquals(LocalDate(2025, 6, 21), sameDaySunset!!.local().date)
+        assertTimeNear(LocalTime(20, 25), sameDaySunset)
+        assertEquals(LocalDate(2025, 6, 22), nextDaySunrise!!.local().date)
     }
 
     @Test
     fun todayAndTomorrowSunTimesFollowTheClock() {
-        val clocked = serviceAt(ZonedDateTime.of(2025, 6, 21, 12, 0, 0, 0, zone))
+        val clocked = serviceAt(at(2025, 6, 21, 12, 0))
 
         val today = clocked.getTodaySunTimes(boston, SunTimesMode.Actual)
         val tomorrow = clocked.getTomorrowSunTimes(boston, SunTimesMode.Actual)
 
-        assertEquals(LocalDate.of(2025, 6, 21), today.rise!!.atZone(zone).toLocalDate())
-        assertEquals(LocalDate.of(2025, 6, 22), tomorrow.rise!!.atZone(zone).toLocalDate())
+        assertEquals(LocalDate(2025, 6, 21), today.rise!!.local().date)
+        assertEquals(LocalDate(2025, 6, 22), tomorrow.rise!!.local().date)
     }
 
     @Test
     fun theSunNeverSetsInTheArcticSummer() {
         val arctic = Coordinate(80.0, 0.0)
-        val noon = ZonedDateTime.of(2025, 6, 21, 12, 0, 0, 0, zone)
+        val noon = at(2025, 6, 21, 12, 0)
         val clocked = serviceAt(noon)
 
         assertTrue(clocked.isSunUp(arctic, noon))
         assertNull(clocked.getNextSunset(arctic, SunTimesMode.Actual))
         assertEquals(
-            Duration.ofDays(1),
-            service.getLengthOfDay(arctic, SunTimesMode.Actual, LocalDate.of(2025, 6, 21))
+            1.days,
+            service.getLengthOfDay(arctic, SunTimesMode.Actual, LocalDate(2025, 6, 21))
         )
     }
 
     @Test
     fun theSunNeverRisesInTheArcticWinter() {
         val arctic = Coordinate(80.0, 0.0)
-        val noon = ZonedDateTime.of(2025, 12, 21, 12, 0, 0, 0, zone)
+        val noon = at(2025, 12, 21, 12, 0)
         val clocked = serviceAt(noon)
 
         assertFalse(clocked.isSunUp(arctic, noon))
         assertNull(clocked.getNextSunrise(arctic, SunTimesMode.Actual))
         assertEquals(
             Duration.ZERO,
-            service.getLengthOfDay(arctic, SunTimesMode.Actual, LocalDate.of(2025, 12, 21))
+            service.getLengthOfDay(arctic, SunTimesMode.Actual, LocalDate(2025, 12, 21))
         )
     }
 
@@ -162,7 +164,7 @@ internal class AstronomyServiceTest {
         // 90 - latitude + solar declination (23.44 degrees at the June solstice)
         val expectedPeak = 90f - 42.36f + 23.44f
 
-        val altitudes = service.getSunAltitudes(boston, LocalDate.of(2025, 6, 21))
+        val altitudes = service.getSunAltitudes(boston, LocalDate(2025, 6, 21))
 
         assertEquals(expectedPeak, altitudes.maxOf { it.value }, 1.5f)
         assertTrue(altitudes.minOf { it.value } < 0f)
@@ -170,28 +172,28 @@ internal class AstronomyServiceTest {
 
     @Test
     fun sunAltitudesCoverTheWholeDay() {
-        val altitudes = service.getSunAltitudes(boston, LocalDate.of(2025, 6, 21))
+        val altitudes = service.getSunAltitudes(boston, LocalDate(2025, 6, 21))
 
-        assertEquals(LocalDate.of(2025, 6, 21), altitudes.first().time.atZone(zone).toLocalDate())
-        assertEquals(LocalDate.of(2025, 6, 21), altitudes.last().time.atZone(zone).toLocalDate())
+        assertEquals(LocalDate(2025, 6, 21), altitudes.first().time.local().date)
+        assertEquals(LocalDate(2025, 6, 21), altitudes.last().time.local().date)
         assertTrue(altitudes.last().time - altitudes.first().time >= 23.hours)
     }
 
     @Test
     fun centeredAltitudesSpanTwelveHoursEitherSideOfTheTime() {
-        val time = ZonedDateTime.of(2025, 6, 21, 12, 0, 0, 0, zone)
+        val time = at(2025, 6, 21, 12, 0)
 
         val altitudes = service.getCenteredSunAltitudes(boston, time)
 
-        assertEquals(time.minusHours(12).toInstant().toKotlinInstant(), altitudes.first().time)
-        assertEquals(time.plusHours(12).toInstant().toKotlinInstant(), altitudes.last().time)
+        assertEquals(time - 12.hours, altitudes.first().time)
+        assertEquals(time + 12.hours, altitudes.last().time)
     }
 
     @Test
     fun seasonsAreOppositeInEachHemisphere() {
         // The day after each solstice, since seasons are evaluated from the start of the day
-        val june = LocalDate.of(2025, 6, 22)
-        val december = LocalDate.of(2025, 12, 22)
+        val june = LocalDate(2025, 6, 22)
+        val december = LocalDate(2025, 12, 22)
 
         assertEquals(Season.Summer, service.getSeason(boston, june))
         assertEquals(Season.Winter, service.getSeason(Coordinate(-33.9, 151.2), june))
@@ -204,7 +206,7 @@ internal class AstronomyServiceTest {
     @Test
     fun moonPhaseNearAKnownFullMoonIsFull() {
         // Full moon: 2025-03-14 06:55 UTC
-        val phase = service.getMoonPhase(ZonedDateTime.of(2025, 3, 14, 2, 55, 0, 0, zone))
+        val phase = service.getMoonPhase(at(2025, 3, 14, 2, 55))
 
         assertTrue(phase.illumination > 99f, "illumination was ${phase.illumination}")
     }
@@ -212,7 +214,7 @@ internal class AstronomyServiceTest {
     @Test
     fun moonPhaseNearAKnownNewMoonIsDark() {
         // New moon: 2025-03-29 10:58 UTC
-        val phase = service.getMoonPhase(ZonedDateTime.of(2025, 3, 29, 6, 58, 0, 0, zone))
+        val phase = service.getMoonPhase(at(2025, 3, 29, 6, 58))
 
         assertTrue(phase.illumination < 1f, "illumination was ${phase.illumination}")
     }
@@ -220,15 +222,15 @@ internal class AstronomyServiceTest {
     @Test
     fun moonIsHalfLitAtQuarterMoon() {
         // First quarter: 2025-03-06 16:32 UTC
-        val phase = service.getMoonPhase(ZonedDateTime.of(2025, 3, 6, 11, 32, 0, 0, zone))
+        val phase = service.getMoonPhase(at(2025, 3, 6, 11, 32))
 
         assertEquals(50f, phase.illumination, 3f)
     }
 
     @Test
     fun moonPhaseForADateIsEvaluatedAtNoon() {
-        val byDate = service.getMoonPhase(LocalDate.of(2025, 3, 10))
-        val atNoon = service.getMoonPhase(ZonedDateTime.of(2025, 3, 10, 12, 0, 0, 0, zone))
+        val byDate = service.getMoonPhase(LocalDate(2025, 3, 10))
+        val atNoon = service.getMoonPhase(at(2025, 3, 10, 12, 0))
 
         assertEquals(atNoon.illumination, byDate.illumination, 0.01f)
     }
@@ -236,61 +238,61 @@ internal class AstronomyServiceTest {
     @Test
     fun superMoonIsDetectedOnAKnownSuperMoon() {
         // Full moon at perigee: 2025-11-05
-        assertTrue(service.isSuperMoon(LocalDate.of(2025, 11, 5)))
+        assertTrue(service.isSuperMoon(LocalDate(2025, 11, 5)))
     }
 
     @Test
     fun superMoonIsNotReportedWhenTheMoonIsNotFull() {
-        assertFalse(service.isSuperMoon(LocalDate.of(2025, 11, 12)))
+        assertFalse(service.isSuperMoon(LocalDate(2025, 11, 12)))
     }
 
     @Test
     fun moonRisesAndSetsOnTheSameCalendarDayMostDays() {
-        val times = service.getMoonTimes(boston, LocalDate.of(2025, 3, 14))
+        val times = service.getMoonTimes(boston, LocalDate(2025, 3, 14))
 
         // The full moon rises near sunset and sets near sunrise
         assertNotNull(times.rise)
-        assertTrue(times.rise!!.atZone(zone).hour in 16..20, "moonrise was ${times.rise}")
+        assertTrue(times.rise!!.local().hour in 16..20, "moonrise was ${times.rise}")
     }
 
     // EVENT SEARCH
 
     @Test
     fun findsTheNextFullMoon() = runBlocking {
-        val next = service.findNextEvent(AstronomyEvent.FullMoon, boston, LocalDate.of(2025, 3, 1))
+        val next = service.findNextEvent(AstronomyEvent.FullMoon, boston, LocalDate(2025, 3, 1))
 
-        assertDateNear(LocalDate.of(2025, 3, 14), next)
+        assertDateNear(LocalDate(2025, 3, 14), next)
     }
 
     @Test
     fun findsTheNextNewMoon() = runBlocking {
-        val next = service.findNextEvent(AstronomyEvent.NewMoon, boston, LocalDate.of(2025, 3, 1))
+        val next = service.findNextEvent(AstronomyEvent.NewMoon, boston, LocalDate(2025, 3, 1))
 
-        assertDateNear(LocalDate.of(2025, 3, 29), next)
+        assertDateNear(LocalDate(2025, 3, 29), next)
     }
 
     @Test
     fun findsTheNextQuarterMoon() = runBlocking {
         val next =
-            service.findNextEvent(AstronomyEvent.QuarterMoon, boston, LocalDate.of(2025, 3, 1))
+            service.findNextEvent(AstronomyEvent.QuarterMoon, boston, LocalDate(2025, 3, 1))
 
         // First quarter on 2025-03-06
-        assertDateNear(LocalDate.of(2025, 3, 6), next)
+        assertDateNear(LocalDate(2025, 3, 6), next)
     }
 
     @Test
     fun searchSkipsTheEventWhenStartingDuringIt() = runBlocking {
-        val fullMoon = service.findNextEvent(AstronomyEvent.FullMoon, boston, LocalDate.of(2025, 3, 1))!!
+        val fullMoon = service.findNextEvent(AstronomyEvent.FullMoon, boston, LocalDate(2025, 3, 1))!!
 
         val following = service.findNextEvent(AstronomyEvent.FullMoon, boston, fullMoon)
 
         // Next full moon is 2025-04-13, about 29.5 days later
-        assertDateNear(LocalDate.of(2025, 4, 13), following)
+        assertDateNear(LocalDate(2025, 4, 13), following)
     }
 
     @Test
     fun searchNeverReturnsTheStartDate() = runBlocking {
-        val start = LocalDate.of(2025, 3, 14)
+        val start = LocalDate(2025, 3, 14)
 
         val next = service.findNextEvent(AstronomyEvent.FullMoon, boston, start)
 
@@ -299,37 +301,37 @@ internal class AstronomyServiceTest {
 
     @Test
     fun findsTheNextSupermoon() = runBlocking {
-        val next = service.findNextEvent(AstronomyEvent.Supermoon, boston, LocalDate.of(2025, 10, 10))
+        val next = service.findNextEvent(AstronomyEvent.Supermoon, boston, LocalDate(2025, 10, 10))
 
-        assertDateNear(LocalDate.of(2025, 11, 5), next)
+        assertDateNear(LocalDate(2025, 11, 5), next)
     }
 
     @Test
     fun findsTheNextMeteorShowerPeak() = runBlocking {
         val next =
-            service.findNextEvent(AstronomyEvent.MeteorShower, boston, LocalDate.of(2025, 8, 1))
+            service.findNextEvent(AstronomyEvent.MeteorShower, boston, LocalDate(2025, 8, 1))
 
         // Perseids peak 2025-08-12
-        assertDateNear(LocalDate.of(2025, 8, 12), next)
+        assertDateNear(LocalDate(2025, 8, 12), next)
     }
 
     @Test
     fun findsTheNextLunarEclipse() = runBlocking {
         val next =
-            service.findNextEvent(AstronomyEvent.LunarEclipse, boston, LocalDate.of(2025, 3, 1))
+            service.findNextEvent(AstronomyEvent.LunarEclipse, boston, LocalDate(2025, 3, 1))
 
         // Total lunar eclipse visible from the Americas on 2025-03-14
-        assertDateNear(LocalDate.of(2025, 3, 14), next)
+        assertDateNear(LocalDate(2025, 3, 14), next)
     }
 
     @Test
     fun findsTheNextSolarEclipse() = runBlocking {
 
         val next =
-            service.findNextEvent(AstronomyEvent.SolarEclipse, cleveland, LocalDate.of(2024, 3, 1))
+            service.findNextEvent(AstronomyEvent.SolarEclipse, cleveland, LocalDate(2024, 3, 1))
 
         // Total solar eclipse 2024-04-08
-        assertEquals(LocalDate.of(2024, 4, 8), next)
+        assertEquals(LocalDate(2024, 4, 8), next)
     }
 
     @Test
@@ -337,8 +339,8 @@ internal class AstronomyServiceTest {
         val next = service.findNextEvent(
             AstronomyEvent.FullMoon,
             boston,
-            LocalDate.of(2025, 3, 15),
-            maxSearch = Duration.ofDays(10)
+            LocalDate(2025, 3, 15),
+            maxSearch = 10.days
         )
 
         assertNull(next)
@@ -348,15 +350,15 @@ internal class AstronomyServiceTest {
 
     @Test
     fun reportsTheTotalSolarEclipseOverCleveland() {
-        val eclipse = service.getSolarEclipse(cleveland, LocalDate.of(2024, 4, 8))
+        val eclipse = service.getSolarEclipse(cleveland, LocalDate(2024, 4, 8))
 
         assertNotNull(eclipse)
         assertTrue(eclipse!!.isTotal, "magnitude was ${eclipse.magnitude}")
         assertTrue(eclipse.obscuration > 0.99f, "obscuration was ${eclipse.obscuration}")
         // Totality in Cleveland was at 3:13 PM EDT
-        assertTimeNear(LocalTime.of(15, 13), eclipse.peak.toLocalTime(), minutes = 10)
-        assertTrue(eclipse.start.isBefore(eclipse.peak), "start ${eclipse.start} peak ${eclipse.peak}")
-        assertTrue(eclipse.end.isAfter(eclipse.peak), "end ${eclipse.end} peak ${eclipse.peak}")
+        assertTimeNear(LocalTime(15, 13), eclipse.peak, minutes = 10)
+        assertTrue(eclipse.start < eclipse.peak, "start ${eclipse.start} peak ${eclipse.peak}")
+        assertTrue(eclipse.end > eclipse.peak, "end ${eclipse.end} peak ${eclipse.peak}")
         assertTrue(eclipse.peakAltitude > 40f, "alt ${eclipse.peakAltitude}")
     }
 
@@ -367,38 +369,38 @@ internal class AstronomyServiceTest {
     @Test
     fun reportsTheTotalSolarEclipseOnTheCenterLine() {
         // Dallas, TX: totality lasted about 3m50s and was centered near 1:42 PM CDT (2:42 PM EDT)
-        val eclipse = service.getSolarEclipse(Coordinate(32.78, -96.80), LocalDate.of(2024, 4, 8))
+        val eclipse = service.getSolarEclipse(Coordinate(32.78, -96.80), LocalDate(2024, 4, 8))
 
         assertNotNull(eclipse)
         assertTrue(eclipse!!.isTotal, "magnitude was ${eclipse.magnitude}")
-        assertTimeNear(LocalTime.of(14, 42), eclipse.peak.toLocalTime(), minutes = 2)
+        assertTimeNear(LocalTime(14, 42), eclipse.peak, minutes = 2)
     }
 
     @Test
     fun reportsNoSolarEclipseOnOrdinaryDays() {
-        assertNull(service.getSolarEclipse(cleveland, LocalDate.of(2024, 4, 15)))
+        assertNull(service.getSolarEclipse(cleveland, LocalDate(2024, 4, 15)))
     }
 
     @Test
     fun reportsTheTotalLunarEclipseOverBoston() {
-        val eclipse = service.getLunarEclipse(boston, LocalDate.of(2025, 3, 14))
+        val eclipse = service.getLunarEclipse(boston, LocalDate(2025, 3, 14))
 
         assertNotNull(eclipse)
         assertTrue(eclipse!!.isTotal)
         // Greatest eclipse: 06:59 UTC (2:59 AM EDT)
-        assertTimeNear(LocalTime.of(2, 59), eclipse.peak.toLocalTime(), minutes = 10)
+        assertTimeNear(LocalTime(2, 59), eclipse.peak, minutes = 10)
     }
 
     @Test
     fun reportsNoLunarEclipseOnOrdinaryDays() {
-        assertNull(service.getLunarEclipse(boston, LocalDate.of(2025, 3, 25)))
+        assertNull(service.getLunarEclipse(boston, LocalDate(2025, 3, 25)))
     }
 
     // METEOR SHOWERS
 
     @Test
     fun reportsThePerseidsOnTheirPeakDay() {
-        val shower = service.getMeteorShower(boston, LocalDate.of(2025, 8, 12))
+        val shower = service.getMeteorShower(boston, LocalDate(2025, 8, 12))
 
         assertNotNull(shower)
         assertEquals("Perseids", shower!!.shower.name)
@@ -406,22 +408,22 @@ internal class AstronomyServiceTest {
 
     @Test
     fun reportsNoMeteorShowerOnAQuietDay() {
-        assertNull(service.getMeteorShower(boston, LocalDate.of(2025, 6, 1)))
+        assertNull(service.getMeteorShower(boston, LocalDate(2025, 6, 1)))
     }
 
     // HELPERS
 
-    private fun serviceAt(time: ZonedDateTime): AstronomyService {
-        return AstronomyService(Clock.fixed(time.toInstant(), zone))
+    private fun at(year: Int, month: Int, day: Int, hour: Int, minute: Int): Instant {
+        return LocalDateTime(year, month, day, hour, minute).toInstant(zone)
     }
 
-    private fun assertTimeNear(
-        expected: LocalTime,
-        actual: ZonedDateTime?,
-        minutes: Long = 6
-    ) {
-        assertNotNull(actual)
-        assertTimeNear(expected, actual!!.withZoneSameInstant(zone).toLocalTime(), minutes)
+    private fun Instant.local(): LocalDateTime = toLocalDateTime(zone)
+
+    private fun serviceAt(time: Instant): AstronomyService {
+        val clock = object : Clock {
+            override fun now(): Instant = time
+        }
+        return AstronomyService(clock, zone)
     }
 
     private fun assertTimeNear(
@@ -430,13 +432,11 @@ internal class AstronomyServiceTest {
         minutes: Long = 6
     ) {
         assertNotNull(actual)
-        assertTimeNear(expected, actual!!.atZone(zone), minutes)
+        assertTimeNear(expected, actual!!.local().time, minutes)
     }
 
-    private fun Instant.atZone(zone: ZoneId): ZonedDateTime = toJavaInstant().atZone(zone)
-
     private fun assertTimeNear(expected: LocalTime, actual: LocalTime, minutes: Long = 6) {
-        val difference = Math.abs(ChronoUnit.MINUTES.between(expected, actual))
+        val difference = abs(expected.toSecondOfDay() - actual.toSecondOfDay()) / 60
         assertTrue(
             difference <= minutes,
             "Expected $expected (+/- $minutes minutes) but was $actual"
@@ -444,7 +444,7 @@ internal class AstronomyServiceTest {
     }
 
     private fun assertDurationNear(expected: Duration, actual: Duration, minutes: Long = 6) {
-        val difference = expected.minus(actual).abs().toMinutes()
+        val difference = (expected - actual).absoluteValue.inWholeMinutes
         assertTrue(
             difference <= minutes,
             "Expected $expected (+/- $minutes minutes) but was $actual"
@@ -453,7 +453,7 @@ internal class AstronomyServiceTest {
 
     private fun assertDateNear(expected: LocalDate, actual: LocalDate?, days: Long = 1) {
         assertNotNull(actual)
-        val difference = Math.abs(ChronoUnit.DAYS.between(expected, actual))
+        val difference = abs(expected.daysUntil(actual!!))
         assertTrue(difference <= days, "Expected $expected (+/- $days days) but was $actual")
     }
 }
