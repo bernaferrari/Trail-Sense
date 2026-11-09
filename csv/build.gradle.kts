@@ -17,7 +17,7 @@ kotlin {
     jvmToolchain(17)
     applyDefaultHierarchyTemplate()
     sourceSets {
-        commonMain.dependencies {  }
+        commonTest.dependencies { implementation(kotlin("test")) }
         jvmTest {
             kotlin.srcDir("src/test/java")
             dependencies {

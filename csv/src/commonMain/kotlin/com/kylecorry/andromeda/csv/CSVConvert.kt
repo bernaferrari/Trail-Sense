@@ -49,7 +49,7 @@ object CSVConvert {
                     if (insideQuotes) {
                         currentCell.append(char)
                     } else {
-                        if (i < csv.lastIndex && csv[i + 1] == '\n') {
+                        if (char == '\r' && i < csv.lastIndex && csv[i + 1] == '\n') {
                             // Also skip the LF in CRLF
                             i++
                         }
@@ -67,12 +67,12 @@ object CSVConvert {
             i++
         }
 
-        // Add the last cell and row if necessary
-        if (currentCell.isNotEmpty()) {
+        // A final delimiter or quoted empty value still represents a cell.
+        if (csv.isNotEmpty() && csv.last() != '\n' && csv.last() != '\r') {
             currentRow.add(currentCell.toString())
-        }
-
-        if (currentRow.isNotEmpty()) {
+            rows.add(currentRow)
+        } else if (insideQuotes) {
+            currentRow.add(currentCell.toString())
             rows.add(currentRow)
         }
 
