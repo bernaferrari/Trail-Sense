@@ -11,7 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 
-class HapticMotor(private val context: Context) : IHapticMotor {
+internal class AndroidHapticMotor(private val context: Context) : HapticMotor {
 
     /**
      * Turns the vibrator on (note: maximum 1 day)

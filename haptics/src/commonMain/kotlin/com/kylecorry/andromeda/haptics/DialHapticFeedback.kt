@@ -5,7 +5,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 class DialHapticFeedback(
-    private val hapticMotor: IHapticMotor,
+    private val hapticMotor: HapticMotor,
     private val vibrateFrequency: Int = 1,
     private val atAngleThreshold: Float = 0.25f
 ) {

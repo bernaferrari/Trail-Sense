@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.haptics
 
 import kotlin.time.Duration
 
-interface IHapticMotor {
+interface HapticMotor {
     /**
      * Turns the vibrator on (note: maximum 1 day)
      * @param amplitude the amplitude between 0 and 255, or -1 for the default amplitude

@@ -12,7 +12,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 
 /** iOS haptic motor backed by Core Haptics. */
-class HapticMotor : IHapticMotor {
+internal class IosHapticMotor : HapticMotor {
     private val pulsar = Pulsar.create()
     private val realtime = pulsar.getRealtimeComposer()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
