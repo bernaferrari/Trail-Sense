@@ -12,6 +12,24 @@ import kotlin.test.assertTrue
 
 class ArchiveTest {
     @Test
+    fun excludesFilesAndLimitsExtraction() = runBlocking {
+        val root = Files.createTempDirectory("andromeda-archive-limits").toString().toPath()
+        val storage = FileStorage(root)
+        try {
+            storage.writeText("input/a.txt", "a")
+            storage.writeText("input/b.txt", "b")
+            storage.writeText("input/c.txt", "c")
+            storage.zip("archive.zip", listOf("input"), password = "secret", exclude = setOf("input/b.txt"))
+            assertEquals(listOf("input/", "input/a.txt", "input/c.txt"), storage.listArchive("archive.zip").map { it.name })
+            storage.unzip("archive.zip", "restored", "secret", maxEntries = 2)
+            assertTrue(storage.exists("restored/input/a.txt"))
+            assertTrue(!storage.exists("restored/input/c.txt"))
+        } finally {
+            storage.fileSystem.deleteRecursively(root)
+        }
+    }
+
+    @Test
     fun archivesNestedFilesAndReadsEntries() = runBlocking {
         val root = Files.createTempDirectory("andromeda-archive").toString().toPath()
         val storage = FileStorage(root)
