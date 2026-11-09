@@ -11,7 +11,7 @@ class GeoJsonConvertTest {
     @ParameterizedTest
     @MethodSource("provideFromJson")
     fun fromJson(json: String, expected: GeoJsonObject) {
-        val parsed = GeoJsonConvert.fromJson(json.byteInputStream())
+        val parsed = GeoJsonConvert.fromJson(json)
         assertEquals(expected, parsed)
     }
 
@@ -19,7 +19,7 @@ class GeoJsonConvertTest {
     @MethodSource("provideFromJson")
     fun toJson(json: String, expected: GeoJsonObject) {
         val serialized = GeoJsonConvert.toJson(expected)
-        val parsed = GeoJsonConvert.fromJson(serialized.byteInputStream())
+        val parsed = GeoJsonConvert.fromJson(serialized)
         assertEquals(expected, parsed)
     }
 
