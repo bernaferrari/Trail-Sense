@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.core.sensors.read
 
 import android.content.Context
 import android.os.SystemClock
-import com.kylecorry.andromeda.battery.Battery
+import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
@@ -17,7 +17,7 @@ import java.time.Instant
 
 class BatteryLogCommand(private val context: Context) : CoroutineCommand {
     override suspend fun execute() {
-        val battery = Battery(context)
+        val battery = AndroidBattery(context)
         val batteryRepo = BatteryRepo.getInstance(context)
         withContext(Dispatchers.IO) {
             try {

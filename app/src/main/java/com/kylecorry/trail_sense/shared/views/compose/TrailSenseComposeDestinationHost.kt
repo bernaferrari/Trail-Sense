@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
@@ -141,7 +141,7 @@ class TrailSenseComposeDestinationHost(
 
     fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
         requestPermissions(listOf(Manifest.permission.CAMERA)) {
-            action(Camera.isAvailable(requireContext()))
+            action(AndroidCamera.isAvailable(requireContext()))
         }
     }
 

@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.signal.CellSignal
 import com.kylecorry.andromeda.signal.CellSignalOptions
 import com.kylecorry.andromeda.signal.cellSignals
-import com.kylecorry.andromeda.signal.ICellSignalSensor
+import com.kylecorry.andromeda.signal.CellSignalSensor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 class CellSignalFlowSensor(
     private val options: CellSignalOptions,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-) : SharedSensor(), ICellSignalSensor {
+) : SharedSensor(), CellSignalSensor {
 
     @Volatile
     override var signals: List<CellSignal> = emptyList()

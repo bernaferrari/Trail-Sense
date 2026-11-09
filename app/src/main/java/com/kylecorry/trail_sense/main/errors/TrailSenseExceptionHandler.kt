@@ -3,11 +3,10 @@ package com.kylecorry.trail_sense.main.errors
 import android.content.Intent
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.exceptions.AggregateBugReportGenerator
-import com.kylecorry.andromeda.exceptions.AndroidDetailsBugReportGenerator
-import com.kylecorry.andromeda.exceptions.AppDetailsBugReportGenerator
-import com.kylecorry.andromeda.exceptions.DeviceDetailsBugReportGenerator
-import com.kylecorry.andromeda.exceptions.StackTraceBugReportGenerator
+import com.kylecorry.andromeda.exceptions.AppDetailsReport
+import com.kylecorry.andromeda.exceptions.CombinedBugReport
+import com.kylecorry.andromeda.exceptions.DeviceDetailsReport
+import com.kylecorry.andromeda.exceptions.StackTraceReport
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
@@ -20,16 +19,15 @@ class TrailSenseExceptionHandler(
     private val activity: MainActivity
 ) : BaseExceptionHandler(
     activity.applicationContext,
-    AggregateBugReportGenerator(
+    CombinedBugReport(
         listOf(
-            AppDetailsBugReportGenerator(activity.getString(R.string.app_name)),
-            PackageNameBugReportGenerator(),
+            AppDetailsReport(activity.applicationContext, activity.getString(R.string.app_name)),
+            PackageNameBugReportGenerator(activity.applicationContext),
             BuildTypeBugReportGenerator(),
-            AndroidDetailsBugReportGenerator(),
-            DeviceDetailsBugReportGenerator(),
-            DestinationDetailsBugReportGenerator(),
-            DiagnosticsBugReportGenerator(),
-            StackTraceBugReportGenerator()
+            DeviceDetailsReport(),
+            DestinationDetailsBugReportGenerator(activity.applicationContext),
+            DiagnosticsBugReportGenerator(activity.applicationContext),
+            StackTraceReport
         )
     ),
     "errors/error.txt",

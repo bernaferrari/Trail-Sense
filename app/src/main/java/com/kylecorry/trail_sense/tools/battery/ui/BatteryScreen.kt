@@ -96,7 +96,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.battery.Battery
+import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.andromeda.battery.BatteryHealth
@@ -149,7 +149,7 @@ fun BatteryToolScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val batteryService = remember { BatteryService() }
-    val battery = remember { Battery(context) }
+    val battery = remember { AndroidBattery(context) }
     val batteryRepo = remember { BatteryRepo.getInstance(context) }
     val lowPowerMode = remember { LowPowerMode(context) }
     val prefs = remember { UserPreferences(context) }
@@ -389,7 +389,7 @@ private fun BatteryScreen(
     tips: List<SystemBatteryTip>,
     isLowPowerEnabled: Boolean,
     formatter: FormatService,
-    battery: Battery,
+    battery: AndroidBattery,
     batteryService: BatteryService,
     canOpenSystemBatterySettings: Boolean,
     onShowHistory: () -> Unit,

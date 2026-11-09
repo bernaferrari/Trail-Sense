@@ -17,7 +17,7 @@ import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.camera2.interop.CaptureRequestOptions
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.AspectRatio
-import androidx.camera.core.Camera
+import androidx.camera.core.Camera as CameraXCamera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
@@ -35,7 +35,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.common.util.concurrent.ListenableFuture
-import com.kylecorry.andromeda.camera.ICamera
+import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
 import com.kylecorry.andromeda.camera.ZoomInfo
 import com.kylecorry.andromeda.core.sensors.SharedSensor
@@ -86,7 +86,7 @@ class ViewfinderCamera(
     private val shouldStabilizePreview: Boolean = true,
     @param:AspectRatio.Ratio
     private val targetAspectRatio: Int = AspectRatio.RATIO_DEFAULT,
-) : SharedSensor(), ICamera {
+) : SharedSensor(), Camera {
 
     override val image: ImageProxy?
         get() = _image
@@ -120,7 +120,7 @@ class ViewfinderCamera(
 
     private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
     private var cameraProvider: ProcessCameraProvider? = null
-    private var camera: Camera? = null
+    private var camera: CameraXCamera? = null
     private var imageCapture: ImageCapture? = null
     private var cameraSelector: CameraSelector? = null
 

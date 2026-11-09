@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
-import com.kylecorry.andromeda.battery.IBattery
+import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
@@ -38,14 +38,14 @@ class BatteryService {
             }
     }
 
-    fun getTimeUntilEmpty(battery: IBattery, readings: List<BatteryReading>): Duration? {
+    fun getTimeUntilEmpty(battery: Battery, readings: List<BatteryReading>): Duration? {
         val capacity = battery.percent
         val rates = powerService.getRates(readings, Duration.ofMinutes(5), false)
         val lastDischargeRate = rates.lastOrNull { it < 0f } ?: return null
         return powerService.getTimeUntilEmpty(capacity, lastDischargeRate)
     }
 
-    fun getTimeUntilFull(battery: IBattery, readings: List<BatteryReading>): Duration? {
+    fun getTimeUntilFull(battery: Battery, readings: List<BatteryReading>): Duration? {
         val capacity = battery.percent
         val rates = powerService.getRates(readings, Duration.ofMinutes(5), false)
         val lastChargeRate = rates.lastOrNull { it > 0f } ?: return null

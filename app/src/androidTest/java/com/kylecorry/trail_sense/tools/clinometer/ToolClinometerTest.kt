@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer
 
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -23,7 +23,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
     @Test
     fun verifyBasicFunctionality() {
         // Starts with the camera enabled
-        if (Camera.hasBackCamera(context)) {
+        if (AndroidCamera.hasBackCamera(context)) {
             isTrue(10000) {
                 isCameraInUse(isBackFacing = true)
             }
@@ -52,7 +52,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
     private fun canSwitchToDialMode() {
         click(R.id.clinometer_mode_btn)
 
-        if (Camera.hasBackCamera(context)) {
+        if (AndroidCamera.hasBackCamera(context)) {
             isTrue {
                 !isCameraInUse(isBackFacing = true)
             }

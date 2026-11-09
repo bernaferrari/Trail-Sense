@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper
 
 import android.graphics.Rect
 import android.graphics.RectF
-import com.kylecorry.andromeda.camera.ICamera
+import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.Vector3
@@ -17,7 +17,7 @@ import kotlin.math.max
  * @param applyDistortionCorrection Whether to apply distortion correction. Defaults to false.
  */
 class CalibratedCameraAnglePixelMapper(
-    private val camera: ICamera,
+    private val camera: Camera,
     private val fallback: CameraAnglePixelMapper = LinearCameraAnglePixelMapper(),
     private val applyDistortionCorrection: Boolean = false,
     private val useManufacturerCalibration: Boolean = false

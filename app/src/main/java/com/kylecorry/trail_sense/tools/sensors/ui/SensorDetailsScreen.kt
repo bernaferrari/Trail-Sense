@@ -67,7 +67,7 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
-import com.kylecorry.andromeda.battery.Battery
+import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.sensors.Sensor as AndromedaSensor
 import com.kylecorry.andromeda.core.sensors.Quality
@@ -147,7 +147,7 @@ internal class SensorDetailsViewModel(
     val magnetometer = sensorService.getMagnetometer()
     val barometer = sensorService.getBarometer()
     val hygrometer = sensorService.getHygrometer()
-    val battery = Battery(appContext)
+    val battery = AndroidBattery(appContext)
     val gyroscope = sensorService.getGyroscope()
     val thermometer = sensorService.getThermometer()
     val cellSignal = sensorService.getCellSignal()

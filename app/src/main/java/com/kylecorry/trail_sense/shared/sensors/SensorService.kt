@@ -17,7 +17,7 @@ import com.kylecorry.andromeda.sense.hygrometer.AndroidHygrometer
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
-import com.kylecorry.andromeda.battery.Battery
+import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.andromeda.core.sensors.Thermometer
@@ -51,7 +51,7 @@ import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.andromeda.sense.temperature.AmbientThermometer
 import com.kylecorry.andromeda.sense.temperature.LegacyThermometer
 import com.kylecorry.andromeda.signal.CellSignalOptions
-import com.kylecorry.andromeda.signal.ICellSignalSensor
+import com.kylecorry.andromeda.signal.CellSignalSensor
 import com.kylecorry.sol.math.filters.LowPassFilter
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
@@ -323,7 +323,7 @@ class SensorService(ctx: Context) {
             return LegacyThermometer(context, ENVIRONMENT_SENSOR_DELAY)
         }
 
-        return Battery(context)
+        return AndroidBattery(context)
     }
 
     fun getHygrometer(): Hygrometer {
@@ -334,7 +334,7 @@ class SensorService(ctx: Context) {
         return MockHygrometer()
     }
 
-    fun getCellSignal(removeUnregisteredSignals: Boolean = true): ICellSignalSensor {
+    fun getCellSignal(removeUnregisteredSignals: Boolean = true): CellSignalSensor {
         if (!hasLocationPermission()) {
             return MockCellSignalSensor()
         }

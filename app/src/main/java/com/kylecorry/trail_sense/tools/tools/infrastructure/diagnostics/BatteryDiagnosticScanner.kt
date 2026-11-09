@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 import com.kylecorry.trail_sense.shared.sensors.flow
 
 import android.content.Context
-import com.kylecorry.andromeda.battery.Battery
+import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +15,7 @@ class BatteryDiagnosticScanner : ToolDiagnosticScanner {
     }
 
     override fun fullScan(context: Context): Flow<List<ToolDiagnosticResult>> {
-        val battery = Battery(context)
+        val battery = AndroidBattery(context)
         return battery.flow.map {
             if (battery.health != BatteryHealth.Good && battery.health != BatteryHealth.Unknown) {
                 listOf(

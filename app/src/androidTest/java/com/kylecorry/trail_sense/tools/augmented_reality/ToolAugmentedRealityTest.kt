@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality
 
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -33,7 +33,7 @@ class ToolAugmentedRealityTest : ToolTestBase(Tools.AUGMENTED_REALITY) {
             clickOk()
         }
 
-        if (Camera.hasBackCamera(context)) {
+        if (AndroidCamera.hasBackCamera(context)) {
             isTrue(10000) {
                 isCameraInUse(isBackFacing = true)
             }
@@ -47,7 +47,7 @@ class ToolAugmentedRealityTest : ToolTestBase(Tools.AUGMENTED_REALITY) {
     private fun canTurnOffCamera() {
         click(R.id.camera_toggle)
 
-        if (Camera.hasBackCamera(context)) {
+        if (AndroidCamera.hasBackCamera(context)) {
             isTrue {
                 !isCameraInUse(isBackFacing = true)
             }

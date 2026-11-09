@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import com.kylecorry.trail_sense.shared.camera.CameraScaleType
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -35,7 +35,7 @@ class SightingCompassView(
     }
 
     fun start() {
-        if (!Camera.isAvailable(camera.context)) {
+        if (!AndroidCamera.isAvailable(camera.context)) {
             return
         }
         try {
