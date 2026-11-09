@@ -273,8 +273,9 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click("Next")
         clickOkIfShown()
 
+        // The calibration opens on the first point now; the rotation step is gone
         hasText("Test Map")
-        hasText("Rotation: 0°")
+        hasText("Point 1 of 2")
 
         input("Location", "42, -72")
         click("Next")

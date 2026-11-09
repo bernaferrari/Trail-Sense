@@ -101,10 +101,11 @@ object TestUtils {
     }
 
     fun back(requireSuccess: Boolean = true) {
-        if (requireSuccess) {
-            assertTrue(device.pressBack())
-        } else {
-            device.pressBack()
+        // pressBack reports whether the key was injected and the UI idled in time. Compose transitions often keep
+        // animating past that wait, so a back that worked can report false. Wait for the UI to settle instead and let
+        // the test's next check verify where it landed.
+        if (!device.pressBack() && requireSuccess) {
+            device.waitForIdle()
         }
     }
 

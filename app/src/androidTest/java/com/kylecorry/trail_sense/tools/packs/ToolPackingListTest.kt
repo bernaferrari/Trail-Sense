@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import androidx.test.uiautomator.Direction
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.trail_sense.R
@@ -349,7 +350,8 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         scrollUntil(direction = Direction.UP) {
             click(category)
         }
-        clickOk()
+        // Picking a category closes its list
+        clickOkIfShown()
         input(id("item_weight_input")(), weight.toString())
         click(id("create_btn"))
     }

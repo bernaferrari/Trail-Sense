@@ -33,14 +33,15 @@ import org.junit.Test
 class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.97)) {
     @Test
     fun verifyBasicFunctionality() {
-        // Bearing
-        hasText(Regex("\\s*\\d+°\\s+[NSEW]+"))
-        // Location
-        hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
+        // Heading: the degrees, then the direction spelled out
+        hasText(Regex("\\d+"), exact = true)
+        hasText(COMPASS_DIRECTION)
+        // Location, with hemispheres instead of signs
+        hasText(LOCATION)
         // Elevation
-        hasText(Regex("-?\\d+ ft"))
-        // Speed
-        hasText(Regex("\\d+\\.\\d+ mph"))
+        hasText(Regex("-?\\d+ ft.*"))
+        // Speed is only shown while moving, and the test location stands still
+        not { hasText(Regex(".*\\d+(\\.\\d+)? mph.*")) }
 
         canDisplaySensorStatus()
 
@@ -79,7 +80,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun canNavigate() {
-        click(R.id.beaconBtn)
+        click(string(R.string.navigation_places), exact = true)
 
         // Create a beacon
         click(id("create_btn"))
@@ -149,7 +150,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun canCreateBeacon() {
-        longClick(R.id.beaconBtn)
+        click(string(R.string.navigation_save_spot), exact = true)
         hasText(string(R.string.create_beacon))
         hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
         back()
@@ -181,9 +182,10 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     fun showsTheCurrentLocation() {
         openWithSavedBeacons()
 
-        hasText("42.030000°,  -71.970000°")
-        hasText("0.0 mph")
-        hasText(string(R.string.true_north))
+        hasText("42.0300° N  71.9700° W")
+        hasText("0 ft elevation")
+        // Standing still shows no speed
+        not { hasText(Regex(".*mph.*")) }
     }
 
     @Test
@@ -229,6 +231,9 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         hasDataPoint(distance, string(R.string.navigation_remaining))
     }
 
+    private val COMPASS_DIRECTION = Regex("(North|South)(east|west)?|East|West")
+    private val LOCATION = Regex("\\d+\\.\\d{4}° [NS]\\s+\\d+\\.\\d{4}° [EW]")
+
     /** The arrow badge, which is read out as the bearing to the destination. */
     private val navigationArrow = { view(By.desc(Pattern.compile("\\d+° [NSEW]+"))) }
 
@@ -240,7 +245,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun navigateToBeacon(name: String) {
-        click(R.id.beaconBtn)
+        click(string(R.string.navigation_places), exact = true)
         click(name)
         click(string(R.string.navigate))
         // Calibration reminder (only shown when the compass accuracy is poor)

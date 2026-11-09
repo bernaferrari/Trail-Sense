@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import com.kylecorry.trail_sense.test_utils.views.desc
 import android.graphics.Point
 import androidx.annotation.StringRes
@@ -44,8 +45,8 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
     @Test
     fun verifyBasicFunctionality() {
-        // Disclaimer
-        clickOk()
+        // The map no longer opens with a disclaimer, but accept one if it does
+        clickOkIfShown()
 
         canZoom()
         canLock()
@@ -56,8 +57,8 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
     @Test
     fun verifyTimeSlider() {
-        // Disclaimer
-        clickOk()
+        // The map no longer opens with a disclaimer, but accept one if it does
+        clickOkIfShown()
 
         // Open the layers sheet
         click(mapControl(R.string.map_options))
@@ -83,8 +84,8 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
     @Test
     fun verifyMapLayers() {
-        // Disclaimer
-        clickOk()
+        // The map no longer opens with a disclaimer, but accept one if it does
+        clickOkIfShown()
 
         // Open the layers sheet
         click(mapControl(R.string.map_options))
@@ -240,7 +241,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
     @Test
     fun mapStartsCenteredOnTheCurrentLocation() {
         assumeFalse(isStagingBuild)
-        clickOk()
+        clickOkIfShown()
 
         longPressCenter()
 
@@ -252,7 +253,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
     @Test
     fun tappingABeaconShowsItAndCanNavigateToIt() {
         openWithCamp()
-        clickOk()
+        clickOkIfShown()
 
         tapAt(campLocation) {
             hasText("Camp", exact = true, waitForTime = 1000)
@@ -269,7 +270,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
     @Test
     fun longPressingReportsTheLocationDistanceAndDirection() {
         assumeFalse(isStagingBuild)
-        clickOk()
+        clickOkIfShown()
         // About 223 m north and 82 m east of the current location
         val target = Coordinate(42.032, -71.969)
 
@@ -330,7 +331,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
     private fun startDrawingPath() {
         assumeFalse(isStagingBuild)
-        clickOk()
+        clickOkIfShown()
         // Long presses don't report locations while measuring, so find the projection first
         projection()
         click(mapControl(R.string.map_options))
