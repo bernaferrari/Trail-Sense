@@ -152,6 +152,7 @@ open class ToolTestBase(
 
     @After
     fun tearDown() {
+        ScreenshotFailureRule.dumpHierarchy()
         TestUtils.unmute(volume)
         TestUtils.stopListeningForCameraUsage()
         TestUtils.stopListeningForTorchUsage()
