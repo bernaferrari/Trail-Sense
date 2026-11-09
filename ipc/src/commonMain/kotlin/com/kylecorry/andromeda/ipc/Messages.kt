@@ -15,12 +15,12 @@ sealed interface IpcValue {
     }
 }
 
-class InterprocessCommunicationRequest(
+class IpcRequest(
     val headers: Map<String, IpcValue> = emptyMap(),
     val payload: ByteArray? = null,
 )
 
-class InterprocessCommunicationResponse(
+class IpcResponse(
     val code: Int,
     val headers: Map<String, IpcValue> = emptyMap(),
     val payload: ByteArray? = null,

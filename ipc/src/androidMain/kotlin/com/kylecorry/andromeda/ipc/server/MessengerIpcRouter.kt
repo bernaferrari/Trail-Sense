@@ -10,8 +10,8 @@ import android.util.Log
 import androidx.core.os.bundleOf
 import com.kylecorry.andromeda.ipc.CODE_BAD_REQUEST
 import com.kylecorry.andromeda.ipc.CODE_INTERNAL_ERROR
-import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest
-import com.kylecorry.andromeda.ipc.InterprocessCommunicationResponse
+import com.kylecorry.andromeda.ipc.IpcRequest
+import com.kylecorry.andromeda.ipc.IpcResponse
 import com.kylecorry.andromeda.ipc.IpcRouter
 import com.kylecorry.andromeda.ipc.PROPERTY_CODE
 import com.kylecorry.andromeda.ipc.PROPERTY_HEADERS
@@ -28,7 +28,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 /** Android Messenger adapter for a shared [IpcRouter]. */
-class InterprocessCommunicationRouter(
+class MessengerIpcRouter(
     private val router: IpcRouter,
     private val looper: Looper = Looper.getMainLooper(),
     private val queueSize: Int = 256,
@@ -48,16 +48,16 @@ class InterprocessCommunicationRouter(
                 val data = message.data
                 val response = try {
                     val route = data.getString(PROPERTY_ROUTE)
-                    if (route == null) InterprocessCommunicationResponse(CODE_BAD_REQUEST)
-                    else router.send(route, InterprocessCommunicationRequest(
+                    if (route == null) IpcResponse(CODE_BAD_REQUEST)
+                    else router.send(route, IpcRequest(
                         (data.getBundle(PROPERTY_HEADERS) ?: bundleOf()).toIpcHeaders(),
                         data.getByteArray(PROPERTY_PAYLOAD),
                     ))
                 } catch (error: CancellationException) {
                     throw error
                 } catch (error: Exception) {
-                    Log.e("InterprocessCommunicationRouter", "Request failed", error)
-                    InterprocessCommunicationResponse(CODE_INTERNAL_ERROR)
+                    Log.e("MessengerIpcRouter", "Request failed", error)
+                    IpcResponse(CODE_INTERNAL_ERROR)
                 }
                 val reply = Message.obtain().apply {
                     data.putInt(PROPERTY_CODE, response.code)
@@ -67,7 +67,7 @@ class InterprocessCommunicationRouter(
                 try {
                     message.replyTo?.send(reply)
                 } catch (error: RemoteException) {
-                    Log.w("InterprocessCommunicationRouter", "Unable to send reply", error)
+                    Log.w("MessengerIpcRouter", "Unable to send reply", error)
                 }
             }
         }

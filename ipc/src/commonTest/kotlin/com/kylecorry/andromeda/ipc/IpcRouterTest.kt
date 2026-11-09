@@ -13,13 +13,13 @@ class IpcRouterTest {
         var failure: Exception? = null
         val client: IpcClient = IpcRouter(
             mapOf(
-                "echo" to { request -> InterprocessCommunicationResponse(CODE_OK, request.headers, request.payload) },
+                "echo" to { request -> IpcResponse(CODE_OK, request.headers, request.payload) },
                 "fail" to { throw IllegalStateException("failed") },
                 "cancel" to { throw CancellationException("cancelled") },
             ),
             onError = { failure = it },
         )
-        val request = InterprocessCommunicationRequest(mapOf("name" to IpcValue.Text("value")), byteArrayOf(1, 2))
+        val request = IpcRequest(mapOf("name" to IpcValue.Text("value")), byteArrayOf(1, 2))
         val response = client.send("echo", request)
         assertEquals(CODE_OK, response.code)
         assertEquals(request.headers, response.headers)

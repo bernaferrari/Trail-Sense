@@ -49,7 +49,7 @@ class LocalIpcClient(
         require(timeout > Duration.ZERO && timeout.isFinite() && maxFrameBytes > 0)
     }
 
-    override suspend fun send(path: String, request: InterprocessCommunicationRequest): InterprocessCommunicationResponse = withTimeout(timeout) {
+    override suspend fun send(path: String, request: IpcRequest): IpcResponse = withTimeout(timeout) {
         val selector = SelectorManager(Dispatchers.IO)
         try {
             val socket = aSocket(selector).tcp().connect(LOOPBACK, port)
@@ -114,14 +114,14 @@ suspend fun localIpcServer(
                             ?: error("IPC client closed without a request")
                         val parsed = try { decodeRequest(input) } catch (error: Exception) { null }
                         val response = when {
-                            parsed == null -> InterprocessCommunicationResponse(CODE_BAD_REQUEST)
-                            parsed.token != token -> InterprocessCommunicationResponse(CODE_UNAUTHORIZED)
+                            parsed == null -> IpcResponse(CODE_BAD_REQUEST)
+                            parsed.token != token -> IpcResponse(CODE_UNAUTHORIZED)
                             else -> try {
                                 router.send(parsed.path, parsed.request)
                             } catch (error: CancellationException) {
                                 throw error
                             } catch (error: Exception) {
-                                InterprocessCommunicationResponse(CODE_INTERNAL_ERROR)
+                                IpcResponse(CODE_INTERNAL_ERROR)
                             }
                         }
                         val encoded = encodeResponse(response)
@@ -151,16 +151,16 @@ suspend fun localIpcServer(
     }
 }
 
-private data class WireRequest(val token: String, val path: String, val request: InterprocessCommunicationRequest)
+private data class WireRequest(val token: String, val path: String, val request: IpcRequest)
 
-private fun encodeRequest(token: String, path: String, request: InterprocessCommunicationRequest): String = buildJsonObject {
+private fun encodeRequest(token: String, path: String, request: IpcRequest): String = buildJsonObject {
     put("token", token)
     put("path", path)
     put("headers", encodeHeaders(request.headers))
     put("payload", request.payload?.let { JsonPrimitive(Base64.encode(it)) } ?: JsonNull)
 }.toString()
 
-private fun encodeResponse(response: InterprocessCommunicationResponse): String = buildJsonObject {
+private fun encodeResponse(response: IpcResponse): String = buildJsonObject {
     put("code", response.code)
     put("headers", encodeHeaders(response.headers))
     put("payload", response.payload?.let { JsonPrimitive(Base64.encode(it)) } ?: JsonNull)
@@ -205,11 +205,11 @@ private fun decodeRequest(text: String): WireRequest {
     return WireRequest(
         value.getValue("token").jsonPrimitive.content,
         value.getValue("path").jsonPrimitive.content,
-        InterprocessCommunicationRequest(decodeHeaders(value.getValue("headers").jsonObject), decodePayload(value)),
+        IpcRequest(decodeHeaders(value.getValue("headers").jsonObject), decodePayload(value)),
     )
 }
 
-private fun decodeResponse(text: String): InterprocessCommunicationResponse {
+private fun decodeResponse(text: String): IpcResponse {
     val value = Json.parseToJsonElement(text).jsonObject
-    return InterprocessCommunicationResponse(value.getValue("code").jsonPrimitive.int, decodeHeaders(value.getValue("headers").jsonObject), decodePayload(value))
+    return IpcResponse(value.getValue("code").jsonPrimitive.int, decodeHeaders(value.getValue("headers").jsonObject), decodePayload(value))
 }

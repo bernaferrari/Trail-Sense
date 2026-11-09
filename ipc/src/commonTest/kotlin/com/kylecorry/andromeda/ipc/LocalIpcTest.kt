@@ -10,7 +10,7 @@ class LocalIpcTest {
     @Test
     fun exchangesTypedMessagesAndRejectsWrongToken() = runBlocking {
         val router = IpcRouter(mapOf("echo" to { request ->
-            InterprocessCommunicationResponse(CODE_OK, request.headers, request.payload)
+            IpcResponse(CODE_OK, request.headers, request.payload)
         }))
         val server = localIpcServer(router, "test-token", this)
         try {
@@ -26,7 +26,7 @@ class LocalIpcTest {
                 "bytes" to IpcValue.Bytes(byteArrayOf(0, 1, -1)),
             )
             val payload = byteArrayOf(0, 1, 2, -1)
-            val response = client.send("echo", InterprocessCommunicationRequest(headers, payload))
+            val response = client.send("echo", IpcRequest(headers, payload))
             assertEquals(CODE_OK, response.code)
             assertEquals(headers, response.headers)
             assertContentEquals(payload, response.payload)

@@ -12,9 +12,9 @@ import android.os.Messenger
 import androidx.core.os.bundleOf
 import com.kylecorry.andromeda.ipc.CODE_INTERNAL_ERROR
 import com.kylecorry.andromeda.ipc.CODE_SERVICE_UNAVAILABLE
-import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest
+import com.kylecorry.andromeda.ipc.IpcRequest
 import com.kylecorry.andromeda.ipc.IpcClient
-import com.kylecorry.andromeda.ipc.InterprocessCommunicationResponse
+import com.kylecorry.andromeda.ipc.IpcResponse
 import com.kylecorry.andromeda.ipc.toBundle
 import com.kylecorry.andromeda.ipc.toIpcHeaders
 import com.kylecorry.andromeda.ipc.PROPERTY_CODE
@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.coroutines.resume
 
-class InterprocessCommunicationClient(
+class MessengerIpcClient(
     private val context: Context,
     private val intent: Intent,
     private val looper: Looper = Looper.getMainLooper()
@@ -107,8 +107,8 @@ class InterprocessCommunicationClient(
 
     override suspend fun send(
         path: String,
-        request: InterprocessCommunicationRequest,
-    ): InterprocessCommunicationResponse =
+        request: IpcRequest,
+    ): IpcResponse =
         suspendCancellableCoroutine {
             val message = Message.obtain()
             val bundle = message.data
@@ -119,7 +119,7 @@ class InterprocessCommunicationClient(
             val replyHandler = object : Handler(looper) {
                 override fun handleMessage(msg: Message) {
                     val result = runCatching {
-                        InterprocessCommunicationResponse(
+                        IpcResponse(
                             msg.data.getInt(PROPERTY_CODE, CODE_INTERNAL_ERROR),
                             (msg.data.getBundle(PROPERTY_HEADERS) ?: bundleOf()).toIpcHeaders(),
                             msg.data.getByteArray(PROPERTY_PAYLOAD)
@@ -132,7 +132,7 @@ class InterprocessCommunicationClient(
             val replyMessenger = Messenger(replyHandler)
             message.replyTo = replyMessenger
             messenger?.send(message) ?: it.resume(
-                InterprocessCommunicationResponse(
+                IpcResponse(
                     CODE_SERVICE_UNAVAILABLE,
                     emptyMap(),
                     null
@@ -142,11 +142,11 @@ class InterprocessCommunicationClient(
 
     suspend fun connectAndSend(
         route: String,
-        request: InterprocessCommunicationRequest = InterprocessCommunicationRequest(),
+        request: IpcRequest = IpcRequest(),
         connectTimeout: Duration = 10.seconds,
         requestTimeout: Duration = 1.minutes,
         stayConnected: Boolean = false
-    ): InterprocessCommunicationResponse {
+    ): IpcResponse {
         return try {
             val success = connect()
             if (!success) {
