@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.trail_sense.test_utils.views.TestView
+import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.Manifest
@@ -505,8 +507,16 @@ object TestUtils {
         return false
     }
 
-    fun clickListItemMenu(label: String, index: Int = 0) {
-        click(com.kylecorry.andromeda.views.R.id.menu_btn, index = index)
+    /**
+     * Opens a list row's overflow menu and picks [label]. Compose rows expose the overflow button by its
+     * content description ("More options" unless the screen names it otherwise) or by a testTag.
+     */
+    fun clickListItemMenu(
+        label: String,
+        index: Int = 0,
+        menu: () -> TestView = { view(By.desc(getString(R.string.note_more_options)), index) }
+    ) {
+        click(menu)
         click(label)
     }
 

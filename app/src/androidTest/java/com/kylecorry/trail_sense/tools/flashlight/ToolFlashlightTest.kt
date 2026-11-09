@@ -77,7 +77,7 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
         }
 
         click(quickAction(Tools.QUICK_ACTION_SCREEN_FLASHLIGHT))
-        isVisible(R.id.screen_flashlight)
+        isVisible("red_white_switcher")
     }
 
 }

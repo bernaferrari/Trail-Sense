@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.whitenoise
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -25,7 +27,7 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
     @Test
     fun verifyBasicFunctionality() {
         // Turn on white noise
-        click(R.id.white_noise_btn)
+        click(desc(string(R.string.tool_white_noise_title)))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -41,7 +43,7 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
 
 
         // Turn it off
-        click(R.id.white_noise_btn)
+        click(desc(string(R.string.tool_white_noise_title)))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -67,11 +69,11 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
     }
 
     private fun canSetSleepTimer() {
-        click(R.id.sleep_timer_switch)
+        click(string(R.string.sleep_timer), exact = true)
         input(R.id.duration, "2")
 
         // Turn on white noise
-        click(R.id.white_noise_btn)
+        click(desc(string(R.string.tool_white_noise_title)))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {

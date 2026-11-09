@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
@@ -152,7 +153,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         waitFor {
             isVisible(R.id.zoom_in_btn)
         }
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.export))
         backUntil {
             hasText("test-map.map")
@@ -401,14 +402,14 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click("Navigate")
         hasText("Test Map", index = 1)
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
-        click(R.id.navigation_cancel)
+        click(desc(string(R.string.stop)))
 
         longClick(R.id.map)
         click("Distance")
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         longClick(R.id.map)
         click("Beacon")
@@ -461,7 +462,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // Create path
         click(id("map_menu_btn"))
@@ -469,7 +470,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // Layers
         click(id("map_menu_btn"))
@@ -480,7 +481,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         scrollUntil { hasText("Tides") }
         scrollUntil { hasText("Navigation") }
         scrollUntil { hasText("Photo maps") }
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // Export
         click(id("map_menu_btn"))

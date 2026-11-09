@@ -111,7 +111,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("Set as default")
         hasText(R.id.photo_position, "Image 1/2")
 
-        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // The page displays all the images
         click("A Test")
@@ -128,7 +128,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         clickOk()
         hasText(R.id.photo_position, "Image 1/1")
 
-        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+        click(toolbarButton(Side.Right))
     }
 
     private fun canEditPage() {
@@ -174,7 +174,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("Created", waitForTime = GPS_WAIT_FOR_TIMEOUT)
         click("View")
         input("Notes", "Quick action sighting")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // The quick action deep link returns to the sightings list after saving.
         hasText("Quick action sighting")
@@ -318,12 +318,12 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         // Create another sighting to delete from the edit page
         click(R.id.create_btn)
         input("Notes", "Delete from edit page")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
         hasText("Delete from edit page")
 
         // Delete from the edit page
         click("Delete from edit page")
-        click(toolbarButton(R.id.title, Side.Left))
+        click(toolbarButton(Side.Left))
         click("Delete")
         clickOk()
 

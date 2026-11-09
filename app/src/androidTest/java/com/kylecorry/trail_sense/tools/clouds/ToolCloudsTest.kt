@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clouds
 
+import com.kylecorry.trail_sense.test_utils.views.clickableIn
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -47,9 +48,9 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
 
         // Back on cloud log
         isVisible(id("add_btn"))
-        click(com.kylecorry.andromeda.views.R.id.title)
+        click(clickableIn("cloud_list"))
         clickOk()
-        isVisible(com.kylecorry.andromeda.views.R.id.title)
+        isVisible(id("cloud_list"))
 
         // Delete all cloud results
         try {
@@ -117,6 +118,6 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
 
         // Back on cloud log
         isVisible(id("add_btn"))
-        isVisible(com.kylecorry.andromeda.views.R.id.title)
+        isVisible(id("cloud_list"))
     }
 }

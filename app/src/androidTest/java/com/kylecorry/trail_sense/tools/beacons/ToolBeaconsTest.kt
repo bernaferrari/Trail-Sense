@@ -342,7 +342,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         clickOk()
 
         scrollToEnd(R.id.create_beacon_scroll)
-        click(toolbarButton(R.id.create_beacon_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // One mile north of 42, -72
         click("Mile north")

@@ -201,12 +201,15 @@ object AutomationLibrary {
 
     fun hasDataPoint(value: Regex, label: String, waitForTime: Long? = null) {
         waitFor(resolveWaitForTime(waitForTime)) {
-            val values = getTexts(R.id.data_point_title)
-            val labels = getTexts(R.id.data_point_desc)
-            val dataPoints = values.zip(labels)
+            // A data point is a value and a label drawn together, so look for the value among the label's siblings
+            val labels = TestUtils.device.findObjects(By.text(label))
+            val dataPoints = labels.map { labelView ->
+                val group = labelView.parent ?: labelView
+                group.allTexts().filter { it != label } to label
+            }
             assertTrue(
                 "Expected data point $value / $label but was $dataPoints",
-                dataPoints.any { (v, l) -> value.matches(v.trim()) && l.trim() == label }
+                dataPoints.any { (values, _) -> values.any { value.matches(it.trim()) } }
             )
         }
     }
@@ -227,6 +230,10 @@ object AutomationLibrary {
     private fun getTexts(tag: String): List<String> {
         val selector = By.res(packageName ?: TestUtils.context.packageName, tag)
         return TestUtils.device.findObjects(selector).map { it.allText() }
+    }
+
+    private fun UiObject2.allTexts(): List<String> {
+        return listOfNotNull(text) + children.flatMap { it.allTexts() }
     }
 
     private fun UiObject2.allText(): String {

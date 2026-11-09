@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation
 
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
@@ -54,7 +55,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
             scrollUntil { hasText("Tides") }
             scrollUntil { hasText("Photo maps") }
             scrollUntil { hasText("Trail maps") }
-            click(toolbarButton(R.id.title, Side.Right))
+            click(toolbarButton(Side.Right))
         }
     }
 
@@ -84,7 +85,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         input("Location", "1.0, -1.0")
         input("Elevation", "100")
         scrollUntil { input(R.id.comment, "Test Comment") }
-        click(toolbarButton(R.id.create_beacon_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // Navigate to it
         isVisible(id("beacon_list"))
@@ -125,11 +126,11 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun hasWorkingQuickActions() {
-        click(toolbarButton(R.id.navigation_title, Side.Left))
+        click(toolbarButton(Side.Left))
         isVisible(R.id.paths_title)
         back()
 
-        click(toolbarButton(R.id.navigation_title, Side.Right))
+        click(toolbarButton(Side.Right))
         clickOkIfShown()
         isVisible(R.id.map_list_title)
         back()
@@ -215,7 +216,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun cancelNavigation() {
-        click(R.id.navigation_cancel)
+        click(desc(string(R.string.stop)))
         // The undo snackbar covers the beacon button until it times out
         hasText(string(R.string.navigation_cancelled))
         not(waitForTime = 15000) { hasText(string(R.string.navigation_cancelled)) }

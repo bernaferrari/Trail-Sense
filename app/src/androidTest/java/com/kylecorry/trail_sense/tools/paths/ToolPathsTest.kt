@@ -136,7 +136,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText(Regex("[1-9]\\d*(\\.\\d+)? (mi|ft)"))
 
         // Cancelling a path with points asks before discarding it
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.dialog_leave))
         backUntil { isVisible(R.id.paths_title) }
     }
@@ -327,7 +327,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Test Path")
 
         // Path points
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Points")
         hasText("Today")
 
@@ -335,13 +335,13 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         back()
 
         // Replace elevations
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.replace_elevations))
         hasText(string(R.string.replace_elevations_confirmation))
         back(false)
 
         // Simplify
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Simplify")
         hasText("will be deleted")
         click(R.id.simplify_quality)
@@ -352,7 +352,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         clickOk()
 
         // Export
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Export")
         hasText("trail-sense-")
         backUntil {
@@ -360,9 +360,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         }
 
         // Hide / show
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Hide")
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Show")
 
         backUntil { isVisible(id("paths_title")) }
@@ -486,9 +486,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Recording")
         hasText(R.id.path_title, "Recording")
 
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.keep_forever))
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         not { hasText(string(R.string.keep_forever)) }
     }
 
@@ -651,7 +651,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Durfee Short")
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Points")
         click(R.id.waypoint_menu_btn)
         click(string(R.string.path_navigation_follow_to_point))
@@ -660,7 +660,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         assertNotNull(PathNavigationStore().load()!!.destinationPointId)
 
         backUntil { isVisible(R.id.path_scroll) }
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Points")
         click(R.id.waypoint_menu_btn)
         click(string(R.string.path_navigation_direct))
@@ -685,7 +685,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun sortBy(current: String, new: String) {
-        click(toolbarButton(R.id.paths_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.sort_by, current))
         click(new)
         clickOk()

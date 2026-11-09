@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ballistics
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -37,12 +38,12 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
 
         input(id("distance_to_target"), "100")
 
-        input(R.id.miss_distance_x, "1")
-        click(R.id.miss_right)
+        input(id("miss_distance_x"), "1")
+        click(string(R.string.right), exact = true)
 
-        scrollToEnd(R.id.scroll_view)
-        input(R.id.miss_distance_y, "2")
-        click(R.id.miss_up)
+        scrollUntil { isVisible(id("miss_direction_y")) }
+        input(id("miss_distance_y"), "2")
+        click(string(R.string.above), exact = true)
 
         hasText(id("adjustment_amount"), "Left 12 clicks\nDown 24 clicks")
     }
@@ -53,7 +54,7 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
         input(id("bullet_speed"), "750")
         input(id("bullet_weight"), "7.5")
 
-        hasText(R.id.energy_amount, "9.4 FPE")
+        hasText(id("energy_amount"), "9.4 FPE")
     }
 
 }

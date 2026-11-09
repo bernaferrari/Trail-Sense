@@ -25,7 +25,7 @@ class ToolClockTest : ToolTestBase(Tools.CLOCK) {
         hasText(R.id.pip_button, string(R.string.pip_button), waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
         // Update time from GPS
-        click(toolbarButton(R.id.clock_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // Click on the PIP button
         click(R.id.pip_button, waitForTime = GPS_WAIT_FOR_TIMEOUT)

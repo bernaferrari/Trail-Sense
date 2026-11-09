@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map
 
+import com.kylecorry.trail_sense.test_utils.views.desc
 import android.graphics.Point
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -63,7 +64,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
         clickOk()
 
         // Close layers sheet
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // Open time sheet
         click(R.id.time_btn)
@@ -153,7 +154,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
         clickOk()
 
         // Close sheet
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
     }
 
     private fun verifySensorStatusBadges() {
@@ -190,14 +191,14 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
         click("Navigate")
         hasText(Regex(".*-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°.*"))
-        click(R.id.navigation_cancel)
+        click(desc(string(R.string.stop)))
 
         longClick(R.id.map)
         click("Distance")
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
     }
 
     private fun verifyMapMenuOptions() {
@@ -206,18 +207,18 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         click(R.id.menu_btn)
         click("Create path")
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         click(R.id.menu_btn)
         click("Layers")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
     }
 
     // The map is drawn on a canvas, so these tests find where something should be on the screen using

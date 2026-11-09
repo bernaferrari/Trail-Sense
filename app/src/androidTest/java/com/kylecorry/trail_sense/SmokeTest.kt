@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense
 
+import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.test_utils.views.desc
 import android.Manifest
 import android.os.Build
 import android.util.Log
@@ -213,7 +215,7 @@ class SmokeTest {
         click("Navigate")
         optional { clickOk() }
         hasText("Test beacon")
-        click({ viewWithResourceId("$packageName:id/navigation_cancel") })
+        click(desc(string(R.string.stop)))
         back()
         back()
         back()

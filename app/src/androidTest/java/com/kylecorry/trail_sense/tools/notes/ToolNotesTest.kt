@@ -18,7 +18,7 @@ import org.junit.Test
 class ToolNotesTest : ToolTestBase(Tools.NOTES) {
     @Test
     fun verifyBasicFunctionality() {
-        hasText(R.id.notes_title, string(R.string.tool_notes_title))
+        hasText(string(R.string.tool_notes_title))
         hasText(id("notes_empty_text"), string(R.string.notes_empty_text))
 
         canCreateNote()
@@ -29,7 +29,7 @@ class ToolNotesTest : ToolTestBase(Tools.NOTES) {
     }
 
     private fun canEditNote() {
-        click(com.kylecorry.andromeda.views.R.id.title)
+        click("Test note", exact = true)
         hasText(id("title_edit"), "Test note")
         hasText(id("content_edit"), "This is a test note")
 
@@ -38,8 +38,8 @@ class ToolNotesTest : ToolTestBase(Tools.NOTES) {
 
         click(id("note_create_btn"))
 
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Test note 2")
-        hasText(com.kylecorry.andromeda.views.R.id.description, "This is a test note 2")
+        hasText("Test note 2", exact = true)
+        hasText("This is a test note 2", exact = true)
     }
 
     private fun canDeleteNote() {
@@ -51,7 +51,7 @@ class ToolNotesTest : ToolTestBase(Tools.NOTES) {
 
     private fun canCreateQRCode() {
         clickListItemMenu(string(R.string.qr_code))
-        hasText(R.id.qr_title, "Test note")
+        hasText("Test note", exact = true)
         back(false)
     }
 
@@ -63,8 +63,8 @@ class ToolNotesTest : ToolTestBase(Tools.NOTES) {
 
         click(id("note_create_btn"))
 
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Test note")
-        hasText(com.kylecorry.andromeda.views.R.id.description, "This is a test note")
+        hasText("Test note", exact = true)
+        hasText("This is a test note", exact = true)
     }
 
     private fun verifyQuickAction() {
@@ -76,7 +76,7 @@ class ToolNotesTest : ToolTestBase(Tools.NOTES) {
 
         click(id("note_create_btn"))
 
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Quick action note")
-        hasText(com.kylecorry.andromeda.views.R.id.description, "This is a quick action note")
+        hasText("Quick action note", exact = true)
+        hasText("This is a quick action note", exact = true)
     }
 }

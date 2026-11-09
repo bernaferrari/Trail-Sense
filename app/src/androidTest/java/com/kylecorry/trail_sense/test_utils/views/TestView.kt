@@ -49,6 +49,21 @@ fun id(resourceName: String, index: Int = 0): () -> TestView = {
     )
 }
 
+/**
+ * Looks up the [index]th clickable node inside the node tagged [resourceName], such as a row in a tagged list group.
+ */
+fun clickableIn(resourceName: String, index: Int = 0): () -> TestView = {
+    val pkg = AutomationLibrary.packageName ?: TestUtils.context.packageName
+    view(By.clickable(true).hasAncestor(By.res(pkg, resourceName)), index)
+}
+
+/**
+ * Looks up a node by its content description, which is how Compose icon buttons and custom controls are named.
+ */
+fun desc(description: String, contains: Boolean = false, index: Int = 0): () -> TestView = {
+    view(if (contains) By.descContains(description) else By.desc(description), index)
+}
+
 fun viewWithText(
     text: String,
     contains: Boolean = false,
