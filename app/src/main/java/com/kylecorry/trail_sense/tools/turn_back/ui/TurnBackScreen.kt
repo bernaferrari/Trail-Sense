@@ -4,19 +4,17 @@
 
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
-import com.kylecorry.trail_sense.shared.time.toInstant
 
-import kotlinx.datetime.LocalDateTime
 
 import kotlin.time.Duration.Companion.milliseconds
 
 import com.kylecorry.trail_sense.shared.time.nowLocal
 
-import com.kylecorry.trail_sense.shared.time.today
 
 import com.kylecorry.trail_sense.shared.time.toLocalTime
 
 import com.kylecorry.trail_sense.shared.time.plusDays
+import com.kylecorry.trail_sense.shared.time.withTime
 
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
@@ -226,9 +224,11 @@ internal class TurnBackViewModel(
 
     /** Return at [time] today, or tomorrow if it has already passed. */
     fun setReturnTimeAt(time: LocalTime) {
-        val today = today()
-        val date = if (time < nowLocal().time) today.plusDays(1) else today
-        val newReturnTime = LocalDateTime(date, time).toInstant()
+        val newReturnTime = if (time < nowLocal().time) {
+            Clock.System.now().plusDays(1).withTime(time)
+        } else {
+            Clock.System.now().withTime(time)
+        }
         setReturnTime(newReturnTime)
     }
 

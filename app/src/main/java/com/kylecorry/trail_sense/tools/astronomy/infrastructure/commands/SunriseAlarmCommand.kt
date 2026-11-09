@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 import com.kylecorry.trail_sense.shared.time.today
 
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.days
+import com.kylecorry.trail_sense.shared.time.plusDays
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -49,7 +49,7 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
         val now = Clock.System.now()
 
         if (location.location == Coordinate.zero) {
-            setAlarm((now + 1.days), "no location available")
+            setAlarm(now.plusDays(1), "no location available")
             return@onDefault
         }
 
@@ -67,7 +67,7 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
                     // Missed the sunrise, schedule the alarm for tomorrow
                     setAlarm(
                         tomorrowSunrise?.minus(alertDuration)
-                            ?: (todaySunrise + 1.days),
+                            ?: todaySunrise.plusDays(1),
                         "past today's sunrise at $todaySunrise"
                     )
                 }
@@ -77,7 +77,7 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
                     sendNotification(todaySunrise)
                     setAlarm(
                         tomorrowSunrise?.minus(alertDuration)
-                            ?: (todaySunrise + 1.days),
+                            ?: todaySunrise.plusDays(1),
                         "within alert window for today's sunrise at $todaySunrise"
                     )
                 }
@@ -92,7 +92,7 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
             }
         } else {
             // There isn't a sunrise today, schedule it for tomorrow
-            setAlarm(tomorrowSunrise?.minus(alertDuration) ?: (now + 1.days), "no sunrise today")
+            setAlarm(tomorrowSunrise?.minus(alertDuration) ?: now.plusDays(1), "no sunrise today")
         }
     }
 

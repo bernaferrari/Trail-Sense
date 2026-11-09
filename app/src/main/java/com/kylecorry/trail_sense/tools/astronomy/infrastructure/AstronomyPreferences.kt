@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure
 
+import com.kylecorry.trail_sense.shared.time.decodeStoredLocalDate
+
 import android.content.Context
 import com.kylecorry.luna.text.toIntCompat
 import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
@@ -95,15 +97,11 @@ class AstronomyPreferences(private val context: Context) {
 
     val sunsetAlertLastSent: LocalDate?
         get() {
-            val raw = cache.getString(context.getString(R.string.pref_sunset_alert_last_sent_date))
-                ?: return null
-            return runCatching { LocalDate.parse(raw) }.getOrNull()
+            return decodeStoredLocalDate(cache.getString(context.getString(R.string.pref_sunset_alert_last_sent_date)))
         }
     val sunriseAlertLastSent: LocalDate?
         get() {
-            val raw = cache.getString(context.getString(R.string.pref_sunrise_alert_last_sent_date))
-                ?: return null
-            return runCatching { LocalDate.parse(raw) }.getOrNull()
+            return decodeStoredLocalDate(cache.getString(context.getString(R.string.pref_sunrise_alert_last_sent_date)))
         }
 
     fun setSunsetAlertLastSentDate(date: LocalDate) {

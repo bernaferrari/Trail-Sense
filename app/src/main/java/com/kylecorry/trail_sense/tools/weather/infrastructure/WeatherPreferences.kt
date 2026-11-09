@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
+import com.kylecorry.trail_sense.shared.time.decodeStoredLocalDate
+
 import com.kylecorry.trail_sense.shared.time.nowLocal
 
 import kotlin.time.Duration.Companion.hours
@@ -110,8 +112,7 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
 
     override var dailyWeatherLastSent: LocalDate?
         get() {
-            val raw = cache.getString("daily_weather_last_sent_date") ?: return null
-            return runCatching { LocalDate.parse(raw) }.getOrNull()
+            return decodeStoredLocalDate(cache.getString("daily_weather_last_sent_date"))
         }
         set(value) {
             if (value == null) {
