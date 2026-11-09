@@ -26,6 +26,7 @@ kotlin {
         androidMain { dependsOn(jvmSharedMain) }
         commonMain.dependencies {
             api(project(":shared"))
+            api(project(":bitmaps"))
             implementation(project(":wkt"))
         }
         iosMain.dependencies { implementation("io.github.yuroyami:kitepdf-pdf:0.13.0") }

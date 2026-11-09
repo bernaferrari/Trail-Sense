@@ -1,16 +1,13 @@
 package com.kylecorry.andromeda.pdf
 
-import android.graphics.Bitmap
+import com.kylecorry.andromeda.bitmaps.PixelImage
+import com.kylecorry.andromeda.bitmaps.encodeJpeg
 import com.kylecorry.andromeda.wkt.CRSWellKnownTextConvert
 import com.kylecorry.andromeda.wkt.WKTNumber
 import com.kylecorry.andromeda.wkt.WKTSection
 import com.kylecorry.andromeda.wkt.WKTString
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.units.Coordinate
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.InputStream
-import java.util.UUID
 
 fun obj(id: Int, vararg contents: PDFValue?): PDFValue.PDFObject {
     return PDFValue.PDFObject(id, 0, contents.toList().filterNotNull())
@@ -44,12 +41,8 @@ fun stream(bytes: ByteArray): PDFValue.PDFStream {
     return PDFValue.PDFStream(bytes)
 }
 
-fun stream(stream: InputStream): PDFInputStream {
-    return PDFInputStream(stream)
-}
-
 fun stream(string: String): PDFValue.PDFStream {
-    return PDFValue.PDFStream(string.toByteArray())
+    return PDFValue.PDFStream(string.encodeToByteArray())
 }
 
 fun catalog(objectId: Int, pagesObjectReference: Int): PDFValue.PDFObject {
@@ -205,7 +198,7 @@ fun stream(
     contents: String,
     properties: PDFValue.PDFDictionary = dict()
 ): PDFValue.PDFObject {
-    return stream(id, contents.toByteArray(), properties)
+    return stream(id, contents.encodeToByteArray(), properties)
 }
 
 fun stream(
@@ -224,83 +217,32 @@ fun stream(
 }
 
 
-fun stream(
-    id: Int,
-    contents: InputStream,
-    length: Long,
-    properties: PDFValue.PDFDictionary = dict()
-): PDFValue.PDFObject {
-    return obj(
-        id,
-        dict(
-            name("/Length") to number(length),
-            *properties.properties.toList().toTypedArray()
-        ),
-        stream(contents)
-    )
-}
-
-private fun dctImage(image: Bitmap, quality: Int = 100): ByteArray {
-    val stream = ByteArrayOutputStream()
-    image.compress(Bitmap.CompressFormat.JPEG, quality, stream)
-    return stream.toByteArray()
-}
-
-fun image(
-    id: Int,
-    image: Bitmap,
-    x: Int = 0,
-    y: Int = 0,
-    destWidth: Int = image.width,
-    destHeight: Int = image.height,
-    quality: Int = 100,
-    properties: PDFValue.PDFDictionary = dict()
-): PDFValue.PDFObject {
-
-    val stream = ByteArrayOutputStream()
-    val writer = stream.bufferedWriter()
-    writer.append("q $destWidth 0 0 $destHeight $x $y cm BI /W ${image.width} /H ${image.height} /CS /RGB /F /DCT /BPC 8 ID ")
-    writer.flush()
-    stream.write(dctImage(image, quality))
-    writer.write(" > EI Q")
-    writer.flush()
-
-    return stream(
-        id,
-        stream.toByteArray(),
-        properties
-    )
-}
-
 fun jpg(
     id: Int,
-    imageStream: InputStream,
+    jpeg: ByteArray,
     imageWidth: Int,
     imageHeight: Int,
     x: Int = 0,
     y: Int = 0,
     destWidth: Int = imageWidth,
     destHeight: Int = imageHeight,
-    properties: PDFValue.PDFDictionary = dict()
+    properties: PDFValue.PDFDictionary = dict(),
 ): PDFValue.PDFObject {
-    val file = File.createTempFile("${UUID.randomUUID()}", ".bin")
-    file.deleteOnExit()
-    val stream = file.outputStream()
-    val writer = stream.bufferedWriter()
-    writer.append("q $destWidth 0 0 $destHeight $x $y cm BI /W $imageWidth /H $imageHeight /CS /RGB /F /DCT /BPC 8 ID ")
-    writer.flush()
-    imageStream.copyTo(stream)
-    writer.flush()
-    writer.write(" > EI Q")
-    writer.flush()
-
-    return stream(
-        id,
-        file.inputStream(),
-        file.length(),
-        properties
-    )
+    require(imageWidth > 0 && imageHeight > 0 && destWidth > 0 && destHeight > 0)
+    val prefix = "q $destWidth 0 0 $destHeight $x $y cm BI /W $imageWidth /H $imageHeight /CS /RGB /F /DCT /BPC 8 ID ".encodeToByteArray()
+    return stream(id, prefix + jpeg + " EI Q".encodeToByteArray(), properties)
 }
+
+fun image(
+    id: Int,
+    image: PixelImage,
+    x: Int = 0,
+    y: Int = 0,
+    destWidth: Int = image.width,
+    destHeight: Int = image.height,
+    quality: Int = 100,
+    properties: PDFValue.PDFDictionary = dict(),
+): PDFValue.PDFObject = jpg(id, image.encodeJpeg(quality), image.width, image.height, x, y, destWidth, destHeight, properties)
 
 fun text(
     id: Int,
@@ -308,7 +250,8 @@ fun text(
     x: Int = 0,
     y: Int = 0,
     size: Int = 24,
-    properties: PDFValue.PDFDictionary = dict()
+    properties: PDFValue.PDFDictionary = dict(),
 ): PDFValue.PDFObject {
-    return stream(id, "BT /F1 $size Tf $x $y Td ($text)Tj ET", properties)
+    val escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+    return stream(id, "BT /F1 $size Tf $x $y Td ($escaped)Tj ET", properties)
 }
