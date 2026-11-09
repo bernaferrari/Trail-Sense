@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
+import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
@@ -15,7 +17,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -66,13 +67,15 @@ class ToolsTest : ToolTestBase(0L) {
             calledOriginalHandler = true
         }
 
-        // Removing the field guide repo will break the DI for the field guide tool
-        DependencyRegistry.remove<FieldGuideRepo>()
-        scenario = TestUtils.startWithTool(Tools.FIELD_GUIDE)
+        // The Compose field guide no longer reads its repo from the registry, so break the pedometer instead: its
+        // screen reads the step tracker from the registry when it is first composed
+        val stepTracker = DependencyRegistry.get<StepTrackerService>()
+        DependencyRegistry.remove<StepTrackerService>()
+        scenario = TestUtils.startWithTool(Tools.PEDOMETER)
 
         isTrue { calledOriginalHandler }
         hasText("An error occurred")
-        hasText("Field Guide")
+        hasText(string(R.string.pedometer))
 
         // Settings
         scrollUntil { click(string(R.string.settings), exact = true) }
@@ -92,8 +95,9 @@ class ToolsTest : ToolTestBase(0L) {
         hasText(string(R.string.restart_app), exact = true)
 
         // Fix the issue and reopen tool
-        DependencyRegistry.addSingleton(FieldGuideRepo.getInstance(TestUtils.context))
+        DependencyRegistry.addSingleton(stepTracker)
         click(string(R.string.reopen_tool), exact = true)
-        hasText("Disclaimer")
+        not { hasText("An error occurred") }
+        hasText(string(R.string.pedometer))
     }
 }
