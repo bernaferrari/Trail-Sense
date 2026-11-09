@@ -91,10 +91,15 @@ object Astronomy {
                         withParallax: Boolean = false): RiseSetTransitTimes =
         PlanetCalculationModel.events(planet, time, timeZone, location, withRefraction, withParallax).public()
 
-    fun getNextEclipse(time: Instant, location: Coordinate, type: EclipseType, maxSearch: Duration? = null): Eclipse? {
+    /**
+     * Finds the next eclipse visible from [location] that is in progress or starts after [time].
+     * [timeZone] determines the local days used when searching for lunar eclipses.
+     */
+    fun getNextEclipse(time: Instant, location: Coordinate, type: EclipseType, maxSearch: Duration? = null,
+                       timeZone: TimeZone = TimeZone.currentSystemDefault()): Eclipse? {
         val result = when (type) {
-            EclipseType.PartialLunar -> LunarEclipseModel(false).next(time, location, TimeZone.currentSystemDefault())
-            EclipseType.TotalLunar -> LunarEclipseModel(true).next(time, location, TimeZone.currentSystemDefault())
+            EclipseType.PartialLunar -> LunarEclipseModel(false).next(time, location, timeZone)
+            EclipseType.TotalLunar -> LunarEclipseModel(true).next(time, location, timeZone)
             EclipseType.Solar -> SolarEclipseModel(maxDuration = maxSearch).getNextEclipse(time, location)
         } ?: return null
         return Eclipse(result.start, result.end, result.magnitude, result.obscuration, result.maximum)
