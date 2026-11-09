@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.main
 
 import android.content.Context
-import android.text.Layout
-import android.text.style.AlignmentSpan
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.text.markdown.MarkdownExtension
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.andromeda.markdown.MarkdownDelimiter
+import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.AltitudeCorrection
@@ -25,7 +25,6 @@ import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.text.HiddenSpan
 import com.kylecorry.trail_sense.shared.text.StringLoader
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -45,15 +44,16 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(NotificationSubsystem(appContext))
         DependencyRegistry.addSingleton(
             MarkdownService(
-                appContext, extensions = listOf(
-                    MarkdownExtension(2, '%') {
-                        HiddenSpan()
-                    },
-                    MarkdownExtension(
-                        1,
-                        '+'
-                    ) { AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER) }
-                )))
+                delimiters = listOf(
+                    // %%text%% is hidden and +text+ centers its paragraph
+                    MarkdownDelimiter("%%", MarkdownDelimiter.Effect.Hide),
+                    MarkdownDelimiter(
+                        "+",
+                        MarkdownDelimiter.Effect.Paragraph(ParagraphStyle(textAlign = TextAlign.Center))
+                    )
+                )
+            )
+        )
         DependencyRegistry.addSingleton(SensorService(appContext))
         DependencyRegistry.addSingleton(FileSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(AppDatabase.getInstance(appContext))

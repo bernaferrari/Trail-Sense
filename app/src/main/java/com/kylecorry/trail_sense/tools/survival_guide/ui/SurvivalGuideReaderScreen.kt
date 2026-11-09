@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import com.kylecorry.trail_sense.shared.text.toSpanned
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
 import android.content.Context
@@ -406,7 +407,7 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
             val parsed = markdown.toMarkdown(content)
             val uri = file.toUri()
             files.output(uri)?.use {
-                writePdf(parsed, it)
+                writePdf(parsed.toSpanned(), it)
             }
             withContext(Dispatchers.Main) {
                 printer.print(uri)

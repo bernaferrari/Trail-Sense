@@ -6,7 +6,6 @@
 package com.kylecorry.trail_sense.shared.dialogs
 
 import android.content.Context
-import android.text.Spanned
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -67,6 +66,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -153,7 +153,7 @@ private fun DialogMessage(text: CharSequence, allowLinks: Boolean, modifier: Mod
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     val style = MaterialTheme.typography.bodyMedium
     val linkColor = MaterialTheme.colorScheme.primary
-    if (text is Spanned || allowLinks) {
+    if (text is AnnotatedString || allowLinks) {
         val annotated = remember(text, linkColor, allowLinks) {
             text.toAnnotatedString(linkColor, linksClickable = allowLinks)
         }
