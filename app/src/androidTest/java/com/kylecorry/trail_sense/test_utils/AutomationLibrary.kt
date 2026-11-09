@@ -1,7 +1,9 @@
 package com.kylecorry.trail_sense.test_utils
 
 import androidx.annotation.StringRes
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.UiObject2
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
@@ -10,6 +12,7 @@ import com.kylecorry.trail_sense.test_utils.views.TestView
 import com.kylecorry.trail_sense.test_utils.views.click
 import com.kylecorry.trail_sense.test_utils.views.getScrollableView
 import com.kylecorry.trail_sense.test_utils.views.hasText
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.input
 import com.kylecorry.trail_sense.test_utils.views.isChecked
 import com.kylecorry.trail_sense.test_utils.views.longClick
@@ -21,6 +24,7 @@ import com.kylecorry.trail_sense.test_utils.views.viewWithText
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import java.util.regex.Pattern
 
 object AutomationLibrary {
 
@@ -135,10 +139,30 @@ object AutomationLibrary {
         text: String,
         exact: Boolean = false,
         index: Int = 0,
+        ignoreCase: Boolean = false,
         waitForTime: Long? = null
     ) {
         waitFor(resolveWaitForTime(waitForTime)) {
-            viewWithText(text, index = index, contains = !exact)
+            if (ignoreCase) {
+                val pattern = if (exact) Regex.escape(text) else ".*${Regex.escape(text)}.*"
+                viewWithText(
+                    Pattern.compile(pattern, Pattern.CASE_INSENSITIVE or Pattern.DOTALL),
+                    index = index
+                )
+            } else {
+                viewWithText(text, index = index, contains = !exact)
+            }
+        }
+    }
+
+    fun hasText(
+        viewLookup: () -> TestView,
+        text: Regex,
+        checkDescendants: Boolean = true,
+        waitForTime: Long? = null
+    ) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            viewLookup().hasText(text, checkDescendants = checkDescendants)
         }
     }
 
@@ -189,6 +213,25 @@ object AutomationLibrary {
 
     private fun getTexts(id: Int): List<String> {
         return TestUtils.device.findObjects(byResId(id, packageName)).map { it.text ?: "" }
+    }
+
+    /**
+     * Verifies the texts of all of the visible Compose nodes with the given testTag, from top to bottom.
+     */
+    fun hasTextsInOrder(tag: String, texts: List<String>, waitForTime: Long? = null) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            assertEquals(texts, getTexts(tag))
+        }
+    }
+
+    private fun getTexts(tag: String): List<String> {
+        val selector = By.res(packageName ?: TestUtils.context.packageName, tag)
+        return TestUtils.device.findObjects(selector).map { it.allText() }
+    }
+
+    private fun UiObject2.allText(): String {
+        text?.let { return it }
+        return children.joinToString(" ") { it.allText() }.trim()
     }
 
     fun any(vararg actions: () -> Unit, waitForTime: Long? = null) {
@@ -247,6 +290,13 @@ object AutomationLibrary {
         waitForTime: Long? = null
     ) {
         isChecked(id, isChecked = false, index = index, waitForTime = waitForTime)
+    }
+
+    fun isNotChecked(
+        viewLookup: () -> TestView,
+        waitForTime: Long? = null
+    ) {
+        isChecked(viewLookup, isChecked = false, waitForTime = waitForTime)
     }
 
     fun isNotChecked(
@@ -450,6 +500,21 @@ object AutomationLibrary {
     }
 
     fun input(
+        viewLookup: () -> TestView,
+        text: String,
+        checkDescendants: Boolean = true,
+        waitForTime: Long? = null,
+        closeKeyboardOnCompletion: Boolean = false
+    ) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            viewLookup().input(text, checkDescendants)
+        }
+        if (closeKeyboardOnCompletion) {
+            TestUtils.closeKeyboard()
+        }
+    }
+
+    fun input(
         id: Int,
         text: String,
         checkDescendants: Boolean = true,
@@ -486,6 +551,19 @@ object AutomationLibrary {
         waitFor(resolveWaitForTime(waitForTime)) {
             TestUtils.not { view(id, index = index, packageName = packageName) }
         }
+    }
+
+    fun isNotVisible(viewLookup: () -> TestView, waitForTime: Long? = null) {
+        waitFor(resolveWaitForTime(waitForTime)) {
+            TestUtils.not { viewLookup() }
+        }
+    }
+
+    /**
+     * Verifies a Compose node with the given testTag is visible.
+     */
+    fun isVisible(tag: String, index: Int = 0, waitForTime: Long? = null) {
+        isVisible(id(tag, index), waitForTime)
     }
 
     fun isVisible(id: Int, index: Int = 0, waitForTime: Long? = null) {

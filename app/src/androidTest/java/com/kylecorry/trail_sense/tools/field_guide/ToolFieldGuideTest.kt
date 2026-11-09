@@ -107,7 +107,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText(R.id.photo_position, "Image 2/2")
 
         // Setting an image as the default moves it to the first slot
-        click(R.id.photo_upload_menu_button)
+        click(id("photo_upload_menu_button"))
         click("Set as default")
         hasText(R.id.photo_position, "Image 1/2")
 
@@ -123,7 +123,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         // An image can be deleted
         clickListItemMenu("Edit")
         scrollUntil(R.id.scroll_view) { hasText(R.id.photo_position, "Image 1/2") }
-        click(R.id.photo_upload_menu_button)
+        click(id("photo_upload_menu_button"))
         click("Delete")
         clickOk()
         hasText(R.id.photo_position, "Image 1/1")
@@ -167,7 +167,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canRecordSightingWithQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_RECORD_SIGHTING))
+        click(quickAction(QUICK_ACTION_RECORD_SIGHTING))
         input(R.id.search, "A Test")
         click("A Test", exact = true, index = 1)
 
@@ -332,3 +332,9 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("Sightings (0)")
     }
 }
+
+/**
+ * Upstream's "Record Sighting" quick action (#3860). The Compose app no longer registers it, so this
+ * step fails until the quick action is restored in FieldGuideToolRegistration and Tools.
+ */
+private const val QUICK_ACTION_RECORD_SIGHTING = 30

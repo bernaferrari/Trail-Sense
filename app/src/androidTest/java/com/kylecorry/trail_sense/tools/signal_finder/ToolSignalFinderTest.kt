@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.signal_finder
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -33,7 +34,7 @@ class ToolSignalFinderTest : ToolTestBase(Tools.SIGNAL_FINDER, Coordinate(42.03,
         // Create a beacon at one of the cell towers
 //        TestUtils.clickListItemMenu(string(R.string.create_beacon))
 //        hasText(R.id.create_beacon_title, string(R.string.create_beacon))
-//        hasText(R.id.beacon_location, "42.030000°,  -71.970000°")
+//        hasText(id("beacon_location"), "42.030000°,  -71.970000°")
 //
 //        back()
 //        click("Leave")

@@ -91,7 +91,7 @@ class ToolsTest : ToolTestBase(0L) {
         isVisible(R.id.restart_app)
 
         // Fix the issue and reopen tool
-        DependencyRegistry.register(FieldGuideRepo.getInstance(TestUtils.context))
+        DependencyRegistry.addSingleton(FieldGuideRepo.getInstance(TestUtils.context))
         click(R.id.reopen_tool)
         hasText("Disclaimer")
     }

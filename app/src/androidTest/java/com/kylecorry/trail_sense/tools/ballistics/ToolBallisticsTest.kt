@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ballistics
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -30,11 +31,11 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
     private fun scope(){
         click("Scope")
 
-        click(R.id.click_amount)
+        click(id("click_amount"))
         click("1/4 MOA")
         clickOk()
 
-        input(R.id.distance_to_target, "100")
+        input(id("distance_to_target"), "100")
 
         input(R.id.miss_distance_x, "1")
         click(R.id.miss_right)
@@ -43,14 +44,14 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
         input(R.id.miss_distance_y, "2")
         click(R.id.miss_up)
 
-        hasText(R.id.adjustment_amount, "Left 12 clicks\nDown 24 clicks")
+        hasText(id("adjustment_amount"), "Left 12 clicks\nDown 24 clicks")
     }
 
     private fun energy(){
         click("Energy")
 
-        input(R.id.bullet_speed, "750")
-        input(R.id.bullet_weight, "7.5")
+        input(id("bullet_speed"), "750")
+        input(id("bullet_weight"), "7.5")
 
         hasText(R.id.energy_amount, "9.4 FPE")
     }

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.cliffheight
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -19,9 +20,9 @@ class ToolCliffHeightTest : ToolTestBase(Tools.CLIFF_HEIGHT) {
 
         // Accept the disclaimer
         clickOk()
-        click(R.id.start_btn)
-        hasText(R.id.cliff_height_title, Regex("[\\d.]+ ft"))
-        click(R.id.start_btn)
-        hasText(R.id.cliff_height_title, Regex("[\\d.]+ ft"))
+        click(id("start_btn"))
+        hasText(id("cliff_height_title"), Regex("[\\d.]+ ft"))
+        click(id("start_btn"))
+        hasText(id("cliff_height_title"), Regex("[\\d.]+ ft"))
     }
 }

@@ -198,6 +198,9 @@ dependencies {
         // Instrumented tests run against the debug app's classpath, and androidx.test:core needs the newer futures.
         debugImplementation("androidx.concurrent:concurrent-futures:1.2.0")
         debugImplementation("androidx.concurrent:concurrent-futures-ktx:1.2.0")
+        // Andromeda's sensor dependency (ksensor) leaks androidx.test into the debug runtime, so align it with the test libraries.
+        debugImplementation("androidx.test:core:1.7.0")
+        debugImplementation("androidx.test:monitor:1.8.0")
     }
     androidTestImplementation(libs.compose.ui.test.junit4)
 

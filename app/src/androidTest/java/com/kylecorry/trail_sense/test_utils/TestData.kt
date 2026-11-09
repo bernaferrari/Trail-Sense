@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.test_utils
 
+import kotlin.time.toKotlinInstant
+import kotlin.time.toJavaInstant
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kylecorry.trail_sense.shared.andromeda_temp.files.AssetFileSystem
-import com.kylecorry.trail_sense.shared.andromeda_temp.gpx.GPXSerializer
+import com.kylecorry.andromeda.gpx.GpxSerializer
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
@@ -86,12 +88,11 @@ object TestData {
     fun loadGpxPoints(assetPath: String): List<PathPoint> {
         val testContext = InstrumentationRegistry.getInstrumentation().context
         val gpx = runBlocking {
-            AssetFileSystem(testContext).stream(assetPath).use {
-                GPXSerializer("Trail Sense").deserialize(it)
-            }
+            val bytes = AssetFileSystem(testContext).stream(assetPath).use { it.readBytes() }
+            GpxSerializer("Trail Sense").deserialize(bytes)
         }
         return gpx.tracks[0].segments[0].points.map {
-            PathPoint(0, 0, it.coordinate, it.elevation, it.time)
+            PathPoint(0, 0, it.coordinate, it.elevation, it.time?.toJavaInstant())
         }
     }
 
@@ -114,7 +115,7 @@ object TestData {
                     temperatureCelsius,
                     humidity = humidity
                 ),
-                Instant.now().minus(age)
+                Instant.now().minus(age).toKotlinInstant()
             )
         )
     }

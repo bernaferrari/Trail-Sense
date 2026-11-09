@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.lightning
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
@@ -13,21 +14,21 @@ class ToolLightningStrikeDistanceTest : ToolTestBase(Tools.LIGHTNING_STRIKE_DIST
     @Test
     fun verifyBasicFunctionality() {
         // Verify it is ready to record lightning
-        hasText(R.id.start_btn, string(R.string.lightning))
+        hasText(id("start_btn"), string(R.string.lightning))
 
         // Click the start button
-        click(R.id.start_btn)
+        click(id("start_btn"))
 
         // Verify it is recording
-        hasText(R.id.lightning_title, Regex("([0-9.]+) (ft|mi)"))
-        hasText(R.id.start_btn, string(R.string.thunder))
+        hasText(id("lightning_title"), Regex("([0-9.]+) (ft|mi)"))
+        hasText(id("start_btn"), string(R.string.thunder))
 
         // Click the start button again
-        click(R.id.start_btn)
+        click(id("start_btn"))
 
         // Verify it recorded the distance
         var previousDistance: String? = null
-        hasText(R.id.lightning_title) {
+        hasText(id("lightning_title")) {
             val regex = Regex("([0-9.]+) (ft|mi)")
             if (regex.matches(it)) {
                 previousDistance = it
@@ -36,12 +37,12 @@ class ToolLightningStrikeDistanceTest : ToolTestBase(Tools.LIGHTNING_STRIKE_DIST
                 false
             }
         }
-        hasText(R.id.start_btn, string(R.string.lightning))
-        hasText(R.id.lightning_title, string(R.string.lightning_dangerously_close))
+        hasText(id("start_btn"), string(R.string.lightning))
+        hasText(id("lightning_title"), string(R.string.lightning_dangerously_close))
 
         // Run it again and verify the last distance shows at the bottom of the screen
-        click(R.id.start_btn)
-        click(R.id.start_btn)
+        click(id("start_btn"))
+        click(id("start_btn"))
 
         hasText(
             R.id.previous_strike,

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.tides
 
+import kotlinx.datetime.TimeZone
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.toKotlinInstant
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
@@ -13,7 +16,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
@@ -41,17 +43,18 @@ class TideModelNoaaTest {
         val errors = stations.flatMap { station ->
             val harmonics = TideModel.getHarmonics(context, station.location)?.harmonics
                 ?: return@flatMap station.tides.map { NO_PREDICTION_MINUTES }
-            val times = station.tides.map { it.second.atZone(ZoneOffset.UTC) }
+            val times = station.tides.map { it.second.toInstant(ZoneOffset.UTC).toKotlinInstant() }
             val predicted = Oceanography.getTides(
                 HarmonicWaterLevelCalculator(harmonics),
-                times.first().minusHours(12),
-                times.last().plusHours(12),
+                times.first() - 12.hours,
+                times.last() + 12.hours,
+                TimeZone.UTC,
                 GoldenSearchExtremaFinder(30.0, 1.0)
             )
             station.tides.mapIndexed { i, (isHigh, _) ->
                 val closest = predicted.filter { it.isHigh == isHigh }
-                    .minByOrNull { Duration.between(it.time, times[i]).abs() }
-                closest?.let { Duration.between(it.time, times[i]).seconds / 60f }
+                    .minByOrNull { (times[i] - it.time).absoluteValue }
+                closest?.let { (times[i] - it.time).inWholeSeconds / 60f }
                     ?: NO_PREDICTION_MINUTES
             }
         }

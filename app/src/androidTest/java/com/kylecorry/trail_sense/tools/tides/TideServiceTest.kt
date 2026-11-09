@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.tides
 
+import kotlinx.datetime.toJavaZoneId
+import kotlinx.datetime.toKotlinTimeZone
+import kotlin.time.toKotlinInstant
+import kotlin.time.Instant
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
@@ -8,7 +12,6 @@ import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -98,7 +101,7 @@ internal class TideServiceTest {
                     service.getTides(
                         table,
                         date,
-                        references.firstOrNull()?.time?.zone ?: ZoneId.systemDefault()
+                        references.firstOrNull()?.timeZone?.toJavaZoneId() ?: ZoneId.systemDefault()
                     )
                 )
             }
@@ -350,12 +353,12 @@ internal class TideServiceTest {
             return LocalDate.of(year, month, day)
         }
 
-        private fun time(day: Int, hour: Int, minute: Int): ZonedDateTime {
+        private fun time(day: Int, hour: Int, minute: Int): Instant {
             return ZonedDateTime.of(
                 LocalDate.of(2022, 1, day),
                 LocalTime.of(hour, minute, 0),
                 ZoneId.systemDefault()
-            )
+            ).toInstant().toKotlinInstant()
         }
 
         private fun tide(
@@ -374,7 +377,7 @@ internal class TideServiceTest {
                 ZoneId.of(zone)
             )
 
-            return Tide(time, high, height)
+            return Tide(time.toInstant().toKotlinInstant(), high, height, time.zone.toKotlinTimeZone())
         }
 
         private fun check(
@@ -399,7 +402,7 @@ internal class TideServiceTest {
                 actual.height!!,
                 if (exact) 0.0001f else 1.5f
             )
-            val delta = Duration.between(actual.time, expected.time).seconds / 60f
+            val delta = (expected.time - actual.time).inWholeSeconds / 60f
             assertEquals(0f, delta, if (exact) 1f else 90f)
         }
     }

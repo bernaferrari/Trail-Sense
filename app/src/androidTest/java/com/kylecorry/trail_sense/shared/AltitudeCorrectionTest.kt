@@ -14,7 +14,7 @@ class AltitudeCorrectionTest {
     @Test
     fun getGeoid() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        DependencyRegistry.register(FileSubsystem.getInstance(context))
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
 
         val errors = mutableListOf<Float>()
         val maximumError = 4f

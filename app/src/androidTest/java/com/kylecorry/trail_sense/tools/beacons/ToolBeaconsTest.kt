@@ -331,7 +331,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         click(R.id.create_btn)
         click(string(R.string.beacon), exact = true)
         input(R.id.beacon_name, "Mile north")
-        input(R.id.beacon_location, "42, -72")
+        input(id("beacon_location"), "42, -72")
         click(R.id.create_at_distance)
         isChecked(R.id.create_at_distance)
 

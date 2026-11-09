@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.diagnostics
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -15,14 +16,14 @@ class ToolDiagnosticsTest : ToolTestBase(Tools.DIAGNOSTICS) {
 
     @Test
     fun verifyBasicFunctionality() {
-        hasText(R.id.diagnostics_title, string(R.string.diagnostics))
+        hasText(id("diagnostics_title"), string(R.string.diagnostics))
 
         // Battery usage always starts restricted, so just check for that
         hasText(string(R.string.battery_usage_restricted), waitForTime = GPS_WAIT_FOR_TIMEOUT)
         click(string(R.string.battery_usage_restricted))
         click(string(android.R.string.cancel))
 
-        click(toolbarButton(R.id.diagnostics_title, Side.Right))
+        click(toolbarButton(id("diagnostics_title"), Side.Right))
         hasText(string(R.string.sensors))
     }
 

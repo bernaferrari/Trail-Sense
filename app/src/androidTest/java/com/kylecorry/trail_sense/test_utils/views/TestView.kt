@@ -37,13 +37,15 @@ fun viewWithResourceId(
 /**
  * Looks up a Compose testTag or view id by entry name, for example `id("play_btn")`.
  * The returned lookup is what [com.kylecorry.trail_sense.test_utils.AutomationLibrary] waits on.
+ * @param index which match to use when several nodes share the tag (top to bottom)
  */
-fun id(resourceName: String): () -> TestView = {
+fun id(resourceName: String, index: Int = 0): () -> TestView = {
     view(
         By.res(
             AutomationLibrary.packageName ?: TestUtils.context.packageName,
             resourceName
-        )
+        ),
+        index
     )
 }
 

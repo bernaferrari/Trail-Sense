@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -118,7 +119,7 @@ class ToolsTabTest : ToolTestBase(0L) {
 
     private fun canOpenTool() {
         click(string(R.string.flashlight_title))
-        isVisible(R.id.screen_flashlight_btn)
+        isVisible(id("screen_flashlight_btn"))
         back()
         isVisible(R.id.tools)
     }

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.migrations
 
+import com.kylecorry.andromeda.preferences.putAll
+import com.kylecorry.andromeda.preferences.getAll
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kylecorry.andromeda.json.JsonConvert
 import com.kylecorry.andromeda.preferences.Preferences
@@ -43,7 +45,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.Duration
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 @RunWith(AndroidJUnit4::class)
 class PreferenceMigratorTest {
@@ -198,7 +200,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration10To11MovesTheAstronomyAlertRunDate() {
-        val date = LocalDate.of(2024, 1, 2)
+        val date = LocalDate(2024, 1, 2)
         prefs.putLocalDate("pref_astronomy_alerts_last_run_date", date)
 
         migrate(10)

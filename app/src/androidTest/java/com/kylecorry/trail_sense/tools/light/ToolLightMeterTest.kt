@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.light
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
@@ -17,18 +18,18 @@ class ToolLightMeterTest : ToolTestBase(Tools.LIGHT_METER) {
             return
         }
 
-        hasText(R.id.light_title, Regex("\\d+ lx"))
+        hasText(id("light_title"), Regex("\\d+ lx"))
 
         // Enter the distance
         input(R.id.amount, "10")
 
         // The candella and beam distance should be shown
-        hasText(R.id.light_title, Regex("\\d+ cd"))
+        hasText(id("light_title"), Regex("\\d+ cd"))
         hasText(R.id.beam_distance_text, Regex("\\d+ ft beam distance"))
 
         // Reset
         click(R.id.reset_btn)
-        hasText(R.id.light_title, Regex("\\d+ cd"))
+        hasText(id("light_title"), Regex("\\d+ cd"))
         hasText(R.id.beam_distance_text, Regex("\\d+ ft beam distance"))
     }
 }

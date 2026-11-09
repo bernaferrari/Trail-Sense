@@ -118,17 +118,17 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
 
     @Test
     fun canMoveBetweenDates() {
-        hasText(R.id.date_btn, string(R.string.today))
+        hasText(id("date_btn"), string(R.string.today))
 
-        click(R.id.next_date)
-        hasText(R.id.date_btn, string(R.string.tomorrow))
+        click(id("next_date"))
+        hasText(id("date_btn"), string(R.string.tomorrow))
 
-        click(R.id.prev_date)
-        click(R.id.prev_date)
-        hasText(R.id.date_btn, string(R.string.yesterday))
+        click(id("prev_date"))
+        click(id("prev_date"))
+        hasText(id("date_btn"), string(R.string.yesterday))
 
-        longClick(R.id.date_btn)
-        hasText(R.id.date_btn, string(R.string.today))
+        longClick(id("date_btn"))
+        hasText(id("date_btn"), string(R.string.today))
     }
 
     @Test
@@ -137,11 +137,11 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
 
         findNext("Full Moon")
         // Full moon: March 14, 2025 06:55 UTC
-        hasText(R.id.date_btn, Regex("March 1[345], 2025"), waitForTime = SEARCH_TIMEOUT)
+        hasText(id("date_btn"), Regex("March 1[345], 2025"), waitForTime = SEARCH_TIMEOUT)
 
         findNext("New Moon")
         // New moon: March 29, 2025 10:58 UTC
-        hasText(R.id.date_btn, Regex("March (28|29|30), 2025"), waitForTime = SEARCH_TIMEOUT)
+        hasText(id("date_btn"), Regex("March (28|29|30), 2025"), waitForTime = SEARCH_TIMEOUT)
     }
 
     @Test
@@ -158,7 +158,7 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
     }
 
     private fun goToDate(year: Int, month: Int, day: Int) {
-        click(R.id.date_btn)
+        click(id("date_btn"))
         TestUtils.pickDate(year, month, day)
     }
 
