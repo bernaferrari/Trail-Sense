@@ -16,9 +16,6 @@ kotlin {
     jvmToolchain(17)
     applyDefaultHierarchyTemplate()
     sourceSets {
-        val jvmSharedMain by creating { dependsOn(commonMain.get()) }
-        jvmMain { dependsOn(jvmSharedMain) }
-        androidMain { dependsOn(jvmSharedMain) }
         commonMain.dependencies {  }
         jvmTest {
             kotlin.srcDir("src/test/java")
