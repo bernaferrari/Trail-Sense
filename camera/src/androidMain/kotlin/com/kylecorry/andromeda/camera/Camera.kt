@@ -45,7 +45,7 @@ import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.permissions.AndroidPermissions
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Range
 import kotlinx.coroutines.launch
@@ -194,7 +194,7 @@ internal class Camera(
 
     @OptIn(androidx.camera.camera2.interop.ExperimentalCamera2Interop::class)
     override fun startImpl() {
-        if (!Permissions.isCameraEnabled(context)) {
+        if (!AndroidPermissions.isCameraEnabled(context)) {
             return
         }
 
@@ -736,7 +736,7 @@ internal class Camera(
     companion object {
         @SuppressLint("UnsupportedChromeOsCameraSystemFeature")
         fun isAvailable(context: Context): Boolean {
-            if (!Permissions.isCameraEnabled(context)) {
+            if (!AndroidPermissions.isCameraEnabled(context)) {
                 return false
             }
             return context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA)

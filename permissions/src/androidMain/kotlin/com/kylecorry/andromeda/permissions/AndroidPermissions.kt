@@ -18,7 +18,7 @@ import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
 import com.kylecorry.andromeda.core.tryOrDefault
 
-object Permissions {
+object AndroidPermissions {
 
     fun isBackgroundLocationEnabled(
         context: Context,

@@ -24,7 +24,7 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.AndroidTime
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.permissions.AndroidPermissions
 import java.time.Instant
 import kotlin.time.toKotlinInstant
 import java.util.concurrent.Executor
@@ -102,7 +102,7 @@ internal class CellSignalSensor(
                 return@tryOrNothing
             }
 
-            if (!Permissions.canGetFineLocation(context)) {
+            if (!AndroidPermissions.canGetFineLocation(context)) {
                 return@tryOrNothing
             }
             telephony?.requestCellInfoUpdate(
@@ -280,7 +280,7 @@ internal class CellSignalSensor(
 
     @SuppressLint("MissingPermission")
     override fun startImpl() {
-        if (!Permissions.canGetFineLocation(context)) {
+        if (!AndroidPermissions.canGetFineLocation(context)) {
             _signals = listOf()
             notifyListeners()
             return
@@ -304,7 +304,7 @@ internal class CellSignalSensor(
 
     @SuppressLint("MissingPermission")
     private fun loadFromCache(notify: Boolean = true) {
-        if (!Permissions.canGetFineLocation(context)) return
+        if (!AndroidPermissions.canGetFineLocation(context)) return
         tryOrNothing {
             updateCellInfo(telephony?.allCellInfo ?: listOf(), notify)
         }

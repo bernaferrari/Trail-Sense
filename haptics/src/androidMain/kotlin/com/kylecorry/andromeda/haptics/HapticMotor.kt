@@ -6,7 +6,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.content.getSystemService
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.permissions.AndroidPermissions
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
@@ -26,7 +26,7 @@ internal class AndroidHapticMotor(private val context: Context) : HapticMotor {
      */
     @SuppressLint("MissingPermission")
     override fun feedback(feedbackType: HapticFeedbackType) {
-        if (!Permissions.canVibrate(context)) {
+        if (!AndroidPermissions.canVibrate(context)) {
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -53,7 +53,7 @@ internal class AndroidHapticMotor(private val context: Context) : HapticMotor {
      */
     @SuppressLint("MissingPermission")
     override fun off() {
-        if (!Permissions.canVibrate(context)) {
+        if (!AndroidPermissions.canVibrate(context)) {
             return
         }
         getVibrator()?.cancel()
@@ -115,7 +115,7 @@ internal class AndroidHapticMotor(private val context: Context) : HapticMotor {
     @SuppressLint("MissingPermission")
     @Suppress("DEPRECATION")
     private fun waveform(millis: List<Long>, repeatPosition: Int = -1) {
-        if (!Permissions.canVibrate(context)) {
+        if (!AndroidPermissions.canVibrate(context)) {
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -137,7 +137,7 @@ internal class AndroidHapticMotor(private val context: Context) : HapticMotor {
         amplitudes: List<Int>,
         repeatPosition: Int = -1
     ) {
-        if (!Permissions.canVibrate(context)) {
+        if (!AndroidPermissions.canVibrate(context)) {
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -156,7 +156,7 @@ internal class AndroidHapticMotor(private val context: Context) : HapticMotor {
     @SuppressLint("MissingPermission")
     @Suppress("DEPRECATION")
     private fun oneShot(millis: Long, amplitude: Int) {
-        if (!Permissions.canVibrate(context)) {
+        if (!AndroidPermissions.canVibrate(context)) {
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
