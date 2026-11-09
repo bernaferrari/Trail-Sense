@@ -5,7 +5,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(projects.storage)
+            api(project(":storage"))
             api(libs.filekit.core)
             implementation(libs.ktor.http)
             api(libs.kmpZip.okio)
@@ -13,7 +13,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.documentfile)
-            implementation(projects.core)
+            implementation(project(":core"))
             api(libs.luna)
         }
     }

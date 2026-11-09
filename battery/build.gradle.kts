@@ -5,13 +5,13 @@ plugins {
 kotlin {
     sourceSets {
         androidMain.dependencies {
-            implementation(projects.core)
+            implementation(project(":core"))
             implementation(libs.androidx.core.ktx)
         }
         commonMain.dependencies {
             api(libs.sol)
-            api(projects.shared)
-            api(projects.device)
+            api(project(":shared"))
+            api(project(":device"))
         }
 
     }

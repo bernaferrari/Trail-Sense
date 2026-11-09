@@ -8,13 +8,13 @@ kotlin {
     }
     sourceSets {
         androidMain.dependencies {
-            implementation(projects.core)
+            implementation(project(":core"))
             implementation(libs.androidx.core.ktx)
             implementation(libs.luna)
         }
         commonMain.dependencies {
             api(libs.sol)
-            api(projects.shared)
+            api(project(":shared"))
         }
     }
 }

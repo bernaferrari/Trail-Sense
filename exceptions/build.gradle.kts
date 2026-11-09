@@ -16,8 +16,8 @@ kotlin {
     }
     sourceSets {
         commonMain.dependencies {
-            api(projects.shared)
-            api(projects.core)
+            api(project(":shared"))
+            api(project(":core"))
             api(libs.okio)
             implementation(libs.kotlinx.atomicfu)
         }

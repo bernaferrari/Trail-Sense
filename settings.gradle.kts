@@ -18,8 +18,6 @@ dependencyResolutionManagement {
     }
 }
 
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
 rootProject.name = "Andromeda"
 include(":haptics")
 include(":notify")

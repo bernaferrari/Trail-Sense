@@ -14,19 +14,19 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sol)
-            api(projects.shared)
-            api(projects.bitmaps)
-            implementation(projects.wkt)
+            api(project(":shared"))
+            api(project(":bitmaps"))
+            implementation(project(":wkt"))
         }
         named("jvmSharedMain") {
             dependencies {
             api(libs.luna)
-            implementation(projects.compression)
+            implementation(project(":compression"))
             }
         }
         androidMain.dependencies {
             implementation(libs.ksensor.core)
-            implementation(projects.core)
+            implementation(project(":core"))
             implementation(libs.androidx.core.ktx)
         }
         jvmMain.dependencies { implementation(libs.pdfbox) }

@@ -12,7 +12,7 @@ kotlin {
         }
     }
     sourceSets {
-        commonMain.dependencies { api(projects.shared) }
+        commonMain.dependencies { api(project(":shared")) }
         named("mobileMain") {
             dependencies {
             api(libs.moko.permissions)
@@ -28,7 +28,7 @@ kotlin {
             }
         }
         androidMain.dependencies {
-            implementation(projects.core)
+            implementation(project(":core"))
             implementation(libs.androidx.core.ktx)
             api(libs.androidx.activity)
         }

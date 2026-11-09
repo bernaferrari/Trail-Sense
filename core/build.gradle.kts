@@ -6,7 +6,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sol)
-            api(projects.shared)
+            api(project(":shared"))
             implementation(libs.ktor.http)
         }
         androidMain.dependencies {

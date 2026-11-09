@@ -5,7 +5,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(projects.shared)
+            api(project(":shared"))
             implementation(libs.kotlinx.atomicfu)
             api(libs.kable.core)
         }

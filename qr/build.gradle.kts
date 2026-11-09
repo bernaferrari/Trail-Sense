@@ -13,7 +13,7 @@ kotlin {
     }
     sourceSets {
         commonMain.dependencies {
-            api(projects.shared)
+            api(project(":shared"))
             implementation(libs.qrcodeKotlin)
         }
         named("jvmSharedMain") {

@@ -4,7 +4,7 @@ plugins {
 
 kotlin {
     sourceSets {
-        commonMain.dependencies { api(projects.shared) }
-        androidMain.dependencies { implementation(projects.core); implementation(libs.androidx.core.ktx); implementation(libs.ksensor.core) }
+        commonMain.dependencies { api(project(":shared")) }
+        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); implementation(libs.ksensor.core) }
     }
 }

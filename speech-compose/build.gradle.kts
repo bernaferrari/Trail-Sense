@@ -13,7 +13,7 @@ kotlin {
     }
     sourceSets {
         commonMain.dependencies {
-            api(projects.speech)
+            api(project(":speech"))
             api(libs.compose.runtime)
         }
         androidMain.dependencies { implementation(libs.compose.ui) }

@@ -9,7 +9,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
         androidMain.dependencies {
-            implementation(projects.permissions)
+            implementation(project(":permissions"))
             implementation(libs.androidx.core.ktx)
             implementation(libs.ksensor.core)
         }

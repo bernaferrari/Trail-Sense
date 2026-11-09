@@ -13,7 +13,7 @@ kotlin {
     }
     sourceSets {
         commonMain.dependencies {
-            api(projects.print)
+            api(project(":print"))
             api(libs.compose.runtime)
         }
         androidMain.dependencies { implementation(libs.compose.ui) }

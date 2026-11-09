@@ -13,7 +13,7 @@ kotlin {
         }
     }
     sourceSets {
-        commonMain.dependencies { api(projects.shared); api(projects.bitmaps) }
+        commonMain.dependencies { api(project(":shared")); api(project(":bitmaps")) }
         jvmMain.dependencies {
             implementation(libs.tensorflowLite.jvm)
             listOf("linux-arm64", "linux-x86_64", "macosx-arm64", "macosx-x86_64", "windows-x86_64").forEach { platform ->

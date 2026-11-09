@@ -8,6 +8,6 @@ kotlin {
     }
     sourceSets.androidMain.dependencies {
         api(libs.androidx.core.ktx)
-        implementation(projects.core)
+        implementation(project(":core"))
     }
 }

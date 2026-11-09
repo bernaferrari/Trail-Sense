@@ -4,7 +4,7 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(projects.shared)
+        api(project(":shared"))
         api(libs.compose.runtime)
         api(libs.jetbrains.navigation.compose)
         api(libs.jetbrains.lifecycle.runtime.compose)

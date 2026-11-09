@@ -14,7 +14,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sol)
-            api(projects.shared)
+            api(project(":shared"))
             implementation(libs.kotlinx.atomicfu)
             api(libs.kotlinx.coroutines.core)
         }

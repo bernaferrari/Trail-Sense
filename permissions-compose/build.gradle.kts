@@ -13,7 +13,7 @@ kotlin {
     }
     sourceSets {
         commonMain.dependencies {
-            api(projects.permissions)
+            api(project(":permissions"))
             api(libs.compose.runtime)
         }
         named("mobileMain") {

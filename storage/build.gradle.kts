@@ -6,7 +6,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         api(libs.kotlinx.datetime)
         api(libs.sol)
-        api(projects.shared)
+        api(project(":shared"))
         api(libs.multiplatformSettings.noArg)
         api(libs.okio)
     }

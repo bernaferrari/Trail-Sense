@@ -4,14 +4,14 @@ plugins {
 
 kotlin {
     sourceSets {
-        commonMain.dependencies { api(projects.shared); api(libs.kotlinx.datetime) }
+        commonMain.dependencies { api(project(":shared")); api(libs.kotlinx.datetime) }
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.androidx.core.ktx)
             api(libs.androidx.work.runtime.ktx)
-            implementation(projects.core)
-            implementation(projects.storage)
-            implementation(projects.permissions)
+            implementation(project(":core"))
+            implementation(project(":storage"))
+            implementation(project(":permissions"))
             api(libs.luna)
         }
     }

@@ -5,7 +5,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            api(projects.shared)
+            api(project(":shared"))
             implementation(libs.kotlinx.atomicfu)
             api(libs.gadulka)
         }
@@ -13,7 +13,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.ksensor.core)
             implementation(libs.kotlinx.coroutines.android)
-            implementation(projects.core)
+            implementation(project(":core"))
             implementation(libs.androidx.core.ktx)
             implementation(libs.luna)
         }

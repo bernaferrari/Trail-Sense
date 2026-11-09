@@ -6,14 +6,14 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sol)
-            api(projects.device)
-            api(projects.storage)
+            api(project(":device"))
+            api(project(":storage"))
             implementation(libs.kotlinx.atomicfu)
         }
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
-            implementation(projects.core)
-            implementation(projects.permissions)
+            implementation(project(":core"))
+            implementation(project(":permissions"))
             api(libs.luna)
         }
     }

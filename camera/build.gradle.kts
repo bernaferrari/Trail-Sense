@@ -14,7 +14,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sol)
-            api(projects.shared)
+            api(project(":shared"))
             api(libs.compose.foundation)
         }
         named("desktopAppleMain") {
@@ -25,8 +25,8 @@ kotlin {
             }
         }
         androidMain.dependencies {
-            implementation(projects.core)
-            implementation(projects.permissions)
+            implementation(project(":core"))
+            implementation(project(":permissions"))
             implementation(libs.androidx.camera.camera2)
             implementation(libs.androidx.camera.lifecycle)
             api(libs.androidx.camera.compose)

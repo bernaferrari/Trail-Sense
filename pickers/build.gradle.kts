@@ -9,8 +9,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlinx.datetime)
-            api(projects.shared)
-            api(projects.forms)
+            api(project(":shared"))
+            api(project(":forms"))
             api(libs.filekit.dialogs.compose)
             api(libs.compose.runtime)
             api(libs.compose.foundation)

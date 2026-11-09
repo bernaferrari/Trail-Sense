@@ -4,7 +4,7 @@ plugins {
 
 kotlin {
     sourceSets {
-        commonMain.dependencies { api(projects.sms); api(libs.compose.runtime) }
+        commonMain.dependencies { api(project(":sms")); api(libs.compose.runtime) }
         androidMain.dependencies { implementation(libs.compose.ui) }
     }
 }
