@@ -30,13 +30,13 @@ internal class PiecewiseWaterLevelCalculatorTest {
         @JvmStatic
         fun providePieces(): Stream<Arguments> {
             val one = mock<IWaterLevelCalculator>()
-            whenever(one.calculate(any())).thenReturn(1f)
+            whenever(one.calculate(any(), any())).thenReturn(1f)
 
             val two = mock<IWaterLevelCalculator>()
-            whenever(two.calculate(any())).thenReturn(2f)
+            whenever(two.calculate(any(), any())).thenReturn(2f)
 
             val three = mock<IWaterLevelCalculator>()
-            whenever(three.calculate(any())).thenReturn(3f)
+            whenever(three.calculate(any(), any())).thenReturn(3f)
 
             val base = listOf(
                 Range(time(1, 1, 0), time(5, 0, 0)) to one,

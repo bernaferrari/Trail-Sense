@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
+import kotlin.time.toKotlinInstant
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaInstant
 import kotlin.time.Instant
@@ -182,8 +183,8 @@ internal class AstronomyServiceTest {
 
         val altitudes = service.getCenteredSunAltitudes(boston, time)
 
-        assertEquals(time.minusHours(12).toInstant(), altitudes.first().time)
-        assertEquals(time.plusHours(12).toInstant(), altitudes.last().time)
+        assertEquals(time.minusHours(12).toInstant().toKotlinInstant(), altitudes.first().time)
+        assertEquals(time.plusHours(12).toInstant().toKotlinInstant(), altitudes.last().time)
     }
 
     @Test
