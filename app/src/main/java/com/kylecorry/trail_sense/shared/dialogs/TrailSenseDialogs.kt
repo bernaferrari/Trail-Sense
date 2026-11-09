@@ -8,6 +8,7 @@ package com.kylecorry.trail_sense.shared.dialogs
 import android.content.Context
 import android.text.Spanned
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,7 +86,6 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
-import com.kylecorry.trail_sense.shared.dialogs.views.Alerts as AndromedaAlerts
 /*
  * Trail Sense's dialogs, drawn in Compose so they look like the rest of the app (28 dp corners, a headline title, the
  * app's colors and type). They keep Andromeda's names and parameters, so callers open them imperatively from any
@@ -262,8 +262,18 @@ object Alerts {
         }
     }
 
-    fun toast(context: Context, text: CharSequence, short: Boolean = true) =
-        AndromedaAlerts.toast(context, text, short)
+    /**
+     * A short message that needs no answer: a Compose snackbar on the screen that is showing. Work running while the
+     * app is in the background has no screen to draw on, so it falls back to the system's toast.
+     */
+    fun toast(context: Context, text: CharSequence, short: Boolean = true) {
+        val host = AppHost.visible(context)
+        if (host != null) {
+            host.snackbar(text.toString(), long = !short)
+        } else {
+            Toast.makeText(context.applicationContext, text, if (short) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
+        }
+    }
 
     /** A dialog with [title] and a spinner that can't be dismissed by the person; dismiss it when the work is done. */
     fun loading(context: Context, title: CharSequence): TrailSenseDialog {

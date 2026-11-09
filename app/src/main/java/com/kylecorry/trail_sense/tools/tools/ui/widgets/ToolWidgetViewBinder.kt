@@ -15,7 +15,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.trail_sense.shared.views.legacy.Views
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration

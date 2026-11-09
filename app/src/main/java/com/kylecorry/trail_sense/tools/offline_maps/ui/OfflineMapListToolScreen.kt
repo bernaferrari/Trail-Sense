@@ -90,7 +90,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
-import com.kylecorry.trail_sense.shared.dialogs.views.toast
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
