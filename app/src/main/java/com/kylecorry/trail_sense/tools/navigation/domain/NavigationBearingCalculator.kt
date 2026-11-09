@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.navigation.domain
 
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.units.Coordinate
+import kotlin.time.Instant
 
 object NavigationBearingCalculator {
 
@@ -13,7 +14,7 @@ object NavigationBearingCalculator {
         declinationOverride: Float
     ): Float {
         return if (useAutoDeclination) {
-            Geophysics.getGeomagneticDeclination(location, elevation, time)
+            Geophysics.getGeomagneticDeclination(location, elevation, Instant.fromEpochMilliseconds(time))
         } else {
             declinationOverride
         }
