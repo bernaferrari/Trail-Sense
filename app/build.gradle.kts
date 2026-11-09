@@ -273,5 +273,6 @@ dependencies {
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.kotlin)
+    testImplementation("com.russhwolf:multiplatform-settings-test:1.3.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
 }

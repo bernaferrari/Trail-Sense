@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.settings.migrations
 
+import kotlin.time.Duration.Companion.minutes
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.AppState
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.time.Duration
 
 class PreferenceMigratorTest {
 
@@ -52,7 +52,7 @@ class PreferenceMigratorTest {
 
         PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(context, settings)
 
-        assertEquals(Duration.ofMinutes(15), settings.getDuration("backtrack_frequency"))
+        assertEquals(15.minutes, settings.getDuration("backtrack_frequency"))
     }
 
     @Test
@@ -68,11 +68,11 @@ class PreferenceMigratorTest {
     fun migrationPreservesExistingBacktrackFrequency() {
         val settings = InMemoryPreferences()
         settings.putBoolean("backtrack_enabled", true)
-        settings.putDuration("backtrack_frequency", Duration.ofMinutes(5))
+        settings.putDuration("backtrack_frequency", 5.minutes)
 
         PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(backtrackContext(), settings)
 
-        assertEquals(Duration.ofMinutes(5), settings.getDuration("backtrack_frequency"))
+        assertEquals(5.minutes, settings.getDuration("backtrack_frequency"))
     }
 
     @Test
@@ -82,7 +82,7 @@ class PreferenceMigratorTest {
 
         PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(weatherContext(), settings)
 
-        assertEquals(Duration.ofMinutes(15), settings.getDuration("weather_frequency"))
+        assertEquals(15.minutes, settings.getDuration("weather_frequency"))
     }
 
     @Test
@@ -98,11 +98,11 @@ class PreferenceMigratorTest {
     fun migrationPreservesExistingWeatherFrequency() {
         val settings = InMemoryPreferences()
         settings.putBoolean("monitor_weather", true)
-        settings.putDuration("weather_frequency", Duration.ofMinutes(5))
+        settings.putDuration("weather_frequency", 5.minutes)
 
         PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(weatherContext(), settings)
 
-        assertEquals(Duration.ofMinutes(5), settings.getDuration("weather_frequency"))
+        assertEquals(5.minutes, settings.getDuration("weather_frequency"))
     }
 
     @Test

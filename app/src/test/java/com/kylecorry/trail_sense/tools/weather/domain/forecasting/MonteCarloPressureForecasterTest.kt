@@ -1,21 +1,21 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.time.Instant
 
 class MonteCarloPressureForecasterTest {
 
     private val forecaster = MonteCarloPressureForecaster()
-    private val start = Instant.ofEpochMilli(1700000000000)
+    private val start = Instant.fromEpochMilliseconds(1700000000000)
 
     private fun history(vararg hpa: Float, stepHours: Long = 1): List<Reading<Pressure>> {
         return hpa.mapIndexed { i, value ->
-            Reading(Pressure.hpa(value), start.plus(Duration.ofHours(i * stepHours)))
+            Reading(Pressure.hpa(value), start + (i * stepHours).hours)
         }
     }
 
@@ -42,7 +42,7 @@ class MonteCarloPressureForecasterTest {
         assertTrue(forecast.isNotEmpty())
         assertTrue(forecast.size <= 4, "Expected at most 4 readings, got ${forecast.size}")
         val hoursFromStart = forecast.map {
-            Duration.between(start, it.time).toMillis() / 3600000f
+            (it.time - start).inWholeMilliseconds / 3600000f
         }
         // The forecast starts after the last observation and steps by an hour
         assertTrue(hoursFromStart.all { it >= 4f }, "Forecast starts before the last reading")
@@ -144,7 +144,7 @@ class MonteCarloPressureForecasterTest {
 
         assertTrue(forecast.isNotEmpty())
         val hoursFromStart = forecast.map {
-            Duration.between(start, it.time).toMillis() / 3600000f
+            (it.time - start).inWholeMilliseconds / 3600000f
         }
         hoursFromStart.zipWithNext { a, b -> assertEquals(2f, b - a, 0.01f) }
     }

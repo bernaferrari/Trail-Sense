@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting.arrival
 
+import kotlin.time.toKotlinInstant
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
@@ -159,7 +160,7 @@ internal class WeatherArrivalTimeCalculatorTest {
         conditions: List<WeatherCondition> = listOf(WeatherCondition.Rain),
         tendency: PressureTendency? = null
     ): WeatherForecast {
-        return WeatherForecast(time, conditions, tendency = tendency)
+        return WeatherForecast(time?.toKotlinInstant(), conditions, tendency = tendency)
     }
 
     companion object {

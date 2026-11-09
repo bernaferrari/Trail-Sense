@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
+import kotlin.time.toKotlinInstant
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.WeatherCondition
@@ -62,7 +63,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun returnsTheMostRecentCloudObservationWithinFourHours() = runBlocking {
-        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(Duration.ofHours(3)))
+        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(Duration.ofHours(3)).toKotlinInstant())
 
         val weather = forecaster().forecast(emptyList(), listOf(cloud), location)
 
@@ -71,7 +72,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun ignoresCloudObservationsOlderThanFourHours() = runBlocking {
-        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(Duration.ofHours(5)))
+        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(Duration.ofHours(5)).toKotlinInstant())
 
         val weather = forecaster().forecast(emptyList(), listOf(cloud), location)
 

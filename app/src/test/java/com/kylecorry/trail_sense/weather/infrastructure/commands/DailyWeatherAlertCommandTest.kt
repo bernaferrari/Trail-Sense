@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.LocalDateTime
+import com.kylecorry.andromeda.core.time.ZonedDateTime
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
@@ -19,8 +23,6 @@ import org.mockito.kotlin.whenever
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
 
 internal class DailyWeatherAlertCommandTest {
 
@@ -51,15 +53,9 @@ internal class DailyWeatherAlertCommandTest {
         timeProvider = mock()
 
         whenever(timeProvider.getTime()).thenReturn(
-            ZonedDateTime.of(
-                2022,
-                1,
-                1,
-                7,
-                0,
-                0,
-                0,
-                ZoneId.of("UTC")
+            ZonedDateTime(
+                LocalDateTime(2022, 1, 1, 7, 0).toInstant(TimeZone.UTC),
+                TimeZone.UTC
             )
         )
 

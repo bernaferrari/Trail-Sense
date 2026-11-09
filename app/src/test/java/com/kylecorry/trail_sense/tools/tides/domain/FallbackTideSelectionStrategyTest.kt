@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides.domain
 
+import kotlinx.datetime.TimeZone
 import com.kylecorry.sol.science.oceanography.Tide
-import com.kylecorry.trail_sense.shared.time.JavaTime.utc
 import com.kylecorry.trail_sense.settings.infrastructure.ITidePreferences
 import com.kylecorry.trail_sense.tools.tides.domain.selection.DefaultTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.domain.selection.FallbackTideSelectionStrategy
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class FallbackTideSelectionStrategyTest {
 
@@ -52,7 +52,7 @@ internal class FallbackTideSelectionStrategyTest {
     }
 
     private fun table(id: Long, millis: Long): TideTable {
-        return TideTable(id, listOf(Tide.high(Instant.ofEpochMilli(millis).utc())), null, null)
+        return TideTable(id, listOf(Tide.high(Instant.fromEpochMilliseconds(millis), timeZone = TimeZone.UTC)), null, null)
     }
 
 }

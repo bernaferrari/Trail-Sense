@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.toJavaDuration
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.luna.time.ITimer
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -47,7 +48,7 @@ class TimeoutGPSModuleTest {
     @Test
     fun startSchedulesTimeoutAndStopIgnoresPendingCallback() = runBlocking<Unit> {
         module.start(data)
-        verify(timer).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
         module.stop(data)
         verify(timer).stop()
         fireTimeout()
@@ -76,7 +77,7 @@ class TimeoutGPSModuleTest {
         fireTimeout()
         assertTrue(data.isTimedOut)
         assertEquals(listOf(true), notifications)
-        verify(timer).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
     }
 
     @Test
@@ -85,7 +86,7 @@ class TimeoutGPSModuleTest {
         fireTimeout()
         assertTrue(accept(ModularGPSData(eventTimeElapsedNanos = 1L)))
         assertFalse(data.isTimedOut)
-        verify(timer, times(2)).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer, times(2)).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
         assertEquals(1, notifications.size)
     }
 
@@ -93,7 +94,7 @@ class TimeoutGPSModuleTest {
     fun updatesWhileStoppedDoNotScheduleTimer() = runBlocking<Unit> {
         assertTrue(accept(ModularGPSData()))
         assertFalse(data.isTimedOut)
-        verify(timer, never()).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer, never()).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
     }
 
     @Test
@@ -103,17 +104,17 @@ class TimeoutGPSModuleTest {
         repeat(20) {
             assertTrue(accept(duplicate))
         }
-        verify(timer).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
 
         fireTimeout()
         assertTrue(data.isTimedOut)
         assertTrue(accept(duplicate))
         assertTrue(data.isTimedOut)
-        verify(timer).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
 
         accept(ModularGPSData(eventTimeElapsedNanos = data.eventTimeElapsedNanos + 1_000_000_000))
         assertFalse(data.isTimedOut)
-        verify(timer, times(2)).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer, times(2)).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
     }
 
     @Test
@@ -147,7 +148,7 @@ class TimeoutGPSModuleTest {
         module.start(data)
         repeat(3) { fireTimeout() }
         assertEquals(listOf(true), notifications)
-        verify(timer).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
     }
 
     @Test
@@ -158,7 +159,7 @@ class TimeoutGPSModuleTest {
         assertTrue(data.isTimedOut)
         module.start(data)
         assertFalse(data.isTimedOut)
-        verify(timer, times(2)).once(SensorService.GPS_READ_TIMEOUT)
+        verify(timer, times(2)).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
         fireTimeout()
         assertTrue(data.isTimedOut)
     }

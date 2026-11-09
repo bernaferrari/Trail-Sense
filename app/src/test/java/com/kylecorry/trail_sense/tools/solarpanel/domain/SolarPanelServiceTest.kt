@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.solarpanel.domain
 
+import kotlinx.datetime.toKotlinTimeZone
+import kotlin.time.toKotlinInstant
+import com.kylecorry.andromeda.core.time.ZonedDateTime as AndromedaZonedDateTime
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -51,7 +54,9 @@ class SolarPanelServiceTest {
         val timeProvider = mock<ZonedDateTimeProvider>()
         val service = SolarPanelService(timeProvider)
         val time = ZonedDateTime.parse(timeString)
-        whenever(timeProvider.getTime()).thenReturn(time)
+        whenever(timeProvider.getTime()).thenReturn(
+            AndromedaZonedDateTime(time.toInstant().toKotlinInstant(), time.zone.toKotlinTimeZone())
+        )
         val duration = Duration.parse(durationString)
         val location = Coordinate(latitude, longitude)
         val (tilt, azimuth) = service.getBestPosition(location, duration, restrictToToday)
@@ -98,7 +103,9 @@ class SolarPanelServiceTest {
         val timeProvider = mock<ZonedDateTimeProvider>()
         val service = SolarPanelService(timeProvider)
         val time = ZonedDateTime.parse(timeString)
-        whenever(timeProvider.getTime()).thenReturn(time)
+        whenever(timeProvider.getTime()).thenReturn(
+            AndromedaZonedDateTime(time.toInstant().toKotlinInstant(), time.zone.toKotlinTimeZone())
+        )
         val duration = Duration.parse(durationString)
         val location = Coordinate(latitude, longitude)
         val energy = service.getSolarEnergy(location, tilt, Bearing.from(azimuth), duration, restrictToToday)

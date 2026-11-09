@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.toJavaInstant
+import kotlin.time.Instant
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.science.shared.Season
 import com.kylecorry.sol.units.Coordinate
@@ -76,8 +79,8 @@ internal class AstronomyServiceTest {
         val civil = service.getSunTimes(boston, SunTimesMode.Civil, date)
 
         assertTimeNear(LocalTime.of(4, 33), civil.rise)
-        assertTrue(civil.rise!!.isBefore(actual.rise))
-        assertTrue(civil.set!!.isAfter(actual.set))
+        assertTrue(civil.rise!! < actual.rise!!)
+        assertTrue(civil.set!! > actual.set!!)
     }
 
     @Test
@@ -121,8 +124,8 @@ internal class AstronomyServiceTest {
         val today = clocked.getTodaySunTimes(boston, SunTimesMode.Actual)
         val tomorrow = clocked.getTomorrowSunTimes(boston, SunTimesMode.Actual)
 
-        assertEquals(LocalDate.of(2025, 6, 21), today.rise!!.toLocalDate())
-        assertEquals(LocalDate.of(2025, 6, 22), tomorrow.rise!!.toLocalDate())
+        assertEquals(LocalDate.of(2025, 6, 21), today.rise!!.atZone(zone).toLocalDate())
+        assertEquals(LocalDate.of(2025, 6, 22), tomorrow.rise!!.atZone(zone).toLocalDate())
     }
 
     @Test
@@ -170,7 +173,7 @@ internal class AstronomyServiceTest {
 
         assertEquals(LocalDate.of(2025, 6, 21), altitudes.first().time.atZone(zone).toLocalDate())
         assertEquals(LocalDate.of(2025, 6, 21), altitudes.last().time.atZone(zone).toLocalDate())
-        assertTrue(Duration.between(altitudes.first().time, altitudes.last().time) >= Duration.ofHours(23))
+        assertTrue(altitudes.last().time - altitudes.first().time >= 23.hours)
     }
 
     @Test
@@ -246,7 +249,7 @@ internal class AstronomyServiceTest {
 
         // The full moon rises near sunset and sets near sunrise
         assertNotNull(times.rise)
-        assertTrue(times.rise!!.hour in 16..20, "moonrise was ${times.rise}")
+        assertTrue(times.rise!!.atZone(zone).hour in 16..20, "moonrise was ${times.rise}")
     }
 
     // EVENT SEARCH
@@ -419,6 +422,17 @@ internal class AstronomyServiceTest {
         assertNotNull(actual)
         assertTimeNear(expected, actual!!.withZoneSameInstant(zone).toLocalTime(), minutes)
     }
+
+    private fun assertTimeNear(
+        expected: LocalTime,
+        actual: Instant?,
+        minutes: Long = 6
+    ) {
+        assertNotNull(actual)
+        assertTimeNear(expected, actual!!.atZone(zone), minutes)
+    }
+
+    private fun Instant.atZone(zone: ZoneId): ZonedDateTime = toJavaInstant().atZone(zone)
 
     private fun assertTimeNear(expected: LocalTime, actual: LocalTime, minutes: Long = 6) {
         val difference = Math.abs(ChronoUnit.MINUTES.between(expected, actual))

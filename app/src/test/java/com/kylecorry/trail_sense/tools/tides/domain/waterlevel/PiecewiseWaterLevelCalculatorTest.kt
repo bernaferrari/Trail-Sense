@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.tides.domain.waterlevel
 
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.oceanography.waterlevel.IWaterLevelCalculator
+import com.kylecorry.sol.science.oceanography.waterlevel.PiecewiseWaterLevelCalculator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -9,17 +10,17 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlin.time.Instant
 import java.util.stream.Stream
 
 internal class PiecewiseWaterLevelCalculatorTest {
 
     @ParameterizedTest
     @MethodSource("providePieces")
-    fun calculate(pieces: List<Pair<Range<ZonedDateTime>, IWaterLevelCalculator>>, time: ZonedDateTime, expected: Float) {
+    fun calculate(pieces: List<Pair<Range<Instant>, IWaterLevelCalculator>>, time: Instant, expected: Float) {
         val calculator = PiecewiseWaterLevelCalculator(pieces)
         val actual = calculator.calculate(time)
         assertEquals(expected, actual, 0.01f)
@@ -52,16 +53,12 @@ internal class PiecewiseWaterLevelCalculatorTest {
                 Arguments.of(base, time(20, 1, 0), 0f),
                 Arguments.of(base, time(1, 1, 0), 1f),
                 Arguments.of(base, time(1, 0, 0), 0f),
-                Arguments.of(emptyList<Pair<Range<ZonedDateTime>, IWaterLevelCalculator>>(), time(1, 0, 0), 0f),
+                Arguments.of(emptyList<Pair<Range<Instant>, IWaterLevelCalculator>>(), time(1, 0, 0), 0f),
             )
         }
 
-        private fun time(day: Int, hour: Int, minute: Int): ZonedDateTime {
-            return ZonedDateTime.of(
-                LocalDate.of(2022, 1, day),
-                LocalTime.of(hour, minute, 0),
-                ZoneId.of("UTC")
-            )
+        private fun time(day: Int, hour: Int, minute: Int): Instant {
+            return LocalDateTime(2022, 1, day, hour, minute).toInstant(TimeZone.UTC)
         }
     }
 }

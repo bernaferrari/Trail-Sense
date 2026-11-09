@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.settings.migrations
 
+import kotlin.time.toKotlinInstant
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
@@ -160,7 +161,7 @@ internal class PedometerPreferenceMigrationTest {
         verify(prefs).putLong("cache_steps", 6)
         verify(prefs).putInstant(
             "last_odometer_reset",
-            Instant.parse("2026-06-14T11:00:00Z")
+            Instant.parse("2026-06-14T11:00:00Z").toKotlinInstant()
         )
         verify(prefs, never()).remove("cache_steps")
         verify(prefs, never()).remove("last_odometer_reset")
@@ -168,7 +169,7 @@ internal class PedometerPreferenceMigrationTest {
         // Retry migration
         whenever(prefs.getLong("cache_steps")).thenReturn(6)
         whenever(prefs.getInstant("last_odometer_reset")).thenReturn(
-            Instant.parse("2026-06-14T11:00:00Z")
+            Instant.parse("2026-06-14T11:00:00Z").toKotlinInstant()
         )
 
         runBlocking {
@@ -198,7 +199,7 @@ internal class PedometerPreferenceMigrationTest {
     private fun getPrefs(startTime: Instant, steps: Long): Preferences {
         val prefs = mock<Preferences>()
         whenever(prefs.getLong("cache_steps")).thenReturn(steps)
-        whenever(prefs.getInstant("last_odometer_reset")).thenReturn(startTime)
+        whenever(prefs.getInstant("last_odometer_reset")).thenReturn(startTime.toKotlinInstant())
         return prefs
     }
 

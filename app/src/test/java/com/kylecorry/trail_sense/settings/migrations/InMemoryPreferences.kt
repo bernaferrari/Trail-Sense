@@ -1,98 +1,66 @@
 package com.kylecorry.trail_sense.settings.migrations
 
 import com.kylecorry.andromeda.preferences.Preferences
-import com.kylecorry.andromeda.preferences.Preference
-import com.kylecorry.luna.topics.generic.Topic
-import com.kylecorry.sol.units.Coordinate
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
+import com.russhwolf.settings.MapSettings
+import com.russhwolf.settings.Settings
+import java.util.concurrent.CopyOnWriteArrayList
 
-class InMemoryPreferences : Preferences {
+/**
+ * Preferences backed by an in-memory map. Like the platform-backed store, every write is reported
+ * through [Preferences.observeChanges].
+ */
+@Suppress("FunctionName")
+fun InMemoryPreferences(): Preferences {
+    val settings = NotifyingSettings(MapSettings())
+    return Preferences(settings) { onChange ->
+        settings.listeners.add(onChange)
+        return@Preferences { settings.listeners.remove(onChange) }
+    }
+}
 
-    private val values = mutableMapOf<String, Any>()
+private class NotifyingSettings(private val delegate: Settings) : Settings by delegate {
+    val listeners = CopyOnWriteArrayList<(String) -> Unit>()
 
-    override val onChange = Topic<String>()
+    private fun changed(key: String) = listeners.forEach { it(key) }
+
+    override fun clear() {
+        val keys = delegate.keys
+        delegate.clear()
+        keys.forEach(::changed)
+    }
 
     override fun remove(key: String) {
-        values.remove(key)
+        delegate.remove(key)
+        changed(key)
     }
-
-    override fun contains(key: String): Boolean = values.containsKey(key)
-
-    private inline fun <reified T> get(key: String): T? = values[key] as? T
 
     override fun putInt(key: String, value: Int) {
-        values[key] = value
-    }
-
-    override fun putBoolean(key: String, value: Boolean) {
-        values[key] = value
-    }
-
-    override fun putString(key: String, value: String) {
-        values[key] = value
-    }
-
-    override fun putFloat(key: String, value: Float) {
-        values[key] = value
-    }
-
-    override fun putDouble(key: String, value: Double) {
-        values[key] = value
+        delegate.putInt(key, value)
+        changed(key)
     }
 
     override fun putLong(key: String, value: Long) {
-        values[key] = value
+        delegate.putLong(key, value)
+        changed(key)
     }
 
-    override fun getInt(key: String): Int? = get(key)
-
-    override fun getBoolean(key: String): Boolean? = get(key)
-
-    override fun getString(key: String): String? = get(key)
-
-    override fun getFloat(key: String): Float? = get(key)
-
-    override fun getDouble(key: String): Double? = get(key)
-
-    override fun getLong(key: String): Long? = get(key)
-
-    override fun putCoordinate(key: String, value: Coordinate) {
-        values[key] = value
+    override fun putString(key: String, value: String) {
+        delegate.putString(key, value)
+        changed(key)
     }
 
-    override fun getCoordinate(key: String): Coordinate? = get(key)
-
-    override fun getLocalDate(key: String): LocalDate? = get(key)
-
-    override fun putLocalDate(key: String, date: LocalDate) {
-        values[key] = date
+    override fun putFloat(key: String, value: Float) {
+        delegate.putFloat(key, value)
+        changed(key)
     }
 
-    override fun putInstant(key: String, value: Instant) {
-        values[key] = value
+    override fun putDouble(key: String, value: Double) {
+        delegate.putDouble(key, value)
+        changed(key)
     }
 
-    override fun getInstant(key: String): Instant? = get(key)
-
-    override fun getDuration(key: String): Duration? = get(key)
-
-    override fun putDuration(key: String, duration: Duration) {
-        values[key] = duration
-    }
-
-    override fun getAll(): Collection<Preference> = emptyList()
-
-    override fun putAll(preferences: Collection<Preference>, clearOthers: Boolean) {
-        // Not needed by the migrator
-    }
-
-    override fun clear() {
-        values.clear()
-    }
-
-    override fun close() {
-        // Nothing to close
+    override fun putBoolean(key: String, value: Boolean) {
+        delegate.putBoolean(key, value)
+        changed(key)
     }
 }
