@@ -26,6 +26,7 @@ kotlin {
             implementation("io.ktor:ktor-client-cio:3.6.1")
             api(compose.foundation)
         }
+        commonTest.dependencies { implementation(kotlin("test")) }
     }
 }
 group = "com.kylecorry.andromeda"
