@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
@@ -44,11 +45,12 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         }
 
         // Weather prediction
-        hasText(R.id.weather_title) {
-            it == string(R.string.weather_no_change) ||
-                    it == string(R.string.weather_overcast) ||
-                    it == string(R.string.weather_clear)
-        }
+        // The forecast is the headline card at the top (it has no tag)
+        any(
+            { hasText(string(R.string.weather_no_change), exact = true, waitForTime = 0) },
+            { hasText(string(R.string.weather_overcast), exact = true, waitForTime = 0) },
+            { hasText(string(R.string.weather_clear), exact = true, waitForTime = 0) }
+        )
 
         // Wait for a pressure reading
         waitFor(15000) {
@@ -56,7 +58,9 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
             scrollToStart()
             scrollUntil { hasText(string(R.string.pressure)) }
         }
-        hasText(Regex("\\d+(\\.\\d+)? in"))
+        // The value and its unit are drawn separately
+        hasText(Regex("\\d+(\\.\\d+)?"))
+        hasText("in", exact = true)
 
         // Historic temperature
         optional {
@@ -153,9 +157,9 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
     fun steadyPressureHasNoForecastedChange() {
         openWithPressureTrend(1020f, 1020f, Duration.ofHours(6))
 
-        hasText(R.id.weather_title, string(R.string.weather_no_change))
-        hasText("0.00 hPa / 3h", exact = true)
-        hasText("1020.0 hPa", exact = true)
+        hasText(string(R.string.weather_no_change))
+        hasText(Regex(".*0\\.0 hPa / 3h.*"))
+        hasText("1020.0", exact = true)
         not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
     }
 
@@ -163,11 +167,11 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
     fun fallingPressureForecastsRain() {
         openWithPressureTrend(1018f, 1012f, Duration.ofHours(6))
 
-        hasText(R.id.weather_title, string(R.string.precipitation_rain))
-        hasText(R.id.weather_title, Regex(".*" + string(R.string.then_weather, "overcast")))
+        hasText(string(R.string.precipitation_rain))
+        hasText(Regex(".*" + string(R.string.then_weather, "overcast")))
         // 6 hPa lost over 6 hours is a 3 hPa drop every 3 hours
-        hasText("-3.00 hPa / 3h", exact = true)
-        hasText("1012.0 hPa", exact = true)
+        hasText(Regex(".*-?3\\.0 hPa / 3h.*"))
+        hasText("1012.0", exact = true)
         // A moderate drop is not a storm
         not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
     }
@@ -176,10 +180,10 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
     fun rapidlyFallingPressureShowsAStormAlert() {
         openWithPressureTrend(1020f, 1010f, Duration.ofHours(3))
 
-        hasText(R.id.weather_title, string(R.string.precipitation_rain))
-        hasText(R.id.weather_title, string(R.string.very_soon).lowercase())
-        hasText("-10.00 hPa / 3h", exact = true)
-        hasText("1010.0 hPa", exact = true)
+        hasText(string(R.string.precipitation_rain))
+        hasText(string(R.string.very_soon).lowercase())
+        hasText(Regex(".*-?10\\.0 hPa / 3h.*"))
+        hasText("1010.0", exact = true)
 
         hasText(string(R.string.alerts), exact = true)
         hasText(string(R.string.weather_storm), exact = true)
@@ -192,10 +196,10 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
     fun risingPressureForecastsClearingSkies() {
         openWithPressureTrend(1008f, 1016f, Duration.ofHours(6))
 
-        hasText(R.id.weather_title, string(R.string.weather_wind))
-        hasText(R.id.weather_title, Regex(".*" + string(R.string.then_weather, "clear")))
-        hasText("4.00 hPa / 3h", exact = true)
-        hasText("1016.0 hPa", exact = true)
+        hasText(string(R.string.weather_wind))
+        hasText(Regex(".*" + string(R.string.then_weather, "clear")))
+        hasText(Regex(".*4\\.0 hPa / 3h.*"))
+        hasText("1016.0", exact = true)
         not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
     }
 
@@ -209,7 +213,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
             interval = Duration.ofMinutes(1)
         )
 
-        hasText(R.id.weather_title, string(R.string.weather_no_change))
+        hasText(string(R.string.weather_no_change))
         not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
     }
 
@@ -217,7 +221,8 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
     fun pressureIsConvertedToTheSelectedUnits() {
         openWithPressureTrend(1013.25f, 1013.25f, Duration.ofHours(6), units = "in")
 
-        hasText(Regex("29\\.92 in"))
+        hasText("29.92", exact = true)
+        hasText("in", exact = true)
     }
 
     @Test

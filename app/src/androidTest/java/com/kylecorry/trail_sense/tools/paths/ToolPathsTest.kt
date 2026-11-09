@@ -399,8 +399,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun canUseBacktrack() {
-        // Verify it will run every minute by default
-        hasText(id("play_bar_title"), "Off - 1m")
+        // Backtrack starts off; the switch row names its state
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_off_title))
 
         // Click the start button
         click(id("play_btn"))
@@ -418,7 +418,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
 
-        hasText(id("play_bar_title"), "On - 1m")
+        // It records every minute by default
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_on_title))
+        hasText(string(R.string.places_backtrack_every, "1m"))
 
         // Wait for the path to be created
         hasText("Today", waitForTime = GPS_WAIT_FOR_TIMEOUT)
@@ -505,7 +507,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
             hasText(string(R.string.battery_settings_limit_accuracy))
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
-        hasText(R.id.play_bar_title, "On - 1m")
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_on_title))
+        hasText(string(R.string.places_backtrack_every, "1m"))
 
         // Wait for the path to be created
         isVisible(clickableIn("paths_list"), waitForTime = GPS_WAIT_FOR_TIMEOUT)
