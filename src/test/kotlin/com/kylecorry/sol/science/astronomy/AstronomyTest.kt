@@ -18,7 +18,6 @@ import com.kylecorry.sol.tests.assertDuration
 import com.kylecorry.sol.tests.parametrized
 import com.kylecorry.sol.time.JvmTime.duration
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.sol.units.CoordinateLongConverter
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -720,7 +719,7 @@ class AstronomyTest {
     @MethodSource("provideDayLengths")
     fun getDaylightLength(
         date: ZonedDateTime,
-        @ConvertWith(CoordinateLongConverter::class) location: Coordinate,
+        location: Coordinate,
         expected: Duration
     ) {
         val length = JvmAstronomy.getDaylightLength(date, location)

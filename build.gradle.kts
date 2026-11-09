@@ -67,6 +67,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation("com.willowtreeapps.assertk:assertk:0.28.1")
         }
         jvmMain {
             kotlin.srcDir("src/main/kotlin")
@@ -76,7 +77,6 @@ kotlin {
             dependencies {
                 implementation("org.junit.jupiter:junit-jupiter-api:5.14.4")
                 implementation("org.junit.jupiter:junit-jupiter-params:5.14.4")
-                implementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
                 runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.4")
                 runtimeOnly("org.junit.platform:junit-platform-launcher:1.14.4")
             }
