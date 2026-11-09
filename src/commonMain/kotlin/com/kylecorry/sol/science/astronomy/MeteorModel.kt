@@ -1,13 +1,11 @@
-@file:Suppress("MaxLineLength", "ReturnCount", "LoopWithTooManyJumpStatements")
-
 package com.kylecorry.sol.science.astronomy
 
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.science.astronomy.locators.MeteorShowerPositionModel
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
+import com.kylecorry.sol.science.astronomy.meteors.MeteorShowerPeak
 import com.kylecorry.sol.science.astronomy.rst.NewtonsRiseSetModel
-import com.kylecorry.sol.science.astronomy.rst.SearchRiseSetTimes
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -21,31 +19,35 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
-internal data class MeteorPeak(val shower: MeteorShower, val start: Instant, val peak: Instant, val end: Instant)
-
 internal object MeteorModel {
-    fun shower(location: Coordinate, date: Instant, zone: TimeZone): MeteorPeak? {
-        val start = date.toLocalDateTime(zone).date.atStartOfDayIn(zone)
-        val longitude = SunCalculationModel.longitude(date)
-        for (shower in MeteorShower.entries) {
-            if (deltaAngle(longitude, shower.solarLongitude).absoluteValue > 2) continue
-            val peak = peak(shower, location, start, zone) ?: continue
-            val transit = peak.transit ?: continue
-            if (transit.toLocalDateTime(zone).date == date.toLocalDateTime(zone).date) {
-                return MeteorPeak(shower, peak.rise ?: transit, transit, peak.set ?: transit)
+    /**
+     * Gets the meteor shower that peaks on the local day containing [date], if any.
+     */
+    fun shower(location: Coordinate, date: Instant, zone: TimeZone): MeteorShowerPeak? {
+        val day = date.toLocalDateTime(zone).date
+        val startOfDay = day.atStartOfDayIn(zone)
+        val solarLongitude = SunCalculationModel.longitude(date)
+        return MeteorShower.entries
+            .asSequence()
+            .filter { deltaAngle(solarLongitude, it.solarLongitude).absoluteValue <= 2 }
+            .mapNotNull { shower ->
+                val peak = peak(shower, location, startOfDay, zone) ?: return@mapNotNull null
+                val transit = peak.transit ?: return@mapNotNull null
+                MeteorShowerPeak(shower, peak.rise ?: transit, transit, peak.set ?: transit)
             }
-        }
-        return null
+            .firstOrNull { it.peak.toLocalDateTime(zone).date == day }
     }
 
-    fun active(location: Coordinate, date: Instant, zone: TimeZone): List<MeteorPeak> {
-        val active = mutableSetOf<MeteorPeak>()
+    fun active(location: Coordinate, date: Instant, zone: TimeZone): List<MeteorShowerPeak> {
+        val active = mutableSetOf<MeteorShowerPeak>()
         val range = MeteorShower.entries.maxOf { it.activeDays }
         var current = date.plus(-range, DateTimeUnit.DAY, zone)
         val end = date.plus(range, DateTimeUnit.DAY, zone)
         while (current < end) {
             val peak = shower(location, current, zone)
-            if (peak != null && (date - peak.peak).absoluteValue <= (peak.shower.activeDays / 2).days) active.add(peak)
+            if (peak != null && (date - peak.peak).absoluteValue <= (peak.shower.activeDays / 2).days) {
+                active.add(peak)
+            }
             current = current.plus(1, DateTimeUnit.DAY, zone)
         }
         return active.toList()
@@ -56,33 +58,38 @@ internal object MeteorModel {
         return CelestialObservation(Bearing.from(horizon.azimuth.toFloat()), horizon.altitude.toFloat())
     }
 
-    private fun peak(shower: MeteorShower, location: Coordinate, now: Instant, zone: TimeZone): SearchRiseSetTimes? {
+    /**
+     * Gets the visible window (rise to set, clipped to the astronomical night) and peak of the radiant.
+     */
+    @Suppress("ReturnCount")
+    private fun peak(shower: MeteorShower, location: Coordinate, now: Instant, zone: TimeZone): RiseSetTransitTimes? {
         val time = SunCalculationModel.nextAtLongitude(shower.solarLongitude, now, zone)
-        fun times(date: Instant) = NewtonsRiseSetModel().calculate(
-            MeteorShowerPositionModel(shower), date, zone, location, 0.0, false, false
-        )
-        val results = listOf(times(time.plus(-1, DateTimeUnit.DAY, zone)), times(time),
-            times(time.plus(1, DateTimeUnit.DAY, zone)))
+        val radiant = MeteorShowerPositionModel(shower)
+        val results = (-1..1).map {
+            val day = time.plus(it, DateTimeUnit.DAY, zone)
+            NewtonsRiseSetModel().calculate(radiant, day, zone, location, 0.0, false, false)
+        }
         val transit = results.mapNotNull { it.transit }.minByOrNull { (it - time).absoluteValue }
         val reference = transit ?: time
         val rise = results.mapNotNull { it.rise }.filter { it < reference }.maxOrNull()
         val set = results.mapNotNull { it.set }.filter { it > reference }.minOrNull()
-        val night = SunCalculationModel.closestNight(reference, zone, location, SunTimesMode.Astronomical) ?: return null
+        val night = SunCalculationModel.closestNight(reference, zone, location, SunTimesMode.Astronomical)
+            ?: return null
+
         if (transit == null) {
-            var current = night.start
-            var peakAltitude = -1f
-            var peakTime = current
-            while (current < night.end) {
-                val altitude = position(shower, location, current).altitude
-                if (altitude > peakAltitude) {
-                    peakAltitude = altitude
-                    peakTime = current
-                }
-                current += 5.minutes
+            // The radiant never transits, use its highest point during the night instead
+            val peakTime = generateSequence(night.start) { it + PEAK_SEARCH_STEP }
+                .takeWhile { it < night.end }
+                .maxByOrNull { position(shower, location, it).altitude }
+                ?: return null
+            if (position(shower, location, peakTime).altitude < 0) {
+                return null
             }
-            return if (peakAltitude < 0) null else SearchRiseSetTimes(night.start, peakTime, night.end)
+            return RiseSetTransitTimes(night.start, peakTime, night.end)
         }
         val intersection = Range(rise ?: night.start, set ?: night.end).intersection(night) ?: return null
-        return SearchRiseSetTimes(intersection.start, intersection.clamp(transit), intersection.end)
+        return RiseSetTransitTimes(intersection.start, intersection.clamp(transit), intersection.end)
     }
+
+    private val PEAK_SEARCH_STEP = 5.minutes
 }
