@@ -26,41 +26,62 @@ object Geophysics {
         deltaHCoefficients = WorldMagneticModel2025.DELTA_H
     )
 
+    @Deprecated(
+        "Use the kotlin.time.Instant overload",
+        ReplaceWith("getGeomagneticDeclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))", "kotlin.time.Instant")
+    )
+    fun getGeomagneticDeclination(coordinate: Coordinate, altitude: Float?, time: Long): Float =
+        getGeomagneticDeclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))
+
     fun getGeomagneticDeclination(
         coordinate: Coordinate,
         altitude: Float? = null,
-        time: Long = Clock.System.now().toEpochMilliseconds()
+        time: Instant = Clock.System.now()
     ): Float {
         val geoField = worldMagneticModel.getVector(
             coordinate,
             Distance.meters(altitude ?: 0f),
-            Instant.fromEpochMilliseconds(time)
+            time
         )
         return atan2(geoField.y, geoField.x).toDegrees()
     }
 
+    @Deprecated(
+        "Use the kotlin.time.Instant overload",
+        ReplaceWith("getGeomagneticInclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))", "kotlin.time.Instant")
+    )
+    fun getGeomagneticInclination(coordinate: Coordinate, altitude: Float?, time: Long): Float =
+        getGeomagneticInclination(coordinate, altitude, Instant.fromEpochMilliseconds(time))
+
     fun getGeomagneticInclination(
         coordinate: Coordinate,
         altitude: Float? = null,
-        time: Long = Clock.System.now().toEpochMilliseconds()
+        time: Instant = Clock.System.now()
     ): Float {
         val geoField = worldMagneticModel.getVector(
             coordinate,
             Distance.meters(altitude ?: 0f),
-            Instant.fromEpochMilliseconds(time)
+            time
         )
         return atan2(geoField.z, hypot(geoField.x, geoField.y)).toDegrees()
     }
 
+    @Deprecated(
+        "Use the kotlin.time.Instant overload",
+        ReplaceWith("getGeomagneticField(coordinate, altitude, Instant.fromEpochMilliseconds(time))", "kotlin.time.Instant")
+    )
+    fun getGeomagneticField(coordinate: Coordinate, altitude: Float?, time: Long): Vector3 =
+        getGeomagneticField(coordinate, altitude, Instant.fromEpochMilliseconds(time))
+
     fun getGeomagneticField(
         coordinate: Coordinate,
         altitude: Float? = null,
-        time: Long = Clock.System.now().toEpochMilliseconds()
+        time: Instant = Clock.System.now()
     ): Vector3 {
         val geoField = worldMagneticModel.getVector(
             coordinate,
             Distance.meters(altitude ?: 0f),
-            Instant.fromEpochMilliseconds(time)
+            time
         )
         return Vector3(geoField.x * 0.001f, geoField.y * 0.001f, geoField.z * 0.001f)
     }

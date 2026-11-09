@@ -1,5 +1,7 @@
 package com.kylecorry.sol.science.geophysics
 
+import com.kylecorry.sol.math.trigonometry.Trigonometry
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -23,10 +25,10 @@ class VerticalDeflectionCalculatorTest {
     fun fromGeoidSlope() {
         // A geoid rising 1 m per km to the north tilts the plumb line south: xi = -1 mm/m
         val model = VerticalDeflectionCalculator.fromGeoid(0.1) { location ->
-            location.latitude * Math.toRadians(1.0) * Geology.EARTH_AVERAGE_RADIUS / 1000.0
+            location.latitude * Trigonometry.toRadians(1.0) * Geology.EARTH_AVERAGE_RADIUS / 1000.0
         }
         val deflection = model.getVerticalDeflection(Coordinate(40.0, -70.0))!!
-        assertEquals(Math.toDegrees(-0.001) * 3600, deflection.xi, 0.01)
+        assertEquals(Trigonometry.toDegrees(-0.001) * 3600, deflection.xi, 0.01)
         assertEquals(0.0, deflection.eta, 1e-9)
     }
 }

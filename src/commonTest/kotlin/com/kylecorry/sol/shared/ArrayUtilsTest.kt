@@ -17,15 +17,15 @@ class ArrayUtilsTest {
         arr.swap(1, 1)
         assertContentEquals(arrayOf(3, 2, 1), arr)
 
-        assertFailsWith<ArrayIndexOutOfBoundsException> {
+        assertFailsWith<IndexOutOfBoundsException> {
             arr.swap(0, 3)
         }
 
-        assertFailsWith<ArrayIndexOutOfBoundsException> {
+        assertFailsWith<IndexOutOfBoundsException> {
             arr.swap(3, 0)
         }
 
-        assertFailsWith<ArrayIndexOutOfBoundsException> {
+        assertFailsWith<IndexOutOfBoundsException> {
             arr.swap(-1, 0)
         }
     }

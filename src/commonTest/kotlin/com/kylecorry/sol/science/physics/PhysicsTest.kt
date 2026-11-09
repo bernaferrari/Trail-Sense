@@ -1,30 +1,33 @@
 package com.kylecorry.sol.science.physics
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import com.kylecorry.sol.tests.arg
 import com.kylecorry.sol.math.interpolation.Interpolation
 
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.*
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.CsvSource
-import org.junit.jupiter.params.provider.MethodSource
 import kotlin.time.Duration.Companion.seconds
-import java.util.stream.Stream
 
 class PhysicsTest {
 
-    @ParameterizedTest
-    @MethodSource("provideFallHeights")
-    fun fallHeight(time: Long, heightMeters: Float) {
+    @Test
+    fun fallHeight() {
+        provideFallHeights().forEach { args -> fallHeight(args[0].arg<Long>(), args[1].arg<Float>()) }
+    }
+
+    private fun fallHeight(time: Long, heightMeters: Float) {
         val actualHeight = Physics.fallHeight(time.seconds)
         assertEquals(heightMeters, actualHeight.meters().value, 0.0001f)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideIsMetal")
-    fun isMetal(field: Vector3, threshold: Float, expected: Boolean) {
+    @Test
+    fun isMetal() {
+        provideIsMetal().forEach { args -> isMetal(args[0].arg<Vector3>(), args[1].arg<Float>(), args[2].arg<Boolean>()) }
+    }
+
+    private fun isMetal(field: Vector3, threshold: Float, expected: Boolean) {
         assertEquals(expected, Physics.isMetal(field, threshold))
     }
 
@@ -60,22 +63,22 @@ class PhysicsTest {
         // .308 winchester, BC 0.474
         val expectedTrajectory = listOf(
             Triple(
-                0f, // JvmTime
+                0f, // Time
                 Vector2(0f, -1.5f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             ),
             Triple(
-                0.12f, // JvmTime
+                0.12f, // Time
                 Vector2(100f, 0f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             ),
             Triple(
-                0.24f, // JvmTime
+                0.24f, // Time
                 Vector2(200f, -4.1f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             ),
             Triple(
-                0.38f, // JvmTime
+                0.38f, // Time
                 Vector2(300f, -14.8f), // Position (yards, inches)
                 2670f // Velocity (feet/s)
             )
@@ -101,10 +104,9 @@ class PhysicsTest {
                 )
             )
 
-
             assertEquals(
                 expected.first, actual.time, 0.05f,
-                "JvmTime did not match for $expected"
+                "Time did not match for $expected"
             )
 
             // These values are so high because drag is not accounted for yet
@@ -132,11 +134,14 @@ class PhysicsTest {
         }
     }
 
-    @ParameterizedTest
-    @CsvSource("1, 1, 0.5")
-    @CsvSource("2, 1, 1")
-    @CsvSource("1, 2, 2")
-    fun getKineticEnergy(mass: Float, speed: Float, expected: Float) {
+    @Test
+    fun getKineticEnergy() {
+        getKineticEnergy(1f, 1f, 0.5f)
+        getKineticEnergy(2f, 1f, 1f)
+        getKineticEnergy(1f, 2f, 2f)
+    }
+
+    private fun getKineticEnergy(mass: Float, speed: Float, expected: Float) {
         val kilograms = Weight.from(mass, WeightUnits.Kilograms)
         val metersPerSecond = Speed.from(speed, DistanceUnits.Meters, TimeUnits.Seconds)
         val joules = Physics.getKineticEnergy(kilograms, metersPerSecond).convertTo(
@@ -145,23 +150,19 @@ class PhysicsTest {
         assertEquals(expected, joules, 0.01f)
     }
 
-
     companion object {
-        @JvmStatic
-        fun provideIsMetal(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(Vector3(0f, 1f, 0f), 0f, true),
-                Arguments.of(Vector3(0f, 1f, 0f), 1f, true),
-                Arguments.of(Vector3(0f, 1f, 0f), 2f, false),
+        fun provideIsMetal(): List<List<Any?>> {
+            return listOf(
+                listOf(Vector3(0f, 1f, 0f), 0f, true),
+                listOf(Vector3(0f, 1f, 0f), 1f, true),
+                listOf(Vector3(0f, 1f, 0f), 2f, false),
             )
         }
-
-        @JvmStatic
-        fun provideFallHeights(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(0L, 0f),
-                Arguments.of(1L, 4.905f),
-                Arguments.of(2L, 19.62f),
+        fun provideFallHeights(): List<List<Any?>> {
+            return listOf(
+                listOf(0L, 0f),
+                listOf(1L, 4.905f),
+                listOf(2L, 19.62f),
             )
         }
     }

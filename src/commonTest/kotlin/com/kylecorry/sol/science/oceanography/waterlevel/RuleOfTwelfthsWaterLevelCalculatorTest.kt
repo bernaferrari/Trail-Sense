@@ -1,27 +1,27 @@
 package com.kylecorry.sol.science.oceanography.waterlevel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import com.kylecorry.sol.tests.arg
+
 import com.kylecorry.sol.science.oceanography.high
 import com.kylecorry.sol.science.oceanography.low
 
 import com.kylecorry.sol.science.oceanography.Tide
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.MethodSource
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.util.stream.Stream
+import com.kylecorry.sol.tests.ZonedTime
+import com.kylecorry.sol.tests.zoned
 
 internal class RuleOfTwelfthsWaterLevelCalculatorTest {
 
-    @ParameterizedTest
-    @MethodSource("provideWaterLevels")
-    fun calculate(
+    @Test
+    fun calculate() {
+        provideWaterLevels().forEach { args -> calculate(args[0].arg<Tide>(), args[1].arg<Tide>(), args[2].arg<ZonedTime>(), args[3].arg<Float>()) }
+    }
+
+    private fun calculate(
         first: Tide,
         second: Tide,
-        time: ZonedDateTime,
+        time: ZonedTime,
         expected: Float
     ) {
         val calculator = RuleOfTwelfthsWaterLevelCalculator(first, second)
@@ -30,90 +30,89 @@ internal class RuleOfTwelfthsWaterLevelCalculatorTest {
     }
 
     companion object {
-        @JvmStatic
-        fun provideWaterLevels(): Stream<Arguments> {
-            return Stream.of(
+        fun provideWaterLevels(): List<List<Any?>> {
+            return listOf(
                 // Low to high
-                Arguments.of(
+                listOf(
                     Tide.low(time(1, 0, 0), 0f),
                     Tide.high(time(1, 6, 0), 12f),
                     time(1, 0, 0),
                     0f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.low(time(1, 0, 0), 0f),
                     Tide.high(time(1, 6, 0), 12f),
                     time(1, 1, 0),
                     0.8f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.low(time(1, 0, 0), 0f),
                     Tide.high(time(1, 6, 0), 12f),
                     time(1, 2, 0),
                     3f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.low(time(1, 0, 0), 0f),
                     Tide.high(time(1, 6, 0), 12f),
                     time(1, 3, 0),
                     6f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.low(time(1, 0, 0), 0f),
                     Tide.high(time(1, 6, 0), 12f),
                     time(1, 4, 0),
                     9f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.low(time(1, 0, 0), 0f),
                     Tide.high(time(1, 6, 0), 12f),
                     time(1, 5, 0),
                     11.2f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.low(time(1, 0, 0), 0f),
                     Tide.high(time(1, 6, 0), 12f),
                     time(1, 6, 0),
                     12f
                 ),
                 // High to low
-                Arguments.of(
+                listOf(
                     Tide.high(time(1, 6, 0), 12f),
                     Tide.low(time(1, 12, 0), 0f),
                     time(1, 6, 0),
                     12f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.high(time(1, 6, 0), 12f),
                     Tide.low(time(1, 12, 0), 0f),
                     time(1, 7, 0),
                     11.2f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.high(time(1, 6, 0), 12f),
                     Tide.low(time(1, 12, 0), 0f),
                     time(1, 8, 0),
                     9f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.high(time(1, 6, 0), 12f),
                     Tide.low(time(1, 12, 0), 0f),
                     time(1, 9, 0),
                     6f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.high(time(1, 6, 0), 12f),
                     Tide.low(time(1, 12, 0), 0f),
                     time(1, 10, 0),
                     3f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.high(time(1, 6, 0), 12f),
                     Tide.low(time(1, 12, 0), 0f),
                     time(1, 11, 0),
                     0.8f
                 ),
-                Arguments.of(
+                listOf(
                     Tide.high(time(1, 6, 0), 12f),
                     Tide.low(time(1, 12, 0), 0f),
                     time(1, 12, 0),
@@ -122,14 +121,9 @@ internal class RuleOfTwelfthsWaterLevelCalculatorTest {
             )
         }
 
-        private fun time(day: Int, hour: Int, minute: Int): ZonedDateTime {
-            return ZonedDateTime.of(
-                LocalDate.of(2022, 1, day),
-                LocalTime.of(hour, minute, 0),
-                ZoneId.of("UTC")
-            )
+        private fun time(day: Int, hour: Int, minute: Int): ZonedTime {
+            return zoned(2022, 1, day, hour, minute)
         }
-
 
     }
 }

@@ -1,13 +1,15 @@
 package com.kylecorry.sol.science.oceanography.waterlevel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
 import com.kylecorry.sol.science.oceanography.TideConstituent
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import com.kylecorry.sol.tests.atZone
+import com.kylecorry.sol.tests.zoned
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
 
 internal class HarmonicWaterLevelCalculatorTest {
 
@@ -27,30 +29,30 @@ internal class HarmonicWaterLevelCalculatorTest {
             TidalHarmonic(TideConstituent.Z0, 0f, 0f)
         )
 
-        val zone = ZoneId.of("America/New_York")
-        val date = LocalDate.of(2021, 12, 22)
+        val zone = TimeZone.of("America/New_York")
+        val date = LocalDate(2021, 12, 22)
 
         val calculator = HarmonicWaterLevelCalculator(harmonics)
 
         val delta = 0.35f
         assertEquals(
             calculator.calculate(
-                ZonedDateTime.of(date, LocalTime.of(2, 35), zone)
+                date.atTime(2, 35).atZone(zone)
             ), -1.69f, delta
         )
         assertEquals(
             calculator.calculate(
-                ZonedDateTime.of(date, LocalTime.of(9, 27), zone)
+                date.atTime(9, 27).atZone(zone)
             ), 1.59f, delta
         )
         assertEquals(
             calculator.calculate(
-                ZonedDateTime.of(date, LocalTime.of(15, 27), zone)
+                date.atTime(15, 27).atZone(zone)
             ), -1.59f, delta
         )
         assertEquals(
             calculator.calculate(
-                ZonedDateTime.of(date, LocalTime.of(22, 0), zone)
+                date.atTime(22, 0).atZone(zone)
             ), 1.13f, delta
         )
     }
@@ -67,12 +69,12 @@ internal class HarmonicWaterLevelCalculatorTest {
 
         assertEquals(
             0.7992f - 0.9693f - 0.5533f,
-            calculator.calculate(ZonedDateTime.of(2020, 3, 15, 6, 0, 0, 0, ZoneId.of("UTC"))),
+            calculator.calculate(zoned(2020, 3, 15, 6)),
             0.02f
         )
         assertEquals(
             0.1778f - 0.996f - 0.0742f,
-            calculator.calculate(ZonedDateTime.of(2030, 3, 15, 6, 0, 0, 0, ZoneId.of("UTC"))),
+            calculator.calculate(zoned(2030, 3, 15, 6)),
             0.02f
         )
     }

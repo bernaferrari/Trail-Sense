@@ -1,26 +1,26 @@
 package com.kylecorry.sol.science.meteorology.forecast
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.meteorology.observation.WeatherObservation
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Pressure
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.time.Instant
-import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 internal class ZambrettiForecasterTest {
 
-    private val time = Instant.ofEpochSecond(1700000000)
+    private val time = Instant.fromEpochSeconds(1700000000)
     private val location = Coordinate(40.0, -80.0)
 
     @Test
     fun steadyPressureUsesTheSteadyFormula() {
         val forecast = forecast(
             listOf(
-                pressure(1025f, time.minus(Duration.ofHours(3))),
+                pressure(1025f, time - 3.hours),
                 pressure(1025f, time)
             )
         )
@@ -33,12 +33,12 @@ internal class ZambrettiForecasterTest {
     @Test
     fun ignoresObservationsAfterTheForecastTime() {
         val observations = listOf(
-            pressure(1025f, time.minus(Duration.ofHours(3))),
+            pressure(1025f, time - 3.hours),
             pressure(1025f, time)
         )
 
         val expected = forecast(observations)
-        val actual = forecast(observations + pressure(990f, time.plus(Duration.ofHours(1))))
+        val actual = forecast(observations + pressure(990f, time + 1.hours))
 
         assertEquals(expected, actual)
     }
@@ -47,12 +47,12 @@ internal class ZambrettiForecasterTest {
         ZambrettiForecaster.forecast(
             observations,
             null,
-            time.toKotlinInstant(),
+            time,
             0.5f,
             2f,
             location
         )
 
     private fun pressure(hpa: Float, time: Instant) =
-        WeatherObservation.Pressure(time.toKotlinInstant(), Pressure.hpa(hpa))
+        WeatherObservation.Pressure(time, Pressure.hpa(hpa))
 }

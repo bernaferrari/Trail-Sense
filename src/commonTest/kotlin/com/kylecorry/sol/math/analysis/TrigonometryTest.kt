@@ -274,29 +274,29 @@ internal class TrigonometryTest {
         }
         fun provideTanDegrees(): List<List<Any?>> {
             return listOf(
-                listOf(45.0, tan(Math.toRadians(45.0))),
-                listOf(80.0, tan(Math.toRadians(80.0))),
-                listOf(0.0, tan(Math.toRadians(0.0))),
-                listOf(-80.0, tan(Math.toRadians(-80.0))),
-                listOf(720.0, tan(Math.toRadians(720.0))),
+                listOf(45.0, tan(Trigonometry.toRadians(45.0))),
+                listOf(80.0, tan(Trigonometry.toRadians(80.0))),
+                listOf(0.0, tan(Trigonometry.toRadians(0.0))),
+                listOf(-80.0, tan(Trigonometry.toRadians(-80.0))),
+                listOf(720.0, tan(Trigonometry.toRadians(720.0))),
             )
         }
         fun provideSinDegrees(): List<List<Any?>> {
             return listOf(
-                listOf(45.0, sin(Math.toRadians(45.0))),
-                listOf(90.0, sin(Math.toRadians(90.0))),
-                listOf(0.0, sin(Math.toRadians(0.0))),
-                listOf(-90.0, sin(Math.toRadians(-90.0))),
-                listOf(720.0, sin(Math.toRadians(720.0))),
+                listOf(45.0, sin(Trigonometry.toRadians(45.0))),
+                listOf(90.0, sin(Trigonometry.toRadians(90.0))),
+                listOf(0.0, sin(Trigonometry.toRadians(0.0))),
+                listOf(-90.0, sin(Trigonometry.toRadians(-90.0))),
+                listOf(720.0, sin(Trigonometry.toRadians(720.0))),
             )
         }
         fun provideCosDegrees(): List<List<Any?>> {
             return listOf(
-                listOf(45.0, cos(Math.toRadians(45.0))),
-                listOf(90.0, cos(Math.toRadians(90.0))),
-                listOf(0.0, cos(Math.toRadians(0.0))),
-                listOf(-90.0, cos(Math.toRadians(-90.0))),
-                listOf(720.0, cos(Math.toRadians(720.0))),
+                listOf(45.0, cos(Trigonometry.toRadians(45.0))),
+                listOf(90.0, cos(Trigonometry.toRadians(90.0))),
+                listOf(0.0, cos(Trigonometry.toRadians(0.0))),
+                listOf(-90.0, cos(Trigonometry.toRadians(-90.0))),
+                listOf(720.0, cos(Trigonometry.toRadians(720.0))),
             )
         }
     }

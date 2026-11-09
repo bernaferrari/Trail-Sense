@@ -1,5 +1,7 @@
 package com.kylecorry.sol.math.optimization
 
+import kotlin.math.PI
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -62,7 +64,7 @@ class ExtremaFinderTest {
         xTolerance: Float,
         yTolerance: Float
     ) {
-        assert(expected.size == actual.size) { "Expected ${expected.size} extremas but found ${actual.size}" }
+        assertEquals(expected.size, actual.size, "Expected ${expected.size} extremas but found ${actual.size}")
         for (i in expected.indices) {
             val expectedExtrema = expected[i]
             val actualExtrema = actual[i]
@@ -78,15 +80,15 @@ class ExtremaFinderTest {
                 // Sin (min and max)
                 listOf(
                     0.0,
-                    2 * Math.PI,
+                    2 * PI,
                     { x: Double -> sin(x) },
                     listOf(
                         Extremum(
-                            Vector2(Math.PI.toFloat() / 2f, 1f),
+                            Vector2(PI.toFloat() / 2f, 1f),
                             true
                         ),
                         Extremum(
-                            Vector2(3 * Math.PI.toFloat() / 2f, -1f),
+                            Vector2(3 * PI.toFloat() / 2f, -1f),
                             false
                         )
                     )
@@ -94,23 +96,23 @@ class ExtremaFinderTest {
                 // Sin (max only)
                 listOf(
                     0.0,
-                    Math.PI,
+                    PI,
                     { x: Double -> sin(x) },
                     listOf(
                         Extremum(
-                            Vector2(Math.PI.toFloat() / 2f, 1f),
+                            Vector2(PI.toFloat() / 2f, 1f),
                             true
                         )
                     )
                 ),
                 // Sin (min only)
                 listOf(
-                    Math.PI,
-                    2 * Math.PI,
+                    PI,
+                    2 * PI,
                     { x: Double -> sin(x) },
                     listOf(
                         Extremum(
-                            Vector2(3 * Math.PI.toFloat() / 2f, -1f),
+                            Vector2(3 * PI.toFloat() / 2f, -1f),
                             false
                         )
                     )

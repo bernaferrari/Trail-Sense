@@ -1,5 +1,7 @@
 package com.kylecorry.sol.math.analysis
 
+import kotlin.math.PI
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -40,7 +42,7 @@ class FrequencyAnalysisTest {
     @Test
     fun ifft(){
         val data =
-            List(1024) { sin(it.toFloat() / 1024f * 2 * Math.PI).toFloat() + 0.5f * sin(it.toFloat() / 1024f * 2 * Math.PI * 3).toFloat() }
+            List(1024) { sin(it.toFloat() / 1024f * 2 * PI).toFloat() + 0.5f * sin(it.toFloat() / 1024f * 2 * PI * 3).toFloat() }
         val fft = FrequencyAnalysis.fft(data)
         val ifft = FrequencyAnalysis.ifft(fft)
         for (i in data.indices){
@@ -51,7 +53,7 @@ class FrequencyAnalysisTest {
     @Test
     fun getMostResonantFrequency() {
         // Sine wave with frequency 1 Hz (power of 2 size)
-        val data = List(1024) { sin(it.toFloat() / 1024f * 2 * Math.PI).toFloat() }
+        val data = List(1024) { sin(it.toFloat() / 1024f * 2 * PI).toFloat() }
         val frequency = FrequencyAnalysis.getMostResonantFrequency(data, 1024f)
         assertEquals(1f, frequency!!, 0.001f)
 
@@ -63,7 +65,7 @@ class FrequencyAnalysisTest {
     fun getMostResonantFrequencies() {
         // Sine wave with frequency of 1 Hz + half power sine wave with frequency of 3 Hz (power of 2 size)
         val data =
-            List(1024) { sin(it.toFloat() / 1024f * 2 * Math.PI).toFloat() + 0.5f * sin(it.toFloat() / 1024f * 2 * Math.PI * 3).toFloat() }
+            List(1024) { sin(it.toFloat() / 1024f * 2 * PI).toFloat() + 0.5f * sin(it.toFloat() / 1024f * 2 * PI * 3).toFloat() }
 
         val frequencies = FrequencyAnalysis.getMostResonantFrequencies(data, 1024f, 2)
         assertEquals(1f, frequencies[0], 0.001f)
@@ -73,7 +75,7 @@ class FrequencyAnalysisTest {
     @Test
     fun getFrequencySpectrum() {
         // Sine wave with frequency 1 Hz (power of 2 size)
-        val data = List(1024) { sin(it.toFloat() / 1024f * 2 * Math.PI).toFloat() }
+        val data = List(1024) { sin(it.toFloat() / 1024f * 2 * PI).toFloat() }
         val spectrum = FrequencyAnalysis.getFrequencySpectrum(data, 1024f)
         assertEquals(1024, spectrum.size)
         assertEquals(0f, spectrum[0].first, 0.001f)
@@ -87,7 +89,7 @@ class FrequencyAnalysisTest {
     fun getMagnitudeOfFrequency() {
         // Sine wave with frequency of 1 Hz + half power sine wave with frequency of 3 Hz (power of 2 size)
         val data =
-            List(1024) { sin(it.toFloat() / 1024f * 2 * Math.PI).toFloat() + 0.5f * sin(it.toFloat() / 1024f * 2 * Math.PI * 3).toFloat() }
+            List(1024) { sin(it.toFloat() / 1024f * 2 * PI).toFloat() + 0.5f * sin(it.toFloat() / 1024f * 2 * PI * 3).toFloat() }
         val magnitude1 = FrequencyAnalysis.getMagnitudeOfFrequency(data, 1f, 1024f)
         assertEquals(512f, magnitude1, 0.001f)
 
@@ -102,7 +104,7 @@ class FrequencyAnalysisTest {
 
 //    @Test
 //    fun fftPerformance(){
-//        val data = List(1024) { sin(it.toFloat() / 1024f * 2 * Math.PI).toFloat() }
+//        val data = List(1024) { sin(it.toFloat() / 1024f * 2 * PI).toFloat() }
 //        val runs = 100000
 //        val twiddleFactors = FrequencyAnalysis.getTwiddleFactorsFFT(data.size)
 //        performanceTest(runs){

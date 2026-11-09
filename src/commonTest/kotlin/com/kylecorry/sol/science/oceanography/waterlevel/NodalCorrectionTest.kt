@@ -1,10 +1,12 @@
 package com.kylecorry.sol.science.oceanography.waterlevel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+
 import com.kylecorry.sol.science.oceanography.TideConstituent
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 internal class NodalCorrectionTest {
 
@@ -43,7 +45,7 @@ internal class NodalCorrectionTest {
         )
 
         for ((year, constituents) in expected) {
-            val time = LocalDateTime.of(year, 3, 15, 0, 0).toEpochSecond(ZoneOffset.UTC)
+            val time = LocalDateTime(year, 3, 15, 0, 0).toInstant(TimeZone.UTC).epochSeconds
             val nodal = NodalCorrection.at(time)
             for ((constituent, value) in constituents) {
                 val (f, u) = nodal.of(constituent)

@@ -1,5 +1,7 @@
 package com.kylecorry.sol.math.geometry
 
+import kotlin.math.PI
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -31,8 +33,8 @@ internal class HoughTransformTest {
         assertEquals(3, parameterSpace.thetaBinCount)
         assertEquals(5f, parameterSpace.maxRho, 0.0001f)
         assertEquals(0f, parameterSpace.thetaValues[0], 0.0001f)
-        assertEquals(Math.PI.toFloat() / 2f, parameterSpace.thetaValues[1], 0.0001f)
-        assertEquals(Math.PI.toFloat(), parameterSpace.thetaValues[2], 0.0001f)
+        assertEquals(PI.toFloat() / 2f, parameterSpace.thetaValues[1], 0.0001f)
+        assertEquals(PI.toFloat(), parameterSpace.thetaValues[2], 0.0001f)
         assertTrue(parameterSpace.accumulatorBins.all { it == 0f })
     }
 
@@ -53,7 +55,7 @@ internal class HoughTransformTest {
             endThetaDegrees = 90f
         )
 
-        assertEquals(Math.PI.toFloat() / 3f, parameterSpace.thetaValues[0], 0.0001f)
+        assertEquals(PI.toFloat() / 3f, parameterSpace.thetaValues[0], 0.0001f)
     }
 
     @Test

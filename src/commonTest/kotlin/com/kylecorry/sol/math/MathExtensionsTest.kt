@@ -1,5 +1,7 @@
 package com.kylecorry.sol.math
 
+import com.kylecorry.sol.math.trigonometry.Trigonometry
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import com.kylecorry.sol.tests.arg
@@ -242,11 +244,11 @@ class MathExtensionsTest {
     companion object {
         fun provideRadians(): List<List<Any?>> {
             return listOf(
-                listOf(45.0, Math.toRadians(45.0)),
-                listOf(90.0, Math.toRadians(90.0)),
-                listOf(0.0, Math.toRadians(0.0)),
-                listOf(-90.0, Math.toRadians(-90.0)),
-                listOf(720.0, Math.toRadians(720.0)),
+                listOf(45.0, Trigonometry.toRadians(45.0)),
+                listOf(90.0, Trigonometry.toRadians(90.0)),
+                listOf(0.0, Trigonometry.toRadians(0.0)),
+                listOf(-90.0, Trigonometry.toRadians(-90.0)),
+                listOf(720.0, Trigonometry.toRadians(720.0)),
             )
         }
         fun provideRoundPlaces(): List<List<Any?>> {

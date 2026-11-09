@@ -1,18 +1,20 @@
 package com.kylecorry.sol.science.oceanography.waterlevel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+
 import com.kylecorry.sol.science.oceanography.TideConstituent
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 internal class AstronomicalArgumentTest {
 
     // Expected values are from pyTMD at 2030-03-15 06:00 UTC
     @Test
     fun matchesPyTMD() {
-        val time = LocalDateTime.of(2030, 3, 15, 6, 0).toEpochSecond(ZoneOffset.UTC)
+        val time = LocalDateTime(2030, 3, 15, 6, 0).toInstant(TimeZone.UTC).epochSeconds
         val argument = AstronomicalArgument.at(time.toDouble())
 
         val expected = mapOf(
