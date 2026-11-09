@@ -138,7 +138,7 @@ class DependencyRegistryTest {
         }
 
         assertEquals(
-            "No service registered for ${TestService::class.name}",
+            "No service registered for ${TestService::class.qualifiedName}",
             exception.message
         )
     }

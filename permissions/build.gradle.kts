@@ -1,42 +1,36 @@
 plugins {
-    kotlin("multiplatform")
-    id("com.android.kotlin.multiplatform.library")
-    id("com.vanniktech.maven.publish")
+    id("andromeda.library")
 }
+
 kotlin {
-    android {
-        namespace = "com.kylecorry.andromeda.permissions"
-        compileSdk = 37
-        minSdk = 24
-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-    }
-    jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
-    iosArm64()
-    iosSimulatorArm64()
-    jvmToolchain(17)
-    applyDefaultHierarchyTemplate()
-    sourceSets {
-        val mobileMain by creating {
-            dependsOn(commonMain.get())
-            dependencies {
-                api("dev.icerock.moko:permissions:0.20.1")
-                implementation("dev.icerock.moko:permissions-camera:0.20.1")
-                implementation("dev.icerock.moko:permissions-location:0.20.1")
-                implementation("dev.icerock.moko:permissions-microphone:0.20.1")
-                implementation("dev.icerock.moko:permissions-bluetooth:0.20.1")
-                implementation("dev.icerock.moko:permissions-notifications:0.20.1")
-                implementation("dev.icerock.moko:permissions-motion:0.20.1")
-                implementation("dev.icerock.moko:permissions-gallery:0.20.1")
-                implementation("dev.icerock.moko:permissions-contacts:0.20.1")
-                implementation("dev.icerock.moko:permissions-storage:0.20.1")
+    applyDefaultHierarchyTemplate {
+        common {
+            group("mobile") {
+                withAndroidLibrary()
+                group("ios")
             }
         }
-        androidMain { dependsOn(mobileMain) }
-        iosMain { dependsOn(mobileMain) }
-        commonMain.dependencies { api(project(":shared")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); api("androidx.activity:activity:1.8.1") }
+    }
+    sourceSets {
+        commonMain.dependencies { api(projects.shared) }
+        named("mobileMain") {
+            dependencies {
+            api(libs.moko.permissions)
+            implementation(libs.moko.permissions.camera)
+            implementation(libs.moko.permissions.location)
+            implementation(libs.moko.permissions.microphone)
+            implementation(libs.moko.permissions.bluetooth)
+            implementation(libs.moko.permissions.notifications)
+            implementation(libs.moko.permissions.motion)
+            implementation(libs.moko.permissions.gallery)
+            implementation(libs.moko.permissions.contacts)
+            implementation(libs.moko.permissions.storage)
+            }
+        }
+        androidMain.dependencies {
+            implementation(projects.core)
+            implementation(libs.androidx.core.ktx)
+            api(libs.androidx.activity)
+        }
     }
 }
-group = "com.kylecorry.andromeda"
-version = "25.1.1"
-mavenPublishing { coordinates("com.kylecorry.andromeda", "permissions", "25.1.1") }

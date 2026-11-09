@@ -1,33 +1,16 @@
 plugins {
-    kotlin("multiplatform")
-    id("com.android.kotlin.multiplatform.library")
-    id("com.vanniktech.maven.publish")
+    id("andromeda.library")
 }
 
 kotlin {
-    android {
-        namespace = "com.kylecorry.andromeda.storage"
-        compileSdk = 37
-        minSdk = 24
-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-    }
-    jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
-    iosArm64()
-    iosSimulatorArm64()
-    jvmToolchain(17)
     sourceSets.commonMain.dependencies {
-        api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
-        api("com.kylecorry:sol:19.4.0")
-        api(project(":shared"))
-        api("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
-        api("com.squareup.okio:okio:3.18.2")
+        api(libs.kotlinx.datetime)
+        api(libs.sol)
+        api(projects.shared)
+        api(libs.multiplatformSettings.noArg)
+        api(libs.okio)
     }
     sourceSets.jvmTest.dependencies {
-        implementation(kotlin("test"))
-        implementation("com.russhwolf:multiplatform-settings-test:1.3.0")
+        implementation(libs.multiplatformSettings.test)
     }
 }
-
-group = "com.kylecorry.andromeda"
-version = "25.1.1"
-mavenPublishing { coordinates("com.kylecorry.andromeda", "storage", "25.1.1") }

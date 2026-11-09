@@ -1,72 +1,171 @@
+# Every version is the latest stable release on Maven Central or Google Maven as of 2026-11-09.
+
 [versions]
-androidLibraryVersion = "9.4.1"
-androidXDocumentFileVersion = "1.1.0"
-androidXExifinterfaceVersion = "1.4.2"
-appCompatVersion = "1.8.0"
-cameraCamera2Version = "1.6.2"
-constraintlayoutVersion = "2.2.2"
-coreKtxVersion = "1.19.1"
-flexboxVersion = "3.0.0"
-tensorflowLiteSupportVersion = "0.5.0"
-coroutinesVersion = "1.11.0"
-datastorePreferencesVersion = "1.2.1"
-desugarVersion = "2.1.5"
-espressoCoreVersion = "3.7.0"
-gsonVersion = "2.14.0"
-junit = "1.3.0"
-junitJupiterApiVersion = "6.1.3"
-junitVersion = "4.13.2"
-kotlinParcelizeVersion = "2.4.21"
-androidXLifecycle = "2.11.0"
-lunaVersion = "2.4.1"
-materialVersion = "1.14.0"
-markwonVersion = "4.6.2"
-mockitoKotlinVersion = "6.4.0"
-preferenceKtxVersion = "1.2.1"
-printVersion = "1.1.0"
-recyclerviewVersion = "1.4.0"
-solVersion = "19.2.5"
-workRuntimeKtxVersion = "2.12.0"
-zxingVersion = "3.5.4"
+andromeda = "26.0.0"
+# Targets
+android-compileSdk = "37"
+android-minSdk = "24"
+jvmToolchain = "17"
+# Build
+kotlin = "2.4.21"
+agp = "9.5.1"
+composeMultiplatform = "1.12.2"
+composeMaterial3 = "1.9.0"
+mavenPublish = "0.37.0"
+# Kotlin
+atomicfu = "0.33.0"
+coroutines = "1.11.0"
+datetime = "0.8.0"
+serialization = "1.12.0"
+# AndroidX
+androidx-activity = "1.13.0"
+androidx-camera = "1.6.2"
+androidx-core = "1.19.1"
+androidx-documentfile = "1.1.0"
+androidx-glance = "1.2.0"
+androidx-lifecycle = "2.11.0"
+androidx-print = "1.1.0"
+androidx-test-junit = "1.3.0"
+androidx-test-espresso = "3.7.0"
+androidx-work = "2.12.0"
+jetbrains-lifecycle = "2.11.0"
+jetbrains-navigation = "2.10.0"
+# Libraries
+camerak = "1.2"
+coil = "3.6.3"
+filekit = "0.17.0"
+gadulka = "1.14.0"
+javacpp = "1.5.14"
+jetbrains-markdown = "0.7.18"
+kable = "0.45.0"
+kitepdf = "0.13.0"
+kiteqr = "0.1.0"
+kmpnotifier = "2.0.2"
+kmpZip = "2.1.0"
+korlibs = "6.0.0"
+ksensor = "9.40.0"
+ktor = "3.6.1"
+# LiteRT 2.x (2.3.2) removed the NNAPI delegate that ClassifierAcceleration.AndroidNnapi uses; 1.4.2 is the newest 1.x
+litert = "1.4.2"
+luna = "2.4.1"
+markdownRenderer = "0.46.0"
+moko-permissions = "0.20.1"
+multiplatformSettings = "1.3.0"
+okio = "3.18.2"
+oshi = "7.7.3"
+pdfbox = "3.0.8"
+pulsar = "0.1.0"
+qrcodeKotlin = "4.5.0"
+sol = "19.4.0"
+tensorflowLiteJvm = "2.21.0-1.5.14"
+xmlutil = "1.0.2.1"
+zoomimage = "1.7.0"
+zxing = "3.5.4"
+audioCapture = "0.1.0"
+# Tests
+junit4 = "4.13.2"
+junit5 = "6.1.3"
 
 [libraries]
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appCompatVersion" }
-androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2Version" }
-androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCamera2Version" }
-androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCamera2Version" }
-androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
-androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
-androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "androidXDocumentFileVersion" }
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferencesVersion" }
-androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
-androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junit" }
-androidx-lifecycle-livedata-core-ktx = { module = "androidx.lifecycle:lifecycle-livedata-core-ktx", version.ref = "androidXLifecycle" }
-androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidXLifecycle" }
-androidx-preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preferenceKtxVersion" }
-androidx-print = { module = "androidx.print:print", version.ref = "printVersion" }
-androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerviewVersion" }
-androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
-androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "androidXExifinterfaceVersion" }
-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarVersion" }
-flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexboxVersion" }
-tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflowLiteSupportVersion" }
-markwon = { module = "io.noties.markwon:core", version.ref = "markwonVersion" }
-markwon-linkify = { module = "io.noties.markwon:linkify", version.ref = "markwonVersion" }
-markwon-image = { module = "io.noties.markwon:image", version.ref = "markwonVersion" }
-markwon-simple = { module = "io.noties.markwon:simple-ext", version.ref = "markwonVersion" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
-junit = { module = "junit:junit", version.ref = "junitVersion" }
-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiterApiVersion" }
-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiterApiVersion" }
-junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junitJupiterApiVersion" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitJupiterApiVersion" }
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutinesVersion" }
-luna = { module = "com.kylecorry:luna", version.ref = "lunaVersion" }
-material = { module = "com.google.android.material:material", version.ref = "materialVersion" }
-mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlinVersion" }
-sol = { module = "com.kylecorry:sol", version.ref = "solVersion" }
-zxing = { module = "com.google.zxing:core", version.ref = "zxingVersion" }
+# Gradle plugins used by build-logic
+android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+compose-gradlePlugin = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "composeMultiplatform" }
+mavenPublish-gradlePlugin = { module = "com.vanniktech:gradle-maven-publish-plugin", version.ref = "mavenPublish" }
+
+# Kotlin
+kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+# Compose Multiplatform
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMaterial3" }
+jetbrains-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "jetbrains-lifecycle" }
+jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "jetbrains-navigation" }
+
+# AndroidX
+androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "androidx-camera" }
+androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "androidx-camera" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidx-camera" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
+androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "androidx-documentfile" }
+androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "androidx-glance" }
+androidx-lifecycle-livedata-core-ktx = { module = "androidx.lifecycle:lifecycle-livedata-core-ktx", version.ref = "androidx-lifecycle" }
+androidx-print = { module = "androidx.print:print", version.ref = "androidx-print" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
+
+# Libraries
+audioCapture = { module = "io.github.piotrprus:audio-capture", version.ref = "audioCapture" }
+camerak = { module = "io.github.kashif-mehmood-km:camerak", version.ref = "camerak" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
+gadulka = { module = "eu.iamkonstantin.kotlin:gadulka", version.ref = "gadulka" }
+javacpp = { module = "org.bytedeco:javacpp", version.ref = "javacpp" }
+jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrains-markdown" }
+kable-core = { module = "com.juul.kable:kable-core", version.ref = "kable" }
+kitepdf = { module = "io.github.yuroyami:kitepdf-pdf", version.ref = "kitepdf" }
+kiteqr = { module = "io.github.yuroyami:kiteqr", version.ref = "kiteqr" }
+kmpnotifier-local = { module = "io.github.mirzemehdi:kmpnotifier-local", version.ref = "kmpnotifier" }
+kmpZip-okio = { module = "no.synth:kmp-zip-okio", version.ref = "kmpZip" }
+korlibs-compression = { module = "com.soywiz:korlibs-compression", version.ref = "korlibs" }
+ksensor-core = { module = "io.github.shadadman:ksensor-core", version.ref = "ksensor" }
+ksensor-sensors-environment = { module = "io.github.shadadman:ksensor-sensors-environment", version.ref = "ksensor" }
+ksensor-sensors-motion = { module = "io.github.shadadman:ksensor-sensors-motion", version.ref = "ksensor" }
+ksensor-sensors-positioning = { module = "io.github.shadadman:ksensor-sensors-positioning", version.ref = "ksensor" }
+ksensor-states-system = { module = "io.github.shadadman:ksensor-states-system", version.ref = "ksensor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
+ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
+litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
+luna = { module = "com.kylecorry:luna", version.ref = "luna" }
+markdownRenderer-m3 = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdownRenderer" }
+markdownRenderer-coil3 = { module = "com.mikepenz:multiplatform-markdown-renderer-coil3", version.ref = "markdownRenderer" }
+moko-permissions = { module = "dev.icerock.moko:permissions", version.ref = "moko-permissions" }
+moko-permissions-bluetooth = { module = "dev.icerock.moko:permissions-bluetooth", version.ref = "moko-permissions" }
+moko-permissions-camera = { module = "dev.icerock.moko:permissions-camera", version.ref = "moko-permissions" }
+moko-permissions-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "moko-permissions" }
+moko-permissions-contacts = { module = "dev.icerock.moko:permissions-contacts", version.ref = "moko-permissions" }
+moko-permissions-gallery = { module = "dev.icerock.moko:permissions-gallery", version.ref = "moko-permissions" }
+moko-permissions-location = { module = "dev.icerock.moko:permissions-location", version.ref = "moko-permissions" }
+moko-permissions-microphone = { module = "dev.icerock.moko:permissions-microphone", version.ref = "moko-permissions" }
+moko-permissions-motion = { module = "dev.icerock.moko:permissions-motion", version.ref = "moko-permissions" }
+moko-permissions-notifications = { module = "dev.icerock.moko:permissions-notifications", version.ref = "moko-permissions" }
+moko-permissions-storage = { module = "dev.icerock.moko:permissions-storage", version.ref = "moko-permissions" }
+multiplatformSettings-noArg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
+multiplatformSettings-test = { module = "com.russhwolf:multiplatform-settings-test", version.ref = "multiplatformSettings" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+oshi-core = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+pulsar = { module = "com.swmansion:pulsar-kmp", version.ref = "pulsar" }
+qrcodeKotlin = { module = "io.github.g0dkar:qrcode-kotlin", version.ref = "qrcodeKotlin" }
+sol = { module = "com.kylecorry:sol", version.ref = "sol" }
+tensorflowLite-jvm = { module = "org.bytedeco:tensorflow-lite", version.ref = "tensorflowLiteJvm" }
+xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }
+zoomimage-compose-coil3 = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version.ref = "zoomimage" }
+zxing = { module = "com.google.zxing:core", version.ref = "zxing" }
+
+# Tests
+androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
+androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit5" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit5" }
 
 [plugins]
-android-library = { id = "com.android.library", version.ref = "androidLibraryVersion" }
-kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlinParcelizeVersion" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
