@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.convert
 
+import com.kylecorry.trail_sense.test_utils.views.TestView
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
+import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -35,8 +38,11 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
     }
 
     private fun canConvertCoordinates() {
-        // The converter opens on distance, so pick the coordinates category first
-        click(string(R.string.coordinates_tab), exact = true)
+        // The converter opens on distance, so pick the coordinates category first. It is the first chip, which may
+        // be scrolled out of the category row.
+        scrollUntil({ categoryRow() }, direction = Direction.LEFT) {
+            click(string(R.string.coordinates_tab), exact = true)
+        }
         inputAmount("42, -72")
         val format = FormatService.getInstance(TestUtils.context)
         pickUnit(
@@ -135,6 +141,14 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
     private fun pickUnit(current: String, unit: String) {
         click(current, exact = true)
         click(unit, exact = true, index = if (current == unit) 1 else 0)
+    }
+
+    /** The horizontally scrolling row of category chips: the short scrollable at the top of the converter. */
+    private fun categoryRow(): TestView {
+        val row = TestUtils.device.findObjects(By.scrollable(true).pkg(TestUtils.context.packageName))
+            .minByOrNull { it.visibleBounds.height() }
+            ?: throw AssertionError("Category row not found")
+        return TestView(row)
     }
 
     private fun verifyQuickAction() {

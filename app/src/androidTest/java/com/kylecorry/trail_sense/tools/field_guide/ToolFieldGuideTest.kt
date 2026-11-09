@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.field_guide
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
@@ -241,8 +242,10 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
     }
 
     private fun canLogSightings() {
-        click("Sightings (0)")
-        hasText("No sightings")
+        // The page shows a sightings row with its count, which opens the list
+        hasText(id("field_guide_page_sightings"), "0 sightings")
+        click(id("field_guide_page_sightings"))
+        hasText(string(R.string.no_sightings))
         click(id("create_btn"))
         click(id("time"))
         pickDate(2025, 1, 1)
@@ -250,8 +253,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("January 1, 2025 6:00 AM")
         input(id("location")(), "42, 72")
         input(id("elevation")(), "100")
-        click("Harvested")
-        click("Show on map")
+        click(id("harvested"))
+        click(id("show_on_map"))
         input("Notes", "Test")
         click(id("field_guide_sighting_save_btn"))
 
@@ -265,9 +268,9 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("January 1, 2025 6:00 AM")
         hasText("42.000000°,  72.000000°")
         hasText("100")
-        isChecked("Harvested")
-        isNotChecked("Show on map")
-        click("Show on map")
+        isChecked(id("harvested"))
+        isNotChecked(id("show_on_map"))
+        click(id("show_on_map"))
         input("Test", "Test 2")
         click(id("field_guide_sighting_save_btn"))
 
@@ -280,8 +283,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("January 1, 2025 6:00 AM")
         hasText("42.000000°,  72.000000°")
         hasText("100")
-        isChecked("Harvested")
-        isChecked("Show on map")
+        isChecked(id("harvested"))
+        isChecked(id("show_on_map"))
         input("Test 2", "Test 3")
         click(id("field_guide_sighting_save_btn"))
 

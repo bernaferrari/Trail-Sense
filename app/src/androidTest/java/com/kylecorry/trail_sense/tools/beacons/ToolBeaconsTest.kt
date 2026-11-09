@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons
 
+import com.kylecorry.trail_sense.test_utils.views.field
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import com.kylecorry.sol.units.Coordinate
@@ -64,7 +65,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         scrollToEnd(id("create_beacon_scroll"))
 
         hasText(id("beacon_group_picker"), string(R.string.no_group))
-        hasText(id("beacon_color_picker"), string(R.string.color))
+        hasText(id("beacon_color_picker"), string(R.string.places_shape_and_color))
         hasText(id("beacon_icon_picker"), string(R.string.icon))
 
         input(id("comment")(), "Test notes")
@@ -121,7 +122,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         scrollToEnd(id("create_beacon_scroll"))
         hasText(id("comment"), "Test notes")
         hasText(id("beacon_group_picker"), string(R.string.no_group))
-        hasText(id("beacon_color_picker"), string(R.string.color))
+        hasText(id("beacon_color_picker"), string(R.string.places_shape_and_color))
         hasText(id("beacon_icon_picker"), string(R.string.icon))
 
         input(id("comment")(), "Test notes 2")
@@ -263,7 +264,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         openWithSavedBeacons()
 
         hasTextsInVerticalOrder(listOf("Camp", "Trailheads", "Lake", "Summit"))
-        hasTextsInVerticalOrder(listOf("0.69 mi", "1 beacon", "14.86 mi", "40.41 mi"))
+        hasTextsInVerticalOrder(listOf("0.69 mi", "1 place", "14.86 mi", "40.41 mi"))
     }
 
     @Test
@@ -304,7 +305,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         hasText(R.id.beacon_title, "42.500000°,  -71.500000°")
         // Stored in meters, displayed in feet
         hasDataPoint("1000 ft", string(R.string.elevation))
-        hasDataPoint("40.41 mi", string(R.string.distance))
+        // The distance is the page's headline now, not a data point
+        hasText(id("beacon_distance"), "40.41 mi")
         hasText(R.id.comment_text, "Great view")
     }
 
@@ -334,9 +336,10 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         isChecked(R.id.create_at_distance)
 
         input(string(R.string.distance), "5280")
-        click(string(R.string.enter_manually))
-        input(R.id.bearing, "0")
-        click(R.id.true_north)
+        // The manual entry is an icon button beside the compass and camera; its dialog hides tags, so use labels
+        click(id("manual_bearing"))
+        input(field(string(R.string.bearing)), "0")
+        click(string(R.string.true_north), exact = true)
         clickOk()
 
         scrollToEnd(R.id.create_beacon_scroll)

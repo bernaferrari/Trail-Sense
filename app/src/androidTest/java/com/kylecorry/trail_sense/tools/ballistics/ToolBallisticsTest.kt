@@ -45,7 +45,9 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
         input(id("miss_distance_y"), "2")
         click(string(R.string.above), exact = true)
 
-        hasText(id("adjustment_amount"), "Left 12 clicks\nDown 24 clicks")
+        // The distance is in yards now (it was feet): 1 in at 100 yd is about 1 MOA, so 4 clicks of 1/4 MOA
+        hasText(id("distance_to_target"), "yd")
+        hasText(id("adjustment_amount"), "Left 4 clicks\nDown 8 clicks")
     }
 
     private fun energy(){

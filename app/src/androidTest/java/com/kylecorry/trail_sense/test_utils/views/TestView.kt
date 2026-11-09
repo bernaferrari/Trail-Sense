@@ -84,7 +84,9 @@ fun viewWithText(@StringRes text: Int, contains: Boolean = false, index: Int = 0
 }
 
 fun getScrollableView(index: Int = 0): TestView {
-    return view(By.scrollable(true), index)
+    // Only the app's own lists: the system UI's notification list is scrollable too and can come first
+    val pkg = AutomationLibrary.packageName ?: TestUtils.context.packageName
+    return view(By.scrollable(true).pkg(pkg), index)
 }
 
 fun view(selector: BySelector, index: Int = 0): TestView {
