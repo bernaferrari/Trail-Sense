@@ -159,7 +159,6 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // AndroidX
-    implementation(libs.constraintlayout)
     implementation(libs.appcompat)
     implementation(libs.core.ktx)
     implementation(libs.documentfile)
