@@ -1,39 +1,43 @@
 package com.kylecorry.sol.science.meteorology
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import com.kylecorry.sol.tests.arg
+
 import assertk.assertThat
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.science.shared.Season
 import com.kylecorry.sol.tests.isCloseTo
-import com.kylecorry.sol.time.JvmTime
+import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.units.*
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
-import org.junit.jupiter.params.provider.CsvSource
-import org.junit.jupiter.params.provider.MethodSource
-import java.time.*
-import kotlin.time.toKotlinInstant
-import kotlin.time.toKotlinDuration
-import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinMonth
 import kotlin.time.Duration.Companion.hours
-import java.util.stream.Stream
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 
 class MeteorologyTest {
 
-    @ParameterizedTest
-    @MethodSource("provideAltitudes")
-    fun altitude(pressure: Float, seaLevel: Float, altitude: Float) {
+    @Test
+    fun altitude() {
+        provideAltitudes().forEach { args -> altitude(args[0].arg<Float>(), args[1].arg<Float>(), args[2].arg<Float>()) }
+    }
+
+    private fun altitude(pressure: Float, seaLevel: Float, altitude: Float) {
         val actual = Meteorology.getAltitude(Pressure.hpa(pressure), Pressure.hpa(seaLevel))
         val expected = Distance.meters(altitude)
         assertThat(actual).isCloseTo(expected, 1f)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideForecasts")
-    fun forecast(
+    @Test
+    fun forecast() {
+        provideForecasts().forEach { args -> forecast(args[0].arg<PressureCharacteristic>(), args[1].arg<Float>(), args[2].arg<Float?>(), args[3].arg<Weather>()) }
+    }
+
+    private fun forecast(
         characteristic: PressureCharacteristic,
         tendencyAmount: Float,
         stormThresh: Float?,
@@ -44,58 +48,71 @@ class MeteorologyTest {
         assertEquals(expectedWeather, weather)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideWeatherForecasts")
-    fun forecast(
+    @Test
+    fun forecastFromReadings() {
+        provideWeatherForecasts().forEach { args -> forecastFromReadings(args[0].arg<List<Reading<Pressure>>>(), args[1].arg<List<Reading<CloudGenus?>>>(), args[2].arg<Range<Temperature>?>(), args[3].arg<WeatherForecast>(), args[4].arg<WeatherForecast>()) }
+    }
+
+    private fun forecastFromReadings(
         pressures: List<Reading<Pressure>>,
         clouds: List<Reading<CloudGenus?>>,
         temperatures: Range<Temperature>?,
         now: WeatherForecast,
         then: WeatherForecast
     ) {
-        val weather = Meteorology.forecast(pressures, clouds, temperatures, time = weatherTime.toKotlinInstant())
+        val weather = Meteorology.forecast(pressures, clouds, temperatures, time = weatherTime)
         assertEquals(now, weather.first())
         assertEquals(then, weather.last())
     }
 
-    @ParameterizedTest
-    @MethodSource("provideTendencies")
-    fun tendency(
+    @Test
+    fun tendency() {
+        provideTendencies().forEach { args -> tendency(args[0].arg<Float>(), args[1].arg<Float>(), args[2].arg<Duration>(), args[3].arg<Float>(), args[4].arg<PressureTendency>()) }
+    }
+
+    private fun tendency(
         lastHpa: Float,
         currentHpa: Float,
         duration: Duration,
         threshold: Float,
         expectedTendency: PressureTendency
     ) {
-        val tendency = Meteorology.getTendency(Pressure.hpa(lastHpa), Pressure.hpa(currentHpa), duration.toKotlinDuration(), threshold)
+        val tendency = Meteorology.getTendency(Pressure.hpa(lastHpa), Pressure.hpa(currentHpa), duration, threshold)
         assertEquals(expectedTendency, tendency)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideHeatIndex")
-    fun heatIndex(temperature: Float, humidity: Float, expected: Float) {
+    @Test
+    fun heatIndex() {
+        provideHeatIndex().forEach { args -> heatIndex(args[0].arg<Float>(), args[1].arg<Float>(), args[2].arg<Float>()) }
+    }
+
+    private fun heatIndex(temperature: Float, humidity: Float, expected: Float) {
         val hi = Meteorology.getHeatIndex(temperature, humidity)
         assertEquals(expected, hi, 0.5f)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideHeatAlert")
-    fun heatAlert(heatIndex: Float, expected: HeatAlert) {
+    @Test
+    fun heatAlert() {
+        provideHeatAlert().forEach { args -> heatAlert(args[0].arg<Float>(), args[1].arg<HeatAlert>()) }
+    }
+
+    private fun heatAlert(heatIndex: Float, expected: HeatAlert) {
         val alert = Meteorology.getHeatAlert(heatIndex)
         assertEquals(expected, alert)
     }
 
-    @ParameterizedTest
-    @CsvSource(
-        "40, 5, 36",
-        "10, 25, -11",
-        "-10, 15, -32",
-        "-15, 40, -50",
-        "-45, 60, -98",
-        "50.5, 10, 50.5",
-        "0, 3, 0",
-    )
-    fun getWindChill(temperature: Float, windSpeed: Float, expected: Float) {
+    @Test
+    fun getWindChill() {
+        getWindChill(40f, 5f, 36f)
+        getWindChill(10f, 25f, -11f)
+        getWindChill(-10f, 15f, -32f)
+        getWindChill(-15f, 40f, -50f)
+        getWindChill(-45f, 60f, -98f)
+        getWindChill(50.5f, 10f, 50.5f)
+        getWindChill(0f, 3f, 0f)
+    }
+
+    private fun getWindChill(temperature: Float, windSpeed: Float, expected: Float) {
         val chill = Meteorology.getWindChill(
             Temperature.fahrenheit(temperature),
             Speed.from(windSpeed, DistanceUnits.Miles, TimeUnits.Hours)
@@ -103,48 +120,61 @@ class MeteorologyTest {
         assertEquals(expected, chill.value, 0.5f)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideDewPoint")
-    fun dewPoint(temperature: Float, humidity: Float, expected: Float) {
+    @Test
+    fun dewPoint() {
+        provideDewPoint().forEach { args -> dewPoint(args[0].arg<Float>(), args[1].arg<Float>(), args[2].arg<Float>()) }
+    }
+
+    private fun dewPoint(temperature: Float, humidity: Float, expected: Float) {
         val dew = Meteorology.getDewPoint(temperature, humidity)
         assertEquals(expected, dew, 0.5f)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideLightningStrikes")
-    fun lightningStrikes(lightning: Instant, thunder: Instant, expected: Float) {
-        val distance = Meteorology.getLightningStrikeDistance(lightning.toKotlinInstant(), thunder.toKotlinInstant())
+    @Test
+    fun lightningStrikes() {
+        provideLightningStrikes().forEach { args -> lightningStrikes(args[0].arg<Instant>(), args[1].arg<Instant>(), args[2].arg<Float>()) }
+    }
+
+    private fun lightningStrikes(lightning: Instant, thunder: Instant, expected: Float) {
+        val distance = Meteorology.getLightningStrikeDistance(lightning, thunder)
         assertEquals(expected, distance, 0.5f)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideLightningStrikeDistances")
-    fun lightningStrikeDanger(distanceMeters: Float, expected: Boolean) {
+    @Test
+    fun lightningStrikeDanger() {
+        provideLightningStrikeDistances().forEach { args -> lightningStrikeDanger(args[0].arg<Float>(), args[1].arg<Boolean>()) }
+    }
+
+    private fun lightningStrikeDanger(distanceMeters: Float, expected: Boolean) {
         val danger = Meteorology.isLightningStrikeDangerous(Distance.meters(distanceMeters))
         assertEquals(expected, danger)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideSeasons")
-    fun seasons(expected: Season, isNorth: Boolean, date: LocalDate) {
+    @Test
+    fun seasons() {
+        provideSeasons().forEach { args -> seasons(args[0].arg<Season>(), args[1].arg<Boolean>(), args[2].arg<LocalDate>()) }
+    }
+
+    private fun seasons(expected: Season, isNorth: Boolean, date: LocalDate) {
         val season = Meteorology.getSeason(
             Coordinate(if (isNorth) 1.0 else -1.0, 0.0),
-            date.toKotlinLocalDate()
+            date
         )
         assertEquals(expected, season)
     }
 
-    @ParameterizedTest
-    @CsvSource(
-        "20.0, 0.0, 0.0, 20.0",  // Same elevation - no change
-        "20.0, 0.0, 1000.0, 13.5",       // Higher elevation - should be colder
-        "0.0, 1000.0, 0.0, 6.5",         // Lower elevation - should be warmer
-        "-10.0, 0.0, 1000.0, -16.5",     // Higher elevation with negative base temp
-        "25.0, 100.0, 200.0, 24.35",     // Small elevation change
-        "15.0, 0.0, 5000.0, -17.5",      // Large elevation change
-        "0.0, 0.0, 50000.0, -273.15"     // Extreme elevation - clamped to absolute zero
-    )
-    fun temperatureAtElevation(
+    @Test
+    fun temperatureAtElevation() {
+        temperatureAtElevation(20.0f, 0.0f, 0.0f, 20.0f)
+        temperatureAtElevation(20.0f, 0.0f, 1000.0f, 13.5f)
+        temperatureAtElevation(0.0f, 1000.0f, 0.0f, 6.5f)
+        temperatureAtElevation(-10.0f, 0.0f, 1000.0f, -16.5f)
+        temperatureAtElevation(25.0f, 100.0f, 200.0f, 24.35f)
+        temperatureAtElevation(15.0f, 0.0f, 5000.0f, -17.5f)
+        temperatureAtElevation(0.0f, 0.0f, 50000.0f, -273.15f)
+    }
+
+    private fun temperatureAtElevation(
         temperatureCelsius: Float,
         baseElevationMeters: Float,
         destElevationMeters: Float,
@@ -164,9 +194,12 @@ class MeteorologyTest {
         assertEquals(68.75f, temp)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideSeaLevelPressure")
-    fun convertsToSeaLevel(
+    @Test
+    fun convertsToSeaLevel() {
+        provideSeaLevelPressure().forEach { args -> convertsToSeaLevel(args[0].arg<Float>(), args[1].arg<Float>(), args[2].arg<Float?>(), args[3].arg<Float>()) }
+    }
+
+    private fun convertsToSeaLevel(
         pressureHpa: Float,
         altitudeMeters: Float,
         temperatureCelsius: Float?,
@@ -180,16 +213,22 @@ class MeteorologyTest {
         assertEquals(expectedPressureHpa, reading.hpa().value, 0.1f)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideHighPressures")
-    fun isHigh(pressureHpa: Float, isHigh: Boolean) {
+    @Test
+    fun isHigh() {
+        provideHighPressures().forEach { args -> isHigh(args[0].arg<Float>(), args[1].arg<Boolean>()) }
+    }
+
+    private fun isHigh(pressureHpa: Float, isHigh: Boolean) {
         val ret = Meteorology.isHighPressure(Pressure.hpa(pressureHpa))
         assertEquals(isHigh, ret)
     }
 
-    @ParameterizedTest
-    @MethodSource("provideLowPressures")
-    fun isLow(pressureHpa: Float, isLow: Boolean) {
+    @Test
+    fun isLow() {
+        provideLowPressures().forEach { args -> isLow(args[0].arg<Float>(), args[1].arg<Boolean>()) }
+    }
+
+    private fun isLow(pressureHpa: Float, isLow: Boolean) {
         val ret = Meteorology.isLowPressure(Pressure.hpa(pressureHpa))
         assertEquals(isLow, ret)
     }
@@ -524,21 +563,19 @@ class MeteorologyTest {
 
         for ((classification, temperatures, precipitation) in tests) {
             val climate = Meteorology.getKoppenGeigerClimateClassification(
-                temperatures.mapKeys { it.key.toKotlinMonth() },
-                precipitation.mapKeys { it.key.toKotlinMonth() }
+                temperatures,
+                precipitation
             )
             assertEquals(classification, climate.code)
         }
     }
 
     companion object {
-
-        @JvmStatic
-        fun provideAltitudes(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(1000f, 1000f, 0f),
-                Arguments.of(1100f, 1000f, -811.3525f),
-                Arguments.of(900f, 1000f, 879.9459f),
+        fun provideAltitudes(): List<List<Any?>> {
+            return listOf(
+                listOf(1000f, 1000f, 0f),
+                listOf(1100f, 1000f, -811.3525f),
+                listOf(900f, 1000f, 879.9459f),
             )
         }
 
@@ -613,48 +650,40 @@ class MeteorologyTest {
                 Month.DECEMBER to Distance.from(dec.toFloat() + decSnow.toFloat() / 10, DistanceUnits.Millimeters)
             )
         }
-
-        @JvmStatic
-        fun provideLowPressures(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(1000f, true),
-                Arguments.of(1009.144f, true),
-                Arguments.of(1009.145f, false),
-                Arguments.of(1013f, false),
-                Arguments.of(1030f, false),
+        fun provideLowPressures(): List<List<Any?>> {
+            return listOf(
+                listOf(1000f, true),
+                listOf(1009.144f, true),
+                listOf(1009.145f, false),
+                listOf(1013f, false),
+                listOf(1030f, false),
+            )
+        }
+        fun provideHighPressures(): List<List<Any?>> {
+            return listOf(
+                listOf(1000f, false),
+                listOf(1013f, false),
+                listOf(1022.688f, false),
+                listOf(1022.689f, true),
+                listOf(1030f, true),
+            )
+        }
+        fun provideSeaLevelPressure(): List<List<Any?>> {
+            return listOf(
+                listOf(0f, 0f, null, 0f),
+                listOf(0f, 0f, 0f, 0f),
+                listOf(1000f, -100f, null, 988.2f),
+                listOf(980f, 200f, null, 1003.48f),
+                listOf(980f, 1000f, 15f, 1101.93f),
+                listOf(1000f, -100f, 28f, 988.71f),
             )
         }
 
-        @JvmStatic
-        fun provideHighPressures(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(1000f, false),
-                Arguments.of(1013f, false),
-                Arguments.of(1022.688f, false),
-                Arguments.of(1022.689f, true),
-                Arguments.of(1030f, true),
-            )
-        }
-
-        @JvmStatic
-        fun provideSeaLevelPressure(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(0f, 0f, null, 0f),
-                Arguments.of(0f, 0f, 0f, 0f),
-                Arguments.of(1000f, -100f, null, 988.2f),
-                Arguments.of(980f, 200f, null, 1003.48f),
-                Arguments.of(980f, 1000f, 15f, 1101.93f),
-                Arguments.of(1000f, -100f, 28f, 988.71f),
-            )
-        }
-
-        private val weatherTime = Instant.ofEpochSecond(100000)
-
-        @JvmStatic
-        fun provideWeatherForecasts(): Stream<Arguments> {
-            return Stream.of(
+        private val weatherTime = Instant.fromEpochSeconds(100000)
+        fun provideWeatherForecasts(): List<List<Any?>> {
+            return listOf(
                 // Pressure only - storm (warm temps)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1021f),
                     emptyList<Reading<CloudGenus?>>(),
                     temperatures(10f, 20f),
@@ -674,7 +703,7 @@ class MeteorologyTest {
                     )
                 ),
                 // Pressure only - storm (cold temps)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1021f),
                     emptyList<Reading<CloudGenus?>>(),
                     temperatures(-10f, 0f),
@@ -694,7 +723,7 @@ class MeteorologyTest {
                     )
                 ),
                 // Pressure only - storm (slightly warm temps)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1021f),
                     emptyList<Reading<CloudGenus?>>(),
                     temperatures(-2f, 8f),
@@ -713,7 +742,7 @@ class MeteorologyTest {
                     )
                 ),
                 // Pressure only - storm (slightly cold temps)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1021f),
                     emptyList<Reading<CloudGenus?>>(),
                     temperatures(-5f, 2f),
@@ -732,7 +761,7 @@ class MeteorologyTest {
                     )
                 ),
                 // Pressure only - worsening slow
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1027f),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -748,7 +777,7 @@ class MeteorologyTest {
                     )
                 ),
                 // Pressure only - worsening fast
-                Arguments.of(
+                listOf(
                     pressures(1009f, 1005f),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -767,7 +796,7 @@ class MeteorologyTest {
                 ),
 
                 // Pressure only - improving slow
-                Arguments.of(
+                listOf(
                     pressures(1027f, 1030f),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -783,7 +812,7 @@ class MeteorologyTest {
                     )
                 ),
                 // Pressure only - improving slow (not high pressure)
-                Arguments.of(
+                listOf(
                     pressures(1014f, 1017f),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -798,7 +827,7 @@ class MeteorologyTest {
                     )
                 ),
                 // Pressure only - improving fast
-                Arguments.of(
+                listOf(
                     pressures(1005f, 1009f),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -815,12 +844,12 @@ class MeteorologyTest {
                 ),
 
                 // clouds only - warm front
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Stratus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Warm,
                         null,
                         PressureTendency(PressureCharacteristic.Steady, 0f),
@@ -833,12 +862,12 @@ class MeteorologyTest {
                     )
                 ),
                 // clouds only - warm front (Ns)
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Nimbostratus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1),
+                        weatherTime - 1.seconds,
                         WeatherFront.Warm,
                         null,
                         PressureTendency(PressureCharacteristic.Steady, 0f),
@@ -851,12 +880,12 @@ class MeteorologyTest {
                     )
                 ),
                 // clouds only - cold front
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Cumulus),
                     temperatures(10f, 20f),
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Cold,
                         null,
                         PressureTendency(PressureCharacteristic.Steady, 0f),
@@ -873,12 +902,12 @@ class MeteorologyTest {
                     )
                 ),
                 // clouds only - cold front (Cb)
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Cumulonimbus),
                     temperatures(10f, 20f),
                     weatherAt(
-                        weatherTime.minusSeconds(1),
+                        weatherTime - 1.seconds,
                         WeatherFront.Cold,
                         null,
                         PressureTendency(PressureCharacteristic.Steady, 0f),
@@ -895,12 +924,12 @@ class MeteorologyTest {
                     )
                 ),
                 // clouds only - cold front (Cb only)
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Cumulonimbus),
                     temperatures(10f, 20f),
                     weatherAt(
-                        weatherTime.minusSeconds(1),
+                        weatherTime - 1.seconds,
                         WeatherFront.Cold,
                         null,
                         PressureTendency(PressureCharacteristic.Steady, 0f),
@@ -917,12 +946,12 @@ class MeteorologyTest {
                     )
                 ),
                 // clouds only - cold front (Cb, cold temps)
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Cumulonimbus),
                     temperatures(-10f, 10f),
                     weatherAt(
-                        weatherTime.minusSeconds(1),
+                        weatherTime - 1.seconds,
                         WeatherFront.Cold,
                         null,
                         PressureTendency(PressureCharacteristic.Steady, 0f),
@@ -937,12 +966,12 @@ class MeteorologyTest {
                     )
                 ),
                 // clouds only - unknown front
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(12.0).minusMillis(500)),
+                        weatherTime - 1.seconds + (Time.hours(12.0) - 500.milliseconds),
                         null,
                         null,
                         PressureTendency(PressureCharacteristic.Steady, 0f),
@@ -954,7 +983,7 @@ class MeteorologyTest {
                     )
                 ),
                 // clouds only - no front
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     clouds(CloudGenus.Cumulus, CloudGenus.Stratocumulus),
                     null,
@@ -971,7 +1000,7 @@ class MeteorologyTest {
                 ),
 
                 // no data
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -986,12 +1015,12 @@ class MeteorologyTest {
                 ),
 
                 // warm front (slow)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1027f),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Stratus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Warm,
                         PressureSystem.High,
                         PressureTendency(PressureCharacteristic.Falling, -1f),
@@ -1003,12 +1032,12 @@ class MeteorologyTest {
                     )
                 ),
                 // warm front (fast)
-                Arguments.of(
+                listOf(
                     pressures(1009f, 1005f),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Stratus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Warm,
                         PressureSystem.Low,
                         PressureTendency(PressureCharacteristic.FallingFast, -4 / 3f),
@@ -1022,12 +1051,12 @@ class MeteorologyTest {
                     )
                 ),
                 // warm front (storm)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1021f),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Stratus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Warm,
                         null,
                         PressureTendency(PressureCharacteristic.FallingFast, -3f),
@@ -1042,12 +1071,12 @@ class MeteorologyTest {
                     )
                 ),
                 // cold front (slow)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1027f),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Cumulus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Cold,
                         PressureSystem.High,
                         PressureTendency(PressureCharacteristic.Falling, -1f),
@@ -1062,12 +1091,12 @@ class MeteorologyTest {
                     )
                 ),
                 // cold front (fast)
-                Arguments.of(
+                listOf(
                     pressures(1009f, 1005f),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Cumulus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Cold,
                         PressureSystem.Low,
                         PressureTendency(PressureCharacteristic.FallingFast, -4 / 3f),
@@ -1081,12 +1110,12 @@ class MeteorologyTest {
                     )
                 ),
                 // cold front (storm)
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1021f),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Cumulus),
                     null,
                     weatherAt(
-                        weatherTime.minusSeconds(1).plus(JvmTime.hours(1.5)),
+                        weatherTime - 1.seconds + Time.hours(1.5),
                         WeatherFront.Cold,
                         null,
                         PressureTendency(PressureCharacteristic.FallingFast, -3f),
@@ -1102,7 +1131,7 @@ class MeteorologyTest {
                 ),
 
                 // Cold front (passing)
-                Arguments.of(
+                listOf(
                     pressures(1027f, 1030f),
                     clouds(CloudGenus.Cirrus, CloudGenus.Altocumulus, CloudGenus.Cumulus),
                     null,
@@ -1119,7 +1148,7 @@ class MeteorologyTest {
                 ),
 
                 // Overcast in high pressure
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1030f),
                     clouds(CloudGenus.Stratus),
                     null,
@@ -1137,7 +1166,7 @@ class MeteorologyTest {
                 ),
 
                 // Clear in low pressure
-                Arguments.of(
+                listOf(
                     pressures(1000f, 1000f),
                     clouds(null),
                     null,
@@ -1155,7 +1184,7 @@ class MeteorologyTest {
                 ),
 
                 // Unknown
-                Arguments.of(
+                listOf(
                     pressures(1022f, 1022f),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -1168,7 +1197,7 @@ class MeteorologyTest {
                 ),
 
                 // Replaces unknown forecast (using pressure)
-                Arguments.of(
+                listOf(
                     pressures(
                         1024f,
                         1023f
@@ -1188,7 +1217,7 @@ class MeteorologyTest {
                 ),
 
                 // Replaces unknown forecast (using clouds)
-                Arguments.of(
+                listOf(
                     pressures(
                         1022f,
                         1022f
@@ -1205,14 +1234,14 @@ class MeteorologyTest {
                 ),
 
                 // Ignores front-indicating clouds older than 24 hours
-                Arguments.of(
+                listOf(
                     emptyList<Reading<Pressure>>(),
                     listOf(
-                        Reading(CloudGenus.Cirrus, weatherTime.minus(Duration.ofHours(26)).toKotlinInstant()),
-                        Reading(CloudGenus.Altocumulus, weatherTime.minus(Duration.ofHours(25)).toKotlinInstant()),
+                        Reading(CloudGenus.Cirrus, weatherTime - 26.hours),
+                        Reading(CloudGenus.Altocumulus, weatherTime - 25.hours),
                         Reading(
                             CloudGenus.Stratus,
-                            weatherTime.minus(Duration.ofHours(24)).minusSeconds(1).toKotlinInstant()
+                            weatherTime - 24.hours - 1.seconds
                         )
                     ),
                     null,
@@ -1225,10 +1254,10 @@ class MeteorologyTest {
                 ),
 
                 // Ignores current cloud conditions older than 3 hours
-                Arguments.of(
+                listOf(
                     pressures(1030f, 1030f),
                     listOf(
-                        Reading(CloudGenus.Stratus, weatherTime.minus(Duration.ofHours(4)).toKotlinInstant())
+                        Reading(CloudGenus.Stratus, weatherTime - 4.hours)
                     ),
                     null,
                     weatherAt(
@@ -1244,10 +1273,10 @@ class MeteorologyTest {
                 ),
 
                 // Ignores pressures older than 48 hours
-                Arguments.of(
+                listOf(
                     listOf(
-                        Reading(Pressure.hpa(1027f), weatherTime.minus(Duration.ofHours(52)).toKotlinInstant()),
-                        Reading(Pressure.hpa(1030f), weatherTime.minus(Duration.ofHours(49)).toKotlinInstant())
+                        Reading(Pressure.hpa(1027f), weatherTime - 52.hours),
+                        Reading(Pressure.hpa(1030f), weatherTime - 49.hours)
                     ),
                     emptyList<Reading<CloudGenus?>>(),
                     null,
@@ -1286,7 +1315,7 @@ class MeteorologyTest {
             vararg conditions: WeatherCondition
         ): WeatherForecast {
             return WeatherForecast(
-                time.toKotlinInstant(),
+                time,
                 conditions.toList(),
                 front,
                 system,
@@ -1312,43 +1341,41 @@ class MeteorologyTest {
         private fun pressures(last: Float, now: Float): List<Reading<Pressure>> {
             val time = weatherTime
             return listOf(
-                Reading(Pressure.hpa(last), time.minus(Duration.ofHours(3)).toKotlinInstant()),
-                Reading(Pressure.hpa(now), time.toKotlinInstant())
+                Reading(Pressure.hpa(last), time - 3.hours),
+                Reading(Pressure.hpa(now), time)
             )
         }
 
         private fun clouds(vararg clouds: CloudGenus?): List<Reading<CloudGenus?>> {
-            var time = weatherTime.minusSeconds(clouds.size.toLong())
+            var time = weatherTime - clouds.size.seconds
             return clouds.map {
-                val r = Reading(it, time.toKotlinInstant())
-                time = time.plusSeconds(1)
+                val r = Reading(it, time)
+                time += 1.seconds
                 r
             }
         }
-
-        @JvmStatic
-        fun provideForecasts(): Stream<Arguments> {
+        fun provideForecasts(): List<List<Any?>> {
             // First argument not used yet
-            return Stream.of(
-                Arguments.of(PressureCharacteristic.Steady, 0f, -6f, Weather.NoChange),
-                Arguments.of(PressureCharacteristic.FallingFast, -6f, -6f, Weather.Storm),
-                Arguments.of(PressureCharacteristic.FallingFast, -8f, -7f, Weather.Storm),
-                Arguments.of(PressureCharacteristic.FallingFast, -6 / 3f, null, Weather.Storm),
-                Arguments.of(
+            return listOf(
+                listOf(PressureCharacteristic.Steady, 0f, -6f, Weather.NoChange),
+                listOf(PressureCharacteristic.FallingFast, -6f, -6f, Weather.Storm),
+                listOf(PressureCharacteristic.FallingFast, -8f, -7f, Weather.Storm),
+                listOf(PressureCharacteristic.FallingFast, -6 / 3f, null, Weather.Storm),
+                listOf(
                     PressureCharacteristic.FallingFast,
                     -5 / 3f,
                     null,
                     Weather.WorseningFast
                 ),
-                Arguments.of(
+                listOf(
                     PressureCharacteristic.FallingFast,
                     -4f,
                     -6f,
                     Weather.WorseningFast
                 ),
-                Arguments.of(PressureCharacteristic.Falling, -2f, -6f, Weather.WorseningSlow),
-                Arguments.of(PressureCharacteristic.Rising, 2f, -6f, Weather.ImprovingSlow),
-                Arguments.of(
+                listOf(PressureCharacteristic.Falling, -2f, -6f, Weather.WorseningSlow),
+                listOf(PressureCharacteristic.Rising, 2f, -6f, Weather.ImprovingSlow),
+                listOf(
                     PressureCharacteristic.RisingFast,
                     8f,
                     -6f,
@@ -1356,88 +1383,86 @@ class MeteorologyTest {
                 ),
             )
         }
-
-        @JvmStatic
-        fun provideTendencies(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(
+        fun provideTendencies(): List<List<Any?>> {
+            return listOf(
+                listOf(
                     1000f,
                     1000f,
-                    Duration.ofHours(3),
+                    3.hours,
                     2f,
                     PressureTendency(PressureCharacteristic.Steady, 0f)
                 ),
-                Arguments.of(
+                listOf(
                     1000f,
                     1001f,
-                    Duration.ofHours(3),
+                    3.hours,
                     2 / 3f,
                     PressureTendency(PressureCharacteristic.Steady, 1 / 3f)
                 ),
-                Arguments.of(
+                listOf(
                     1000f,
                     1004f,
-                    Duration.ofHours(3),
+                    3.hours,
                     2 / 3f,
                     PressureTendency(PressureCharacteristic.RisingFast, 4 / 3f)
                 ),
-                Arguments.of(
+                listOf(
                     1000f,
                     1003f,
-                    Duration.ofHours(3),
+                    3.hours,
                     2 / 3f,
                     PressureTendency(PressureCharacteristic.Rising, 1f)
                 ),
-                Arguments.of(
+                listOf(
                     1004f,
                     1000f,
-                    Duration.ofHours(3),
+                    3.hours,
                     2 / 3f,
                     PressureTendency(PressureCharacteristic.FallingFast, -4 / 3f)
                 ),
-                Arguments.of(
+                listOf(
                     1002f,
                     1000f,
-                    Duration.ofHours(3),
+                    3.hours,
                     2 / 3f,
                     PressureTendency(PressureCharacteristic.Falling, -2 / 3f)
                 ),
-                Arguments.of(
+                listOf(
                     1002f,
                     1000f,
-                    Duration.ofHours(3),
+                    3.hours,
                     1 / 3f,
                     PressureTendency(PressureCharacteristic.Falling, -2 / 3f)
                 ),
-                Arguments.of(
+                listOf(
                     1003f,
                     1000f,
-                    Duration.ofHours(3),
+                    3.hours,
                     1 / 3f,
                     PressureTendency(PressureCharacteristic.FallingFast, -1f)
                 ),
-                Arguments.of(
+                listOf(
                     1002f,
                     1000f,
-                    Duration.ofHours(2),
+                    2.hours,
                     1 / 3f,
                     PressureTendency(PressureCharacteristic.FallingFast, -1f)
                 ),
-                Arguments.of(
+                listOf(
                     1008f,
                     1000f,
-                    Duration.ofHours(4),
+                    4.hours,
                     2 / 3f,
                     PressureTendency(PressureCharacteristic.FallingFast, -2f)
                 ),
-                Arguments.of(
+                listOf(
                     1000f,
                     1000f,
                     Duration.ZERO,
                     2 / 3f,
                     PressureTendency(PressureCharacteristic.Steady, 0f)
                 ),
-                Arguments.of(
+                listOf(
                     1000.1f,
                     1000f,
                     Duration.ZERO,
@@ -1446,97 +1471,85 @@ class MeteorologyTest {
                 ),
             )
         }
-
-        @JvmStatic
-        fun provideHeatIndex(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(0f, 0f, 0f),
-                Arguments.of(1f, 0f, 1f),
-                Arguments.of(26f, 0f, 26f),
-                Arguments.of(27f, 80f, 30f),
-                Arguments.of(30f, 80f, 38f),
-                Arguments.of(30f, 100f, 44f),
-                Arguments.of(30f, 45f, 30f),
-                Arguments.of(36f, 60f, 48f),
+        fun provideHeatIndex(): List<List<Any?>> {
+            return listOf(
+                listOf(0f, 0f, 0f),
+                listOf(1f, 0f, 1f),
+                listOf(26f, 0f, 26f),
+                listOf(27f, 80f, 30f),
+                listOf(30f, 80f, 38f),
+                listOf(30f, 100f, 44f),
+                listOf(30f, 45f, 30f),
+                listOf(36f, 60f, 48f),
             )
         }
-
-        @JvmStatic
-        fun provideHeatAlert(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(-26f, HeatAlert.FrostbiteDanger),
-                Arguments.of(-25f, HeatAlert.FrostbiteDanger),
-                Arguments.of(-24f, HeatAlert.FrostbiteWarning),
-                Arguments.of(-17f, HeatAlert.FrostbiteWarning),
-                Arguments.of(-16f, HeatAlert.FrostbiteCaution),
-                Arguments.of(5f, HeatAlert.FrostbiteCaution),
-                Arguments.of(6f, HeatAlert.Normal),
-                Arguments.of(26f, HeatAlert.Normal),
-                Arguments.of(27f, HeatAlert.HeatCaution),
-                Arguments.of(32.5f, HeatAlert.HeatCaution),
-                Arguments.of(33f, HeatAlert.HeatWarning),
-                Arguments.of(39f, HeatAlert.HeatWarning),
-                Arguments.of(40f, HeatAlert.HeatAlert),
-                Arguments.of(50f, HeatAlert.HeatAlert),
-                Arguments.of(51f, HeatAlert.HeatDanger),
+        fun provideHeatAlert(): List<List<Any?>> {
+            return listOf(
+                listOf(-26f, HeatAlert.FrostbiteDanger),
+                listOf(-25f, HeatAlert.FrostbiteDanger),
+                listOf(-24f, HeatAlert.FrostbiteWarning),
+                listOf(-17f, HeatAlert.FrostbiteWarning),
+                listOf(-16f, HeatAlert.FrostbiteCaution),
+                listOf(5f, HeatAlert.FrostbiteCaution),
+                listOf(6f, HeatAlert.Normal),
+                listOf(26f, HeatAlert.Normal),
+                listOf(27f, HeatAlert.HeatCaution),
+                listOf(32.5f, HeatAlert.HeatCaution),
+                listOf(33f, HeatAlert.HeatWarning),
+                listOf(39f, HeatAlert.HeatWarning),
+                listOf(40f, HeatAlert.HeatAlert),
+                listOf(50f, HeatAlert.HeatAlert),
+                listOf(51f, HeatAlert.HeatDanger),
             )
         }
-
-        @JvmStatic
-        fun provideDewPoint(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(20f, 100f, 20f),
-                Arguments.of(21f, 90f, 19f),
-                Arguments.of(15f, 24f, -5f),
-                Arguments.of(16f, 10f, -16f),
+        fun provideDewPoint(): List<List<Any?>> {
+            return listOf(
+                listOf(20f, 100f, 20f),
+                listOf(21f, 90f, 19f),
+                listOf(15f, 24f, -5f),
+                listOf(16f, 10f, -16f),
             )
         }
-
-        @JvmStatic
-        fun provideLightningStrikes(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(Instant.ofEpochSecond(0), Instant.ofEpochSecond(1), 343f),
-                Arguments.of(Instant.ofEpochSecond(0), Instant.ofEpochSecond(2), 686f),
-                Arguments.of(Instant.ofEpochSecond(0), Instant.ofEpochSecond(10), 3430f),
-                Arguments.of(Instant.ofEpochSecond(0), Instant.ofEpochSecond(0), 0f),
-                Arguments.of(Instant.ofEpochSecond(1), Instant.ofEpochSecond(0), 0f),
+        fun provideLightningStrikes(): List<List<Any?>> {
+            return listOf(
+                listOf(Instant.fromEpochSeconds(0), Instant.fromEpochSeconds(1), 343f),
+                listOf(Instant.fromEpochSeconds(0), Instant.fromEpochSeconds(2), 686f),
+                listOf(Instant.fromEpochSeconds(0), Instant.fromEpochSeconds(10), 3430f),
+                listOf(Instant.fromEpochSeconds(0), Instant.fromEpochSeconds(0), 0f),
+                listOf(Instant.fromEpochSeconds(1), Instant.fromEpochSeconds(0), 0f),
             )
         }
-
-        @JvmStatic
-        fun provideLightningStrikeDistances(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(Distance.kilometers(10f).meters().value, true),
-                Arguments.of(Distance.kilometers(10.1f).meters().value, false),
-                Arguments.of(10000f, true),
-                Arguments.of(100f, true),
+        fun provideLightningStrikeDistances(): List<List<Any?>> {
+            return listOf(
+                listOf(Distance.kilometers(10f).meters().value, true),
+                listOf(Distance.kilometers(10.1f).meters().value, false),
+                listOf(10000f, true),
+                listOf(100f, true),
             )
         }
+        fun provideSeasons(): List<List<Any?>> {
+            return listOf(
+                listOf(Season.Summer, false, LocalDate(2021, 1, 1)),
+                listOf(Season.Summer, false, LocalDate(2021, 2, 28)),
+                listOf(Season.Fall, false, LocalDate(2021, 3, 1)),
+                listOf(Season.Fall, false, LocalDate(2021, 5, 31)),
+                listOf(Season.Winter, false, LocalDate(2021, 6, 1)),
+                listOf(Season.Winter, false, LocalDate(2021, 8, 31)),
+                listOf(Season.Spring, false, LocalDate(2021, 9, 1)),
+                listOf(Season.Spring, false, LocalDate(2021, 11, 30)),
+                listOf(Season.Summer, false, LocalDate(2021, 12, 1)),
+                listOf(Season.Summer, false, LocalDate(2021, 12, 31)),
 
-        @JvmStatic
-        fun provideSeasons(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of(Season.Summer, false, LocalDate.of(2021, 1, 1)),
-                Arguments.of(Season.Summer, false, LocalDate.of(2021, 2, 28)),
-                Arguments.of(Season.Fall, false, LocalDate.of(2021, 3, 1)),
-                Arguments.of(Season.Fall, false, LocalDate.of(2021, 5, 31)),
-                Arguments.of(Season.Winter, false, LocalDate.of(2021, 6, 1)),
-                Arguments.of(Season.Winter, false, LocalDate.of(2021, 8, 31)),
-                Arguments.of(Season.Spring, false, LocalDate.of(2021, 9, 1)),
-                Arguments.of(Season.Spring, false, LocalDate.of(2021, 11, 30)),
-                Arguments.of(Season.Summer, false, LocalDate.of(2021, 12, 1)),
-                Arguments.of(Season.Summer, false, LocalDate.of(2021, 12, 31)),
-
-                Arguments.of(Season.Winter, true, LocalDate.of(2021, 1, 1)),
-                Arguments.of(Season.Winter, true, LocalDate.of(2021, 2, 28)),
-                Arguments.of(Season.Spring, true, LocalDate.of(2021, 3, 1)),
-                Arguments.of(Season.Spring, true, LocalDate.of(2021, 5, 31)),
-                Arguments.of(Season.Summer, true, LocalDate.of(2021, 6, 1)),
-                Arguments.of(Season.Summer, true, LocalDate.of(2021, 8, 31)),
-                Arguments.of(Season.Fall, true, LocalDate.of(2021, 9, 1)),
-                Arguments.of(Season.Fall, true, LocalDate.of(2021, 11, 30)),
-                Arguments.of(Season.Winter, true, LocalDate.of(2021, 12, 1)),
-                Arguments.of(Season.Winter, true, LocalDate.of(2021, 12, 31)),
+                listOf(Season.Winter, true, LocalDate(2021, 1, 1)),
+                listOf(Season.Winter, true, LocalDate(2021, 2, 28)),
+                listOf(Season.Spring, true, LocalDate(2021, 3, 1)),
+                listOf(Season.Spring, true, LocalDate(2021, 5, 31)),
+                listOf(Season.Summer, true, LocalDate(2021, 6, 1)),
+                listOf(Season.Summer, true, LocalDate(2021, 8, 31)),
+                listOf(Season.Fall, true, LocalDate(2021, 9, 1)),
+                listOf(Season.Fall, true, LocalDate(2021, 11, 30)),
+                listOf(Season.Winter, true, LocalDate(2021, 12, 1)),
+                listOf(Season.Winter, true, LocalDate(2021, 12, 31)),
             )
         }
 
