@@ -21,7 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.math.MathUtils
 import com.kylecorry.luna.concurrency.SafeExecutor
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.AndroidTime
 import com.kylecorry.luna.time.CoroutineTimer
@@ -37,7 +37,7 @@ internal class CellSignalSensor(
     private val removeUnregisteredSignals: Boolean = true,
     private val pathLossFactor: Float = 1f
 ) :
-    AbstractSensor() {
+    SharedSensor() {
 
     private val telephony by lazy { context.getSystemService<TelephonyManager>() }
     private val executor by lazy { ContextCompat.getMainExecutor(context) }

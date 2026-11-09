@@ -40,7 +40,7 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.common.util.concurrent.ListenableFuture
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -77,7 +77,7 @@ internal class Camera(
     private val targetAspectRatio: Int = AspectRatio.RATIO_DEFAULT,
     private val onAnalysisFrame: ((ImageProxy) -> Unit)? = null,
     private val onAnalysisError: (Throwable) -> Unit = {},
-) : AbstractSensor(), ICamera {
+) : SharedSensor(), ICamera {
 
     override val image: ImageProxy?
         get() = _image

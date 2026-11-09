@@ -44,6 +44,10 @@ abstract class SharedSensor : Sensor {
         eventTimeElapsedNanos = monotonicNanos() - age.inWholeNanoseconds
         timestamp = time
     }
+    protected fun setEventTimeToNow() {
+        eventTimeElapsedNanos = monotonicNanos()
+        timestamp = Clock.System.now()
+    }
     protected fun setEventTimeFrom(sensor: Sensor) {
         eventTimeElapsedNanos = sensor.eventTimeElapsedNanos
         timestamp = sensor.timestamp

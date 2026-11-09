@@ -7,14 +7,14 @@ import android.util.Size
 import android.util.SizeF
 import androidx.camera.core.ImageProxy
 import com.kylecorry.andromeda.core.annotations.ExperimentalUsage
-import com.kylecorry.andromeda.core.sensors.ISensor
+import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.Range
 import java.io.File
 import java.io.OutputStream
 import java.time.Duration
 
-internal interface ICamera : ISensor {
+internal interface ICamera : Sensor {
     val image: ImageProxy?
     val zoom: ZoomInfo?
     val sensorRotation: Float
