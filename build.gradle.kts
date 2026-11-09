@@ -1,35 +1,74 @@
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
+
 plugins {
-    kotlin("multiplatform") version "2.3.0"
-    id("com.vanniktech.maven.publish") version "0.37.0"
-    id("dev.detekt") version "2.0.0-alpha.5"
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.detekt)
 }
 
-val versionName = "19.4.0"
+val versionName = "20.0.0"
+
+kotlin {
+    explicitApi()
+
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation()
+
+    jvmToolchain(17)
+    jvm {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
+    }
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.kotlinx.datetime)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.assertk)
+        }
+        jvmTest.dependencies {
+            implementation(project.dependencies.platform(libs.junit.bom))
+            runtimeOnly(libs.junit.platform.launcher)
+        }
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
 
 mavenPublishing {
     coordinates("com.kylecorry", "sol", versionName)
 
     pom {
-        name.set("Sol")
-        description.set("A Kotlin library for science and math in the real world.")
-        url.set("https://github.com/kylecorry31/sol")
+        name = "Sol"
+        description = "A Kotlin Multiplatform library for science and math in the real world."
+        url = "https://github.com/kylecorry31/sol"
         licenses {
             license {
-                name.set("MIT License")
-                url.set("https://opensource.org/licenses/MIT")
+                name = "MIT License"
+                url = "https://opensource.org/licenses/MIT"
             }
         }
         developers {
             developer {
-                id.set("kylecorry31")
-                name.set("Kyle Corry")
-                email.set("kylecorry31@gmail.com")
+                id = "kylecorry31"
+                name = "Kyle Corry"
+                email = "kylecorry31@gmail.com"
             }
         }
         scm {
-            connection.set("scm:git:git://github.com/kylecorry31/sol.git")
-            developerConnection.set("scm:git:ssh://github.com:kylecorry31/sol.git")
-            url.set("https://github.com/kylecorry31/sol")
+            connection = "scm:git:git://github.com/kylecorry31/sol.git"
+            developerConnection = "scm:git:ssh://github.com:kylecorry31/sol.git"
+            url = "https://github.com/kylecorry31/sol"
         }
     }
 
@@ -40,53 +79,8 @@ mavenPublishing {
     }
 }
 
-repositories {
-    maven {
-        url = uri("https://jitpack.io")
-        content {
-            includeGroupByRegex("com\\.github.*")
-        }
-    }
-    mavenCentral()
-}
-
 dependencies {
-    detektPlugins("com.kylecorry:orion:1.1.0")
-}
-
-kotlin {
-    explicitApi()
-
-    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
-    abiValidation {
-        enabled.set(true)
-    }
-
-    jvm {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        }
-    }
-    iosArm64()
-    iosSimulatorArm64()
-    jvmToolchain(17)
-
-    sourceSets {
-        commonMain.dependencies {
-            api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
-        }
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-            implementation("com.willowtreeapps.assertk:assertk:0.28.1")
-        }
-        jvmTest.dependencies {
-            runtimeOnly("org.junit.platform:junit-platform-launcher:1.14.4")
-        }
-    }
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
+    detektPlugins(libs.detekt.orion)
 }
 
 detekt {
@@ -95,19 +89,19 @@ detekt {
     baseline = file("$rootDir/config/detekt/baseline.xml")
 }
 
-tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-    setSource(files("src/commonMain/kotlin", "src/jvmMain/kotlin", "src/iosMain/kotlin"))
-    include("**/*.kt", "**/*.kts")
-    exclude("**/build/**")
+// Analyze the production code of every target in one pass
+val productionSources = files(provider {
+    kotlin.sourceSets.filter { it.name.endsWith("Main") }.flatMap { it.kotlin.srcDirs }.filter { it.exists() }
+})
+
+tasks.withType<Detekt>().configureEach {
+    setSource(productionSources)
     exclude("**/gov/nasa/worldwind/**")
     jvmTarget = "11"
 }
 
-tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
-    setSource(files("src/commonMain/kotlin", "src/jvmMain/kotlin", "src/iosMain/kotlin"))
-    include("**/*.kt", "**/*.kts")
-    exclude("**/build/**")
+tasks.withType<DetektCreateBaselineTask>().configureEach {
+    setSource(productionSources)
     exclude("**/gov/nasa/worldwind/**")
     jvmTarget = "11"
 }
-

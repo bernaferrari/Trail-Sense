@@ -850,7 +850,6 @@ public final class com/kylecorry/sol/math/filters/KalmanFilter$Companion {
 }
 
 public final class com/kylecorry/sol/math/filters/LoessFilter {
-	public static final field DEGENERATE_DETERMINANT D
 	public fun <init> ()V
 	public fun <init> (FIFIILjava/lang/Float;Lkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (FIFIILjava/lang/Float;Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1132,7 +1131,6 @@ public final class com/kylecorry/sol/math/geometry/Rectangle$Companion {
 
 public final class com/kylecorry/sol/math/geometry/Rotation {
 	public static final field Companion Lcom/kylecorry/sol/math/geometry/Rotation$Companion;
-	public synthetic fun <init> ([DLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun angle ()D
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
@@ -1330,9 +1328,6 @@ public final class com/kylecorry/sol/math/optimization/IterativeSimpleExtremaFin
 }
 
 public final class com/kylecorry/sol/math/optimization/LeastSquaresOptimizer {
-	public static final field DAMPING_SCALE D
-	public static final field INITIAL_DAMPING D
-	public static final field MAX_DAMPING D
 	public fun <init> ()V
 	public final fun optimize (Ljava/util/List;Ljava/util/List;IFFFLjava/util/List;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;)Ljava/util/List;
 	public static synthetic fun optimize$default (Lcom/kylecorry/sol/math/optimization/LeastSquaresOptimizer;Ljava/util/List;Ljava/util/List;IFFFLjava/util/List;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Ljava/util/List;
@@ -2168,6 +2163,7 @@ public final class com/kylecorry/sol/science/ecology/triggers/PhotoperiodTrigger
 }
 
 public final class com/kylecorry/sol/science/ecology/triggers/TemperatureTrigger : com/kylecorry/sol/science/ecology/triggers/LifecycleEventTrigger {
+	public fun <init> ()V
 	public synthetic fun <init> (JZLcom/kylecorry/sol/science/ecology/triggers/TemperatureTriggerType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (JZLcom/kylecorry/sol/science/ecology/triggers/TemperatureTriggerType;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun isTriggered (Lcom/kylecorry/sol/science/ecology/LifecycleEventFactors;)Z
@@ -2956,7 +2952,6 @@ public final class com/kylecorry/sol/science/oceanography/waterlevel/HarmonicLun
 }
 
 public final class com/kylecorry/sol/science/oceanography/waterlevel/HarmonicWaterLevelCalculator : com/kylecorry/sol/science/oceanography/waterlevel/IWaterLevelCalculator {
-	public static final field SECONDS_PER_DAY J
 	public fun <init> (Ljava/util/List;)V
 	public fun calculate (Lkotlin/time/Instant;Lkotlinx/datetime/TimeZone;)F
 }
