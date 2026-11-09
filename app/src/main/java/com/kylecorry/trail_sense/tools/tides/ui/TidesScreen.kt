@@ -217,8 +217,9 @@ fun TidesToolScreen() {
         "--"
     } else {
         val name = tideFormatter.getTideTypeName(current.type)
-        val waterLevel = if (current.waterLevel != null) {
-            val height = Distance.meters(current.waterLevel).convertTo(units)
+        val currentWaterLevel = current.waterLevel
+        val waterLevel = if (currentWaterLevel != null) {
+            val height = Distance.meters(currentWaterLevel).convertTo(units)
             " (${formatService.formatDistance(height, 2, true)})"
         } else {
             ""
