@@ -86,7 +86,7 @@ detekt {
 }
 
 tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-    setSource(files("src/main/kotlin", "src/commonMain/kotlin"))
+    setSource(files("src/commonMain/kotlin", "src/jvmMain/kotlin", "src/iosMain/kotlin"))
     include("**/*.kt", "**/*.kts")
     exclude("**/build/**")
     exclude("**/gov/nasa/worldwind/**")
@@ -94,7 +94,7 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
 }
 
 tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
-    setSource(files("src/main/kotlin", "src/commonMain/kotlin"))
+    setSource(files("src/commonMain/kotlin", "src/jvmMain/kotlin", "src/iosMain/kotlin"))
     include("**/*.kt", "**/*.kts")
     exclude("**/build/**")
     exclude("**/gov/nasa/worldwind/**")
