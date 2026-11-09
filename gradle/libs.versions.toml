@@ -6,6 +6,7 @@ junit = "6.1.3"
 detekt = "2.0.0-alpha.6"
 orion = "1.1.0"
 maven-publish = "0.37.0"
+jsJoda-timezone = "3.2.1"
 
 [libraries]
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }

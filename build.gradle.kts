@@ -1,6 +1,7 @@
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
@@ -10,6 +11,10 @@ plugins {
 }
 
 val versionName = "20.0.0"
+
+// Some astronomy tests take several seconds on Wasm. Kotlin/JS is not a target because it stores Float as a
+// 64-bit double, which changes the results of sol's single precision math.
+val MOCHA_TIMEOUT = "120s"
 
 kotlin {
     explicitApi()
@@ -25,6 +30,12 @@ kotlin {
     }
     iosArm64()
     iosSimulatorArm64()
+    macosArm64()
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        nodejs { testTask { useMocha { timeout = MOCHA_TIMEOUT } } }
+        browser { testTask { enabled = false } }
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -33,6 +44,9 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.assertk)
+        }
+        webTest.dependencies {
+            implementation(npm("@js-joda/timezone", libs.versions.jsJoda.timezone.get()))
         }
         jvmTest.dependencies {
             implementation(project.dependencies.platform(libs.junit.bom))
