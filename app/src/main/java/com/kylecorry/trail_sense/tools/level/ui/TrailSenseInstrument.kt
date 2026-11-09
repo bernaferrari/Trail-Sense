@@ -341,7 +341,7 @@ fun TrailSenseCameraUnavailable(
         actionLabel = stringResource(R.string.open_settings),
         onAction = {
             com.kylecorry.andromeda.core.tryOrNothing {
-                context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
+                context.startActivity(com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents.appSettings(context))
             }
         },
         modifier = modifier

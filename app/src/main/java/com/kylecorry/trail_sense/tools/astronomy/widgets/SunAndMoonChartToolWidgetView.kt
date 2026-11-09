@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.astronomy.widgets
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChartColors
 
 import com.kylecorry.trail_sense.tools.astronomy.ui.drawAstroChart
@@ -9,7 +15,7 @@ import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -40,10 +46,10 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
         val sunAltitudes = astronomy.getSunAltitudes()
         val moonAltitudes = astronomy.getMoonAltitudes()
         val currentSun = sunAltitudes.minByOrNull {
-            Duration.between(instant, it.time).abs()
+            JavaTime.between(instant, it.time).abs()
         }
         val currentMoon = moonAltitudes.minByOrNull {
-            Duration.between(instant, it.time).abs()
+            JavaTime.between(instant, it.time).abs()
         }
 
         var content: ToolWidgetContent.Chart? = null
@@ -57,7 +63,7 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
                 moon.tilt
             ).asImageBitmap()
             val state = AstroChartState(
-                startTime = sunAltitudes.firstOrNull()?.time ?: Instant.now(),
+                startTime = (sunAltitudes.firstOrNull()?.time ?: kotlin.time.Clock.System.now()).toJavaInstant(),
                 sun = sunAltitudes,
                 moon = moonAltitudes,
                 sunPosition = currentSun,

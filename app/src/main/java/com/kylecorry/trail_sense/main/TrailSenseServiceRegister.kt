@@ -4,8 +4,8 @@ import android.content.Context
 import android.text.Layout
 import android.text.style.AlignmentSpan
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.markdown.MarkdownExtension
-import com.kylecorry.andromeda.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownExtension
+import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.AltitudeCorrection
@@ -74,7 +74,7 @@ object TrailSenseServiceRegister {
             tool.singletons.forEach { producer ->
                 val service = producer(appContext)
                 @Suppress("UNCHECKED_CAST")
-                val clazz = service.javaClass as Class<Any>
+                val clazz = service::class as kotlin.reflect.KClass<Any>
                 DependencyRegistry.addSingleton(clazz, service)
             }
         }

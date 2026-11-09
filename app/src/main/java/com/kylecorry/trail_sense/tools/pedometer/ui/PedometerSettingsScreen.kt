@@ -22,16 +22,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.IPedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.andromeda.notify.Notify
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -273,7 +273,7 @@ internal data class PedometerSettingsKeys(
  */
 internal class PedometerSettingsViewModel(
     private val prefs: UserPreferences,
-    private val cache: IPreferences,
+    private val cache: Preferences,
     private val pedometer: IPedometerSubsystem,
     private val status: PedometerSystemStatus,
     private val keys: PedometerSettingsKeys

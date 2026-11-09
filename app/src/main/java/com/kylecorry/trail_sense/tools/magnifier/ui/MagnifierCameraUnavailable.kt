@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState

@@ -3,10 +3,10 @@ package com.kylecorry.trail_sense.shared.dem
 import android.graphics.Bitmap
 import android.util.Size
 import com.kylecorry.andromeda.bitmaps.FloatBitmap
-import com.kylecorry.andromeda.bitmaps.operations.Convert
-import com.kylecorry.andromeda.bitmaps.operations.CropTile
-import com.kylecorry.andromeda.bitmaps.operations.applyOperations
-import com.kylecorry.andromeda.bitmaps.operations.set
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Convert
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.CropTile
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.applyOperations
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.set
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.cache.GeospatialCache
 import com.kylecorry.luna.concurrency.onDefault

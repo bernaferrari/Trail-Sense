@@ -25,8 +25,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
-import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeToFit
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.resizeToFit
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.geometry.Size

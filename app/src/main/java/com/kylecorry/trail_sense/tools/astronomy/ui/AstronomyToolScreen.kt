@@ -1,6 +1,12 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -59,13 +65,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.markdown.MarkdownService
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.sol.time.Time.atEndOfDay
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.atEndOfDay
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
@@ -414,7 +420,7 @@ internal class AstronomyViewModel(
     private val astronomyService: AstronomyService = AstronomyService()
 ) : ViewModel() {
 
-    private val gps: IGPS = sensorService.getGPS()
+    private val gps: GpsSensor = sensorService.getGPS()
     private val declination by lazy { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
     private var sunTimesMode: SunTimesMode = prefs.astronomy.sunTimesMode
     private var chartDataProvider: IAstroChartDataProvider = createChartDataProvider()
@@ -622,7 +628,7 @@ internal class AstronomyViewModel(
 
         val today = date == LocalDate.now()
         chart = chart.copy(
-            startTime = data.sun.firstOrNull()?.time ?: Instant.now(),
+            startTime = (data.sun.firstOrNull()?.time ?: kotlin.time.Clock.System.now()).toJavaInstant(),
             sun = data.sun,
             moon = data.moon,
             sunPosition = if (today) closest(data.sun) else null,
@@ -632,7 +638,7 @@ internal class AstronomyViewModel(
 
     private fun closest(altitudes: List<Reading<Float>>, time: ZonedDateTime = ZonedDateTime.now()): Reading<Float>? {
         val instant = time.toInstant()
-        return altitudes.minByOrNull { Duration.between(instant, it.time).abs() }
+        return altitudes.minByOrNull { JavaTime.between(instant, it.time).abs() }
     }
 
     private suspend fun updateDetails() {

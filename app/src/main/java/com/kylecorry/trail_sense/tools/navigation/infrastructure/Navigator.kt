@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.luna.concurrency.BackgroundTask

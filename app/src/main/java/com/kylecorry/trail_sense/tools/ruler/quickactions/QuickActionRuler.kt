@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Screen
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences

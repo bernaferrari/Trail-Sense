@@ -3,7 +3,13 @@
 
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
-import com.kylecorry.andromeda.core.sensors.IAltimeter
+import com.kylecorry.andromeda.core.sensors.read
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
+import com.kylecorry.andromeda.core.sensors.Altimeter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
@@ -57,7 +63,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
@@ -97,7 +103,7 @@ const val WATER_PURIFICATION_END_TIME_KEY = "water_purification_start_time"
  */
 @Composable
 internal fun WaterPurificationScreen(
-    cache: IPreferences,
+    cache: Preferences,
     formatService: FormatService,
     getSelectedDuration: suspend (TimeSelection) -> Duration
 ) {
@@ -208,7 +214,7 @@ internal fun WaterPurificationScreen(
                         val selectedDuration = duration ?: Duration.ofMinutes(3)
                         cache.putInstant(
                             WATER_PURIFICATION_END_TIME_KEY,
-                            Instant.now().plus(selectedDuration)
+                            kotlin.time.Clock.System.now().plus(selectedDuration)
                         )
                         WaterPurificationTimerService.start(
                             context,
@@ -457,10 +463,10 @@ private fun WaterStep(
     }
 }
 
-private fun getRemainingTime(cache: IPreferences): Duration? {
+private fun getRemainingTime(cache: Preferences): Duration? {
     val lastEndTime =
         cache.getInstant(WATER_PURIFICATION_END_TIME_KEY) ?: return null
-    val duration = Duration.between(Instant.now(), lastEndTime)
+    val duration = JavaTime.between(Instant.now(), lastEndTime)
     return if (!duration.isNegative && !duration.isZero) duration else null
 }
 
@@ -486,7 +492,7 @@ fun WaterPurificationToolScreen() {
 }
 
 /** How long to boil for a selection: auto reads the altitude (up to 10 s), otherwise three minutes. */
-private class BoilTime(private val altimeter: IAltimeter) {
+private class BoilTime(private val altimeter: Altimeter) {
     private val waterService = WaterService()
 
     suspend fun getDuration(selection: TimeSelection): Duration = onDefault {

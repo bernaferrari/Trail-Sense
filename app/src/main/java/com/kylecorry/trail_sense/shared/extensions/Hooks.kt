@@ -3,14 +3,14 @@ package com.kylecorry.trail_sense.shared.extensions
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import com.kylecorry.andromeda.core.sensors.IAltimeter
-import com.kylecorry.andromeda.core.sensors.ISpeedometer
-import com.kylecorry.andromeda.core.ui.ReactiveComponent
-import com.kylecorry.andromeda.core.ui.useCallback
-import com.kylecorry.andromeda.core.ui.useService
-import com.kylecorry.andromeda.preferences.IPreferences
-import com.kylecorry.andromeda.sense.compass.ICompass
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.core.sensors.Altimeter
+import com.kylecorry.andromeda.core.sensors.Speedometer
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.ReactiveComponent
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useCallback
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useService
+import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.andromeda.sense.compass.CompassSensor
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -25,24 +25,24 @@ import java.time.Duration
 fun ReactiveComponent.useGPSSensor(
     frequency: Duration = SensorService.DEFAULT_GPS_FREQUENCY,
     tag: String? = null
-): IGPS {
+): GpsSensor {
     val sensors = useService<SensorService>()
     return useMemo(sensors, frequency.seconds, frequency.nano, tag) { sensors.getGPS(frequency, tag = tag) }
 }
 
-fun ReactiveComponent.useCompassSensor(delay: Int = SensorService.MOTION_SENSOR_DELAY): ICompass {
+fun ReactiveComponent.useCompassSensor(delay: Int = SensorService.MOTION_SENSOR_DELAY): CompassSensor {
     val sensors = useService<SensorService>()
     return useMemo(sensors, delay) { sensors.getCompass(delay = delay) }
 }
 
-fun ReactiveComponent.useAltimeterSensor(gps: IGPS? = null): IAltimeter {
+fun ReactiveComponent.useAltimeterSensor(gps: GpsSensor? = null): Altimeter {
     val sensors = useService<SensorService>()
     return useMemo(sensors, gps) {
         sensors.getAltimeter(gps = gps)
     }
 }
 
-fun ReactiveComponent.useSpeedometerSensor(gps: IGPS? = null): ISpeedometer {
+fun ReactiveComponent.useSpeedometerSensor(gps: GpsSensor? = null): Speedometer {
     val sensors = useService<SensorService>()
     return useMemo(sensors, gps) {
         sensors.getSpeedometer(gps = gps)
@@ -69,7 +69,7 @@ fun ReactiveComponent.useNavigationSensors(
     }
 
     val defaultElevationReading = useMemo(altimeter, gps) {
-        Distance.meters(altimeter.altitude) to (if (altimeter is IGPS) altimeter.verticalAccuracy else gps.verticalAccuracy)?.let {
+        Distance.meters(altimeter.altitude) to (if (altimeter is GpsSensor) altimeter.verticalAccuracy else gps.verticalAccuracy)?.let {
             Distance.meters(
                 it
             )
@@ -101,7 +101,7 @@ fun ReactiveComponent.useNavigationSensors(
         altimeter,
         defaultElevationReading
     ) {
-        Distance.meters(altimeter.altitude) to (if (altimeter is IGPS) altimeter.verticalAccuracy else gps.verticalAccuracy)?.let {
+        Distance.meters(altimeter.altitude) to (if (altimeter is GpsSensor) altimeter.verticalAccuracy else gps.verticalAccuracy)?.let {
             Distance.meters(
                 it
             )
@@ -143,8 +143,8 @@ fun ReactiveComponent.useNavigationSensors(
 
 fun <T> ReactiveComponent.usePreference(
     key: String,
-    load: (IPreferences, String) -> T?,
-    save: (IPreferences, String, T) -> Unit
+    load: (Preferences, String) -> T?,
+    save: (Preferences, String, T) -> Unit
 ): Pair<T?, (T?) -> Unit> {
     val prefs = useService<PreferencesSubsystem>()
 
@@ -169,19 +169,19 @@ fun <T> ReactiveComponent.usePreference(
 fun ReactiveComponent.useFloatPreference(
     key: String
 ): Pair<Float?, (Float?) -> Unit> {
-    return usePreference(key, IPreferences::getFloat, IPreferences::putFloat)
+    return usePreference(key, Preferences::getFloat, Preferences::putFloat)
 }
 
 fun ReactiveComponent.useIntPreference(
     key: String
 ): Pair<Int?, (Int?) -> Unit> {
-    return usePreference(key, IPreferences::getInt, IPreferences::putInt)
+    return usePreference(key, Preferences::getInt, Preferences::putInt)
 }
 
 fun ReactiveComponent.useCoordinatePreference(
     key: String
 ): Pair<Coordinate?, (Coordinate?) -> Unit> {
-    return usePreference(key, IPreferences::getCoordinate, IPreferences::putCoordinate)
+    return usePreference(key, Preferences::getCoordinate, Preferences::putCoordinate)
 }
 
 // Lifecycle

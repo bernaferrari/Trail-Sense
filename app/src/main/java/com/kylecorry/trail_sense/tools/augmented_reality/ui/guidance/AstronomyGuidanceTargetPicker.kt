@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog

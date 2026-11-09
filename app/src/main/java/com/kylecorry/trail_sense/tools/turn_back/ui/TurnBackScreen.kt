@@ -4,6 +4,8 @@
 
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.views.TurnBackEmptyIllustration
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
@@ -82,7 +84,7 @@ import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -103,7 +105,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
@@ -194,7 +196,7 @@ fun TurnBackToolScreen() {
  * alarm and ask for its permissions.
  */
 internal class TurnBackViewModel(
-    val preferences: IPreferences,
+    val preferences: Preferences,
     private val locationSubsystem: LocationSubsystem,
     private val sensorSubsystem: SensorSubsystem
 ) : ViewModel() {
@@ -206,9 +208,9 @@ internal class TurnBackViewModel(
     /** One event each time a return time is set. */
     val alertSet: Flow<Unit> = _alertSet.receiveAsFlow()
 
-    fun turnBackTime(): Instant? = preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_TIME)
+    fun turnBackTime(): Instant? = preferences.getJavaInstant(TurnBackKeys.PREF_TURN_BACK_TIME)
 
-    fun returnTime(): Instant? = preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
+    fun returnTime(): Instant? = preferences.getJavaInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
 
     /** Return at [time] today, or tomorrow if it has already passed. */
     fun setReturnTimeAt(time: LocalTime) {
@@ -262,7 +264,7 @@ internal class TurnBackViewModel(
 }
 
 /** Once, when the alarm needs it, offers background location so the alert can find the sunset while closed. */
-private suspend fun requestBackgroundLocation(context: Context, preferences: IPreferences, effects: ScreenEffects) {
+private suspend fun requestBackgroundLocation(context: Context, preferences: Preferences, effects: ScreenEffects) {
     val shownFlag = PreferencesFlag(preferences, "cache_background_location_requested")
     if (!IsBackgroundLocationRequired().isSatisfiedBy(context)) {
         shownFlag.set(false)

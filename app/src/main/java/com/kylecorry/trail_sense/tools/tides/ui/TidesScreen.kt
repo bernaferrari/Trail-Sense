@@ -4,6 +4,16 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.isBefore
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.isAfter
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalTime
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -386,10 +396,10 @@ internal class TidesViewModel(
             val previous = getPreviousTide(currentTable)
             val now = ZonedDateTime.now()
             nextTide = next
-            timeUntilNextTide = next?.let { Duration.between(now, it.time) }
+            timeUntilNextTide = next?.let { Duration.between(now, it.time.toJava()) }
             turnRemaining = if (next != null && previous != null) {
-                val total = Duration.between(previous.time, next.time).toMillis().toFloat()
-                val left = Duration.between(now, next.time).toMillis().toFloat()
+                val total = JavaTime.between(previous.time, next.time).toMillis().toFloat()
+                val left = Duration.between(now, next.time.toJava()).toMillis().toFloat()
                 if (total > 0f) (left / total).coerceIn(0f, 1f) else null
             } else {
                 null
@@ -413,7 +423,7 @@ internal class TidesViewModel(
         val currentTable = table
         return currentDaily.tides.map {
             val matchingTide = currentTable?.tides?.firstOrNull { tide ->
-                Duration.between(tide.time, it.time).abs() < Duration.ofMinutes(2)
+                JavaTime.between(tide.time, it.time).abs() < Duration.ofMinutes(2)
             }
 
             it.copy(height = matchingTide?.height)
@@ -442,7 +452,7 @@ internal class TidesViewModel(
     private suspend fun getLevelFraction(table: TideTable): Float? {
         val today = dailyTideCommand.execute(table, LocalDate.now())
         val now = Instant.now()
-        val reading = today.waterLevels.minByOrNull { Duration.between(now, it.time).abs() } ?: return null
+        val reading = today.waterLevels.minByOrNull { Duration.between(now, it.time.toJava()).abs() } ?: return null
         val range = today.waterLevelRange.end - today.waterLevelRange.start
         if (range <= 0f) return null
         return ((reading.value - today.waterLevelRange.start) / range).coerceIn(0f, 1f)
@@ -932,7 +942,7 @@ private fun TideChartView(
                 }
 
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val startTime = dailyData.waterLevels.firstOrNull()?.time ?: Instant.now()
+                    val startTime = dailyData.waterLevels.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
                     val totalRange = dailyData.waterLevelRange.end - dailyData.waterLevelRange.start
                     val rangeDelta = (totalRange * 0.1f).coerceAtLeast(0.1f)
                     val minimum = dailyData.waterLevelRange.start - rangeDelta
@@ -942,8 +952,8 @@ private fun TideChartView(
                     val plotWidth = size.width - 2 * inset
                     val plotHeight = size.height - 2 * inset
 
-                    fun x(time: Instant): Float {
-                        val hours = Duration.between(startTime, time).toMillis() / 3_600_000f
+                    fun x(time: kotlin.time.Instant): Float {
+                        val hours = JavaTime.between(startTime, time).toMillis() / 3_600_000f
                         return inset + (hours / 24f).coerceIn(0f, 1f) * plotWidth
                     }
 
@@ -959,7 +969,7 @@ private fun TideChartView(
                     )
 
                     val currentLevel = dailyData.waterLevels.minByOrNull {
-                        Duration.between(Instant.now(), it.time).abs()
+                        JavaTime.between(kotlin.time.Clock.System.now(), it.time).abs()
                     }?.takeIf { displayDate == LocalDate.now() }
                     val nowCenter = currentLevel?.let { Offset(x(it.time), y(it.value)) }
 
@@ -977,7 +987,7 @@ private fun TideChartView(
                     val clearance = 8.dp.toPx()
                     dailyData.tides.forEach { tide ->
                         val reading = dailyData.waterLevels.minByOrNull {
-                            Duration.between(tide.time.toInstant(), it.time).abs()
+                            JavaTime.between(tide.time, it.time).abs()
                         } ?: return@forEach
                         val center = Offset(x(reading.time), y(reading.value))
                         if (nowCenter != null && (center - nowCenter).getDistance() < clearance) return@forEach

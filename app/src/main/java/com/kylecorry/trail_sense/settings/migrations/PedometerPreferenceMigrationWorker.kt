@@ -4,8 +4,8 @@ import android.content.Context
 import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
-import com.kylecorry.andromeda.background.WorkTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.WorkTaskScheduler
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService

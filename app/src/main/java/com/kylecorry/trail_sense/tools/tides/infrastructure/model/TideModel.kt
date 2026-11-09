@@ -6,10 +6,10 @@ import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
-import com.kylecorry.andromeda.bitmaps.ImagePixelReader
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.ImagePixelReader
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.andromeda.files.AssetFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.AssetFileSystem
 import com.kylecorry.luna.cache.MemoryLRUCache
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.arithmetic.Arithmetic.wrap

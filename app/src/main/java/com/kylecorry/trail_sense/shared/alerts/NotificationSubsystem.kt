@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.trail_sense.shared.UserPreferences
 
 class NotificationSubsystem(private val context: Context) {

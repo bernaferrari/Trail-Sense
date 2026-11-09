@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import com.kylecorry.andromeda.sense.compass.ICompass
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.compass.CompassSensor
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -16,6 +16,6 @@ data class NavigationSensorValues(
     val declination: Float,
     val speed: Speed,
     val gpsSpeed: Speed,
-    val gps: IGPS? = null,
-    val compass: ICompass? = null
+    val gps: GpsSensor? = null,
+    val compass: CompassSensor? = null
 )

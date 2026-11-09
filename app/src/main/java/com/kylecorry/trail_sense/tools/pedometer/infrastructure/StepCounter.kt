@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
@@ -10,10 +12,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-internal class StepCounter(private val preferences: IPreferences) : IStepTrackerService {
+internal class StepCounter(private val preferences: Preferences) : IStepTrackerService {
 
     val startTime: Instant?
-        get() = preferences.getInstant(LAST_RESET_KEY)
+        get() = preferences.getJavaInstant(LAST_RESET_KEY)
 
 
     val steps: Long
@@ -24,7 +26,7 @@ internal class StepCounter(private val preferences: IPreferences) : IStepTracker
             val lastSteps = this.steps
             preferences.putLong(STEPS_KEY, steps + lastSteps)
             if (startTime == null) {
-                preferences.putInstant(LAST_RESET_KEY, Instant.now())
+                preferences.putInstant(LAST_RESET_KEY, kotlin.time.Clock.System.now())
             }
         }
     }
@@ -43,7 +45,7 @@ internal class StepCounter(private val preferences: IPreferences) : IStepTracker
     fun reset() {
         synchronized(this) {
             preferences.remove(STEPS_KEY)
-            preferences.putInstant(LAST_RESET_KEY, Instant.now())
+            preferences.putInstant(LAST_RESET_KEY, kotlin.time.Clock.System.now())
         }
     }
 

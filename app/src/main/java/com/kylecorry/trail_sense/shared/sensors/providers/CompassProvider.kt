@@ -1,26 +1,33 @@
 package com.kylecorry.trail_sense.shared.sensors.providers
 
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.magnetometer.AndroidMagnetometer
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.AndroidGyroscope
+
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
-import android.util.Range
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.accelerometer.AndroidAccelerometer
 import android.view.Surface
-import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.andromeda.sense.accelerometer.GravitySensor
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.accelerometer.GravitySensor
 import com.kylecorry.andromeda.sense.accelerometer.LowPassAccelerometer
 import com.kylecorry.andromeda.sense.compass.Compass
 import com.kylecorry.andromeda.sense.compass.FilteredCompass
-import com.kylecorry.andromeda.sense.compass.ICompass
-import com.kylecorry.andromeda.sense.compass.LegacyCompass
+import com.kylecorry.andromeda.sense.compass.CompassSensor
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.compass.LegacyCompass
 import com.kylecorry.andromeda.sense.magnetometer.LowPassMagnetometer
 import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.andromeda.sense.orientation.CustomGeomagneticRotationSensor
 import com.kylecorry.andromeda.sense.orientation.CustomRotationSensor
-import com.kylecorry.andromeda.sense.orientation.GeomagneticRotationSensor
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.GeomagneticRotationSensor
 import com.kylecorry.andromeda.sense.orientation.GravityRotationSensor
 import com.kylecorry.andromeda.sense.orientation.Gyroscope
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
-import com.kylecorry.andromeda.sense.orientation.RotationSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.RotationSensor
 import com.kylecorry.andromeda.sense.orientation.filter.FilteredOrientationSensor
 import com.kylecorry.andromeda.sense.orientation.filter.LowPassOrientationSensorFilter
 import com.kylecorry.sol.math.filters.MovingAverageFilter
@@ -36,7 +43,7 @@ import kotlin.math.pow
 
 class CompassProvider(private val context: Context, private val prefs: ICompassPreferences) {
 
-    fun get(sensorDelay: Int, existingOrientationSensor: IOrientationSensor? = null): ICompass {
+    fun get(sensorDelay: Int, existingOrientationSensor: OrientationSensor? = null): CompassSensor {
         val useTrueNorth = prefs.useTrueNorth
 
         var source = prefs.source
@@ -73,11 +80,11 @@ class CompassProvider(private val context: Context, private val prefs: ICompassP
 
         return MagQualityCompassWrapper(
             compass,
-            Magnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
+            AndroidMagnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
         )
     }
 
-    private fun getBaseOrientationSensor(sensorDelay: Int): IOrientationSensor {
+    private fun getBaseOrientationSensor(sensorDelay: Int): OrientationSensor {
         var source = prefs.source
 
         // Swap out the legacy orientation sensor for the rotation vector sensor
@@ -112,7 +119,7 @@ class CompassProvider(private val context: Context, private val prefs: ICompassP
         return getCustomGeomagneticRotationSensor(true, sensorDelay)
     }
 
-    fun getOrientationSensor(sensorDelay: Int): IOrientationSensor {
+    fun getOrientationSensor(sensorDelay: Int): OrientationSensor {
         val smoothing = prefs.compassSmoothing
 
         val baseOrientationSensor = getBaseOrientationSensor(sensorDelay)
@@ -138,7 +145,7 @@ class CompassProvider(private val context: Context, private val prefs: ICompassP
         if (smoothing <= 1) {
             return MagQualityOrientationWrapper(
                 quickRecalibration,
-                Magnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
+                AndroidMagnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
             )
         }
 
@@ -149,7 +156,7 @@ class CompassProvider(private val context: Context, private val prefs: ICompassP
                 quickRecalibration,
                 LowPassOrientationSensorFilter(alpha, true)
             ),
-            Magnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
+            AndroidMagnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
         )
 
     }
@@ -167,19 +174,19 @@ class CompassProvider(private val context: Context, private val prefs: ICompassP
     private fun getCustomGeomagneticRotationSensor(
         useGyroIfAvailable: Boolean,
         sensorDelay: Int
-    ): IOrientationSensor {
+    ): OrientationSensor {
 
-        val accelerometer = if (useGyroIfAvailable && Sensors.hasGravity(context)) {
+        val accelerometer: Accelerometer = if (useGyroIfAvailable && Sensors.hasGravity(context)) {
             GravitySensor(context, sensorDelay)
         } else {
-            LowPassAccelerometer(context, sensorDelay, ACCELEROMETER_LOW_PASS)
+            LowPassAccelerometer(AndroidAccelerometer(context, sensorDelay), ACCELEROMETER_LOW_PASS)
         }
 
         if (!Sensors.hasSensor(context, Sensor.TYPE_MAGNETIC_FIELD)) {
             return GravityRotationSensor(accelerometer)
         }
 
-        val magnetometer = LowPassMagnetometer(context, sensorDelay, MAGNETOMETER_LOW_PASS)
+        val magnetometer = LowPassMagnetometer(AndroidMagnetometer(context, sensorDelay), MAGNETOMETER_LOW_PASS)
 
         return CustomGeomagneticRotationSensor(
             magnetometer,
@@ -188,20 +195,24 @@ class CompassProvider(private val context: Context, private val prefs: ICompassP
         )
     }
 
-    private fun getCustomRotationSensor(sensorDelay: Int): IOrientationSensor {
-        val magnetometer = LowPassMagnetometer(context, sensorDelay, MAGNETOMETER_LOW_PASS)
-        val accelerometer = LowPassAccelerometer(context, sensorDelay, ACCELEROMETER_LOW_PASS)
-        val gyro = Gyroscope(context, sensorDelay)
+    private fun getCustomRotationSensor(sensorDelay: Int): OrientationSensor {
+        val magnetometer = LowPassMagnetometer(AndroidMagnetometer(context, sensorDelay), MAGNETOMETER_LOW_PASS)
+        val accelerometer = LowPassAccelerometer(AndroidAccelerometer(context, sensorDelay), ACCELEROMETER_LOW_PASS)
+        val gyro = AndroidGyroscope(context, sensorDelay)
 
         return CustomRotationSensor(
             magnetometer, accelerometer, gyro,
-            validMagnetometerMagnitudes = Range(20f, 65f),
-            validAccelerometerMagnitudes = Range(4f, 20f),
+            scope = sensorScope,
+            validMagnetometerMagnitudes = 20f..65f,
+            validAccelerometerMagnitudes = 4f..20f,
             onlyUseMagnetometerQuality = true
         )
     }
 
     companion object {
+
+        // Long-lived scope for fused sensors; their jobs are started and cancelled with the sensor itself
+        private val sensorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         const val MAGNETOMETER_LOW_PASS = 0.3f
         const val ACCELEROMETER_LOW_PASS = 0.1f

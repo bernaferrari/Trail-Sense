@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.paths.domain
 
+import kotlin.time.toKotlinInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.andromeda.gpx.GPXTrack
 import com.kylecorry.andromeda.gpx.GPXTrackSegment
@@ -14,7 +18,7 @@ class PathGPXConverter {
 
     private fun toGPX(path: FullPath): GPXData {
         val waypoints = path.points.map {
-            GPXWaypoint(it.coordinate, elevation = it.elevation, time = it.time)
+            GPXWaypoint(it.coordinate, elevation = it.elevation, time = it.time?.toKotlinInstant())
         }
         val pathId = path.points.firstOrNull()?.pathId ?: 0
 

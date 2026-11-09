@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.Flow
@@ -13,8 +15,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.core.net.toUri
-
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.material3.MaterialShapes
@@ -70,15 +70,15 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
-import com.kylecorry.andromeda.bitmaps.BitmapUtils
-import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
-import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.resizeExact
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService

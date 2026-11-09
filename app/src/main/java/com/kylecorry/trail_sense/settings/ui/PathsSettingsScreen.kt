@@ -22,8 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService

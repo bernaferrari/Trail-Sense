@@ -16,7 +16,7 @@ class GpxIOService(private val uriPicker: UriPicker, private val uriService: Uri
     override suspend fun import(): GPXData? = onIO {
         val uri = uriPicker.open(listOf("*/*")).getOrNull() ?: return@onIO null
         val stream = uriService.inputStream(uri) ?: return@onIO null
-        GPXParser.parse(stream)
+        GPXParser.parse(stream.bufferedReader().use { it.readText() })
     }
 
 }

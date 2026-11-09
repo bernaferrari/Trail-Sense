@@ -58,7 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.CompassDirection

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.math.random.nextGaussian

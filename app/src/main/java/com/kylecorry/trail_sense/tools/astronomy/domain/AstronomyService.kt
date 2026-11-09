@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
@@ -19,9 +23,16 @@ import com.kylecorry.sol.science.astronomy.stars.STAR_CATALOG
 import com.kylecorry.sol.science.astronomy.stars.Star
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.shared.Season
-import com.kylecorry.sol.time.Time
-import com.kylecorry.sol.time.Time.atStartOfDay
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.atStartOfDay
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinTimeZone
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTimeRange
+import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalDate
+import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
@@ -53,18 +64,20 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     }
 
     fun getMoonPhase(time: ZonedDateTime): MoonPhase {
-        return Astronomy.getMoonPhase(time)
+        return Astronomy.getMoonPhase(time.toKotlinInstant())
     }
 
     fun isSuperMoon(date: LocalDate): Boolean {
         val time = date.atTime(12, 0).toZonedDateTime()
-        return Astronomy.isSuperMoon(time)
+        return Astronomy.isSuperMoon(time.toKotlinInstant())
     }
 
     fun getMoonTimes(location: Coordinate, date: LocalDate): RiseSetTransitTimes {
+        val start = date.atStartOfDay().toZonedDateTime()
         return Astronomy.getMoonEvents(
-            date.atStartOfDay().toZonedDateTime(),
+            start.toKotlinInstant(),
             location,
+            start.toKotlinTimeZone(),
             withRefraction = true,
             withParallax = true
         )
@@ -76,7 +89,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     ): List<Reading<Float>> {
         val startTime = time.minusHours(12)
         val endTime = time.plusHours(12)
-        return Time.getReadings(
+        return JavaTime.getReadings(
             startTime,
             endTime,
             altitudeGranularity
@@ -86,7 +99,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     }
 
     fun getMoonAltitudes(location: Coordinate, date: LocalDate): List<Reading<Float>> {
-        return Time.getReadings(
+        return JavaTime.getReadings(
             date,
             ZoneId.systemDefault(),
             altitudeGranularity
@@ -99,7 +112,11 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         location: Coordinate,
         time: ZonedDateTime = ZonedDateTime.now()
     ): CelestialObservation {
-        return Astronomy.getMoonPosition(time, location, withRefraction = true, withParallax = true)
+        return Astronomy.getMoonPosition(time.toKotlinInstant(), location, withRefraction = true, withParallax = true)
+    }
+
+    fun getMoonAltitude(location: Coordinate, time: kotlin.time.Instant): Float {
+        return getMoonAltitude(location, time.toZonedDateTime())
     }
 
     fun getMoonAltitude(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now()): Float {
@@ -112,7 +129,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
 
     fun isMoonUp(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now(clock)): Boolean {
         return Astronomy.isMoonUp(
-            time,
+            time.toKotlinInstant(),
             location,
             withRefraction = true,
             withParallax = true
@@ -122,10 +139,11 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     fun getMoonAboveHorizonTimes(location: Coordinate, time: ZonedDateTime): Range<ZonedDateTime>? {
         return Astronomy.getMoonAboveHorizonTimes(
             location,
-            time,
+            time.toKotlinInstant(),
+            time.toKotlinTimeZone(),
             withRefraction = true,
             withParallax = true
-        )
+        )?.toZonedDateTimeRange(time.zone)
     }
 
     fun getMoonTilt(
@@ -137,9 +155,9 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             getMoonTimes(location, time.toLocalDate()).transit ?: getMoonTimes(
                 location,
                 time.toLocalDate().minusDays(1)
-            ).transit ?: time.toLocalDate().atStartOfDay().toZonedDateTime()
+            ).transit ?: time.toLocalDate().atStartOfDay().toZonedDateTime().toKotlinInstant()
         } else {
-            time
+            time.toKotlinInstant()
         }
 
         val parallacticAngle = Astronomy.getMoonParallacticAngle(timeToUse, location)
@@ -154,9 +172,11 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         sunTimesMode: SunTimesMode,
         date: LocalDate
     ): RiseSetTransitTimes {
+        val start = date.atStartOfDay().toZonedDateTime()
         return Astronomy.getSunEvents(
-            date.atStartOfDay().toZonedDateTime(),
+            start.toKotlinInstant(),
             location,
+            start.toKotlinTimeZone(),
             sunTimesMode,
             true
         )
@@ -167,12 +187,14 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         sunTimesMode: SunTimesMode,
         date: LocalDate
     ): Duration {
+        val start = date.atStartOfDay().toZonedDateTime()
         return Astronomy.getDaylightLength(
-            date.atStartOfDay().toZonedDateTime(),
+            start.toKotlinInstant(),
             location,
+            start.toKotlinTimeZone(),
             sunTimesMode,
             true
-        )
+        ).toJava()
     }
 
     fun getTodaySunTimes(location: Coordinate, sunTimesMode: SunTimesMode): RiseSetTransitTimes {
@@ -184,7 +206,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     }
 
     fun getSunAltitudes(location: Coordinate, date: LocalDate): List<Reading<Float>> {
-        return Time.getReadings(
+        return JavaTime.getReadings(
             date,
             ZoneId.systemDefault(),
             altitudeGranularity
@@ -199,7 +221,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
     ): List<Reading<Float>> {
         val startTime = time.minusHours(12)
         val endTime = time.plusHours(12)
-        return Time.getReadings(
+        return JavaTime.getReadings(
             startTime,
             endTime,
             altitudeGranularity
@@ -213,7 +235,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         sunTimesMode: SunTimesMode,
         time: ZonedDateTime = ZonedDateTime.now(clock)
     ): LocalDateTime? {
-        return Astronomy.getNextSunset(time, location, sunTimesMode, true)
+        return Astronomy.getNextSunset(time.toKotlinInstant(), location, time.toKotlinTimeZone(), sunTimesMode, true)
             ?.toLocalDateTime()
     }
 
@@ -222,16 +244,20 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         sunTimesMode: SunTimesMode,
         time: ZonedDateTime = ZonedDateTime.now(clock)
     ): LocalDateTime? {
-        return Astronomy.getNextSunrise(time, location, sunTimesMode, true)
+        return Astronomy.getNextSunrise(time.toKotlinInstant(), location, time.toKotlinTimeZone(), sunTimesMode, true)
             ?.toLocalDateTime()
     }
 
     fun isSunUp(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now(clock)): Boolean {
-        return Astronomy.isSunUp(time, location, true)
+        return Astronomy.isSunUp(time.toKotlinInstant(), location, true)
     }
 
     fun getSunAzimuth(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now()): Bearing {
         return getSunPosition(location, time).azimuth
+    }
+
+    fun getSunAltitude(location: Coordinate, time: kotlin.time.Instant): Float {
+        return getSunAltitude(location, time.toZonedDateTime())
     }
 
     fun getSunAltitude(location: Coordinate, time: ZonedDateTime = ZonedDateTime.now()): Float {
@@ -242,14 +268,14 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         location: Coordinate,
         time: ZonedDateTime = ZonedDateTime.now()
     ): CelestialObservation {
-        return Astronomy.getSunPosition(time, location, withRefraction = true)
+        return Astronomy.getSunPosition(time.toKotlinInstant(), location, withRefraction = true)
     }
 
     fun getSunAboveHorizonTimes(location: Coordinate, time: ZonedDateTime): Range<ZonedDateTime>? {
         return Astronomy.getSunAboveHorizonTimes(
-            location, time,
+            location, time.toKotlinInstant(), time.toKotlinTimeZone(),
             withRefraction = true
-        )
+        )?.toZonedDateTimeRange(time.zone)
     }
 
     fun getMeteorShower(
@@ -257,15 +283,15 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         date: LocalDate = LocalDate.now()
     ): MeteorShowerPeak? {
         val today = date.atTime(12, 0).toZonedDateTime()
-        return Astronomy.getMeteorShower(location, today)
-            ?: Astronomy.getMeteorShower(location, today.plusDays(1))
+        return Astronomy.getMeteorShower(location, today.toKotlinInstant(), today.toKotlinTimeZone())
+            ?: Astronomy.getMeteorShower(location, today.plusDays(1).toKotlinInstant(), today.toKotlinTimeZone())
     }
 
     fun getMeteorShowerPeakAltitude(peak: MeteorShowerPeak, location: Coordinate): Float {
         return Astronomy.getMeteorShowerPosition(
             peak.shower,
             location,
-            peak.peak.toInstant()
+            peak.peak
         ).altitude
     }
 
@@ -273,14 +299,14 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         return Astronomy.getMeteorShowerPosition(
             peak.shower,
             location,
-            peak.peak.toInstant()
+            peak.peak
         ).azimuth
     }
 
     fun getSeason(location: Coordinate, date: LocalDate = LocalDate.now()): Season {
         return Astronomy.getSeason(
             location,
-            date.atStartOfDay(ZoneId.systemDefault())
+            date.atStartOfDay(ZoneId.systemDefault()).toKotlinInstant()
         )
     }
 
@@ -298,12 +324,14 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         time: ZonedDateTime = ZonedDateTime.now()
     ): LunarEclipseShadow {
         return Astronomy.getLunarEclipseShadow(
-            time,
+            time.toKotlinInstant(),
             location,
+            time.toKotlinTimeZone(),
             withRefraction = true,
             withParallax = true
         )
     }
+
 
     fun getSolarEclipse(
         location: Coordinate,
@@ -318,7 +346,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         location: Coordinate,
         time: ZonedDateTime = ZonedDateTime.now()
     ): Float? {
-        return Astronomy.getEclipseObscuration(time, location, EclipseType.Solar)
+        return Astronomy.getEclipseObscuration(time.toKotlinInstant(), location, EclipseType.Solar)
     }
 
     fun getPeakSolarEclipseObscuration(
@@ -332,7 +360,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
 
         val optimizer = GoldenSearchExtremaFinder(hoursToMinutes, toleranceMinutes)
         return optimizer.find(Range(startTime * hoursToMinutes, endTime * hoursToMinutes)) {
-            val newTime = time.atStartOfDay().plus(Time.hours(it / hoursToMinutes))
+            val newTime = time.atStartOfDay().plus(JavaTime.hours(it / hoursToMinutes))
             getSolarEclipseObscuration(location, newTime)?.toDouble() ?: 0.0
         }.firstOrNull { it.isHigh }?.point?.y
     }
@@ -364,7 +392,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         location: Coordinate,
         time: ZonedDateTime = ZonedDateTime.now()
     ): CelestialObservation {
-        return Astronomy.getStarPosition(star, time, location, true)
+        return Astronomy.getStarPosition(star, time.toKotlinInstant(), location, true)
     }
 
     fun getVisiblePlanets(
@@ -391,7 +419,7 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         }
 
         return planetsToConsider.map {
-            it to Astronomy.getPlanetPosition(it, time, location, withRefraction = true)
+            it to Astronomy.getPlanetPosition(it, time.toKotlinInstant(), location, withRefraction = true)
         }.filter { thresholdElevation == null || it.second.altitude > thresholdElevation }
     }
 
@@ -404,18 +432,18 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
             return emptyList()
         }
 
-        val showers = Astronomy.getActiveMeteorShowers(location, time)
+        val showers = Astronomy.getActiveMeteorShowers(location, time.toKotlinInstant(), time.toKotlinTimeZone())
 
         return showers
             .filter {
-                Duration.between(time, it.peak)
+                Duration.between(time.toInstant(), it.peak.toJava())
                     .abs() <= Duration.ofDays(it.shower.activeDays.toLong() / 3)
             }
             .map { shower ->
                 shower.shower to Astronomy.getMeteorShowerPosition(
                     shower.shower,
                     location,
-                    time.toInstant()
+                    time.toKotlinInstant()
                 )
             }.filter { thresholdElevation == null || it.second.altitude > thresholdElevation }
     }
@@ -428,10 +456,10 @@ class AstronomyService(private val clock: Clock = Clock.systemDefaultZone()) {
         getPeakAltitude: (ZonedDateTime) -> Float
     ): Eclipse? {
         val nextEclipse = Astronomy.getNextEclipse(
-            date.atStartOfDay(ZoneId.systemDefault()),
+            date.atStartOfDay(ZoneId.systemDefault()).toKotlinInstant(),
             location,
             eclipseType,
-            Duration.ofDays(days)
+            Duration.ofDays(days).toKotlin()
         ) ?: return null
 
         val start = nextEclipse.start.toZonedDateTime()

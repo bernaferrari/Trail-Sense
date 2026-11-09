@@ -3,12 +3,12 @@ package com.kylecorry.trail_sense.shared
 import android.content.Context
 import android.hardware.SensorManager
 import com.google.android.material.color.DynamicColors
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.luna.text.toFloatCompat
-import com.kylecorry.andromeda.preferences.BooleanPreference
-import com.kylecorry.andromeda.preferences.IntEnumPreference
-import com.kylecorry.andromeda.preferences.IntPreference
-import com.kylecorry.andromeda.preferences.StringEnumPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.IntEnumPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.IntPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
 import com.kylecorry.andromeda.preferences.getIntArray
 import com.kylecorry.andromeda.preferences.getLongArray
 import com.kylecorry.andromeda.preferences.putIntArray

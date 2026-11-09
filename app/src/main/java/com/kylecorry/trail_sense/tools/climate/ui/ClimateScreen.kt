@@ -6,6 +6,10 @@
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
@@ -343,8 +347,8 @@ private class ClimateViewModel(
         if (monthlyAverageTemperatures.isEmpty()) return null
 
         val climate = Meteorology.getKoppenGeigerClimateClassification(
-            monthlyAverageTemperatures,
-            precipitation
+            monthlyAverageTemperatures.mapKeys { it.key.toKotlin() },
+            precipitation.mapKeys { it.key.toKotlin() }
         )
 
         return when {

@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.cliffheight.domain
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.science.geophysics.Geophysics
@@ -23,7 +27,7 @@ class CliffHeightService {
             location?.let { Geophysics.getGravity(it) } ?: Geophysics.GRAVITY
         }
 
-        return Physics.fallHeight(time, gravity)
+        return Physics.fallHeight(time.toKotlin(), gravity)
     }
 
 }

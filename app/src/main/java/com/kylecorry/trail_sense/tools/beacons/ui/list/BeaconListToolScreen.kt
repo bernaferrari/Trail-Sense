@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.settings.infrastructure.IBeaconPreferences
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
@@ -27,8 +27,6 @@ import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.navigation.toGeoUri
 
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
-
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.tools.beacons.ui.polygon
@@ -495,7 +493,7 @@ internal class BeaconListViewModel(
     route: Route.BeaconList,
     val beaconService: BeaconService,
     private val preferences: IBeaconPreferences,
-    private val gps: IGPS,
+    private val gps: GpsSensor,
     private val importer: BeaconGpxImporter
 ) : ViewModel(), BeaconListControllerHost {
 

@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.settings.migrations
 
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.tools.pedometer.domain.ActiveTimeCalculator
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
 import java.time.Duration
@@ -11,14 +13,14 @@ import java.time.temporal.ChronoUnit
 
 class PedometerPreferenceMigration(
     private val stepTracker: IStepTrackerService,
-    private val prefs: IPreferences,
+    private val prefs: Preferences,
     private val now: () -> Instant = Instant::now
 ) {
     private val activeTimeCalculator = ActiveTimeCalculator()
 
     suspend fun migrate(): Unit = onIO {
         val steps = prefs.getLong(STEPS_KEY) ?: 0L
-        val startTime = prefs.getInstant(LAST_RESET_KEY)
+        val startTime = prefs.getJavaInstant(LAST_RESET_KEY)
         if (steps > 0 && startTime != null) {
             var remainingSteps = steps
             createStepAdditions(startTime, now().coerceAtLeast(startTime), steps).forEach {

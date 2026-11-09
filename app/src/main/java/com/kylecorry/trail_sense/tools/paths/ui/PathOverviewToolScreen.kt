@@ -15,8 +15,8 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.sense.compass.ICompass
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.compass.CompassSensor
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
@@ -31,8 +31,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.material3.MaterialShapes
@@ -638,8 +636,8 @@ internal class PathOverviewViewModel(
     val pathId: Long,
     val pathService: PathService,
     private val navigator: Navigator,
-    private val gps: IGPS,
-    private val compass: ICompass,
+    private val gps: GpsSensor,
+    private val compass: CompassSensor,
     private val declinationProvider: IDeclinationStrategy,
     private val baseDistanceUnits: DistanceUnits,
     private val isDebug: Boolean,

@@ -1,16 +1,18 @@
 package com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
-import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.notify.Notify
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
@@ -29,7 +31,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         val userPrefs = DependencyRegistry.get<UserPreferences>()
 
         val returnTime =
-            prefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME) ?: return
+            prefs.preferences.getJavaInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME) ?: return
 
         val formattedReturnTime =
             FormatService.getInstance(context).formatTime(returnTime, includeSeconds = false)
@@ -78,7 +80,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
 
         fun start(context: Context) {
             val prefs = PreferencesSubsystem.getInstance(context)
-            val turnBackTime = prefs.preferences.getInstant(
+            val turnBackTime = prefs.preferences.getJavaInstant(
                 TurnBackKeys.PREF_TURN_BACK_TIME
             ) ?: return
 

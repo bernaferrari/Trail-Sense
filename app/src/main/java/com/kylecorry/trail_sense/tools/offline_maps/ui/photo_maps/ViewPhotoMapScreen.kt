@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.andromeda.torch.screenBrightness
+
+import com.kylecorry.trail_sense.shared.sensors.asLiveData
+
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -53,7 +57,7 @@ import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
 import java.util.concurrent.atomic.AtomicBoolean
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.trigonometry.Trigonometry
@@ -284,7 +288,7 @@ private class ViewPhotoMapRenderer(
 
     private val screenLock by lazy { NavigationScreenLock(prefs.photoMaps.keepScreenUnlockedWhileOpen) }
 
-    private val screenLight by lazy { ScreenTorch(activity.window) }
+    private val screenLight by lazy { ScreenTorch(screenBrightness(activity.window)) }
 
     // Map layers
     private val layerManager = PhotoMapToolLayerManager()

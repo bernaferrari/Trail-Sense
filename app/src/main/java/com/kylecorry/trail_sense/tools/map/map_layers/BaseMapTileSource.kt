@@ -5,8 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import androidx.core.graphics.toColorInt
-import com.kylecorry.andromeda.bitmaps.operations.Conditional
-import com.kylecorry.andromeda.bitmaps.operations.ReplaceColor
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Conditional
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.ReplaceColor
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.Coordinate

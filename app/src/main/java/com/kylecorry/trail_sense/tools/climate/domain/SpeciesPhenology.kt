@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.climate.domain
 
+import kotlin.time.Duration.Companion.days
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.sol.science.ecology.GrowingDegreeDaysCalculationType
 import com.kylecorry.sol.science.ecology.LifecycleEvent
 import com.kylecorry.sol.science.ecology.triggers.CumulativeGrowingDegreeDaysTrigger
@@ -94,7 +98,7 @@ data class SpeciesPhenology(
                                 TemperatureUnits.Celsius,
                                 Temperature.zero
                             ),
-                            Duration.ofDays(60),
+                            60.days,
                             resetWhenBaseNotTriggered = true
                         ),
                     )

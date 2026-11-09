@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.shared.declination
 
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 
 class GPSDeclinationStrategy(
-    private val gps: IGPS,
+    private val gps: GpsSensor,
     cacheRadiusMeters: Float = 1000f
 ) : IDeclinationStrategy {
 

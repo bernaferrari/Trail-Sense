@@ -1,5 +1,13 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.copy
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
+import kotlin.time.toJavaInstant
+
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
 
@@ -381,7 +389,7 @@ private fun getLocationSheetState(
         "± $accuracyStr"
     }
 
-    val timeAgo = Duration.between(gps.eventTime, Instant.now())
+    val timeAgo = Duration.between(gps.timestamp.toJavaInstant(), Instant.now())
     return LocationSheetState(
         location = formatService.formatLocation(gps.location, format),
         coordinateFormat = formatService.formatCoordinateType(format),
@@ -727,12 +735,12 @@ internal class NavigatorViewModel(
 
     private fun updateAltitudeChart() {
         viewModelScope.launch {
-            val currentAltitude = Reading(sensors.altimeter.altitude, Instant.now())
+            val currentAltitude = Reading(sensors.altimeter.altitude, kotlin.time.Clock.System.now())
             altitudeChartReadings = withContext(Dispatchers.Default) {
                 val readings =
                     (backtrackAltitudeReadings + weatherAltitudeReadings + currentAltitude).sortedBy { it.time }
                         .filter {
-                            Duration.between(
+                            JavaTime.between(
                                 it.time,
                                 Instant.now()
                             ) < MAX_ALTITUDE_FILTER_HISTORY_DURATION
@@ -745,7 +753,7 @@ internal class NavigatorViewModel(
                 }
 
                 smoothed.filter {
-                    Duration.between(it.time, Instant.now()).abs() <= altitudeHistoryDuration
+                    JavaTime.between(it.time, Instant.now()).abs() <= altitudeHistoryDuration
                 }
             }
         }

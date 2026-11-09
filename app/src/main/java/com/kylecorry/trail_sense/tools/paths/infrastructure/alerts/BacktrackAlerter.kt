@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.content.Context
 import android.os.Bundle
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService

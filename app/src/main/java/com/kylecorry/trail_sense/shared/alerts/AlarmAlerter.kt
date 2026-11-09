@@ -5,8 +5,8 @@ import android.media.MediaPlayer
 import android.net.Uri
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.notify.Notify
-import com.kylecorry.andromeda.sound.SystemSoundPlayer
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.sound.SystemSoundPlayer
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import java.time.Duration

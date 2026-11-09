@@ -38,12 +38,12 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.kylecorry.andromeda.camera.ICamera
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
 import com.kylecorry.andromeda.camera.ZoomInfo
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Range
 import kotlinx.coroutines.launch
@@ -85,7 +85,7 @@ class ViewfinderCamera(
     private val shouldStabilizePreview: Boolean = true,
     @param:AspectRatio.Ratio
     private val targetAspectRatio: Int = AspectRatio.RATIO_DEFAULT,
-) : AbstractSensor(), ICamera {
+) : SharedSensor(), ICamera {
 
     override val image: ImageProxy?
         get() = _image

@@ -1,5 +1,15 @@
 package com.kylecorry.trail_sense.tools.tides.widgets
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.isBefore
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.isAfter
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalTime
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
 
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -47,7 +57,7 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
         val tides = TidesSubsystem.getInstance(context)
         val tide = tides.getNearestTide()
         val currentWaterLevel = tide?.today?.waterLevels?.minByOrNull {
-            Duration.between(Instant.now(), it.time).abs()
+            JavaTime.between(kotlin.time.Clock.System.now(), it.time).abs()
         }
 
         val title = if (tide == null) context.getString(R.string.no_tides) else tide.table.name ?: ""
@@ -70,15 +80,15 @@ private class TideWidgetChart(
     private val currentWaterLevel: Reading<Float>?
 ) : WidgetChart {
     override fun DrawScope.draw(scheme: ColorScheme) {
-        val startTime = waterLevels.firstOrNull()?.time ?: Instant.now()
+        val startTime = waterLevels.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
         val totalRange = waterLevelRange.end - waterLevelRange.start
         val rangeDelta = (totalRange * 0.25f).coerceAtLeast(0.2f)
         val minimum = waterLevelRange.start - rangeDelta
         val maximum = waterLevelRange.end + rangeDelta
         val valueRange = (maximum - minimum).takeIf { it > 0f } ?: 1f
 
-        fun x(time: Instant): Float {
-            val hours = Duration.between(startTime, time).toMillis() / 3_600_000f
+        fun x(time: kotlin.time.Instant): Float {
+            val hours = JavaTime.between(startTime, time).toMillis() / 3_600_000f
             return (hours / 24f).coerceIn(0f, 1f) * size.width
         }
 

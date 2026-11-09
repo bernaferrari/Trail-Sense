@@ -7,9 +7,9 @@ import android.graphics.Color
 import android.graphics.Path
 import android.os.Bundle
 import androidx.core.graphics.createBitmap
-import com.kylecorry.andromeda.canvas.CanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.CanvasDrawer
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject

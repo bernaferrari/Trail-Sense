@@ -98,10 +98,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.sensors.ISensor
-import com.kylecorry.andromeda.sound.ISoundPlayer
-import com.kylecorry.andromeda.sound.SoundPlayer
-import com.kylecorry.andromeda.sound.ToneGenerator
+import com.kylecorry.andromeda.core.sensors.Sensor
+import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
+import com.kylecorry.trail_sense.shared.andromeda_temp.sound.SoundPlayer
+import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ToneGenerator
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
@@ -503,7 +503,7 @@ private fun MetalDetectorScreen(
     metalDirection: Pair<Bearing, Bearing>,
     showSinglePoleDirection: Boolean,
     metalDirectionSensitivity: Float,
-    magnetometer: ISensor,
+    magnetometer: Sensor,
     onAccuracyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -633,7 +633,7 @@ private fun MetalHero(
     fieldValue: String,
     fieldUnit: String,
     metalDetected: Boolean,
-    magnetometer: ISensor,
+    magnetometer: Sensor,
     onAccuracyClick: () -> Unit,
     chartReadings: List<Float>,
     lowerThreshold: Float,
@@ -869,7 +869,7 @@ private fun ToolToggle(
 
 @Composable
 private fun AccuracyBadge(
-    magnetometer: ISensor,
+    magnetometer: Sensor,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current

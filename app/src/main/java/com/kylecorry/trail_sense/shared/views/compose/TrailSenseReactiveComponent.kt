@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
-import com.kylecorry.andromeda.core.ui.ReactiveComponent
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.ReactiveComponent
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.luna.hooks.Ref
 import kotlin.coroutines.EmptyCoroutineContext

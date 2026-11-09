@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.overrides
 
 import android.content.Context
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.units.Bearing
@@ -17,7 +17,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import java.time.Instant
 
-class CachedGPS(context: Context, private val updateFrequency: Long = 1000L) : AbstractSensor(),
+class CachedGPS(context: Context, private val updateFrequency: Long = 1000L) : SharedSensor(),
     ISatelliteGPS, InactiveGPS, MockedGPS {
     override val location: Coordinate
         get() {
@@ -36,8 +36,8 @@ class CachedGPS(context: Context, private val updateFrequency: Long = 1000L) : A
         )
     override val speedAccuracy: Float?
         get() = null
-    override var eventTime: Instant
-        get() = Instant.now()
+    override var timestamp: kotlin.time.Instant
+        get() = kotlin.time.Clock.System.now()
         set(_) {}
     override val verticalAccuracy: Float?
         get() = cached?.verticalAccuracy

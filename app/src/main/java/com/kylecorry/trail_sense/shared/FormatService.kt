@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared
 
+import kotlin.time.toJavaInstant
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
@@ -9,7 +11,7 @@ import android.text.format.Formatter
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.core.system.ResourceCache
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.ResourceCache
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
 import com.kylecorry.sol.science.geography.formatting.CoordinateFormat
@@ -23,8 +25,8 @@ import com.kylecorry.sol.science.geography.formatting.UTMCoordinateFormat
 import com.kylecorry.sol.science.meteorology.Precipitation
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.shared.Season
-import com.kylecorry.sol.time.Time.toEpochMillis
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toEpochMillis
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.CompassDirection
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -183,6 +185,12 @@ class FormatService private constructor(private val context: Context) {
     ): String {
         return formatTime(time.toZonedDateTime(), includeSeconds, includeMinutes)
     }
+
+    fun formatTime(
+        time: kotlin.time.Instant,
+        includeSeconds: Boolean = true,
+        includeMinutes: Boolean = true
+    ): String = formatTime(time.toJavaInstant(), includeSeconds, includeMinutes)
 
     fun formatTime(
         time: LocalTime,

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.content.Context
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 

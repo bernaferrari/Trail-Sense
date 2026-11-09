@@ -1,12 +1,16 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting.arrival
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.meteorology.WeatherForecast
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
-import com.kylecorry.sol.time.Time.roundNearestMinute
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.roundNearestMinute
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.tools.weather.domain.RelativeArrivalTime
 import com.kylecorry.trail_sense.tools.weather.domain.get3hTendency
@@ -26,7 +30,7 @@ internal class WeatherArrivalTimeCalculator(
         if (forecastedTime != null) {
             // This handles the case when the forecasted time is in the past, therefore the weather is now
             if (forecastedTime < Instant.now(clock)) {
-                return WeatherArrivalTime(forecastedTime, true)
+                return WeatherArrivalTime(forecastedTime.toJavaInstant(), true)
             }
             val rounded = forecastedTime.toZonedDateTime().roundNearestMinute(15).toInstant()
             return WeatherArrivalTime(rounded, true)

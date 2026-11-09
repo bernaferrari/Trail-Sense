@@ -4,7 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
-
+import com.kylecorry.trail_sense.shared.time.interop.*
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
@@ -21,7 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
 import androidx.activity.compose.LocalActivity
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -80,7 +80,7 @@ import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService

@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import com.kylecorry.andromeda.core.system.Package
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
 import androidx.compose.ui.platform.LocalContext
 
 /**

@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
 import android.graphics.Bitmap
@@ -7,7 +11,7 @@ import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
@@ -135,9 +139,21 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
             context.getString(R.string.noon) to times.transit,
             context.getString(R.string.astronomy_set) to times.set
         ).sortedBy { it.second }.map {
-            datapoint(formatTime(it.second), it.first)
+            datapoint(formatTime(it.second?.toZonedDateTime()), it.first)
         }
     }
+
+    protected fun times(
+        start: kotlin.time.Instant?,
+        peak: kotlin.time.Instant?,
+        end: kotlin.time.Instant?,
+        displayDate: LocalDate? = start?.toZonedDateTime()?.toLocalDate()
+    ): List<AstronomyListItemData> = times(
+        start?.toZonedDateTime(),
+        peak?.toZonedDateTime(),
+        end?.toZonedDateTime(),
+        displayDate
+    )
 
     protected fun times(
         start: ZonedDateTime?,

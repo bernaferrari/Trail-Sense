@@ -3,12 +3,14 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import com.kylecorry.andromeda.torch.screenBrightness
+
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.platform.LocalContext
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -165,7 +167,7 @@ fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) 
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val state = remember(window) {
         ScreenFlashlightState(
-            torch = ScreenTorch(window),
+            torch = ScreenTorch(screenBrightness(window)),
             cache = PreferencesSubsystem.getInstance(context).preferences,
             brightnessKey = context.getString(R.string.pref_screen_torch_brightness)
         )
@@ -201,7 +203,7 @@ fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) 
 
 private class ScreenFlashlightState(
     private val torch: ScreenTorch,
-    private val cache: IPreferences,
+    private val cache: Preferences,
     private val brightnessKey: String
 ) : ScreenFlashlightController {
 

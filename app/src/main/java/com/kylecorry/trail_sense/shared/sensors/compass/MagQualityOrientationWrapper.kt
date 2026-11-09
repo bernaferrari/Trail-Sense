@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.shared.sensors.compass
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.sol.math.Quaternion
 
 class MagQualityOrientationWrapper(
-    private val orientationSensor: IOrientationSensor,
-    private val magnetometer: IMagnetometer
-) : AbstractSensor(), IOrientationSensor {
+    private val orientationSensor: OrientationSensor,
+    private val magnetometer: Magnetometer
+) : SharedSensor(), OrientationSensor {
 
     override val hasValidReading: Boolean
         get() = orientationSensor.hasValidReading

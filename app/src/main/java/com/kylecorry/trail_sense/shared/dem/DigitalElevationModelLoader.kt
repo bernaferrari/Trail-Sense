@@ -2,8 +2,8 @@ package com.kylecorry.trail_sense.shared.dem
 
 import android.net.Uri
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.files.ZipUtils
-import com.kylecorry.andromeda.files.ZipUtils.unzip
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.ZipUtils
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.ZipUtils.unzip
 import com.kylecorry.andromeda.json.JsonConvert
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.main.persistence.AppDatabase

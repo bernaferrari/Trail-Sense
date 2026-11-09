@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
@@ -23,7 +27,7 @@ data class CloudReadingEntity(
 
     companion object {
         fun from(reading: Reading<CloudObservation>): CloudReadingEntity {
-            return CloudReadingEntity(reading.time, reading.value.genus).also {
+            return CloudReadingEntity(reading.time.toJavaInstant(), reading.value.genus).also {
                 it.id = reading.value.id
             }
         }

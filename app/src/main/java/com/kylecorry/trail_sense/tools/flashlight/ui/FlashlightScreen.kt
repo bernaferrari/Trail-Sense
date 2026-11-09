@@ -3,6 +3,12 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.isAfter
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
@@ -153,7 +159,7 @@ fun FlashlightScreen(
 
         val instant = cache.getInstant(context.getString(R.string.pref_flashlight_timeout_instant))
         val duration = if (instant != null && instant.isAfter(Instant.now())) {
-            Duration.between(Instant.now(), instant)
+            JavaTime.between(Instant.now(), instant)
         } else {
             prefs.flashlight.timeout
         }

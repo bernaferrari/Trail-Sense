@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode

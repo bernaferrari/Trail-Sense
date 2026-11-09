@@ -19,16 +19,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.canvas.CanvasDrawer
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.CanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.TextAlign
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.luna.signals.SchmittTrigger
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.math.Euler
@@ -120,7 +120,7 @@ class AugmentedRealityView(val context: Context) {
         sensors.getOrientation(compassSensorDelay)
         private set
     private var gyroOrientationSensor = sensors.getGyroscope(compassSensorDelay)
-    private var customOrientationSensor: IOrientationSensor? = null
+    private var customOrientationSensor: OrientationSensor? = null
     private val hasGyro = Sensors.hasGyroscope(context)
     var orientationSensor = geomagneticOrientationSensor
     val gps = sensors.getGPS(frequency = SensorService.NAVIGATION_GPS_FREQUENCY, tag = "AugmentedRealityView")
@@ -262,7 +262,7 @@ class AugmentedRealityView(val context: Context) {
         orientationSensor = geomagneticOrientationSensor
     }
 
-    fun start(useGPS: Boolean = true, customOrientationSensor: IOrientationSensor? = null) {
+    fun start(useGPS: Boolean = true, customOrientationSensor: OrientationSensor? = null) {
         this.customOrientationSensor = customOrientationSensor
         if (useGPS) {
             gps.start(this::onSensorUpdate)

@@ -11,7 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.backup.BackupCommand
 import com.kylecorry.trail_sense.settings.backup.ChangeAutomaticBackupDirectoryCommand

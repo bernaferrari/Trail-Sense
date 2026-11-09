@@ -7,7 +7,7 @@ import android.annotation.SuppressLint
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.sound.ISoundPlayer
+import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView

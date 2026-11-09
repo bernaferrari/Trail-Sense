@@ -61,10 +61,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.andromeda.sense.location.GPS
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -136,13 +136,13 @@ internal class CalibrateGPSViewModel(
     private val sensorService: SensorService,
     private val formatService: FormatService,
     private val isGpsAvailable: () -> Boolean,
-    private val createRealGps: (RealGpsSource) -> IGPS
+    private val createRealGps: (RealGpsSource) -> GpsSensor
 ) : ViewModel() {
 
     private val throttle = Throttle(20)
 
-    private var gps: IGPS = sensorService.getGPS()
-    private var realGps: IGPS = getRealGPS()
+    private var gps: GpsSensor = sensorService.getGPS()
+    private var realGps: GpsSensor = getRealGPS()
     var locationOverride by mutableStateOf(prefs.gps.locationOverride)
         private set
     var isOverrideLocationLoading by mutableStateOf(false)
@@ -292,7 +292,7 @@ internal class CalibrateGPSViewModel(
         realGps = getRealGPS()
     }
 
-    private fun getRealGPS(): IGPS {
+    private fun getRealGPS(): GpsSensor {
         return createRealGps(
             when {
                 shouldUseRealGPS() -> RealGpsSource.Device

@@ -1,12 +1,18 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShowerPeak
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
@@ -35,7 +41,7 @@ class MeteorShowerAlertCommand(private val context: Context) : Command<Coordinat
         val tomorrowShower = astronomyService.getMeteorShower(value, today.plusDays(1))
 
         val shower = listOfNotNull(todayShower, tomorrowShower).firstOrNull {
-            val timeUntilPeak = Duration.between(LocalDateTime.now(), it.peak)
+            val timeUntilPeak = JavaTime.between(kotlin.time.Clock.System.now(), it.peak)
             timeUntilPeak >= Duration.ZERO && timeUntilPeak <= Duration.ofDays(1)
         }
 
@@ -60,7 +66,7 @@ class MeteorShowerAlertCommand(private val context: Context) : Command<Coordinat
     private fun getShowerDescription(context: Context, shower: MeteorShowerPeak): String {
         val formatService = FormatService.getInstance(context)
 
-        val peak = formatService.formatRelativeDateTime(shower.peak, includeSeconds = false)
+        val peak = formatService.formatRelativeDateTime(shower.peak.toZonedDateTime(), includeSeconds = false)
 
         val rate = context.getString(R.string.meteors_per_hour, shower.shower.rate)
 

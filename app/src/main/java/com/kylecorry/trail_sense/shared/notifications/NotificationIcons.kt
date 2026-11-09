@@ -7,7 +7,7 @@ import android.graphics.Color
 import android.graphics.drawable.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.app.NotificationCompat
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.trail_sense.shared.icons.toIconCompat
 

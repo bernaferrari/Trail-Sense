@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.settings.infrastructure
 
 import android.content.Context
-import com.kylecorry.andromeda.preferences.StringEnumPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter

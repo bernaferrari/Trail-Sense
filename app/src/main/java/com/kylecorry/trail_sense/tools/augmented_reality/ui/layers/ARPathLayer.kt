@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.math.Vector2

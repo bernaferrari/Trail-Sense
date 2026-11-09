@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared.camera
 import android.graphics.RectF
 import android.opengl.Matrix
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationUtils
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.MathExtensions.toRadians
@@ -146,7 +146,7 @@ object AugmentedRealityUtils {
      * @param declination The declination to use (default null)
      */
     fun getOrientation(
-        orientationSensor: IOrientationSensor,
+        orientationSensor: OrientationSensor,
         rotationMatrix: FloatArray,
         orientation: FloatArray,
         declination: Float? = null

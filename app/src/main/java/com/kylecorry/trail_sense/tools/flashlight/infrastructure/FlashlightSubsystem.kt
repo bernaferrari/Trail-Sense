@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import com.kylecorry.andromeda.torch.isTorchAvailable
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.time.CoroutineTimer
@@ -9,9 +13,9 @@ import com.kylecorry.luna.topics.generic.distinct
 import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.torch.ITorch
 import com.kylecorry.andromeda.torch.Torch
-import com.kylecorry.andromeda.torch.TorchStateChangedTopic
+import com.kylecorry.andromeda.torch.deviceTorch
+import com.kylecorry.trail_sense.shared.andromeda_temp.torch.TorchStateChangedTopic
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -31,7 +35,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     private val torchChanged by lazy { TorchStateChangedTopic(context) }
     private val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
     private val prefs by lazy { UserPreferences(context) }
-    private var torch: ITorch? = null
+    private var torch: Torch? = null
 
     private val transitionDuration = Duration.ofSeconds(1)
 
@@ -44,7 +48,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     override val brightnessLevels: Int
         get() = (torch?.brightnessLevels ?: 1) - 1
 
-    private var isAvailable: Boolean = Torch.isAvailable(context, true)
+    private var isAvailable: Boolean = isTorchAvailable(context, true)
 
     private var isTransitioning = false
     private val transitionTimer = CoroutineTimer {
@@ -68,8 +72,8 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
         }
         scope.launch {
             brightness = prefs.flashlight.brightness
-            torch = Torch(context)
-            isAvailable = Torch.isAvailable(context)
+            torch = deviceTorch()
+            isAvailable = isTorchAvailable(context)
         }
     }
 
@@ -193,7 +197,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
         if (prefs.flashlight.shouldTimeout) {
             cache.putInstant(
                 context.getString(R.string.pref_flashlight_timeout_instant),
-                Instant.now().plus(prefs.flashlight.timeout)
+                kotlin.time.Clock.System.now().plus(prefs.flashlight.timeout)
             )
         } else {
             clearTimeout()

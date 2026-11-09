@@ -7,11 +7,11 @@ import android.util.Size
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
-import com.kylecorry.andromeda.bitmaps.ImageRegionLoader
-import com.kylecorry.andromeda.bitmaps.operations.get
-import com.kylecorry.andromeda.bitmaps.operations.getPixels
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.ImageRegionLoader
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.get
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.getPixels
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.andromeda.files.AssetFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.AssetFileSystem
 import com.kylecorry.sol.math.arithmetic.Arithmetic.wrap
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.data.GeographicImageSource

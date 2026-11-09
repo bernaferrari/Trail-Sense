@@ -8,21 +8,25 @@ import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
 import com.kylecorry.sol.science.oceanography.Oceanography
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.waterlevel.HarmonicWaterLevelCalculator
+import com.kylecorry.sol.science.oceanography.waterlevel.GapWaterLevelCalculator
 import com.kylecorry.sol.science.oceanography.waterlevel.IWaterLevelCalculator
+import com.kylecorry.sol.science.oceanography.waterlevel.PiecewiseWaterLevelCalculator
 import com.kylecorry.sol.science.oceanography.waterlevel.LunitidalWaterLevelCalculator
 import com.kylecorry.sol.science.oceanography.waterlevel.RuleOfTwelfthsWaterLevelCalculator
 import com.kylecorry.sol.science.oceanography.waterlevel.TideClockWaterLevelCalculator
 import com.kylecorry.sol.time.Time.hours
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.range.TideTableRangeCalculator
 import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideModel
 import kotlinx.coroutines.runBlocking
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 class TideTableWaterLevelCalculator(private val context: Context, private val table: TideTable) :
     IWaterLevelCalculator {
@@ -36,26 +40,26 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
     var location: Coordinate? = table.location
         private set
 
-    override fun calculate(time: ZonedDateTime): Float = runBlocking {
-        calculateSuspend(time)
+    override fun calculate(time: Instant, timeZone: TimeZone): Float = runBlocking {
+        calculateSuspend(time, timeZone)
     }
 
-    suspend fun calculateSuspend(time: ZonedDateTime): Float {
+    suspend fun calculateSuspend(time: Instant, timeZone: TimeZone = TimeZone.currentSystemDefault()): Float {
         // Harmonic tides don't require a table
         if (tides.isEmpty() && (table.estimator == TideEstimator.Harmonic || table.estimator == TideEstimator.TideModel)) {
-            return getHarmonicCalculator()?.calculate(time) ?: 0f
+            return getHarmonicCalculator()?.calculate(time, timeZone) ?: 0f
         }
 
         // Lunitidal tides don't require a table if the interval is specified
         if (tides.isEmpty() && table.estimator == TideEstimator.LunitidalInterval && table.lunitidalInterval != null) {
-            return lunitidal?.calculate(time) ?: 0f
+            return lunitidal?.calculate(time, timeZone) ?: 0f
         }
 
         if (tides.isEmpty() || time < MIN_TIME || time > MAX_TIME) {
             return 0f
         }
 
-        return generatePiecewiseCalculator().calculate(time)
+        return generatePiecewiseCalculator().calculate(time, timeZone)
     }
 
     private suspend fun generatePiecewiseCalculator(): IWaterLevelCalculator {
@@ -80,7 +84,7 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
     }
 
     private fun hasGap(first: Tide, second: Tide): Boolean {
-        val period = Duration.between(first.time, second.time)
+        val period = second.time - first.time
         val frequency = table.principalFrequency
         val maxPeriod = hours(180 / frequency.toDouble() + 3.0)
         return first.isHigh == second.isHigh || period > maxPeriod
@@ -160,28 +164,28 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
 
     private fun getLastTideBefore(
         calculator: IWaterLevelCalculator,
-        time: ZonedDateTime,
+        time: Instant,
         isHigh: Boolean
     ): Tide? {
-        val tides = getTides(calculator, time.minusDays(2), time)
+        val tides = getTides(calculator, time - 2.days, time)
         return tides.filter { it.isHigh == isHigh }.maxByOrNull { it.time }
     }
 
     private fun getNextTideAfter(
         calculator: IWaterLevelCalculator,
-        time: ZonedDateTime,
+        time: Instant,
         isHigh: Boolean
     ): Tide? {
-        val tides = getTides(calculator, time, time.plusDays(2))
+        val tides = getTides(calculator, time, time + 2.days)
         return tides.filter { it.isHigh == isHigh }.minByOrNull { it.time }
     }
 
     private fun getTides(
         calculator: IWaterLevelCalculator,
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): List<Tide> {
-        return Oceanography.getTides(calculator, start, end, extremaFinder)
+        return Oceanography.getTides(calculator, start, end, extremaFinder = extremaFinder)
     }
 
     private fun getLunitidalCalculator(): IWaterLevelCalculator? {
@@ -192,7 +196,7 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
         // If the lunitidal interval is specified, use it
         if (table.lunitidalInterval != null) {
             return LunitidalWaterLevelCalculator(
-                table.lunitidalInterval,
+                table.lunitidalInterval.toKotlin(),
                 if (table.lunitidalIntervalIsUtc) Coordinate.zero else table.location
                     ?: Coordinate.zero,
                 null,
@@ -264,13 +268,13 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
     private fun getGapCalculator(
         first: Tide,
         second: Tide
-    ): Pair<Range<ZonedDateTime>, IWaterLevelCalculator> {
-        val calculators = mutableListOf<Pair<Range<ZonedDateTime>, IWaterLevelCalculator>>()
+    ): Pair<Range<Instant>, IWaterLevelCalculator> {
+        val calculators = mutableListOf<Pair<Range<Instant>, IWaterLevelCalculator>>()
 
         val frequency = table.principalFrequency
 
         val start = if (first.isHigh == second.isHigh) {
-            val nextTime = first.time.plus(hours(180 / frequency.toDouble()))
+            val nextTime = first.time + hours(180 / frequency.toDouble())
             val nextHeight = if (first.isHigh) range.start else range.end
             val nextTide = Tide(
                 nextTime,
@@ -313,7 +317,7 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
     }
 
     companion object {
-        private val MIN_TIME = LocalDate.of(2000, 1, 1).atStartOfDay().toZonedDateTime()
-        private val MAX_TIME = LocalDate.of(3000, 1, 1).atStartOfDay().toZonedDateTime()
+        private val MIN_TIME = LocalDate(2000, 1, 1).atStartOfDayIn(TimeZone.currentSystemDefault())
+        private val MAX_TIME = LocalDate(3000, 1, 1).atStartOfDayIn(TimeZone.currentSystemDefault())
     }
 }

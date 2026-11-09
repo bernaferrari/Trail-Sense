@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.map.ui
 
+import com.kylecorry.andromeda.torch.screenBrightness
+
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -56,9 +58,9 @@ import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoad
 import java.util.concurrent.atomic.AtomicBoolean
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.core.ui.ReactiveComponent
-import com.kylecorry.andromeda.core.ui.useCallback
-import com.kylecorry.andromeda.core.ui.useService
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.ReactiveComponent
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useCallback
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useService
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.units.Coordinate
@@ -292,7 +294,7 @@ private class MapController(
         val (lockMode, setLockMode) = useLockMode()
 
         val screenLight = component.useMemo(activity) {
-            ScreenTorch(activity.window)
+            ScreenTorch(screenBrightness(activity.window))
         }
 
         val screenLock = component.useMemo(prefs) {

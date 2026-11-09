@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -26,7 +30,7 @@ data class LightningStrikeEntity(
     companion object {
         fun from(reading: Reading<LightningStrike>): LightningStrikeEntity {
             return LightningStrikeEntity(
-                reading.time,
+                reading.time.toJavaInstant(),
                 reading.value.distance.meters().value
             ).also {
                 it.id = reading.value.id

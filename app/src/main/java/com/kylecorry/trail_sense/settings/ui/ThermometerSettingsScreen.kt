@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -25,8 +31,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.sensors.IThermometer
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.core.sensors.Thermometer
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
@@ -339,14 +345,14 @@ internal class TemperatureCalibrationEntry(
  */
 internal class ThermometerSettingsViewModel(
     private val prefs: UserPreferences,
-    private val cache: IPreferences,
+    private val cache: Preferences,
     private val sensorService: SensorService,
     private val weather: IWeatherSubsystem,
     private val keys: ThermometerPreferenceKeys
 ) : ViewModel() {
 
     private val temperatureUnits = prefs.temperatureUnits
-    private var calibratedThermometer: IThermometer? = null
+    private var calibratedThermometer: Thermometer? = null
     private var isThermometerOn = false
     private var history: List<WeatherObservation> = emptyList()
     private var uncalibratedHistory: List<Reading<RawWeatherObservation>> = emptyList()
@@ -487,7 +493,7 @@ internal class ThermometerSettingsViewModel(
 
     private fun updateChart() {
         val displayReadings = history.filter {
-            Duration.between(
+            JavaTime.between(
                 it.time,
                 Instant.now()
             ) <= prefs.weather.pressureHistory
@@ -499,7 +505,7 @@ internal class ThermometerSettingsViewModel(
         }
 
         val displayRawReadings = uncalibratedHistory.filter {
-            Duration.between(
+            JavaTime.between(
                 it.time,
                 Instant.now()
             ) <= prefs.weather.pressureHistory

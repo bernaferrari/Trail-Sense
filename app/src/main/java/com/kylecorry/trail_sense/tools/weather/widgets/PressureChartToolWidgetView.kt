@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.widgets
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
 
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -90,10 +92,10 @@ private class PressureWidgetChart(private val points: PressureChartPoints) : Wid
 }
 
 private fun pressureChartPoints(data: List<Reading<Pressure>>): PressureChartPoints {
-    val startTime = data.firstOrNull()?.time ?: Instant.now()
+    val startTime = data.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
     val points = data.map {
         PressureChartPoint(
-            Duration.between(startTime, it.time).toMillis() / 3_600_000f,
+            JavaTime.between(startTime, it.time).toMillis() / 3_600_000f,
             it.value.value
         )
     }

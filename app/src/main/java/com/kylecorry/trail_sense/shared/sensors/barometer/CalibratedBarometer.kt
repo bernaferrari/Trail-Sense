@@ -1,11 +1,10 @@
 package com.kylecorry.trail_sense.shared.sensors.barometer
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.barometer.IBarometer
-
-class CalibratedBarometer(private val barometer: IBarometer, private val offset: Float) :
-    IBarometer, AbstractSensor() {
+import com.kylecorry.andromeda.sense.barometer.Barometer
+class CalibratedBarometer(private val barometer: Barometer, private val offset: Float) :
+    Barometer, SharedSensor() {
 
     override val hasValidReading: Boolean
         get() = barometer.hasValidReading

@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
+import kotlin.time.toJavaInstant
+
 import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -71,9 +73,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.background.AlarmTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.AlarmTaskScheduler
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -423,11 +425,11 @@ private fun getGPSTime(gps: ISatelliteGPS): Instant {
     }
 
     if (gps.eventTimeElapsedNanos == 0L) {
-        return gps.eventTime
+        return gps.timestamp.toJavaInstant()
     }
     val systemTime = SystemClock.elapsedRealtimeNanos()
     val timeDiff = gps.eventTimeElapsedNanos - systemTime
-    return gps.eventTime.plusNanos(timeDiff)
+    return gps.timestamp.toJavaInstant().plusNanos(timeDiff)
 }
 
 private fun sendNextMinuteNotification(

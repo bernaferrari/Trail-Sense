@@ -9,7 +9,11 @@ import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
 import com.kylecorry.sol.science.oceanography.Oceanography
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.TideType
-import com.kylecorry.sol.time.Time
+import com.kylecorry.trail_sense.shared.time.JavaTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinTimeZone
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
+import kotlin.time.toJavaInstant
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
@@ -40,8 +44,14 @@ class TideService(private val context: Context) {
         val end = date.plusDays(1).atStartOfDay().toZonedDateTime(zone)
         val waterLevelCalculator = getTableCalculator(table)
         val extremaFinder = GoldenSearchExtremaFinder(30.0, 1.0)
-        val tides = Oceanography.getTides(waterLevelCalculator, start, end, extremaFinder)
-        return tides.filter { it.time.toLocalDate() == date }
+        val tides = Oceanography.getTides(
+            waterLevelCalculator,
+            start.toKotlinInstant(),
+            end.toKotlinInstant(),
+            zone.toKotlinTimeZone(),
+            extremaFinder
+        )
+        return tides.filter { it.time.toZonedDateTime(zone).toLocalDate() == date }
     }
 
     private fun LocalDateTime.toZonedDateTime(zone: ZoneId): ZonedDateTime {
@@ -49,11 +59,11 @@ class TideService(private val context: Context) {
     }
 
     suspend fun getWaterLevel(table: TideTable, time: ZonedDateTime): Float {
-        return getTableCalculator(table).calculate(time)
+        return getTableCalculator(table).calculateSuspend(time.toKotlinInstant(), time.toKotlinTimeZone())
     }
 
     suspend fun getWaterLevels(table: TideTable, date: LocalDate): List<Reading<Float>> {
-        return Time.getReadings(
+        return JavaTime.getReadings(
             date,
             ZoneId.systemDefault(),
             Duration.ofMinutes(10)
@@ -72,9 +82,10 @@ class TideService(private val context: Context) {
     ): Boolean {
         val sortedTides = table.tides.sortedBy { it.time }
         for (i in 0 until sortedTides.lastIndex) {
-            if (sortedTides[i].time <= time && sortedTides[i + 1].time >= time) {
-                val period = Duration.between(sortedTides[i].time, sortedTides[i + 1].time)
-                val maxPeriod = Time.hours(180 / table.principalFrequency + 3.0)
+            val instant = time.toKotlinInstant()
+            if (sortedTides[i].time <= instant && sortedTides[i + 1].time >= instant) {
+                val period = Duration.between(sortedTides[i].time.toJavaInstant(), sortedTides[i + 1].time.toJavaInstant())
+                val maxPeriod = JavaTime.hours(180 / table.principalFrequency + 3.0)
                 return !(sortedTides[i].isHigh == sortedTides[i + 1].isHigh || period > maxPeriod)
             }
         }
@@ -86,7 +97,7 @@ class TideService(private val context: Context) {
         time: ZonedDateTime = ZonedDateTime.now()
     ): TideType? {
         val next = getNextTide(table, time) ?: return null
-        val timeToNextTide = Duration.between(time, next.time)
+        val timeToNextTide = Duration.between(time.toInstant(), next.time.toJavaInstant())
         val closeToNextTide = timeToNextTide < Duration.ofHours(2)
         val farFromNextTide = timeToNextTide > Duration.ofHours(4)
         val nextIsHigh = next.isHigh
@@ -113,8 +124,8 @@ class TideService(private val context: Context) {
             getPreviousTide(table, time, type = if (next.isHigh) TideType.Low else TideType.High)
                 ?: return null
 
-        val total = Duration.between(previous.time, next.time).toMillis().toDouble()
-        val delta = Duration.between(previous.time, time).toMillis().toDouble()
+        val total = Duration.between(previous.time.toJavaInstant(), next.time.toJavaInstant()).toMillis().toDouble()
+        val delta = Duration.between(previous.time.toJavaInstant(), time.toInstant()).toMillis().toDouble()
         val progress = (delta / total).toFloat()
         return if (next.isHigh) {
             Interpolation.map(progress, 0f, 1f, 180f, 270f)
@@ -148,7 +159,7 @@ class TideService(private val context: Context) {
         }
         val todayTides = getTides(table, time.toLocalDate())
         val next =
-            todayTides.firstOrNull { it.time >= time && (isTypeHigh == null || it.isHigh == isTypeHigh) }
+            todayTides.firstOrNull { it.time >= time.toKotlinInstant() && (isTypeHigh == null || it.isHigh == isTypeHigh) }
         return next ?: getNextTide(
             table,
             time.toLocalDate().plusDays(1).atStartOfDay().atZone(time.zone),
@@ -173,7 +184,7 @@ class TideService(private val context: Context) {
         }
         val todayTides = getTides(table, time.toLocalDate())
         val previous =
-            todayTides.lastOrNull { it.time <= time && (isTypeHigh == null || it.isHigh == isTypeHigh) }
+            todayTides.lastOrNull { it.time <= time.toKotlinInstant() && (isTypeHigh == null || it.isHigh == isTypeHigh) }
         return previous ?: getPreviousTide(
             table,
             time.toLocalDate().minusDays(1).atStartOfDay().atZone(time.zone),
@@ -192,7 +203,7 @@ class TideService(private val context: Context) {
         return cache.getOrPut(key) {
             val calculator = TideTableWaterLevelCalculator(context, table)
             // Precompute to populate all lookups
-            calculator.calculateSuspend(ZonedDateTime.now())
+            calculator.calculateSuspend(kotlin.time.Clock.System.now())
             calculator
         }
     }

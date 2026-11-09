@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.domain
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.meteorology.WeatherFront

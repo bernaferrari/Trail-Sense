@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.shared.preferences
 
 import android.content.Context
-import com.kylecorry.andromeda.preferences.CachedPreferences
-import com.kylecorry.andromeda.preferences.IPreferences
-import com.kylecorry.andromeda.preferences.SharedPreferences
+import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.andromeda.preferences.preferences
 
 class SessionStateSubsystem private constructor(context: Context) {
-    val preferences: IPreferences = CachedPreferences(SharedPreferences(context, SESSION_STATE))
+    val preferences: Preferences = preferences(context, SESSION_STATE)
 
     companion object {
         private const val SESSION_STATE = "session_state"

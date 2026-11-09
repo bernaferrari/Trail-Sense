@@ -47,8 +47,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.core.system.Package
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.Trail
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons

@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.navigation.ui.data
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
@@ -17,7 +17,7 @@ import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.MarkerCompas
 class UpdateAstronomyLayerCommand(
     private val layer: MarkerCompassLayer,
     private val prefs: UserPreferences,
-    private val gps: IGPS,
+    private val gps: GpsSensor,
     private val isActive: () -> Boolean = { true },
     private val declination: () -> Float
 ) : CoroutineCommand {

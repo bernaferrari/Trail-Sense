@@ -8,12 +8,12 @@ import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.os.CountDownTimer
-import com.kylecorry.andromeda.background.services.AndromedaService
-import com.kylecorry.andromeda.background.services.ForegroundInfo
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.AndromedaService
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences

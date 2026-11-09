@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.battery.domain
 
-import com.kylecorry.sol.time.Time.hours
+import com.kylecorry.trail_sense.shared.time.JavaTime.hours
 import java.time.Duration
 import kotlin.math.absoluteValue
 

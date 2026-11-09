@@ -1,12 +1,16 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.core.time.IZonedDateTimeProvider
+import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.geography.Geography
@@ -36,8 +40,8 @@ class PathService(
     private val pathRepo: PathRepo,
     private val waypointRepo: IWaypointRepo,
     private val pathPreferences: IPathPreferences,
-    private val cache: IPreferences,
-    private val time: IZonedDateTimeProvider = SystemZonedDateTimeProvider()
+    private val cache: Preferences,
+    private val time: ZonedDateTimeProvider = SystemZonedDateTimeProvider()
 ) : IPathService {
 
     private val backtrackLock = Mutex()
@@ -291,7 +295,7 @@ class PathService(
         val isEmpty = waypointLock.withLock {
             waypointRepo.deleteOlderInPath(
                 pathId,
-                time.getTime().toInstant().minus(pathPreferences.backtrackHistory)
+                time.getTime().toJava().toInstant().minus(pathPreferences.backtrackHistory)
             )
             updatePathMetadata(pathId)
             waypointRepo.getCountInPath(pathId) == 0

@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.runtime.Composable
@@ -126,7 +130,7 @@ internal class CalibrateBarometerViewModel(
 
     fun updateChart() {
         val displayReadings = history.filter {
-            Duration.between(
+            JavaTime.between(
                 it.time,
                 Instant.now()
             ) <= prefs.weather.pressureHistory
@@ -136,7 +140,7 @@ internal class CalibrateBarometerViewModel(
         val useSeaLevel = prefs.weather.useSeaLevelPressure
 
         val displayRawReadings = uncalibratedHistory.filter {
-            Duration.between(
+            JavaTime.between(
                 it.time,
                 Instant.now()
             ) <= prefs.weather.pressureHistory

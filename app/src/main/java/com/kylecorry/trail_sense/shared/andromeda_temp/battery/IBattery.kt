@@ -1,0 +1,18 @@
+package com.kylecorry.trail_sense.shared.andromeda_temp.battery
+
+import com.kylecorry.andromeda.battery.BatteryChargingMethod
+import com.kylecorry.andromeda.battery.BatteryChargingStatus
+import com.kylecorry.andromeda.battery.BatteryHealth
+
+import com.kylecorry.andromeda.core.sensors.Sensor
+import com.kylecorry.andromeda.core.sensors.Thermometer
+interface IBattery : Sensor, Thermometer {
+    val percent: Float
+    val capacity: Float
+    val maxCapacity: Float
+    val health: BatteryHealth
+    val voltage: Float
+    val current: Float
+    val chargingMethod: BatteryChargingMethod
+    val chargingStatus: BatteryChargingStatus
+}

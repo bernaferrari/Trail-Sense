@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.ISpeedometer
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.sense.pedometer.IPedometer
+import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.trail_sense.shared.ZERO_SPEED
 import com.kylecorry.trail_sense.tools.pedometer.domain.IPaceCalculator
@@ -11,9 +11,9 @@ import java.time.Duration
 import java.time.Instant
 
 class CurrentPaceSpeedometer(
-    private val pedometer: IPedometer,
+    private val pedometer: Pedometer,
     private val paceCalculator: IPaceCalculator
-) : AbstractSensor(), ISpeedometer {
+) : SharedSensor(), Speedometer {
 
     private val timer = CoroutineTimer {
         updateSpeed()

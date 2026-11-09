@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
@@ -353,7 +353,7 @@ internal class PathsViewModel(
     val pathService: PathService,
     private val preferences: PathsPreferences,
     private val backtrack: ToolService?,
-    private val gps: IGPS
+    private val gps: GpsSensor
 ) : ViewModel() {
 
     var items by mutableStateOf<List<IPath>>(emptyList())

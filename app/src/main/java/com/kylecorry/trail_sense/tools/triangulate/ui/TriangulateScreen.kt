@@ -155,7 +155,7 @@ import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.units.DistanceUnits
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -345,7 +345,7 @@ fun TriangulateToolScreen(
  * page pauses, so they survive leaving the tool.
  */
 internal class TriangulateViewModel(
-    private val preferences: IPreferences,
+    private val preferences: Preferences,
     sensorService: SensorService
 ) : ViewModel() {
 

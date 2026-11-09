@@ -3,10 +3,10 @@ package com.kylecorry.trail_sense.settings.backup
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.WorkerParameters
-import com.kylecorry.andromeda.background.DailyWorker
-import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
-import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
-import com.kylecorry.andromeda.files.ContentFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.DailyWorker
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.ContentFileSystem
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.logging.Logger

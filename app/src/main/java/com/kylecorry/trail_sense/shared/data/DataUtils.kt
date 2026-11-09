@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.shared.data
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.filters.LoessFilter
 import com.kylecorry.sol.math.filters.LoessFilter2D
@@ -91,14 +93,14 @@ object DataUtils {
         select: (value: T) -> Float,
         merge: (value: T, smoothed: Float) -> T
     ): List<Reading<T>> {
-        val start = data.firstOrNull()?.time ?: Instant.now()
+        val start = data.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
         return smooth(
             data,
             smoothness,
             null,
             { _, reading ->
                 Vector2(
-                    Duration.between(start, reading.time).toMillis() / 1000f,
+                    JavaTime.between(start, reading.time).toMillis() / 1000f,
                     select(reading.value)
                 )
             }

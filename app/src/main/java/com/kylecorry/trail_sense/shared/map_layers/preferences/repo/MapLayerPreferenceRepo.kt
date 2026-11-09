@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.repo
 
+import com.kylecorry.andromeda.preferences.putAll
+
+import com.kylecorry.andromeda.preferences.getAll
+
 import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.preferences.Preference

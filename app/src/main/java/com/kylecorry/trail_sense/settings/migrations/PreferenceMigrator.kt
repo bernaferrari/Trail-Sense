@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.settings.migrations
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Screen
 import com.kylecorry.andromeda.json.JsonConvert
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.getIntArray
 import com.kylecorry.andromeda.preferences.putIntArray
 import com.kylecorry.luna.text.toIntCompat
@@ -64,7 +66,7 @@ class PreferenceMigrator private constructor() {
         }
     }
 
-    internal fun migrate(prefs: IPreferences, runMigration: (PreferenceMigration) -> Unit) {
+    internal fun migrate(prefs: Preferences, runMigration: (PreferenceMigration) -> Unit) {
         var currentVersion = prefs.getInt(VERSION_KEY) ?: 0
 
         AppState.isReturningUser = currentVersion > 0
@@ -660,7 +662,7 @@ class PreferenceMigrator private constructor() {
         }
 
         private fun isMapLayerEnabled(
-            prefs: IPreferences,
+            prefs: Preferences,
             mapId: String,
             layerId: String
         ): Boolean {

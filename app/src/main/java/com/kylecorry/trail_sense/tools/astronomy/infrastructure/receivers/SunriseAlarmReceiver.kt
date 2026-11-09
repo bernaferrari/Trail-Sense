@@ -4,8 +4,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
-import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands.SunriseAlarmCommand

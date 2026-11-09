@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.qr.ui
 
+import com.kylecorry.trail_sense.shared.copy
+
+import com.kylecorry.andromeda.core.system.from
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.animation.core.RepeatMode
@@ -72,10 +76,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import com.kylecorry.andromeda.bitmaps.BitmapUtils
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
 import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator

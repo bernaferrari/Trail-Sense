@@ -1,18 +1,22 @@
 package com.kylecorry.trail_sense.tools.whitenoise.infrastructure
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
-import com.kylecorry.andromeda.background.services.AndromedaService
-import com.kylecorry.andromeda.background.services.ForegroundInfo
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.AndromedaService
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.notify.Notify
-import com.kylecorry.andromeda.sound.ISoundPlayer
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
@@ -39,7 +43,7 @@ class WhiteNoiseService : AndromedaService() {
             Tools.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED)
             val stopAt = cache.getInstant(CACHE_KEY_OFF_TIME)
             if (stopAt != null && Instant.now() < stopAt) {
-                offTimer.once(Duration.between(Instant.now(), stopAt))
+                offTimer.once(JavaTime.between(Instant.now(), stopAt))
             }
 
             val soundId = cache.getLong(CACHE_KEY_SLEEP_SOUND_ID) ?: SleepSound.PinkNoise.id
@@ -99,7 +103,7 @@ class WhiteNoiseService : AndromedaService() {
         ) {
             val cache = DependencyRegistry.get<PreferencesSubsystem>().preferences
             if (duration != null && !duration.isZero) {
-                cache.putInstant(CACHE_KEY_OFF_TIME, Instant.now().plus(duration))
+                cache.putInstant(CACHE_KEY_OFF_TIME, kotlin.time.Clock.System.now().plus(duration))
             } else {
                 clearSleepTimer(context)
             }

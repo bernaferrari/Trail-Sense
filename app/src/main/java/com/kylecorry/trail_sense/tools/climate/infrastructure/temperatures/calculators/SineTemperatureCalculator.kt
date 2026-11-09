@@ -2,10 +2,12 @@ package com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.calc
 
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.trigonometry.Trigonometry
-import com.kylecorry.sol.time.Time
+
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
-import java.time.Instant
+import kotlin.time.Instant
+import com.kylecorry.sol.time.Time.hoursBetween
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
 import java.time.ZonedDateTime
 
 internal class SineTemperatureCalculator(
@@ -27,10 +29,10 @@ internal class SineTemperatureCalculator(
     }
 
     override suspend fun calculate(time: ZonedDateTime): Temperature {
-        return Temperature.celsius(wave.calculate(getX(time.toInstant())))
+        return Temperature.celsius(wave.calculate(getX(time.toKotlinInstant())))
     }
 
     private fun getX(time: Instant): Float {
-        return Time.hoursBetween(first.time, time)
+        return hoursBetween(first.time, time)
     }
 }

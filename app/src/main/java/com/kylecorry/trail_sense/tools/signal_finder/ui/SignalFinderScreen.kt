@@ -87,7 +87,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
@@ -99,7 +99,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.andromeda.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
 import com.kylecorry.andromeda.signal.CellSignal
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.geology.Geofence

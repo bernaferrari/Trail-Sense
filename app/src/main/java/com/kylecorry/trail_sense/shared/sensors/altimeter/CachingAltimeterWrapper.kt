@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.shared.sensors.altimeter
 
 import android.content.Context
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.IAltimeter
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import java.time.Instant
 
-class CachingAltimeterWrapper(context: Context, override val altimeter: IAltimeter) :
-    AbstractSensor(),
+class CachingAltimeterWrapper(context: Context, override val altimeter: Altimeter) :
+    SharedSensor(),
     AltimeterWrapper {
 
     private val cache = PreferencesSubsystem.getInstance(context).preferences
@@ -37,7 +37,7 @@ class CachingAltimeterWrapper(context: Context, override val altimeter: IAltimet
 
     private fun onReading(): Boolean {
         cache.putFloat(LAST_ALTITUDE_KEY, altitude)
-        cache.putInstant(LAST_UPDATE_KEY, Instant.now())
+        cache.putInstant(LAST_UPDATE_KEY, kotlin.time.Clock.System.now())
         notifyListeners()
         return true
     }

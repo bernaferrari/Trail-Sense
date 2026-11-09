@@ -1,12 +1,18 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.services
 
+import com.kylecorry.trail_sense.shared.sensors.asFlowable
+
+import kotlin.time.Duration.Companion.milliseconds
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.andromeda.background.IAlwaysOnTaskScheduler
-import com.kylecorry.andromeda.background.TaskSchedulerFactory
-import com.kylecorry.andromeda.background.services.ForegroundInfo
-import com.kylecorry.andromeda.background.services.IntervalService
-import com.kylecorry.andromeda.sense.location.GPS
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IAlwaysOnTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.TaskSchedulerFactory
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.IntervalService
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.LocationRequestConfig
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.FlowableTimer
@@ -53,10 +59,10 @@ class BacktrackService :
             GPS(
                 this,
                 LocationRequestConfig(
-                    frequency = Duration.ofMillis(periodMillis),
+                    frequency = periodMillis.milliseconds,
                     powerUsage = prefs.paths.backtrackGPSPowerUsage
                 )
-            )
+            ).asFlowable()
         }, action = action)
     }
 

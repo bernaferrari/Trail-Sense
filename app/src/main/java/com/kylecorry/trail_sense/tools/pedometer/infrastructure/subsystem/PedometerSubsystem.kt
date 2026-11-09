@@ -1,11 +1,13 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem
 
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.Sensor
 import android.os.Bundle
-import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
 import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.topics.generic.ITopic

@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.shared.sensors.compass
 
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
+import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.Vector3Utils
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 
-fun IMagnetometer.getQualityFromFieldStrength(): Quality {
+fun Magnetometer.getQualityFromFieldStrength(): Quality {
     // https://geomag.bgs.ac.uk/education/earthmag.html
     val normalStrengthRange = Range(22f, 67f)
     val warningStrengthRange =

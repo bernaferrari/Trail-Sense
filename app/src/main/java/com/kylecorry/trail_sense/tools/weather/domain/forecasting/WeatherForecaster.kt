@@ -129,7 +129,7 @@ internal class WeatherForecaster(
             temperatureRange,
             hourlyForecastChangeThreshold.absoluteValue / 3f,
             stormThreshold.absoluteValue / 3f,
-            Instant.now(),
+            kotlin.time.Clock.System.now(),
             location ?: Coordinate.zero,
             forecastSource()
         )

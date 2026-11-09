@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.shared.sensors.thermometer
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.IThermometer
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Thermometer
 import com.kylecorry.sol.units.Temperature
 
 class CalibratedThermometerWrapper(
-    private val thermometer: IThermometer,
+    private val thermometer: Thermometer,
     private val calibrator: ITemperatureCalibrator
-) : IThermometer, AbstractSensor() {
+) : Thermometer, SharedSensor() {
     override val hasValidReading: Boolean
         get() = thermometer.hasValidReading
 

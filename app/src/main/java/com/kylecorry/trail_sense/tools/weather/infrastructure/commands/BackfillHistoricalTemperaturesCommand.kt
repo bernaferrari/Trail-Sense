@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.packs.ui.commands
 
 import android.content.Context
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
 import com.kylecorry.luna.text.slugify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.generic.Command

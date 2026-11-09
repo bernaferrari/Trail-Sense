@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +38,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -44,8 +46,8 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.andromeda.sense.compass.ICompass
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.compass.CompassSensor
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.trail_sense.R
@@ -132,10 +134,10 @@ internal class CalibrateCompassViewModel(
 ) : ViewModel() {
 
     private val throttle = Throttle(20)
-    private val gps: IGPS by lazy { sensorService.getGPS() }
+    private val gps: GpsSensor by lazy { sensorService.getGPS() }
     val hasCompass by lazy { sensorService.hasCompass() }
 
-    private var compass: ICompass = sensorService.getCompass()
+    private var compass: CompassSensor = sensorService.getCompass()
     private var prevQuality = Quality.Unknown
 
     var readings by mutableStateOf<CompassReadings?>(null)
@@ -250,7 +252,7 @@ internal data class CompassReadings(
 )
 
 @Composable
-private fun CalibrateCompassContent(viewModel: CalibrateCompassViewModel, cache: IPreferences) {
+private fun CalibrateCompassContent(viewModel: CalibrateCompassViewModel, cache: Preferences) {
     val context = LocalContext.current
     val prefs = viewModel.prefs
     val hasCompass = viewModel.hasCompass

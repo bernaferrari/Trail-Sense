@@ -4,12 +4,12 @@ import android.content.Context
 import android.os.SystemClock
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.kylecorry.andromeda.background.IPeriodicTaskScheduler
-import com.kylecorry.andromeda.background.PeriodicTaskSchedulerFactory
-import com.kylecorry.andromeda.core.system.Wakelocks
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IPeriodicTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.PeriodicTaskSchedulerFactory
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Wakelocks
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.permissions.Permissions
-import com.kylecorry.andromeda.widgets.Widgets
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.widgets.Widgets
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canGetLocationCustom

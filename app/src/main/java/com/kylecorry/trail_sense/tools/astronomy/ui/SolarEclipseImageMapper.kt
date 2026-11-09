@@ -6,8 +6,8 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Path
 import androidx.core.graphics.createBitmap
-import com.kylecorry.andromeda.canvas.CanvasDrawer
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.CanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.trail_sense.R

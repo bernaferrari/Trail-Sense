@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.mirror.ui
 
+import com.kylecorry.andromeda.torch.screenBrightness
+
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.rememberCoroutineScope
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
@@ -38,7 +40,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.R
@@ -172,7 +174,7 @@ fun MirrorCameraToolScreen() {
     val scope = rememberCoroutineScope()
     // The screen torch lights the activity's window.
     val window = requireNotNull(LocalActivity.current).window
-    val flashlight = remember(window) { ScreenTorch(window) }
+    val flashlight = remember(window) { ScreenTorch(screenBrightness(window)) }
     MirrorCameraScreen(
         onRequestCamera = { action ->
             scope.launch {

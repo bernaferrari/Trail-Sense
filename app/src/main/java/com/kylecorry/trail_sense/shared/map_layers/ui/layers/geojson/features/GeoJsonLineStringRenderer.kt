@@ -5,7 +5,7 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Path
 import androidx.core.graphics.withMatrix
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.StrokeCap
 import com.kylecorry.andromeda.canvas.StrokeJoin
 import com.kylecorry.andromeda.canvas.TextMode

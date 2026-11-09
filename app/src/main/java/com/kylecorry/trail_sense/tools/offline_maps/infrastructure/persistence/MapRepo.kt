@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Size
 import androidx.core.net.toUri
-import com.kylecorry.andromeda.core.math.MathUtils
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.math.MathUtils
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.ParallelCoroutineRunner
 import com.kylecorry.luna.concurrency.onIO

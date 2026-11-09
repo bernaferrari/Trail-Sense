@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.views.charts
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -79,10 +81,10 @@ private fun trailSenseLineChartPoints(
     maximum: Float?,
     freezingValue: Float?
 ): TrailSenseLineChartPoints {
-    val startTime = readings.firstOrNull()?.time ?: Instant.now()
+    val startTime = readings.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
     val points = readings.map {
             TrailSenseLineChartPoint(
-            Duration.between(startTime, it.time).toMillis() / 3_600_000f,
+            JavaTime.between(startTime, it.time).toMillis() / 3_600_000f,
             it.value
         )
     }

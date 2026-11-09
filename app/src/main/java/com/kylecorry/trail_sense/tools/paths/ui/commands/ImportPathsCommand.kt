@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
@@ -88,7 +92,7 @@ class ImportPathsCommand(
 
     private fun List<GPXWaypoint>.toPathPoints(): List<PathPoint> {
         return map {
-            PathPoint(0, 0, it.coordinate, it.elevation, it.time)
+            PathPoint(0, 0, it.coordinate, it.elevation, it.time?.toJavaInstant())
         }
     }
 

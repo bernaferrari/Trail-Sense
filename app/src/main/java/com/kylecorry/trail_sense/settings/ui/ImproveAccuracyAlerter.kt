@@ -23,11 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import com.kylecorry.andromeda.core.sensors.ISensor
-import com.kylecorry.andromeda.sense.compass.ICompass
-import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
+import com.kylecorry.andromeda.core.sensors.Sensor
+import com.kylecorry.andromeda.sense.compass.CompassSensor
+import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.andromeda.sense.mock.MockSensor
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -45,7 +45,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 class ImproveAccuracyAlerter(
     private val context: Context,
     private val customMessage: CharSequence? = null
-) : IValueAlerter<List<ISensor>> {
+) : IValueAlerter<List<Sensor>> {
 
     private val formatter = FormatService.getInstance(context)
     private val baseDistanceUnits = UserPreferences(context).baseDistanceUnits
@@ -53,11 +53,11 @@ class ImproveAccuracyAlerter(
     private val doneButton = context.getString(android.R.string.ok)
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-    override fun alert(value: List<ISensor>) {
+    override fun alert(value: List<Sensor>) {
         val gps = value.firstOrNull { it is ISatelliteGPS } as? ISatelliteGPS
-        val compass = (value.firstOrNull { it is ICompass } as? ICompass)
-            ?: value.firstOrNull { it is IMagnetometer }
-        val orientation = value.firstOrNull { it is IOrientationSensor } as? IOrientationSensor
+        val compass = (value.firstOrNull { it is CompassSensor } as? CompassSensor)
+            ?: value.firstOrNull { it is Magnetometer }
+        val orientation = value.firstOrNull { it is OrientationSensor } as? OrientationSensor
         val hasCompass = compass !is MockSensor
         val content = buildAnnotatedString {
             gps?.let {
@@ -121,7 +121,7 @@ class ImproveAccuracyAlerter(
         }
     }
 
-    private fun AnnotatedString.Builder.appendCompass(compass: ISensor) {
+    private fun AnnotatedString.Builder.appendCompass(compass: Sensor) {
         if (compass is MockSensor) {
             return
         }

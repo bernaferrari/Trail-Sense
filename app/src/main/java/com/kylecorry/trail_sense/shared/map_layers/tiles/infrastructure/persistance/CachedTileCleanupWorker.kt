@@ -3,9 +3,8 @@ package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persist
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.kylecorry.andromeda.background.IOneTimeTaskScheduler
-import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
-
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
 class CachedTileCleanupWorker(
     private val context: Context,
     params: WorkerParameters

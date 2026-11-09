@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.domain
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherForecast
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
@@ -18,7 +20,7 @@ fun List<Reading<CloudGenus?>>.getLastCloud(
     now: Instant = Instant.now()
 ): Reading<CloudGenus?>? {
     val lastCloud = lastOrNull() ?: return null
-    if (Duration.between(lastCloud.time, now).abs() > maxTime) {
+    if (JavaTime.between(lastCloud.time, now).abs() > maxTime) {
         return null
     }
     return lastCloud

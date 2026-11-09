@@ -3,6 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
+import kotlin.time.Duration.Companion.seconds
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -130,7 +134,7 @@ fun TemperatureEstimationToolScreen() {
         readThermometer = {
             readAll(
                 listOf(thermometer),
-                Duration.ofSeconds(10),
+                10.seconds,
                 forceStopOnCompletion = true
             )
         }

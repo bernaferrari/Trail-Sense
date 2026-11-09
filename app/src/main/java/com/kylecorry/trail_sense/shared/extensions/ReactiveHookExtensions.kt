@@ -5,7 +5,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.ui.ReactiveComponent
+import com.kylecorry.andromeda.core.sensors.Sensor
+import com.kylecorry.andromeda.core.sensors.SensorSubscriber
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.ReactiveComponent
 import com.kylecorry.luna.topics.ITopic
 import com.kylecorry.luna.topics.generic.ITopic as GenericTopic
 import kotlinx.coroutines.CoroutineScope
@@ -122,6 +124,49 @@ fun <T : Any, V> ReactiveComponent.useTopic(
         useTopic(topic, mapper(it), mapper)
     } ?: useTopic(topic, null, mapper)
 }
+
+/**
+ * Re-renders with [mapper] applied to [sensor] whenever it reports a new reading while the component is active.
+ */
+fun <T : Sensor, V> ReactiveComponent.useSensor(
+    sensor: T,
+    default: V,
+    mapper: (T) -> V
+): V {
+    val (value, setValue) = useState(default)
+    val owner = useLifecycleOwner()
+    val currentMapper = useRef(mapper)
+    currentMapper.current = mapper
+    useEffectWithCleanup(arrayOf(sensor, owner)) {
+        val callback: SensorSubscriber = {
+            setValue(currentMapper.current(sensor))
+            true
+        }
+        sensor.subscribe(callback)
+        return@useEffectWithCleanup {
+            sensor.unsubscribe(callback)
+        }
+    }
+    return value
+}
+
+fun <T : Sensor, V> ReactiveComponent.useSensor(
+    sensor: T,
+    mapper: (T) -> V
+): V {
+    return useSensor(sensor, mapper(sensor), mapper)
+}
+
+fun <T : Sensor, V> ReactiveComponent.useTopic(
+    topic: T,
+    default: V,
+    mapper: (T) -> V
+): V = useSensor(topic, default, mapper)
+
+fun <T : Sensor, V> ReactiveComponent.useTopic(
+    topic: T,
+    mapper: (T) -> V
+): V = useSensor(topic, mapper)
 
 private fun LifecycleOwner.launchRepeating(
     state: BackgroundMinimumState,

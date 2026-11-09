@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
 import android.graphics.Color
 import androidx.annotation.ColorInt
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint

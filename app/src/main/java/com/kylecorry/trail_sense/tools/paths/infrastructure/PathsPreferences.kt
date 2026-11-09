@@ -1,9 +1,11 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
-import com.kylecorry.andromeda.preferences.BooleanPreference
-import com.kylecorry.andromeda.preferences.IntEnumPreference
-import com.kylecorry.andromeda.preferences.StringEnumPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.IntEnumPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
 import com.kylecorry.andromeda.sense.location.GPSPowerUsage
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -66,7 +68,7 @@ class PathsPreferences(private val context: Context) : IPathPreferences {
         get() = backtrackGPSPowerMode.powerUsage ?: gps.powerMode.powerUsage ?: GPSPowerUsage.High
 
     var backtrackRecordFrequency: Duration
-        get() = cache.getDuration(context.getString(R.string.pref_backtrack_frequency))
+        get() = cache.getJavaDuration(context.getString(R.string.pref_backtrack_frequency))
             ?: Duration.ofMinutes(1)
         set(value) {
             cache.putDuration(context.getString(R.string.pref_backtrack_frequency), value)

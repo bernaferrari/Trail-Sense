@@ -82,9 +82,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.sense.compass.ICompass
+import com.kylecorry.andromeda.sense.compass.CompassSensor
 import com.kylecorry.andromeda.sense.level.Level
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
@@ -357,7 +357,7 @@ fun SolarPanelScreen(
 private fun SolarHero(
     energy: String,
     position: Pair<Float, Bearing>,
-    compass: ICompass,
+    compass: CompassSensor,
     orientation: Level,
     declination: IDeclinationStrategy,
     prefs: UserPreferences,
@@ -518,7 +518,7 @@ private fun PanelSideView(
 @Composable
 private fun SolarPanelReadout(
     position: Pair<Float, Bearing>,
-    compass: ICompass,
+    compass: CompassSensor,
     orientation: Level,
     formatter: FormatService,
     prefs: UserPreferences,
@@ -699,9 +699,9 @@ private fun SolarCue(
 
 private fun getEnergyText(
     solarPanelService: SolarPanelService,
-    gps: IGPS,
+    gps: GpsSensor,
     orientation: Level,
-    compass: ICompass,
+    compass: CompassSensor,
     alignToRestOfDay: Boolean,
     nowDuration: Duration,
     formatter: FormatService,
@@ -722,7 +722,7 @@ private fun getEnergyText(
 
 private fun getAzimuthDiff(
     position: Pair<Float, Bearing>?,
-    compass: ICompass,
+    compass: CompassSensor,
     declination: IDeclinationStrategy,
     prefs: UserPreferences
 ): Float {

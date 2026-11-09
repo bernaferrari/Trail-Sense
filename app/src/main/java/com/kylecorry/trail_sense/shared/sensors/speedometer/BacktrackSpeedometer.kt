@@ -5,8 +5,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.ISpeedometer
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 
-class BacktrackSpeedometer(private val context: Context) : AbstractSensor(), ISpeedometer {
+class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speedometer {
 
     private val pathService by lazy { PathService.getInstance(context) }
     private val prefs by lazy { UserPreferences(context) }

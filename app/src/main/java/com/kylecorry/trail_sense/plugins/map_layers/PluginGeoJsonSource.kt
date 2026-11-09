@@ -47,7 +47,7 @@ class PluginGeoJsonSource(private val packageId: String, private val endpoint: S
 
         return try {
             val converted = withTimeout(PluginGuard.MAX_GEOJSON_PARSE_TIME) {
-                GeoJsonConvert.fromJson(ByteArrayInputStream(geoJsonBytes))
+                GeoJsonConvert.fromJson(geoJsonBytes.decodeToString())
             }
             if (converted != null && PluginGuard.isValidGeoJson(converted)) {
                 converted

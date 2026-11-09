@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.climate.infrastructure
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.interpolation.Interpolator
 import com.kylecorry.sol.math.interpolation.LocalNewtonInterpolator
-import com.kylecorry.sol.time.Time.daysUntil
+import com.kylecorry.trail_sense.shared.time.JavaTime.daysUntil
 import java.time.LocalDate
 import java.time.Month
 

@@ -1,10 +1,14 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.sensors.flow
+
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.light.AndroidLightSensor
+
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
 import com.kylecorry.andromeda.sense.light.LightSensor
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +34,7 @@ class LightSensorDiagnosticScanner : ToolDiagnosticScanner {
     }
 
     override fun fullScan(context: Context): Flow<List<ToolDiagnosticResult>> {
-        val lightSensor = LightSensor(context, SensorManager.SENSOR_DELAY_NORMAL)
+        val lightSensor = AndroidLightSensor(context, SensorManager.SENSOR_DELAY_NORMAL)
         return lightSensor.flow.map {
             val diagnosticResults = mutableListOf<ToolDiagnosticResult>()
             if (lightSensor.quality == Quality.Poor) {

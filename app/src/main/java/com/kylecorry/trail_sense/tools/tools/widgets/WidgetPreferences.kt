@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.tools.widgets
 
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.preferences.SharedPreferences
+import com.kylecorry.andromeda.preferences.preferences
 import com.kylecorry.luna.text.toLongCompat
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.data.Identifiable
@@ -29,7 +29,7 @@ class WidgetPreferences(
     private val appWidgetId: Int
 ) {
 
-    private val prefs = SharedPreferences(
+    private val prefs = preferences(
         context,
         "${context.packageName}_widget_preferences",
         commitChanges = true

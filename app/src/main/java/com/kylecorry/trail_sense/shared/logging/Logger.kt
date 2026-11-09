@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.logging
 
 import android.content.Context
 import android.util.Log
-import com.kylecorry.andromeda.files.CacheFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.CacheFileSystem
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.subscriptions.generic.Subscription

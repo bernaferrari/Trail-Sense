@@ -1,15 +1,21 @@
 package com.kylecorry.trail_sense.tools.climate.domain
 
+import kotlinx.datetime.daysUntil
+
+import kotlinx.datetime.toJavaLocalDate
+
+import kotlin.time.Duration.Companion.hours
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.mergeIntersecting
 import com.kylecorry.sol.science.ecology.Ecology
-import com.kylecorry.sol.time.Time.daysUntil
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
-import java.time.Duration
 import java.time.LocalDate
 
 class PhenologyService(private val weather: IWeatherSubsystem) {
@@ -33,11 +39,11 @@ class PhenologyService(private val weather: IWeatherSubsystem) {
 
             val events = Ecology.getLifecycleEventDates(
                 species.events,
-                Range(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31)),
+                Range(kotlinx.datetime.LocalDate(year, 1, 1), kotlinx.datetime.LocalDate(year, 12, 31)),
                 // TODO: This isn't needed right now, but it should be an interpolated version of astronomy get daylight length (for performance)
-                { Duration.ofHours(12) }
+                { 12.hours }
             ) { date ->
-                val newDate = date.withYear(year)
+                val newDate = date.toJavaLocalDate().withYear(year)
                 temperatureMap[newDate]?.second ?: Range(Temperature.zero, Temperature.zero)
             }.toMutableList()
 
@@ -49,6 +55,7 @@ class PhenologyService(private val weather: IWeatherSubsystem) {
             activeDays[species] =
                 Ecology.getActivePeriodsForYear(year, events, EVENT_ACTIVE_START, EVENT_ACTIVE_END)
                     .filter { it.start.daysUntil(it.end) > 1 }
+                    .map { Range(it.start.toJavaLocalDate(), it.end.toJavaLocalDate()) }
         }
 
         // Merge the active periods for similar biological activity

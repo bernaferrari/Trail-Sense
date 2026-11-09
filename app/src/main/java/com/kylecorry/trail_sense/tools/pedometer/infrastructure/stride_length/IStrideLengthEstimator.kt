@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length
 
-import com.kylecorry.andromeda.core.sensors.ISensor
+import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.sol.units.Distance
 
-interface IStrideLengthEstimator : ISensor {
+interface IStrideLengthEstimator : Sensor {
     val strideLength: Distance?
     fun reset()
 }

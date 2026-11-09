@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared.sensors.gps
 import android.os.SystemClock
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.sol.time.Time
+import com.kylecorry.trail_sense.shared.time.JavaTime
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
@@ -24,15 +24,15 @@ class TimezoneGPS(updateFrequency: Long = 1000L) :
         get() {
             val zone = ZoneId.systemDefault()
             return hooks.memo("location", zone) {
-                Time.getLocationFromTimeZone(zone)
+                JavaTime.getLocationFromTimeZone(zone)
             }
         }
     override val speed: Speed
         get() = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
     override val speedAccuracy: Float?
         get() = null
-    override var eventTime: Instant
-        get() = Instant.now()
+    override var timestamp: kotlin.time.Instant
+        get() = kotlin.time.Clock.System.now()
         set(_) {}
     override val verticalAccuracy: Float?
         get() = null

@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.shared.icons.trail.Grass
 import com.kylecorry.trail_sense.shared.icons.trail.Beach
 import com.kylecorry.trail_sense.shared.icons.trail.Wind
@@ -138,7 +140,7 @@ fun WhiteNoiseScreen(
     var showSoundPicker by remember { mutableStateOf(false) }
     var useSleepTimer by remember {
         val stopTime = cache.getInstant(WhiteNoiseService.CACHE_KEY_OFF_TIME)
-        mutableStateOf(stopTime != null && stopTime > Instant.now())
+        mutableStateOf(stopTime != null && stopTime > kotlin.time.Clock.System.now())
     }
     var hours by remember { mutableStateOf("00") }
     var minutes by remember { mutableStateOf("00") }
@@ -169,9 +171,9 @@ fun WhiteNoiseScreen(
         while (true) {
             isRunning = WhiteNoiseService.isRunning
             val stopTime = cache.getInstant(WhiteNoiseService.CACHE_KEY_OFF_TIME)
-            if (stopTime != null && stopTime > Instant.now()) {
+            if (stopTime != null && stopTime > kotlin.time.Clock.System.now()) {
                 useSleepTimer = true
-                setDuration(Duration.between(Instant.now(), stopTime))
+                setDuration(JavaTime.between(Instant.now(), stopTime))
             }
             delay(250)
         }

@@ -1,10 +1,14 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
+import kotlin.time.Duration.Companion.seconds
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import android.os.SystemClock
 import com.kylecorry.andromeda.sense.mock.MockSensor
 import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.sol.math.MathExtensions.real
 import com.kylecorry.sol.units.Reading
@@ -22,7 +26,7 @@ import java.time.Instant
 
 internal class WeatherObserver(
     private val context: Context,
-    private val timeout: Duration = SensorService.GPS_READ_TIMEOUT
+    private val timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
 ) : IWeatherObserver {
 
     private val sensorService by lazy { SensorService(context) }
@@ -35,7 +39,7 @@ internal class WeatherObserver(
         )
     }
     private val altimeterAsGPS by lazy { sensorService.getGPSFromAltimeter(altimeter) }
-    private val gps: IGPS by lazy {
+    private val gps: GpsSensor by lazy {
         altimeterAsGPS ?: sensorService.getGPS(SensorService.SINGLE_FIX_GPS_FREQUENCY, tag = "WeatherObserver")
     }
     private val barometer by lazy { sensorService.getBarometer(false) }
@@ -58,7 +62,7 @@ internal class WeatherObserver(
 
         // Read the thermometer one last time - historic thermometer depends on updated location/elevation reading
         if (thermometer is HistoricThermometer) {
-            readAll(listOf(thermometer), Duration.ofSeconds(1), forceStopOnCompletion = true)
+            readAll(listOf(thermometer), 1.seconds, forceStopOnCompletion = true)
         }
 
         if (barometer.pressure == 0f) {
@@ -87,7 +91,7 @@ internal class WeatherObserver(
                 hygrometer.humidity,
                 gps.location
             ),
-            Instant.now()
+            kotlin.time.Clock.System.now()
         )
     }
 

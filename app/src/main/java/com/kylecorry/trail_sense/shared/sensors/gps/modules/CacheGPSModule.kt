@@ -6,7 +6,7 @@ import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.andromeda.json.JsonConvert
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.luna.hooks.MemoizedValue
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -44,7 +44,7 @@ data class GPSCacheData(
  * Persists accepted readings so the last known location survives a restart.
  */
 class CacheGPSModule(
-    private val cache: IPreferences = getAppService<PreferencesSubsystem>().preferences,
+    private val cache: Preferences = getAppService<PreferencesSubsystem>().preferences,
     private val timeProvider: TimeProvider = SystemTimeProvider(),
     getBootCount: () -> Int? = { readBootCount(getAppService()) }
 ) : GPSModule {
@@ -170,7 +170,7 @@ class CacheGPSModule(
                 .takeIf { it >= 0 }
         }
 
-        fun getCachedData(cache: IPreferences): GPSCacheData? {
+        fun getCachedData(cache: Preferences): GPSCacheData? {
             val json = cache.getString(LAST_GPS)
             return cacheParser.getOrPut(json) {
                 json?.let { JsonConvert.fromJson(it) }

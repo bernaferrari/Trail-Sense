@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.notifications.*
@@ -7,8 +9,8 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.notify.Notify
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Coordinate
@@ -48,10 +50,10 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
         val alertDuration = Duration.ofMinutes(userPrefs.astronomy.sunsetAlertMinutesBefore)
         val suntimesMode = userPrefs.astronomy.sunTimesMode
 
-        val todaySunset = astronomyService.getTodaySunTimes(location.location, suntimesMode).set
+        val todaySunset = astronomyService.getTodaySunTimes(location.location, suntimesMode).set?.toZonedDateTime()
 
         val tomorrowSunset =
-            astronomyService.getTomorrowSunTimes(location.location, suntimesMode).set
+            astronomyService.getTomorrowSunTimes(location.location, suntimesMode).set?.toZonedDateTime()
 
         if (todaySunset != null) {
             when {

@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.core.sensors.ISensor
+import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.trail_sense.R
@@ -60,7 +60,7 @@ class SensorStatusBadgeView(
     private var compassStatusBadgeProvider: SensorStatusBadgeProvider? = null
 
     private var gps: ISatelliteGPS? = null
-    private var compassSensor: ISensor? = null
+    private var compassSensor: Sensor? = null
 
     private var isStarted = false
     private var badgeVisible by mutableStateOf(true)
@@ -201,7 +201,7 @@ class SensorStatusBadgeView(
         }
     }
 
-    fun setSensors(gps: ISatelliteGPS?, compass: ISensor) {
+    fun setSensors(gps: ISatelliteGPS?, compass: Sensor) {
         showGpsBadge = gps != null
         this.gps = gps
         this.compassSensor = compass
@@ -211,7 +211,7 @@ class SensorStatusBadgeView(
         updateBadges()
     }
 
-    fun getSensors(): List<ISensor> {
+    fun getSensors(): List<Sensor> {
         return listOfNotNull(gps, compassSensor)
     }
 

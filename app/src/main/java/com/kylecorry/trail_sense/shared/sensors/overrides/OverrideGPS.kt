@@ -27,8 +27,8 @@ class OverrideGPS(context: Context, updateFrequency: Long = 1000L) :
         get() = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
     override val speedAccuracy: Float?
         get() = null
-    override var eventTime: Instant
-        get() = Instant.now()
+    override var timestamp: kotlin.time.Instant
+        get() = kotlin.time.Clock.System.now()
         set(_) {}
     override val verticalAccuracy: Float?
         get() = null

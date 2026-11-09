@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
 import android.content.Context
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsCommand
 import kotlinx.coroutines.flow.Flow

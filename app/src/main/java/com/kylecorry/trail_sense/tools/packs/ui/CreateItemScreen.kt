@@ -1,8 +1,6 @@
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.packs.ui
-
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.material3.FilledTonalButton
@@ -31,7 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.channels.Channel
 import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
@@ -128,7 +126,7 @@ fun CreateItemToolScreen(route: Route.CreatePackItem) {
 internal class CreateItemViewModel(
     private val route: Route.CreatePackItem,
     private val repo: PackRepo,
-    private val preferences: IPreferences
+    private val preferences: Preferences
 ) : ViewModel() {
 
     private val defaultCategory =

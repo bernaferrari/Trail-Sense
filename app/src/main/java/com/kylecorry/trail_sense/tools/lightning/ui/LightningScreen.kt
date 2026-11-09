@@ -3,6 +3,12 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
+import kotlin.time.toKotlinInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
 import androidx.compose.animation.animateColorAsState
@@ -162,7 +168,7 @@ fun LightningScreen(
         formatService.formatDistance(it, Units.getDecimalPlaces(it.units), false)
     }
     val ghostMeters = lastStrike
-        ?.takeIf { Duration.between(it.time, Instant.now()) <= GHOST_MAX_AGE }
+        ?.takeIf { JavaTime.between(it.time, Instant.now()) <= GHOST_MAX_AGE }
         ?.value?.distance?.meters()?.value
     val dangerLabel = Distance.meters(DANGER_METERS).convertTo(units).toRelativeDistance().let {
         formatService.formatDistance(it, 0, false)
@@ -534,5 +540,5 @@ private fun StormSky(
 }
 
 private fun getDistance(lightning: Instant, thunder: Instant): Distance {
-    return Distance.meters(Meteorology.getLightningStrikeDistance(lightning, thunder))
+    return Distance.meters(Meteorology.getLightningStrikeDistance(lightning.toKotlinInstant(), thunder.toKotlinInstant()))
 }

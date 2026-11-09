@@ -5,9 +5,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
 import com.kylecorry.luna.text.capitalizeWords
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.widgets.Widgets
+import com.kylecorry.trail_sense.shared.andromeda_temp.widgets.Widgets
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.luna.topics.generic.Topic
 import com.kylecorry.trail_sense.R

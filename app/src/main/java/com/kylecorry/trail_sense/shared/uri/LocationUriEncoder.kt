@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.shared.uri
 
+import com.kylecorry.andromeda.core.system.uri
+
+import com.kylecorry.andromeda.core.system.from
+
 import android.net.Uri
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.sol.units.Coordinate

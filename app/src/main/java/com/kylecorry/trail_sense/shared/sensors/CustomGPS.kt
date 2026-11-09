@@ -1,13 +1,15 @@
 package com.kylecorry.trail_sense.shared.sensors
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
+
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
-import com.kylecorry.andromeda.sense.location.GNSSSatelliteStatusSensor
-import com.kylecorry.andromeda.sense.location.GPS
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GNSSSatelliteStatusSensor
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.GPSPowerUsage
 import com.kylecorry.andromeda.sense.location.LocationRequestConfig
 import com.kylecorry.andromeda.sense.location.Satellite
@@ -32,7 +34,7 @@ class CustomGPS(
     private val context: Context,
     private val gpsFrequency: Duration = SensorService.DEFAULT_GPS_FREQUENCY,
     private val tag: String? = null,
-) : AbstractSensor(), ISatelliteGPS {
+) : SharedSensor(), ISatelliteGPS {
 
     private val id = nextId.incrementAndGet()
     private val logger by lazy { getAppService<Logger>() }
@@ -79,8 +81,8 @@ class CustomGPS(
     override val speedAccuracy: Float?
         get() = data.speedAccuracy
 
-    override var eventTime: Instant
-        get() = data.eventTime
+    override var timestamp: kotlin.time.Instant
+        get() = data.timestamp
         set(_) {}
 
     override val altitude: Float
@@ -103,7 +105,7 @@ class CustomGPS(
         val powerUsage = UserPreferences(context).gps.powerMode.powerUsage ?: GPSPowerUsage.High
         GPS(
             context.applicationContext,
-            LocationRequestConfig(frequency = gpsFrequency, powerUsage = powerUsage)
+            LocationRequestConfig(frequency = gpsFrequency.toKotlin(), powerUsage = powerUsage)
         )
     }
     private val satelliteStatusSensor by lazy {

@@ -2,10 +2,10 @@ package com.kylecorry.trail_sense.settings.backup
 
 import android.content.Context
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
 import com.kylecorry.andromeda.core.system.UriAccess
-import com.kylecorry.andromeda.core.system.pickDirectory
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.pickDirectory
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.Command

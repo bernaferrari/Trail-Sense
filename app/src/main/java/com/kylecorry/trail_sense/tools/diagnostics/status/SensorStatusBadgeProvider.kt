@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.diagnostics.status
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
-import com.kylecorry.andromeda.core.sensors.ISensor
+import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.sense.mock.MockSensor
 import com.kylecorry.trail_sense.R
@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 
 class SensorStatusBadgeProvider(
-    private val sensor: ISensor,
+    private val sensor: Sensor,
     private val context: Context,
     private val icon: ImageVector
 ) : StatusBadgeProvider {

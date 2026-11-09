@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.sensors.flow
+
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.magnetometer.AndroidMagnetometer
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.content.Context
@@ -31,7 +35,7 @@ class MagnetometerDiagnosticScanner : ToolDiagnosticScanner {
     }
 
     override fun fullScan(context: Context): Flow<List<ToolDiagnosticResult>> {
-        val magnetometer = Magnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
+        val magnetometer = AndroidMagnetometer(context, SensorManager.SENSOR_DELAY_NORMAL)
         return magnetometer.flow.map {
             if (magnetometer.quality == Quality.Poor) {
                 listOf(

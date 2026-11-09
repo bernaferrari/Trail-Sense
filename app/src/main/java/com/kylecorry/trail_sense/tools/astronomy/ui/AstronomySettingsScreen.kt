@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -17,7 +19,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsOption
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
@@ -320,7 +322,7 @@ internal data class AstronomySettingsKeys(
 /** The astronomy settings rows, over preferences and the sunrise and sunset alert services. */
 internal class AstronomySettingsViewModel(
     private val prefs: AstronomyPreferences,
-    val cache: IPreferences,
+    val cache: Preferences,
     private val sunsetService: ToolService,
     private val sunriseService: ToolService,
     private val keys: AstronomySettingsKeys

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.share
 
+import com.kylecorry.trail_sense.shared.copy
+
 import android.content.Context
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.trail_sense.R

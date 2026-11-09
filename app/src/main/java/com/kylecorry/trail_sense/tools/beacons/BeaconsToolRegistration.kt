@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons
 
+import com.kylecorry.andromeda.core.system.from
+
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
 import com.kylecorry.trail_sense.shared.navigation.Route

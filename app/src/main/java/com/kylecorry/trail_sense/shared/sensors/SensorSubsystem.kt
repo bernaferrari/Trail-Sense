@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.shared.sensors
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.annotation.SuppressLint
 import android.content.Context
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.sol.math.MathExtensions.real
 import com.kylecorry.sol.units.Coordinate
@@ -86,7 +88,7 @@ class SensorSubsystem private constructor(private val context: Context) {
      */
     suspend fun getLocation(
         preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: Duration = SensorService.GPS_READ_TIMEOUT
+        timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
     ): Coordinate {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownLocation
@@ -111,7 +113,7 @@ class SensorSubsystem private constructor(private val context: Context) {
      */
     suspend fun getElevation(
         preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: Duration = SensorService.GPS_READ_TIMEOUT
+        timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
     ): Distance {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownElevation
@@ -137,7 +139,7 @@ class SensorSubsystem private constructor(private val context: Context) {
      */
     suspend fun getLocationAndElevation(
         preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: Duration = SensorService.GPS_READ_TIMEOUT
+        timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
     ): Pair<Coordinate, Distance> {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownLocation to lastKnownElevation

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.toJavaDuration
+
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.luna.time.CoroutineTimer
@@ -80,7 +82,7 @@ class TimeoutGPSModule(
     }
 
     companion object {
-        private val TIMEOUT_DURATION = SensorService.GPS_READ_TIMEOUT
+        private val TIMEOUT_DURATION = SensorService.GPS_READ_TIMEOUT.toJavaDuration()
         private const val TAG = "TimeoutGPSModule"
     }
 }

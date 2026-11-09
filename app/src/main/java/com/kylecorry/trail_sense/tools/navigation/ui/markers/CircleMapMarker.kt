@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.navigation.ui.markers
 
 import android.graphics.Color
 import androidx.annotation.ColorInt
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.SizeUnit

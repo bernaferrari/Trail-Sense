@@ -19,7 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
@@ -160,7 +160,7 @@ internal data class NavigationSettingsKeys(
  */
 internal class NavigationSettingsViewModel(
     private val prefs: NavigationPreferences,
-    private val cache: IPreferences,
+    private val cache: Preferences,
     private val keys: NavigationSettingsKeys,
     val hasCompass: Boolean,
     private val baseDistanceUnits: DistanceUnits

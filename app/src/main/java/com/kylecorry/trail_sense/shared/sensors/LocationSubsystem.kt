@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.shared.sensors
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.sol.units.Coordinate
@@ -53,8 +59,8 @@ class LocationSubsystem private constructor(private val context: Context) {
             }
 
             val lastUpdate =
-                prefs.getInstant(CachingAltimeterWrapper.LAST_UPDATE_KEY) ?: Instant.EPOCH
-            return Duration.between(lastUpdate, Instant.now())
+                prefs.getJavaInstant(CachingAltimeterWrapper.LAST_UPDATE_KEY) ?: Instant.EPOCH
+            return JavaTime.between(lastUpdate, Instant.now())
         }
 
     init {

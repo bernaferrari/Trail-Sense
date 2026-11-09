@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared.colors
 import android.content.Context
 import android.graphics.Color
 import androidx.annotation.ColorInt
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.trail_sense.shared.UserPreferences
 import kotlin.math.max
 import kotlin.math.min

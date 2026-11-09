@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.Vector2
-import com.kylecorry.sol.time.Time
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -125,7 +125,7 @@ internal fun AstroChart(
                                 return@detectTapGestures
                             }
                             val hour = (((offset.x - inset) / (width - 2 * inset)) * 24f).coerceIn(0f, 24f)
-                            onClick(state.startTime.plus(Time.hours(hour.toDouble())).toZonedDateTime())
+                            onClick(state.startTime.plus(JavaTime.hours(hour.toDouble())).toZonedDateTime())
                         }
                     }
             ) {
@@ -141,7 +141,7 @@ internal fun AstroChart(
         ) {
             listOf(0, 6, 12, 18, 24).forEach { hour ->
                 Text(
-                    state.startTime.plus(Time.hours(hour.toDouble())).toZonedDateTime().hour.toString(),
+                    state.startTime.plus(JavaTime.hours(hour.toDouble())).toZonedDateTime().hour.toString(),
                     style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
                     color = scheme.onSurfaceVariant
                 )
@@ -379,7 +379,7 @@ private fun DrawScope.drawHorizontal(
 
 /** Hours since [start] and the altitude. */
 private fun Reading<Float>.toVector(start: Instant): Vector2 {
-    return Vector2(Duration.between(start, time).toMillis() / 3600000f, value)
+    return Vector2(JavaTime.between(start, time).toMillis() / 3600000f, value)
 }
 
 private fun toScreen(point: Vector2, left: Float, right: Float, top: Float, bottom: Float): Offset {

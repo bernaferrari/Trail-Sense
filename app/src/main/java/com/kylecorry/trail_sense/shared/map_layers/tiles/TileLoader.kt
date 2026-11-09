@@ -9,10 +9,10 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.os.Bundle
-import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
-import com.kylecorry.andromeda.bitmaps.operations.Pad
-import com.kylecorry.andromeda.bitmaps.operations.Resize
-import com.kylecorry.andromeda.bitmaps.operations.applyOperations
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.use
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Pad
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Resize
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.applyOperations
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.main.getAppService

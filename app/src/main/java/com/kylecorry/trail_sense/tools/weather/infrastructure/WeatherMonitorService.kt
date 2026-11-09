@@ -4,11 +4,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import com.kylecorry.andromeda.background.IAlwaysOnTaskScheduler
-import com.kylecorry.andromeda.background.TaskSchedulerFactory
-import com.kylecorry.andromeda.background.services.ForegroundInfo
-import com.kylecorry.andromeda.background.services.IntervalService
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.IAlwaysOnTaskScheduler
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.TaskSchedulerFactory
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
+import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.IntervalService
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify

@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -16,7 +18,7 @@ import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
 import com.kylecorry.sol.science.astronomy.stars.CONSTELLATIONS
 import com.kylecorry.sol.science.astronomy.stars.Star
-import com.kylecorry.sol.time.Time
+import com.kylecorry.trail_sense.shared.time.JavaTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -202,7 +204,7 @@ class ARAstronomyLayer(
                 val sunPathTimes = astro.getSunAboveHorizonTimes(location, time)
 
                 val moonPositions = if (moonPathTimes != null) {
-                    Time.getReadings(
+                    JavaTime.getReadings(
                         moonPathTimes.start.minus(granularity),
                         moonPathTimes.end.plus(granularity),
                         granularity
@@ -233,7 +235,7 @@ class ARAstronomyLayer(
                 }
 
                 val sunPositions = if (sunPathTimes != null) {
-                    Time.getReadings(
+                    JavaTime.getReadings(
                         sunPathTimes.start.minus(granularity),
                         sunPathTimes.end.plus(granularity),
                         granularity

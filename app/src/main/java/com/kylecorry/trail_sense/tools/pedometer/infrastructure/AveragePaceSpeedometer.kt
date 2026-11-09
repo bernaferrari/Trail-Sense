@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
 import android.os.Bundle
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.ISpeedometer
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.trail_sense.shared.ZERO_SPEED
@@ -22,7 +22,7 @@ class AveragePaceSpeedometer(
     private val stepTrackerService: IStepTrackerService,
     private val paceCalculator: IPaceCalculator,
     private val pedometerPreferences: IPedometerPreferences
-) : AbstractSensor(), ISpeedometer {
+) : SharedSensor(), Speedometer {
 
     private var scope = newScope()
 

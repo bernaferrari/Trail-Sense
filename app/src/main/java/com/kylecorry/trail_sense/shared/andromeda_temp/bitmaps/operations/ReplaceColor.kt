@@ -1,0 +1,24 @@
+package com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations
+
+import android.graphics.Bitmap
+import androidx.annotation.ColorInt
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.replaceColor
+import com.kylecorry.sol.math.arithmetic.Arithmetic
+
+class ReplaceColor(
+    @param:ColorInt private val sourceColor: Int,
+    @param:ColorInt private val destinationColor: Int,
+    private val threshold: Float = Arithmetic.EPSILON_FLOAT,
+    private val interpolate: Boolean = false,
+    private val inPlace: Boolean = true
+) : BitmapOperation {
+    override fun execute(bitmap: Bitmap): Bitmap {
+        return bitmap.replaceColor(
+            sourceColor,
+            destinationColor,
+            threshold,
+            interpolate,
+            inPlace
+        )
+    }
+}

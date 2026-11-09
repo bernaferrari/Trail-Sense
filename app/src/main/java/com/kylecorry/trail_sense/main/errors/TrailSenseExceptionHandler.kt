@@ -3,11 +3,11 @@ package com.kylecorry.trail_sense.main.errors
 import android.content.Intent
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.exceptions.AggregateBugReportGenerator
-import com.kylecorry.andromeda.exceptions.AndroidDetailsBugReportGenerator
-import com.kylecorry.andromeda.exceptions.AppDetailsBugReportGenerator
-import com.kylecorry.andromeda.exceptions.DeviceDetailsBugReportGenerator
-import com.kylecorry.andromeda.exceptions.StackTraceBugReportGenerator
+import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.AggregateBugReportGenerator
+import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.AndroidDetailsBugReportGenerator
+import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.AppDetailsBugReportGenerator
+import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.DeviceDetailsBugReportGenerator
+import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.StackTraceBugReportGenerator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService

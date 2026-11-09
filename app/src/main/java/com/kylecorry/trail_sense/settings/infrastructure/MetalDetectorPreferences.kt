@@ -2,8 +2,8 @@ package com.kylecorry.trail_sense.settings.infrastructure
 
 import android.content.Context
 import android.hardware.Sensor
-import com.kylecorry.andromeda.preferences.BooleanPreference
-import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
 import com.kylecorry.trail_sense.R
 
 class MetalDetectorPreferences(context: Context) : PreferenceRepo(context) {

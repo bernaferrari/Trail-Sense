@@ -7,8 +7,8 @@ import android.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.toColorInt
-import com.kylecorry.andromeda.canvas.CanvasDrawer
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.CanvasDrawer
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.trail_sense.shared.icons.trail.*

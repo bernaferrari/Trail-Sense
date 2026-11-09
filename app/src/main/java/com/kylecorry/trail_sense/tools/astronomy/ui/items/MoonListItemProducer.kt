@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate

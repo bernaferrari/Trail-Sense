@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.shared.sensors.compass
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.compass.ICompass
-import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
+import com.kylecorry.andromeda.sense.compass.CompassSensor
+import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.sol.units.Bearing
 
 class MagQualityCompassWrapper(
-    private val compass: ICompass,
-    private val magnetometer: IMagnetometer
+    private val compass: CompassSensor,
+    private val magnetometer: Magnetometer
 ) :
-    AbstractSensor(), ICompass {
+    SharedSensor(), CompassSensor {
     override val bearing: Bearing
         get() = compass.bearing
 

@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.whistle.infrastructure
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
-import com.kylecorry.andromeda.sound.SoundPlayer
+import com.kylecorry.trail_sense.shared.andromeda_temp.sound.SoundPlayer
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import kotlin.math.sin
 

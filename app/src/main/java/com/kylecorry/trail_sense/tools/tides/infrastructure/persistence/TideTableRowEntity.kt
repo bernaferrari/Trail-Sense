@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import java.time.Instant
-import java.time.ZoneId
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
 @Entity(tableName = "tide_table_rows", indices = [Index(value = ["table_id"])])
 data class TideTableRowEntity(
@@ -20,7 +21,7 @@ data class TideTableRowEntity(
 
     fun toTide(): Tide {
         return Tide(
-            time.atZone(ZoneId.systemDefault()),
+            time.toKotlinInstant(),
             isHigh,
             heightMeters
         )
@@ -31,7 +32,7 @@ data class TideTableRowEntity(
             return TideTableRowEntity(
                 id,
                 tableId,
-                tide.time.toInstant(),
+                tide.time.toJavaInstant(),
                 tide.isHigh,
                 tide.height
             )

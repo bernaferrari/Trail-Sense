@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.settings.infrastructure
 
 import android.content.Context
-import com.kylecorry.andromeda.preferences.BooleanPreference
-import com.kylecorry.andromeda.preferences.IntPreference
-import com.kylecorry.andromeda.preferences.StringEnumPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.IntPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.compass.CompassSource

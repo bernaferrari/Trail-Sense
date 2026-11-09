@@ -2,11 +2,11 @@ package com.kylecorry.trail_sense.plugins.infrastructure
 
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest
-import com.kylecorry.andromeda.ipc.InterprocessCommunicationResponse
-import com.kylecorry.andromeda.ipc.client.InterprocessCommunicationClient
+import com.kylecorry.trail_sense.shared.andromeda_temp.ipc.InterprocessCommunicationRequest
+import com.kylecorry.trail_sense.shared.andromeda_temp.ipc.InterprocessCommunicationResponse
+import com.kylecorry.trail_sense.shared.andromeda_temp.ipc.client.InterprocessCommunicationClient
 import com.kylecorry.andromeda.json.toJsonBytes
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import java.io.Closeable

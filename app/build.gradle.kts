@@ -205,6 +205,12 @@ dependencies {
     implementation(libs.material)
     implementation(libs.flexbox)
 
+    // Markdown rendering into Android text spans (formerly bundled by Andromeda's markdown module)
+    implementation("io.noties.markwon:core:4.6.2")
+    implementation("io.noties.markwon:linkify:4.6.2")
+    implementation("io.noties.markwon:image:4.6.2")
+    implementation("io.noties.markwon:simple-ext:4.6.2")
+
     // Andromeda
     implementation(libs.andromeda.core)
     implementation(libs.andromeda.forms)

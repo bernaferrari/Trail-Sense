@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import com.kylecorry.luna.text.toIntCompat
-import com.kylecorry.andromeda.preferences.BooleanPreference
-import com.kylecorry.andromeda.preferences.FloatPreference
-import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.FloatPreference
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
 import com.kylecorry.sol.math.Range
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -43,7 +45,7 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
 
     override var weatherUpdateFrequency: Duration
         get() {
-            return cache.getDuration(context.getString(R.string.pref_weather_update_frequency))
+            return cache.getJavaDuration(context.getString(R.string.pref_weather_update_frequency))
                 ?: Duration.ofMinutes(30)
         }
         set(value) {

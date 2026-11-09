@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.calculators
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
+
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.sol.time.Time.getClosestFutureTime
-import com.kylecorry.sol.time.Time.getClosestPastTime
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.getClosestFutureTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.getClosestPastTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
@@ -58,8 +60,8 @@ internal class DailyTemperatureCalculator(
             }
 
             return Range(previousHigh, nextLow) to QuadraticTemperatureCalculator(
-                Reading(start, nextLow.toInstant()),
-                Reading(end, previousHigh.toInstant())
+                Reading(start, nextLow.toKotlinInstant()),
+                Reading(end, previousHigh.toKotlinInstant())
             )
         }
 
@@ -77,8 +79,8 @@ internal class DailyTemperatureCalculator(
 
         // High Low x High Low
         return Range(previousLow, nextHigh) to SineTemperatureCalculator(
-            Reading(start, previousLow.toInstant()),
-            Reading(end, nextHigh.toInstant())
+            Reading(start, previousLow.toKotlinInstant()),
+            Reading(end, nextHigh.toKotlinInstant())
         )
     }
 
@@ -89,7 +91,7 @@ internal class DailyTemperatureCalculator(
             astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate().plusDays(1))
         return getClosestFutureTime(
             time,
-            listOf(today.transit?.plus(offset), tomorrow.transit?.plus(offset))
+            listOf(today.transit?.toZonedDateTime(time.zone)?.plus(offset), tomorrow.transit?.toZonedDateTime(time.zone)?.plus(offset))
         ) ?: getClosestFutureTime(
             time,
             listOf(
@@ -120,7 +122,7 @@ internal class DailyTemperatureCalculator(
             astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate().minusDays(1))
         return getClosestPastTime(
             time,
-            listOf(today.transit?.plus(offset), yesterday.transit?.plus(offset))
+            listOf(today.transit?.toZonedDateTime(time.zone)?.plus(offset), yesterday.transit?.toZonedDateTime(time.zone)?.plus(offset))
         ) ?: getClosestPastTime(
             time,
             listOf(
@@ -140,7 +142,7 @@ internal class DailyTemperatureCalculator(
             astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate().minusDays(1))
         return getClosestPastTime(
             time,
-            listOf(today.rise, yesterday.rise)
+            listOf(today.rise?.toZonedDateTime(time.zone), yesterday.rise?.toZonedDateTime(time.zone))
         ) ?: getClosestPastTime(
             time,
             listOf(

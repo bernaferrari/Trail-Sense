@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
+
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,8 +14,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.sol.units.DistanceUnits
-
-
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -71,7 +71,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.science.oceanography.Tide
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -290,7 +290,7 @@ internal class CreateTideViewModel(
             TideEntry(
                 nextTideEntryId++,
                 it.isHigh,
-                it.time,
+                it.time.toZonedDateTime(),
                 if (height != null) Distance.meters(height).convertTo(units) else null
             )
         }
@@ -378,7 +378,7 @@ internal class CreateTideViewModel(
         val tides = tideEntries.mapNotNull {
             val time = it.time ?: return@mapNotNull null
             Tide(
-                time,
+                time.toKotlinInstant(),
                 it.isHigh,
                 it.height?.meters()?.value
             )

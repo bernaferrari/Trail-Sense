@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
 import androidx.annotation.ColorInt
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
-
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 interface IPathLineDrawerStrategy {
     fun draw(
         canvasDrawer: ICanvasDrawer,

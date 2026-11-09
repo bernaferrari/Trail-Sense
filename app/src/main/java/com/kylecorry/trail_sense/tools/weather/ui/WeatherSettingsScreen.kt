@@ -2,11 +2,13 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import kotlinx.coroutines.launch
 
@@ -23,7 +25,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.settings.ui.SettingsOption
 import com.kylecorry.trail_sense.settings.ui.optionLabel
 import com.kylecorry.trail_sense.settings.ui.pickOption
@@ -34,8 +36,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.units.Pressure
@@ -509,7 +511,7 @@ internal sealed interface WeatherSettingsEvent {
  */
 internal class WeatherSettingsViewModel(
     private val prefs: WeatherPreferences,
-    private val cache: IPreferences,
+    private val cache: Preferences,
     private val monitor: ToolService,
     private val repo: WeatherRepo,
     private val isNotificationBlocked: () -> Boolean,
@@ -604,7 +606,7 @@ internal class WeatherSettingsViewModel(
     suspend fun loadDebugTimingSummary() {
         debugTimingSummary = withContext(Dispatchers.Default) {
             val readings = repo.getAll()
-                .zipWithNext { a, b -> Duration.between(a.time, b.time).seconds / 60f }
+                .zipWithNext { a, b -> JavaTime.between(a.time, b.time).seconds / 60f }
 
             if (readings.isEmpty()) {
                 return@withContext null

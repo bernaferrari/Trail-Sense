@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalDateTime
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.hooks.Hooks

@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.paths.infrastructure
 
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter

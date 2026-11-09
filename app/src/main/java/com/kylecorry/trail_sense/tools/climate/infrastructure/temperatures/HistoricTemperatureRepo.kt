@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.time.Time
+import com.kylecorry.trail_sense.shared.time.JavaTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
@@ -28,7 +28,7 @@ internal class HistoricTemperatureRepo(private val context: Context) : ITemperat
         val monthly =
             HistoricMonthlyTemperatureRangeRepo.getMonthlyTemperatureRanges(location)
 
-        Time.getYearlyValues(year) {
+        JavaTime.getYearlyValues(year) {
             getDailyRange(location, it, monthly)
         }
     }
@@ -40,7 +40,7 @@ internal class HistoricTemperatureRepo(private val context: Context) : ITemperat
     ): List<Reading<Temperature>> {
         val calculator = DailyTemperatureCalculator(location, this::getDailyRange)
 
-        return Time.getReadings(start, end, Duration.ofMinutes(10)) {
+        return JavaTime.getReadings(start, end, Duration.ofMinutes(10)) {
             calculator.calculate(it)
         }
     }

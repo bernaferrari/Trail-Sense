@@ -4,6 +4,10 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalTime
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect

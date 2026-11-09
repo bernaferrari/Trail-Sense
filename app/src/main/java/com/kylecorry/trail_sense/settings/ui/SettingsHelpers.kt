@@ -18,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -98,7 +98,7 @@ internal fun optionLabel(options: List<SettingsOption>, selected: String): Strin
 }
 
 internal fun Context.getStringPreference(
-    cache: IPreferences,
+    cache: Preferences,
     @StringRes key: Int,
     default: String
 ): String {
@@ -106,18 +106,18 @@ internal fun Context.getStringPreference(
 }
 
 internal fun Context.getBoolean(
-    cache: IPreferences,
+    cache: Preferences,
     @StringRes key: Int,
     default: Boolean
 ): Boolean {
     return cache.getBoolean(getString(key)) ?: default
 }
 
-internal fun Context.putString(cache: IPreferences, @StringRes key: Int, value: String) {
+internal fun Context.putString(cache: Preferences, @StringRes key: Int, value: String) {
     cache.putString(getString(key), value)
 }
 
-internal fun Context.putBoolean(cache: IPreferences, @StringRes key: Int, value: Boolean) {
+internal fun Context.putBoolean(cache: Preferences, @StringRes key: Int, value: Boolean) {
     cache.putBoolean(getString(key), value)
 }
 

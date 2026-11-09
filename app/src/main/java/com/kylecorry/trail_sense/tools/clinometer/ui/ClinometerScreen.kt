@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
+import com.kylecorry.trail_sense.shared.sensors.asLiveData
+
 import androidx.compose.ui.draw.alpha
 import android.content.Context
 import android.graphics.Color
@@ -47,12 +49,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.observe
-import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
-import com.kylecorry.andromeda.sense.clinometer.IClinometer
+import com.kylecorry.andromeda.sense.clinometer.ClinometerSensor
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
 import com.kylecorry.luna.cache.TrackedState
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
@@ -102,7 +104,7 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -209,7 +211,7 @@ private class ClinometerController(
     private var startMarker: ARPoint? = null
     private var endMarker: ARPoint? = null
 
-    private val clinometer: IClinometer
+    private val clinometer: ClinometerSensor
         get() = if (useCamera) cameraClinometer else sideClinometer
 
     @Composable

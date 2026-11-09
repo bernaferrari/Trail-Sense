@@ -15,7 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
@@ -218,7 +218,7 @@ private fun Context.widgetThemeOptions(): List<SettingsOption> {
     )
 }
 
-private fun Context.getDefaultWidgetTheme(cache: IPreferences): String {
+private fun Context.getDefaultWidgetTheme(cache: Preferences): String {
     val key = getString(R.string.pref_default_widget_theme)
     val current = cache.getString(key)
     if (current != null) {

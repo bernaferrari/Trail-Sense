@@ -1,22 +1,22 @@
 package com.kylecorry.trail_sense.shared.sensors.altimeter
 
 import android.hardware.SensorManager
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.core.sensors.IAltimeter
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.sense.altitude.BarometricAltimeter
-import com.kylecorry.andromeda.sense.barometer.IBarometer
+import com.kylecorry.andromeda.sense.barometer.Barometer
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Pressure
 
 class AutoInitializeBarometricAltimeter(
-    private val barometer: IBarometer,
+    private val barometer: Barometer,
     private val cachedAltimeter: CachedAltimeter
-) : AbstractSensor(),
-    IAltimeter {
+) : SharedSensor(),
+    Altimeter {
 
     private var isRunning = false
-    private var altimeter: IAltimeter? = null
+    private var altimeter: Altimeter? = null
 
     override fun startImpl() {
         isRunning = true

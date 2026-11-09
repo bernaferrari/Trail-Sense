@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
+import com.kylecorry.andromeda.core.sensors.SensorSubscriber
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.location.IGPS
-import com.kylecorry.luna.topics.Subscriber
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import java.time.Instant
 
 class ModularGPSData(
@@ -24,10 +24,10 @@ class ModularGPSData(
     override var quality: Quality = Quality.Unknown,
     override var hasValidReading: Boolean = false,
     override var altitude: Float = 0f,
-    override var eventTime: Instant = Instant.now(),
+    var eventTime: Instant = Instant.now(),
     override var speed: Speed = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds),
     @Volatile var isTimedOut: Boolean = false
-) : IGPS {
+) : GpsSensor {
 
     // Internal filter uncertainty - replace this with a custom data property (map) later
     var kalmanState: GPSKalmanState? = null
@@ -38,30 +38,27 @@ class ModularGPSData(
     val id: Long
         get() = eventTimeElapsedNanos
 
+    override val timestamp: kotlin.time.Instant
+        get() = eventTime.toKotlinInstant()
+
     // This is a data holder, so it never emits
-    override val flow: Flow<Unit> = emptyFlow()
-
-    override fun start(subscriber: Subscriber) {
+    override fun start(subscriber: SensorSubscriber) {
         // Do nothing
     }
 
-    override fun stop(subscriber: Subscriber?) {
+    override fun stop(subscriber: SensorSubscriber?) {
         // Do nothing
     }
 
-    override fun subscribe(subscriber: Subscriber) {
+    override fun subscribe(subscriber: SensorSubscriber) {
         // Do nothing
     }
 
-    override fun unsubscribe(subscriber: Subscriber) {
+    override fun unsubscribe(subscriber: SensorSubscriber) {
         // Do nothing
     }
 
     override fun unsubscribeAll() {
-        // Do nothing
-    }
-
-    override suspend fun read(isSatisfied: () -> Boolean) {
         // Do nothing
     }
 
@@ -84,7 +81,7 @@ class ModularGPSData(
         other.isTimedOut = isTimedOut
     }
 
-    fun populateFromGPS(gps: IGPS) {
+    fun populateFromGPS(gps: GpsSensor) {
         kalmanState = null
         location = gps.location
         verticalAccuracy = gps.verticalAccuracy
@@ -97,7 +94,7 @@ class ModularGPSData(
         quality = gps.quality
         hasValidReading = gps.hasValidReading
         altitude = gps.altitude
-        eventTime = gps.eventTime
+        eventTime = gps.timestamp.toJavaInstant()
         speed = gps.speed
         speedSource = (gps as? ModularGPSData)?.speedSource ?: SpeedSource.Provider
     }

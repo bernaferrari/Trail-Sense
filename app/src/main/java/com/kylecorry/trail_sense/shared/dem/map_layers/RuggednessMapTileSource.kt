@@ -5,8 +5,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
-import com.kylecorry.andromeda.bitmaps.operations.Dither
-import com.kylecorry.andromeda.bitmaps.operations.applyOperations
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Dither
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.applyOperations
 import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.dem.colors.RuggednessDefaultColorMap
 import com.kylecorry.trail_sense.shared.dem.getCellSizeX

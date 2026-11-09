@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.compass
 
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.sol.math.MathExtensions.real
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.trail_sense.main.getAppService
@@ -21,13 +21,13 @@ import kotlin.math.sqrt
  * @param verbose true if the sensor should print debug information
  */
 class QuickRecalibrationOrientationSensor(
-    private val reference: IOrientationSensor,
-    private val primary: IOrientationSensor,
+    private val reference: OrientationSensor,
+    private val primary: OrientationSensor,
     private val resetAngleThreshold: Float = 4f,
     private val motionAngleThreshold: Float = 60f,
     resetTime: Duration = Duration.ofSeconds(1),
     private val verbose: Boolean = false
-) : AbstractSensor(), IOrientationSensor {
+) : SharedSensor(), OrientationSensor {
 
     override val hasValidReading: Boolean
         get() = primary.hasValidReading

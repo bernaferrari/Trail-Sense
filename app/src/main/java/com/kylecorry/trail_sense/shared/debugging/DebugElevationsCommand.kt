@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.debugging
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import com.kylecorry.andromeda.csv.CSVConvert
 import com.kylecorry.sol.units.Reading

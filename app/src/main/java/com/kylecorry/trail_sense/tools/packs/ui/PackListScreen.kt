@@ -69,7 +69,7 @@ import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.LaunchedEffect

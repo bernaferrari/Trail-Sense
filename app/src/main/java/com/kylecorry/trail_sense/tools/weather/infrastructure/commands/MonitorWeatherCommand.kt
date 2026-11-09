@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
+import kotlin.time.Duration.Companion.seconds
+
 import android.content.Context
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
@@ -37,7 +39,7 @@ internal class MonitorWeatherCommand(
         fun create(context: Context): MonitorWeatherCommand {
             return MonitorWeatherCommand(
                 WeatherRepo.getInstance(context),
-                WeatherObserver(context, Duration.ofSeconds(10)),
+                WeatherObserver(context, 10.seconds),
                 WeatherSubsystem.getInstance(context),
                 SendWeatherAlertsCommand(context)
             )

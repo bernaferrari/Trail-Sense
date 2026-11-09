@@ -7,11 +7,11 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.core.graphics.alpha
 import com.kylecorry.andromeda.bitmaps.LookupTable
-import com.kylecorry.andromeda.bitmaps.operations.Conditional
-import com.kylecorry.andromeda.bitmaps.operations.Lut
-import com.kylecorry.andromeda.bitmaps.operations.applyOperationsOrNull
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Conditional
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Lut
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.applyOperationsOrNull
 import com.kylecorry.andromeda.core.ui.colormaps.AlphaColorMap
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.map_layers.tiles.InterpolatedGridValueProvider
 import com.kylecorry.trail_sense.shared.map_layers.tiles.ParallelCoordinateGridValueProvider

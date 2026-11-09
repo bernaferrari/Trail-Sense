@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
 import android.content.Context
-import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.luna.text.slugify
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow

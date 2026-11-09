@@ -2,6 +2,10 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.andromeda.core.sensors.read
+
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import android.content.Context
 import android.text.util.Linkify.WEB_URLS
 import androidx.compose.runtime.Composable
@@ -20,12 +24,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.core.sensors.IAltimeter
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.core.sensors.Altimeter
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.sense.altitude.FusedAltimeter
-import com.kylecorry.andromeda.sense.barometer.IBarometer
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.barometer.Barometer
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onDefault
@@ -409,14 +413,14 @@ internal data class AltimeterConditionalState(
  */
 internal class CalibrateAltimeterViewModel(
     private val prefs: UserPreferences,
-    private val cache: IPreferences,
+    private val cache: Preferences,
     private val sensorService: SensorService,
-    private val gps: IGPS,
+    private val gps: GpsSensor,
     private val keys: AltimeterPreferenceKeys
 ) : ViewModel() {
 
-    private val barometer: IBarometer = sensorService.getBarometer()
-    private var altimeter: IAltimeter
+    private val barometer: Barometer = sensorService.getBarometer()
+    private var altimeter: Altimeter
     private val throttle = Throttle(20)
     private var altimeterStarted = false
     private var isShown = false

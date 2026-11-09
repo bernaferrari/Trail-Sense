@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps
 
+import com.kylecorry.andromeda.bitmaps.toPixelImage
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Size
-import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
-import com.kylecorry.andromeda.files.FileSaver
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.rotate
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.FileSaver
 import com.kylecorry.andromeda.pdf.Datum
 import com.kylecorry.andromeda.pdf.GeographicCoordinateSystem
 import com.kylecorry.andromeda.pdf.GeospatialPDFParser
@@ -88,7 +90,7 @@ class MapExportService(
                     catalog(1, 2),
                     pages(2, listOf(3)),
                     page(3, 2, width, height, listOf(4)),
-                    image(4, bitmap, destWidth = width, destHeight = height)
+                    image(4, bitmap.toPixelImage(), destWidth = width, destHeight = height)
                 )
             }
 
@@ -117,7 +119,7 @@ class MapExportService(
                 catalog(1, 2),
                 pages(2, listOf(3)),
                 page(3, 2, width, height, listOf(4), listOf(5)),
-                image(4, bitmap, destWidth = width, destHeight = height),
+                image(4, bitmap.toPixelImage(), destWidth = width, destHeight = height),
                 viewport(5, 6, doubleArrayOf(0.0, 0.0, width.toDouble(), height.toDouble())),
                 geo(
                     6,

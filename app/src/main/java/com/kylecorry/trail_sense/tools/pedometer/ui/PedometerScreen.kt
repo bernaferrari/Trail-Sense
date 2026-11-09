@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.pedometer.AndroidPedometer
+
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 
@@ -90,10 +92,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.sensors.ISpeedometer
+import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.luna.topics.generic.getOrNull
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -165,7 +167,7 @@ internal fun PedometerScreen(
         AveragePaceSpeedometer(stepTracker, paceCalculator, prefs.pedometer)
     }
     val instantSpeedometer = remember(paceCalculator) {
-        CurrentPaceSpeedometer(Pedometer(context), paceCalculator)
+        CurrentPaceSpeedometer(AndroidPedometer(context), paceCalculator)
     }
     var refreshKey by remember { mutableIntStateOf(0) }
     var openPeriod by remember { mutableStateOf<StepTrackingPeriod?>(null) }
@@ -957,7 +959,7 @@ private fun PedometerSessionRow(
 }
 
 @Composable
-private fun speedText(speedometer: ISpeedometer, formatService: FormatService): String {
+private fun speedText(speedometer: Speedometer, formatService: FormatService): String {
     return if (speedometer.hasValidReading) {
         formatService.formatSpeed(speedometer.speed.value)
     } else {
@@ -966,7 +968,7 @@ private fun speedText(speedometer: ISpeedometer, formatService: FormatService): 
 }
 
 @Composable
-private fun paceText(speedometer: ISpeedometer, formatService: FormatService): String {
+private fun paceText(speedometer: Speedometer, formatService: FormatService): String {
     return if (speedometer.hasValidReading) {
         formatService.formatPace(speedometer.speed.value)
     } else {

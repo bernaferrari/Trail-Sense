@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.tools.pedometer.domain
 
-import com.kylecorry.andromeda.core.time.IZonedDateTimeProvider
+import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+
+import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.IEventEmitter
@@ -23,7 +25,7 @@ class StepTrackerService(
     private val repository: IStepTrackerRepository,
     private val eventBus: IEventEmitter,
     private val preferences: IPedometerPreferences,
-    private val timeProvider: IZonedDateTimeProvider = SystemZonedDateTimeProvider()
+    private val timeProvider: ZonedDateTimeProvider = SystemZonedDateTimeProvider()
 ) : IStepTrackerService {
 
     private val stepMutex = Mutex()
@@ -154,7 +156,7 @@ class StepTrackerService(
     }
 
     override suspend fun clean() = stepMutex.withLock {
-        val cutoff = timeProvider.getTime().toInstant().minus(preferences.stepHistory)
+        val cutoff = timeProvider.getTime().toJava().toInstant().minus(preferences.stepHistory)
         val deletedBuckets = repository.deleteBucketsOlderThan(cutoff)
         val deletedPeriods = repository.deleteEmptyClosedPeriods()
         val updatedPeriods = repository.setMinimumPeriodStartTime(cutoff)

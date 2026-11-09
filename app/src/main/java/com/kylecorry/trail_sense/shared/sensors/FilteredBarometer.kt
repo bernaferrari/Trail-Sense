@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.sense.barometer.IBarometer
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.sense.barometer.Barometer
 import com.kylecorry.sol.math.filters.IFilter
 
 class FilteredBarometer(
-    private val barometer: IBarometer,
+    private val barometer: Barometer,
     private val minimumReadingCount: Int = 1,
     private val filterProvider: (initialValue: Float) -> IFilter
-) : AbstractSensor(), IBarometer {
+) : SharedSensor(), Barometer {
 
     private var filter: IFilter? = null
     private var filteredPressure: Float? = null

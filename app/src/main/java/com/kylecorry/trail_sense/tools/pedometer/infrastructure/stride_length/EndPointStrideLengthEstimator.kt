@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length
 
-import com.kylecorry.andromeda.core.sensors.AbstractSensor
-import com.kylecorry.andromeda.sense.location.IGPS
-import com.kylecorry.andromeda.sense.pedometer.IPedometer
+import com.kylecorry.andromeda.core.sensors.SharedSensor
+import com.kylecorry.andromeda.sense.location.GpsSensor
+import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 
-class EndPointStrideLengthEstimator(private val gps: IGPS, private val pedometer: IPedometer) :
-    AbstractSensor(), IStrideLengthEstimator {
+class EndPointStrideLengthEstimator(private val gps: GpsSensor, private val pedometer: Pedometer) :
+    SharedSensor(), IStrideLengthEstimator {
 
     override var strideLength: Distance? = null
         private set

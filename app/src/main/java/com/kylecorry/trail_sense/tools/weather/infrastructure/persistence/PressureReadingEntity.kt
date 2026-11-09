@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.persistence
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index

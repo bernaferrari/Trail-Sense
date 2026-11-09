@@ -1,9 +1,11 @@
 package com.kylecorry.trail_sense.tools.paths.domain.factories
 
+import com.kylecorry.trail_sense.shared.time.interop.*
+
 import android.content.Context
 import android.graphics.Color
 import android.util.Range
-import com.kylecorry.andromeda.core.rangeOrNull
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.rangeOrNull
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.scales.ContinuousColorScale

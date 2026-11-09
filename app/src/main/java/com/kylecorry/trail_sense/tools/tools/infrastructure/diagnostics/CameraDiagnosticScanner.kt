@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf

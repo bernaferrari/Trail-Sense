@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.main.errors
 
 import android.content.Context
-import com.kylecorry.andromeda.core.system.CurrentApp
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.CurrentApp
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.andromeda.exceptions.IBugReportGenerator
-import com.kylecorry.andromeda.files.IFileSystem
-import com.kylecorry.andromeda.files.LocalFileSystem
-
+import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.IBugReportGenerator
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.IFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.LocalFileSystem
 abstract class BaseExceptionHandler(
     protected val context: Context,
     private val generator: IBugReportGenerator,

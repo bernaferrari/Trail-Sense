@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -229,7 +235,7 @@ fun WeatherToolScreen(
         if (readings.size < 2) {
             return
         }
-        val readingDuration = Duration.between(readings.first().time, Instant.now())
+        val readingDuration = JavaTime.between(readings.first().time, Instant.now())
         CustomUiUtils.showComposeContentDialog(
             context = context,
             title = context.getString(
@@ -255,7 +261,7 @@ fun WeatherToolScreen(
         if (readings.size < 2) {
             return
         }
-        val readingDuration = Duration.between(readings.first().time, Instant.now())
+        val readingDuration = JavaTime.between(readings.first().time, Instant.now())
         CustomUiUtils.showComposeContentDialog(
             context = context,
             title = context.getString(
@@ -506,7 +512,7 @@ internal class WeatherViewModel(
         updateJob = viewModelScope.launch {
             val nextHistory = onIO {
                 weatherSubsystem.getHistory().filter {
-                    Duration.between(it.time, Instant.now()) <= prefs.weather.pressureHistory
+                    JavaTime.between(it.time, Instant.now()) <= prefs.weather.pressureHistory
                 }
             }
 
@@ -531,7 +537,7 @@ internal class WeatherViewModel(
         if (isDebug()) {
             if (prefs.weather.useSeaLevelPressure) {
                 val raw = weatherSubsystem.getRawHistory(true).filter {
-                    Duration.between(
+                    JavaTime.between(
                         it.time,
                         Instant.now()
                     ) <= prefs.weather.pressureHistory
@@ -846,7 +852,7 @@ private fun WeatherPressureSection(
 @Composable
 private fun WeatherChartAxis(data: WeatherPressureChartData, formatService: FormatService) {
     val start = (data.data.firstOrNull() ?: data.raw.firstOrNull())?.time ?: return
-    val span = Duration.between(start, Instant.now())
+    val span = JavaTime.between(start, Instant.now())
     Row(
         Modifier
             .fillMaxWidth()
@@ -1166,11 +1172,11 @@ private fun weatherPressureChartPoints(
     val startTime = data.firstOrNull()?.time
         ?: raw.firstOrNull()?.time
         ?: forecast.firstOrNull()?.time
-        ?: Instant.now()
+        ?: kotlin.time.Clock.System.now()
     fun toPoints(readings: List<Reading<Pressure>>): List<WeatherPressureChartPoint> {
         return readings.map {
             WeatherPressureChartPoint(
-                Duration.between(startTime, it.time).toMillis() / 3_600_000f,
+                JavaTime.between(startTime, it.time).toMillis() / 3_600_000f,
                 it.value.value
             )
         }
@@ -1193,7 +1199,7 @@ private fun weatherPressureChartPoints(
     val yMinimum = mid - span / 2
     val yMaximum = mid + span / 2
     return WeatherPressureChartPoints(
-        startTime = startTime,
+        startTime = startTime.toJavaInstant(),
         data = points,
         raw = rawPoints,
         forecast = forecastPoints,

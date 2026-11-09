@@ -61,7 +61,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
@@ -685,13 +685,13 @@ internal fun rememberFloatPreference(key: String): Pair<Float?, (Float?) -> Unit
     return value to setter
 }
 
-private fun IPreferences.getDistance(key: String): Distance? {
+private fun Preferences.getDistance(key: String): Distance? {
     val value = getFloat("$key-value") ?: return null
     val unit = getInt("$key-unit") ?: return null
     return Distance.from(value, DistanceUnits.entries.firstOrNull { it.id == unit } ?: DistanceUnits.Meters)
 }
 
-private fun IPreferences.putDistance(key: String, distance: Distance?) {
+private fun Preferences.putDistance(key: String, distance: Distance?) {
     if (distance == null) {
         remove("$key-value")
         remove("$key-unit")
@@ -701,7 +701,7 @@ private fun IPreferences.putDistance(key: String, distance: Distance?) {
     }
 }
 
-private fun IPreferences.getSpeed(key: String): Speed? {
+private fun Preferences.getSpeed(key: String): Speed? {
     val value = getFloat("$key-value") ?: return null
     val distanceUnit = getInt("$key-distance-unit") ?: return null
     val timeUnit = getInt("$key-time-unit") ?: return null
@@ -712,7 +712,7 @@ private fun IPreferences.getSpeed(key: String): Speed? {
     )
 }
 
-private fun IPreferences.putSpeed(key: String, speed: Speed?) {
+private fun Preferences.putSpeed(key: String, speed: Speed?) {
     if (speed == null) {
         remove("$key-value")
         remove("$key-distance-unit")
@@ -724,13 +724,13 @@ private fun IPreferences.putSpeed(key: String, speed: Speed?) {
     }
 }
 
-private fun IPreferences.getWeight(key: String): Weight? {
+private fun Preferences.getWeight(key: String): Weight? {
     val value = getFloat("$key-value") ?: return null
     val unit = getInt("$key-unit") ?: return null
     return Weight.from(value, WeightUnits.entries.firstOrNull { it.id == unit } ?: WeightUnits.Kilograms)
 }
 
-private fun IPreferences.putWeight(key: String, weight: Weight?) {
+private fun Preferences.putWeight(key: String, weight: Weight?) {
     if (weight == null) {
         remove("$key-value")
         remove("$key-unit")

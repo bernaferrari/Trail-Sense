@@ -1,5 +1,15 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem
 
+import kotlin.time.toJavaInstant
+
+import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
+
+import com.kylecorry.trail_sense.shared.time.interop.*
+
+import com.kylecorry.trail_sense.shared.time.JavaTime
+
+import com.kylecorry.trail_sense.shared.preferences.onChange
+
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.cache.MemoryCachedValue
@@ -7,7 +17,7 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.subscriptions.ISubscription
 import com.kylecorry.luna.subscriptions.Subscription
-import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateClassification
 import com.kylecorry.sol.science.meteorology.Meteorology
@@ -127,7 +137,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
             val reading = precalibrated.firstOrNull { r -> r.time == it.time }
             WeatherObservation(
                 reading?.value?.id ?: 0L,
-                it.time,
+                it.time.toJavaInstant(),
                 Pressure.from(it.value.value + offset, it.value.units),
                 Temperature.celsius(reading?.value?.temperature ?: 0f),
                 reading?.value?.humidity
@@ -216,7 +226,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
             val readings = weatherRepo.getAll()
                 .asSequence()
                 .sortedBy { it.time }
-                .filter { it.time <= Instant.now() }
+                .filter { it.time <= kotlin.time.Clock.System.now() }
                 .map {
                     if (it.value.location == Coordinate.zero) it.copy(
                         value = it.value.copy(
@@ -254,8 +264,8 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
             .associate { it.first.month to Temperature.celsius((it.second.start.celsius().value + it.second.end.celsius().value) / 2) }
 
         return Meteorology.getKoppenGeigerClimateClassification(
-            monthlyAverageTemperatures,
-            precipitation
+            monthlyAverageTemperatures.mapKeys { it.key.toKotlin() },
+            precipitation.mapKeys { it.key.toKotlin() }
         )
     }
 
@@ -264,7 +274,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
             val last = weatherRepo.getLast()?.time
             val maxPeriod = prefs.weather.weatherUpdateFrequency.dividedBy(3)
 
-            if (last != null && Duration.between(last, Instant.now()).abs() < maxPeriod) {
+            if (last != null && JavaTime.between(last, Instant.now()).abs() < maxPeriod) {
                 getAppService<Logger>().info(
                     TAG,
                     "Skipping weather reading, last reading was at $last (minimum spacing: $maxPeriod)"

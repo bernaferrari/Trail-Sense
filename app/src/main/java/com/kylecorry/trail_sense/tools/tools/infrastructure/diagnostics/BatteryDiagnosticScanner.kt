@@ -1,7 +1,9 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.sensors.flow
+
 import android.content.Context
-import com.kylecorry.andromeda.battery.Battery
+import com.kylecorry.trail_sense.shared.andromeda_temp.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow

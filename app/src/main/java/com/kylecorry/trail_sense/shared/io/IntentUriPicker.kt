@@ -2,10 +2,10 @@ package com.kylecorry.trail_sense.shared.io
 
 import android.content.Context
 import android.net.Uri
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.core.system.UriAccess
-import com.kylecorry.andromeda.core.system.createFile
-import com.kylecorry.andromeda.core.system.pickFile
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.createFile
+import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.pickFile
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.Result
 import com.kylecorry.trail_sense.R

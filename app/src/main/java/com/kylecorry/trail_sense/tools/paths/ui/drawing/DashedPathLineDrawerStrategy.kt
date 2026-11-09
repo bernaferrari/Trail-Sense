@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
 import android.graphics.DashPathEffect
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
-
+import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 class DashedPathLineDrawerStrategy : IPathLineDrawerStrategy {
     override fun draw(
         canvasDrawer: ICanvasDrawer,

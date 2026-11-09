@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import android.content.Context
-import com.kylecorry.sol.time.Time.toZonedDateTime
+import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R

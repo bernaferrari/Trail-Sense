@@ -1,9 +1,13 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
+import com.kylecorry.trail_sense.shared.sensors.flow
+
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.AndroidGyroscope
+
 import android.content.Context
 import android.hardware.SensorManager
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
 import com.kylecorry.andromeda.sense.orientation.Gyroscope
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +33,7 @@ class GyroscopeDiagnosticScanner : ToolDiagnosticScanner {
     }
 
     override fun fullScan(context: Context): Flow<List<ToolDiagnosticResult>> {
-        val gyroscope = Gyroscope(context, SensorManager.SENSOR_DELAY_NORMAL)
+        val gyroscope = AndroidGyroscope(context, SensorManager.SENSOR_DELAY_NORMAL)
         return gyroscope.flow.map {
             if (gyroscope.quality == Quality.Poor) {
                 listOf(
