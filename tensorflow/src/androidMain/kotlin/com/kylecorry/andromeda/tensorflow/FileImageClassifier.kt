@@ -19,7 +19,9 @@ actual fun imageClassifier(
     val model = FileInputStream(modelPath).use { stream ->
         stream.channel.map(FileChannel.MapMode.READ_ONLY, 0, stream.channel.size())
     }
-    val interpreter = Interpreter(model, Interpreter.Options().setNumThreads(options.numThreads))
+    val interpreterOptions = Interpreter.Options().setNumThreads(options.numThreads)
+    if (options.acceleration == ClassifierAcceleration.AndroidNnapi) interpreterOptions.setUseNNAPI(true)
+    val interpreter = Interpreter(model, interpreterOptions)
     try {
         require(interpreter.inputTensorCount == 1 && interpreter.outputTensorCount == 1) { "Expected a model with one input and one output" }
         val inputSize = interpreter.getInputTensor(0).numBytes()

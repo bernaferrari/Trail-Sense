@@ -24,6 +24,7 @@ actual fun imageClassifier(
     decodeOutput: (ByteArray) -> List<Float>,
     options: ClassifierOptions,
 ): ImageClassifier {
+    require(options.acceleration == ClassifierAcceleration.Cpu) { "NNAPI is only available on Android" }
     val model = requireNotNull(TfLiteModelCreateFromFile(modelPath)) { "Unable to load model: $modelPath" }
     val interpreterOptions = TfLiteInterpreterOptionsCreate()
     if (interpreterOptions == null) {

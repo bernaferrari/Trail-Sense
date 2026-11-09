@@ -2,7 +2,14 @@ package com.kylecorry.andromeda.tensorflow
 
 import com.kylecorry.andromeda.bitmaps.PixelImage
 
-data class ClassifierOptions(val numThreads: Int = 4, val applySoftmax: Boolean = false) {
+/** NNAPI acceleration is available only on Android. */
+enum class ClassifierAcceleration { Cpu, AndroidNnapi }
+
+data class ClassifierOptions(
+    val numThreads: Int = 4,
+    val applySoftmax: Boolean = false,
+    val acceleration: ClassifierAcceleration = ClassifierAcceleration.Cpu,
+) {
     init { require(numThreads > 0) }
 }
 

@@ -29,10 +29,8 @@ kotlin {
         }
         jvmTest.dependencies { implementation(kotlin("test")) }
         androidMain.dependencies {
-            implementation(project(":core"))
-            api(libs.tensorflow.lite.support)
+            implementation("com.google.ai.edge.litert:litert:1.0.1")
             implementation(libs.kotlinx.coroutines.android)
-            implementation(libs.androidx.core.ktx)
         }
     }
 }
