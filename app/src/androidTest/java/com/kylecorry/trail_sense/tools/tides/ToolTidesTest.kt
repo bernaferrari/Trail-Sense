@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides
 
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -136,15 +137,18 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
             it == string(R.string.high_tide) || it == string(R.string.low_tide)
         }
 
-        hasText(
-            id("tide_event_title", index = 1), string(
-                if (isHighFirst) {
-                    R.string.low_tide
-                } else {
-                    R.string.high_tide
-                }
+        // The list sits under the chart, so the second tide can be below the fold
+        scrollUntil {
+            hasText(
+                id("tide_event_title", index = 1), string(
+                    if (isHighFirst) {
+                        R.string.low_tide
+                    } else {
+                        R.string.high_tide
+                    }
+                )
             )
-        )
+        }
 
         // TODO: Verify the times are correct
         // TODO: Verify the chart

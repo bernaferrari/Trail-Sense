@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.paths
 
 import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.test_utils.views.view
+import java.util.regex.Pattern
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.views.clickableIn
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
@@ -393,7 +394,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun canRenamePath() {
-        click(id("path_item_menu_Today"))
+        // The recorded path is named after its time span, so match the tag's prefix
+        click({ view(By.res(Pattern.compile("(.*:id/)?path_item_menu_Today.*"))) })
         click(string(R.string.rename))
         input(string(R.string.name), "Test Path")
         clickOk()
@@ -671,7 +673,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Durfee Short")
         click(toolbarButton(Side.Right))
         click("Points")
-        click(R.id.waypoint_menu_btn)
+        // Each point's menu button is read out as "Details"
+        click(desc(string(R.string.details)))
         click(string(R.string.path_navigation_follow_to_point))
 
         // The navigation card, which has no tags, is marked by its stop button
@@ -681,7 +684,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         backUntil { isVisible(id("path_menu_btn")) }
         click(toolbarButton(Side.Right))
         click("Points")
-        click(R.id.waypoint_menu_btn)
+        click(desc(string(R.string.details)))
         click(string(R.string.path_navigation_direct))
 
         val navigator = Navigator.getInstance(TestUtils.context)
@@ -695,7 +698,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
         hasText("Durfee Short")
         // The list is ordered by most recent: Mansfield, Durfee Short, Sprague
-        clickListItemMenu(string(R.string.delete), index = 1)
+        clickListItemMenu(string(R.string.delete), menu = id("path_item_menu_Durfee Short"))
         clickOk()
 
         not { hasText("Durfee Short") }
@@ -707,7 +710,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click(toolbarButton(Side.Right))
         click(string(R.string.sort_by, current))
         click(new)
-        clickOk()
+        // Picking a sort applies it
+        clickOkIfShown()
     }
 
     private fun hasTitlesInOrder(vararg titles: String) {

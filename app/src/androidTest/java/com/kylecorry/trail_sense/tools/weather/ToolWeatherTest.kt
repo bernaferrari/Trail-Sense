@@ -49,7 +49,9 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         any(
             { hasText(string(R.string.weather_no_change), exact = true, waitForTime = 0) },
             { hasText(string(R.string.weather_overcast), exact = true, waitForTime = 0) },
-            { hasText(string(R.string.weather_clear), exact = true, waitForTime = 0) }
+            { hasText(string(R.string.weather_clear), exact = true, waitForTime = 0) },
+            // Before the monitor has a few readings, the headline asks to start it
+            { hasText(string(R.string.weather_empty_title), exact = true, waitForTime = 0) }
         )
 
         // Wait for a pressure reading
@@ -181,7 +183,8 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         openWithPressureTrend(1020f, 1010f, Duration.ofHours(3))
 
         hasText(string(R.string.precipitation_rain))
-        hasText(string(R.string.very_soon).lowercase())
+        // The headline reads "Very soon, then ..."
+        hasText(string(R.string.very_soon), ignoreCase = true)
         hasText(Regex(".*-?10\\.0 hPa / 3h.*"))
         hasText("1010.0", exact = true)
 

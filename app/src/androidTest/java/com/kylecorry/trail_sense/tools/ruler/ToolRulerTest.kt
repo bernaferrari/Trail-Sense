@@ -42,7 +42,8 @@ class ToolRulerTest : ToolTestBase(Tools.RULER) {
         input(field(string(R.string.distance_from)), "1")
         input(field(string(R.string.distance_to)), "10")
         click(string(R.string.done), exact = true)
-        hasText(id("map_distance"), Regex("\\d+(\\.\\d+)? ft"))
+        // The verbal scale uses the ruler's units (metric here)
+        hasText(id("map_distance"), Regex("\\d+(\\.\\d+)? (ft|m)"))
 
         // Switch back to ratio and verify it's still there
         click(id("map_scale"))

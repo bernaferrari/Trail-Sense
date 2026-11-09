@@ -59,7 +59,8 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
 
         input(id("search"), "Eating fish")
-        back(false)
+        // Back would also clear the search, so only hide the keyboard
+        TestUtils.closeKeyboard()
         hasText("fishing gear")
         click("Fish")
 
