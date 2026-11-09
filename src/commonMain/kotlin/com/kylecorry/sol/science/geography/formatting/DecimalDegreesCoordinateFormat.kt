@@ -11,7 +11,7 @@ import com.kylecorry.sol.units.Coordinate
  * @param locale the locale whose decimal separator, minus sign, and digits are used. Text in any locale
  * (or [NumberLocale.Invariant] for machine-readable text) can be parsed back.
  */
-class DecimalDegreesCoordinateFormat(
+public class DecimalDegreesCoordinateFormat(
     private val precision: Int = 6,
     private val locale: NumberLocale = NumberLocale.System
 ) : CoordinateFormat {

@@ -4,21 +4,21 @@ import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.arithmetic.Arithmetic.square
 import kotlin.math.PI
 
-data class Circle(val center: Vector2, val radius: Float) {
+public data class Circle(val center: Vector2, val radius: Float) {
 
-    fun circumference(): Float {
+    public fun circumference(): Float {
         return (2 * PI * radius).toFloat()
     }
 
-    fun area(): Float {
+    public fun area(): Float {
         return (PI * square(radius)).toFloat()
     }
 
-    fun contains(point: Vector2): Boolean {
+    public fun contains(point: Vector2): Boolean {
         return center.distanceTo(point) <= radius
     }
 
-    fun intersects(other: Circle): Boolean {
+    public fun intersects(other: Circle): Boolean {
         return center.distanceTo(other.center) <= (radius + other.radius)
     }
 }

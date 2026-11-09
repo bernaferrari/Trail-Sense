@@ -21,13 +21,13 @@ import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-object Statistics {
+public object Statistics {
 
     /**
      * Calculate the weighted sum of the provided values
      * @param values a list of value to weights [0, 1]
      */
-    fun weightedMean(values: List<Pair<Float, Float>>): Float {
+    public fun weightedMean(values: List<Pair<Float, Float>>): Float {
         var sum = 0f
         for (value in values) {
             sum += value.first * value.second
@@ -36,11 +36,11 @@ object Statistics {
         return sum
     }
 
-    fun mean(values: List<Float>): Float {
+    public fun mean(values: List<Float>): Float {
         return values.average().toFloat()
     }
 
-    fun meanVector2(values: List<Vector2>): Vector2 {
+    public fun meanVector2(values: List<Vector2>): Vector2 {
         if (values.isEmpty()) {
             return Vector2(Float.NaN, Float.NaN)
         }
@@ -54,7 +54,7 @@ object Statistics {
         return Vector2((x / values.size).toFloat(), (y / values.size).toFloat())
     }
 
-    fun geometricMean(values: List<Float>): Float {
+    public fun geometricMean(values: List<Float>): Float {
         if (values.isEmpty()) {
             return 0f
         }
@@ -66,11 +66,11 @@ object Statistics {
         return total.pow(1 / values.size.toDouble()).toFloat()
     }
 
-    fun harmonicMean(values: List<Float>): Float {
+    public fun harmonicMean(values: List<Float>): Float {
         return values.size / values.sumOfFloat { 1 / it }
     }
 
-    fun variance(values: List<Float>, forPopulation: Boolean = false, mean: Float? = null): Float {
+    public fun variance(values: List<Float>, forPopulation: Boolean = false, mean: Float? = null): Float {
         if (values.size <= 1) {
             return 0f
         }
@@ -79,24 +79,24 @@ object Statistics {
             .toFloat() / (values.size - if (!forPopulation) 1 else 0)
     }
 
-    fun standardDeviation(values: List<Float>, forPopulation: Boolean = false, mean: Float? = null): Float {
+    public fun standardDeviation(values: List<Float>, forPopulation: Boolean = false, mean: Float? = null): Float {
         return sqrt(variance(values, forPopulation, mean))
     }
 
-    fun stdev(values: List<Float>, forPopulation: Boolean = false, mean: Float? = null): Float {
+    public fun stdev(values: List<Float>, forPopulation: Boolean = false, mean: Float? = null): Float {
         return standardDeviation(values, forPopulation, mean)
     }
 
-    fun median(values: List<Float>): Float {
+    public fun median(values: List<Float>): Float {
         return quantile(values, 0.5f, interpolate = false)
     }
 
-    fun medianAbsoluteDeviation(values: List<Float>, median: Float? = null): Float {
+    public fun medianAbsoluteDeviation(values: List<Float>, median: Float? = null): Float {
         val medianValue = median ?: median(values)
         return median(values.map { (it - medianValue).absoluteValue })
     }
 
-    fun medianAbsoluteDeviationToStandardDeviation(medianAbsoluteDeviation: Float): Float {
+    public fun medianAbsoluteDeviationToStandardDeviation(medianAbsoluteDeviation: Float): Float {
         return medianAbsoluteDeviation * 1.4826f
     }
 
@@ -110,7 +110,7 @@ object Statistics {
      * @param values the values in order, a null value is skipped along with the lines it is part of
      * @return the estimated standard deviation of the error, or 0 if there are less than 3 consecutive values
      */
-    fun estimateNoise(xs: List<Float>, values: List<Float?>): Float {
+    public fun estimateNoise(xs: List<Float>, values: List<Float?>): Float {
         val deviations = (1..<values.size - 1).mapNotNull { i ->
             val before = values[i - 1] ?: return@mapNotNull null
             val current = values[i] ?: return@mapNotNull null
@@ -125,7 +125,7 @@ object Statistics {
         return MEAN_ABSOLUTE_DEVIATION_TO_STANDARD_DEVIATION * mean(deviations)
     }
 
-    fun quantile(values: List<Float>, quantile: Float, interpolate: Boolean = true): Float {
+    public fun quantile(values: List<Float>, quantile: Float, interpolate: Boolean = true): Float {
         if (values.isEmpty()) {
             return 0f
         }
@@ -150,7 +150,7 @@ object Statistics {
         return lerp(remainder, lower, upper)
     }
 
-    fun skewness(
+    public fun skewness(
         values: List<Float>,
         mean: Float? = null,
         stdev: Float? = null
@@ -163,7 +163,7 @@ object Statistics {
         }.toFloat() / values.size
     }
 
-    fun probability(values: List<Float>): List<Float> {
+    public fun probability(values: List<Float>): List<Float> {
         val sum = values.sum()
         if (Arithmetic.isZero(sum)) {
             return values
@@ -172,11 +172,11 @@ object Statistics {
         return values.map { it / sum }
     }
 
-    fun probability(x: Float, distribution: GaussianDistribution): Float {
+    public fun probability(x: Float, distribution: GaussianDistribution): Float {
         return distribution.probability(x)
     }
 
-    fun softmax(values: List<Float>): List<Float> {
+    public fun softmax(values: List<Float>): List<Float> {
         if (values.isEmpty()) {
             return emptyList()
         }
@@ -186,7 +186,7 @@ object Statistics {
         return exponents.map { if (Arithmetic.isZero(sumExp)) 0f else it / sumExp }
     }
 
-    fun joint(distributions: List<GaussianDistribution>): GaussianDistribution? {
+    public fun joint(distributions: List<GaussianDistribution>): GaussianDistribution? {
         if (distributions.isEmpty()) {
             return null
         }
@@ -204,7 +204,7 @@ object Statistics {
         return GaussianDistribution(mean, sqrt(variance))
     }
 
-    fun zScore(value: Float, distribution: GaussianDistribution, n: Int = 1): Float {
+    public fun zScore(value: Float, distribution: GaussianDistribution, n: Int = 1): Float {
         return if (n == 1) {
             (value - distribution.mean) / distribution.standardDeviation
         } else {
@@ -215,7 +215,7 @@ object Statistics {
     /**
      * Calculates the slope of the best fit line
      */
-    fun slope(data: List<Vector2>): Float {
+    public fun slope(data: List<Vector2>): Float {
         return LinearRegression(data).equation.m
     }
 
@@ -223,7 +223,7 @@ object Statistics {
      * Calculates the root mean square errors between the datasets.
      * Actual and predicted must correspond 1-1 with eachother.
      */
-    fun rmse(actual: List<Float>, predicted: List<Float>): Float {
+    public fun rmse(actual: List<Float>, predicted: List<Float>): Float {
         val n = actual.size
         return sqrt(sse(actual, predicted) / n)
     }
@@ -232,7 +232,7 @@ object Statistics {
      * Calculates the sum of squared errors between the datasets.
      * Actual and predicted must correspond 1-1 with eachother.
      */
-    fun sse(actual: List<Float>, predicted: List<Float>): Float {
+    public fun sse(actual: List<Float>, predicted: List<Float>): Float {
 
         var sum = 0f
         for (i in actual.indices) {
@@ -245,7 +245,7 @@ object Statistics {
     /**
      * Calculates the accuracy given a confusion matrix (rows = predicted, columns = actual)
      */
-    fun accuracy(confusion: Matrix): Float {
+    public fun accuracy(confusion: Matrix): Float {
         val total = confusion.sum()
         val correct = confusion.multiply(Matrix.identity(confusion.rows())).sum()
         return correct / total
@@ -255,7 +255,7 @@ object Statistics {
      * Calculates the F1 score given a confusion matrix (rows = predicted, columns = actual)
      * @param weighted if true, a weighted average will be used to combine f1 scores by number of examples per class
      */
-    fun f1Score(confusion: Matrix, weighted: Boolean = false): Float {
+    public fun f1Score(confusion: Matrix, weighted: Boolean = false): Float {
         val all = confusion.sum()
         val weight = 1 / confusion.rows().toFloat()
 
@@ -270,7 +270,7 @@ object Statistics {
     /**
      * Calculates the F1 for a single class given a confusion matrix (rows = predicted, columns = actual)
      */
-    fun f1Score(confusion: Matrix, classIdx: Int): Float {
+    public fun f1Score(confusion: Matrix, classIdx: Int): Float {
         val precision = precision(confusion, classIdx)
         val recall = recall(confusion, classIdx)
         val f = (2 * precision * recall) / (precision + recall)
@@ -283,7 +283,7 @@ object Statistics {
     /**
      * Calculates the recall for a single class given a confusion matrix (rows = predicted, columns = actual)
      */
-    fun recall(confusion: Matrix, classIdx: Int): Float {
+    public fun recall(confusion: Matrix, classIdx: Int): Float {
         val actual = confusion.getColumn(classIdx)
         val tp = confusion[classIdx, classIdx]
         val fn = actual.sum() - tp
@@ -296,7 +296,7 @@ object Statistics {
     /**
      * Calculates the precision for a single class given a confusion matrix (rows = predicted, columns = actual)
      */
-    fun precision(confusion: Matrix, classIdx: Int): Float {
+    public fun precision(confusion: Matrix, classIdx: Int): Float {
         val predicted = confusion.getRow(classIdx)
         val tp = confusion[classIdx, classIdx]
         val fp = predicted.sum() - tp
@@ -306,7 +306,7 @@ object Statistics {
         return tp / (tp + fp)
     }
 
-    fun smooth(data: List<Float>, smoothing: Float = 0.5f): List<Float> {
+    public fun smooth(data: List<Float>, smoothing: Float = 0.5f): List<Float> {
         if (data.isEmpty()) {
             return data
         }
@@ -322,13 +322,13 @@ object Statistics {
         }
     }
 
-    fun movingAverage(data: List<Float>, window: Int = 5): List<Float> {
+    public fun movingAverage(data: List<Float>, window: Int = 5): List<Float> {
         val filter = MovingAverageFilter(window)
 
         return data.map { filter.filter(it) }
     }
 
-    fun removeOutliers(
+    public fun removeOutliers(
         measurements: List<Double>,
         threshold: Double,
         replaceWithAverage: Boolean = false,
@@ -364,7 +364,7 @@ object Statistics {
         return filtered
     }
 
-    fun textureFeatures(glcm: Matrix): TextureFeatures {
+    public fun textureFeatures(glcm: Matrix): TextureFeatures {
         var entropy = 0f
         var contrast = 0f
         var homogeneity = 0f
@@ -427,7 +427,7 @@ object Statistics {
         )
     }
 
-    fun huberWeight(residual: Float, threshold: Float): Float {
+    public fun huberWeight(residual: Float, threshold: Float): Float {
         val absResidual = residual.absoluteValue
         return if (absResidual <= threshold) {
             1f
@@ -436,7 +436,7 @@ object Statistics {
         }
     }
 
-    fun huberLoss(residual: Float, threshold: Float): Float {
+    public fun huberLoss(residual: Float, threshold: Float): Float {
         val absResidual = residual.absoluteValue
         return if (absResidual <= threshold) {
             square(absResidual) / 2
@@ -445,14 +445,14 @@ object Statistics {
         }
     }
 
-    fun range(values: List<Float>): Float {
+    public fun range(values: List<Float>): Float {
         if (values.size < 2) {
             return 0f
         }
         return values.max() - values.min()
     }
 
-    fun interquartileRange(values: List<Float>, interpolate: Boolean = true): Float {
+    public fun interquartileRange(values: List<Float>, interpolate: Boolean = true): Float {
         if (values.size < 2) {
             return 0f
         }
@@ -466,7 +466,7 @@ object Statistics {
      * @param k the number of components to extract
      * @return a matrix where rows are samples and columns are principal component projections (centered)
      */
-    fun principalComponentAnalysis(x: Matrix, k: Int): Matrix {
+    public fun principalComponentAnalysis(x: Matrix, k: Int): Matrix {
         return PrincipalComponentAnalysis.getComponents(x, k)
     }
 

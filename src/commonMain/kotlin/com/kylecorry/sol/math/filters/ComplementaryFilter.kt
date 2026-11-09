@@ -2,15 +2,15 @@ package com.kylecorry.sol.math.filters
 
 import com.kylecorry.sol.math.sumOfFloat
 
-class ComplementaryFilter(initialWeights: List<Float>, initialValue: Float = 0f) {
-    var value = initialValue
+public class ComplementaryFilter(initialWeights: List<Float>, initialValue: Float = 0f) {
+    public var value: Float = initialValue
 
-    var weights = normalizeWeights(initialWeights)
+    public var weights: List<Float> = normalizeWeights(initialWeights)
         set(value) {
             field = normalizeWeights(value)
         }
 
-    fun filter(values: List<Float>): Float {
+    public fun filter(values: List<Float>): Float {
         value = weightedAverage(weights, values)
         return value
     }

@@ -107,7 +107,7 @@ import kotlin.math.tan
  * @author Garrett Headley - Feb 12, 2007 4:48:11 PM
  * @version $Id$
  */
-class PolarCoordConverter
+internal class PolarCoordConverter
 internal constructor() {
     /* Ellipsoid Parameters, default to WGS 84  */
     private var Polar_a = 6378137.0 /* Semi-major axis of ellipsoid in meters  */
@@ -131,21 +131,21 @@ internal constructor() {
     private var Polar_Delta_Easting = 12713601.0
     private var Polar_Delta_Northing = 12713601.0
 
-    var easting: Double = 0.0
+    internal var easting: Double = 0.0
         private set
-    var northing: Double = 0.0
+    internal var northing: Double = 0.0
         private set
 
     /**
      * @return Latitude in radians.
      */
-    var latitude: Double = 0.0
+    internal var latitude: Double = 0.0
         private set
 
     /**
      * @return Longitude in radians.
      */
-    var longitude: Double = 0.0
+    internal var longitude: Double = 0.0
         private set
 
     /**
@@ -161,7 +161,7 @@ internal constructor() {
      * @param False_Northing           Northing (Y) at center of projection, in meters
      * @return error code
      */
-    fun setPolarStereographicParameters(
+    internal fun setPolarStereographicParameters(
         a: Double, f: Double, Latitude_of_True_Scale: Double,
         Longitude_Down_from_Pole: Double, False_Easting: Double, False_Northing: Double
     ): Long {
@@ -248,7 +248,7 @@ internal constructor() {
      * @param Longitude Longitude, in radians
      * @return error code
      */
-    fun convertGeodeticToPolarStereographic(Latitude: Double, Longitude: Double): Long {
+    internal fun convertGeodeticToPolarStereographic(Latitude: Double, Longitude: Double): Long {
         var Latitude = Latitude
         var Longitude = Longitude
         var dlam: Double
@@ -321,7 +321,7 @@ internal constructor() {
      * @param Northing Northing (Y), in meters
      * @return error code
      */
-    fun convertPolarStereographicToGeodetic(Easting: Double, Northing: Double): Long {
+    internal fun convertPolarStereographicToGeodetic(Easting: Double, Northing: Double): Long {
         var dy = 0.0
         var dx = 0.0
         var rho = 0.0
@@ -402,17 +402,17 @@ internal constructor() {
         return (Error_Code)
     }
 
-    companion object {
+    internal companion object {
         private const val POLAR_NO_ERROR: Long = 0x0000
         private const val POLAR_LAT_ERROR: Long = 0x0001
         private const val POLAR_LON_ERROR: Long = 0x0002
         private const val POLAR_ORIGIN_LAT_ERROR: Long = 0x0004
         private const val POLAR_ORIGIN_LON_ERROR: Long = 0x0008
-        const val POLAR_EASTING_ERROR: Long = 0x0010
-        const val POLAR_NORTHING_ERROR: Long = 0x0020
+        internal const val POLAR_EASTING_ERROR: Long = 0x0010
+        internal const val POLAR_NORTHING_ERROR: Long = 0x0020
         private const val POLAR_A_ERROR: Long = 0x0040
         private const val POLAR_INV_F_ERROR: Long = 0x0080
-        const val POLAR_RADIUS_ERROR: Long = 0x0100
+        internal const val POLAR_RADIUS_ERROR: Long = 0x0100
 
         private const val PI = 3.14159265358979323
         private const val PI_OVER_2: Double = PI / 2.0

@@ -4,7 +4,7 @@ import com.kylecorry.sol.science.ecology.LifecycleEventFactors
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.average
 
-class TemperatureTrigger(
+public class TemperatureTrigger(
     threshold: Temperature = Temperature.celsius(0f),
     private val above: Boolean = true,
     private val triggerType: TemperatureTriggerType =

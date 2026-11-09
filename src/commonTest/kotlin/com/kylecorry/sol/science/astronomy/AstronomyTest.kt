@@ -983,7 +983,7 @@ class AstronomyTest {
 
         if (hasFix) {
             assertNotNull(actual)
-            assertEquals(0f, actual!!.distanceTo(location), Distance.meters(20f).value)
+            assertEquals(0f, actual.distanceTo(location), Distance.meters(20f).value)
         } else {
             assertNull(actual)
         }
@@ -1025,7 +1025,7 @@ class AstronomyTest {
 
         if (hasFix) {
             assertNotNull(actual)
-            assertEquals(0f, actual!!.distanceTo(location), Distance.meters(10f).value)
+            assertEquals(0f, actual.distanceTo(location), Distance.meters(10f).value)
         } else {
             assertNull(actual)
         }
@@ -1121,7 +1121,7 @@ class AstronomyTest {
 
         assertNotNull(actual)
 
-        assertDate(zoned(start), actual!!.start, 2.minutes)
+        assertDate(zoned(start), actual.start, 2.minutes)
         assertDate(zoned(checkNotNull(maximum)), actual.maximum, 2.minutes)
         assertDate(zoned(end), actual.end, 2.minutes)
 

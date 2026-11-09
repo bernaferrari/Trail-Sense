@@ -3,11 +3,11 @@ package com.kylecorry.sol.science.astronomy.locators
 import com.kylecorry.sol.math.trigonometry.Trigonometry.toDegrees
 import com.kylecorry.sol.science.astronomy.units.JD_2000
 
-enum class Planet(
-    val order: Int,
+public enum class Planet(
+    public val order: Int,
     internal val epoch: Double,
-    val orbitalPeriod: Double,
-    val radius: Double,
+    public val orbitalPeriod: Double,
+    public val radius: Double,
     internal val eccentricity: Double,
     internal val semimajorAxis: Double,
     internal val angularDiameter: Double,

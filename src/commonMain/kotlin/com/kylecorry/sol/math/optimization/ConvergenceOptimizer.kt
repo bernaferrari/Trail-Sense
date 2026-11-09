@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.Range
 import kotlin.math.ceil
 import kotlin.math.ln
 
-class ConvergenceOptimizer(
+public class ConvergenceOptimizer(
     private val initialStep: Float,
     private val precision: Float,
     private val initialValue: Pair<Double, Double>? = null,

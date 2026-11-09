@@ -39,7 +39,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
 
-object Geography {
+public object Geography {
 
     private const val EARTH_AVERAGE_RADIUS = 6371.2e3
 
@@ -49,7 +49,7 @@ object Geography {
      * @param destination The destination location
      * @return The ENU coordinate
      */
-    fun toENU(
+    public fun toENU(
         reference: Location,
         destination: Location
     ): Vector3 {
@@ -66,7 +66,7 @@ object Geography {
      * @param distance The distance in meters
      * @return The ENU coordinate
      */
-    fun toENU(
+    public fun toENU(
         bearing: Float,
         elevation: Float,
         distance: Float
@@ -79,7 +79,7 @@ object Geography {
      * @param enu The ENU coordinate
      * @return The bearing (positive is clockwise from north)
      */
-    fun getBearingFromENU(enu: Vector3): Bearing {
+    public fun getBearingFromENU(enu: Vector3): Bearing {
         return Bearing.from(atan2(enu.x, enu.y).toDegrees().real(0f))
     }
 
@@ -88,7 +88,7 @@ object Geography {
      * @param enu The ENU coordinate
      * @return The elevation in degrees (positive is up)
      */
-    fun getElevationFromENU(enu: Vector3): Float {
+    public fun getElevationFromENU(enu: Vector3): Float {
         return asin(enu.z / enu.magnitude()).toDegrees().real(0f)
     }
 
@@ -97,7 +97,7 @@ object Geography {
      * @param enu The ENU coordinate
      * @return The distance in the units of the ENU coordinate
      */
-    fun getDistanceFromENU(enu: Vector3): Float {
+    public fun getDistanceFromENU(enu: Vector3): Float {
         return enu.magnitude()
     }
 
@@ -106,7 +106,7 @@ object Geography {
      * @param location The geographic coordinate (elevation needs to be above WGS84 ellipsoid)
      * @return The ECEF coordinate in meters
      */
-    fun getECEF(location: Location): Vector3 {
+    public fun getECEF(location: Location): Vector3 {
         val lat = location.coordinate.latitude.toRadians()
         val lon = location.coordinate.longitude.toRadians()
         val a = ReferenceEllipsoid.wgs84.a
@@ -124,7 +124,7 @@ object Geography {
      * @param ecef The ECEF coordinate in meters
      * @return The geographic coordinate
      */
-    fun getLocationFromECEF(ecef: Vector3): Location {
+    public fun getLocationFromECEF(ecef: Vector3): Location {
         val x = ecef.x.toDouble()
         val y = ecef.y.toDouble()
         val z = ecef.z.toDouble()
@@ -146,7 +146,7 @@ object Geography {
         )
     }
 
-    fun trilaterate(
+    public fun trilaterate(
         readings: List<Geofence>,
         isWeighted: Boolean = false,
         calculateBias: Boolean = false
@@ -295,7 +295,7 @@ object Geography {
      * @return a 3 element float array of the following
      * [distance (m), initial bearing (true north), final bearing (true north)]
      */
-    fun vincenty(
+    public fun vincenty(
         location1: Coordinate,
         location2: Coordinate
     ): FloatArray {
@@ -391,7 +391,7 @@ object Geography {
      * @return a 3 element float array of the following
      * [distance (m), initial bearing (true north), final bearing (true north)]
      */
-    fun haversine(
+    public fun haversine(
         location1: Coordinate,
         location2: Coordinate,
         radius: Double = 6371.2e3
@@ -426,11 +426,11 @@ object Geography {
         return (radius * c).toFloat()
     }
 
-    fun containedByArea(coordinate: Coordinate, area: IGeoArea): Boolean {
+    public fun containedByArea(coordinate: Coordinate, area: IGeoArea): Boolean {
         return area.contains(coordinate)
     }
 
-    fun getRegion(coordinate: Coordinate): Region {
+    public fun getRegion(coordinate: Coordinate): Region {
         return when {
             coordinate.latitude.absoluteValue >= 66.5 -> Region.Polar
             coordinate.latitude.absoluteValue >= 23.5 -> Region.Temperate
@@ -438,7 +438,7 @@ object Geography {
         }
     }
 
-    fun getMapDistance(
+    public fun getMapDistance(
         measurement: Distance,
         scaleFrom: Distance,
         scaleTo: Distance
@@ -450,11 +450,11 @@ object Geography {
         )
     }
 
-    fun getMapDistance(measurement: Distance, ratioFrom: Float, ratioTo: Float): Distance {
+    public fun getMapDistance(measurement: Distance, ratioFrom: Float, ratioTo: Float): Distance {
         return Distance.from(ratioTo * measurement.value / ratioFrom, measurement.units)
     }
 
-    fun getBounds(points: List<Coordinate>): CoordinateBounds {
+    public fun getBounds(points: List<Coordinate>): CoordinateBounds {
         return CoordinateBounds.from(points)
     }
 
@@ -469,7 +469,7 @@ object Geography {
      * coordinate (True North)
      * @return The triangulated coordinate, if possible
      */
-    fun triangulateSelf(
+    public fun triangulateSelf(
         referenceA: Coordinate,
         selfToReferenceBearingA: Bearing,
         referenceB: Coordinate,
@@ -554,7 +554,7 @@ object Geography {
      * unknown coordinate (True North)
      * @return The triangulated coordinate, if possible
      */
-    fun triangulateDestination(
+    public fun triangulateDestination(
         referenceA: Coordinate,
         referenceAToDestinationBearing: Bearing,
         referenceB: Coordinate,
@@ -568,7 +568,7 @@ object Geography {
         )
     }
 
-    fun deadReckon(
+    public fun deadReckon(
         lastLocation: Coordinate,
         distanceTravelled: Float,
         bearingToLast: Bearing
@@ -576,7 +576,7 @@ object Geography {
         return lastLocation.plus(distanceTravelled.toDouble(), bearingToLast.inverse())
     }
 
-    fun navigate(
+    public fun navigate(
         from: Coordinate,
         to: Coordinate,
         declination: Float = 0f,
@@ -601,7 +601,7 @@ object Geography {
         )
     }
 
-    fun getCrossTrackDistance(
+    public fun getCrossTrackDistance(
         point: Coordinate,
         start: Coordinate,
         end: Coordinate
@@ -625,7 +625,7 @@ object Geography {
         return Distance.meters(crossTrackDistance.toFloat())
     }
 
-    fun getAlongTrackDistance(
+    public fun getAlongTrackDistance(
         point: Coordinate,
         start: Coordinate,
         end: Coordinate
@@ -654,7 +654,7 @@ object Geography {
         return Distance.meters(distance.toFloat())
     }
 
-    fun getNearestPoint(
+    public fun getNearestPoint(
         point: Coordinate,
         start: Coordinate,
         end: Coordinate
@@ -675,11 +675,11 @@ object Geography {
         return start.plus(alongTrack, bearing)
     }
 
-    fun destination(from: Coordinate, distance: Float, bearing: Bearing): Coordinate {
+    public fun destination(from: Coordinate, distance: Float, bearing: Bearing): Coordinate {
         return from.plus(distance.toDouble(), bearing)
     }
 
-    fun getPathDistance(points: List<Coordinate>, highAccuracy: Boolean = true): Distance {
+    public fun getPathDistance(points: List<Coordinate>, highAccuracy: Boolean = true): Distance {
         if (points.size < 2) {
             return Distance.meters(0f)
         }
@@ -692,7 +692,7 @@ object Geography {
         return Distance.meters(distance)
     }
 
-    fun getElevationGain(elevations: List<Distance>): Distance {
+    public fun getElevationGain(elevations: List<Distance>): Distance {
         var sum = 0f
 
         if (elevations.isEmpty()) {
@@ -710,7 +710,7 @@ object Geography {
         return Distance.meters(sum)
     }
 
-    fun getElevationLoss(elevations: List<Distance>): Distance {
+    public fun getElevationLoss(elevations: List<Distance>): Distance {
         var sum = 0f
 
         if (elevations.isEmpty()) {

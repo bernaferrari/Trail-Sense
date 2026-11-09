@@ -2,7 +2,7 @@ package com.kylecorry.sol.math.optimization
 
 import com.kylecorry.sol.math.Range
 
-class GridSearchOptimizer(private val stepSize: Double) : IOptimizer {
+public class GridSearchOptimizer(private val stepSize: Double) : IOptimizer {
     override fun optimize(
         xRange: Range<Double>,
         yRange: Range<Double>,

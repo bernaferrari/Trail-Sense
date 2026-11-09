@@ -4,9 +4,9 @@ package gov.nasa.worldwind.avlist
  * @author Tom Gaskins
  * @version $Id$
  */
-interface AVKey {
+internal interface AVKey {
     companion object {
-        const val NORTH: String = "gov.nasa.worldwind.avkey.North"
-        const val SOUTH: String = "gov.nasa.worldwdind.avkey.South"
+        internal const val NORTH: String = "gov.nasa.worldwind.avkey.North"
+        internal const val SOUTH: String = "gov.nasa.worldwdind.avkey.South"
     }
 }

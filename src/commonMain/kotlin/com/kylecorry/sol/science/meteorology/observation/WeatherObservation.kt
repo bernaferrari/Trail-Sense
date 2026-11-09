@@ -5,23 +5,23 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Speed
 import kotlin.time.Instant
 
-sealed class WeatherObservation<T>(
-    val time: Instant,
-    val value: T
+public sealed class WeatherObservation<T>(
+    public val time: Instant,
+    public val value: T
 ) {
-    class Pressure(time: Instant, value: com.kylecorry.sol.units.Pressure) :
+    public class Pressure(time: Instant, value: com.kylecorry.sol.units.Pressure) :
         WeatherObservation<com.kylecorry.sol.units.Pressure>(time, value)
 
-    class WindSpeed(time: Instant, value: Speed) : WeatherObservation<Speed>(time, value)
+    public class WindSpeed(time: Instant, value: Speed) : WeatherObservation<Speed>(time, value)
 
     /**
      * A wind direction observation - the direction the wind is coming from.
      */
-    class WindDirection(time: Instant, value: Bearing) : WeatherObservation<Bearing>(time, value)
-    class CloudGenus(time: Instant, value: com.kylecorry.sol.science.meteorology.clouds.CloudGenus?) :
+    public class WindDirection(time: Instant, value: Bearing) : WeatherObservation<Bearing>(time, value)
+    public class CloudGenus(time: Instant, value: com.kylecorry.sol.science.meteorology.clouds.CloudGenus?) :
         WeatherObservation<com.kylecorry.sol.science.meteorology.clouds.CloudGenus?>(time, value)
 
-    fun asReading(): Reading<T> {
+    public fun asReading(): Reading<T> {
         return Reading(value, time)
     }
 

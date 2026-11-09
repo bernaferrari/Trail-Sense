@@ -53,7 +53,7 @@ internal class RangeTest {
             assertNull(intersection)
         } else {
             assertNotNull(intersection)
-            assertEquals(expectedStart, intersection!!.start)
+            assertEquals(expectedStart, intersection.start)
             assertEquals(expectedEnd, intersection.end)
         }
     }

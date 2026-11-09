@@ -29,7 +29,7 @@ import kotlin.math.sqrt
  * @param distanceFn the distance between two points, it is called with the point being smoothed first
  */
 @Suppress("LongParameterList")
-class LoessFilter(
+public class LoessFilter(
     private val span: Float = 0.3f,
     private val robustnessIterations: Int = 2,
     private val accuracy: Float = 1e-12f,
@@ -42,7 +42,7 @@ class LoessFilter(
     /**
      * Smooth the data, the output will have the same indices as the input
      */
-    fun filter(xs: List<List<Float>>, ys: List<Float>): List<Float> {
+    public fun filter(xs: List<List<Float>>, ys: List<Float>): List<Float> {
         val n = xs.size
         if (n < 3) {
             return ys

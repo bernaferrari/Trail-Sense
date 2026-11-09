@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology
 
-enum class WeatherCondition(val id: Long) {
+public enum class WeatherCondition(public val id: Long) {
     Clear(1),
     Overcast(2),
     Precipitation(3),

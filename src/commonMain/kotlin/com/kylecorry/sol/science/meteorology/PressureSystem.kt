@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology
 
-enum class PressureSystem(val id: Long) {
+public enum class PressureSystem(public val id: Long) {
     High(1),
     Low(2)
 }

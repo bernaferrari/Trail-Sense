@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.astronomy.moon
 
 private const val TRUE_PHASE_WIDTH_DEGREES = 11.25f
 
-enum class MoonTruePhase(val startAngle: Float, val endAngle: Float) {
+public enum class MoonTruePhase(public val startAngle: Float, public val endAngle: Float) {
     New(360 - TRUE_PHASE_WIDTH_DEGREES, TRUE_PHASE_WIDTH_DEGREES),
     WaningCrescent(TRUE_PHASE_WIDTH_DEGREES, 90 - TRUE_PHASE_WIDTH_DEGREES),
     ThirdQuarter(90 - TRUE_PHASE_WIDTH_DEGREES, 90 + TRUE_PHASE_WIDTH_DEGREES),

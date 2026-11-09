@@ -7,8 +7,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-object HoughTransform {
-    fun vote(
+public object HoughTransform {
+    public fun vote(
         gradients: Gradients,
         threshold: Float,
         thetaBinCount: Int,

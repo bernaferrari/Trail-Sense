@@ -3,9 +3,9 @@ package com.kylecorry.sol.math.optimization
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import kotlin.math.absoluteValue
 
-object Optimization {
+public object Optimization {
 
-    inline fun newtonRaphsonIteration(
+    public inline fun newtonRaphsonIteration(
         initialValue: Double = 0.0,
         tolerance: Double = Arithmetic.EPSILON_DOUBLE,
         maxIterations: Int = Int.MAX_VALUE,
@@ -23,7 +23,7 @@ object Optimization {
         return lastValue
     }
 
-    inline fun newtonRaphsonIteration(
+    public inline fun newtonRaphsonIteration(
         initialValue: Float = 0f,
         tolerance: Float = Arithmetic.EPSILON_FLOAT,
         maxIterations: Int = Int.MAX_VALUE,

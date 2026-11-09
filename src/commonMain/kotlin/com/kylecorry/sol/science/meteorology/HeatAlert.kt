@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology
 
-enum class HeatAlert {
+public enum class HeatAlert {
     FrostbiteDanger,
     FrostbiteWarning,
     FrostbiteCaution,

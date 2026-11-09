@@ -14,9 +14,9 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.sqrt
 
-object Geophysics {
+public object Geophysics {
 
-    const val GRAVITY = 9.81f
+    public const val GRAVITY: Float = 9.81f
 
     private val worldMagneticModel = SphericalHarmonics(
         WorldMagneticModel2025.G_COEFFICIENTS,
@@ -26,7 +26,7 @@ object Geophysics {
         deltaHCoefficients = WorldMagneticModel2025.DELTA_H
     )
 
-    fun getGeomagneticDeclination(
+    public fun getGeomagneticDeclination(
         coordinate: Coordinate,
         altitude: Float? = null,
         time: Instant = Clock.System.now()
@@ -39,7 +39,7 @@ object Geophysics {
         return atan2(geoField.y, geoField.x).toDegrees()
     }
 
-    fun getGeomagneticInclination(
+    public fun getGeomagneticInclination(
         coordinate: Coordinate,
         altitude: Float? = null,
         time: Instant = Clock.System.now()
@@ -52,7 +52,7 @@ object Geophysics {
         return atan2(geoField.z, hypot(geoField.x, geoField.y)).toDegrees()
     }
 
-    fun getGeomagneticField(
+    public fun getGeomagneticField(
         coordinate: Coordinate,
         altitude: Float? = null,
         time: Instant = Clock.System.now()
@@ -65,7 +65,7 @@ object Geophysics {
         return Vector3(geoField.x * 0.001f, geoField.y * 0.001f, geoField.z * 0.001f)
     }
 
-    fun getGravity(coordinate: Coordinate): Float {
+    public fun getGravity(coordinate: Coordinate): Float {
         // Somigliana equation (IGF80)
         val ellipsoid = ReferenceEllipsoid.wgs84
         val ge = 9.78032677153489
@@ -75,21 +75,21 @@ object Geophysics {
         return (ge * (1 + k * sinLat2) / sqrt(1 - e2 * sinLat2)).toFloat()
     }
 
-    fun getAzimuth(gravity: Vector3, magneticField: Vector3): Bearing {
+    public fun getAzimuth(gravity: Vector3, magneticField: Vector3): Bearing {
         return AzimuthCalculator.calculate(gravity, magneticField) ?: Bearing.from(0f)
     }
 
     /**
      * Converts an astronomic location (from gravity and the stars) to a geodetic location
      */
-    fun getGeodeticLocation(astronomic: Coordinate, deflection: VerticalDeflection): Coordinate {
+    public fun getGeodeticLocation(astronomic: Coordinate, deflection: VerticalDeflection): Coordinate {
         return VerticalDeflectionCalculator.toGeodetic(astronomic, deflection)
     }
 
     /**
      * Converts a geodetic location to the astronomic location that gravity would indicate
      */
-    fun getAstronomicLocation(geodetic: Coordinate, deflection: VerticalDeflection): Coordinate {
+    public fun getAstronomicLocation(geodetic: Coordinate, deflection: VerticalDeflection): Coordinate {
         return VerticalDeflectionCalculator.toAstronomic(geodetic, deflection)
     }
 
@@ -99,7 +99,7 @@ object Geophysics {
      * @param stepDegrees the spacing used for the central difference
      * @param geoid the geoid height in meters at a location
      */
-    fun getVerticalDeflectionModel(stepDegrees: Double, geoid: (Coordinate) -> Double): VerticalDeflectionModel {
+    public fun getVerticalDeflectionModel(stepDegrees: Double, geoid: (Coordinate) -> Double): VerticalDeflectionModel {
         return VerticalDeflectionCalculator.fromGeoid(stepDegrees, geoid)
     }
 }

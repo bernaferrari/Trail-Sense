@@ -14,7 +14,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 
-class LunitidalWaterLevelCalculator(
+public class LunitidalWaterLevelCalculator(
     private val lunitidalInterval: Duration,
     private val location: Coordinate = Coordinate.zero,
     private val lowLunitidalInterval: Duration? = null,

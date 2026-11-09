@@ -1,5 +1,5 @@
 package com.kylecorry.sol.math.optimization
 
-interface IListExtremaFinder {
-    fun find(values: List<Float>): List<Extremum>
+public interface IListExtremaFinder {
+    public fun find(values: List<Float>): List<Extremum>
 }

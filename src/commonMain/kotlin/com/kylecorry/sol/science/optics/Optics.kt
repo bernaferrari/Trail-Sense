@@ -10,7 +10,7 @@ import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
-object Optics {
+public object Optics {
 
     /**
      * Calculates the angular size of an object
@@ -18,7 +18,7 @@ object Optics {
      * @param distance The distance to the object
      * @return The angular size in degrees
      */
-    fun getAngularSize(diameter: Distance, distance: Distance): Float {
+    public fun getAngularSize(diameter: Distance, distance: Distance): Float {
         return getAngularSize(diameter.meters().value, distance.meters().value)
     }
 
@@ -28,7 +28,7 @@ object Optics {
      * @param distance The distance to the object in the same unit
      * @return The angular size in degrees
      */
-    fun getAngularSize(diameter: Float, distance: Float): Float {
+    public fun getAngularSize(diameter: Float, distance: Float): Float {
         return (2 * atan2(diameter / 2f, distance)).toDegrees()
     }
 
@@ -39,7 +39,7 @@ object Optics {
      * @param opticalCenter The optical center (in pixels)
      * @return The projected point in pixels
      */
-    fun perspectiveProjection(
+    public fun perspectiveProjection(
         point: Vector3,
         focalLength: Vector2,
         opticalCenter: Vector2,
@@ -62,7 +62,7 @@ object Optics {
      * @param distance The distance to the point
      * @return The point in the camera's coordinate system
      */
-    fun inversePerspectiveProjection(
+    public fun inversePerspectiveProjection(
         point: Vector2,
         focalLength: Vector2,
         opticalCenter: Vector2,
@@ -107,7 +107,7 @@ object Optics {
      * @param sensorSizePixels The sensor size in pixels
      * @return The focal length in pixels
      */
-    fun getFocalLengthPixels(
+    public fun getFocalLengthPixels(
         focalLength: Float,
         sensorSize: Float,
         sensorSizePixels: Int
@@ -120,7 +120,7 @@ object Optics {
      * @param focalLength The focal length in any unit
      * @param sensorSize The sensor size in the same unit
      */
-    fun getFieldOfView(
+    public fun getFieldOfView(
         focalLength: Float,
         sensorSize: Float
     ): Float {
@@ -134,7 +134,7 @@ object Optics {
      * @param viewSize The view size
      * @return The focal length in the same unit as viewSize
      */
-    fun getFocalLength(fieldOfView: Float, viewSize: Float): Float {
+    public fun getFocalLength(fieldOfView: Float, viewSize: Float): Float {
         return viewSize / (2 * tanDegrees(fieldOfView / 2f))
     }
 
@@ -146,7 +146,7 @@ object Optics {
      * @param tangentialDistortionCoefficients The tangential distortion coefficients
      * @return The undistorted point
      */
-    fun brownConradyDistortionCorrection(
+    public fun brownConradyDistortionCorrection(
         point: Vector2,
         opticalCenter: Vector2,
         radialDistortionCoefficients: List<Float>,
@@ -191,17 +191,17 @@ object Optics {
         return Vector2(point.x + xCorrection, point.y + yCorrection)
     }
 
-    fun luxToCandela(lux: Float, distance: Distance): Float {
+    public fun luxToCandela(lux: Float, distance: Distance): Float {
         val meters = distance.meters().value
         return lux * meters * meters
     }
 
-    fun luxAtDistance(candela: Float, distance: Distance): Float {
+    public fun luxAtDistance(candela: Float, distance: Distance): Float {
         val meters = distance.meters().value
         return candela / (meters * meters)
     }
 
-    fun lightBeamDistance(candela: Float): Distance {
+    public fun lightBeamDistance(candela: Float): Distance {
         return Distance.meters(sqrt(candela * 4))
     }
 

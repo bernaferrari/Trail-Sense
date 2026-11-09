@@ -5,7 +5,7 @@ import com.kylecorry.sol.shared.toDoubleCompat
 import com.kylecorry.sol.units.Coordinate
 import kotlin.math.abs
 
-class DegreesDecimalMinutesCoordinateFormat(private val precision: Int = 3) : CoordinateFormat {
+public class DegreesDecimalMinutesCoordinateFormat(private val precision: Int = 3) : CoordinateFormat {
     override fun toString(coordinate: Coordinate): String {
         val latDir = if (coordinate.latitude < 0) "S" else "N"
         val lngDir = if (coordinate.longitude < 0) "W" else "E"

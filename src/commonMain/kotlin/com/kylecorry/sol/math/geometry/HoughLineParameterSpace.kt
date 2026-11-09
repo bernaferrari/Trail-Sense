@@ -3,14 +3,14 @@ package com.kylecorry.sol.math.geometry
 import kotlin.math.max
 import kotlin.math.min
 
-class HoughLineParameterSpace(
-    val accumulatorBins: FloatArray,
-    val rhoBinCount: Int,
-    val thetaBinCount: Int,
-    val maxRho: Float,
-    val thetaValues: FloatArray
+public class HoughLineParameterSpace(
+    public val accumulatorBins: FloatArray,
+    public val rhoBinCount: Int,
+    public val thetaBinCount: Int,
+    public val maxRho: Float,
+    public val thetaValues: FloatArray
 ) {
-    fun score(thetaBinIndex: Int, rhoBinIndex: Int): Float {
+    public fun score(thetaBinIndex: Int, rhoBinIndex: Int): Float {
         return accumulatorBins[thetaBinIndex * rhoBinCount + rhoBinIndex]
     }
 
@@ -22,7 +22,7 @@ class HoughLineParameterSpace(
         }
     }
 
-    fun findStrongestLineCandidates(
+    public fun findStrongestLineCandidates(
         maxCandidates: Int,
         suppressionThetaRadius: Int = DEFAULT_SUPPRESSION_THETA_RADIUS,
         suppressionRhoRadius: Int = DEFAULT_SUPPRESSION_RHO_RADIUS
@@ -98,7 +98,7 @@ class HoughLineParameterSpace(
         }
     }
 
-    fun getLineCandidate(thetaBinIndex: Int, rhoBinIndex: Int): PolarLine {
+    public fun getLineCandidate(thetaBinIndex: Int, rhoBinIndex: Int): PolarLine {
         return PolarLine(getRho(rhoBinIndex), thetaValues[thetaBinIndex])
     }
 
@@ -108,10 +108,10 @@ class HoughLineParameterSpace(
         val score: Float
     )
 
-    companion object {
+    public companion object {
         private const val DEFAULT_SUPPRESSION_THETA_RADIUS = 2
         private const val DEFAULT_SUPPRESSION_RHO_RADIUS = 8
     }
 }
 
-data class LineCandidate(val line: PolarLine, val score: Float)
+public data class LineCandidate(val line: PolarLine, val score: Float)

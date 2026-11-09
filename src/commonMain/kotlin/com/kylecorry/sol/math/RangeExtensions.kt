@@ -1,6 +1,6 @@
 package com.kylecorry.sol.math
 
-fun <T : Comparable<T>> List<Range<T>>.mergeIntersecting(): List<Range<T>> {
+public fun <T : Comparable<T>> List<Range<T>>.mergeIntersecting(): List<Range<T>> {
     val newRanges = mutableListOf<Range<T>>()
     for (range in sortedBy { it.start }) {
         if (newRanges.isEmpty()) {

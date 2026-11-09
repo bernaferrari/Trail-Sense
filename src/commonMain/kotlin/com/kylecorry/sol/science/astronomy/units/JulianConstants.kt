@@ -1,3 +1,3 @@
 package com.kylecorry.sol.science.astronomy.units
 
-const val JD_2000 = 2451545.0
+public const val JD_2000: Double = 2451545.0

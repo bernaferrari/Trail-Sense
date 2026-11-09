@@ -28,18 +28,18 @@ import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.pow
 
-object Meteorology {
+public object Meteorology {
 
     private val cloudService = CloudService()
 
-    fun getAltitude(pressure: Pressure, seaLevelPressure: Pressure): Distance {
+    public fun getAltitude(pressure: Pressure, seaLevelPressure: Pressure): Distance {
         val hpa = pressure.hpa().value
         val seaHpa = seaLevelPressure.hpa().value
         val meters = 44330.0 * (1 - (hpa / seaHpa).toDouble().pow(1 / 5.255))
         return Distance.meters(meters.toFloat())
     }
 
-    fun getSeaLevelPressure(
+    public fun getSeaLevelPressure(
         pressure: Pressure, altitude: Distance, temperature: Temperature? = null
     ): Pressure {
         val hpa = pressure.hpa().value
@@ -56,12 +56,12 @@ object Meteorology {
         return Pressure.hpa(adjustedPressure).convertTo(pressure.units)
     }
 
-    fun isHighPressure(pressure: Pressure): Boolean = PressureModel.isHigh(pressure)
+    public fun isHighPressure(pressure: Pressure): Boolean = PressureModel.isHigh(pressure)
 
-    fun isLowPressure(pressure: Pressure): Boolean = PressureModel.isLow(pressure)
+    public fun isLowPressure(pressure: Pressure): Boolean = PressureModel.isLow(pressure)
 
     /** Calculates the pressure tendency in hPa per hour. */
-    fun getTendency(
+    public fun getTendency(
         last: Pressure, current: Pressure, duration: Duration, changeThreshold: Float
     ): PressureTendency = duration.toComponents { seconds, nanoseconds ->
         val floorSeconds = if (nanoseconds < 0) seconds - 1 else seconds
@@ -74,7 +74,7 @@ object Meteorology {
      * @param stormThreshold (optional) The change threshold to consider a storm (hPa / hr)
      * @return The predicted weather
      */
-    fun forecast(
+    public fun forecast(
         tendency: PressureTendency, stormThreshold: Float? = null
     ): Weather {
         val isStorm = tendency.amount <= (stormThreshold ?: -2f)
@@ -108,7 +108,7 @@ object Meteorology {
      * @param source the source to use to derive the forecast
      * @return the predicted weather (now and later - times are not accurate yet)
      */
-    fun forecast(
+    public fun forecast(
         pressures: List<Reading<Pressure>>,
         clouds: List<Reading<CloudGenus?>>,
         dailyTemperatureRange: Range<Temperature>?,
@@ -146,7 +146,7 @@ object Meteorology {
      * @param source the source to use to derive the forecast
      * @return the predicted weather (now and later - times are not accurate yet)
      */
-    fun forecast(
+    public fun forecast(
         observations: List<WeatherObservation<*>>,
         dailyTemperatureRange: Range<Temperature>?,
         pressureChangeThreshold: Float = 0.5f,
@@ -177,7 +177,7 @@ object Meteorology {
      * @param relativeHumidity The relative humidity (%)
      * @return The heat index (C)
      */
-    fun getHeatIndex(temperature: Float, relativeHumidity: Float): Float {
+    public fun getHeatIndex(temperature: Float, relativeHumidity: Float): Float {
         if (temperature < 27) return temperature
 
         val c1 = -8.78469475556
@@ -209,7 +209,7 @@ object Meteorology {
      * @param heatIndex The heat index (C)
      * @return The heat alert level
      */
-    fun getHeatAlert(heatIndex: Float): HeatAlert {
+    public fun getHeatAlert(heatIndex: Float): HeatAlert {
         return when {
             heatIndex <= -25 -> HeatAlert.FrostbiteDanger
             heatIndex <= -17 -> HeatAlert.FrostbiteWarning
@@ -228,7 +228,7 @@ object Meteorology {
      * @param windSpeed the wind speed
      * @return the wind chill temperature
      */
-    fun getWindChill(temperature: Temperature, windSpeed: Speed): Temperature {
+    public fun getWindChill(temperature: Temperature, windSpeed: Speed): Temperature {
         val t = temperature.convertTo(TemperatureUnits.Fahrenheit).value.toDouble()
         val v = windSpeed.convertTo(DistanceUnits.Miles, TimeUnits.Hours).value.toDouble()
 
@@ -248,7 +248,7 @@ object Meteorology {
      * @param relativeHumidity The relative humidity (%)
      * @return The dew point (C)
      */
-    fun getDewPoint(temperature: Float, relativeHumidity: Float): Float {
+    public fun getDewPoint(temperature: Float, relativeHumidity: Float): Float {
         val m = 17.62
         val tn = 243.12
         var lnRH = ln(relativeHumidity.toDouble() / 100)
@@ -267,7 +267,7 @@ object Meteorology {
      * @param thunder The time the thunder was heard
      * @return The distance to the lightning strike in meters
      */
-    fun getLightningStrikeDistance(lightning: Instant, thunder: Instant): Float {
+    public fun getLightningStrikeDistance(lightning: Instant, thunder: Instant): Float {
         val speedOfSound = 343f
         val duration = (thunder - lightning)
 
@@ -284,7 +284,7 @@ object Meteorology {
      * @param distance The distance to the lightning strike
      * @return true if the strike is dangerous, false otherwise
      */
-    fun isLightningStrikeDangerous(distance: Distance): Boolean {
+    public fun isLightningStrikeDangerous(distance: Distance): Boolean {
         // https://www.weather.gov/media/zhu/ZHU_Training_Page/lightning_stuff/lightning/lightning_facts.pdf
         return distance.meters().value <= 10000
     }
@@ -296,7 +296,7 @@ object Meteorology {
      * @param temp2 the temperature occurring 2 time units after temp0
      * @return the ambient temperature in celsius or null if the readings weren't all increasing or decreasing
      */
-    fun getAmbientTemperature(temp0: Float, temp1: Float, temp2: Float): Float? {
+    public fun getAmbientTemperature(temp0: Float, temp1: Float, temp2: Float): Float? {
         val isIncreasing = temp0 < temp1 && temp1 < temp2
         val isDecreasing = temp0 > temp1 && temp1 > temp2
 
@@ -306,7 +306,7 @@ object Meteorology {
         return (temp0 * temp2 - temp1 * temp1) / (temp0 + temp2 - 2 * temp1)
     }
 
-    fun getSeason(location: Coordinate, date: LocalDate): Season {
+    public fun getSeason(location: Coordinate, date: LocalDate): Season {
         val north = location.isNorthernHemisphere
         val d = date
         return when {
@@ -325,7 +325,7 @@ object Meteorology {
      * @param destElevation the elevation of the destination
      * @return the temperature at the destination
      */
-    fun getTemperatureAtElevation(
+    public fun getTemperatureAtElevation(
         temperature: Temperature, baseElevation: Distance, destElevation: Distance
     ): Temperature {
         val celsius = temperature.celsius().value
@@ -342,7 +342,7 @@ object Meteorology {
      * @param cloud the type of cloud
      * @return the types of precipitation the cloud can produce
      */
-    fun getPrecipitation(cloud: CloudGenus): List<Precipitation> {
+    public fun getPrecipitation(cloud: CloudGenus): List<Precipitation> {
         return cloudService.getPrecipitation(cloud)
     }
 
@@ -351,7 +351,7 @@ object Meteorology {
      * @param cloud the type of cloud
      * @return the chance that it will precipitate [0, 1]
      */
-    fun getPrecipitationChance(cloud: CloudGenus): Float {
+    public fun getPrecipitationChance(cloud: CloudGenus): Float {
         return cloudService.getPrecipitationChance(cloud)
     }
 
@@ -361,7 +361,7 @@ object Meteorology {
      * @param location the location
      * @return the height range of the cloud layer
      */
-    fun getHeightRange(level: CloudLevel, location: Coordinate): Range<Distance> {
+    public fun getHeightRange(level: CloudLevel, location: Coordinate): Range<Distance> {
         return cloudService.getHeightRange(level, location)
     }
 
@@ -370,7 +370,7 @@ object Meteorology {
      * @param percent the percent cloud cover [0, 1]
      * @return the cloud cover classification
      */
-    fun getCloudCover(percent: Float): CloudCover {
+    public fun getCloudCover(percent: Float): CloudCover {
         return cloudService.getCloudCover(percent)
     }
 
@@ -380,7 +380,7 @@ object Meteorology {
      * @param precipitation The average monthly precipitation
      * @return The Koppen-Geiger climate classification
      */
-    fun getKoppenGeigerClimateClassification(
+    public fun getKoppenGeigerClimateClassification(
         temperatures: Map<Month, Temperature>,
         precipitation: Map<Month, Distance>
     ): KoppenGeigerClimateClassification {

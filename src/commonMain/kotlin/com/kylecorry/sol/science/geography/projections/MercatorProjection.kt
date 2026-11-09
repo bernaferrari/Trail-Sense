@@ -11,7 +11,7 @@ import kotlin.math.atan
 import kotlin.math.ln
 import kotlin.math.sinh
 
-class MercatorProjection(private val scale: Float = 1f) : IMapProjection {
+public class MercatorProjection(private val scale: Float = 1f) : IMapProjection {
     override fun toCoordinate(pixel: Vector2): Coordinate {
         // Double math keeps the inverse projection precise near the poles on every platform
         val longitude = (pixel.x.toDouble() / scale).toDegrees()
@@ -33,13 +33,13 @@ class MercatorProjection(private val scale: Float = 1f) : IMapProjection {
         return Vector2(x.toFloat(), y.toFloat())
     }
 
-    companion object {
-        fun getScaleForLatitude(latitude: Double): Float {
+    public companion object {
+        public fun getScaleForLatitude(latitude: Double): Float {
             return cosDegrees(latitude).toFloat()
         }
 
-        const val MAX_LATITUDE = 85.05112878
-        const val MIN_LATITUDE = -85.05112878
+        public const val MAX_LATITUDE: Double = 85.05112878
+        public const val MIN_LATITUDE: Double = -85.05112878
     }
 
 }

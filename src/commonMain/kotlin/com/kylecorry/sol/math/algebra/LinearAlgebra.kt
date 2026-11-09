@@ -8,9 +8,9 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-object LinearAlgebra {
+public object LinearAlgebra {
 
-    fun dot(mat1: Matrix, mat2: Matrix): Matrix {
+    public fun dot(mat1: Matrix, mat2: Matrix): Matrix {
         require(mat1.columns() == mat2.rows()) { "Matrix 1 columns must be the same size as matrix 2 rows" }
 
         val product = Matrix.zeros(mat1.rows(), mat2.columns())
@@ -30,7 +30,7 @@ object LinearAlgebra {
         return product
     }
 
-    fun dot(matrix: Matrix, vector: Vector): Matrix {
+    public fun dot(matrix: Matrix, vector: Vector): Matrix {
         return if (matrix.rows() == vector.size) {
             dot(matrix, vector.toRowMatrix())
         } else {
@@ -38,7 +38,7 @@ object LinearAlgebra {
         }
     }
 
-    fun subtract(mat1: Matrix, mat2: Matrix): Matrix {
+    public fun subtract(mat1: Matrix, mat2: Matrix): Matrix {
         require(mat1.columns() == mat2.columns() || mat2.columns() == 1) {
             "Matrix 1 columns must be the same size as matrix 2 columns"
         }
@@ -52,11 +52,11 @@ object LinearAlgebra {
         }
     }
 
-    fun subtract(mat1: Matrix, value: Float): Matrix {
+    public fun subtract(mat1: Matrix, value: Float): Matrix {
         return add(mat1, -value)
     }
 
-    fun add(mat1: Matrix, mat2: Matrix): Matrix {
+    public fun add(mat1: Matrix, mat2: Matrix): Matrix {
         require(mat1.columns() == mat2.columns() || mat2.columns() == 1) {
             "Matrix 1 columns must be the same size as matrix 2 columns"
         }
@@ -70,13 +70,13 @@ object LinearAlgebra {
         }
     }
 
-    fun add(mat1: Matrix, value: Float): Matrix {
+    public fun add(mat1: Matrix, value: Float): Matrix {
         return Matrix.create(mat1.rows(), mat1.columns()) { row, col ->
             mat1[row, col] + value
         }
     }
 
-    fun multiply(mat1: Matrix, mat2: Matrix): Matrix {
+    public fun multiply(mat1: Matrix, mat2: Matrix): Matrix {
         require(mat1.columns() == mat2.columns() || mat2.columns() == 1) {
             "Matrix 1 columns must be the same size as matrix 2 columns"
         }
@@ -90,13 +90,13 @@ object LinearAlgebra {
         }
     }
 
-    fun multiply(mat1: Matrix, scale: Float): Matrix {
+    public fun multiply(mat1: Matrix, scale: Float): Matrix {
         return Matrix.create(mat1.rows(), mat1.columns()) { row, col ->
             mat1[row, col] * scale
         }
     }
 
-    fun divide(mat1: Matrix, mat2: Matrix): Matrix {
+    public fun divide(mat1: Matrix, mat2: Matrix): Matrix {
         require(mat1.columns() == mat2.columns() || mat2.columns() == 1) {
             "Matrix 1 columns must be the same size as matrix 2 columns"
         }
@@ -110,23 +110,23 @@ object LinearAlgebra {
         }
     }
 
-    fun divide(mat1: Matrix, scale: Float): Matrix {
+    public fun divide(mat1: Matrix, scale: Float): Matrix {
         return multiply(mat1, 1 / scale)
     }
 
-    fun transpose(mat: Matrix): Matrix {
+    public fun transpose(mat: Matrix): Matrix {
         return Matrix.create(mat.columns(), mat.rows()) { row, col ->
             mat[col, row]
         }
     }
 
-    fun map(mat: Matrix, fn: (value: Float) -> Float): Matrix {
+    public fun map(mat: Matrix, fn: (value: Float) -> Float): Matrix {
         return Matrix.create(mat.rows(), mat.columns()) { row, col ->
             fn(mat[row, col])
         }
     }
 
-    fun mapRows(mat: Matrix, fn: (row: FloatArray) -> FloatArray): Matrix {
+    public fun mapRows(mat: Matrix, fn: (row: FloatArray) -> FloatArray): Matrix {
         val copy = mat.clone()
         val temp = FloatArray(mat.columns())
         for (row in 0..<mat.rows()) {
@@ -136,19 +136,19 @@ object LinearAlgebra {
         return copy
     }
 
-    fun mapColumns(mat: Matrix, fn: (row: FloatArray) -> FloatArray): Matrix {
+    public fun mapColumns(mat: Matrix, fn: (row: FloatArray) -> FloatArray): Matrix {
         return mapRows(mat.transpose(), fn).transpose()
     }
 
-    fun sum(mat: Matrix): Float {
+    public fun sum(mat: Matrix): Float {
         return mat.sum()
     }
 
-    fun sumColumns(mat: Matrix): Matrix {
+    public fun sumColumns(mat: Matrix): Matrix {
         return sumRows(mat.transpose()).transpose()
     }
 
-    fun sumRows(mat: Matrix): Matrix {
+    public fun sumRows(mat: Matrix): Matrix {
         val temp = FloatArray(mat.columns())
         return Matrix.create(mat.rows(), 1) { row, _ ->
             mat.getRow(row, temp)
@@ -156,15 +156,15 @@ object LinearAlgebra {
         }
     }
 
-    fun max(mat: Matrix): Float {
+    public fun max(mat: Matrix): Float {
         return mat.max()
     }
 
-    fun maxColumns(mat: Matrix): Matrix {
+    public fun maxColumns(mat: Matrix): Matrix {
         return maxRows(mat.transpose()).transpose()
     }
 
-    fun maxRows(mat: Matrix): Matrix {
+    public fun maxRows(mat: Matrix): Matrix {
         val temp = FloatArray(mat.columns())
         return Matrix.create(mat.rows(), 1) { row, _ ->
             mat.getRow(row, temp)
@@ -172,7 +172,7 @@ object LinearAlgebra {
         }
     }
 
-    fun inverse(m: Matrix): Matrix {
+    public fun inverse(m: Matrix): Matrix {
         require(m.rows() == m.columns()) {
             "Matrix must be square to calculate inverse"
         }
@@ -185,7 +185,7 @@ object LinearAlgebra {
         return adjugate(m).transpose().divide(determinant(m))
     }
 
-    fun adjugate(m: Matrix): Matrix {
+    public fun adjugate(m: Matrix): Matrix {
         require(m.rows() == m.columns()) {
             "Matrix must be square to calculate adjugate"
         }
@@ -208,7 +208,7 @@ object LinearAlgebra {
         }
     }
 
-    fun determinant(m: Matrix): Float {
+    public fun determinant(m: Matrix): Float {
         require(m.rows() == m.columns()) {
             "Matrix must be square to calculate determinant"
         }
@@ -230,7 +230,7 @@ object LinearAlgebra {
         }
     }
 
-    fun cofactor(m: Matrix, r: Int, c: Int): Matrix {
+    public fun cofactor(m: Matrix, r: Int, c: Int): Matrix {
         require(m.rows() > 0)
         require(m.columns() > 0)
 
@@ -249,7 +249,7 @@ object LinearAlgebra {
         }
     }
 
-    fun qr(m: Matrix): Pair<Matrix, Matrix> {
+    public fun qr(m: Matrix): Pair<Matrix, Matrix> {
         val rows = m.rows()
         val cols = m.columns()
 
@@ -279,7 +279,7 @@ object LinearAlgebra {
     /**
      * Returns a column matrix of the diagonal of the matrix
      */
-    fun diagonal(m: Matrix): Matrix {
+    public fun diagonal(m: Matrix): Matrix {
         return Matrix.create(1, min(m.rows(), m.columns())) { _, i ->
             m[i, i]
         }
@@ -289,7 +289,7 @@ object LinearAlgebra {
      * Eigenvalues are ordered by decreasing magnitude. Symmetric matrices use the Jacobi method, which ignores
      * [tolerance].
      */
-    fun eigen(
+    public fun eigen(
         m: Matrix,
         tolerance: Float = 1e-12f,
         maxIterations: Int = 1000
@@ -321,11 +321,11 @@ object LinearAlgebra {
         return EigenDecomposition(Vector(diagonal(new).getRow(0)), normalizeEigenvectorSigns(vectors))
     }
 
-    fun norm(m: Matrix): Float {
+    public fun norm(m: Matrix): Float {
         return m.norm()
     }
 
-    fun solveLinear(a: Matrix, b: Vector): Vector {
+    public fun solveLinear(a: Matrix, b: Vector): Vector {
         require(a.rows() == a.columns()) { "Matrix must be square" }
         require(a.rows() == b.n) { "Matrix rows must be the same size as the vector" }
 
@@ -363,7 +363,7 @@ object LinearAlgebra {
         return x
     }
 
-    fun leastNorm(a: Matrix, b: Vector): Vector {
+    public fun leastNorm(a: Matrix, b: Vector): Vector {
         val (q, r) = qr(a.transpose())
         val y = q.dot(r.inverse().transpose()).dot(b.toColumnMatrix())
         return Vector(y.getColumn(0))
@@ -376,7 +376,7 @@ object LinearAlgebra {
      * @param b The vector b
      * @return The solution x
      */
-    fun leastSquares(a: Matrix, b: Vector): Vector {
+    public fun leastSquares(a: Matrix, b: Vector): Vector {
         val isUnderdetermined = a.rows() < a.columns()
         if (isUnderdetermined) {
             return leastNorm(a, b)
@@ -396,7 +396,7 @@ object LinearAlgebra {
      * @param weights The row weights
      * @return The solution x
      */
-    fun weightedLeastSquares(a: Matrix, b: Vector, weights: Vector): Vector {
+    public fun weightedLeastSquares(a: Matrix, b: Vector, weights: Vector): Vector {
         require(weights.size == a.rows()) { "Weights must have the same size as the number of rows in A" }
         require(b.size == a.rows()) { "B must have the same size as the number of rows in A" }
         require(weights.data.all { it >= 0f }) { "Weights must be greater than or equal to 0" }
@@ -426,7 +426,7 @@ object LinearAlgebra {
      * @param maxIterations The maximum number of reweighting iterations
      * @return The solution x
      */
-    fun robustLeastSquares(
+    public fun robustLeastSquares(
         a: Matrix,
         b: Vector,
         tuningConstant: Float = 1.5f,
@@ -461,7 +461,7 @@ object LinearAlgebra {
         return solution
     }
 
-    fun appendColumn(m: Matrix, col: FloatArray): Matrix {
+    public fun appendColumn(m: Matrix, col: FloatArray): Matrix {
         require(col.size == m.rows())
         return Matrix.create(m.rows(), m.columns() + 1) { r, c ->
             if (c < m.columns()) {
@@ -541,7 +541,7 @@ object LinearAlgebra {
         }
     }
 
-    fun appendColumn(m: Matrix, value: Float): Matrix {
+    public fun appendColumn(m: Matrix, value: Float): Matrix {
         return Matrix.create(m.rows(), m.columns() + 1) { r, c ->
             if (c < m.columns()) {
                 m[r, c]
@@ -551,7 +551,7 @@ object LinearAlgebra {
         }
     }
 
-    fun appendRow(m: Matrix, row: FloatArray): Matrix {
+    public fun appendRow(m: Matrix, row: FloatArray): Matrix {
         require(row.size == m.columns())
         return Matrix.create(m.rows() + 1, m.columns()) { r, c ->
             if (r < m.rows()) {
@@ -562,7 +562,7 @@ object LinearAlgebra {
         }
     }
 
-    fun appendRow(m: Matrix, value: Float): Matrix {
+    public fun appendRow(m: Matrix, value: Float): Matrix {
         return Matrix.create(m.rows() + 1, m.columns()) { r, c ->
             if (r < m.rows()) {
                 m[r, c]
@@ -572,6 +572,6 @@ object LinearAlgebra {
         }
     }
 
-    data class EigenDecomposition(val values: Vector, val vectors: Matrix)
+    public data class EigenDecomposition(val values: Vector, val vectors: Matrix)
 
 }

@@ -6,15 +6,15 @@ import com.kylecorry.sol.math.algebra.dot
 import com.kylecorry.sol.math.algebra.inverse
 import com.kylecorry.sol.math.algebra.transpose
 
-class WeightedLeastSquaresRegression(
+public class WeightedLeastSquaresRegression(
     private val input: List<List<Float>>,
     private val output: List<Float>,
     private val weights: List<Float>
 ) : IRegression {
 
     private val inputs = input.firstOrNull()?.size ?: 0
-    val b = fit()
-    val coefs = b.getColumn(0).toList()
+    public val b: Matrix = fit()
+    public val coefs: List<Float> = b.getColumn(0).toList()
 
     override fun predict(x: List<Float>): Float {
         val input = Matrix.row(values = (x + listOf(1f)).toFloatArray())

@@ -6,7 +6,7 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
 import kotlin.random.Random
 
-class HillClimbingOptimizer(
+public class HillClimbingOptimizer(
     private val step: Double = 1.0,
     private val maxIterations: Int = 1000,
     private val initialValue: Pair<Double, Double>? = null

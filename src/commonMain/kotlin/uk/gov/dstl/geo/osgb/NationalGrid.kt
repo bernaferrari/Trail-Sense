@@ -22,7 +22,7 @@ import kotlin.math.log10
 import kotlin.math.pow
 
 /** Convert National grid (TM 123412 23434) to OSGB Northing and Easting. */
-object NationalGrid {
+internal object NationalGrid {
     private const val SIZE_M = 100000.0
 
     private class GridSquare(
@@ -201,7 +201,7 @@ object NationalGrid {
      * @param ng the national grid string
      * @return array [n,e]
      */
-    fun fromNationalGrid(ng: String): DoubleArray {
+    internal fun fromNationalGrid(ng: String): DoubleArray {
         val trimmed = ng.trim()
         val ref = trimmed.substring(0, 2)
 
@@ -280,7 +280,7 @@ object NationalGrid {
      * @param en array of {e,n}
      * @return optional empty if the ne has no representation
      */
-    fun toNationalGrid(en: DoubleArray): String? {
+    internal fun toNationalGrid(en: DoubleArray): String? {
         for (gs in GRID_SQUARES.values) {
             if (gs.inside(en)) {
                 val offset = gs.offsetEastingNorthing(en)

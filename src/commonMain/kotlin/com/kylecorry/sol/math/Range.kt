@@ -1,17 +1,17 @@
 package com.kylecorry.sol.math
 
-data class Range<T : Comparable<T>>(val start: T, val end: T) {
-    operator fun contains(value: T): Boolean {
+public data class Range<T : Comparable<T>>(val start: T, val end: T) {
+    public operator fun contains(value: T): Boolean {
         return value in start..end
     }
 
-    fun clamp(value: T): T {
+    public fun clamp(value: T): T {
         if (value > end) return end
         if (value < start) return start
         return value
     }
 
-    fun intersection(other: Range<T>): Range<T>? {
+    public fun intersection(other: Range<T>): Range<T>? {
         if (other.start > end || other.end < start) {
             return null
         }
@@ -19,8 +19,8 @@ data class Range<T : Comparable<T>>(val start: T, val end: T) {
         return Range(maxOf(start, other.start), minOf(end, other.end))
     }
 
-    companion object {
-        fun <T : Comparable<T>> intersection(
+    public companion object {
+        public fun <T : Comparable<T>> intersection(
             ranges: List<Range<T>>,
             ignoreNoIntersection: Boolean = false,
             stopWhenNoIntersection: Boolean = false

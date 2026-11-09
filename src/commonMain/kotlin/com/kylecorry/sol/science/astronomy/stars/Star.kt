@@ -15,16 +15,16 @@ import com.kylecorry.sol.science.astronomy.units.EquatorialCoordinate
 // https://en.wikipedia.org/wiki/List_of_brightest_stars
 // https://en.wikipedia.org/wiki/List_of_stars_for_navigation
 
-class Star internal constructor(
-    val hipDesignation: Int,
-    val name: String,
+public class Star internal constructor(
+    public val hipDesignation: Int,
+    public val name: String,
     internal val coordinate: EquatorialCoordinate,
-    val magnitude: Float,
-    val motion: ProperMotion,
-    val colorIndexBV: Float
+    public val magnitude: Float,
+    public val motion: ProperMotion,
+    public val colorIndexBV: Float
 )
 
 /**
  * Proper motion of a star in degrees per year
  */
-data class ProperMotion(val declination: Double, val rightAscension: Double)
+public data class ProperMotion(val declination: Double, val rightAscension: Double)

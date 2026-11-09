@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.algebra.Polynomial
 import com.kylecorry.sol.math.algebra.PolynomialTerm
 
-class NewtonPolynomialRegression(private val order: Int) : PolynomialRegression {
+public class NewtonPolynomialRegression(private val order: Int) : PolynomialRegression {
     override fun fit(points: List<Vector2>): Polynomial {
         val sortedPoints = points.sortedBy { it.x }
         val coefficients = getDividedDifferenceCoefficients(sortedPoints)

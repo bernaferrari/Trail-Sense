@@ -10,9 +10,9 @@ import com.kylecorry.sol.units.Distance
 import kotlin.math.absoluteValue
 import kotlin.math.atan
 
-object Geology {
+public object Geology {
 
-    const val EARTH_AVERAGE_RADIUS = 6371.2e3
+    public const val EARTH_AVERAGE_RADIUS: Double = 6371.2e3
 
     private val riskClassifier = AvalancheRiskClassifier()
 
@@ -21,7 +21,7 @@ object Geology {
      * @param inclination The inclination angle (degrees)
      * @return The avalanche risk
      */
-    fun getAvalancheRisk(inclination: Float): AvalancheRisk {
+    public fun getAvalancheRisk(inclination: Float): AvalancheRisk {
         return riskClassifier.classify(inclination)
     }
 
@@ -30,7 +30,7 @@ object Geology {
      * @param inclination The inclination angle (degrees)
      * @return The slope grade as a percentage
      */
-    fun getSlopeGrade(inclination: Float): Float {
+    public fun getSlopeGrade(inclination: Float): Float {
         if (inclination == 90f) {
             return Float.POSITIVE_INFINITY
         } else if (inclination == -90f) {
@@ -40,15 +40,15 @@ object Geology {
         return Trigonometry.tanDegrees(inclination) * 100
     }
 
-    fun getInclinationFromSlopeGrade(grade: Float): Float {
+    public fun getInclinationFromSlopeGrade(grade: Float): Float {
         return atan(grade / 100f).toDegrees()
     }
 
-    fun getInclination(distance: Distance, elevationChange: Distance): Float {
+    public fun getInclination(distance: Distance, elevationChange: Distance): Float {
         return getInclinationFromSlopeGrade(getSlopeGrade(distance, elevationChange))
     }
 
-    fun getElevationCurvatureCorrection(distance: Distance, withRefraction: Boolean = true): Distance {
+    public fun getElevationCurvatureCorrection(distance: Distance, withRefraction: Boolean = true): Distance {
         // https://giwmscdnone.gov.np/media/pdf_upload/Compress-%202.%20Engineering%20Surveying%20Grade%20-%209_mv8gnsx.pdf
         val distanceMeters = distance.meters().value
         val curvatureCorrection = square(distanceMeters) / (2 * EARTH_AVERAGE_RADIUS)
@@ -63,7 +63,7 @@ object Geology {
      * @param elevations a list of elevation measurements in the same direction up to the horizon
      * @return the inclination of the horizon
      */
-    fun getHorizonDipAngle(
+    public fun getHorizonDipAngle(
         currentElevation: Distance,
         elevations: List<ElevationRayMeasurement>,
         withRefraction: Boolean = true
@@ -85,7 +85,7 @@ object Geology {
      * @param topInclination The inclination angle to the top (degrees)
      * @return The estimated height of the object
      */
-    fun getHeightFromInclination(
+    public fun getHeightFromInclination(
         distance: Distance,
         bottomInclination: Float,
         topInclination: Float
@@ -107,7 +107,7 @@ object Geology {
      * @param topInclination The inclination angle to the top (degrees)
      * @return The estimated distance to the object
      */
-    fun getDistanceFromInclination(
+    public fun getDistanceFromInclination(
         height: Distance,
         bottomInclination: Float,
         topInclination: Float
@@ -126,7 +126,7 @@ object Geology {
      * @param angle The angle, where 0 is the horizon (front), 90 is the sky (above),
      * 180 is the horizon (behind), and 270 is the ground (below)
      */
-    fun getInclination(angle: Float): Float {
+    public fun getInclination(angle: Float): Float {
         return when (val wrappedAngle = wrap(angle, 0f, 360f)) {
             in 90f..270f -> 180f - wrappedAngle
             in 270f..360f -> wrappedAngle - 360f
@@ -140,7 +140,7 @@ object Geology {
      * @param vertical The vertical distance
      * @return The slope grade as a percentage
      */
-    fun getSlopeGrade(horizontal: Distance, vertical: Distance): Float {
+    public fun getSlopeGrade(horizontal: Distance, vertical: Distance): Float {
         val y = vertical.meters().value
         val x = horizontal.meters().value
 
@@ -167,7 +167,7 @@ object Geology {
      * @param endElevation The ending elevation
      * @return The slope grade as a percentage
      */
-    fun getSlopeGrade(
+    public fun getSlopeGrade(
         start: Coordinate,
         startElevation: Distance,
         end: Coordinate,

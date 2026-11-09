@@ -49,7 +49,7 @@ import kotlin.time.Instant
  * (rise and set times, daylight length, meteor shower peaks, lunar eclipse searches) also take the
  * observer's [TimeZone], which defaults to the system time zone and decides where each day starts.
  */
-object Astronomy {
+public object Astronomy {
 
     // region Sun
 
@@ -57,7 +57,7 @@ object Astronomy {
      * Gets the sunrise, solar noon, and sunset on the local day containing [time].
      * @param mode the altitude that counts as the sun rising or setting (actual, civil, nautical, astronomical)
      */
-    fun getSunEvents(
+    public fun getSunEvents(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -77,7 +77,7 @@ object Astronomy {
      * @return a celestial observation containing an altitude, azimuth,
      * angular diameter (won't be null), and distance (won't be null)
      */
-    fun getSunPosition(
+    public fun getSunPosition(
         time: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
@@ -89,7 +89,7 @@ object Astronomy {
     /**
      * Gets the first sunset after [time], searching the current and next local day.
      */
-    fun getNextSunset(
+    public fun getNextSunset(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -105,7 +105,7 @@ object Astronomy {
     /**
      * Gets the first sunrise after [time], searching the current and next local day.
      */
-    fun getNextSunrise(
+    public fun getNextSunrise(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -118,7 +118,7 @@ object Astronomy {
         }
     }
 
-    fun isSunUp(
+    public fun isSunUp(
         time: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
@@ -130,7 +130,7 @@ object Astronomy {
     /**
      * Gets how long the sun is above the horizon during the local day containing [time].
      */
-    fun getDaylightLength(
+    public fun getDaylightLength(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -164,7 +164,7 @@ object Astronomy {
     /**
      * Gets the solar radiation for the given time in kW/m^2
      */
-    fun getSolarRadiation(
+    public fun getSolarRadiation(
         time: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
@@ -182,7 +182,7 @@ object Astronomy {
      * Gets the solar radiation for the given time in kW/m^2 on a surface with the given [tilt] and [azimuth]
      */
     @Suppress("LongParameterList")
-    fun getSolarRadiation(
+    public fun getSolarRadiation(
         time: Instant,
         location: Coordinate,
         tilt: Float,
@@ -207,7 +207,7 @@ object Astronomy {
      * within approximately a day.
      */
     @Suppress("LongParameterList")
-    fun getSunAboveHorizonTimes(
+    public fun getSunAboveHorizonTimes(
         location: Coordinate,
         time: Instant,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -229,7 +229,7 @@ object Astronomy {
     /**
      * Gets the moonrise, transit, and moonset on the local day containing [time].
      */
-    fun getMoonEvents(
+    public fun getMoonEvents(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -248,7 +248,7 @@ object Astronomy {
      * @return a celestial observation containing an altitude, azimuth,
      * angular diameter (won't be null), and distance (won't be null)
      */
-    fun getMoonPosition(
+    public fun getMoonPosition(
         time: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
@@ -260,7 +260,7 @@ object Astronomy {
     /**
      * Gets the first moonset after [time], searching the current and next local day.
      */
-    fun getNextMoonset(
+    public fun getNextMoonset(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -275,7 +275,7 @@ object Astronomy {
     /**
      * Gets the first moonrise after [time], searching the current and next local day.
      */
-    fun getNextMoonrise(
+    public fun getNextMoonrise(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -287,11 +287,11 @@ object Astronomy {
         }
     }
 
-    fun getMoonPhase(time: Instant): MoonPhase {
+    public fun getMoonPhase(time: Instant): MoonPhase {
         return MoonPhaseModel().getPhase(time)
     }
 
-    fun isMoonUp(
+    public fun isMoonUp(
         time: Instant,
         location: Coordinate,
         withRefraction: Boolean = false,
@@ -303,7 +303,7 @@ object Astronomy {
     /**
      * Determines if the moon is a super moon: full and within 360,000 km of the earth.
      */
-    fun isSuperMoon(time: Instant): Boolean {
+    public fun isSuperMoon(time: Instant): Boolean {
         if (getMoonPhase(time).phase != MoonTruePhase.Full) {
             return false
         }
@@ -323,7 +323,7 @@ object Astronomy {
      * @return The range of times the moon is above the horizon or null if it is not above the horizon
      * within approximately a day.
      */
-    fun getMoonAboveHorizonTimes(
+    public fun getMoonAboveHorizonTimes(
         location: Coordinate,
         time: Instant,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -342,7 +342,7 @@ object Astronomy {
      * observer's local zenith, in degrees. Positive angles are eastward (counterclockwise in an
      * upright, non-mirrored view of the sky).
      */
-    fun getMoonZenithAngleOfBrightLimb(time: Instant, location: Coordinate): Float {
+    public fun getMoonZenithAngleOfBrightLimb(time: Instant, location: Coordinate): Float {
         return MoonPhaseModel().getZenithAngleOfBrightLimb(time, location)
     }
 
@@ -351,20 +351,20 @@ object Astronomy {
      * moon's North Pole, in degrees. Positive angles are eastward (counterclockwise in an
      * upright, non-mirrored view of the sky).
      */
-    fun getMoonPositionAngleOfBrightLimb(time: Instant): Float {
+    public fun getMoonPositionAngleOfBrightLimb(time: Instant): Float {
         return MoonPhaseModel().getPositionAngleOfBrightLimb(time).toFloat()
     }
 
     /**
      * The parallactic angle of the moon in degrees.
      */
-    fun getMoonParallacticAngle(time: Instant, location: Coordinate): Float {
+    public fun getMoonParallacticAngle(time: Instant, location: Coordinate): Float {
         return AstroUtils.getParallacticAngle(MoonPositionModel(), time, location)
     }
 
     // endregion
 
-    fun getSeason(location: Coordinate, time: Instant): Season {
+    public fun getSeason(location: Coordinate, time: Instant): Season {
         return SeasonCalculator.getSeason(location, time)
     }
 
@@ -375,7 +375,7 @@ object Astronomy {
      * @param maxSearch the maximum time to search for a solar eclipse, or null for the default
      * @param timeZone determines the local days used when searching for lunar eclipses
      */
-    fun getNextEclipse(
+    public fun getNextEclipse(
         time: Instant,
         location: Coordinate,
         type: EclipseType,
@@ -393,21 +393,21 @@ object Astronomy {
     /**
      * Gets the magnitude of the eclipse at [time], or null if it is not supported for the eclipse type.
      */
-    fun getEclipseMagnitude(time: Instant, location: Coordinate, type: EclipseType): Float? {
+    public fun getEclipseMagnitude(time: Instant, location: Coordinate, type: EclipseType): Float? {
         return if (type == EclipseType.Solar) SolarEclipseModel().getMagnitude(time, location) else null
     }
 
     /**
      * Gets the obscuration of the eclipse at [time], or null if it is not supported for the eclipse type.
      */
-    fun getEclipseObscuration(time: Instant, location: Coordinate, type: EclipseType): Float? {
+    public fun getEclipseObscuration(time: Instant, location: Coordinate, type: EclipseType): Float? {
         return if (type == EclipseType.Solar) SolarEclipseModel().getObscuration(time, location) else null
     }
 
     /**
      * Gets the position and size of the earth's shadow during the peak of the lunar eclipse closest to [time].
      */
-    fun getLunarEclipseShadow(
+    public fun getLunarEclipseShadow(
         time: Instant,
         location: Coordinate,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
@@ -424,7 +424,7 @@ object Astronomy {
     /**
      * Gets the meteor shower that peaks on the local day containing [time], if any.
      */
-    fun getMeteorShower(
+    public fun getMeteorShower(
         location: Coordinate,
         time: Instant,
         timeZone: TimeZone = TimeZone.currentSystemDefault()
@@ -436,7 +436,7 @@ object Astronomy {
      * Get a list of meteor showers which are active.
      * This does not check the time of day, so the shower may not currently be visible.
      */
-    fun getActiveMeteorShowers(
+    public fun getActiveMeteorShowers(
         location: Coordinate,
         time: Instant,
         timeZone: TimeZone = TimeZone.currentSystemDefault()
@@ -444,7 +444,7 @@ object Astronomy {
         return MeteorModel.active(location, time, timeZone)
     }
 
-    fun getMeteorShowerPosition(
+    public fun getMeteorShowerPosition(
         shower: MeteorShower,
         location: Coordinate,
         time: Instant
@@ -456,7 +456,7 @@ object Astronomy {
 
     // region Stars
 
-    fun getStarPosition(
+    public fun getStarPosition(
         star: Star,
         time: Instant,
         location: Coordinate,
@@ -473,7 +473,7 @@ object Astronomy {
     /**
      * Get the color temperature of a star in Kelvin
      */
-    fun getColorTemperature(star: Star): Float {
+    public fun getColorTemperature(star: Star): Float {
         // Ballesteros' formula
         val bv = star.colorIndexBV
         return 4600f * ((1 / (0.92f * bv + 1.7f)) + (1 / (0.92f * bv + 0.62f)))
@@ -491,7 +491,7 @@ object Astronomy {
      * @param minMagnitude the faintest catalog stars to consider
      */
     @Suppress("LongParameterList")
-    fun plateSolve(
+    public fun plateSolve(
         readings: List<CelestialObservation>,
         time: Instant,
         approximateLocation: Coordinate? = null,
@@ -512,11 +512,11 @@ object Astronomy {
     /**
      * Gets the distance from the observer to the point directly below a star with the given altitude.
      */
-    fun getZenithDistance(altitude: Float): Distance {
+    public fun getZenithDistance(altitude: Float): Distance {
         return Distance.nauticalMiles((90f - altitude) * 60)
     }
 
-    fun getLocationFromStars(
+    public fun getLocationFromStars(
         starReadings: List<StarReading>,
         approximateLocation: Coordinate? = null
     ): Coordinate? {
@@ -526,7 +526,7 @@ object Astronomy {
     /**
      * Identifies the stars in a photo of the sky. Only the angles between stars are used, so no compass is needed.
      */
-    fun identifyStars(
+    public fun identifyStars(
         image: SkyImage,
         approximateLocation: Coordinate,
         settings: StarIdentifierSettings = StarIdentifierSettings()
@@ -538,7 +538,7 @@ object Astronomy {
      * Gets the location from a photo of the sky using gravity's up direction (SkyImage.up)
      * @param deflection converts the astronomic location to geodetic, if provided
      */
-    fun getLocationFromStars(
+    public fun getLocationFromStars(
         image: SkyImage,
         approximateLocation: Coordinate,
         settings: StarIdentifierSettings = StarIdentifierSettings(),
@@ -552,7 +552,7 @@ object Astronomy {
      * optional, it only narrows the search.
      * @return the identification, with a rotation from the camera's frame to East-North-Up
      */
-    fun getOrientationFromStars(
+    public fun getOrientationFromStars(
         image: SkyImage,
         location: Coordinate,
         settings: StarIdentifierSettings = StarIdentifierSettings(maxZenithOffsetDegrees = 5.0)
@@ -564,7 +564,7 @@ object Astronomy {
 
     // region Planets
 
-    fun getPlanetPosition(
+    public fun getPlanetPosition(
         planet: Planet,
         time: Instant,
         location: Coordinate,
@@ -578,7 +578,7 @@ object Astronomy {
      * Gets the rise, transit, and set times of the planet on the local day containing [time].
      */
     @Suppress("LongParameterList")
-    fun getPlanetEvents(
+    public fun getPlanetEvents(
         planet: Planet,
         time: Instant,
         location: Coordinate,

@@ -6,7 +6,7 @@ import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.calculus.Calculus
 import com.kylecorry.sol.math.calculus.RungeKutta4thOrderSolver
 
-class DerivativePredictor(
+public class DerivativePredictor(
     private val order: Int = 2,
     private val configs: Map<Int, DerivativePredictorConfig> = emptyMap()
 ) : ITimeSeriesPredictor {
@@ -65,8 +65,8 @@ class DerivativePredictor(
         }
     }
 
-    class DerivativePredictorConfig(
-        val map: ((List<Vector2>) -> List<Vector2>)? = null,
-        val finiteDifferenceOrder: Int = 1
+    public class DerivativePredictorConfig(
+        public val map: ((List<Vector2>) -> List<Vector2>)? = null,
+        public val finiteDifferenceOrder: Int = 1
     )
 }

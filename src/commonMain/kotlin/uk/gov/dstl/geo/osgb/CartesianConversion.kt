@@ -31,7 +31,7 @@ import kotlin.math.sqrt
  * horizontally and vertically) Equations taken from
  * https://www.ordnancesurvey.co.uk/documents/resources/guide-coordinate-systems-great-britain.pdf
  */
-object CartesianConversion {
+internal object CartesianConversion {
     private const val MAX_TO_LAT_LON_ITERATIONS = 128
 
     /**
@@ -40,7 +40,7 @@ object CartesianConversion {
      * @param b Semi-minor axis of the ellipsoid
      * @return Array of cartesian coordinates [x, y, z]
      */
-    fun fromLatLon(inputCoordinates: DoubleArray, a: Double, b: Double): DoubleArray {
+    internal fun fromLatLon(inputCoordinates: DoubleArray, a: Double, b: Double): DoubleArray {
         val lat = (inputCoordinates[0] * kotlin.math.PI / 180.0)
         val lon = (inputCoordinates[1] * kotlin.math.PI / 180.0)
         val height = inputCoordinates[2]
@@ -62,7 +62,7 @@ object CartesianConversion {
      * @param precision Precision to calculate the latitude to
      * @return Array of coordinates [lat, lon, ellipsoidHeight]
      */
-    fun toLatLon(inputCoordinates: DoubleArray, a: Double, b: Double, precision: Double): DoubleArray {
+    internal fun toLatLon(inputCoordinates: DoubleArray, a: Double, b: Double, precision: Double): DoubleArray {
         val x = inputCoordinates[0]
         val y = inputCoordinates[1]
         val z = inputCoordinates[2]
@@ -108,7 +108,7 @@ object CartesianConversion {
      * @param rZ Rotation about the z axis (in radians)
      * @return Array of coordinates [x, y, z] that have been transformed
      */
-    fun helmertTransformation(
+    internal fun helmertTransformation(
         inputCoordinates: DoubleArray,
         tX: Double,
         tY: Double,

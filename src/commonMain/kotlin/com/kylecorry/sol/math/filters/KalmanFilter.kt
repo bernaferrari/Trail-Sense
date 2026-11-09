@@ -1,19 +1,19 @@
 package com.kylecorry.sol.math.filters
 
-class KalmanFilter(
+public class KalmanFilter(
     initialEstimate: Double,
     private val initialError: Double,
     private val processError: Double,
     initialTime: Double? = null
 ) {
 
-    var estimate = initialEstimate
+    public var estimate: Double = initialEstimate
         private set
-    var estimateError = initialError
+    public var estimateError: Double = initialError
         private set
     private var lastTime = initialTime
 
-    fun filter(measurement: Double, error: Double = initialError, time: Double? = null): Double {
+    public fun filter(measurement: Double, error: Double = initialError, time: Double? = null): Double {
 
         val timeScale = if (lastTime != null && time != null) {
             time - (lastTime ?: 0.0)
@@ -34,13 +34,13 @@ class KalmanFilter(
         return estimate
     }
 
-    companion object {
+    public companion object {
 
         /**
          * Filter a list of measurements, including the error estimate with the estimate
          * @return a list of pairs of estimate to error
          */
-        fun filterWithError(
+        public fun filterWithError(
             measurements: List<Double>,
             errors: List<Double>,
             processError: Double,
@@ -68,7 +68,7 @@ class KalmanFilter(
             return values
         }
 
-        fun filter(
+        public fun filter(
             measurements: List<Double>,
             errors: List<Double>,
             processError: Double,
@@ -90,7 +90,7 @@ class KalmanFilter(
             return values
         }
 
-        fun filter(
+        public fun filter(
             measurements: List<Double>,
             error: Double,
             processError: Double,

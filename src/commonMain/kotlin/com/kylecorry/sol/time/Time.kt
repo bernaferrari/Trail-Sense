@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-object Time {
+public object Time {
 
     private const val MILLIS_PER_HOUR = 3_600_000.0
     private const val SECONDS_PER_HOUR = 3600f
@@ -36,51 +36,53 @@ object Time {
     /**
      * Converts a fractional number of hours to a duration (millisecond precision).
      */
-    fun hours(hours: Double): Duration = (hours * MILLIS_PER_HOUR).toLong().milliseconds
+    public fun hours(hours: Double): Duration = (hours * MILLIS_PER_HOUR).toLong().milliseconds
 
     /**
      * Converts a duration to a fractional number of hours (millisecond precision).
      */
-    fun hours(duration: Duration): Double = duration.inWholeMilliseconds / MILLIS_PER_HOUR
+    public fun hours(duration: Duration): Double = duration.inWholeMilliseconds / MILLIS_PER_HOUR
 
-    fun duration(hours: Long = 0, minutes: Long = 0, seconds: Long = 0): Duration {
+    public fun duration(hours: Long = 0, minutes: Long = 0, seconds: Long = 0): Duration {
         return hours.hours + minutes.minutes + seconds.seconds
     }
 
-    fun Instant.isInPast(): Boolean = this < Clock.System.now()
+    public fun Instant.isInPast(): Boolean = this < Clock.System.now()
 
-    fun Instant.isOlderThan(duration: Duration): Boolean = this < Clock.System.now() - duration
+    public fun Instant.isOlderThan(duration: Duration): Boolean = this < Clock.System.now() - duration
 
     /**
      * The number of hours until [other], truncated to whole seconds.
      */
-    fun Instant.hoursUntil(other: Instant): Float = hoursBetween(this, other)
+    public fun Instant.hoursUntil(other: Instant): Float = hoursBetween(this, other)
 
-    fun LocalDate.daysUntil(other: LocalDate): Long = other.toEpochDays() - toEpochDays()
+    public fun LocalDate.daysUntil(other: LocalDate): Long = other.toEpochDays() - toEpochDays()
 
-    fun Instant.plusHours(hours: Long): Instant = this + hours.hours
+    public fun Instant.plusHours(hours: Long): Instant = this + hours.hours
 
     /**
      * The number of hours from [first] to [second], truncated to whole seconds.
      */
-    fun hoursBetween(first: Instant, second: Instant): Float = wholeSecondsBetween(first, second) / SECONDS_PER_HOUR
+    public fun hoursBetween(first: Instant, second: Instant): Float {
+        return wholeSecondsBetween(first, second) / SECONDS_PER_HOUR
+    }
 
     /**
      * The last instant of the day in [timeZone], one nanosecond before the next day starts.
      */
-    fun LocalDate.atEndOfDayIn(timeZone: TimeZone): Instant {
+    public fun LocalDate.atEndOfDayIn(timeZone: TimeZone): Instant {
         return LocalDateTime(year, month, day, 23, 59, 59, 999_999_999).toInstant(timeZone)
     }
 
-    fun getClosestPastTime(time: Instant, times: List<Instant?>): Instant? {
+    public fun getClosestPastTime(time: Instant, times: List<Instant?>): Instant? {
         return times.filterNotNull().filter { it < time }.maxOrNull()
     }
 
-    fun getClosestFutureTime(time: Instant, times: List<Instant?>): Instant? {
+    public fun getClosestFutureTime(time: Instant, times: List<Instant?>): Instant? {
         return times.filterNotNull().filter { it > time }.minOrNull()
     }
 
-    fun getClosestTime(time: Instant, times: List<Instant?>): Instant? {
+    public fun getClosestTime(time: Instant, times: List<Instant?>): Instant? {
         return times.filterNotNull().minByOrNull { (it - time).absoluteValue }
     }
 
@@ -89,7 +91,7 @@ object Time {
      * @param alwaysIncludeEnd if true, [end] is sampled even when it does not fall on a step
      * @return the readings, or an empty list if the step is not positive
      */
-    inline fun <T> getReadings(
+    public inline fun <T> getReadings(
         start: Instant,
         end: Instant,
         step: Duration,
@@ -121,7 +123,7 @@ object Time {
     /**
      * Samples [valueFn] every [step] over the given [date] in [zone].
      */
-    inline fun <T> getReadings(
+    public inline fun <T> getReadings(
         date: LocalDate,
         zone: TimeZone,
         step: Duration,
@@ -131,7 +133,7 @@ object Time {
         return getReadings(date.atStartOfDayIn(zone), date.atEndOfDayIn(zone), step, alwaysIncludeEndOfDay, valueFn)
     }
 
-    inline fun <T> getYearlyValues(year: Int, valueProvider: (date: LocalDate) -> T): List<Pair<LocalDate, T>> {
+    public inline fun <T> getYearlyValues(year: Int, valueProvider: (date: LocalDate) -> T): List<Pair<LocalDate, T>> {
         val values = mutableListOf<Pair<LocalDate, T>>()
         var date = LocalDate(year, 1, 1)
         while (date.year == year) {
@@ -144,7 +146,7 @@ object Time {
     /**
      * The time between the earliest and latest reading.
      */
-    fun List<Reading<*>>.duration(): Duration {
+    public fun List<Reading<*>>.duration(): Duration {
         val start = minByOrNull { it.time } ?: return Duration.ZERO
         val end = maxByOrNull { it.time } ?: return Duration.ZERO
         return end.time - start.time
@@ -153,18 +155,18 @@ object Time {
     /**
      * The amount of daylight savings in effect in [zone] at [time] (zero if none).
      */
-    fun getDaylightSavings(time: Instant, zone: TimeZone): Duration {
+    public fun getDaylightSavings(time: Instant, zone: TimeZone): Duration {
         return (zone.offsetAt(time).totalSeconds - standardOffsetSeconds(zone, time)).seconds
     }
 
-    fun isDaylightSavings(time: Instant, zone: TimeZone): Boolean {
+    public fun isDaylightSavings(time: Instant, zone: TimeZone): Boolean {
         return getDaylightSavings(time, zone) != Duration.ZERO
     }
 
     /**
      * Gets the instants in [year] when the daylight savings amount of [zone] changes, with the new amount.
      */
-    fun getDaylightSavingsTransitions(zone: TimeZone, year: Int): List<Pair<Instant, Duration>> {
+    public fun getDaylightSavingsTransitions(zone: TimeZone, year: Int): List<Pair<Instant, Duration>> {
         val transitions = mutableListOf<Pair<Instant, Duration>>()
         var time = LocalDate(year, 1, 1).atStartOfDayIn(zone)
         repeat(MAX_TRANSITIONS_PER_YEAR) {
@@ -181,12 +183,15 @@ object Time {
         return transitions
     }
 
-    fun Range<Instant>.middle(): Instant = start + (end - start) / 2
+    public fun Range<Instant>.middle(): Instant = start + (end - start) / 2
 
     /**
      * Rounds to the nearest multiple of [minutes] past the hour in [timeZone].
      */
-    fun Instant.roundNearestMinute(minutes: Int = 1, timeZone: TimeZone = TimeZone.currentSystemDefault()): Instant {
+    public fun Instant.roundNearestMinute(
+        minutes: Int = 1,
+        timeZone: TimeZone = TimeZone.currentSystemDefault()
+    ): Instant {
         val local = toLocalDateTime(timeZone)
         val interval = minutes * NANOS_PER_MINUTE
         val nanosIntoHour = local.minute * NANOS_PER_MINUTE + local.second * NANOS_PER_SECOND + local.nanosecond
@@ -197,14 +202,14 @@ object Time {
     /**
      * The offset of local solar time from UTC at the given longitude.
      */
-    fun getSolarTimeOffset(longitude: Double): Duration = hours(longitude / DEGREES_PER_HOUR)
+    public fun getSolarTimeOffset(longitude: Double): Duration = hours(longitude / DEGREES_PER_HOUR)
 
-    fun getLongitudeFromSolarTimeOffset(offset: Duration): Double = hours(offset) * DEGREES_PER_HOUR
+    public fun getLongitudeFromSolarTimeOffset(offset: Duration): Double = hours(offset) * DEGREES_PER_HOUR
 
     /**
      * Gets a fixed offset time zone (whole hours) based on the solar time at the location.
      */
-    fun getApproximateTimeZone(location: Coordinate): TimeZone {
+    public fun getApproximateTimeZone(location: Coordinate): TimeZone {
         val hours = (location.longitude / DEGREES_PER_HOUR).roundToInt()
         val sign = if (hours >= 0) "+" else "-"
         val paddedHours = hours.absoluteValue.toString().padStart(2, '0')
@@ -215,7 +220,7 @@ object Time {
      * Gets a representative location for the time zone. Known zones map to their principal city,
      * others to the equator at the longitude of their standard offset at [time].
      */
-    fun getLocationFromTimeZone(zone: TimeZone, time: Instant = Clock.System.now()): Coordinate {
+    public fun getLocationFromTimeZone(zone: TimeZone, time: Instant = Clock.System.now()): Coordinate {
         return TimeZoneLocations.getLocation(zone.id)
             ?: Coordinate(0.0, standardOffsetSeconds(zone, time) / SECONDS_PER_DEGREE_OF_LONGITUDE)
     }

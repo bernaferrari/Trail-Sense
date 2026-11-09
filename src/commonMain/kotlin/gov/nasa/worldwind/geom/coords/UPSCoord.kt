@@ -14,12 +14,12 @@ import gov.nasa.worldwind.geom.Angle
  * @author Patrick Murris
  * @version $Id$
  */
-class UPSCoord(
-    val latitude: Angle,
-    val longitude: Angle,
-    val hemisphere: String?,
-    val easting: Double,
-    val northing: Double
+internal class UPSCoord(
+    internal val latitude: Angle,
+    internal val longitude: Angle,
+    internal val hemisphere: String?,
+    internal val easting: Double,
+    internal val northing: Double
 ) {
 
     override fun toString(): String {
@@ -30,8 +30,8 @@ class UPSCoord(
         return sb.toString()
     }
 
-    companion object {
-        fun fromLatLon(latitude: Angle, longitude: Angle): UPSCoord {
+    internal companion object {
+        internal fun fromLatLon(latitude: Angle, longitude: Angle): UPSCoord {
             val converter = UPSCoordConverter()
             val err = converter.convertGeodeticToUPS(latitude.radians, longitude.radians)
 
@@ -43,7 +43,7 @@ class UPSCoord(
             )
         }
 
-        fun fromUPS(hemisphere: String?, easting: Double, northing: Double): UPSCoord {
+        internal fun fromUPS(hemisphere: String?, easting: Double, northing: Double): UPSCoord {
             val converter = UPSCoordConverter()
             val err = converter.convertUPSToGeodetic(hemisphere, easting, northing)
 

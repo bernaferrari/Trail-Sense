@@ -21,16 +21,16 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 
-object Oceanography {
-    const val DENSITY_SALT_WATER = 1023.6f
-    const val DENSITY_FRESH_WATER = 997.0474f
+public object Oceanography {
+    public const val DENSITY_SALT_WATER: Float = 1023.6f
+    public const val DENSITY_FRESH_WATER: Float = 997.0474f
 
     private val LUNAR_HALF_DAY = 12.hours
 
     /**
      * Gets the depth below the water surface from the water pressure.
      */
-    fun getDepth(pressure: Pressure, seaLevelPressure: Pressure, isSaltWater: Boolean = true): Distance {
+    public fun getDepth(pressure: Pressure, seaLevelPressure: Pressure, isSaltWater: Boolean = true): Distance {
         if (pressure <= seaLevelPressure) {
             return Distance.from(0f, DistanceUnits.Meters)
         }
@@ -45,7 +45,7 @@ object Oceanography {
     /**
      * Estimates the tidal range from the moon phase over the last few days.
      */
-    fun getTidalRange(time: Instant, timeZone: TimeZone = TimeZone.currentSystemDefault()): TidalRange {
+    public fun getTidalRange(time: Instant, timeZone: TimeZone = TimeZone.currentSystemDefault()): TidalRange {
         val phaseModel = MoonPhaseModel()
         for (daysAgo in 0..3) {
             val phase = phaseModel.getPhase(time.plus(-daysAgo, DateTimeUnit.DAY, timeZone)).phase
@@ -61,7 +61,7 @@ object Oceanography {
     /**
      * Gets the high and low tides between [start] and [end].
      */
-    fun getTides(
+    public fun getTides(
         calculator: IWaterLevelCalculator,
         start: Instant,
         end: Instant,
@@ -80,7 +80,7 @@ object Oceanography {
     /**
      * Gets the time between the moon's last transit (upper or lower) and the high tide.
      */
-    fun getLunitidalInterval(
+    public fun getLunitidalInterval(
         highTideTime: Instant,
         location: Coordinate = Coordinate.zero,
         timeZone: TimeZone = TimeZone.currentSystemDefault()
@@ -101,7 +101,7 @@ object Oceanography {
      * Gets the average lunitidal interval of the high tides, accounting for intervals that wrap around
      * the 12 hour lunar half day.
      */
-    fun getMeanLunitidalInterval(
+    public fun getMeanLunitidalInterval(
         highTideTimes: List<Instant>,
         location: Coordinate = Coordinate.zero,
         timeZone: TimeZone = TimeZone.currentSystemDefault()

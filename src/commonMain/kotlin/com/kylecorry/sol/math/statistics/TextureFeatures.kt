@@ -1,6 +1,6 @@
 package com.kylecorry.sol.math.statistics
 
-data class TextureFeatures(
+public data class TextureFeatures(
     val energy: Float,
     val entropy: Float,
     val contrast: Float,

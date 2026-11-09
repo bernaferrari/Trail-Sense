@@ -2,9 +2,9 @@ package com.kylecorry.sol.science.ecology.triggers
 
 import com.kylecorry.sol.science.ecology.LifecycleEventFactors
 
-interface LifecycleEventTrigger {
-    fun isTriggered(factors: LifecycleEventFactors): Boolean
-    fun reset() {
+public interface LifecycleEventTrigger {
+    public fun isTriggered(factors: LifecycleEventFactors): Boolean
+    public fun reset() {
         // Do nothing
     }
 }

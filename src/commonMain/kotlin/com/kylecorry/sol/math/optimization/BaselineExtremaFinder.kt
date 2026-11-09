@@ -2,7 +2,7 @@ package com.kylecorry.sol.math.optimization
 
 import com.kylecorry.sol.math.Vector2
 
-class BaselineExtremaFinder : IListExtremaFinder {
+public class BaselineExtremaFinder : IListExtremaFinder {
 
     override fun find(values: List<Float>): List<Extremum> {
         if (values.isEmpty()) {

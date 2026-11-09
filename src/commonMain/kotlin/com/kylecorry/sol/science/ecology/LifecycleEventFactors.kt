@@ -5,7 +5,7 @@ import com.kylecorry.sol.units.Temperature
 import kotlin.time.Duration
 import kotlinx.datetime.LocalDate
 
-data class LifecycleEventFactors(
+public data class LifecycleEventFactors(
     val lengthOfDay: Duration,
     val temperature: Range<Temperature>,
     val date: LocalDate

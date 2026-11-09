@@ -30,9 +30,9 @@ import kotlin.math.sin
  * If unclamped or more precise values are needeed, use the [DoubleCoordinate] class instead.
  */
 @JvmInline
-value class Coordinate internal constructor(val packed: Long) : ICoordinate {
+public value class Coordinate internal constructor(public val packed: Long) : ICoordinate {
 
-    constructor(latitude: Double, longitude: Double) : this(
+    public constructor(latitude: Double, longitude: Double) : this(
         pack(latitude.coerceIn(-90.0, 90.0), toLongitude(longitude))
     )
 
@@ -42,29 +42,29 @@ value class Coordinate internal constructor(val packed: Long) : ICoordinate {
     override val longitude: Double
         get() = unpackLongitude(packed)
 
-    val isNorthernHemisphere: Boolean
+    public val isNorthernHemisphere: Boolean
         get() = latitude >= 0
 
-    val antipode: Coordinate
+    public val antipode: Coordinate
         get() = Coordinate(-latitude, toLongitude(longitude + 180))
 
     override fun toString(): String {
         return "$latitude, $longitude"
     }
 
-    fun copy(latitude: Double = this.latitude, longitude: Double = this.longitude): Coordinate {
+    public fun copy(latitude: Double = this.latitude, longitude: Double = this.longitude): Coordinate {
         return Coordinate(latitude, longitude)
     }
 
-    operator fun component1(): Double {
+    public operator fun component1(): Double {
         return latitude
     }
 
-    operator fun component2(): Double {
+    public operator fun component2(): Double {
         return longitude
     }
 
-    fun distanceTo(other: Coordinate, highAccuracy: Boolean = true): Float {
+    public fun distanceTo(other: Coordinate, highAccuracy: Boolean = true): Float {
         return if (highAccuracy) {
             Geography.vincenty(this, other)[0]
         } else {
@@ -72,11 +72,11 @@ value class Coordinate internal constructor(val packed: Long) : ICoordinate {
         }
     }
 
-    fun plus(distance: Distance, bearing: Bearing): Coordinate {
+    public fun plus(distance: Distance, bearing: Bearing): Coordinate {
         return plus(distance.meters().value.toDouble(), bearing)
     }
 
-    fun plus(meters: Double, bearing: Bearing): Coordinate {
+    public fun plus(meters: Double, bearing: Bearing): Coordinate {
         // Adapted from https://www.movable-type.co.uk/scripts/latlong.html
         val radius = EARTH_AVERAGE_RADIUS
         val newLat = asin(
@@ -97,7 +97,7 @@ value class Coordinate internal constructor(val packed: Long) : ICoordinate {
     /**
      * Get the bearing to the other coordinate (using True North)
      */
-    fun bearingTo(other: Coordinate, highAccuracy: Boolean = true): Bearing {
+    public fun bearingTo(other: Coordinate, highAccuracy: Boolean = true): Bearing {
         return if (highAccuracy) {
             Bearing.from(Geography.vincenty(this, other)[1])
         } else {
@@ -105,7 +105,7 @@ value class Coordinate internal constructor(val packed: Long) : ICoordinate {
         }
     }
 
-    fun toCartesian(): Vector3 {
+    public fun toCartesian(): Vector3 {
         val x = cosDegrees(latitude) * cosDegrees(longitude)
         val y = cosDegrees(latitude) * sinDegrees(longitude)
         val z = sinDegrees(latitude)
@@ -116,7 +116,7 @@ value class Coordinate internal constructor(val packed: Long) : ICoordinate {
     /**
      * Get the angle between two coordinates (through the center of the Earth)
      */
-    fun degreesBetween(other: Coordinate): Float {
+    public fun degreesBetween(other: Coordinate): Float {
         val value =
             sinDegrees(latitude) * sinDegrees(other.latitude) +
                     cosDegrees(latitude) * cosDegrees(other.latitude) *
@@ -124,19 +124,19 @@ value class Coordinate internal constructor(val packed: Long) : ICoordinate {
         return acos(value.coerceIn(-1.0, 1.0)).toDegrees().toFloat().absoluteValue
     }
 
-    companion object {
+    public companion object {
 
-        val zero = Coordinate(0.0, 0.0)
+        public val zero: Coordinate = Coordinate(0.0, 0.0)
         private const val EARTH_AVERAGE_RADIUS = 6371.2e3
         private const val LONGITUDE_BITS = 32
         private const val LONGITUDE_MASK = 0xFFFFFFFFL
         private const val COORDINATE_SCALE = 1e7
 
-        fun toLongitude(degrees: Double): Double {
+        public fun toLongitude(degrees: Double): Double {
             return Arithmetic.wrap(degrees, -180.0, 180.0)
         }
 
-        fun parse(
+        public fun parse(
             location: String,
             formats: List<CoordinateFormat> = defaultFormats
         ): Coordinate? {

@@ -1,5 +1,5 @@
 package com.kylecorry.sol.science.oceanography
 
-enum class TidalRange {
+public enum class TidalRange {
     Neap, Spring, Normal
 }

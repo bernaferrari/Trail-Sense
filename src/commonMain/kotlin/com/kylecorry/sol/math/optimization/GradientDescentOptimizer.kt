@@ -6,7 +6,7 @@ import com.kylecorry.sol.math.interpolation.Interpolation.lerp
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
-class GradientDescentOptimizer(
+public class GradientDescentOptimizer(
     private val learningRate: Double,
     private val maxIterations: Int = 1000,
     private val gradientThreshold: Double = 0.001,
@@ -38,8 +38,8 @@ class GradientDescentOptimizer(
         return x to y
     }
 
-    companion object {
-        fun approximateGradientFn(
+    public companion object {
+        public fun approximateGradientFn(
             step: Double = 0.00001,
             fn: (x: Double, y: Double) -> Double
         ): (x: Double, y: Double) -> Pair<Double, Double> {

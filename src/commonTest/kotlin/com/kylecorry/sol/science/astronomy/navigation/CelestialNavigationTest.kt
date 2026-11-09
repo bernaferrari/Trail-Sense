@@ -23,7 +23,7 @@ class CelestialNavigationTest {
             val photo = sky.generate(SyntheticSky.Errors(falseStars = 0, dropout = 0.0))
             val identification = Astronomy.identifyStars(photo.image, sky.nearby(photo.truth, 800.0))
             assertNotNull(identification)
-            assertTrue(identification!!.stars.size >= photo.image.stars.size * 0.9)
+            assertTrue(identification.stars.size >= photo.image.stars.size * 0.9)
             assertTrue(identification.rmsDegrees < 0.05)
         }
     }
@@ -35,7 +35,7 @@ class CelestialNavigationTest {
             val photo = sky.generate(SyntheticSky.Errors(pixelNoise = 0.0, focalError = 0.0, maxK1 = 0.0, falseStars = 0, dropout = 0.0))
             val location = Astronomy.getLocationFromStars(photo.image, sky.nearby(photo.truth, 800.0))
             assertNotNull(location)
-            assertTrue(location!!.distanceTo(photo.truth) < 500f, "Error: ${location.distanceTo(photo.truth)} m")
+            assertTrue(location.distanceTo(photo.truth) < 500f, "Error: ${location.distanceTo(photo.truth)} m")
         }
     }
 
@@ -72,7 +72,7 @@ class CelestialNavigationTest {
             val identification = Astronomy.getOrientationFromStars(photo.image, photo.truth)
             assertNotNull(identification)
             val axis = Vector3Precise(0.0, 0.0, 1.0)
-            val estimated = HorizonVectors.fromVector(identification!!.rotation.rotate(axis)).first
+            val estimated = HorizonVectors.fromVector(identification.rotation.rotate(axis)).first
             val actual = HorizonVectors.fromVector(photo.deviceToEnu.rotate(axis)).first
             val error = abs(((estimated - actual + 540) % 360) - 180)
             assertTrue(error < 0.05, "Heading error: $error°")

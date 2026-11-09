@@ -5,44 +5,44 @@ import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
 
-data class ComplexNumber(val real: Float, val imaginary: Float) {
+public data class ComplexNumber(val real: Float, val imaginary: Float) {
     val phase: Float
         get() = atan2(imaginary, real)
 
     val magnitude: Float
         get() = hypot(real, imaginary)
 
-    operator fun plus(other: ComplexNumber): ComplexNumber {
+    public operator fun plus(other: ComplexNumber): ComplexNumber {
         return ComplexNumber(real + other.real, imaginary + other.imaginary)
     }
 
-    operator fun minus(other: ComplexNumber): ComplexNumber {
+    public operator fun minus(other: ComplexNumber): ComplexNumber {
         return ComplexNumber(real - other.real, imaginary - other.imaginary)
     }
 
-    operator fun times(other: ComplexNumber): ComplexNumber {
+    public operator fun times(other: ComplexNumber): ComplexNumber {
         return ComplexNumber(
             real * other.real - imaginary * other.imaginary,
             real * other.imaginary + imaginary * other.real
         )
     }
 
-    operator fun times(other: Float): ComplexNumber {
+    public operator fun times(other: Float): ComplexNumber {
         return ComplexNumber(real * other, imaginary * other)
     }
 
-    fun conjugate(): ComplexNumber {
+    public fun conjugate(): ComplexNumber {
         return ComplexNumber(real, -imaginary)
     }
 
-    companion object {
+    public companion object {
 
         /**
          * Calculates the complex exponential e^(i*theta)
          * @param theta The angle in radians
          * @return The complex number
          */
-        fun exp(theta: Float): ComplexNumber {
+        public fun exp(theta: Float): ComplexNumber {
             return ComplexNumber(cos(theta), sin(theta))
         }
     }

@@ -11,62 +11,62 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 @JvmInline
-value class Vector2 internal constructor(internal val packed: Long) {
+public value class Vector2 internal constructor(internal val packed: Long) {
 
-    constructor(x: Float, y: Float) : this(packXY(x, y))
+    public constructor(x: Float, y: Float) : this(packXY(x, y))
 
-    val x: Float
+    public val x: Float
         get() = Float.fromBits(((packed ushr 32) and 0xFFFFFFFFL).toInt())
 
-    val y: Float
+    public val y: Float
         get() = Float.fromBits((packed and 0xFFFFFFFFL).toInt())
 
-    operator fun minus(other: Vector2): Vector2 {
+    public operator fun minus(other: Vector2): Vector2 {
         return Vector2(x - other.x, y - other.y)
     }
 
-    operator fun plus(other: Vector2): Vector2 {
+    public operator fun plus(other: Vector2): Vector2 {
         return Vector2(x + other.x, y + other.y)
     }
 
-    operator fun times(scale: Float): Vector2 {
+    public operator fun times(scale: Float): Vector2 {
         return Vector2(x * scale, y * scale)
     }
 
-    fun magnitude(): Float {
+    public fun magnitude(): Float {
         return sqrt(x * x + y * y)
     }
 
     /**
      * The angle of the vector in degrees (0 - 360, unit circle)
      */
-    fun angle(): Float {
+    public fun angle(): Float {
         return normalizeAngle(atan2(y, x).toDegrees())
     }
 
-    fun normalize(): Vector2 {
+    public fun normalize(): Vector2 {
         val length = magnitude()
         if (Arithmetic.isZero(length)) return this
         return Vector2(x / length, y / length)
     }
 
-    fun distanceTo(other: Vector2): Float {
+    public fun distanceTo(other: Vector2): Float {
         return (other - this).magnitude()
     }
 
-    fun squaredMagnitude(): Float {
+    public fun squaredMagnitude(): Float {
         return x * x + y * y
     }
 
-    fun squaredDistanceTo(other: Vector2): Float {
+    public fun squaredDistanceTo(other: Vector2): Float {
         return (other - this).squaredMagnitude()
     }
 
-    fun angleBetween(other: Vector2): Float {
+    public fun angleBetween(other: Vector2): Float {
         return (other - this).angle()
     }
 
-    fun rotate(angle: Float, origin: Vector2 = zero): Vector2 {
+    public fun rotate(angle: Float, origin: Vector2 = zero): Vector2 {
         if (Arithmetic.isZero(angle % 360f)) return this
         val x = this.x - origin.x
         val y = this.y - origin.y
@@ -78,11 +78,11 @@ value class Vector2 internal constructor(internal val packed: Long) {
         )
     }
 
-    fun copy(x: Float = this.x, y: Float = this.y): Vector2 {
+    public fun copy(x: Float = this.x, y: Float = this.y): Vector2 {
         return Vector2(x, y)
     }
 
-    fun coerceIn(minimum: Vector2, maximum: Vector2): Vector2 {
+    public fun coerceIn(minimum: Vector2, maximum: Vector2): Vector2 {
         return Vector2(
             x.coerceIn(minimum.x, maximum.x),
             y.coerceIn(minimum.y, maximum.y)
@@ -93,10 +93,10 @@ value class Vector2 internal constructor(internal val packed: Long) {
         return "Vector2(x=$x, y=$y)"
     }
 
-    companion object {
-        val zero = from(0f, 0f)
+    public companion object {
+        public val zero: Vector2 = from(0f, 0f)
 
-        fun from(x: Float, y: Float): Vector2 {
+        public fun from(x: Float, y: Float): Vector2 {
             return Vector2(packXY(x, y))
         }
     }

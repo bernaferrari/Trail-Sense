@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.astronomy.eclipse
 
-enum class EclipseType {
+public enum class EclipseType {
     PartialLunar,
     TotalLunar,
     Solar

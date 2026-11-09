@@ -2,7 +2,7 @@ package com.kylecorry.sol.math.filters
 
 import com.kylecorry.sol.math.Vector2
 
-class ProximityChangeFilter2D(
+public class ProximityChangeFilter2D(
     private val changeThreshold: Float
 ) : IFilter2D {
 

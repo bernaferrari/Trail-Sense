@@ -8,7 +8,7 @@ import com.kylecorry.sol.science.optics.PinholeCamera
  * @param rotation maps camera rays to East-North-Up vectors at the location used for identification
  * @param rmsDegrees the RMS angular error between the identified stars and the catalog
  */
-data class StarIdentification(
+public data class StarIdentification(
     val stars: List<IdentifiedStar>,
     val camera: PinholeCamera,
     val rotation: Rotation,

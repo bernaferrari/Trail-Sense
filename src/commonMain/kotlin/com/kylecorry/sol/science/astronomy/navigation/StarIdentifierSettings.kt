@@ -10,7 +10,7 @@ package com.kylecorry.sol.science.astronomy.navigation
  * @param maxZenithOffsetDegrees hypotheses that put gravity's up further than this from the zenith
  * at the approximate location are rejected
  */
-data class StarIdentifierSettings(
+public data class StarIdentifierSettings(
     val maxMagnitude: Float = 4.5f,
     val seedMagnitude: Float = 3.0f,
     val includePlanets: Boolean = true,

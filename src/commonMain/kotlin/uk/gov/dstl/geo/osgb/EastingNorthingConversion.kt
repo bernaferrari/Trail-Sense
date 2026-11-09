@@ -29,7 +29,7 @@ import kotlin.math.tan
  * <p>Equations taken from
  * https://www.ordnancesurvey.co.uk/documents/resources/guide-coordinate-systems-great-britain.pdf
  */
-object EastingNorthingConversion {
+internal object EastingNorthingConversion {
     private const val MAX_TO_LAT_LON_ITERATIONS = 128
 
     /**
@@ -45,7 +45,7 @@ object EastingNorthingConversion {
      * @param lon0 Longitude of true origin
      * @return Array of easting/northings [easting, northing]
      */
-    fun fromLatLon(
+    internal fun fromLatLon(
         inputCoordinates: DoubleArray,
         a: Double,
         b: Double,
@@ -115,7 +115,7 @@ object EastingNorthingConversion {
      * @param lon0Degrees Longitude of true origin
      * @return Array of coordinates [lat, lon]
      */
-    fun toLatLon(
+    internal fun toLatLon(
         inputCoordinates: DoubleArray,
         a: Double,
         b: Double,

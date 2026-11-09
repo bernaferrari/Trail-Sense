@@ -1,6 +1,6 @@
 package com.kylecorry.sol.math
 
-enum class RoundingMethod {
+public enum class RoundingMethod {
     AwayFromZero,
     TowardZero,
 }

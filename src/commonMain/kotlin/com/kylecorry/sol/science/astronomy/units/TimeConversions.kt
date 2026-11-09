@@ -20,25 +20,25 @@ private const val NANOS_PER_DAY = 24 * NANOS_PER_HOUR
 private const val MILLIS_PER_HOUR = 3_600_000.0
 private const val DEGREES_PER_HOUR = 15
 
-fun Instant.toJulianDay(includeTime: Boolean = true): Double {
+public fun Instant.toJulianDay(includeTime: Boolean = true): Double {
     return JulianDay.of(toLocalDateTime(TimeZone.UTC), includeTime)
 }
 
-fun Instant.toJulianCenturies(): Double = JulianDay.centuries(this)
+public fun Instant.toJulianCenturies(): Double = JulianDay.centuries(this)
 
-fun fromJulianDay(julianDay: Double): Instant = JulianDay.from(julianDay)
+public fun fromJulianDay(julianDay: Double): Instant = JulianDay.from(julianDay)
 
 /**
  * The time since midnight.
  */
-fun LocalTime.toDuration(): Duration = hour.hours + minute.minutes + second.seconds + nanosecond.nanoseconds
+public fun LocalTime.toDuration(): Duration = hour.hours + minute.minutes + second.seconds + nanosecond.nanoseconds
 
-fun LocalTime.toDecimalHours(): Double = toDuration().inWholeNanoseconds / NANOS_PER_HOUR.toDouble()
+public fun LocalTime.toDecimalHours(): Double = toDuration().inWholeNanoseconds / NANOS_PER_HOUR.toDouble()
 
 /**
  * The time of day after this duration has elapsed since midnight, wrapping around whole days.
  */
-fun Duration.toLocalTime(): LocalTime {
+public fun Duration.toLocalTime(): LocalTime {
     val nanos = ((inWholeNanoseconds % NANOS_PER_DAY) + NANOS_PER_DAY) % NANOS_PER_DAY
     val seconds = nanos / NANOS_PER_SECOND
     return LocalTime(
@@ -52,22 +52,22 @@ fun Duration.toLocalTime(): LocalTime {
 /**
  * The duration in decimal hours (millisecond precision).
  */
-fun Duration.toDecimal(): Double = inWholeMilliseconds / MILLIS_PER_HOUR
+public fun Duration.toDecimal(): Double = inWholeMilliseconds / MILLIS_PER_HOUR
 
-fun Duration.toDegrees(): Double = toDecimal() * DEGREES_PER_HOUR
+public fun Duration.toDegrees(): Double = toDecimal() * DEGREES_PER_HOUR
 
-fun Duration.toRadians(): Double = toDegrees().toRadians()
+public fun Duration.toRadians(): Double = toDegrees().toRadians()
 
-fun degreesToTime(degrees: Double): Duration = Time.hours(degrees / DEGREES_PER_HOUR)
+public fun degreesToTime(degrees: Double): Duration = Time.hours(degrees / DEGREES_PER_HOUR)
 
-fun dmsToTime(degrees: Int, minutes: Int, seconds: Number): Duration {
+public fun dmsToTime(degrees: Int, minutes: Int, seconds: Number): Duration {
     return degreesToTime(degrees + minutes / 60.0 + seconds.toDouble() / 3600.0)
 }
 
-fun timeToDecimal(hours: Number, minutes: Number, seconds: Number): Double {
+public fun timeToDecimal(hours: Number, minutes: Number, seconds: Number): Double {
     return hours.toDouble() + minutes.toDouble() / 60.0 + seconds.toDouble() / 3600.0
 }
 
-fun timeToAngle(hours: Number, minutes: Number, seconds: Number): Double {
+public fun timeToAngle(hours: Number, minutes: Number, seconds: Number): Double {
     return timeToDecimal(hours, minutes, seconds) * DEGREES_PER_HOUR
 }

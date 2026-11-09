@@ -6,4 +6,4 @@ package com.kylecorry.sol.science.geophysics
  * @param xi the north-south component (positive when gravity's zenith is north of the ellipsoid's)
  * @param eta the east-west component (positive when gravity's zenith is east of the ellipsoid's)
  */
-data class VerticalDeflection(val xi: Double, val eta: Double)
+public data class VerticalDeflection(val xi: Double, val eta: Double)

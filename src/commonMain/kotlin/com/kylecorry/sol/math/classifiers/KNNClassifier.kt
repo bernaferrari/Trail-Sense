@@ -5,7 +5,7 @@ import com.kylecorry.sol.math.arithmetic.Arithmetic.square
 import com.kylecorry.sol.math.statistics.Statistics
 import kotlin.math.sqrt
 
-class KNNClassifier(
+public class KNNClassifier(
     private val k: Int,
     private val input: Matrix,
     private val labels: Array<IntArray>

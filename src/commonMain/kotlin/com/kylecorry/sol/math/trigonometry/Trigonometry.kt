@@ -19,67 +19,67 @@ import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.tan
 
-object Trigonometry {
+public object Trigonometry {
 
-    fun toRadians(angle: Double): Double {
+    public fun toRadians(angle: Double): Double {
         return (angle * kotlin.math.PI / 180.0)
     }
 
-    fun toRadians(angle: Float): Float {
+    public fun toRadians(angle: Float): Float {
         return (angle.toDouble() * kotlin.math.PI / 180.0).toFloat()
     }
 
-    fun toDegrees(angle: Double): Double {
+    public fun toDegrees(angle: Double): Double {
         return (angle * 180.0 / kotlin.math.PI)
     }
 
-    fun toDegrees(angle: Float): Float {
+    public fun toDegrees(angle: Float): Float {
         return (angle.toDouble() * 180.0 / kotlin.math.PI).toFloat()
     }
 
-    fun toDegrees(degrees: Double, minutes: Double = 0.0, seconds: Double = 0.0): Double {
+    public fun toDegrees(degrees: Double, minutes: Double = 0.0, seconds: Double = 0.0): Double {
         val sign = if (degrees < 0 || minutes < 0 || seconds < 0) -1 else 1
         return sign * (abs(degrees) + abs(minutes) / 60 + abs(seconds) / 3600)
     }
 
-    fun toDegrees(degrees: Float, minutes: Float = 0f, seconds: Float = 0f): Float {
+    public fun toDegrees(degrees: Float, minutes: Float = 0f, seconds: Float = 0f): Float {
         val sign = if (degrees < 0 || minutes < 0 || seconds < 0) -1 else 1
         return sign * (abs(degrees) + abs(minutes) / 60 + abs(seconds) / 3600)
     }
 
-    fun sinDegrees(angle: Double): Double {
+    public fun sinDegrees(angle: Double): Double {
         return sin(toRadians(angle))
     }
 
-    fun sinDegrees(angle: Float): Float {
+    public fun sinDegrees(angle: Float): Float {
         return sin(toRadians(angle))
     }
 
-    fun cosDegrees(angle: Double): Double {
+    public fun cosDegrees(angle: Double): Double {
         return cos(toRadians(angle))
     }
 
-    fun cosDegrees(angle: Float): Float {
+    public fun cosDegrees(angle: Float): Float {
         return cos(toRadians(angle))
     }
 
-    fun tanDegrees(angle: Double): Double {
+    public fun tanDegrees(angle: Double): Double {
         return tan(toRadians(angle))
     }
 
-    fun tanDegrees(angle: Float): Float {
+    public fun tanDegrees(angle: Float): Float {
         return tan(toRadians(angle))
     }
 
-    fun normalizeAngle(angle: Float): Float {
+    public fun normalizeAngle(angle: Float): Float {
         return Arithmetic.wrap(angle, 0f, 360f) % 360
     }
 
-    fun normalizeAngle(angle: Double): Double {
+    public fun normalizeAngle(angle: Double): Double {
         return Arithmetic.wrap(angle, 0.0, 360.0) % 360
     }
 
-    fun deltaAngle(angle1: Float, angle2: Float): Float {
+    public fun deltaAngle(angle1: Float, angle2: Float): Float {
         val a = normalizeAngle(angle1 - angle2)
         val b = normalizeAngle(angle2 - angle1)
         return if (a < b) {
@@ -89,12 +89,12 @@ object Trigonometry {
         }
     }
 
-    fun roundNearestAngle(angle: Double, nearest: Double): Double {
+    public fun roundNearestAngle(angle: Double, nearest: Double): Double {
         val normalized = normalizeAngle(angle)
         return normalizeAngle(Arithmetic.roundNearest(normalized, nearest))
     }
 
-    fun roundNearestAngle(angle: Float, nearest: Float): Float {
+    public fun roundNearestAngle(angle: Float, nearest: Float): Float {
         val normalized = normalizeAngle(angle)
         return normalizeAngle(Arithmetic.roundNearest(normalized, nearest))
     }
@@ -106,7 +106,7 @@ object Trigonometry {
      * @param isCounterClockwise true if the new circle is counter clockwise
      * @return the angle on the new circle
      */
-    fun remapUnitAngle(
+    public fun remapUnitAngle(
         angle: Float,
         start: Float,
         isCounterClockwise: Boolean,
@@ -122,7 +122,7 @@ object Trigonometry {
      * @param isCounterClockwise true if the circle is counter clockwise
      * @return the angle on the unit circle
      */
-    fun toUnitAngle(angle: Float, start: Float, isCounterClockwise: Boolean): Float {
+    public fun toUnitAngle(angle: Float, start: Float, isCounterClockwise: Boolean): Float {
         val directionMultiplier = if (isCounterClockwise) 1 else -1
 
         return normalizeAngle(directionMultiplier * angle + start)
@@ -138,7 +138,7 @@ object Trigonometry {
      * @param originalIsCounterClockwise true if the original circle is counter clockwise
      * @return the angle on the new circle
      */
-    fun remapAngle(
+    public fun remapAngle(
         originalAngle: Float,
         newStart: Float,
         newIsCounterClockwise: Boolean = false,
@@ -160,7 +160,7 @@ object Trigonometry {
      * Defaults to interpreting one as a high and the other as a low as a half period
      * @return the waveform which connects these two points
      */
-    fun connect(first: Vector2, second: Vector2, approximateFrequency: Float? = null): Waveform {
+    public fun connect(first: Vector2, second: Vector2, approximateFrequency: Float? = null): Waveform {
         val period = second.x - first.x
         val deltaY = abs(first.y - second.y)
         val verticalShift = deltaY / 2 + min(first.y, second.y)
@@ -188,16 +188,16 @@ object Trigonometry {
         return CosineWave(amplitude, frequency.toFloat(), first.x, verticalShift)
     }
 
-    fun getRangeY(waveform: Waveform): Range<Float> {
+    public fun getRangeY(waveform: Waveform): Range<Float> {
         return Range(-waveform.amplitude + waveform.verticalShift, waveform.amplitude + waveform.verticalShift)
     }
 
-    fun getCombinationRangeY(waveforms: List<Waveform>): Range<Float> {
+    public fun getCombinationRangeY(waveforms: List<Waveform>): Range<Float> {
         val ranges = waveforms.map { getRangeY(it) }
         return Range(ranges.sumOfFloat { it.start }, ranges.sumOfFloat { it.end })
     }
 
-    fun getAngularDistance(azimuth1: Float, altitude1: Float, azimuth2: Float, altitude2: Float): Float {
+    public fun getAngularDistance(azimuth1: Float, altitude1: Float, azimuth2: Float, altitude2: Float): Float {
         if (Arithmetic.isApproximatelyEqual(altitude1, altitude2) && Arithmetic.isApproximatelyEqual(
                 azimuth1,
                 azimuth2
@@ -214,7 +214,7 @@ object Trigonometry {
         return toDegrees(acos(value.coerceIn(-1f, 1f)))
     }
 
-    fun getAngularOffset(
+    public fun getAngularOffset(
         azimuth1: Float,
         altitude1: Float,
         azimuth2: Float,
@@ -245,7 +245,7 @@ object Trigonometry {
      * @param distance The distance
      * @return The ENU coordinate
      */
-    fun toEastNorthUpVector(
+    public fun toEastNorthUpVector(
         azimuth: Float,
         elevation: Float,
         distance: Float

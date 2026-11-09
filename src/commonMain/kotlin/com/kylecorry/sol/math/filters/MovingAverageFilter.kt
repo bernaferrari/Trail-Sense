@@ -1,6 +1,6 @@
 package com.kylecorry.sol.math.filters
 
-class MovingAverageFilter(var size: Int) : IFilter {
+public class MovingAverageFilter(public var size: Int) : IFilter {
 
     private val window = mutableListOf<Float>()
 

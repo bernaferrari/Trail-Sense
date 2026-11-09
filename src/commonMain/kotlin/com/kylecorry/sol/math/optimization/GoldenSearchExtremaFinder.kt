@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.Vector2
 import kotlin.math.abs
 
-class GoldenSearchExtremaFinder(
+public class GoldenSearchExtremaFinder(
     private val initialStep: Double,
     private val tolerance: Double,
     finderProducer: (step: Double) -> IExtremaFinder = { SimpleExtremaFinder(it) }

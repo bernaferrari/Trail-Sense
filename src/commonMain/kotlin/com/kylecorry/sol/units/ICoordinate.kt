@@ -1,6 +1,6 @@
 package com.kylecorry.sol.units
 
-interface ICoordinate {
-    val latitude: Double
-    val longitude: Double
+public interface ICoordinate {
+    public val latitude: Double
+    public val longitude: Double
 }

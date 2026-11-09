@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.meteorology
 
 import kotlin.time.Instant
 
-data class WeatherForecast(
+public data class WeatherForecast(
     val time: Instant?,
     val conditions: List<WeatherCondition>,
     val front: WeatherFront? = null,

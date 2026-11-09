@@ -3,7 +3,7 @@ package com.kylecorry.sol.math.optimization
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.Vector2
 
-class IterativeSimpleExtremaFinder(
+public class IterativeSimpleExtremaFinder(
     initialStep: Double,
     finalStep: Double,
     levels: Int = 2

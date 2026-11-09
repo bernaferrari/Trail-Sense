@@ -1,6 +1,6 @@
 package com.kylecorry.sol.math.filters
 
-class ProximityChangeFilter1D(
+public class ProximityChangeFilter1D(
     private val changeThreshold: Float
 ) : IFilter1D {
 

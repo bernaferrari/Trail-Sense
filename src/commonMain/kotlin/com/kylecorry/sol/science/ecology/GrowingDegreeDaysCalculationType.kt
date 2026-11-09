@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.ecology
 
-enum class GrowingDegreeDaysCalculationType {
+public enum class GrowingDegreeDaysCalculationType {
     /**
      * Always uses the minimum and maximum temperature
      */

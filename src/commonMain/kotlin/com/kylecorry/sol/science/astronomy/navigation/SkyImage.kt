@@ -9,7 +9,7 @@ import kotlin.time.Instant
  * @param camera the camera model, the focal length and distortion are refined during identification
  * @param up gravity's up direction in the camera's coordinate system, or null if unknown
  */
-data class SkyImage(
+public data class SkyImage(
     val stars: List<ImageStar>,
     val camera: PinholeCamera,
     val up: Vector3Precise?,

@@ -137,7 +137,7 @@ class CoordinateFormatterTest {
             return
         }
         assertNotNull(actual)
-        assertEquals(expected.latitude, actual!!.latitude, precision)
+        assertEquals(expected.latitude, actual.latitude, precision)
         assertEquals(expected.longitude, actual.longitude, precision)
     }
 

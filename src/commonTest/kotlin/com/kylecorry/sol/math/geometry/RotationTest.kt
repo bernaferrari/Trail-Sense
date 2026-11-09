@@ -34,7 +34,7 @@ class RotationTest {
     fun triad() {
         val rotation = Rotation.triad(vectors[0], vectors[3], expected.rotate(vectors[0]), expected.rotate(vectors[3]))
         assertNotNull(rotation)
-        assertRotation(expected, rotation!!)
+        assertRotation(expected, rotation)
         assertNull(Rotation.triad(vectors[0], vectors[0], vectors[1], vectors[2]))
     }
 

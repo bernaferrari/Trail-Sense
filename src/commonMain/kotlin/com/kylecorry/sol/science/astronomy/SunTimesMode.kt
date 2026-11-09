@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.astronomy
 
-enum class SunTimesMode {
+public enum class SunTimesMode {
     Actual,
     Civil,
     Nautical,

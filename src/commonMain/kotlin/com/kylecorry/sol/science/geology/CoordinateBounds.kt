@@ -9,13 +9,13 @@ import com.kylecorry.sol.units.Distance
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
-data class CoordinateBounds(val north: Double, val east: Double, val south: Double, val west: Double) :
+public data class CoordinateBounds(val north: Double, val east: Double, val south: Double, val west: Double) :
     IGeoArea {
 
-    val northWest = Coordinate(north, west)
-    val southWest = Coordinate(south, west)
-    val northEast = Coordinate(north, east)
-    val southEast = Coordinate(south, east)
+    val northWest: Coordinate = Coordinate(north, west)
+    val southWest: Coordinate = Coordinate(south, west)
+    val northEast: Coordinate = Coordinate(north, east)
+    val southEast: Coordinate = Coordinate(south, east)
 
     val center: Coordinate
         get() {
@@ -29,7 +29,7 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
             return Coordinate(lat, Coordinate.toLongitude(lon))
         }
 
-    fun height(): Distance {
+    public fun height(): Distance {
         return Distance.meters(
             max(
                 northWest.distanceTo(southWest),
@@ -38,11 +38,11 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
         )
     }
 
-    fun heightDegrees(): Double {
+    public fun heightDegrees(): Double {
         return (north - south).absoluteValue
     }
 
-    fun widthDegrees(): Double {
+    public fun widthDegrees(): Double {
         if (containsAllLongitudes()) {
             return 360.0
         }
@@ -54,7 +54,7 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
         }).absoluteValue
     }
 
-    fun width(): Distance {
+    public fun width(): Distance {
         if (0.0 in south..north) {
             return Distance.meters(Coordinate(0.0, west).distanceTo(Coordinate(0.0, east)))
         }
@@ -75,11 +75,11 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
         return containsLatitude(location.latitude) && containsLongitude(location.longitude)
     }
 
-    fun containsLatitude(latitude: Double): Boolean {
+    public fun containsLatitude(latitude: Double): Boolean {
         return latitude in south..north
     }
 
-    fun containsLongitude(longitude: Double): Boolean {
+    public fun containsLongitude(longitude: Double): Boolean {
         return if (containsAllLongitudes()) {
             true
         } else if (east < 0 && west > 0) {
@@ -89,7 +89,7 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
         }
     }
 
-    fun contains(other: CoordinateBounds): Boolean {
+    public fun contains(other: CoordinateBounds): Boolean {
         return contains(other.northEast) &&
                 contains(other.northWest) &&
                 contains(other.southEast) &&
@@ -97,7 +97,7 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
                 contains(other.center)
     }
 
-    fun intersects(other: CoordinateBounds): Boolean {
+    public fun intersects(other: CoordinateBounds): Boolean {
         if (south > other.north || other.south > north) {
             return false
         }
@@ -111,7 +111,7 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
         return union.widthDegrees() <= (widthDegrees() + other.widthDegrees())
     }
 
-    fun grow(percent: Float): CoordinateBounds {
+    public fun grow(percent: Float): CoordinateBounds {
         val latDelta = heightDegrees() * percent
         val lonDelta = widthDegrees() * percent
 
@@ -133,12 +133,12 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
         return CoordinateBounds(newNorth, newEast, newSouth, newWest)
     }
 
-    companion object {
+    public companion object {
 
-        val empty = CoordinateBounds(0.0, 0.0, 0.0, 0.0)
-        val world = CoordinateBounds(90.0, 180.0, -90.0, -180.0)
+        public val empty: CoordinateBounds = CoordinateBounds(0.0, 0.0, 0.0, 0.0)
+        public val world: CoordinateBounds = CoordinateBounds(90.0, 180.0, -90.0, -180.0)
 
-        fun from(geofence: Geofence): CoordinateBounds {
+        public fun from(geofence: Geofence): CoordinateBounds {
             val north =
                 geofence.center.plus(geofence.radius, Bearing.from(CompassDirection.North)).latitude
             val south =
@@ -151,7 +151,7 @@ data class CoordinateBounds(val north: Double, val east: Double, val south: Doub
             return CoordinateBounds(north, east, south, west)
         }
 
-        fun from(points: List<Coordinate>, checkForFullWorld: Boolean = true): CoordinateBounds {
+        public fun from(points: List<Coordinate>, checkForFullWorld: Boolean = true): CoordinateBounds {
             val west = getWestLongitudeBound(points) ?: return empty
             val east = getEastLongitudeBound(points) ?: return empty
             val north = getNorthLatitudeBound(points) ?: return empty

@@ -5,14 +5,14 @@ import kotlin.jvm.JvmInline
 import kotlin.math.absoluteValue
 
 @JvmInline
-value class Weight private constructor(private val measure: Measure) {
-    val value: Float
+public value class Weight private constructor(private val measure: Measure) {
+    public val value: Float
         get() = measureValue(measure)
 
-    val units: WeightUnits
+    public val units: WeightUnits
         get() = measureUnit<WeightUnits>(measure)
 
-    fun convertTo(newUnits: WeightUnits): Weight {
+    public fun convertTo(newUnits: WeightUnits): Weight {
         if (units == newUnits) {
             return this
         }
@@ -20,12 +20,12 @@ value class Weight private constructor(private val measure: Measure) {
         return from((grams / newUnits.grams).toFloat(), newUnits)
     }
 
-    operator fun plus(other: Weight): Weight {
+    public operator fun plus(other: Weight): Weight {
         val otherInUnits = other.convertTo(units)
         return from(value + otherInUnits.value, units)
     }
 
-    operator fun times(amount: Number): Weight {
+    public operator fun times(amount: Number): Weight {
         return from(value * amount.toFloat().absoluteValue, units)
     }
 
@@ -33,8 +33,8 @@ value class Weight private constructor(private val measure: Measure) {
         return "$value $units"
     }
 
-    companion object {
-        fun from(value: Float, units: WeightUnits): Weight {
+    public companion object {
+        public fun from(value: Float, units: WeightUnits): Weight {
             return Weight(packMeasure(value, units))
         }
     }

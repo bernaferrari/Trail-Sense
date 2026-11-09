@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology.clouds
 
-enum class CloudCover(val id: Long) {
+public enum class CloudCover(public val id: Long) {
     NoClouds(1),
     Few(2),
     Isolated(3),

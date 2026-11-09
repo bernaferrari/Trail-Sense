@@ -2,9 +2,9 @@ package com.kylecorry.sol.math.lists
 
 import com.kylecorry.sol.math.Vector2
 
-object Lists {
+public object Lists {
 
-    fun <T : Comparable<T>> argmax(values: List<T>): Int {
+    public fun <T : Comparable<T>> argmax(values: List<T>): Int {
         if (values.isEmpty()) {
             return -1
         }
@@ -20,7 +20,7 @@ object Lists {
         return maxIndex
     }
 
-    fun <T : Comparable<T>> argmin(values: List<T>): Int {
+    public fun <T : Comparable<T>> argmin(values: List<T>): Int {
         if (values.isEmpty()) {
             return -1
         }
@@ -36,11 +36,11 @@ object Lists {
         return minIndex
     }
 
-    fun <T> oneHot(value: Int, classes: Int, on: T, off: T): List<T> {
+    public fun <T> oneHot(value: Int, classes: Int, on: T, off: T): List<T> {
         return List(classes) { if (it == value) on else off }
     }
 
-    fun isIncreasingX(data: List<Vector2>): Boolean {
+    public fun isIncreasingX(data: List<Vector2>): Boolean {
         for (i in 1..<data.size) {
             if (data[i].x < data[i - 1].x) {
                 return false
@@ -49,7 +49,7 @@ object Lists {
         return true
     }
 
-    fun <T> reorder(data: List<T>, indices: List<Int>, inverse: Boolean = false): List<T> {
+    public fun <T> reorder(data: List<T>, indices: List<Int>, inverse: Boolean = false): List<T> {
         return if (inverse) {
             val newIndices = MutableList(indices.size) { it }
             for (i in indices.indices) {
@@ -67,13 +67,13 @@ object Lists {
         }
     }
 
-    fun <T : Comparable<T>> sortIndices(data: List<T>): List<Int> {
+    public fun <T : Comparable<T>> sortIndices(data: List<T>): List<Int> {
         return data.mapIndexed { index, value ->
             index to value
         }.sortedBy { it.second }.map { it.first }
     }
 
-    fun <T : Comparable<T>> sortIndicesDescending(data: List<T>): List<Int> {
+    public fun <T : Comparable<T>> sortIndicesDescending(data: List<T>): List<Int> {
         return data.mapIndexed { index, value ->
             index to value
         }.sortedByDescending { it.second }.map { it.first }
