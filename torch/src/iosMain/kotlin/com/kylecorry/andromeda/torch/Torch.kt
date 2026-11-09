@@ -5,7 +5,7 @@ import platform.AVFoundation.*
 
 /** Camera torch on iOS. Brightness is continuous and exposed as 100 levels. */
 @OptIn(ExperimentalForeignApi::class)
-internal class Torch : ITorch {
+internal class IosTorch : Torch {
     private val device get() = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
     override val brightnessLevels: Int get() = if (isAvailable()) 100 else 0
     override fun isAvailable(): Boolean = device?.hasTorch == true && device?.torchAvailable == true

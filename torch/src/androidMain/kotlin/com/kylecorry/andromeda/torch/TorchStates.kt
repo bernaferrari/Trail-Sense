@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 actual fun torchStates(): Flow<TorchState> = callbackFlow {
     val context = KSensorContext.get()
-    val cameraId = Torch(context).cameraId
+    val cameraId = AndroidTorch(context).cameraId
     if (cameraId == null) {
         trySend(TorchState.Unavailable)
         close()

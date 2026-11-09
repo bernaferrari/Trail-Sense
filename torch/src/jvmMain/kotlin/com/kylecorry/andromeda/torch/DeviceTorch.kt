@@ -1,10 +1,10 @@
 package com.kylecorry.andromeda.torch
 
-actual fun deviceTorch(): ITorch = UnavailableTorch
+actual fun deviceTorch(): Torch = UnavailableTorch
 
 actual fun screenBrightness(): ScreenBrightness? = null
 
-private object UnavailableTorch : ITorch {
+private object UnavailableTorch : Torch {
     override val brightnessLevels = 0
     override fun on() = Unit
     override fun on(brightness: Float) = Unit

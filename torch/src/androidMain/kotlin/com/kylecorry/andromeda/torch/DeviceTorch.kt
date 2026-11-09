@@ -2,4 +2,4 @@ package com.kylecorry.andromeda.torch
 
 import com.ksensor.core.context.KSensorContext
 
-actual fun deviceTorch(): ITorch = Torch(KSensorContext.get())
+actual fun deviceTorch(): Torch = AndroidTorch(KSensorContext.get())

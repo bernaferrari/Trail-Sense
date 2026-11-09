@@ -8,7 +8,7 @@ interface ScreenBrightness {
     var brightness: Float
 }
 
-class ScreenTorch(private val screen: ScreenBrightness) : ITorch {
+class ScreenTorch(private val screen: ScreenBrightness) : Torch {
     private var previousBrightness: Float? = null
     override val brightnessLevels: Int = 255
     override fun isAvailable(): Boolean = true

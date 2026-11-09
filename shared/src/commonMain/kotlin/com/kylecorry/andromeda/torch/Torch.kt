@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.torch
 
-interface ITorch {
+interface Torch {
 
     /**
      * The number of brightness levels supported by the torch
