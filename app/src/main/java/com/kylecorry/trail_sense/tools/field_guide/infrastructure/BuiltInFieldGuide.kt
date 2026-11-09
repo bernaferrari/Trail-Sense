@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.field_guide.infrastructure
 
+import kotlinx.serialization.Serializable
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.andromeda.json.JsonConvert
@@ -12,9 +13,13 @@ import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 
 object BuiltInFieldGuide {
 
+    @Serializable
+
     private class Pages : ProguardIgnore {
         var pages: List<BuiltInFieldGuidePage> = emptyList()
     }
+
+    @Serializable
 
     private class BuiltInFieldGuidePage : ProguardIgnore {
         var content: String = ""
