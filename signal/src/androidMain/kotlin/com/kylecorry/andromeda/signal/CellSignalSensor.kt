@@ -31,13 +31,13 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.time.toKotlinInstant
 
-class CellSignalSensor(
+internal class CellSignalSensor(
     private val context: Context,
     private val updateCellCache: Boolean,
     private val removeUnregisteredSignals: Boolean = true,
     private val pathLossFactor: Float = 1f
 ) :
-    AbstractSensor(), ICellSignalSensor {
+    AbstractSensor() {
 
     private val telephony by lazy { context.getSystemService<TelephonyManager>() }
     private val executor by lazy { ContextCompat.getMainExecutor(context) }
@@ -84,7 +84,7 @@ class CellSignalSensor(
     override val hasValidReading: Boolean
         get() = hasReading
 
-    override val signals: List<CellSignal>
+    val signals: List<CellSignal>
         get() = _signals
 
     private var _signals = listOf<CellSignal>()
