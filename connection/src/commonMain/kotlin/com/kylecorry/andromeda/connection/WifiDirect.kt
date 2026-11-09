@@ -24,10 +24,7 @@ interface WifiDirectGroup : AutoCloseable {
 }
 
 /** A connected byte stream. Close it when finished. */
-interface WifiDirectConnection : AutoCloseable {
-    suspend fun read(maxBytes: Int = 4096): ByteArray?
-    suspend fun write(bytes: ByteArray)
-}
+interface WifiDirectConnection : ByteConnection
 
 /** Forms a group with a discovered peer. The operating system may ask the user to confirm. */
 expect suspend fun connectWifiDirect(peer: WifiDirectPeer): WifiDirectGroup

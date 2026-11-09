@@ -4,12 +4,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
 
 /** A connected Bluetooth Classic byte stream. Close it when finished. */
-interface RfcommConnection : AutoCloseable {
-    /** Reads up to [maxBytes], or returns null when the peer closes the stream. */
-    suspend fun read(maxBytes: Int = 4096): ByteArray?
-    /** Writes all bytes to the connection. */
-    suspend fun write(bytes: ByteArray)
-}
+interface RfcommConnection : ByteConnection
 
 enum class RfcommSecurity { Secure, Insecure }
 
