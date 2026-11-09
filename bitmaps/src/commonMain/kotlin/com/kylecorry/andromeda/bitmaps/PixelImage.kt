@@ -114,16 +114,14 @@ fun PixelImage.grayscale(average: Boolean = false): PixelImage = map { color ->
 }
 
 /** Counts pixels in each of the 256 grayscale luminance buckets. */
-fun PixelImage.luminanceHistogram(): IntArray = histogramDot()
-
-/** Counts pixels by a weighted sum of their red, green, blue, and alpha channels. */
-fun PixelImage.histogramDot(red: Float = 0.299f, green: Float = 0.587f, blue: Float = 0.114f, alpha: Float = 0f): IntArray {
-    require(listOf(red, green, blue, alpha).all { it.isFinite() && it >= 0f } && red + green + blue + alpha <= 1.000001f)
+fun PixelImage.luminanceHistogram(): IntArray {
     val histogram = IntArray(256)
     for (color in pixels) {
-        val value = red * ((color ushr 16) and 255) + green * ((color ushr 8) and 255) +
-            blue * (color and 255) + alpha * ((color ushr 24) and 255)
-        histogram[value.toInt().coerceIn(0, 255)]++
+        val red = (color ushr 16) and 0xff
+        val green = (color ushr 8) and 0xff
+        val blue = color and 0xff
+        val luminance = (0.299f * red + 0.587f * green + 0.114f * blue).toInt().coerceIn(0, 255)
+        histogram[luminance]++
     }
     return histogram
 }
