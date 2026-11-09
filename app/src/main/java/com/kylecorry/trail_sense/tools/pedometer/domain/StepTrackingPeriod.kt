@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.tools.pedometer.domain
 
+import kotlin.time.Clock
+
 import com.kylecorry.trail_sense.shared.data.Identifiable
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 data class StepTrackingPeriod(
     override val id: Long,
@@ -15,14 +17,14 @@ data class StepTrackingPeriod(
         get() = stepCountBuckets.sumOf { it.steps }
 
     val elapsedTime: Duration
-        get() = Duration.between(startTime, endTime ?: Instant.now())
+        get() = (endTime ?: Clock.System.now()) - startTime
 
     val activeTime: Duration
         get() {
-            val currentTime = Instant.now()
+            val currentTime = Clock.System.now()
             val totalActiveTime = stepCountBuckets.fold(Duration.ZERO) { total, bucket ->
-                val bucketActiveTime = if (bucket.steps > 0 && bucket.activeTime.isZero) {
-                    Duration.between(bucket.startTime, minOf(bucket.endTime, currentTime))
+                val bucketActiveTime = if (bucket.steps > 0 && bucket.activeTime == Duration.ZERO) {
+                    (minOf(bucket.endTime, currentTime) - bucket.startTime)
                 } else {
                     bucket.activeTime
                 }

@@ -2,8 +2,6 @@ package com.kylecorry.trail_sense.tools.sensors.quickactions
 
 import com.kylecorry.andromeda.core.sensors.read
 
-import com.kylecorry.trail_sense.shared.time.interop.*
-
 import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.navigation.Route

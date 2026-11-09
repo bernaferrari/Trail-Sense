@@ -2,12 +2,12 @@ package com.kylecorry.trail_sense.tools.astronomy.domain
 
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
 import com.kylecorry.sol.units.Bearing
-import java.time.LocalDateTime
+import kotlin.time.Instant
 
 data class MoonDetails(
-    val rise: LocalDateTime?,
-    val set: LocalDateTime?,
-    val transit: LocalDateTime?,
+    val rise: Instant?,
+    val set: Instant?,
+    val transit: Instant?,
     val isUp: Boolean,
     val phase: MoonTruePhase,
     val phaseAngle: Float,

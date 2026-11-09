@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
@@ -102,7 +104,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.Location
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
-import java.time.Duration
 
 private const val WHISTLE = "whistle"
 
@@ -175,7 +176,7 @@ fun WhistleScreen(
             WhistleSignal(
                 "sos",
                 context.getString(R.string.sos),
-                Signals.sos(Duration.ofMillis(400)) + listOf(Signal.off(Duration.ofMillis(400 * 7))),
+                Signals.sos(400.milliseconds) + listOf(Signal.off((400 * 7).milliseconds)),
                 loop = true,
                 icon = TrailIcons.ToolWhistle,
                 shape = MaterialShapes.SoftBurst
@@ -366,7 +367,7 @@ private fun SignalRhythm(
     playing: Boolean,
     height: androidx.compose.ui.unit.Dp = 12.dp
 ) {
-    val total = signal.sumOf { it.duration.toMillis() }.toInt().coerceAtLeast(1)
+    val total = signal.sumOf { it.duration.inWholeMilliseconds }.toInt().coerceAtLeast(1)
     val clock by rememberInfiniteTransition(label = "rhythm").animateFloat(
         initialValue = 0f,
         targetValue = total.toFloat(),
@@ -383,7 +384,7 @@ private fun SignalRhythm(
         var x = 0f
         var time = 0f
         for (s in signal) {
-            val millis = s.duration.toMillis().toFloat()
+            val millis = s.duration.inWholeMilliseconds.toFloat()
             val length = millis * unit
             if (s.isOn) {
                 val w = length.coerceAtLeast(size.height)

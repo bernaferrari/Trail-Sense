@@ -1,11 +1,14 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
+
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.andromeda.sense.location.GpsSensor
-import java.time.Duration
+import kotlin.time.Duration
 
 fun GpsSensor.durationSince(elapsedNanos: Long): Duration {
-    return Duration.ofNanos(eventTimeElapsedNanos - elapsedNanos)
+    return (eventTimeElapsedNanos - elapsedNanos).nanoseconds
 }
 
 fun GpsSensor.durationSince(other: GpsSensor): Duration {
@@ -13,5 +16,5 @@ fun GpsSensor.durationSince(other: GpsSensor): Duration {
 }
 
 fun GpsSensor.age(timeProvider: TimeProvider): Duration {
-    return Duration.ofMillis(timeProvider.elapsedRealtime()).minusNanos(eventTimeElapsedNanos)
+    return timeProvider.elapsedRealtime().milliseconds - eventTimeElapsedNanos.nanoseconds
 }

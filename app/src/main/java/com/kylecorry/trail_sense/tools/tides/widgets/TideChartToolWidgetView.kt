@@ -1,14 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides.widgets
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.isBefore
-
-import com.kylecorry.trail_sense.shared.time.JavaTime.isAfter
-
-import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalTime
-
-import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
-
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
 
@@ -45,8 +37,7 @@ import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 
 class TideChartToolWidgetView : ChartToolWidgetViewBase() {
 
@@ -57,7 +48,7 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
         val tides = TidesSubsystem.getInstance(context)
         val tide = tides.getNearestTide()
         val currentWaterLevel = tide?.today?.waterLevels?.minByOrNull {
-            JavaTime.between(kotlin.time.Clock.System.now(), it.time).abs()
+            (it.time - (kotlin.time.Clock.System.now())).absoluteValue
         }
 
         val title = if (tide == null) context.getString(R.string.no_tides) else tide.table.name ?: ""
@@ -88,7 +79,7 @@ private class TideWidgetChart(
         val valueRange = (maximum - minimum).takeIf { it > 0f } ?: 1f
 
         fun x(time: kotlin.time.Instant): Float {
-            val hours = JavaTime.between(startTime, time).toMillis() / 3_600_000f
+            val hours = (time - startTime).inWholeMilliseconds / 3_600_000f
             return (hours / 24f).coerceIn(0f, 1f) * size.width
         }
 

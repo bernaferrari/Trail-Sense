@@ -1,20 +1,22 @@
 package com.kylecorry.trail_sense.tools.pedometer.domain
 
-import java.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+
+import kotlin.time.Duration
 
 class ActiveTimeCalculator {
 
     fun calculate(steps: Long, elapsedTime: Duration): Duration {
-        if (steps <= 0 || elapsedTime.isZero || elapsedTime.isNegative) {
+        if (steps <= 0 || elapsedTime == Duration.ZERO || elapsedTime.isNegative()) {
             return Duration.ZERO
         }
 
-        val elapsedMs = elapsedTime.toMillis()
+        val elapsedMs = elapsedTime.inWholeMilliseconds
         val stepsPerMinute = steps.toDouble() * MILLIS_PER_MINUTE / elapsedMs
 
         return when {
             stepsPerMinute >= MIN_ACTIVE_STEPS_PER_MINUTE -> elapsedTime
-            else -> minOf(elapsedTime, Duration.ofMillis(steps * ACTIVE_MILLIS_PER_STEP))
+            else -> minOf(elapsedTime, (steps * ACTIVE_MILLIS_PER_STEP).milliseconds)
         }
     }
 

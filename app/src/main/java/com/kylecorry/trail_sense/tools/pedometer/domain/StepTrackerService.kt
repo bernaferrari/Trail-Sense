@@ -1,10 +1,15 @@
 package com.kylecorry.trail_sense.tools.pedometer.domain
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+import com.kylecorry.trail_sense.shared.time.truncateTo
+
+import com.kylecorry.trail_sense.shared.time.atStartOfDay
+
+import com.kylecorry.trail_sense.shared.time.plusDays
+
+import kotlin.time.Duration.Companion.hours
 
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.IEventEmitter
@@ -12,11 +17,10 @@ import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
+import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToLong
@@ -40,16 +44,16 @@ class StepTrackerService(
 
     override suspend fun getHourlyStepCounts(
         date: LocalDate,
-        zoneId: ZoneId
+        zoneId: TimeZone
     ): List<HourlyStepCount> {
-        val startTime = date.atStartOfDay(zoneId).toInstant()
-        val endTime = date.plusDays(1).atStartOfDay(zoneId).toInstant()
+        val startTime = date.atStartOfDay(zoneId)
+        val endTime = date.plusDays(1).atStartOfDay(zoneId)
         val buckets = repository.getStepCountBuckets(startTime, endTime)
 
         val hourlyStepCounts = mutableListOf<HourlyStepCount>()
         var hourStart = startTime
-        while (hourStart.isBefore(endTime)) {
-            val hourEnd = hourStart.plus(Duration.ofHours(1))
+        while ((hourStart < endTime)) {
+            val hourEnd = hourStart.plus(1.hours)
             val steps = buckets.sumOf { bucket ->
                 getProportionalSteps(bucket, hourStart, hourEnd).toDouble()
             }.roundToLong()
@@ -64,9 +68,9 @@ class StepTrackerService(
         startTime: Instant,
         endTime: Instant
     ): Float {
-        val bucketDuration = Duration.between(bucket.startTime, bucket.endTime).toMillis()
-        val overlapStart = max(bucket.startTime.toEpochMilli(), startTime.toEpochMilli())
-        val overlapEnd = min(bucket.endTime.toEpochMilli(), endTime.toEpochMilli())
+        val bucketDuration = (bucket.endTime - bucket.startTime).inWholeMilliseconds
+        val overlapStart = max(bucket.startTime.toEpochMilliseconds(), startTime.toEpochMilliseconds())
+        val overlapEnd = min(bucket.endTime.toEpochMilliseconds(), endTime.toEpochMilliseconds())
         val overlapDuration = overlapEnd - overlapStart
         return if (bucketDuration > 0 && overlapDuration > 0) {
             bucket.steps * overlapDuration / bucketDuration.toFloat()
@@ -97,7 +101,7 @@ class StepTrackerService(
         activeTime: Duration
     ) = stepMutex.withLock {
         val existingOpenPeriod = getOrCreateOpenStepTrackingPeriodWithoutLock(time)
-        val openPeriod = if (time.isBefore(existingOpenPeriod.startTime)) {
+        val openPeriod = if ((time < existingOpenPeriod.startTime)) {
             existingOpenPeriod.copy(startTime = time).also {
                 repository.upsertStepTrackingPeriod(it)
             }
@@ -105,7 +109,7 @@ class StepTrackerService(
             existingOpenPeriod
         }
         val containedBucket = openPeriod.stepCountBuckets.firstOrNull {
-            (time == it.startTime || time.isAfter(it.startTime)) && time.isBefore(it.endTime)
+            (time == it.startTime || (time > it.startTime)) && (time < it.endTime)
         }
         val bucketToAdd = if (containedBucket != null) {
             containedBucket.copy(
@@ -114,12 +118,8 @@ class StepTrackerService(
             )
         } else {
             // Buckets always start on the hour and are 1 hour long
-            val startTime = time.toZonedDateTime()
-                .truncatedTo(ChronoUnit.HOURS)
-                .toInstant()
-            val endTime = startTime.toZonedDateTime()
-                .plus(DEFAULT_BUCKET_DURATION)
-                .toInstant()
+            val startTime = time.truncateTo(1.hours)
+            val endTime = startTime + DEFAULT_BUCKET_DURATION
             StepCountBucket(
                 id = 0,
                 periodId = openPeriod.id,
@@ -156,7 +156,7 @@ class StepTrackerService(
     }
 
     override suspend fun clean() = stepMutex.withLock {
-        val cutoff = timeProvider.getTime().toJava().toInstant().minus(preferences.stepHistory)
+        val cutoff = timeProvider.getTime().instant - preferences.stepHistory
         val deletedBuckets = repository.deleteBucketsOlderThan(cutoff)
         val deletedPeriods = repository.deleteEmptyClosedPeriods()
         val updatedPeriods = repository.setMinimumPeriodStartTime(cutoff)
@@ -175,6 +175,6 @@ class StepTrackerService(
     }
 
     companion object {
-        private val DEFAULT_BUCKET_DURATION = Duration.ofHours(1)
+        private val DEFAULT_BUCKET_DURATION = 1.hours
     }
 }

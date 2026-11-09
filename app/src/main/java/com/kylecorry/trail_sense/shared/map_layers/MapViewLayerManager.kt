@@ -19,7 +19,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import java.time.Instant
+import kotlin.time.Instant
 
 class MapViewLayerManager(private val invalidateView: () -> Unit) {
 

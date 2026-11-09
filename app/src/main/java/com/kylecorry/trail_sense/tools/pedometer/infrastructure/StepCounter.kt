@@ -1,21 +1,22 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 
 internal class StepCounter(private val preferences: Preferences) : IStepTrackerService {
 
     val startTime: Instant?
-        get() = preferences.getJavaInstant(LAST_RESET_KEY)
+        get() = preferences.getInstant(LAST_RESET_KEY)
 
 
     val steps: Long
@@ -37,7 +38,7 @@ internal class StepCounter(private val preferences: Preferences) : IStepTrackerS
 
     override suspend fun getHourlyStepCounts(
         date: LocalDate,
-        zoneId: ZoneId
+        zoneId: TimeZone
     ): List<HourlyStepCount> = emptyList()
 
     override suspend fun clean() = Unit
@@ -64,7 +65,7 @@ internal class StepCounter(private val preferences: Preferences) : IStepTrackerS
                     id = 0,
                     periodId = 0,
                     startTime = start,
-                    endTime = Instant.now().plus(Duration.ofHours(1)),
+                    endTime = Clock.System.now().plus(1.hours),
                     steps = steps
                 )
             )

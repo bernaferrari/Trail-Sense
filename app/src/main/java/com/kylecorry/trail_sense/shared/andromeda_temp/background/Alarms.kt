@@ -9,10 +9,8 @@ import android.util.Log
 import androidx.core.content.getSystemService
 import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
 import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
-import com.kylecorry.trail_sense.shared.time.JavaTime.toEpochMillis
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 object Alarms {
 
@@ -62,11 +60,11 @@ object Alarms {
         if (allowWhileIdle) {
             alarmManager?.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                time.toEpochMilli(),
+                time.toEpochMilliseconds(),
                 pendingIntent
             )
         } else {
-            alarmManager?.setExact(AlarmManager.RTC_WAKEUP, time.toEpochMilli(), pendingIntent)
+            alarmManager?.setExact(AlarmManager.RTC_WAKEUP, time.toEpochMilliseconds(), pendingIntent)
         }
     }
 
@@ -79,14 +77,14 @@ object Alarms {
     ) {
         val alarmManager = getAlarmManager(context)
         val start = if (isWindowCentered) {
-            time.minus(window.dividedBy(2))
+            time - window / 2
         } else {
             time
         }
         alarmManager?.setWindow(
             AlarmManager.RTC_WAKEUP,
-            start.toEpochMilli(),
-            window.toMillis(),
+            start.toEpochMilliseconds(),
+            window.inWholeMilliseconds,
             pendingIntent
         )
     }
@@ -101,11 +99,11 @@ object Alarms {
         if (allowWhileIdle) {
             alarmManager?.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                time.toEpochMilli(),
+                time.toEpochMilliseconds(),
                 pendingIntent
             )
         } else {
-            alarmManager?.set(AlarmManager.RTC_WAKEUP, time.toEpochMilli(), pendingIntent)
+            alarmManager?.set(AlarmManager.RTC_WAKEUP, time.toEpochMilliseconds(), pendingIntent)
         }
     }
 
@@ -125,8 +123,8 @@ object Alarms {
         val alarmManager = getAlarmManager(context)
         alarmManager?.setRepeating(
             AlarmManager.RTC_WAKEUP,
-            time.toEpochMilli(),
-            interval.toMillis(),
+            time.toEpochMilliseconds(),
+            interval.inWholeMilliseconds,
             pendingIntent
         )
     }
@@ -145,7 +143,7 @@ object Alarms {
         viewAlarmPendingIntent: PendingIntent
     ) {
         val alarmManager = getAlarmManager(context) ?: return
-        val info = AlarmManager.AlarmClockInfo(time.toEpochMilli(), viewAlarmPendingIntent)
+        val info = AlarmManager.AlarmClockInfo(time.toEpochMilliseconds(), viewAlarmPendingIntent)
         alarmManager.setAlarmClock(info, pendingIntent)
     }
 

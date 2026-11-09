@@ -7,8 +7,6 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import kotlin.time.Instant
 import com.kylecorry.sol.time.Time.hoursBetween
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
-import java.time.ZonedDateTime
 
 internal class SineTemperatureCalculator(
     private val first: Reading<Temperature>,
@@ -28,8 +26,8 @@ internal class SineTemperatureCalculator(
         )
     }
 
-    override suspend fun calculate(time: ZonedDateTime): Temperature {
-        return Temperature.celsius(wave.calculate(getX(time.toKotlinInstant())))
+    override suspend fun calculate(time: Instant): Temperature {
+        return Temperature.celsius(wave.calculate(getX(time)))
     }
 
     private fun getX(time: Instant): Float {

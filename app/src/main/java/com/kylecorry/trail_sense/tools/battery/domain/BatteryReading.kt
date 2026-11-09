@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.battery.domain
 
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 data class BatteryReading(
     val time: Instant,

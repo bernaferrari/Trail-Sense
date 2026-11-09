@@ -4,7 +4,12 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
+
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+
+import kotlin.time.Duration.Companion.hours
+
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
@@ -80,7 +85,6 @@ import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -107,8 +111,7 @@ import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 
 @Composable
 fun CloudToolScreen(route: Route.Clouds) {
@@ -126,7 +129,7 @@ fun CloudToolScreen(route: Route.Clouds) {
     val clouds by viewModel.clouds.collectAsStateWithLifecycle()
     val subtitle = stringResource(
         R.string.last_duration,
-        formatter.formatDuration(Duration.ofHours(48), short = true)
+        formatter.formatDuration(48.hours, short = true)
     )
 
     fun openCloudPicker(uri: Uri) {
@@ -203,12 +206,12 @@ fun CloudToolScreen(route: Route.Clouds) {
  */
 internal class CloudViewModel(
     private val repo: IReadingRepo<CloudObservation>,
-    private val now: () -> Instant = Instant::now
+    private val now: () -> Instant = { Clock.System.now() }
 ) : ViewModel() {
 
     val clouds: StateFlow<List<Reading<CloudObservation>>?> = repo.getAllLive().asFlow()
         .map { all ->
-            val since = now().minus(Duration.ofHours(48))
+            val since = now().minus(48.hours)
             all.sortedByDescending { cloud -> cloud.time }.filter { cloud -> cloud.time >= since }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -259,7 +262,7 @@ private fun CloudScreen(
 
     // The log covers two days, so "Today" and "Yesterday" are the natural groups.
     val days = remember(clouds) {
-        clouds.groupBy { it.time.toZonedDateTime().toLocalDate() }.toList()
+        clouds.groupBy { it.time.toLocalDate() }.toList()
     }
 
     // One question: what are the clouds saying? The latest cloud and what it may bring answer it; the log sits below.

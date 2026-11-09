@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
-import java.time.Instant
+import kotlin.time.Instant
 
 class StepTrackerRepo private constructor(private val dao: StepTrackerDao) : IStepTrackerRepository {
 

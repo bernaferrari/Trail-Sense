@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
 import com.kylecorry.sol.units.Bearing
-import java.time.LocalDateTime
+import kotlin.time.Instant
 
 data class SunDetails(
-    val rise: LocalDateTime?,
-    val set: LocalDateTime?,
-    val transit: LocalDateTime?,
+    val rise: Instant?,
+    val set: Instant?,
+    val transit: Instant?,
     val isUp: Boolean,
-    val nextRise: LocalDateTime?,
-    val nextSet: LocalDateTime?,
+    val nextRise: Instant?,
+    val nextSet: Instant?,
     val altitude: Float,
     val azimuth: Bearing
 ) {
@@ -24,6 +24,6 @@ data class SunDetails(
             if (nextSet == null) {
                 return AstronomyTransition.Rise
             }
-            return if (nextRise.isBefore(nextSet)) AstronomyTransition.Rise else AstronomyTransition.Set
+            return if (nextRise < nextSet) AstronomyTransition.Rise else AstronomyTransition.Set
         }
 }

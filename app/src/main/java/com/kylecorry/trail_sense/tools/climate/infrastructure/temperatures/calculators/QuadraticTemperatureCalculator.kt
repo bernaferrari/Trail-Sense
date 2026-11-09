@@ -6,8 +6,6 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import kotlin.time.Instant
 import com.kylecorry.sol.time.Time.hoursBetween
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
-import java.time.ZonedDateTime
 
 internal class QuadraticTemperatureCalculator(
     private val low: Reading<Temperature>,
@@ -17,8 +15,8 @@ internal class QuadraticTemperatureCalculator(
     private val b = low.value.celsius().value
     private val a = (high.value.celsius().value - b) / square(getX(high.time))
 
-    override suspend fun calculate(time: ZonedDateTime): Temperature {
-        val x = getX(time.toKotlinInstant())
+    override suspend fun calculate(time: Instant): Temperature {
+        val x = getX(time)
         return Temperature.celsius(a * square(x) + b)
     }
 

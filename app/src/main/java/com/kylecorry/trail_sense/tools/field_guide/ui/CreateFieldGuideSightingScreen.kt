@@ -1,6 +1,10 @@
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
+
+import com.kylecorry.trail_sense.shared.time.toLocalDateTime
+
+import com.kylecorry.trail_sense.shared.time.nowLocal
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,7 +61,6 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.text.toDoubleCompat
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
@@ -79,7 +82,8 @@ import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
+import com.kylecorry.trail_sense.shared.time.toInstant
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
@@ -145,7 +149,7 @@ internal class CreateFieldGuideSightingViewModel(
     route: Route.CreateFieldGuideSighting,
     private val repo: FieldGuideRepo,
     private val baseDistanceUnits: DistanceUnits,
-    private val initialDatetime: LocalDateTime = LocalDateTime.now()
+    private val initialDatetime: LocalDateTime = nowLocal()
 ) : ViewModel() {
 
     private val pageId = route.pageId
@@ -179,7 +183,7 @@ internal class CreateFieldGuideSightingViewModel(
                 Distance.meters(it).convertTo(baseDistanceUnits)
             }
             sighting.time?.let {
-                datetime = it.toZonedDateTime().toLocalDateTime()
+                datetime = it.toLocalDateTime()
             }
             location = sighting.location
             elevation = sightingElevation
@@ -194,7 +198,7 @@ internal class CreateFieldGuideSightingViewModel(
         val sighting = Sighting(
             sightingId,
             pageId,
-            datetime?.toZonedDateTime()?.toInstant(),
+            datetime?.toInstant(),
             location,
             elevation?.meters()?.value,
             harvested,
@@ -216,7 +220,7 @@ internal class CreateFieldGuideSightingViewModel(
             if (isSaved) return false
             val sighting = initialSighting
             return if (sighting != null) {
-                datetime?.toZonedDateTime()?.toInstant() != sighting.time ||
+                datetime?.toInstant() != sighting.time ||
                     location != sighting.location ||
                     elevation?.meters()?.value != sighting.altitude ||
                     notes != sighting.notes ||
@@ -366,8 +370,8 @@ private fun DateTimeInput(
     val context = LocalContext.current
     val formatter = remember { DependencyRegistry.get<FormatService>() }
     val prefs = remember { DependencyRegistry.get<UserPreferences>() }
-    val selected = datetime ?: LocalDateTime.now()
-    val text = formatter.formatDateTime(selected.toZonedDateTime(), relative = true)
+    val selected = datetime ?: nowLocal()
+    val text = formatter.formatDateTime(selected.toInstant(), relative = true)
 
     TrailSenseListItem(
         title = stringResource(R.string.time),
@@ -728,7 +732,7 @@ private fun NotesInput(
 private fun CreateFieldGuideSightingScreenPreview() {
     TrailSenseTheme {
         CreateFieldGuideSightingScreen(
-            datetime = LocalDateTime.now(),
+            datetime = nowLocal(),
             location = null,
             elevation = null,
             notes = "Found near the trail.",

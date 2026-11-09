@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.sol.units.Coordinate
@@ -16,7 +18,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.modules.TimeoutGPSModule
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Duration
+import kotlin.time.Duration
 
 internal class SharedGPSPipeline(
     private val logger: Logger = getAppService(),
@@ -110,7 +112,7 @@ internal class SharedGPSPipeline(
 
     companion object {
         private const val TAG = "SharedGPSPipeline"
-        private val STARTUP_READING_THRESHOLD = Duration.ofSeconds(5)
+        private val STARTUP_READING_THRESHOLD = 5.seconds
 
         @Volatile
         private var instance: SharedGPSPipeline? = null

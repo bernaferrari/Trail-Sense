@@ -2,6 +2,11 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import kotlin.time.toJavaDuration
+
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+
 import androidx.compose.foundation.clickable
 
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -76,7 +81,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.sp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
@@ -129,7 +133,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.Duration
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.min
@@ -217,7 +220,7 @@ internal class MetalDetectorViewModel(
         calibrate()
     }
 
-    private val isMetalDetected = Debouncer(Duration.ofMillis(100))
+    private val isMetalDetected = Debouncer(100.milliseconds)
 
     private var audio: ISoundPlayer? = null
     private val audioLock = Any()
@@ -269,7 +272,7 @@ internal class MetalDetectorViewModel(
             orientation.start(this::onMagnetometerUpdate)
             gravity.start(this::onMagnetometerUpdate)
         }
-        calibrateTimer.once(Duration.ofSeconds(2))
+        calibrateTimer.once(2.seconds.toJavaDuration())
 
         if (prefs.metalDetector.isMetalAudioEnabled) {
             initializeAudio()
@@ -297,9 +300,9 @@ internal class MetalDetectorViewModel(
     fun updateHighSensitivity(isChecked: Boolean) {
         isHighSensitivity = isChecked
         isMetalDetected.debounceTime = if (isChecked) {
-            Duration.ofMillis(50)
+            50.milliseconds
         } else {
-            Duration.ofMillis(100)
+            100.milliseconds
         }
     }
 
@@ -467,7 +470,7 @@ internal class MetalDetectorViewModel(
     }
 
     companion object {
-        private val VIBRATION_DURATION = Duration.ofMillis(200)
+        private val VIBRATION_DURATION = 200.milliseconds
         private const val AUDIO_FREQUENCY = 750
     }
 }

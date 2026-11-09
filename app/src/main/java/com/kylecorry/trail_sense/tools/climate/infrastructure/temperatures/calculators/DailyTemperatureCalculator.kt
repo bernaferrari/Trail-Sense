@@ -1,31 +1,36 @@
 package com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.calculators
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
-
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.trail_sense.shared.time.JavaTime.getClosestFutureTime
-import com.kylecorry.trail_sense.shared.time.JavaTime.getClosestPastTime
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
+import com.kylecorry.sol.time.Time.getClosestFutureTime
+import com.kylecorry.sol.time.Time.getClosestPastTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
+import com.kylecorry.trail_sense.shared.time.atStartOfDay
+import com.kylecorry.trail_sense.shared.time.minusDays
+import com.kylecorry.trail_sense.shared.time.plusDays
+import com.kylecorry.trail_sense.shared.time.systemTimeZone
+import com.kylecorry.trail_sense.shared.time.toLocalDate
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 internal class DailyTemperatureCalculator(
     private val location: Coordinate,
-    private val dailyTemperatureRangeProvider: suspend (location: Coordinate, date: LocalDate) -> Range<Temperature>
+    private val dailyTemperatureRangeProvider: suspend (location: Coordinate, date: LocalDate) -> Range<Temperature>,
+    private val zone: TimeZone = systemTimeZone
 ) : ITemperatureCalculator {
 
-    private val calculators = mutableListOf<Pair<Range<ZonedDateTime>, ITemperatureCalculator>>()
-    private val offset = Duration.ofHours(3)
-    private val astronomy = AstronomyService()
+    private val calculators = mutableListOf<Pair<Range<Instant>, ITemperatureCalculator>>()
+    private val offset = 3.hours
+    private val astronomy = AstronomyService(timeZone = zone)
 
-    override suspend fun calculate(time: ZonedDateTime): Temperature {
+    override suspend fun calculate(time: Instant): Temperature {
         val existing = calculators.firstOrNull { it.first.contains(time) }
         val calculator = if (existing == null) {
             val newCalculator = createCalculator(time)
@@ -37,122 +42,103 @@ internal class DailyTemperatureCalculator(
         return calculator.calculate(time)
     }
 
-    private suspend fun createCalculator(time: ZonedDateTime): Pair<Range<ZonedDateTime>, ITemperatureCalculator> {
-        val range = dailyTemperatureRangeProvider.invoke(location, time.toLocalDate())
+    private fun Instant.date(): LocalDate = toLocalDate(zone)
+
+    private suspend fun createCalculator(time: Instant): Pair<Range<Instant>, ITemperatureCalculator> {
+        val date = time.date()
+        val range = dailyTemperatureRangeProvider.invoke(location, date)
         val nextHigh = getNextHighTime(time)
         val nextLow = getNextLowTime(time)
         val previousHigh = getPreviousHighTime(time)
         val previousLow = getPreviousLowTime(time)
 
         // Low High x Low High
-        if (nextLow.isBefore(nextHigh)) {
+        if (nextLow < nextHigh) {
 
-            val start = if (nextLow.toLocalDate() != time.toLocalDate()) {
-                dailyTemperatureRangeProvider.invoke(location, nextLow.toLocalDate()).start
+            val start = if (nextLow.date() != date) {
+                dailyTemperatureRangeProvider.invoke(location, nextLow.date()).start
             } else {
                 range.start
             }
 
-            val end = if (previousHigh.toLocalDate() != time.toLocalDate()) {
-                dailyTemperatureRangeProvider.invoke(location, previousHigh.toLocalDate()).end
+            val end = if (previousHigh.date() != date) {
+                dailyTemperatureRangeProvider.invoke(location, previousHigh.date()).end
             } else {
                 range.end
             }
 
             return Range(previousHigh, nextLow) to QuadraticTemperatureCalculator(
-                Reading(start, nextLow.toKotlinInstant()),
-                Reading(end, previousHigh.toKotlinInstant())
+                Reading(start, nextLow),
+                Reading(end, previousHigh)
             )
         }
 
-        val start = if (previousLow.toLocalDate() != time.toLocalDate()) {
-            dailyTemperatureRangeProvider.invoke(location, previousLow.toLocalDate()).start
+        val start = if (previousLow.date() != date) {
+            dailyTemperatureRangeProvider.invoke(location, previousLow.date()).start
         } else {
             range.start
         }
 
-        val end = if (nextHigh.toLocalDate() != time.toLocalDate()) {
-            dailyTemperatureRangeProvider.invoke(location, nextHigh.toLocalDate()).end
+        val end = if (nextHigh.date() != date) {
+            dailyTemperatureRangeProvider.invoke(location, nextHigh.date()).end
         } else {
             range.end
         }
 
         // High Low x High Low
         return Range(previousLow, nextHigh) to SineTemperatureCalculator(
-            Reading(start, previousLow.toKotlinInstant()),
-            Reading(end, nextHigh.toKotlinInstant())
+            Reading(start, previousLow),
+            Reading(end, nextHigh)
         )
     }
 
+    private fun LocalDate.atNoonPlusOffset(): Instant = atTime(12, 0).toInstant(zone) + offset
 
-    private fun getNextHighTime(time: ZonedDateTime): ZonedDateTime {
-        val today = astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate())
-        val tomorrow =
-            astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate().plusDays(1))
+    private fun getNextHighTime(time: Instant): Instant {
+        val date = time.date()
+        val today = astronomy.getSunTimes(location, SunTimesMode.Actual, date)
+        val tomorrow = astronomy.getSunTimes(location, SunTimesMode.Actual, date.plusDays(1))
         return getClosestFutureTime(
             time,
-            listOf(today.transit?.toZonedDateTime(time.zone)?.plus(offset), tomorrow.transit?.toZonedDateTime(time.zone)?.plus(offset))
+            listOf(today.transit?.plus(offset), tomorrow.transit?.plus(offset))
         ) ?: getClosestFutureTime(
             time,
-            listOf(
-                ZonedDateTime.of(time.toLocalDate(), LocalTime.NOON.plus(offset), time.zone),
-                ZonedDateTime.of(
-                    time.toLocalDate().plusDays(1),
-                    LocalTime.NOON.plus(offset),
-                    time.zone
-                )
-            )
+            listOf(date.atNoonPlusOffset(), date.plusDays(1).atNoonPlusOffset())
         )!!
     }
 
-    private fun getNextLowTime(time: ZonedDateTime): ZonedDateTime {
-        return astronomy.getNextSunrise(location, SunTimesMode.Actual, time)?.toZonedDateTime()
+    private fun getNextLowTime(time: Instant): Instant {
+        val date = time.date()
+        return astronomy.getNextSunrise(location, SunTimesMode.Actual, time)
             ?: getClosestFutureTime(
                 time,
-                listOf(
-                    ZonedDateTime.of(time.toLocalDate(), LocalTime.MIN, time.zone),
-                    ZonedDateTime.of(time.toLocalDate().plusDays(1), LocalTime.MIN, time.zone)
-                )
+                listOf(date.atStartOfDay(zone), date.plusDays(1).atStartOfDay(zone))
             )!!
     }
 
-    private fun getPreviousHighTime(time: ZonedDateTime): ZonedDateTime {
-        val today = astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate())
-        val yesterday =
-            astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate().minusDays(1))
+    private fun getPreviousHighTime(time: Instant): Instant {
+        val date = time.date()
+        val today = astronomy.getSunTimes(location, SunTimesMode.Actual, date)
+        val yesterday = astronomy.getSunTimes(location, SunTimesMode.Actual, date.minusDays(1))
         return getClosestPastTime(
             time,
-            listOf(today.transit?.toZonedDateTime(time.zone)?.plus(offset), yesterday.transit?.toZonedDateTime(time.zone)?.plus(offset))
+            listOf(today.transit?.plus(offset), yesterday.transit?.plus(offset))
         ) ?: getClosestPastTime(
             time,
-            listOf(
-                ZonedDateTime.of(time.toLocalDate(), LocalTime.NOON.plus(offset), time.zone),
-                ZonedDateTime.of(
-                    time.toLocalDate().minusDays(1),
-                    LocalTime.NOON.plus(offset),
-                    time.zone
-                )
-            )
+            listOf(date.atNoonPlusOffset(), date.minusDays(1).atNoonPlusOffset())
         )!!
     }
 
-    private fun getPreviousLowTime(time: ZonedDateTime): ZonedDateTime {
-        val today = astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate())
-        val yesterday =
-            astronomy.getSunTimes(location, SunTimesMode.Actual, time.toLocalDate().minusDays(1))
+    private fun getPreviousLowTime(time: Instant): Instant {
+        val date = time.date()
+        val today = astronomy.getSunTimes(location, SunTimesMode.Actual, date)
+        val yesterday = astronomy.getSunTimes(location, SunTimesMode.Actual, date.minusDays(1))
         return getClosestPastTime(
             time,
-            listOf(today.rise?.toZonedDateTime(time.zone), yesterday.rise?.toZonedDateTime(time.zone))
+            listOf(today.rise, yesterday.rise)
         ) ?: getClosestPastTime(
             time,
-            listOf(
-                ZonedDateTime.of(time.toLocalDate(), LocalTime.MIN, time.zone),
-                ZonedDateTime.of(
-                    time.toLocalDate().minusDays(1),
-                    LocalTime.MIN,
-                    time.zone
-                )
-            )
+            listOf(date.atStartOfDay(zone), date.minusDays(1).atStartOfDay(zone))
         )!!
     }
 }

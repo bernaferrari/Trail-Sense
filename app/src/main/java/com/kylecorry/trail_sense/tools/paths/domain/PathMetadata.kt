@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.paths.domain
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Distance
-import java.time.Instant
+import kotlin.time.Instant
 
 data class PathMetadata(
     val distance: Distance,

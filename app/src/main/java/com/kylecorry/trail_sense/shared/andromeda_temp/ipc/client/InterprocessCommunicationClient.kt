@@ -23,7 +23,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import java.io.Closeable
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.coroutines.resume
 
 class InterprocessCommunicationClient(
@@ -137,8 +139,8 @@ class InterprocessCommunicationClient(
     suspend fun connectAndSend(
         route: String,
         request: InterprocessCommunicationRequest = InterprocessCommunicationRequest(),
-        connectTimeout: Duration = Duration.ofSeconds(10),
-        requestTimeout: Duration = Duration.ofMinutes(1),
+        connectTimeout: Duration = 10.seconds,
+        requestTimeout: Duration = 1.minutes,
         stayConnected: Boolean = false
     ): InterprocessCommunicationResponse {
         return try {
@@ -146,8 +148,8 @@ class InterprocessCommunicationClient(
             if (!success) {
                 throw IllegalStateException("Could not connect to service")
             }
-            waitUntilConnected(connectTimeout.toMillis())
-            withTimeout(requestTimeout.toMillis()) {
+            waitUntilConnected(connectTimeout.inWholeMilliseconds)
+            withTimeout(requestTimeout) {
                 send(route, request)
             }
         } finally {

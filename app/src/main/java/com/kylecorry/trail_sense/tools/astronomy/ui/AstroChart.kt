@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import kotlin.time.Clock
+
 import androidx.compose.ui.graphics.painter.Painter
 
 import androidx.compose.material3.ColorScheme
@@ -42,8 +44,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.Vector2
-import com.kylecorry.trail_sense.shared.time.JavaTime
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -53,9 +53,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.Duration
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Instant
+import com.kylecorry.sol.time.Time
+import com.kylecorry.trail_sense.shared.time.toLocalTime
 import kotlin.math.absoluteValue
 
 /**
@@ -64,7 +64,7 @@ import kotlin.math.absoluteValue
  * twilight limits are drawn ([showBands]).
  */
 internal data class AstroChartState(
-    val startTime: Instant = Instant.now(),
+    val startTime: Instant = Clock.System.now(),
     val sun: List<Reading<Float>> = emptyList(),
     val moon: List<Reading<Float>> = emptyList(),
     val sunPosition: Reading<Float>? = null,
@@ -85,7 +85,7 @@ internal fun AstroChart(
     state: AstroChartState,
     moonImage: ImageBitmap?,
     modifier: Modifier = Modifier,
-    onChartClicked: (time: ZonedDateTime?) -> Unit = {}
+    onChartClicked: (time: Instant?) -> Unit = {}
 ) {
     val scheme = MaterialTheme.colorScheme
     val colors = remember(scheme) { AstroChartColors.from(scheme) }
@@ -125,7 +125,7 @@ internal fun AstroChart(
                                 return@detectTapGestures
                             }
                             val hour = (((offset.x - inset) / (width - 2 * inset)) * 24f).coerceIn(0f, 24f)
-                            onClick(state.startTime.plus(JavaTime.hours(hour.toDouble())).toZonedDateTime())
+                            onClick(state.startTime + Time.hours(hour.toDouble()))
                         }
                     }
             ) {
@@ -141,7 +141,7 @@ internal fun AstroChart(
         ) {
             listOf(0, 6, 12, 18, 24).forEach { hour ->
                 Text(
-                    state.startTime.plus(JavaTime.hours(hour.toDouble())).toZonedDateTime().hour.toString(),
+                    (state.startTime + Time.hours(hour.toDouble())).toLocalTime().hour.toString(),
                     style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
                     color = scheme.onSurfaceVariant
                 )
@@ -379,7 +379,7 @@ private fun DrawScope.drawHorizontal(
 
 /** Hours since [start] and the altitude. */
 private fun Reading<Float>.toVector(start: Instant): Vector2 {
-    return Vector2(JavaTime.between(start, time).toMillis() / 3600000f, value)
+    return Vector2((time - start).inWholeMilliseconds / 3600000f, value)
 }
 
 private fun toScreen(point: Vector2, left: Float, right: Float, top: Float, bottom: Float): Offset {

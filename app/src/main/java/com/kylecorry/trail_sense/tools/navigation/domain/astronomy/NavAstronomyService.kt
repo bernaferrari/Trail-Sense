@@ -1,8 +1,9 @@
 package com.kylecorry.trail_sense.tools.navigation.domain.astronomy
 
+import com.kylecorry.trail_sense.shared.time.today
+
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.LocalDate
 
 class NavAstronomyService(private val astronomy: AstronomyService = AstronomyService()) {
 
@@ -14,7 +15,7 @@ class NavAstronomyService(private val astronomy: AstronomyService = AstronomySer
             moonPosition.azimuth.value,
             astronomy.isSunUp(location),
             astronomy.isMoonUp(location),
-            astronomy.getMoonPhase(LocalDate.now()).phase,
+            astronomy.getMoonPhase(today()).phase,
             astronomy.getMoonTilt(location).parallacticAngle
         )
     }

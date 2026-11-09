@@ -1,18 +1,19 @@
 package com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures
 
+import kotlin.time.Duration.Companion.minutes
+
 import android.content.Context
+import com.kylecorry.sol.time.Time
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
-import com.kylecorry.trail_sense.shared.time.JavaTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.tools.climate.infrastructure.MonthlyValueInterpolator
 import com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.calculators.DailyTemperatureCalculator
-import java.time.Duration
-import java.time.LocalDate
-import java.time.Month
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
+import kotlin.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
@@ -28,24 +29,24 @@ internal class HistoricTemperatureRepo(private val context: Context) : ITemperat
         val monthly =
             HistoricMonthlyTemperatureRangeRepo.getMonthlyTemperatureRanges(location)
 
-        JavaTime.getYearlyValues(year) {
+        Time.getYearlyValues(year) {
             getDailyRange(location, it, monthly)
         }
     }
 
     override suspend fun getTemperatures(
         location: Coordinate,
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): List<Reading<Temperature>> {
         val calculator = DailyTemperatureCalculator(location, this::getDailyRange)
 
-        return JavaTime.getReadings(start, end, Duration.ofMinutes(10)) {
+        return Time.getReadings(start, end, 10.minutes) {
             calculator.calculate(it)
         }
     }
 
-    override suspend fun getTemperature(location: Coordinate, time: ZonedDateTime): Temperature {
+    override suspend fun getTemperature(location: Coordinate, time: Instant): Temperature {
         val calculator = DailyTemperatureCalculator(location, this::getDailyRange)
         return calculator.calculate(time)
     }

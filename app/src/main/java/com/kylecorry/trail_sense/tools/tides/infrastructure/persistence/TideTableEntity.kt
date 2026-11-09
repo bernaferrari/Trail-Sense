@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
-import java.time.Duration
+import kotlin.time.Duration
 
 @Entity(tableName = "tide_tables")
 data class TideTableEntity(

@@ -3,11 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
-import kotlin.time.toKotlinInstant
-
-import com.kylecorry.trail_sense.shared.time.interop.*
-
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
@@ -92,8 +89,8 @@ import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.Ligh
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 import kotlin.math.max
 
 /** A strike closer than this is dangerous: the 30-second flash-to-thunder rule. */
@@ -103,7 +100,7 @@ private const val DANGER_METERS = 10_000f
 private const val SKY_METERS = 15_000f
 
 /** A previous strike shows as a ghost ring only while it belongs to the same storm. */
-private val GHOST_MAX_AGE: Duration = Duration.ofMinutes(30)
+private val GHOST_MAX_AGE: Duration = 30.minutes
 
 private enum class StrikeStage { Ready, Counting, Result }
 
@@ -130,7 +127,7 @@ fun LightningScreen(
     var lightningTime by remember { mutableStateOf<Instant?>(null) }
     var strike by remember { mutableStateOf<Reading<LightningStrike>?>(null) }
     var lastStrike by remember { mutableStateOf<Reading<LightningStrike>?>(null) }
-    var now by remember { mutableStateOf(Instant.now()) }
+    var now by remember { mutableStateOf(Clock.System.now()) }
     val flash = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
@@ -145,7 +142,7 @@ fun LightningScreen(
         if (lightningTime == null) return@LaunchedEffect
         while (true) {
             withFrameNanos { }
-            now = Instant.now()
+            now = Clock.System.now()
         }
     }
 
@@ -168,7 +165,7 @@ fun LightningScreen(
         formatService.formatDistance(it, Units.getDecimalPlaces(it.units), false)
     }
     val ghostMeters = lastStrike
-        ?.takeIf { JavaTime.between(it.time, Instant.now()) <= GHOST_MAX_AGE }
+        ?.takeIf { (Clock.System.now() - it.time) <= GHOST_MAX_AGE }
         ?.value?.distance?.meters()?.value
     val dangerLabel = Distance.meters(DANGER_METERS).convertTo(units).toRelativeDistance().let {
         formatService.formatDistance(it, 0, false)
@@ -186,8 +183,8 @@ fun LightningScreen(
     fun act() {
         when (stage) {
             StrikeStage.Ready -> {
-                lightningTime = Instant.now()
-                now = Instant.now()
+                lightningTime = Clock.System.now()
+                now = Clock.System.now()
                 scope.launch {
                     flash.snapTo(1f)
                     flash.animateTo(0f, tween(700, easing = FastOutSlowInEasing))
@@ -195,7 +192,7 @@ fun LightningScreen(
             }
 
             StrikeStage.Counting -> {
-                val thunder = Instant.now()
+                val thunder = Clock.System.now()
                 val distance = getDistance(lightningTime!!, thunder)
                 val currentStrike = Reading(LightningStrike(0, distance), thunder)
                 strike = currentStrike
@@ -540,5 +537,5 @@ private fun StormSky(
 }
 
 private fun getDistance(lightning: Instant, thunder: Instant): Distance {
-    return Distance.meters(Meteorology.getLightningStrikeDistance(lightning.toKotlinInstant(), thunder.toKotlinInstant()))
+    return Distance.meters(Meteorology.getLightningStrikeDistance(lightning, thunder))
 }

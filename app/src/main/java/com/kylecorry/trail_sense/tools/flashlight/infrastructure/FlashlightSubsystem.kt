@@ -1,8 +1,11 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
-import com.kylecorry.andromeda.torch.isTorchAvailable
+import kotlin.time.toJavaDuration
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+
+import com.kylecorry.andromeda.torch.isTorchAvailable
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -26,8 +29,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
 import java.util.Optional
 
 class FlashlightSubsystem private constructor(private val context: Context) : IFlashlightSubsystem {
@@ -37,7 +38,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     private val prefs by lazy { UserPreferences(context) }
     private var torch: Torch? = null
 
-    private val transitionDuration = Duration.ofSeconds(1)
+    private val transitionDuration = 1.seconds
 
     private val _mode = Topic(defaultValue = Optional.of(getMode()))
     override val mode: ITopic<FlashlightMode>
@@ -98,7 +99,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     private fun setTransitioning(transitioning: Boolean) {
         isTransitioning = transitioning
         if (transitioning) {
-            transitionTimer.once(transitionDuration)
+            transitionTimer.once(transitionDuration.toJavaDuration())
         } else {
             transitionTimer.stop()
         }

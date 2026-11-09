@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.navigation.domain
 
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.data.Identifiable
-import java.time.Instant
+import kotlin.time.Instant
 
 data class NavigationBearing(
     override val id: Long,

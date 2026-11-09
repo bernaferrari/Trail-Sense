@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import kotlin.time.Clock
+
 import android.net.Uri
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.luna.concurrency.onIO
@@ -13,7 +15,6 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.MapFileTypeUtils
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.attribution.OfflineMapAttributionExtractorFactory
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.bounds.OfflineMapBoundsCalculatorFactory
-import java.time.Instant
 import java.util.UUID
 
 class CreateVectorMapFromFileCommand(
@@ -46,7 +47,7 @@ class CreateVectorMapFromFileCommand(
             type,
             path,
             files.size(path),
-            Instant.now(),
+            Clock.System.now(),
             OfflineMapBoundsCalculatorFactory().getBoundsCalculator(type).getBounds(path),
             OfflineMapAttributionExtractorFactory().getAttributionExtractor(type)
                 .getAttribution(path),

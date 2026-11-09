@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.domain
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
@@ -12,7 +11,7 @@ import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.PrimaryWeatherSelector
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.arrival.WeatherArrivalTime
-import java.time.Instant
+import kotlin.time.Instant
 
 data class CurrentWeather(
     val prediction: WeatherPrediction,

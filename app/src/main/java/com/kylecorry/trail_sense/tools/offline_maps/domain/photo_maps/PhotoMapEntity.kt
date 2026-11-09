@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.Coordinate
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "maps", indices = [Index(value = ["parent"])])
 data class PhotoMapEntity(
@@ -76,7 +76,7 @@ data class PhotoMapEntity(
             metadata,
             parent,
             visible,
-            createdOn = createdOn?.let { Instant.ofEpochMilli(it) })
+            createdOn = createdOn?.let { Instant.fromEpochMilliseconds(it) })
     }
 
     companion object {
@@ -101,7 +101,7 @@ data class PhotoMapEntity(
                 metadata.unscaledPdfSize?.width?.toInt(),
                 metadata.unscaledPdfSize?.height?.toInt(),
                 map.visible,
-                map.createdOn?.toEpochMilli()
+                map.createdOn?.toEpochMilliseconds()
             ).also {
                 it.id = map.id
             }

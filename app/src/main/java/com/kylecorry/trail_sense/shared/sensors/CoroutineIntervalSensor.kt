@@ -1,9 +1,11 @@
 package com.kylecorry.trail_sense.shared.sensors
 
+import kotlin.time.toJavaDuration
+
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.luna.time.CoroutineTimer
-import java.time.Duration
+import kotlin.time.Duration
 
 abstract class CoroutineIntervalSensor(private val frequency: Duration) : SharedSensor() {
 
@@ -13,7 +15,7 @@ abstract class CoroutineIntervalSensor(private val frequency: Duration) : Shared
         get() = true
 
     override fun startImpl() {
-        timer.interval(frequency)
+        timer.interval(frequency.toJavaDuration())
     }
 
     override fun stopImpl() {

@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.shared.andromeda_temp.background
 
+import kotlin.time.Clock
+
 import android.content.Context
 import android.os.Bundle
 import androidx.work.*
 import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
 import com.kylecorry.trail_sense.shared.andromeda_temp.core.toMap
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 import java.util.concurrent.TimeUnit
 
 /**
@@ -36,7 +38,7 @@ class WorkTaskScheduler(
             .Builder(task).apply {
                 addTag(uniqueId)
                 if (delay > Duration.ZERO) {
-                    setInitialDelay(delay.toMillis(), TimeUnit.MILLISECONDS)
+                    setInitialDelay(delay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
                 }
                 if (constraints != null) {
                     setConstraints(constraints)
@@ -58,7 +60,7 @@ class WorkTaskScheduler(
     }
 
     override fun once(time: Instant) {
-        once(Duration.between(Instant.now(), time))
+        once((time - Clock.System.now()))
     }
 
     override fun start() {
@@ -71,13 +73,13 @@ class WorkTaskScheduler(
         val request = PeriodicWorkRequest
             .Builder(
                 task,
-                period.toMillis(),
+                period.inWholeMilliseconds,
                 TimeUnit.MILLISECONDS,
-                (flexDuration ?: period).toMillis(),
+                (flexDuration ?: period).inWholeMilliseconds,
                 TimeUnit.MILLISECONDS
             ).apply {
                 addTag(uniqueId)
-                setInitialDelay(initialDelay.toMillis(), TimeUnit.MILLISECONDS)
+                setInitialDelay(initialDelay.inWholeMilliseconds, TimeUnit.MILLISECONDS)
                 if (constraints != null) {
                     setConstraints(constraints)
                 }
@@ -98,7 +100,7 @@ class WorkTaskScheduler(
     }
 
     override fun interval(period: Duration, start: Instant) {
-        interval(period, Duration.between(Instant.now(), start))
+        interval(period, (start - Clock.System.now()))
     }
 
     override fun cancel() {

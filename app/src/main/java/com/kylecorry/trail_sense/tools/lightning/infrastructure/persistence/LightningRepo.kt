@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
@@ -7,13 +10,11 @@ import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
-import java.time.Duration
-import java.time.Instant
 
 class LightningRepo private constructor(private val dao: LightningStrikeDao) : ILightningRepo {
 
     override suspend fun clean() = onIO {
-        dao.deleteOlderThan(Instant.now().minus(LIGHTNING_HISTORY_DURATION).toEpochMilli())
+        dao.deleteOlderThan(Clock.System.now().minus(LIGHTNING_HISTORY_DURATION).toEpochMilliseconds())
     }
 
     override suspend fun add(reading: Reading<LightningStrike>): Long = onIO {
@@ -52,7 +53,7 @@ class LightningRepo private constructor(private val dao: LightningStrikeDao) : I
     }
 
     companion object {
-        private val LIGHTNING_HISTORY_DURATION = Duration.ofHours(2)
+        private val LIGHTNING_HISTORY_DURATION = 2.hours
 
         private var instance: LightningRepo? = null
 

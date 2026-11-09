@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
-import java.time.Duration
+import kotlin.time.Duration
 
 interface ToolService {
 

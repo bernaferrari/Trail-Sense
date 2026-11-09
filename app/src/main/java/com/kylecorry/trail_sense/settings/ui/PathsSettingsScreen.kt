@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import kotlin.time.Duration.Companion.days
+
 import android.content.Context
 import android.os.Bundle
 import androidx.compose.foundation.background
@@ -45,7 +47,6 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackSe
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
-import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -67,7 +68,7 @@ fun PathsSettingsToolScreen() {
         mutableStateOf(formatService.formatDuration(prefs.paths.backtrackRecordFrequency, includeSeconds = true))
     }
     var backtrackHistorySummary by remember {
-        mutableStateOf(formatService.formatDays(prefs.paths.backtrackHistory.toDays().toInt()))
+        mutableStateOf(formatService.formatDays(prefs.paths.backtrackHistory.inWholeDays.toInt()))
     }
     var isNotificationBlocked by remember {
         mutableStateOf(Notify.isChannelBlocked(context, BacktrackService.FOREGROUND_CHANNEL_ID))
@@ -291,14 +292,14 @@ private fun pickBacktrackHistory(context: Context, prefs: UserPreferences, onPic
         context,
         context.getString(R.string.pref_backtrack_history_days_title),
         null,
-        prefs.paths.backtrackHistory.toDays().toInt(),
+        prefs.paths.backtrackHistory.inWholeDays.toInt(),
         allowDecimals = false,
         allowNegative = false,
         hint = context.getString(R.string.days)
     ) { days ->
         if (days != null) {
             val dayCount = days.toInt()
-            prefs.paths.backtrackHistory = Duration.ofDays(days.toLong())
+            prefs.paths.backtrackHistory = (days.toLong()).days
             onPicked(dayCount)
         }
     }

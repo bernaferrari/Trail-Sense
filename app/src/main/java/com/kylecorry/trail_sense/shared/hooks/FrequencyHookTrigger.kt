@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.hooks
 
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 internal class FrequencyHookTrigger {
 
@@ -11,13 +11,8 @@ internal class FrequencyHookTrigger {
 
     fun getValue(time: Instant, threshold: Duration): Boolean {
         synchronized(lock) {
-            if (lastTime == null) {
-                lastTime = time
-                lastReturnValue = !lastReturnValue
-                return lastReturnValue
-            }
-
-            if (Duration.between(lastTime, time) >= threshold) {
+            val previous = lastTime
+            if (previous == null || (time - previous) >= threshold) {
                 lastTime = time
                 lastReturnValue = !lastReturnValue
                 return lastReturnValue

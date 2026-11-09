@@ -4,7 +4,7 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.shared.ZERO_SPEED
-import java.time.Duration
+import kotlin.time.Duration
 
 class StrideLengthPaceCalculator(private val strideLength: Distance) : IPaceCalculator {
     override fun distance(steps: Long): Distance {
@@ -13,7 +13,7 @@ class StrideLengthPaceCalculator(private val strideLength: Distance) : IPaceCalc
 
     override fun speed(steps: Long, time: Duration): Speed {
         val d = distance(steps)
-        val seconds = time.seconds
+        val seconds = time.inWholeSeconds
         if (seconds <= 0) {
             return ZERO_SPEED
         }

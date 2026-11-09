@@ -2,7 +2,17 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
+import kotlin.time.Duration.Companion.minutes
+
+import kotlin.time.Duration.Companion.hours
+
+import com.kylecorry.trail_sense.shared.time.toLocalDateTime
+
+import com.kylecorry.trail_sense.shared.time.toInstant
+
+import kotlin.time.Instant
+
+import com.kylecorry.trail_sense.shared.time.nowLocal
 
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.lifecycle.ViewModel
@@ -71,7 +81,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.science.oceanography.Tide
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -103,9 +112,7 @@ import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTabl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
+import kotlin.time.Duration
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 
 @Composable
@@ -187,10 +194,10 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
             CustomUiUtils.pickDatetime(
                 context,
                 prefs.use24HourTime,
-                entry.time?.toLocalDateTime() ?: LocalDateTime.now()
+                entry.time?.toLocalDateTime() ?: nowLocal()
             ) {
                 if (it != null) {
-                    viewModel.updateTideEntry(entry.copy(time = it.toZonedDateTime()))
+                    viewModel.updateTideEntry(entry.copy(time = it.toInstant()))
                 }
             }
         },
@@ -290,7 +297,7 @@ internal class CreateTideViewModel(
             TideEntry(
                 nextTideEntryId++,
                 it.isHigh,
-                it.time.toZonedDateTime(),
+                it.time,
                 if (height != null) Distance.meters(height).convertTo(units) else null
             )
         }
@@ -378,7 +385,7 @@ internal class CreateTideViewModel(
         val tides = tideEntries.mapNotNull {
             val time = it.time ?: return@mapNotNull null
             Tide(
-                time.toKotlinInstant(),
+                time,
                 it.isHigh,
                 it.height?.meters()?.value
             )
@@ -429,7 +436,7 @@ internal class CreateTideViewModel(
 internal data class TideEntry(
     val id: Long,
     val isHigh: Boolean,
-    val time: ZonedDateTime?,
+    val time: Instant?,
     val height: Distance?
 )
 
@@ -846,9 +853,9 @@ private fun LunitidalIntervalInput(
     onDurationChange: (Duration?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val absoluteDuration = duration?.abs()
+    val absoluteDuration = duration?.absoluteValue
     var isNegative by remember {
-        mutableStateOf(duration?.isNegative == true)
+        mutableStateOf(duration?.isNegative() == true)
     }
     var hoursText by remember {
         mutableStateOf(formatDurationHours(absoluteDuration))
@@ -868,7 +875,7 @@ private fun LunitidalIntervalInput(
     LaunchedEffect(duration) {
         val parsed = parseLunitidalInterval(hoursText, minutesText, isNegative)
         if (parsed != duration) {
-            isNegative = duration?.isNegative == true
+            isNegative = duration?.isNegative() == true
             hoursText = formatDurationHours(absoluteDuration)
             minutesText = formatDurationMinutes(absoluteDuration)
         }
@@ -937,23 +944,22 @@ private fun parseLunitidalInterval(
         return null
     }
 
-    val duration = Duration
-        .ofHours((parsedHours ?: 0L).coerceIn(0L, 99L))
-        .plusMinutes((parsedMinutes ?: 0L).coerceIn(0L, 99L))
+    val duration = (parsedHours ?: 0L).coerceIn(0L, 99L).hours +
+        (parsedMinutes ?: 0L).coerceIn(0L, 99L).minutes
 
     return if (isNegative) {
-        duration.negated()
+        -duration
     } else {
         duration
     }
 }
 
 private fun formatDurationHours(duration: Duration?): String {
-    return duration?.toHours()?.coerceIn(0L, 99L)?.toString() ?: ""
+    return duration?.inWholeHours?.coerceIn(0L, 99L)?.toString() ?: ""
 }
 
 private fun formatDurationMinutes(duration: Duration?): String {
-    return duration?.toMinutes()?.rem(60)?.coerceIn(0L, 99L)?.toString() ?: ""
+    return duration?.inWholeMinutes?.rem(60)?.coerceIn(0L, 99L)?.toString() ?: ""
 }
 
 @Composable

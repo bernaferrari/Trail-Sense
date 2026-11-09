@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.shared.morse
 
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
+
+import kotlin.time.Duration
 
 object Signals {
 
@@ -12,11 +14,11 @@ object Signals {
             Signal.off(dotDuration),
             Signal.on(dotDuration),
             Signal.off(dotDuration),
-            Signal.on(dotDuration.multipliedBy(3)),
+            Signal.on(dotDuration.times(3)),
             Signal.off(dotDuration),
-            Signal.on(dotDuration.multipliedBy(3)),
+            Signal.on(dotDuration.times(3)),
             Signal.off(dotDuration),
-            Signal.on(dotDuration.multipliedBy(3)),
+            Signal.on(dotDuration.times(3)),
             Signal.off(dotDuration),
             Signal.on(dotDuration),
             Signal.off(dotDuration),
@@ -28,24 +30,24 @@ object Signals {
 
     fun help(): List<Signal> {
         return listOf(
-            Signal.on(Duration.ofSeconds(2)),
-            Signal.off(Duration.ofSeconds(1)),
-            Signal.on(Duration.ofSeconds(2)),
-            Signal.off(Duration.ofSeconds(1)),
-            Signal.on(Duration.ofSeconds(2)),
-            Signal.off(Duration.ofSeconds(3))
+            Signal.on(2.seconds),
+            Signal.off(1.seconds),
+            Signal.on(2.seconds),
+            Signal.off(1.seconds),
+            Signal.on(2.seconds),
+            Signal.off(3.seconds)
         )
     }
 
     fun acknowledged(): List<Signal> {
-        return listOf(Signal.on(Duration.ofSeconds(2)))
+        return listOf(Signal.on(2.seconds))
     }
 
     fun comeHere(): List<Signal> {
         return listOf(
-            Signal.on(Duration.ofSeconds(2)),
-            Signal.off(Duration.ofSeconds(1)),
-            Signal.on(Duration.ofSeconds(2)),
+            Signal.on(2.seconds),
+            Signal.off(1.seconds),
+            Signal.on(2.seconds),
         )
     }
 

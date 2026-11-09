@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.battery.domain
 
-import java.time.Duration
+import kotlin.time.Duration
 
 data class RunningService(
     val name: String,

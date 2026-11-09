@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.tools.services
 
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.CoroutineWorker
@@ -17,14 +20,14 @@ import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem.SensorRefreshPolicy
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
+import kotlin.time.Duration
 
 class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         val wakelock = Wakelocks.get(applicationContext, TAG)
-        wakelock?.acquire(Duration.ofSeconds(60).toMillis())
+        wakelock?.acquire(60.seconds.inWholeMilliseconds)
         val start = SystemClock.elapsedRealtime()
         try {
             // Update stale location/elevation data if needed
@@ -51,14 +54,14 @@ class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
             return
         }
 
-        val isLocationStale = locationSubsystem.locationAge.toMinutes() > 30
-        val isElevationStale = locationSubsystem.elevationAge.toMinutes() > 30
+        val isLocationStale = locationSubsystem.locationAge.inWholeMinutes > 30
+        val isElevationStale = locationSubsystem.elevationAge.inWholeMinutes > 30
 
         if (isLocationStale || isElevationStale) {
             getAppService<Logger>().info(
                 TAG,
-                "Refreshing stale widget sensor data (location age: ${locationSubsystem.locationAge.toMinutes()}min, " +
-                    "elevation age: ${locationSubsystem.elevationAge.toMinutes()}min)"
+                "Refreshing stale widget sensor data (location age: ${locationSubsystem.locationAge.inWholeMinutes}min, " +
+                    "elevation age: ${locationSubsystem.elevationAge.inWholeMinutes}min)"
             )
         }
 
@@ -75,7 +78,7 @@ class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
         private const val TAG = "WidgetUpdateWorker"
         private const val UNIQUE_ID = 267389
 
-        val FREQUENCY: Duration = Duration.ofMinutes(30)
+        val FREQUENCY: Duration = 30.minutes
 
         fun start(context: Context) {
             scheduler(context).interval(FREQUENCY)

@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.shared.data.AssetInputStreamable
 import com.kylecorry.trail_sense.shared.data.EncodedDataImageReader
 import com.kylecorry.trail_sense.shared.data.GeographicImageSource
 import com.kylecorry.trail_sense.shared.data.SingleImageReader
-import java.time.Month
+import kotlinx.datetime.Month
 import kotlin.math.max
 import kotlin.math.min
 

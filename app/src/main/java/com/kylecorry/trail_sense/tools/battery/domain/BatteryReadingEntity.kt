@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.tools.battery.domain
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "battery", indices = [Index(value = ["time"])])
 class BatteryReadingEntity(
@@ -26,8 +27,8 @@ class BatteryReadingEntity(
             percent,
             capacity,
             isCharging,
-            uptime?.let { Duration.ofMillis(it) },
-            elapsedRealtime?.let { Duration.ofMillis(it) }
+            uptime?.let { it.milliseconds },
+            elapsedRealtime?.let { it.milliseconds }
         )
     }
 
@@ -38,8 +39,8 @@ class BatteryReadingEntity(
                 reading.capacity,
                 reading.isCharging,
                 reading.time,
-                reading.uptime?.toMillis(),
-                reading.elapsedRealtime?.toMillis()
+                reading.uptime?.inWholeMilliseconds,
+                reading.elapsedRealtime?.inWholeMilliseconds
             )
         }
     }

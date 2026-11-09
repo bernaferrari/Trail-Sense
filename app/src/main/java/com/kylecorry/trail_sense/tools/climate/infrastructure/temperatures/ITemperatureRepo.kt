@@ -4,8 +4,8 @@ import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
+import kotlin.time.Instant
 
 interface ITemperatureRepo {
     suspend fun getYearlyTemperatures(
@@ -15,10 +15,10 @@ interface ITemperatureRepo {
 
     suspend fun getTemperatures(
         location: Coordinate,
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): List<Reading<Temperature>>
 
-    suspend fun getTemperature(location: Coordinate, time: ZonedDateTime): Temperature
+    suspend fun getTemperature(location: Coordinate, time: Instant): Temperature
     suspend fun getDailyTemperatureRange(location: Coordinate, date: LocalDate): Range<Temperature>
 }

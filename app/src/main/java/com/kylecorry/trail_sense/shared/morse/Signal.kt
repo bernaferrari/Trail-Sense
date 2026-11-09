@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.morse
 
-import java.time.Duration
+import kotlin.time.Duration
 
 data class Signal(val isOn: Boolean, val duration: Duration) {
 

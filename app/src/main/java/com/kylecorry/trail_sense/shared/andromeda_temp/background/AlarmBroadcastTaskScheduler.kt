@@ -1,13 +1,16 @@
 package com.kylecorry.trail_sense.shared.andromeda_temp.background
 
+import kotlin.time.Duration.Companion.minutes
+
+import kotlin.time.Clock
+
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * Uses the AlarmManager and Broadcast Receivers to scheduler work. Useful for work that needs to run at an exact time.
@@ -24,7 +27,7 @@ class AlarmBroadcastTaskScheduler(
     private val uniqueId: Int,
     private val exact: Boolean = true,
     private val allowWhileIdle: Boolean = false,
-    private val inexactWindow: Duration = Duration.ofMinutes(10),
+    private val inexactWindow: Duration = 10.minutes,
     private val isWindowCentered: Boolean = false,
     private val intentExtras: Bundle? = null
 ) :
@@ -35,7 +38,7 @@ class AlarmBroadcastTaskScheduler(
         cancel()
         Alarms.set(
             context,
-            Instant.now().plus(delay),
+            Clock.System.now().plus(delay),
             createPendingIntent(),
             exact,
             allowWhileIdle,
@@ -45,7 +48,7 @@ class AlarmBroadcastTaskScheduler(
     }
 
     override fun once(time: Instant) {
-        once(Duration.between(Instant.now(), time))
+        once((time - Clock.System.now()))
     }
 
     override fun start() {
@@ -56,14 +59,14 @@ class AlarmBroadcastTaskScheduler(
         cancel()
         Alarms.setRepeating(
             context,
-            Instant.now().plus(initialDelay),
+            Clock.System.now().plus(initialDelay),
             period,
             createPendingIntent()
         )
     }
 
     override fun interval(period: Duration, start: Instant) {
-        interval(period, Duration.between(Instant.now(), start))
+        interval(period, (start - Clock.System.now()))
     }
 
     override fun cancel() {

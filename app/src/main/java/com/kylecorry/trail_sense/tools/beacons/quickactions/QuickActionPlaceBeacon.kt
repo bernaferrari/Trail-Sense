@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.quickactions
 
+import kotlin.time.Clock
+
 import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -19,7 +21,6 @@ import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListControllerHost
-import java.time.ZonedDateTime
 import kotlinx.coroutines.launch
 
 class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
@@ -45,7 +46,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestina
 
                 // Create a beacon
                 val formatter = FormatService.getInstance(host.context)
-                val time = formatter.formatDateTime(ZonedDateTime.now())
+                val time = formatter.formatDateTime(Clock.System.now())
 
                 val prefs = UserPreferences(host.context)
                 val beaconService = BeaconService(host.context)

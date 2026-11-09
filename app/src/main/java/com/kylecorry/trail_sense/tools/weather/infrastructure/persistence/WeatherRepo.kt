@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.persistence
 
+import kotlin.time.Duration.Companion.hours
+
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
@@ -10,8 +15,6 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
-import java.time.Duration
-import java.time.Instant
 
 class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeatherObservation> {
 
@@ -79,7 +82,7 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
     }
 
     override suspend fun clean() = onIO {
-        pressureDao.deleteOlderThan(Instant.now().minus(PRESSURE_HISTORY_DURATION).toEpochMilli())
+        pressureDao.deleteOlderThan(Clock.System.now().minus(PRESSURE_HISTORY_DURATION).toEpochMilliseconds())
 
         // TODO: Only do this if there was a change
         _readingsChanged.publish()
@@ -87,7 +90,7 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
 
     companion object {
 
-        private val PRESSURE_HISTORY_DURATION = Duration.ofDays(2).plusHours(6)
+        private val PRESSURE_HISTORY_DURATION = 2.days.plus(6.hours)
 
         private var instance: WeatherRepo? = null
 

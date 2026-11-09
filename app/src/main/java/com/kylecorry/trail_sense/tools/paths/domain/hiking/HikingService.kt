@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.domain.hiking
 
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.sol.math.filters.LoessFilter2D
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.science.geography.Geography
@@ -11,7 +13,7 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
-import java.time.Duration
+import kotlin.time.Duration
 import kotlin.math.pow
 
 object HikingService {
@@ -157,7 +159,7 @@ object HikingService {
     ): Duration {
         val speedValue = speed.convertTo(DistanceUnits.Meters, TimeUnits.Seconds).value.coerceAtLeast(0.1f)
         val scarfs = getScarfsDistance(distance, elevationGain).meters().value
-        return Duration.ofSeconds((scarfs / speedValue).toLong())
+        return ((scarfs / speedValue).toLong()).seconds
     }
 
     fun getScarfsDistance(distance: Distance, elevationGain: Distance): Distance {

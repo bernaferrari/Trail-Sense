@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
-import java.time.Duration
+import kotlin.time.Duration
 
 class Debouncer(var debounceTime: Duration, initialValue: Boolean = false) {
 
 
     val value: Boolean
         get() {
-            if (lastValue == lastAttemptedValue || lastAttemptedTime - lastTime > debounceTime.toMillis()) {
+            if (lastValue == lastAttemptedValue || lastAttemptedTime - lastTime > debounceTime.inWholeMilliseconds) {
                 lastValue = lastAttemptedValue
                 lastTime = lastAttemptedTime
             }

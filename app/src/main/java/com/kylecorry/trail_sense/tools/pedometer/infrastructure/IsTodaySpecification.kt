@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
+import com.kylecorry.trail_sense.shared.time.today
+
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+
 import com.kylecorry.luna.specifications.Specification
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
 
 class IsTodaySpecification : Specification<Instant>() {
     override fun isSatisfiedBy(value: Instant): Boolean {
-        return value.toZonedDateTime().toLocalDate() == LocalDate.now()
+        return value.toLocalDate() == today()
     }
 }

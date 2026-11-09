@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.paths.domain
 
 import com.kylecorry.andromeda.signal.CellNetworkQuality
 import com.kylecorry.sol.units.Coordinate
-import java.time.Instant
+import kotlin.time.Instant
 
 data class PathPoint(
     val id: Long,

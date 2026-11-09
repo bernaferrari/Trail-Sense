@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

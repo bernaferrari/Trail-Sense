@@ -2,17 +2,13 @@ package com.kylecorry.trail_sense.shared.haptics
 
 import kotlin.time.Duration.Companion.seconds
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
-
-import com.kylecorry.trail_sense.shared.time.interop.*
-
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.andromeda.haptics.DialHapticFeedback
 import com.kylecorry.andromeda.haptics.HapticFeedbackType
 import com.kylecorry.andromeda.haptics.HapticMotor
 import com.kylecorry.andromeda.haptics.deviceHaptics
-import java.time.Duration
+import kotlin.time.Duration
 
 class HapticSubsystem private constructor(context: Context) {
 
@@ -27,7 +23,7 @@ class HapticSubsystem private constructor(context: Context) {
     }
 
     fun interval(on: Duration, off: Duration = on) {
-        motor.interval(on.toKotlin(), off.toKotlin())
+        motor.interval(on, off)
     }
 
     fun click() {

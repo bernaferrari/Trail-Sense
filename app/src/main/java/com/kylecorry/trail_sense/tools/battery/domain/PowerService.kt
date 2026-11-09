@@ -1,7 +1,10 @@
 package com.kylecorry.trail_sense.tools.battery.domain
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.hours
-import java.time.Duration
+import kotlin.time.Duration.Companion.hours
+
+import kotlin.time.Duration.Companion.milliseconds
+
+import kotlin.time.Duration
 import kotlin.math.absoluteValue
 
 class PowerService {
@@ -16,7 +19,7 @@ class PowerService {
 
         val hours = -(capacity / capacityDrainPerHour)
 
-        return hours(hours.toDouble())
+        return hours.toDouble().hours
     }
 
     fun getDeepSleep(batteryReadings: List<BatteryReading>): DeepSleep? {
@@ -30,11 +33,11 @@ class PowerService {
         for (i in 1 until readings.size) {
             val previousReading = readings[i - 1]
             val reading = readings[i]
-            val deltaElapsed = reading.elapsedRealtime!!.toMillis() - previousReading.elapsedRealtime!!.toMillis()
-            val deltaUptime = reading.uptime!!.toMillis() - previousReading.uptime!!.toMillis()
+            val deltaElapsed = reading.elapsedRealtime!!.inWholeMilliseconds - previousReading.elapsedRealtime!!.inWholeMilliseconds
+            val deltaUptime = reading.uptime!!.inWholeMilliseconds - previousReading.uptime!!.inWholeMilliseconds
 
             // The clocks reset on reboot, so only trust intervals where they still track wall time
-            val deltaTime = Duration.between(previousReading.time, reading.time).toMillis()
+            val deltaTime = (reading.time - previousReading.time).inWholeMilliseconds
             if (deltaElapsed <= 0 || deltaUptime < 0 || (deltaElapsed - deltaTime).absoluteValue > REBOOT_TOLERANCE_MILLIS) {
                 continue
             }
@@ -49,7 +52,7 @@ class PowerService {
 
         val sleepPercent = 100f * totalSleep / totalElapsed
 
-        return DeepSleep(sleepPercent, Duration.ofMillis(totalElapsed))
+        return DeepSleep(sleepPercent, totalElapsed.milliseconds)
     }
 
     fun getRates(
@@ -84,10 +87,7 @@ class PowerService {
 
         return grouped
             .filter {
-                Duration.between(
-                    it.second.first().time,
-                    it.second.last().time
-                ) >= minDuration
+                (it.second.last().time - (it.second.first().time)) >= minDuration
             }
             .mapNotNull { getRate(it.second.first(), it.second.last(), hasCapacity) }
 
@@ -100,7 +100,7 @@ class PowerService {
     ): Float? {
         val capacityDiff =
             if (hasCapacity) second.capacity - first.capacity else second.percent - first.percent
-        val timeDiff = Duration.between(first.time, second.time).toMillis() / (1000f * 60f * 60f)
+        val timeDiff = (second.time - first.time).inWholeMilliseconds / (1000f * 60f * 60f)
 
         if (timeDiff == 0f) {
             return null
@@ -134,7 +134,7 @@ class PowerService {
             return Duration.ZERO
         }
 
-        return hours(hours.toDouble())
+        return hours.toDouble().hours
     }
 
     companion object {

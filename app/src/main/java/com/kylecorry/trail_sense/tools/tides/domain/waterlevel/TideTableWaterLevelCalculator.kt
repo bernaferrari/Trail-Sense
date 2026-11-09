@@ -15,7 +15,6 @@ import com.kylecorry.sol.science.oceanography.waterlevel.LunitidalWaterLevelCalc
 import com.kylecorry.sol.science.oceanography.waterlevel.RuleOfTwelfthsWaterLevelCalculator
 import com.kylecorry.sol.science.oceanography.waterlevel.TideClockWaterLevelCalculator
 import com.kylecorry.sol.time.Time.hours
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
@@ -196,7 +195,7 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
         // If the lunitidal interval is specified, use it
         if (table.lunitidalInterval != null) {
             return LunitidalWaterLevelCalculator(
-                table.lunitidalInterval.toKotlin(),
+                table.lunitidalInterval,
                 if (table.lunitidalIntervalIsUtc) Coordinate.zero else table.location
                     ?: Coordinate.zero,
                 null,

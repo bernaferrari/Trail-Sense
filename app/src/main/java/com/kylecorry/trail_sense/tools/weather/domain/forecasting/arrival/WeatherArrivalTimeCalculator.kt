@@ -1,24 +1,22 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting.arrival
 
-import kotlin.time.toJavaInstant
+import com.kylecorry.trail_sense.shared.time.roundToNearest
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Duration.Companion.minutes
+
+import kotlin.time.Clock
 
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.meteorology.WeatherForecast
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
-import com.kylecorry.trail_sense.shared.time.JavaTime.roundNearestMinute
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.tools.weather.domain.RelativeArrivalTime
 import com.kylecorry.trail_sense.tools.weather.domain.get3hTendency
-import java.time.Clock
-import java.time.Instant
 
 internal class WeatherArrivalTimeCalculator(
-    private val clock: Clock = Clock.systemDefaultZone()
+    private val clock: Clock = Clock.System
 ) : IWeatherArrivalTimeCalculator {
     override fun getArrivalTime(
         forecast: List<WeatherForecast>,
@@ -29,10 +27,10 @@ internal class WeatherArrivalTimeCalculator(
 
         if (forecastedTime != null) {
             // This handles the case when the forecasted time is in the past, therefore the weather is now
-            if (forecastedTime < Instant.now(clock)) {
-                return WeatherArrivalTime(forecastedTime.toJavaInstant(), true)
+            if (forecastedTime < clock.now()) {
+                return WeatherArrivalTime(forecastedTime, true)
             }
-            val rounded = forecastedTime.toZonedDateTime().roundNearestMinute(15).toInstant()
+            val rounded = forecastedTime.roundToNearest(15.minutes)
             return WeatherArrivalTime(rounded, true)
         }
 
@@ -42,17 +40,17 @@ internal class WeatherArrivalTimeCalculator(
         return when {
             currentConditions.isEmpty() -> null
             currentConditions.contains(WeatherCondition.Storm) || tendency.characteristic.isRapid -> WeatherArrivalTime.fromRelative(
-                Instant.now(clock),
+                clock.now(),
                 RelativeArrivalTime.VerySoon
             )
 
             tendency.characteristic != PressureCharacteristic.Steady -> WeatherArrivalTime.fromRelative(
-                Instant.now(clock),
+                clock.now(),
                 RelativeArrivalTime.Soon
             )
 
             else -> WeatherArrivalTime.fromRelative(
-                Instant.now(clock),
+                clock.now(),
                 RelativeArrivalTime.Later
             )
         }

@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.settings.migrations
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -49,7 +49,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.Duration
 
 class PreferenceMigrator private constructor() {
 
@@ -164,10 +163,10 @@ class PreferenceMigrator private constructor() {
             PreferenceMigration(8, 9) { context, prefs ->
                 val userPrefs = UserPreferences(context)
                 prefs.getString("pref_backtrack_frequency")?.toLongOrNull()?.let {
-                    userPrefs.paths.backtrackRecordFrequency = Duration.ofMinutes(it)
+                    userPrefs.paths.backtrackRecordFrequency = it.minutes
                 }
                 prefs.getString("pref_weather_update_frequency")?.toLongOrNull()?.let {
-                    userPrefs.weather.weatherUpdateFrequency = Duration.ofMinutes(it)
+                    userPrefs.weather.weatherUpdateFrequency = it.minutes
                 }
             },
             PreferenceMigration(9, 10) { context, prefs ->
@@ -555,7 +554,7 @@ class PreferenceMigrator private constructor() {
                 val backtrackFrequencyKey = context.getString(R.string.pref_backtrack_frequency)
                 // If the user enabled backtrack in the past but didn't change the frequency, default to the original 15 minutes so they aren't surprised
                 if (prefs.contains(backtrackEnabledKey) && !prefs.contains(backtrackFrequencyKey)) {
-                    prefs.putDuration(backtrackFrequencyKey, Duration.ofMinutes(15))
+                    prefs.putDuration(backtrackFrequencyKey, 15.minutes)
                 }
             },
             PreferenceMigration(35, 36) { context, prefs ->
@@ -563,7 +562,7 @@ class PreferenceMigrator private constructor() {
                 val weatherFrequencyKey = context.getString(R.string.pref_weather_update_frequency)
                 // If the user enabled the weather monitor in the past but didn't change the frequency, default to the original 15 minutes so they aren't surprised
                 if (prefs.contains(weatherMonitorEnabledKey) && !prefs.contains(weatherFrequencyKey)) {
-                    prefs.putDuration(weatherFrequencyKey, Duration.ofMinutes(15))
+                    prefs.putDuration(weatherFrequencyKey, 15.minutes)
                 }
             },
             PreferenceMigration(36, 37) { context, prefs ->

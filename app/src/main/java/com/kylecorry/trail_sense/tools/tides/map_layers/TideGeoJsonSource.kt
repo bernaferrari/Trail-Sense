@@ -23,7 +23,7 @@ import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideTypeComm
 import com.kylecorry.trail_sense.tools.tides.domain.commands.LoadAllTideTablesCommand
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
 
-import java.time.Instant
+import kotlin.time.Instant
 
 class TideGeoJsonSource : GeoJsonSource {
 
@@ -41,7 +41,7 @@ class TideGeoJsonSource : GeoJsonSource {
         val showPhase =
             preferences.getBoolean(SHOW_PHASE, DEFAULT_SHOW_PHASE)
 
-        val time = Instant.ofEpochMilli(params.getLong(MapLayerParams.PARAM_TIME))
+        val time = Instant.fromEpochMilliseconds(params.getLong(MapLayerParams.PARAM_TIME))
         val context = DependencyRegistry.get<Context>()
         val tideService = TideService(context)
         val tables = LoadAllTideTablesCommand(context).execute() + getNearbyTideTables(

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure
 
+import kotlin.time.Duration.Companion.seconds
+
 import android.content.Context
 import androidx.work.WorkerParameters
 import com.kylecorry.trail_sense.shared.andromeda_temp.background.DailyWorker
@@ -8,14 +10,13 @@ import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSch
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands.AstronomyAlertCommand
-import java.time.Duration
-import java.time.LocalTime
+import kotlinx.datetime.LocalTime
 
 // TODO: Autogenerate last run key (pref_andromeda_daily_worker_last_run_date_UNIQUEID)
 class AstronomyDailyWorker(context: Context, params: WorkerParameters) : DailyWorker(
     context,
     params,
-    wakelockDuration = Duration.ofSeconds(15),
+    wakelockDuration = 15.seconds,
     getPreferences = { PreferencesSubsystem.getInstance(context).preferences },
 ) {
 

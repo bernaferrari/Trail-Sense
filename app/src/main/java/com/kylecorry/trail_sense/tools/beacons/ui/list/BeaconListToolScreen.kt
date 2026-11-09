@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import kotlin.time.Clock
+
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
@@ -138,7 +140,6 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import com.kylecorry.trail_sense.tools.qr.ui.QRImportContent
-import java.time.Instant
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 interface BeaconListControllerHost {
@@ -255,7 +256,7 @@ fun BeaconListToolScreen(
 
     fun export(gpx: GPXData) {
         scope.launch {
-            val exportFile = "trail-sense-${Instant.now().epochSecond}.gpx"
+            val exportFile = "trail-sense-${Clock.System.now().epochSeconds}.gpx"
             val success = gpxService.export(gpx, exportFile)
             if (success) {
                 effects.showMessage(

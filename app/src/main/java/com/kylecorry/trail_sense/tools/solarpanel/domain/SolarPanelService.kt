@@ -1,8 +1,14 @@
 package com.kylecorry.trail_sense.tools.solarpanel.domain
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Duration.Companion.seconds
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+import kotlin.time.Instant
+
+import com.kylecorry.sol.time.Time
+
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
@@ -11,12 +17,12 @@ import com.kylecorry.sol.math.calculus.Calculus
 import com.kylecorry.sol.math.optimization.HillClimbingOptimizer
 import com.kylecorry.sol.math.optimization.SimulatedAnnealingOptimizer
 import com.kylecorry.sol.science.astronomy.Astronomy
-import com.kylecorry.trail_sense.shared.time.JavaTime
-import com.kylecorry.trail_sense.shared.time.JavaTime.atEndOfDay
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
-import java.time.Duration
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlinx.datetime.TimeZone
+import com.kylecorry.trail_sense.shared.time.atEndOfDay
+import com.kylecorry.trail_sense.shared.time.toLocalDate
 
 class SolarPanelService(
     private val timeProvider: ZonedDateTimeProvider = SystemZonedDateTimeProvider()
@@ -29,13 +35,14 @@ class SolarPanelService(
         location: Coordinate,
         tilt: Float,
         azimuth: Bearing,
-        duration: Duration = Duration.ofDays(1),
+        duration: Duration = 1.days,
         restrictToToday: Boolean = false
     ): Float {
-        val time = timeProvider.getTime().toJava()
-        var end = time.plus(duration)
-        if (end.toLocalDate() != time.toLocalDate() && restrictToToday) {
-            end = time.atEndOfDay()
+        val now = timeProvider.getTime()
+        val time = now.instant
+        var end = time + duration
+        if (end.toLocalDate(now.timeZone) != time.toLocalDate(now.timeZone) && restrictToToday) {
+            end = time.atEndOfDay(now.timeZone)
         }
         return getSolarRadiation(
             time,
@@ -51,8 +58,8 @@ class SolarPanelService(
         maxDuration: Duration,
         restrictToToday: Boolean = false
     ): Pair<Float, Bearing> {
-        val duration = if (maxDuration <= Duration.ofMinutes(15).plusSeconds(5)) {
-            Duration.ofMinutes(15).plusSeconds(15)
+        val duration = if (maxDuration <= 15.minutes + 5.seconds) {
+            15.minutes + 15.seconds
         } else {
             maxDuration
         }
@@ -60,28 +67,26 @@ class SolarPanelService(
         return getBestPosition(
             location,
             maxDuration = duration,
-            energyResolution = if (duration < Duration.ofHours(6)) Duration.ofMinutes(15) else Duration.ofMinutes(
-                30
-            ),
+            energyResolution = if (duration < 6.hours) 15.minutes else 30.minutes,
             restrictToToday = restrictToToday
         )
     }
 
     private fun getSolarRadiation(
-        start: ZonedDateTime,
-        end: ZonedDateTime,
+        start: Instant,
+        end: Instant,
         location: Coordinate,
         tilt: Float,
         bearing: Bearing,
-        dt: Duration = Duration.ofMinutes(15),
+        dt: Duration = 15.minutes,
     ): Double {
         val secondsToHours = 1.0 / (60 * 60)
         val original = Calculus.integral(
             0.0,
-            Duration.between(start, end).seconds * secondsToHours,
-            dt.seconds * secondsToHours
+            (end - start).inWholeSeconds * secondsToHours,
+            dt.inWholeSeconds * secondsToHours
         ) { hours ->
-            val t = start.plus(JavaTime.hours(hours))
+            val t = start + Time.hours(hours)
             Astronomy.getSolarRadiation(t, location, tilt, bearing, withRefraction = true)
                 .coerceAtLeast(0.0)
         }
@@ -93,24 +98,25 @@ class SolarPanelService(
         // Try again, but allowing negative values
         return Calculus.integral(
             0.0,
-            Duration.between(start, end).seconds * secondsToHours,
-            dt.seconds * secondsToHours
+            (end - start).inWholeSeconds * secondsToHours,
+            dt.inWholeSeconds * secondsToHours
         ) { hours ->
-            val t = start.plus(JavaTime.hours(hours))
+            val t = start + Time.hours(hours)
             Astronomy.getSolarRadiation(t, location, tilt, bearing, withRefraction = true)
         }
     }
 
     private fun getBestPosition(
         location: Coordinate,
-        start: ZonedDateTime = timeProvider.getTime().toJava(),
-        maxDuration: Duration = Duration.ofDays(1),
-        energyResolution: Duration = Duration.ofMinutes(30),
-        restrictToToday: Boolean = false
+        start: Instant = timeProvider.getTime().instant,
+        maxDuration: Duration = 1.days,
+        energyResolution: Duration = 30.minutes,
+        restrictToToday: Boolean = false,
+        zone: TimeZone = timeProvider.getTime().timeZone
     ): Pair<Float, Bearing> {
-        var end = start.plus(maxDuration)
-        if (end.toLocalDate() != start.toLocalDate() && restrictToToday) {
-            end = start.atEndOfDay()
+        var end = start + maxDuration
+        if (end.toLocalDate(zone) != start.toLocalDate(zone) && restrictToToday) {
+            end = start.atEndOfDay(zone)
         }
 
         val startAzimuth = if (location.isNorthernHemisphere) {
@@ -143,7 +149,7 @@ class SolarPanelService(
             )
         }
 
-        val optimizer = if (start.toLocalDate() == end.toLocalDate()) {
+        val optimizer = if (start.toLocalDate(zone) == end.toLocalDate(zone)) {
             HillClimbingOptimizer(
                 1.0,
                 2000

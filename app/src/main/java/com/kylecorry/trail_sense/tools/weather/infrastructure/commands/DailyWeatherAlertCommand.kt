@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+
+import com.kylecorry.trail_sense.shared.time.toLocalDate
 
 import android.content.Context
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
@@ -26,18 +28,18 @@ class DailyWeatherAlertCommand(
             return
         }
 
-        val time = timeProvider.getTime().toJava()
+        val now = timeProvider.getTime()
+        val today = now.instant.toLocalDate(now.timeZone)
 
-        val lastSentDate = prefs.dailyWeatherLastSent
-        if (time.toLocalDate() == lastSentDate) {
+        if (today == prefs.dailyWeatherLastSent) {
             return
         }
 
-        if (!CanSendDailyForecast(prefs.dailyForecastTime).isSatisfiedBy(time.toLocalTime())) {
+        if (!CanSendDailyForecast(prefs.dailyForecastTime).isSatisfiedBy(now.instant.toLocalTime(now.timeZone))) {
             return
         }
 
-        prefs.dailyWeatherLastSent = time.toLocalDate()
+        prefs.dailyWeatherLastSent = today
         alerter.alert(value.prediction)
     }
 

@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathMetadata
 import com.kylecorry.trail_sense.tools.paths.domain.PathPointColoringStyle
 import com.kylecorry.trail_sense.tools.paths.domain.PathStyle
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "paths", indices = [Index(value = ["parentId"])])
 data class PathEntity(
@@ -57,8 +57,8 @@ data class PathEntity(
                 Distance.meters(distance),
                 numWaypoints,
                 if (startTime != null && endTime != null) Range(
-                    Instant.ofEpochMilli(startTime),
-                    Instant.ofEpochMilli(endTime)
+                    Instant.fromEpochMilliseconds(startTime),
+                    Instant.fromEpochMilliseconds(endTime)
                 ) else null,
                 CoordinateBounds(north, east, south, west)
             ),
@@ -78,8 +78,8 @@ data class PathEntity(
                 path.temporary,
                 path.metadata.distance.meters().value,
                 path.metadata.waypoints,
-                path.metadata.duration?.start?.toEpochMilli(),
-                path.metadata.duration?.end?.toEpochMilli(),
+                path.metadata.duration?.start?.toEpochMilliseconds(),
+                path.metadata.duration?.end?.toEpochMilliseconds(),
                 path.metadata.bounds.north,
                 path.metadata.bounds.east,
                 path.metadata.bounds.south,

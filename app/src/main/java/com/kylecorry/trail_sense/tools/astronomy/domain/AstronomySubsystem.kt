@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalDateTime
-
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Duration.Companion.minutes
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -12,9 +10,8 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import com.kylecorry.trail_sense.shared.time.today
+import kotlin.time.Clock
 
 class AstronomySubsystem(context: Context) {
 
@@ -29,11 +26,11 @@ class AstronomySubsystem(context: Context) {
             "sun",
             prefs.astronomy.sunTimesMode,
             hookTriggers.distance("sun", location.location, Distance.kilometers(1f)),
-            hookTriggers.frequency("sun", Duration.ofMinutes(1))
+            hookTriggers.frequency("sun", 1.minutes)
         ) {
             val sunTimesMode = prefs.astronomy.sunTimesMode
             val location = location.location
-            val times = astronomyService.getSunTimes(location, sunTimesMode, LocalDate.now())
+            val times = astronomyService.getSunTimes(location, sunTimesMode, today())
             val azimuth = astronomyService.getSunAzimuth(location)
             val altitude = astronomyService.getSunAltitude(location)
 
@@ -41,9 +38,9 @@ class AstronomySubsystem(context: Context) {
             val nextSunset = astronomyService.getNextSunset(location, sunTimesMode)
 
             SunDetails(
-                times.rise?.toLocalDateTime(),
-                times.set?.toLocalDateTime(),
-                times.transit?.toLocalDateTime(),
+                times.rise,
+                times.set,
+                times.transit,
                 altitude > 0,
                 nextSunrise,
                 nextSunset,
@@ -56,19 +53,19 @@ class AstronomySubsystem(context: Context) {
         get() = hooks.memo(
             "moon",
             hookTriggers.distance("moon", location.location, Distance.kilometers(1f)),
-            hookTriggers.frequency("moon", Duration.ofMinutes(1))
+            hookTriggers.frequency("moon", 1.minutes)
         ) {
             val location = location.location
-            val moonTimes = astronomyService.getMoonTimes(location, LocalDate.now())
+            val moonTimes = astronomyService.getMoonTimes(location, today())
             val phase = astronomyService.getCurrentMoonPhase()
             val altitude = astronomyService.getMoonAltitude(location)
             val azimuth = astronomyService.getMoonAzimuth(location)
             val tilt = astronomyService.getMoonTilt(location)
 
             MoonDetails(
-                moonTimes.rise?.toLocalDateTime(),
-                moonTimes.set?.toLocalDateTime(),
-                moonTimes.transit?.toLocalDateTime(),
+                moonTimes.rise,
+                moonTimes.set,
+                moonTimes.transit,
                 altitude > 0,
                 phase.phase,
                 phase.phaseAngle,
@@ -81,17 +78,17 @@ class AstronomySubsystem(context: Context) {
 
     fun getSunAltitudes(): List<Reading<Float>> {
         return if (!prefs.astronomy.centerSunAndMoon) {
-            astronomyService.getSunAltitudes(location.location, LocalDate.now())
+            astronomyService.getSunAltitudes(location.location, today())
         } else {
-            astronomyService.getCenteredSunAltitudes(location.location, ZonedDateTime.now())
+            astronomyService.getCenteredSunAltitudes(location.location, Clock.System.now())
         }
     }
 
     fun getMoonAltitudes(): List<Reading<Float>> {
         return if (!prefs.astronomy.centerSunAndMoon) {
-            astronomyService.getMoonAltitudes(location.location, LocalDate.now())
+            astronomyService.getMoonAltitudes(location.location, today())
         } else {
-            astronomyService.getCenteredMoonAltitudes(location.location, ZonedDateTime.now())
+            astronomyService.getCenteredMoonAltitudes(location.location, Clock.System.now())
         }
     }
 

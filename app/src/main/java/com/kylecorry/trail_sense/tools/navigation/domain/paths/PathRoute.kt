@@ -5,16 +5,15 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
-import java.time.Clock
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 class PathRoute(
     private val pathPoints: List<PathPoint>,
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.System
 ) {
     private val coordinates = pathPoints.map { it.coordinate }
     private val geometry = RouteGeometry(coordinates)
@@ -47,7 +46,7 @@ class PathRoute(
         if (previousGuidance != null && location == state.location) {
             return previousGuidance
         }
-        val currentTime = Instant.now(clock)
+        val currentTime = clock.now()
         val tolerance = (accuracy?.meters()?.value ?: 0f)
             .coerceIn(ROUTING_SAME_PLACE_TOLERANCE_METERS, CURRENT_LOCATION_MAX_TOLERANCE_METERS)
         val match = matchLocation(location, tolerance, currentTime)
@@ -118,7 +117,7 @@ class PathRoute(
     private fun matchLocation(location: Coordinate, tolerance: Float, currentTime: Instant): Snap {
         val movement = state.location?.distanceTo(location) ?: 0f
         val lastDistance = state.distanceAlong
-        val secondsSinceLastUpdate = state.time?.let { Duration.between(it, currentTime).toMillis() / 1000f } ?: 0f
+        val secondsSinceLastUpdate = state.time?.let { (currentTime - it).inWholeMilliseconds / 1000f } ?: 0f
         // How far the user could have hiked since the last update (likely more than actual)
         val possibleHikingDistance = MAX_HIKING_SPEED_METERS_PER_SECOND * secondsSinceLastUpdate
         // How far the user could have moved based on the GPS change (likely less than actual)

@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.tools.flashlight.FlashlightToolRegistration
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import java.time.Duration
+import kotlin.time.Duration
 
 class FlashlightToolService(context: Context) : ToolService {
 

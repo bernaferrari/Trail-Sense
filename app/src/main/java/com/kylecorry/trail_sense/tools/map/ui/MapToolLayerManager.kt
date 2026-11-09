@@ -24,7 +24,7 @@ import com.kylecorry.trail_sense.tools.navigation.map_layers.CompassOverlayLayer
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceLayer
 import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathElevationPrefetcher
-import java.time.Instant
+import kotlin.time.Instant
 
 class MapToolLayerManager {
     private val selectedPointLayer = ConfigurableGeoJsonLayer()

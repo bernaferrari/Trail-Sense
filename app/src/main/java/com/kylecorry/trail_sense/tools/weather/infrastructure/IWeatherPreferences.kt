@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlin.time.Duration
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 interface IWeatherPreferences {
     val hasBarometer: Boolean
@@ -19,7 +19,7 @@ interface IWeatherPreferences {
     val sendStormAlerts: Boolean
     val hourlyForecastChangeThreshold: Float
     val stormAlertThreshold: Float
-    var dailyWeatherLastSent: LocalDate
+    var dailyWeatherLastSent: LocalDate?
     val dailyWeatherIsForTomorrow: Boolean
     var dailyForecastTime: LocalTime
     val leftButton: Int

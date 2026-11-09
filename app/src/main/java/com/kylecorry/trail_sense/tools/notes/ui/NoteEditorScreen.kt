@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import kotlin.time.Clock
+
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
 import androidx.compose.ui.platform.LocalContext
@@ -45,7 +47,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
-import java.time.Instant
 
 /**
  * The note editor: the title and the contents as one grouped object, the contents roomy enough to write in, and Save
@@ -179,7 +180,7 @@ internal class NoteEditorViewModel(private val repo: NoteRepo) : ViewModel() {
         val existingNote = editingNote
         val note = existingNote?.copy(title = title, contents = content)
             ?.apply { id = existingNote.id }
-            ?: Note(title, content, Instant.now().toEpochMilli())
+            ?: Note(title, content, Clock.System.now().toEpochMilliseconds())
         withContext(Dispatchers.IO) {
             repo.addNote(note)
         }

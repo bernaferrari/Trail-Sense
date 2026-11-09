@@ -3,7 +3,9 @@
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
-import kotlin.time.toJavaInstant
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+
+import kotlin.time.Clock
 
 import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -75,7 +77,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.andromeda_temp.background.AlarmTaskScheduler
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -94,12 +95,14 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import kotlinx.coroutines.delay
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
+import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlinx.datetime.LocalTime
+import kotlin.time.toKotlinInstant
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
+import com.kylecorry.trail_sense.shared.time.toLocalDateTime
+import com.kylecorry.trail_sense.shared.time.truncateTo
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -138,20 +141,20 @@ private fun ClockScreen(
     onScheduleNextMinute: (Instant, Instant) -> Unit
 ) {
     val context = LocalContext.current
-    var gpsTime by remember { mutableStateOf(Instant.now()) }
-    var systemTime by remember { mutableStateOf(Instant.now()) }
+    var gpsTime by remember { mutableStateOf(Clock.System.now()) }
+    var systemTime by remember { mutableStateOf(Clock.System.now()) }
     var isGpsTime by remember { mutableStateOf(false) }
     var isUpdatingClock by remember { mutableStateOf(true) }
-    var now by remember { mutableStateOf(Instant.now()) }
+    var now by remember { mutableStateOf(Clock.System.now()) }
 
     fun onGpsUpdate(): Boolean {
         gpsTime = getGpsTime()
-        systemTime = Instant.now()
+        systemTime = Clock.System.now()
         isGpsTime = true
 
         if (gps is CustomGPS && gps.isTimedOut) {
             Alerts.toast(context, context.getString(R.string.no_gps_signal))
-            gpsTime = Instant.now()
+            gpsTime = Clock.System.now()
             isGpsTime = false
         }
 
@@ -182,16 +185,16 @@ private fun ClockScreen(
 
     LaunchedEffect(Unit) {
         while (true) {
-            now = Instant.now()
+            now = Clock.System.now()
             delay(20)
         }
     }
 
-    val systemDiff = Duration.between(systemTime, now)
+    val systemDiff = (now - systemTime)
     val currentTime = gpsTime.plus(systemDiff)
-    val myTime = ZonedDateTime.ofInstant(currentTime, ZoneId.systemDefault())
-    val timeText = formatService.formatTime(myTime.toLocalTime())
-    val dateText = formatService.formatDate(myTime)
+    val myTime = currentTime.toLocalDateTime()
+    val timeText = formatService.formatTime(myTime.time)
+    val dateText = formatService.formatDate(myTime.date)
     val showAnalogClock = prefs.clock.showAnalogClock
 
     // One question: is this clock right?
@@ -214,7 +217,7 @@ private fun ClockScreen(
         item("time") {
             // The drift between the device clock and GPS, shown on the face as a ghost second hand.
             val driftSeconds = if (isGpsTime && !isUpdatingClock) {
-                Duration.between(gpsTime, systemTime).toMillis() / 1000f
+                (systemTime - gpsTime).inWholeMilliseconds / 1000f
             } else {
                 0f
             }
@@ -235,7 +238,7 @@ private fun ClockScreen(
                             .size(288.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            AnalogClock(time = myTime.toLocalTime(), driftSeconds = driftSeconds)
+                            AnalogClock(time = myTime.time, driftSeconds = driftSeconds)
                         }
                     }
                 }
@@ -259,7 +262,7 @@ private fun ClockScreen(
                 )
                 // The verdict: how far the device clock drifts from GPS, one quiet line under the time (the time is
                 // the one display value), led by a check when it can be trusted and a warning when it can't.
-                val offset = getClockOffset(Duration.between(systemTime, gpsTime))
+                val offset = getClockOffset((gpsTime - systemTime))
                 val trusted = isGpsTime && !isUpdatingClock && offset.seconds <= TRIVIAL_OFFSET_SECONDS
                 androidx.compose.foundation.layout.Row(
                     modifier = Modifier.padding(top = TrailSenseSpacing.md),
@@ -297,7 +300,7 @@ private fun ClockScreen(
                 exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut()
             ) {
                 // Emphasis follows importance: a trivial drift gets a tonal button, a real one the filled primary.
-                val drift = getClockOffset(Duration.between(systemTime, gpsTime)).seconds
+                val drift = getClockOffset((gpsTime - systemTime)).seconds
                 val onClick = {
                     requestExactAlarms {
                         onScheduleNextMinute(gpsTime, systemTime)
@@ -420,16 +423,16 @@ private fun Offset.pointAt(radius: Float, degrees: Float): Offset {
 private fun getGPSTime(gps: ISatelliteGPS): Instant {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         tryOrNothing {
-            return SystemClock.currentGnssTimeClock().instant()
+            return SystemClock.currentGnssTimeClock().instant().toKotlinInstant()
         }
     }
 
     if (gps.eventTimeElapsedNanos == 0L) {
-        return gps.timestamp.toJavaInstant()
+        return gps.timestamp
     }
     val systemTime = SystemClock.elapsedRealtimeNanos()
     val timeDiff = gps.eventTimeElapsedNanos - systemTime
-    return gps.timestamp.toJavaInstant().plusNanos(timeDiff)
+    return gps.timestamp + timeDiff.nanoseconds
 }
 
 private fun sendNextMinuteNotification(
@@ -438,17 +441,17 @@ private fun sendNextMinuteNotification(
     gpsTime: Instant,
     systemTime: Instant
 ) {
-    val systemDiff = Duration.between(systemTime, Instant.now())
+    val systemDiff = (Clock.System.now() - systemTime)
     val currentTime = gpsTime.plus(systemDiff)
-    val clockError = Duration.between(systemTime, gpsTime)
-    val myTime = ZonedDateTime.ofInstant(currentTime, ZoneId.systemDefault())
-    val displayTimeWithSeconds = myTime.toLocalDateTime()
-    var displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1)
-    val displayTimeSecond = displayTimeWithSeconds.second
-    if (displayTimeSecond > 45) {
-        displayTime = displayTimeWithSeconds.truncatedTo(ChronoUnit.MINUTES).plusMinutes(2)
+    val clockError = (gpsTime - systemTime)
+    val displayTimeWithSeconds = currentTime.toLocalDateTime()
+    val minuteStart = currentTime.truncateTo(1.minutes)
+    val displayTime = if (displayTimeWithSeconds.second > 45) {
+        minuteStart + 2.minutes
+    } else {
+        minuteStart + 1.minutes
     }
-    val sendTime = displayTime.minus(clockError)
+    val sendTime = displayTime - clockError
     val formattedTime = formatService.formatTime(displayTime.toLocalTime())
 
     Alerts.dialog(
@@ -465,7 +468,7 @@ private fun sendNextMinuteNotification(
             val scheduler = AlarmTaskScheduler(context) {
                 NextMinuteBroadcastReceiver.pendingIntent(context, formattedTime)
             }
-            scheduler.once(sendTime.toZonedDateTime().toInstant())
+            scheduler.once(sendTime)
             context.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
         }
     }
@@ -473,7 +476,7 @@ private fun sendNextMinuteNotification(
 
 @Composable
 private fun clockOffsetLabel(systemTime: Instant, gpsTime: Instant): String {
-    val offset = getClockOffset(Duration.between(systemTime, gpsTime))
+    val offset = getClockOffset((gpsTime - systemTime))
     val seconds = offset.seconds.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
     return when (offset.direction) {
         ClockOffsetDirection.Accurate -> stringResource(R.string.clock_device_time_accurate)
@@ -502,10 +505,10 @@ internal enum class ClockOffsetDirection {
 }
 
 private fun getClockOffset(duration: Duration): ClockOffset {
-    val seconds = kotlin.math.abs(duration.seconds)
+    val seconds = kotlin.math.abs(duration.inWholeSeconds)
     val direction = when {
         seconds == 0L -> ClockOffsetDirection.Accurate
-        duration.isNegative -> ClockOffsetDirection.Fast
+        duration.isNegative() -> ClockOffsetDirection.Fast
         else -> ClockOffsetDirection.Slow
     }
     return ClockOffset(seconds, direction)

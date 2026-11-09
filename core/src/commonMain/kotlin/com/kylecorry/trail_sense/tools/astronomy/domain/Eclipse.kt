@@ -1,17 +1,17 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
-import java.time.Duration
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 data class Eclipse(
-    val start: ZonedDateTime,
-    val end: ZonedDateTime,
-    val peak: ZonedDateTime,
+    val start: Instant,
+    val end: Instant,
+    val peak: Instant,
     val magnitude: Float,
     val obscuration: Float,
     val peakAltitude: Float
 ) {
     val isTotal: Boolean = magnitude.roundPlaces(2) >= 1f
-    val duration: Duration = Duration.between(start, end)
+    val duration: Duration = (end - start)
 }

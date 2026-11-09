@@ -2,9 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
-
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
@@ -64,8 +62,6 @@ import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.BackfillHistoricalTemperaturesCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import java.time.Duration
-import java.time.Instant
 import kotlinx.coroutines.launch
 
 @Composable
@@ -493,10 +489,7 @@ internal class ThermometerSettingsViewModel(
 
     private fun updateChart() {
         val displayReadings = history.filter {
-            JavaTime.between(
-                it.time,
-                Instant.now()
-            ) <= prefs.weather.pressureHistory
+            (Clock.System.now() - it.time) <= prefs.weather.pressureHistory
         }.map {
             Reading(
                 it.temperature.convertTo(temperatureUnits).value,
@@ -505,10 +498,7 @@ internal class ThermometerSettingsViewModel(
         }
 
         val displayRawReadings = uncalibratedHistory.filter {
-            JavaTime.between(
-                it.time,
-                Instant.now()
-            ) <= prefs.weather.pressureHistory
+            (Clock.System.now() - it.time) <= prefs.weather.pressureHistory
         }.map {
             Reading(
                 Temperature.celsius(it.value.temperature).convertTo(temperatureUnits).value,

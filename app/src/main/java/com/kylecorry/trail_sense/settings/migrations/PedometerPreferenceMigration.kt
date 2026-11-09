@@ -1,26 +1,29 @@
 package com.kylecorry.trail_sense.settings.migrations
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.truncateTo
+
+import kotlin.time.Clock
+
+import kotlin.time.Duration.Companion.hours
+
 
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.tools.pedometer.domain.ActiveTimeCalculator
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
-import java.time.Duration
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 class PedometerPreferenceMigration(
     private val stepTracker: IStepTrackerService,
     private val prefs: Preferences,
-    private val now: () -> Instant = Instant::now
+    private val now: () -> Instant = { Clock.System.now() }
 ) {
     private val activeTimeCalculator = ActiveTimeCalculator()
 
     suspend fun migrate(): Unit = onIO {
         val steps = prefs.getLong(STEPS_KEY) ?: 0L
-        val startTime = prefs.getJavaInstant(LAST_RESET_KEY)
+        val startTime = prefs.getInstant(LAST_RESET_KEY)
         if (steps > 0 && startTime != null) {
             var remainingSteps = steps
             createStepAdditions(startTime, now().coerceAtLeast(startTime), steps).forEach {
@@ -50,7 +53,7 @@ class PedometerPreferenceMigration(
             StepAddition(
                 time = range.first,
                 steps = baseSteps + if (index.toLong() < remainingSteps) 1 else 0,
-                elapsedTime = Duration.between(range.first, minOf(range.second, endTime)),
+                elapsedTime = (minOf(range.second, endTime) - range.first),
                 endTime = minOf(range.second, endTime)
             )
         }
@@ -63,13 +66,10 @@ class PedometerPreferenceMigration(
         val ranges = mutableListOf<Pair<Instant, Instant>>()
         var bucketStart = startTime
         do {
-            val nextHour = bucketStart.toZonedDateTime()
-                .truncatedTo(ChronoUnit.HOURS)
-                .plus(Duration.ofHours(1))
-                .toInstant()
+            val nextHour = bucketStart.truncateTo(1.hours) + 1.hours
             ranges.add(bucketStart to nextHour)
             bucketStart = nextHour
-        } while (bucketStart.isBefore(endTime))
+        } while (bucketStart < endTime)
         return ranges
     }
 

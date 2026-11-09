@@ -41,8 +41,10 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sharing.MapSite
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.format.Padding
+import kotlinx.datetime.format
+import kotlinx.datetime.format.char
 
 @Composable
 fun UnitSettingsToolScreen() {
@@ -255,10 +257,17 @@ private fun UnitSystemCard(title: String, example: String, selected: Boolean, on
 
 /** How a time reads with these choices, shown under them so the switches explain themselves. */
 private fun exampleTime(use24HourTime: Boolean, includeLeadingZero: Boolean): String {
-    val hour = if (use24HourTime) "H" else "h"
-    val pattern = (if (includeLeadingZero) hour + hour else hour) +
-            ":mm" + if (use24HourTime) "" else " a"
-    return LocalTime.of(9, 5).format(DateTimeFormatter.ofPattern(pattern))
+    val padding = if (includeLeadingZero) Padding.ZERO else Padding.NONE
+    val format = LocalTime.Format {
+        if (use24HourTime) hour(padding) else amPmHour(padding)
+        char(':')
+        minute()
+        if (!use24HourTime) {
+            char(' ')
+            amPmMarker("AM", "PM")
+        }
+    }
+    return LocalTime(9, 5).format(format)
 }
 
 private fun distanceUnitsValue(units: UserPreferences.DistanceUnits): String {

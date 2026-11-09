@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer.domain
 
-import java.time.Instant
+import kotlin.time.Instant
 
 data class HourlyStepCount(
     val startTime: Instant,

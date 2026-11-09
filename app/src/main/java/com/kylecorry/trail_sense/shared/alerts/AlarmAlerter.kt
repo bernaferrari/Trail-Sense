@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.shared.alerts
 
+import kotlin.time.toJavaDuration
+
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
@@ -9,7 +14,6 @@ import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
 import com.kylecorry.trail_sense.shared.andromeda_temp.sound.SystemSoundPlayer
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import java.time.Duration
 
 class AlarmAlerter(
     private val context: Context,
@@ -37,12 +41,12 @@ class AlarmAlerter(
         }
 
         val end = if (duration == -1) {
-            Duration.ofSeconds(5)
+            5.seconds
         } else {
-            Duration.ofMillis(duration.toLong()).coerceAtMost(Duration.ofSeconds(5))
+            (duration.toLong()).milliseconds.coerceAtMost(5.seconds)
         }
 
-        timer.once(end)
+        timer.once(end.toJavaDuration())
 
         player.start()
         haptics.alert()

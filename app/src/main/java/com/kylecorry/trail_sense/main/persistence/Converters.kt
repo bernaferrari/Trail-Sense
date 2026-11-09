@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.main.persistence
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import androidx.room.TypeConverter
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.units.WeightUnits
@@ -11,8 +13,8 @@ import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 import com.kylecorry.trail_sense.tools.paths.domain.PathPointColoringStyle
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 class Converters {
     @TypeConverter
@@ -49,22 +51,22 @@ class Converters {
 
     @TypeConverter
     fun fromInstant(value: Instant): Long {
-        return value.toEpochMilli()
+        return value.toEpochMilliseconds()
     }
 
     @TypeConverter
     fun toInstant(value: Long): Instant {
-        return Instant.ofEpochMilli(value)
+        return Instant.fromEpochMilliseconds(value)
     }
 
     @TypeConverter
     fun fromDuration(value: Duration): Long {
-        return value.toMillis()
+        return value.inWholeMilliseconds
     }
 
     @TypeConverter
     fun toDuration(value: Long): Duration {
-        return Duration.ofMillis(value)
+        return value.milliseconds
     }
 
     @TypeConverter

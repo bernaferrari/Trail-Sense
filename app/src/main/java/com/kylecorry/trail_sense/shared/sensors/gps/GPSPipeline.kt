@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared.sensors.gps
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 
 /** Callers must serialize lifecycle and update calls, including across suspension points. */
@@ -11,7 +11,7 @@ class GPSPipeline(
     private val modules: List<GPSModule>,
     private val logger: () -> Logger = { getAppService() }
 ) {
-    private val data = ModularGPSData(eventTime = Instant.EPOCH)
+    private val data = ModularGPSData(eventTime = Instant.fromEpochMilliseconds(0))
     private val candidate = ModularGPSData()
     val reading: ModularGPSData
         get() = data

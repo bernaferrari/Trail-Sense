@@ -1,23 +1,24 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting.temperatures
 
+import kotlin.time.Instant
+
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ITemperatureCalibrator
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
 
 internal class CalibratedTemperatureService(
     private val service: ITemperatureService,
     private val calibrator: ITemperatureCalibrator
 ) : ITemperatureService {
-    override suspend fun getTemperature(time: ZonedDateTime): Temperature {
+    override suspend fun getTemperature(time: Instant): Temperature {
         return calibrator.calibrate(service.getTemperature(time))
     }
 
     override suspend fun getTemperatures(
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): List<Reading<Temperature>> {
         return service.getTemperatures(start, end).map {
             it.copy(value = calibrator.calibrate(it.value))
@@ -33,8 +34,8 @@ internal class CalibratedTemperatureService(
     }
 
     override suspend fun getTemperatureRange(
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): Range<Temperature> {
         val range = service.getTemperatureRange(start, end)
         return Range(

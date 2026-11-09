@@ -1,7 +1,8 @@
 package com.kylecorry.trail_sense.tools.qr.infrastructure
 
+import kotlin.time.Clock
+
 import com.kylecorry.trail_sense.tools.notes.domain.Note
-import java.time.Instant
 
 class NoteQREncoder : IQREncoder<Note> {
 
@@ -22,9 +23,9 @@ class NoteQREncoder : IQREncoder<Note> {
         return if (split.size > 1 && !split[0].contains("\n")) {
             val title = split.first()
             val body = split.takeLast(split.size - 1).joinToString("\n\n\n")
-            Note(title, body, Instant.now().toEpochMilli())
+            Note(title, body, Clock.System.now().toEpochMilliseconds())
         } else {
-            Note(null, qr, Instant.now().toEpochMilli())
+            Note(null, qr, Clock.System.now().toEpochMilliseconds())
         }
     }
 }

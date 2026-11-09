@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.foundation.clickable
@@ -78,7 +80,6 @@ import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSPowerMode
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
-import java.time.Duration
 import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
@@ -232,8 +233,8 @@ internal class CalibrateGPSViewModel(
         val accuracy = Distance.meters(
             current.minAccuracy ?: GPSAccuracyFilter.Default.minAccuracy!!
         ).convertTo(prefs.baseDistanceUnits).value.roundToInt().coerceIn(range.first, range.last)
-        val wait = current.maxAccuracyWait?.seconds?.toInt()
-            ?: GPSAccuracyFilter.Default.maxAccuracyWait!!.seconds.toInt()
+        val wait = current.maxAccuracyWait?.inWholeSeconds?.toInt()
+            ?: GPSAccuracyFilter.Default.maxAccuracyWait!!.inWholeSeconds.toInt()
         return accuracy to wait
     }
 
@@ -566,7 +567,7 @@ private fun GPSAccuracyFilterDialog(
             Text(
                 text = stringResource(
                     R.string.gps_accuracy_wait,
-                    formatService.formatDuration(Duration.ofSeconds(wait.toLong()), includeSeconds = true)
+                    formatService.formatDuration((wait.toLong()).seconds, includeSeconds = true)
                 ),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = TrailSenseSpacing.sm)

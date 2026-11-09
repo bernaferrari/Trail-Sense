@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.domain.factories
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
 
 import android.content.Context
 import android.graphics.Color
@@ -13,13 +13,12 @@ import com.kylecorry.trail_sense.shared.scales.IColorScale
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.IPointColoringStrategy
 import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.TimePointColoringStrategy
-import java.time.Instant
 
 class TimePointDisplayFactory(private val context: Context) : IPointDisplayFactory {
     override fun createColoringStrategy(path: List<PathPoint>): IPointColoringStrategy {
         val timeRange = path.mapNotNull { it.time }.rangeOrNull() ?: Range(
-            Instant.now(),
-            Instant.now()
+            Clock.System.now(),
+            Clock.System.now()
         )
         return TimePointColoringStrategy(
             timeRange,

@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.shared.andromeda_temp.background
 
-import com.kylecorry.trail_sense.shared.time.interop.*
-
 import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
@@ -11,16 +9,22 @@ import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Wakelocks
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.preferences
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 abstract class DailyWorker(
     context: Context,
     params: WorkerParameters,
-    private val tolerance: Duration = Duration.ofMinutes(30),
+    private val tolerance: Duration = 30.minutes,
     private val wakelockDuration: Duration? = null,
     private val getPreferences: (Context) -> Preferences = { preferences(it) }
 ) : CoroutineWorker(context, params) {
@@ -33,7 +37,7 @@ abstract class DailyWorker(
             val wakelockTag = "$uniqueId::interval::wakelock"
             tryOrDefault(null) {
                 Wakelocks.get(applicationContext, wakelockTag)
-                    ?.also { it.acquire(wakelockDuration.toMillis()) }
+                    ?.also { it.acquire(wakelockDuration.inWholeMilliseconds) }
             }
         } else {
             null
@@ -43,28 +47,31 @@ abstract class DailyWorker(
             val context = applicationContext
 
             val jobState = synchronized(lock) {
-                val now = LocalDateTime.now()
+                val zone = TimeZone.currentSystemDefault()
+                val now = Clock.System.now()
+                val today = now.toLocalDateTime(zone).date
                 val cache = getPreferences(context)
-                val lastRun = cache.getJavaLocalDate(getLastRunKey(context))
-                val shouldSend = isEnabled(context) && lastRun != now.toLocalDate()
+                val lastRun = cache.getLocalDate(getLastRunKey(context))
+                val shouldSend = isEnabled(context) && lastRun != today
 
-                val sendTime = LocalDate.now().atTime(getScheduledTime(context))
+                val scheduledTime = getScheduledTime(context)
+                val sendTime = today.atTime(scheduledTime).toInstant(zone)
                 val tomorrowSendTime =
-                    LocalDate.now().plusDays(1).atTime(getScheduledTime(context))
+                    today.plus(DatePeriod(days = 1)).atTime(scheduledTime).toInstant(zone)
 
                 val sendWindowStart = sendTime - tolerance
                 val sendWindowEnd = sendTime + tolerance
 
-                val inWindow = now.isAfter(sendWindowStart) && now.isBefore(sendWindowEnd)
-                val isTooEarly = now.isBefore(sendWindowStart)
-                val isAfterWindow = now.isAfter(sendWindowEnd)
+                val inWindow = now > sendWindowStart && now < sendWindowEnd
+                val isTooEarly = now < sendWindowStart
+                val isAfterWindow = now > sendWindowEnd
 
                 if (inWindow && shouldSend) {
                     Log.d(
                         javaClass.simpleName,
                         "Received a broadcast and executed"
                     )
-                    cache.putLocalDate(getLastRunKey(context), now.toLocalDate())
+                    cache.putLocalDate(getLastRunKey(context), today)
                     return@synchronized true to tomorrowSendTime
                 }
 
@@ -125,10 +132,10 @@ abstract class DailyWorker(
         return OneTimeTaskSchedulerFactory(context).deferrable(this::class.java, uniqueId)
     }
 
-    private fun setAlarm(context: Context, time: LocalDateTime) {
+    private fun setAlarm(context: Context, time: Instant) {
         val scheduler = getScheduler(context)
         scheduler.cancel()
-        scheduler.once(time.toZonedDateTime().toInstant())
+        scheduler.once(time)
         Log.d(
             javaClass.simpleName,
             "Scheduled the next run for $time"

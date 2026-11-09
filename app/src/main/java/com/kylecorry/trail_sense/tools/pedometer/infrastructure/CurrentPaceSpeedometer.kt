@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
+import kotlin.time.Clock
+
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.luna.time.CoroutineTimer
@@ -7,8 +9,7 @@ import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.trail_sense.shared.ZERO_SPEED
 import com.kylecorry.trail_sense.tools.pedometer.domain.IPaceCalculator
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 
 class CurrentPaceSpeedometer(
     private val pedometer: Pedometer,
@@ -25,10 +26,10 @@ class CurrentPaceSpeedometer(
         private set
 
     private var lastSteps = 0
-    private var lastTime = Instant.MIN
+    private var lastTime = Instant.DISTANT_PAST
 
     override fun startImpl() {
-        lastTime = Instant.MIN
+        lastTime = Instant.DISTANT_PAST
         lastSteps = 0
         hasValidReading = false
         speed = ZERO_SPEED
@@ -42,18 +43,18 @@ class CurrentPaceSpeedometer(
     }
 
     private fun updateSpeed() {
-        if (lastTime == Instant.MIN) {
+        if (lastTime == Instant.DISTANT_PAST) {
             lastSteps = pedometer.steps
-            lastTime = Instant.now()
+            lastTime = Clock.System.now()
             return
         }
 
         val steps = pedometer.steps - lastSteps
-        val duration = Duration.between(lastTime, Instant.now())
+        val duration = (Clock.System.now() - lastTime)
         speed = paceCalculator.speed(steps.toLong(), duration)
         hasValidReading = true
 
-        lastTime = Instant.now()
+        lastTime = Clock.System.now()
         lastSteps = pedometer.steps
 
         notifyListeners()

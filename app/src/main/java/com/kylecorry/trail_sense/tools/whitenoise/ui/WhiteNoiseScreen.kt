@@ -2,7 +2,11 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Duration.Companion.seconds
+
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.shared.icons.trail.Grass
 import com.kylecorry.trail_sense.shared.icons.trail.Beach
@@ -75,7 +79,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.graphics.shapes.toPath
 import androidx.compose.ui.graphics.asComposePath
-import androidx.compose.foundation.layout.height
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
@@ -103,8 +106,7 @@ import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.SleepSound
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
 import kotlinx.coroutines.delay
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 
 /**
  * White noise: the play button is the hero, with what is playing written under it; the sound and the sleep timer
@@ -148,15 +150,15 @@ fun WhiteNoiseScreen(
 
     fun setDuration(duration: Duration) {
         val clamped = duration.coerceIn(Duration.ZERO, MAX_DURATION)
-        hours = clamped.toHours().toString().padStart(2, '0')
-        minutes = (clamped.toMinutes() % 60).toString().padStart(2, '0')
-        seconds = (clamped.seconds % 60).toString().padStart(2, '0')
+        hours = clamped.inWholeHours.toString().padStart(2, '0')
+        minutes = (clamped.inWholeMinutes % 60).toString().padStart(2, '0')
+        seconds = (clamped.inWholeSeconds % 60).toString().padStart(2, '0')
     }
 
     fun currentDuration(): Duration {
-        return Duration.ofHours(hours.toLongOrNull() ?: 0)
-            .plusMinutes(minutes.toLongOrNull() ?: 0)
-            .plusSeconds(seconds.toLongOrNull() ?: 0)
+        return (hours.toLongOrNull() ?: 0).hours
+            .plus((minutes.toLongOrNull() ?: 0).minutes)
+            .plus((seconds.toLongOrNull() ?: 0).seconds)
             .coerceIn(Duration.ZERO, MAX_DURATION)
     }
 
@@ -173,7 +175,7 @@ fun WhiteNoiseScreen(
             val stopTime = cache.getInstant(WhiteNoiseService.CACHE_KEY_OFF_TIME)
             if (stopTime != null && stopTime > kotlin.time.Clock.System.now()) {
                 useSleepTimer = true
-                setDuration(JavaTime.between(Instant.now(), stopTime))
+                setDuration((stopTime - (Clock.System.now())))
             }
             delay(250)
         }
@@ -279,7 +281,7 @@ fun WhiteNoiseScreen(
                         TrailSenseConnectedChoice(
                             options = listOf(15L, 30L, 60L, 120L).map { mins ->
                                 TrailSenseChoice(
-                                    value = Duration.ofMinutes(mins),
+                                    value = mins.minutes,
                                     label = if (mins < 60) {
                                         stringResource(R.string.white_noise_minutes_short, mins.toInt())
                                     } else {
@@ -521,4 +523,4 @@ private fun Duration.coerceIn(min: Duration, max: Duration): Duration {
     }
 }
 
-private val MAX_DURATION: Duration = Duration.ofHours(99).plusMinutes(59).plusSeconds(59)
+private val MAX_DURATION: Duration = 99.hours.plus(59.minutes).plus(59.seconds)

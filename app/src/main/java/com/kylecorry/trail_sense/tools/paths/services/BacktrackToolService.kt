@@ -20,7 +20,7 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathServ
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
+import kotlin.time.Duration
 
 class BacktrackToolService(private val context: Context) : ToolService {
 
@@ -122,7 +122,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
             Tools.broadcast(
                 PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED,
                 Bundle().apply {
-                    putLong(PathsToolRegistration.BROADCAST_PARAM_BACKTRACK_FREQUENCY, prefs.paths.backtrackRecordFrequency.toMillis())
+                    putLong(PathsToolRegistration.BROADCAST_PARAM_BACKTRACK_FREQUENCY, prefs.paths.backtrackRecordFrequency.inWholeMilliseconds)
                 }
             )
         }

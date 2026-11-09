@@ -6,8 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.kylecorry.trail_sense.settings.infrastructure.AugmentedRealityPreferences
 import com.kylecorry.trail_sense.shared.withId
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Instant
 
 /**
  * The AR screen's own choices: the mode, whether the camera is on, the time the sky is shown at, and the layers
@@ -23,7 +22,7 @@ internal class AugmentedRealityViewModel(
     var mode = ARMode.entries.withId(initialModeId) ?: ARMode.Normal
 
     /** The time the route asked for; only applied the first time the screen is created. */
-    var initialTime: ZonedDateTime? = initialTime?.let { ZonedDateTime.parse(it) }
+    var initialTime: Instant? = initialTime?.let { Instant.parse(it) }
         private set
 
     var isCameraEnabled = initialCameraEnabled
@@ -41,7 +40,7 @@ internal class AugmentedRealityViewModel(
         private set
 
     /** Takes the route's time once; later creations of the screen keep the current state. */
-    fun consumeInitialTime(): ZonedDateTime? {
+    fun consumeInitialTime(): Instant? {
         return initialTime.also { initialTime = null }
     }
 

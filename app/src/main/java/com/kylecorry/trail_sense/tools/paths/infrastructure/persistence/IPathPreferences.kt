@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 import com.kylecorry.trail_sense.tools.paths.domain.PathStyle
-import java.time.Duration
+import kotlin.time.Duration
 
 interface IPathPreferences {
     val defaultPathStyle: PathStyle

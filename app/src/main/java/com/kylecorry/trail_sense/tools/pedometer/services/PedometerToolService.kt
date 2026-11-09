@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
+import kotlin.time.Duration
 
 class PedometerToolService(private val context: Context) : ToolService {
 

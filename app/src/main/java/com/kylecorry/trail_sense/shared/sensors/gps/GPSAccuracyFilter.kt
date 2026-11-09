@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
-import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
+
+import kotlin.time.Duration
 
 data class GPSAccuracyFilter(
     val minAccuracy: Float?,
@@ -13,7 +15,7 @@ data class GPSAccuracyFilter(
         const val MAX_WAIT_SECONDS = 15
 
         val None = GPSAccuracyFilter(null, null)
-        val Default = GPSAccuracyFilter(32f, Duration.ofSeconds(3))
+        val Default = GPSAccuracyFilter(32f, 3.seconds)
 
         fun custom(minAccuracyMeters: Float, maxWaitSeconds: Int): GPSAccuracyFilter {
             return GPSAccuracyFilter(
@@ -21,9 +23,7 @@ data class GPSAccuracyFilter(
                     MIN_ACCURACY_METERS.toFloat(),
                     MAX_ACCURACY_METERS.toFloat()
                 ),
-                Duration.ofSeconds(
-                    maxWaitSeconds.coerceIn(MIN_WAIT_SECONDS, MAX_WAIT_SECONDS).toLong()
-                )
+                (maxWaitSeconds.coerceIn(MIN_WAIT_SECONDS, MAX_WAIT_SECONDS).toLong()).seconds
             )
         }
     }

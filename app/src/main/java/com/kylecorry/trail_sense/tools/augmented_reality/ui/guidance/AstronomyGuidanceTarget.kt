@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlinInstant
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.luna.concurrency.onDefault
@@ -74,7 +72,7 @@ class AstronomyGuidanceTarget(
                 ).firstOrNull { it.first == selection.planet }?.second
                     ?: Astronomy.getPlanetPosition(
                         selection.planet,
-                        time.toKotlinInstant(),
+                        time,
                         location,
                         withRefraction = true
                     )
@@ -110,7 +108,7 @@ class AstronomyGuidanceTarget(
                 val position = Astronomy.getMeteorShowerPosition(
                     selection.shower,
                     location,
-                    time.toKotlinInstant()
+                    time
                 )
                 ARGuidanceTargetState(
                     ARGuidanceDisplayState(

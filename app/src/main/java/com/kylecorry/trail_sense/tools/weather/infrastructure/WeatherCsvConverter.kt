@@ -1,9 +1,8 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import com.kylecorry.sol.units.Reading
-import java.time.Instant
+import kotlin.time.Instant
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 
 class WeatherCsvConverter {

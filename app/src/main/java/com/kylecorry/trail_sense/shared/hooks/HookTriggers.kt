@@ -1,9 +1,10 @@
 package com.kylecorry.trail_sense.shared.hooks
 
+import kotlin.time.Clock
+
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 
 class HookTriggers {
     private val distanceTriggers = mutableMapOf<String, DistanceHookTrigger>()
@@ -28,7 +29,7 @@ class HookTriggers {
         val conditional = synchronized(frequencyLock) {
             frequencyTriggers.getOrPut(name) { FrequencyHookTrigger() }
         }
-        return conditional.getValue(Instant.now(), threshold)
+        return conditional.getValue(Clock.System.now(), threshold)
     }
 
 }

@@ -6,7 +6,7 @@ import com.kylecorry.sol.science.oceanography.TideConstituent
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
-import java.time.Duration
+import kotlin.time.Duration
 
 data class TideTable(
     override val id: Long,

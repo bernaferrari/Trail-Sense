@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
+import kotlin.time.Clock
+
 import com.kylecorry.andromeda.core.sensors.SensorSubscriber
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Bearing
@@ -10,7 +10,7 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
-import java.time.Instant
+import kotlin.time.Instant
 
 class ModularGPSData(
     override var location: Coordinate = Coordinate.zero,
@@ -24,7 +24,7 @@ class ModularGPSData(
     override var quality: Quality = Quality.Unknown,
     override var hasValidReading: Boolean = false,
     override var altitude: Float = 0f,
-    var eventTime: Instant = Instant.now(),
+    var eventTime: Instant = Clock.System.now(),
     override var speed: Speed = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds),
     @Volatile var isTimedOut: Boolean = false
 ) : GpsSensor {
@@ -39,7 +39,7 @@ class ModularGPSData(
         get() = eventTimeElapsedNanos
 
     override val timestamp: kotlin.time.Instant
-        get() = eventTime.toKotlinInstant()
+        get() = eventTime
 
     // This is a data holder, so it never emits
     override fun start(subscriber: SensorSubscriber) {
@@ -94,7 +94,7 @@ class ModularGPSData(
         quality = gps.quality
         hasValidReading = gps.hasValidReading
         altitude = gps.altitude
-        eventTime = gps.timestamp.toJavaInstant()
+        eventTime = gps.timestamp
         speed = gps.speed
         speedSource = (gps as? ModularGPSData)?.speedSource ?: SpeedSource.Provider
     }

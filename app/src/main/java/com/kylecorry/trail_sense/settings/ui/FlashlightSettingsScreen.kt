@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import kotlin.time.Duration
+
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.runtime.Composable
@@ -101,7 +103,7 @@ fun FlashlightSettingsToolScreen() {
             duration = timeout,
             showSeconds = true,
             onDurationPicked = {
-                if (it != null && !it.isZero) {
+                if (it != null && it != Duration.ZERO) {
                     prefs.timeout = it
                     timeout = it
                 }

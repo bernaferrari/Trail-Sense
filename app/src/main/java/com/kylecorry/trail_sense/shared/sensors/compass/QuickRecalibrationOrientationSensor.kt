@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.compass
 
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
@@ -8,7 +11,7 @@ import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.tools.metaldetector.ui.Debouncer
-import java.time.Duration
+import kotlin.time.Duration
 import kotlin.math.sqrt
 
 /**
@@ -25,7 +28,7 @@ class QuickRecalibrationOrientationSensor(
     private val primary: OrientationSensor,
     private val resetAngleThreshold: Float = 4f,
     private val motionAngleThreshold: Float = 60f,
-    resetTime: Duration = Duration.ofSeconds(1),
+    resetTime: Duration = 1.seconds,
     private val verbose: Boolean = false
 ) : SharedSensor(), OrientationSensor {
 
@@ -43,10 +46,10 @@ class QuickRecalibrationOrientationSensor(
 
     private var isStarted = false
     private val startLock = Any()
-    private val resetTimeMillis = resetTime.toMillis()
+    private val resetTimeMillis = resetTime.inWholeMilliseconds
     private var lastThresholdTime = 0L
     private var lastOrientation = Quaternion.zero
-    private var isMoving = Debouncer(Duration.ofMillis(40))
+    private var isMoving = Debouncer(40.milliseconds)
     private var lastMotionTime = 0L
     private var lastLogTime = 0L
 

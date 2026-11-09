@@ -22,7 +22,7 @@ class GPSPreferences(context: Context) : PreferenceRepo(context), IGPSPreference
             val accuracy = cache.getFloat(getString(R.string.pref_gps_accuracy_meters))
                 ?: GPSAccuracyFilter.Default.minAccuracy!!
             val wait = cache.getInt(getString(R.string.pref_gps_accuracy_wait_seconds))
-                ?: GPSAccuracyFilter.Default.maxAccuracyWait!!.seconds.toInt()
+                ?: GPSAccuracyFilter.Default.maxAccuracyWait!!.inWholeSeconds.toInt()
             if (accuracy <= 0 || wait <= 0) {
                 return GPSAccuracyFilter.None
             }
@@ -35,7 +35,7 @@ class GPSPreferences(context: Context) : PreferenceRepo(context), IGPSPreference
                 return
             }
             val accuracy = value.minAccuracy
-            val wait = value.maxAccuracyWait.seconds.toInt()
+            val wait = value.maxAccuracyWait.inWholeSeconds.toInt()
             cache.putFloat(
                 getString(R.string.pref_gps_accuracy_meters),
                 accuracy.coerceIn(
