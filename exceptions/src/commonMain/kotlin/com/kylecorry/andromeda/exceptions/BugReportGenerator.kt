@@ -24,6 +24,7 @@ class AppDetailsReport(private val name: String, private val version: String, pr
 class DeviceDetailsReport(private val device: com.kylecorry.andromeda.core.system.DeviceInfo = com.kylecorry.andromeda.core.system.deviceInfo()) : BugReportGenerator {
     override fun generate(error: Throwable): String = buildString {
         append("Platform: ${device.platform} ${device.operatingSystemVersion}")
+        device.apiLevel?.let { append("\nAPI level: $it") }
         device.manufacturer?.let { append("\nManufacturer: $it") }
         device.model?.let { append("\nDevice: $it") }
     }

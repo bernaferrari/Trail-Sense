@@ -26,10 +26,6 @@ kotlin {
             implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
         }
         commonTest.dependencies { implementation(kotlin("test")) }
-        androidMain.dependencies {
-            implementation(project(":files"))
-            implementation(libs.androidx.core.ktx)
-        }
     }
 }
 group = "com.kylecorry.andromeda"

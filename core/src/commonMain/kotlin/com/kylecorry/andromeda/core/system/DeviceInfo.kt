@@ -5,6 +5,7 @@ data class DeviceInfo(
     val operatingSystemVersion: String,
     val model: String?,
     val manufacturer: String?,
+    val apiLevel: Int? = null,
 )
 
 expect fun deviceInfo(): DeviceInfo
