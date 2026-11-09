@@ -16,7 +16,6 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
-import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.tryOrDefault
 
 object Permissions {
@@ -87,12 +86,12 @@ object Permissions {
     }
 
     fun getRequestedPermissions(context: Context): List<String> {
-        val info = Package.getPackageInfo(context, flags = PackageManager.GET_PERMISSIONS)
+        val info = AndroidPackage.getPackageInfo(context, flags = PackageManager.GET_PERMISSIONS)
         return info.requestedPermissions?.asList() ?: emptyList()
     }
 
     fun getGrantedPermissions(context: Context): List<String> {
-        val info = Package.getPackageInfo(context, flags = PackageManager.GET_PERMISSIONS)
+        val info = AndroidPackage.getPackageInfo(context, flags = PackageManager.GET_PERMISSIONS)
         return info.requestedPermissions?.filterIndexed { i, _ ->
             val flags = info.requestedPermissionsFlags ?: return@filterIndexed false
             (flags[i] and PackageInfo.REQUESTED_PERMISSION_GRANTED) == PackageInfo.REQUESTED_PERMISSION_GRANTED
@@ -101,7 +100,7 @@ object Permissions {
 
     fun isIgnoringBatteryOptimizations(context: Context): Boolean {
         return context.getSystemService<PowerManager>()
-            ?.isIgnoringBatteryOptimizations(Package.getPackageName(context)) ?: false
+            ?.isIgnoringBatteryOptimizations(AndroidPackage.getPackageName(context)) ?: false
     }
 
     fun hasPermission(context: Context, permission: String, checkAppOps: Boolean = false): Boolean {
@@ -158,7 +157,7 @@ object Permissions {
             throw SecurityException("Caller is not allowed")
         }
         for (packageName in packages) {
-            val signatures = Package.getSignatureSha256Fingerprints(context, packageName)
+            val signatures = AndroidPackage.getSignatureSha256Fingerprints(context, packageName)
             if (!signatures.any { it in allowedSignatures }) {
                 throw SecurityException("Caller is not allowed")
             }
@@ -187,7 +186,7 @@ object Permissions {
         }
 
         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-        val uri = Uri.fromParts("package", Package.getPackageName(context), null)
+        val uri = Uri.fromParts("package", AndroidPackage.getPackageName(context), null)
         intent.data = uri
         context.startActivity(intent)
     }
