@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.camera.ICamera
 import com.kylecorry.andromeda.camera.Camera
 
 /** Adapts Camera2 metadata to the shared calibrated projection. */
-fun ICamera.calibrationSource(): CameraCalibrationSource = object : CameraCalibrationSource {
+internal fun ICamera.calibrationSource(): CameraCalibrationSource = object : CameraCalibrationSource {
     override val calibrationId: String? get() = (this@calibrationSource as? Camera)?.getCameraId()
     override val sensorRotationDegrees: Int get() = sensorRotation.toInt()
     override val zoomRatio: Float? get() = zoom?.ratio

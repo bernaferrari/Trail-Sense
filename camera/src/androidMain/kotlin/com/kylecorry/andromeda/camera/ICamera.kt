@@ -14,7 +14,7 @@ import java.io.File
 import java.io.OutputStream
 import java.time.Duration
 
-interface ICamera : ISensor {
+internal interface ICamera : ISensor {
     val image: ImageProxy?
     val zoom: ZoomInfo?
     val sensorRotation: Float
