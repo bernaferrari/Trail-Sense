@@ -11,7 +11,7 @@ import android.service.quicksettings.TileService
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
-import com.kylecorry.andromeda.core.system.CurrentApp
+import android.app.ActivityManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -65,7 +65,7 @@ abstract class AndromedaTileService : TileService() {
     fun startForegroundService(action: suspend () -> Unit) {
         val powerManager = getSystemService(PowerManager::class.java)
         val needsActivity = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-            !CurrentApp.isInForeground(includeForegroundServices = true) &&
+            !isAppForeground() &&
             powerManager?.isIgnoringBatteryOptimizations(packageName) != true
         if (!needsActivity) {
             CoroutineScope(Dispatchers.Default).launch { action() }
@@ -88,4 +88,11 @@ abstract class AndromedaTileService : TileService() {
             TileActionRegistry.take(id)
         }
     }
+}
+
+private fun isAppForeground(): Boolean {
+    val info = ActivityManager.RunningAppProcessInfo()
+    ActivityManager.getMyMemoryState(info)
+    return info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND ||
+        info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE
 }

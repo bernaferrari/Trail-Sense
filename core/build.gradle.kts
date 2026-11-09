@@ -1,7 +1,6 @@
 plugins {
     kotlin("multiplatform")
     id("com.android.kotlin.multiplatform.library")
-    alias(libs.plugins.kotlin.parcelize)
     id("com.vanniktech.maven.publish")
 }
 kotlin {
@@ -26,6 +25,7 @@ kotlin {
             implementation("io.ktor:ktor-http:3.6.1")
         }
         androidMain.dependencies {
+            implementation("io.github.shadadman:ksensor-core:9.40.0")
             implementation(libs.androidx.core.ktx)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.androidx.lifecycle.livedata.core.ktx)

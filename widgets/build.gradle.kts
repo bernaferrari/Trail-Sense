@@ -21,7 +21,6 @@ kotlin {
         androidMain.dependencies {
             api("androidx.glance:glance-appwidget:1.2.0")
             implementation("androidx.activity:activity-compose:1.13.0")
-            implementation(project(":core"))
             implementation(libs.androidx.core.ktx)
         }
     }

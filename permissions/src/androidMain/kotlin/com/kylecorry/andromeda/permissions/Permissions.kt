@@ -16,7 +16,6 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.content.getSystemService
-import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.tryOrDefault
 
@@ -183,7 +182,7 @@ object Permissions {
 
         if (!hasPermission(context, Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)) {
             // Can't directly request this permission, so send the user to the settings page
-            context.startActivity(Intents.batteryOptimizationSettings())
+            context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
             return
         }
 
@@ -217,7 +216,7 @@ object Permissions {
             return
         }
 
-        context.startActivity(Intents.alarmAndReminderSettings(context))
+        context.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.fromParts("package", context.packageName, null)))
     }
 
     fun canCreateForegroundServices(

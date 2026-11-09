@@ -9,7 +9,6 @@ import android.hardware.camera2.CameraMetadata
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.getSystemService
-import com.kylecorry.andromeda.core.system.Android
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -72,7 +71,7 @@ internal class Torch(private val context: Context) : ITorch {
             return false
         }
 
-        if (Android.sdk < Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return false
         }
 
