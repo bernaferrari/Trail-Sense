@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 
-actual fun microphoneSamples(sampleRate: Int): Flow<FloatArray> = flow {
+actual fun microphoneFrames(sampleRate: Int, processing: MicrophoneProcessing): Flow<MicrophoneFrame> = flow {
+    requireDefaultMicrophoneProcessing(processing)
     require(sampleRate > 0)
     val format = AudioFormat(sampleRate.toFloat(), 16, 1, true, false)
     val line = AudioSystem.getLine(DataLine.Info(TargetDataLine::class.java, format)) as TargetDataLine
@@ -21,7 +22,7 @@ actual fun microphoneSamples(sampleRate: Int): Flow<FloatArray> = flow {
         val buffer = ByteArray(maxOf(2, sampleRate / 10 * 2))
         while (currentCoroutineContext().isActive) {
             val count = line.read(buffer, 0, buffer.size)
-            if (count > 0) emit(pcm16ToFloat(buffer.copyOf(count - count % 2)))
+            if (count > 0) emit(MicrophoneFrame(pcm16ToFloat(buffer.copyOf(count - count % 2)), null))
         }
     } finally {
         line.stop()
