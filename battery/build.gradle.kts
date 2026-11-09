@@ -9,7 +9,6 @@ kotlin {
         compileSdk = 37
         minSdk = 24
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        withDeviceTestBuilder { sourceSetTreeName = "test" }.configure { instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     }
     jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
     iosArm64()
@@ -21,11 +20,7 @@ kotlin {
             api(project(":shared"))
             api(project(":device"))
         }
-        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx) }
-        getByName("androidDeviceTest") {
-            kotlin.srcDir("src/androidTest/java")
-            dependencies { implementation(libs.junit); implementation(libs.androidx.junit); implementation(libs.androidx.espresso.core) }
-        }
+
     }
 }
 group = "com.kylecorry.andromeda"
