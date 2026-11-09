@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.andromeda.core.time.once
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.trail_sense.shared.copy
 
 import com.kylecorry.trail_sense.shared.time.interop.*
@@ -266,7 +269,7 @@ fun NavigatorToolScreen(
         val compassLayerTimer = CoroutineTimer { display.updateCompassLayers(lifecycleOwner.lifecycleScope) }
         val northReferenceHideTimer = CoroutineTimer { views.northReferenceIndicator.showLabel = false }
         display.resume(lifecycleOwner.lifecycleScope)
-        northReferenceHideTimer.once(Duration.ofSeconds(5))
+        northReferenceHideTimer.once(5.seconds)
         updateTimer.interval(NAVIGATION_UPDATE_INTERVAL)
         compassLayerTimer.interval(100)
         display.refresh(errors)

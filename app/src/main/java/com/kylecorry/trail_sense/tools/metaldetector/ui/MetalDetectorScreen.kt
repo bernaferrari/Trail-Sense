@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import com.kylecorry.andromeda.core.time.once
+import kotlin.time.Duration.Companion.seconds
+
 import androidx.compose.foundation.clickable
 
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -269,7 +272,7 @@ internal class MetalDetectorViewModel(
             orientation.start(this::onMagnetometerUpdate)
             gravity.start(this::onMagnetometerUpdate)
         }
-        calibrateTimer.once(Duration.ofSeconds(2))
+        calibrateTimer.once(2.seconds)
 
         if (prefs.metalDetector.isMetalAudioEnabled) {
             initializeAudio()

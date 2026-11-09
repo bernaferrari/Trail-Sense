@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles
 
+import kotlin.time.Duration
+import com.kylecorry.andromeda.core.time.interval
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -38,7 +41,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import kotlin.math.max

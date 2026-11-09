@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy
 
+import kotlin.time.Duration.Companion.minutes
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -40,7 +42,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
-import java.time.Duration
 
 object AstronomyToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -225,7 +226,7 @@ object AstronomyToolRegistration : ToolRegistration {
                     ),
                     tileSource = ::SolarEclipseTileSource,
                     isTimeDependent = true,
-                    refreshInterval = Duration.ofMinutes(2)
+                    refreshInterval = 2.minutes
                 ),
                 MapLayerDefinition(
                     LunarEclipseTileSource.SOURCE_ID,
@@ -242,7 +243,7 @@ object AstronomyToolRegistration : ToolRegistration {
                     ),
                     tileSource = ::LunarEclipseTileSource,
                     isTimeDependent = true,
-                    refreshInterval = Duration.ofMinutes(2)
+                    refreshInterval = 2.minutes
                 ),
                 MapLayerDefinition(
                     NightTileSource.SOURCE_ID,
@@ -259,7 +260,7 @@ object AstronomyToolRegistration : ToolRegistration {
                     ),
                     tileSource = ::NightTileSource,
                     isTimeDependent = true,
-                    refreshInterval = Duration.ofMinutes(1)
+                    refreshInterval = 1.minutes
                 )
             ),
             singletons = listOf(

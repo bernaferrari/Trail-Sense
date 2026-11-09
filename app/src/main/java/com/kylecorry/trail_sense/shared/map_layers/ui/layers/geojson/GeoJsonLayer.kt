@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
+import kotlin.time.Duration
+import com.kylecorry.andromeda.core.time.interval
+
 import android.content.Context
 import android.os.Bundle
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
@@ -22,7 +25,6 @@ import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.paths.ui.PathBackgroundColor
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException

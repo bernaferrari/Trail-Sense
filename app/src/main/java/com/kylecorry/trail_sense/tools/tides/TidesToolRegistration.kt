@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides
 
+import kotlin.time.Duration.Companion.minutes
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -20,7 +22,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
-import java.time.Duration
 
 object TidesToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -60,7 +61,7 @@ object TidesToolRegistration : ToolRegistration {
                     ),
                     geoJsonSource = ::TideGeoJsonSource,
                     isTimeDependent = true,
-                    refreshInterval = Duration.ofMinutes(10)
+                    refreshInterval = 10.minutes
                 )
             ),
             widgets = listOf(

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.plugins.infrastructure
 
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.hours
+
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import java.time.Duration
 
@@ -20,8 +23,8 @@ object PluginGuard {
     const val MAX_TILE_BYTES = 1024 * 1024
     const val MAX_TILE_SIZE = 256
 
-    val MIN_REFRESH_INTERVAL: Duration = Duration.ofSeconds(30)
-    val MAX_REFRESH_INTERVAL: Duration = Duration.ofHours(1)
+    val MIN_REFRESH_INTERVAL: kotlin.time.Duration = 30.seconds
+    val MAX_REFRESH_INTERVAL: kotlin.time.Duration = 1.hours
     val MAX_GEOJSON_PARSE_TIME: Duration = Duration.ofSeconds(2)
 
     private val endpointRegex = Regex("^/[A-Za-z0-9/_-]{1,${MAX_ENDPOINT_LENGTH - 1}}$")
