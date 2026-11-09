@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.declination
 
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.trail_sense.settings.infrastructure.IDeclinationPreferences
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -12,7 +12,7 @@ internal class DeclinationFactoryTest {
     @Test
     fun returnsGPSStrategyWhenAutoDeclination() {
         val prefs = mock(IDeclinationPreferences::class.java)
-        val gps = mock(IGPS::class.java)
+        val gps = mock(GpsSensor::class.java)
         whenever(prefs.useAutoDeclination).thenReturn(true)
 
         val provider = DeclinationFactory()
@@ -25,7 +25,7 @@ internal class DeclinationFactoryTest {
     @Test
     fun returnsOverrideStrategyWhenNotAutoDeclination() {
         val prefs = mock(IDeclinationPreferences::class.java)
-        val gps = mock(IGPS::class.java)
+        val gps = mock(GpsSensor::class.java)
         whenever(prefs.useAutoDeclination).thenReturn(false)
 
         val provider = DeclinationFactory()

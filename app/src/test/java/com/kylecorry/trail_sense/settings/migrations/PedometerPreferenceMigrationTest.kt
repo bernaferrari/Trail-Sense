@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.settings.migrations
 
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
@@ -195,8 +195,8 @@ internal class PedometerPreferenceMigrationTest {
         verify(prefs).remove("last_odometer_reset")
     }
 
-    private fun getPrefs(startTime: Instant, steps: Long): IPreferences {
-        val prefs = mock<IPreferences>()
+    private fun getPrefs(startTime: Instant, steps: Long): Preferences {
+        val prefs = mock<Preferences>()
         whenever(prefs.getLong("cache_steps")).thenReturn(steps)
         whenever(prefs.getInstant("last_odometer_reset")).thenReturn(startTime)
         return prefs

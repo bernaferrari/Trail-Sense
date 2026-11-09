@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.test_utils
 
 import androidx.test.platform.app.InstrumentationRegistry
-import com.kylecorry.andromeda.files.AssetFileSystem
-import com.kylecorry.andromeda.gpx.GPXSerializer
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.AssetFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.gpx.GPXSerializer
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase

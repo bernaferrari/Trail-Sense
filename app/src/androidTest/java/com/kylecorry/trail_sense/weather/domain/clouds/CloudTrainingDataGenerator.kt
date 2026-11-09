@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.weather.domain.clouds
 
 import androidx.test.platform.app.InstrumentationRegistry
-import com.kylecorry.andromeda.bitmaps.BitmapUtils
-import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils
+import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.resizeExact
 import com.kylecorry.andromeda.csv.CSVConvert
-import com.kylecorry.andromeda.files.AssetFileSystem
-import com.kylecorry.andromeda.files.BaseFileSystem
-import com.kylecorry.andromeda.files.CacheFileSystem
-import com.kylecorry.andromeda.files.FileSaver
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.AssetFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.BaseFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.CacheFileSystem
+import com.kylecorry.trail_sense.shared.andromeda_temp.files.FileSaver
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import kotlinx.coroutines.runBlocking

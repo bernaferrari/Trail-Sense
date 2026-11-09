@@ -9,8 +9,8 @@ import com.kylecorry.sol.science.oceanography.TideConstituent
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.waterlevel.HarmonicWaterLevelCalculator
-import com.kylecorry.sol.time.Time.atEndOfDay
-import com.kylecorry.sol.time.Time.atStartOfDay
+import com.kylecorry.trail_sense.shared.time.JavaTime.atEndOfDay
+import com.kylecorry.trail_sense.shared.time.JavaTime.atStartOfDay
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideModel

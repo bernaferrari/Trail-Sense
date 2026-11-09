@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.settings.migrations
 
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.Preference
 import com.kylecorry.luna.topics.generic.Topic
 import com.kylecorry.sol.units.Coordinate
@@ -8,7 +8,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
-class InMemoryPreferences : IPreferences {
+class InMemoryPreferences : Preferences {
 
     private val values = mutableMapOf<String, Any>()
 

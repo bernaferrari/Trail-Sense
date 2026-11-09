@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides.domain
 
 import com.kylecorry.sol.science.oceanography.Tide
-import com.kylecorry.sol.time.Time.utc
+import com.kylecorry.trail_sense.shared.time.JavaTime.utc
 import com.kylecorry.trail_sense.settings.infrastructure.ITidePreferences
 import com.kylecorry.trail_sense.tools.tides.domain.selection.LastTideSelectionStrategy
 import kotlinx.coroutines.runBlocking

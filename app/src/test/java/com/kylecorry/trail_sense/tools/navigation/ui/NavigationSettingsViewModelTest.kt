@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
@@ -42,7 +42,7 @@ class NavigationSettingsViewModelTest {
         return prefs
     }
 
-    private fun viewModel(cache: IPreferences, hasCompass: Boolean = true) = NavigationSettingsViewModel(
+    private fun viewModel(cache: Preferences, hasCompass: Boolean = true) = NavigationSettingsViewModel(
         prefs = prefs(),
         cache = cache,
         keys = keys,
@@ -52,7 +52,7 @@ class NavigationSettingsViewModelTest {
 
     @Test
     fun withoutACompassNearbyBeaconsAreAlwaysShown() {
-        val cache = mock<IPreferences>()
+        val cache = mock<Preferences>()
         val viewModel = viewModel(cache, hasCompass = false)
         assertTrue(viewModel.displayMultipleBeacons)
         verify(cache).putBoolean("multi", true)
@@ -66,7 +66,7 @@ class NavigationSettingsViewModelTest {
 
     @Test
     fun onlyTheStepSpeedometerAsksForActivityRecognition() {
-        val cache = mock<IPreferences>()
+        val cache = mock<Preferences>()
         val viewModel = viewModel(cache)
 
         assertTrue(viewModel.updateSpeedometerType("instant_pedometer"))
@@ -79,7 +79,7 @@ class NavigationSettingsViewModelTest {
 
     @Test
     fun theVisibleBeaconCountIsStoredAsText() {
-        val cache = mock<IPreferences>()
+        val cache = mock<Preferences>()
         val viewModel = viewModel(cache)
 
         viewModel.updateNumberOfVisibleBeacons(7)

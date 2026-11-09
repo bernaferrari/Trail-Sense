@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.settings.migrations
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kylecorry.andromeda.json.JsonConvert
-import com.kylecorry.andromeda.preferences.IPreferences
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.Preference
 import com.kylecorry.andromeda.preferences.getIntArray
 import com.kylecorry.andromeda.preferences.putIntArray
@@ -49,7 +49,7 @@ import java.time.LocalDate
 class PreferenceMigratorTest {
 
     private val context = TestUtils.context
-    private lateinit var prefs: IPreferences
+    private lateinit var prefs: Preferences
     private var snapshot: Collection<Preference> = emptyList()
     private val mapIds = listOf(
         NavigationToolRegistration.MAP_ID,

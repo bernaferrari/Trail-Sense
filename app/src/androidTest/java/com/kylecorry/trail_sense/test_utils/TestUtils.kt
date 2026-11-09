@@ -22,9 +22,9 @@ import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.work.testing.WorkManagerTestInitHelper
-import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.andromeda.permissions.SpecialPermission
-import com.kylecorry.andromeda.torch.TorchStateChangedTopic
+import com.kylecorry.trail_sense.shared.andromeda_temp.torch.TorchStateChangedTopic
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity

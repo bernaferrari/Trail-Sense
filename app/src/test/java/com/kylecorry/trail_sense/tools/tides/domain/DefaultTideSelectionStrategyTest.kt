@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides.domain
 
 import com.kylecorry.sol.science.oceanography.Tide
-import com.kylecorry.sol.time.Time.utc
+import com.kylecorry.trail_sense.shared.time.JavaTime.utc
 import com.kylecorry.trail_sense.tools.tides.domain.selection.DefaultTideSelectionStrategy
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
