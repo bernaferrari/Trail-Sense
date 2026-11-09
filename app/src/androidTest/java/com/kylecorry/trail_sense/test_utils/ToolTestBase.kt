@@ -105,6 +105,8 @@ open class ToolTestBase(
 
 
         TestUtils.setWaitForIdleTimeout()
+        // A test that stopped with the shade open would otherwise cover every test after it
+        TestUtils.closeNotificationShade()
         if (packageName == null) {
             TestUtils.setupApplication()
 
@@ -153,6 +155,7 @@ open class ToolTestBase(
     @After
     fun tearDown() {
         ScreenshotFailureRule.dumpHierarchy()
+        tryOrNothing { TestUtils.closeNotificationShade() }
         TestUtils.unmute(volume)
         TestUtils.stopListeningForCameraUsage()
         TestUtils.stopListeningForTorchUsage()

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.test_utils
 
+import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityWindowInfo
 import java.util.regex.Pattern
 import com.kylecorry.trail_sense.test_utils.views.desc
@@ -363,7 +364,14 @@ object TestUtils {
     }
 
     fun closeNotificationShade() {
-        device.swipe(0, device.displayHeight, 0, 0, 10)
+        // A swipe only collapses the shade one level when quick settings are expanded, so ask the system to dismiss it
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            InstrumentationRegistry.getInstrumentation().uiAutomation
+                .performGlobalAction(AccessibilityService.GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE)
+        } else {
+            device.swipe(0, device.displayHeight, 0, 0, 10)
+        }
+        device.waitForIdle()
     }
 
     // Helpers
