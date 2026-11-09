@@ -21,11 +21,15 @@ sealed interface ToolWidgetContent {
         override val clickAction: WidgetClickAction? = null
     ) : ToolWidgetContent
 
+    /**
+     * A chart: [drawing] (drawn live in the app and into the home-screen widget's image) or a ready [bitmap] (the
+     * map). [emptyText] stands in for the chart when there is nothing to draw yet.
+     */
     data class Chart(
-        val bitmap: Bitmap?,
         val title: CharSequence? = null,
-        /** Drawn live in the app (the bitmap is for home screen widgets). */
-        val chart: (@androidx.compose.runtime.Composable () -> Unit)? = null,
+        val drawing: WidgetChart? = null,
+        val bitmap: Bitmap? = null,
+        val emptyText: CharSequence? = null,
         override val clickAction: WidgetClickAction? = null
     ) : ToolWidgetContent
 

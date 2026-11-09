@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.weather.widgets
 
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
+
+import androidx.compose.ui.graphics.drawscope.DrawScope
+
+import androidx.compose.material3.ColorScheme
+
 import android.content.Context
 import android.view.View
 import androidx.compose.foundation.Canvas
@@ -56,89 +62,29 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
             .map { it.copy(value = it.value.convertTo(units)) }
 
 
-        return onMain {
-            chartContent(
-                context,
-                WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.WEATHER))
-            ) { PressureChart(context, displayReadings) }
-        }
-    }
-
-    @Composable
-    private fun PressureChart(context: Context, readings: List<Reading<Pressure>>) {
-        run {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = context.getString(R.string.pressure),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                WidgetPressureChart(
-                    readings = readings,
-                    noDataText = context.getString(R.string.no_data),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
-            }
-        }
+        return ToolWidgetContent.Chart(
+            title = context.getString(R.string.pressure),
+            drawing = if (displayReadings.isEmpty()) null else PressureWidgetChart(pressureChartPoints(displayReadings)),
+            emptyText = if (displayReadings.isEmpty()) context.getString(R.string.no_data) else null,
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.WEATHER))
+        )
     }
 }
 
-@Composable
-private fun WidgetPressureChart(
-    readings: List<Reading<Pressure>>,
-    noDataText: String,
-    modifier: Modifier = Modifier
-) {
-    val primary = MaterialTheme.colorScheme.primary
-    val grid = MaterialTheme.colorScheme.outlineVariant
-    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
-
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        if (readings.isEmpty()) {
-            Text(
-                text = noDataText,
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            return@Box
+/** The pressure history as a line over a light grid. */
+private class PressureWidgetChart(private val points: PressureChartPoints) : WidgetChart {
+    override fun DrawScope.draw(scheme: ColorScheme) {
+        repeat(5) { index ->
+            val y = index / 4f * size.height
+            drawLine(scheme.outlineVariant, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
         }
-
-        val chartPoints = pressureChartPoints(readings)
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            repeat(5) { index ->
-                val y = index / 4f * size.height
-                drawLine(
-                    color = grid,
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx()
-                )
-            }
-
-            chartPoints.data.zipWithNext().forEach { (start, end) ->
-                drawLine(
-                    color = primary,
-                    start = Offset(
-                        chartPoints.x(start.x, size.width),
-                        chartPoints.y(start.pressure, size.height)
-                    ),
-                    end = Offset(
-                        chartPoints.x(end.x, size.width),
-                        chartPoints.y(end.pressure, size.height)
-                    ),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
+        points.data.zipWithNext().forEach { (start, end) ->
+            drawLine(
+                color = scheme.primary,
+                start = Offset(points.x(start.x, size.width), points.y(start.pressure, size.height)),
+                end = Offset(points.x(end.x, size.width), points.y(end.pressure, size.height)),
+                strokeWidth = 2.dp.toPx()
+            )
         }
     }
 }

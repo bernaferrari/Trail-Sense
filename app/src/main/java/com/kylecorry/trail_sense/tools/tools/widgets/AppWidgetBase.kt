@@ -5,6 +5,7 @@ import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import com.kylecorry.luna.concurrency.onDefault
@@ -32,6 +33,9 @@ abstract class AppWidgetBase(private val widgetId: String) : GlanceAppWidgetRece
 }
 
 private class TrailSenseGlanceWidget(private val widgetId: String) : GlanceAppWidget() {
+    // Charts are drawn at the widget's real size, so they stay sharp however the widget is resized.
+    override val sizeMode: SizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
         val widget = Tools.getWidget(context, widgetId)

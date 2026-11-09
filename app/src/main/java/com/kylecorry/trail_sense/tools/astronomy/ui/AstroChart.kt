@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import androidx.compose.ui.graphics.painter.Painter
+
+import androidx.compose.material3.ColorScheme
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -84,24 +88,10 @@ internal fun AstroChart(
     onChartClicked: (time: ZonedDateTime?) -> Unit = {}
 ) {
     val scheme = MaterialTheme.colorScheme
-    val sunColor = scheme.primary
-    val daylightColor = scheme.primary.copy(alpha = 0.32f)
-    val isDark = scheme.surface.luminance() < 0.5f
-    val nightColor = if (isDark) NightSky.copy(alpha = 0.45f) else NightSky.copy(alpha = 0.07f)
-    val moonColor = scheme.outline
-    val limitColor = scheme.outlineVariant
-    val horizonColor = scheme.outline.copy(alpha = 0.8f)
-    val ringColor = scheme.background
-    val moonOutline = scheme.outlineVariant
-    val moonShadow = scheme.surfaceContainerHighest
-    val moonFilter = remember(moonShadow) {
-        ColorFilter.colorMatrix(ColorMatrix(moonPhaseColorMatrix(moonShadow, MoonLit)))
-    }
+    val colors = remember(scheme) { AstroChartColors.from(scheme) }
     val fallbackMoon = rememberVectorPainter(TrailIcons.Moon)
     val onClick by rememberUpdatedState(onChartClicked)
 
-    val sunLine = remember(state.startTime, state.sun) { state.sun.map { it.toVector(state.startTime) } }
-    val moonLine = remember(state.startTime, state.moon) { state.moon.map { it.toVector(state.startTime) } }
     val sunPosition = state.sunPosition?.toVector(state.startTime)
     val moonPosition = state.moonPosition?.toVector(state.startTime)
 
@@ -139,128 +129,7 @@ internal fun AstroChart(
                         }
                     }
             ) {
-                val inset = TrailSenseChartInset.toPx()
-                val left = inset
-                val right = size.width - inset
-                val top = inset
-                val bottom = size.height - inset
-
-                if (state.showBands) {
-                    listOf(
-                        AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL,
-                        AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL,
-                        AstronomyService.SUN_MIN_ALTITUDE_CIVIL
-                    ).forEach {
-                        drawHorizontal(it, limitColor, left, right, top, bottom)
-                    }
-                }
-                val horizonY = toScreen(Vector2(0f, 0f), left, right, top, bottom).y
-                // The night under the horizon: a deeper band of sky, so the horizon reads as a real edge.
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        listOf(nightColor.copy(alpha = nightColor.alpha * 0.4f), nightColor),
-                        startY = horizonY,
-                        endY = size.height
-                    ),
-                    topLeft = Offset(0f, horizonY),
-                    size = Size(size.width, size.height - horizonY)
-                )
-                // Daylight as a lake under the sun's curve while it is up, brightest where the sun is highest.
-                if (sunLine.size >= 2) {
-                    val screen = sunLine.map { toScreen(it, left, right, top, bottom) }
-                    val peak = screen.minOf { it.y }
-                    val lake = trailSenseSmoothPath(screen).apply {
-                        lineTo(screen.last().x, horizonY)
-                        lineTo(screen.first().x, horizonY)
-                        close()
-                    }
-                    clipRect(left = left, top = 0f, right = right, bottom = horizonY) {
-                        drawPath(
-                            lake,
-                            Brush.verticalGradient(
-                                listOf(daylightColor, daylightColor.copy(alpha = daylightColor.alpha * 0.25f)),
-                                startY = peak,
-                                endY = horizonY
-                            )
-                        )
-                    }
-                }
-                drawLine(
-                    horizonColor,
-                    Offset(left, horizonY),
-                    Offset(right, horizonY),
-                    strokeWidth = 1.dp.toPx(),
-                    cap = StrokeCap.Round
-                )
-
-                drawLineChart(
-                    moonLine, moonColor, left, right, top, bottom, 2.dp.toPx(),
-                    dash = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 5.dp.toPx()))
-                )
-                // The sun's path: full strength while it is up, quieter once it has set.
-                clipRect(left = 0f, top = 0f, right = size.width, bottom = horizonY) {
-                    drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx(), smooth = true)
-                }
-                clipRect(left = 0f, top = horizonY, right = size.width, bottom = size.height) {
-                    drawLineChart(sunLine, sunColor.copy(alpha = 0.45f), left, right, top, bottom, 3.dp.toPx(), smooth = true)
-                }
-
-                moonPosition?.let {
-                    // A clean phase disc in a soft moonlight glow: the lit part pale, the shadow a quiet raised
-                    // tone, a hairline rim so a thin crescent still reads as the whole moon.
-                    val point = toScreen(it, left, right, top, bottom)
-                    val imageSize = MoonSize.toPx()
-                    val glow = imageSize / 2f + 12.dp.toPx()
-                    drawCircle(
-                        Brush.radialGradient(
-                            listOf(MoonLit.copy(alpha = 0.22f), MoonLit.copy(alpha = 0f)),
-                            center = point,
-                            radius = glow
-                        ),
-                        glow,
-                        point
-                    )
-                    drawCircle(ringColor, imageSize / 2f + 2.dp.toPx(), point)
-                    val topLeft = Offset(point.x - imageSize / 2f, point.y - imageSize / 2f)
-                    if (moonImage != null) {
-                        drawImage(
-                            moonImage,
-                            dstOffset = IntOffset(topLeft.x.toInt(), topLeft.y.toInt()),
-                            dstSize = IntSize(imageSize.toInt(), imageSize.toInt()),
-                            colorFilter = moonFilter
-                        )
-                    } else {
-                        translate(topLeft.x, topLeft.y) {
-                            with(fallbackMoon) {
-                                draw(Size(imageSize, imageSize), colorFilter = moonFilter)
-                            }
-                        }
-                    }
-                    drawCircle(moonOutline, imageSize / 2f, point, style = Stroke(1.dp.toPx()))
-                }
-                sunPosition?.let {
-                    // The sun itself on its path: a warm disc in a soft halo (dimmer once it has set), on the
-                    // chart's "now" line.
-                    val point = toScreen(it, left, right, top, bottom)
-                    val up = point.y <= horizonY
-                    drawLine(
-                        sunColor.copy(alpha = 0.5f),
-                        Offset(point.x, 0f),
-                        Offset(point.x, size.height),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                    drawCircle(
-                        Brush.radialGradient(
-                            listOf(SunWarm.copy(alpha = if (up) 0.45f else 0.18f), SunWarm.copy(alpha = 0f)),
-                            center = point,
-                            radius = 18.dp.toPx()
-                        ),
-                        18.dp.toPx(),
-                        point
-                    )
-                    drawCircle(ringColor, 8.dp.toPx(), point)
-                    drawCircle(if (up) SunWarm else SunWarm.copy(alpha = 0.6f), 6.dp.toPx(), point)
-                }
+                drawAstroChart(state, colors, moonImage, fallbackMoon)
             }
         }
         // The hours of the charted day under the plot; none is "now", so none is emphasised.
@@ -278,6 +147,185 @@ internal fun AstroChart(
                 )
             }
         }
+    }
+}
+
+/** The chart's colours, from the app's scheme (in the app) or the widget theme's (on the home screen). */
+internal data class AstroChartColors(
+    val sun: Color,
+    val daylight: Color,
+    val night: Color,
+    val moon: Color,
+    val limit: Color,
+    val horizon: Color,
+    val ring: Color,
+    val moonOutline: Color,
+    val moonFilter: ColorFilter
+) {
+    companion object {
+        fun from(scheme: ColorScheme): AstroChartColors {
+            val isDark = scheme.surface.luminance() < 0.5f
+            return AstroChartColors(
+                sun = scheme.primary,
+                daylight = scheme.primary.copy(alpha = 0.32f),
+                night = if (isDark) NightSky.copy(alpha = 0.45f) else NightSky.copy(alpha = 0.07f),
+                moon = scheme.outline,
+                limit = scheme.outlineVariant,
+                horizon = scheme.outline.copy(alpha = 0.8f),
+                ring = scheme.background,
+                moonOutline = scheme.outlineVariant,
+                moonFilter = ColorFilter.colorMatrix(
+                    ColorMatrix(moonPhaseColorMatrix(scheme.surfaceContainerHighest, MoonLit))
+                )
+            )
+        }
+    }
+}
+
+/**
+ * The plot itself: night under the horizon, daylight under the sun's curve, the moon's dotted path, the sun and moon
+ * where they are now. Drawn by [AstroChart] in the app and by the sun and moon widget on the home screen.
+ */
+internal fun DrawScope.drawAstroChart(
+    state: AstroChartState,
+    colors: AstroChartColors,
+    moonImage: ImageBitmap?,
+    fallbackMoon: Painter? = null
+) {
+    val sunLine = state.sun.map { it.toVector(state.startTime) }
+    val moonLine = state.moon.map { it.toVector(state.startTime) }
+    val sunPosition = state.sunPosition?.toVector(state.startTime)
+    val moonPosition = state.moonPosition?.toVector(state.startTime)
+    val sunColor = colors.sun
+    val daylightColor = colors.daylight
+    val nightColor = colors.night
+    val moonColor = colors.moon
+    val limitColor = colors.limit
+    val horizonColor = colors.horizon
+    val ringColor = colors.ring
+    val moonOutline = colors.moonOutline
+    val moonFilter = colors.moonFilter
+    val inset = TrailSenseChartInset.toPx()
+    val left = inset
+    val right = size.width - inset
+    val top = inset
+    val bottom = size.height - inset
+
+    if (state.showBands) {
+        listOf(
+            AstronomyService.SUN_MIN_ALTITUDE_ASTRONOMICAL,
+            AstronomyService.SUN_MIN_ALTITUDE_NAUTICAL,
+            AstronomyService.SUN_MIN_ALTITUDE_CIVIL
+        ).forEach {
+            drawHorizontal(it, limitColor, left, right, top, bottom)
+        }
+    }
+    val horizonY = toScreen(Vector2(0f, 0f), left, right, top, bottom).y
+    // The night under the horizon: a deeper band of sky, so the horizon reads as a real edge.
+    drawRect(
+        brush = Brush.verticalGradient(
+            listOf(nightColor.copy(alpha = nightColor.alpha * 0.4f), nightColor),
+            startY = horizonY,
+            endY = size.height
+        ),
+        topLeft = Offset(0f, horizonY),
+        size = Size(size.width, size.height - horizonY)
+    )
+    // Daylight as a lake under the sun's curve while it is up, brightest where the sun is highest.
+    if (sunLine.size >= 2) {
+        val screen = sunLine.map { toScreen(it, left, right, top, bottom) }
+        val peak = screen.minOf { it.y }
+        val lake = trailSenseSmoothPath(screen).apply {
+            lineTo(screen.last().x, horizonY)
+            lineTo(screen.first().x, horizonY)
+            close()
+        }
+        clipRect(left = left, top = 0f, right = right, bottom = horizonY) {
+            drawPath(
+                lake,
+                Brush.verticalGradient(
+                    listOf(daylightColor, daylightColor.copy(alpha = daylightColor.alpha * 0.25f)),
+                    startY = peak,
+                    endY = horizonY
+                )
+            )
+        }
+    }
+    drawLine(
+        horizonColor,
+        Offset(left, horizonY),
+        Offset(right, horizonY),
+        strokeWidth = 1.dp.toPx(),
+        cap = StrokeCap.Round
+    )
+
+    drawLineChart(
+        moonLine, moonColor, left, right, top, bottom, 2.dp.toPx(),
+        dash = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 5.dp.toPx()))
+    )
+    // The sun's path: full strength while it is up, quieter once it has set.
+    clipRect(left = 0f, top = 0f, right = size.width, bottom = horizonY) {
+        drawLineChart(sunLine, sunColor, left, right, top, bottom, 3.5.dp.toPx(), smooth = true)
+    }
+    clipRect(left = 0f, top = horizonY, right = size.width, bottom = size.height) {
+        drawLineChart(sunLine, sunColor.copy(alpha = 0.45f), left, right, top, bottom, 3.dp.toPx(), smooth = true)
+    }
+
+    moonPosition?.let {
+        // A clean phase disc in a soft moonlight glow: the lit part pale, the shadow a quiet raised
+        // tone, a hairline rim so a thin crescent still reads as the whole moon.
+        val point = toScreen(it, left, right, top, bottom)
+        val imageSize = MoonSize.toPx()
+        val glow = imageSize / 2f + 12.dp.toPx()
+        drawCircle(
+            Brush.radialGradient(
+                listOf(MoonLit.copy(alpha = 0.22f), MoonLit.copy(alpha = 0f)),
+                center = point,
+                radius = glow
+            ),
+            glow,
+            point
+        )
+        drawCircle(ringColor, imageSize / 2f + 2.dp.toPx(), point)
+        val topLeft = Offset(point.x - imageSize / 2f, point.y - imageSize / 2f)
+        if (moonImage != null) {
+            drawImage(
+                moonImage,
+                dstOffset = IntOffset(topLeft.x.toInt(), topLeft.y.toInt()),
+                dstSize = IntSize(imageSize.toInt(), imageSize.toInt()),
+                colorFilter = moonFilter
+            )
+        } else if (fallbackMoon != null) {
+            translate(topLeft.x, topLeft.y) {
+                with(fallbackMoon) {
+                    draw(Size(imageSize, imageSize), colorFilter = moonFilter)
+                }
+            }
+        }
+        drawCircle(moonOutline, imageSize / 2f, point, style = Stroke(1.dp.toPx()))
+    }
+    sunPosition?.let {
+        // The sun itself on its path: a warm disc in a soft halo (dimmer once it has set), on the
+        // chart's "now" line.
+        val point = toScreen(it, left, right, top, bottom)
+        val up = point.y <= horizonY
+        drawLine(
+            sunColor.copy(alpha = 0.5f),
+            Offset(point.x, 0f),
+            Offset(point.x, size.height),
+            strokeWidth = 1.dp.toPx()
+        )
+        drawCircle(
+            Brush.radialGradient(
+                listOf(SunWarm.copy(alpha = if (up) 0.45f else 0.18f), SunWarm.copy(alpha = 0f)),
+                center = point,
+                radius = 18.dp.toPx()
+            ),
+            18.dp.toPx(),
+            point
+        )
+        drawCircle(ringColor, 8.dp.toPx(), point)
+        drawCircle(if (up) SunWarm else SunWarm.copy(alpha = 0.6f), 6.dp.toPx(), point)
     }
 }
 

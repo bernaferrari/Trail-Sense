@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
+import androidx.glance.LocalSize
+
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Bitmap
 import android.os.Build
@@ -58,7 +60,7 @@ fun ToolWidgetGlanceContent(
         contentAlignment = Alignment.Center
     ) {
         when (content) {
-            is ToolWidgetContent.Chart -> ChartContent(content, colors)
+            is ToolWidgetContent.Chart -> ChartContent(content, colors, theme)
             is ToolWidgetContent.List -> ListContent(content, colors)
             is ToolWidgetContent.Simple -> SimpleContent(content, colors)
             is ToolWidgetContent.Title -> TitleContent(content.title?.toString().orEmpty(), colors)
@@ -124,7 +126,7 @@ private fun TitleContent(title: String, colors: WidgetColors) {
 }
 
 @Composable
-private fun ChartContent(content: ToolWidgetContent.Chart, colors: WidgetColors) {
+private fun ChartContent(content: ToolWidgetContent.Chart, colors: WidgetColors, theme: WidgetTheme) {
     Column(
         modifier = GlanceModifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -137,8 +139,30 @@ private fun ChartContent(content: ToolWidgetContent.Chart, colors: WidgetColors)
             )
             Spacer(GlanceModifier.height(4.dp))
         }
-        val bitmap = content.bitmap
-        if (bitmap != null) {
+        val emptyText = content.emptyText
+        val drawing = content.drawing
+        // The chart is drawn at the widget's own size (SizeMode.Exact), below the title.
+        val context = LocalContext.current
+        val size = LocalSize.current
+        val bitmap = when {
+            emptyText != null -> null
+            drawing != null -> {
+                val density = context.resources.displayMetrics.density
+                val titleHeight = if (content.title.isNullOrBlank()) 0f else 28f
+                drawing.toBitmap(
+                    context,
+                    (size.width.value * density).toInt(),
+                    ((size.height.value - titleHeight) * density).toInt(),
+                    widgetColorScheme(context, theme)
+                )
+            }
+            else -> content.bitmap
+        }
+        if (emptyText != null) {
+            Box(GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = emptyText.toString(), style = TextStyle(color = colors.secondaryText))
+            }
+        } else if (bitmap != null) {
             Image(
                 provider = ImageProvider(bitmap),
                 contentDescription = content.title?.toString(),

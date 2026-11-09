@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.astronomy.widgets
 
+import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChartColors
+
+import com.kylecorry.trail_sense.tools.astronomy.ui.drawAstroChart
+
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
+
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -59,12 +65,10 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
                 showBands = userPrefs.astronomy.showAstronomyBands
             )
 
-            content = chartContent(
-                context,
-                WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.ASTRONOMY))
-            ) {
-                AstroChart(state, moonImage, Modifier.fillMaxSize())
-            }
+            content = ToolWidgetContent.Chart(
+                drawing = WidgetChart { scheme -> drawAstroChart(state, AstroChartColors.from(scheme), moonImage) },
+                clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.ASTRONOMY))
+            )
         }
 
         return content!!

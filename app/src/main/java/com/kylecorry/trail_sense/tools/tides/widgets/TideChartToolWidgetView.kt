@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.tides.widgets
 
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
+
+import androidx.compose.ui.graphics.drawscope.DrawScope
+
+import androidx.compose.material3.ColorScheme
+
 import android.content.Context
 import android.view.View
 import androidx.compose.foundation.Canvas
@@ -45,143 +51,83 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
         }
 
         val title = if (tide == null) context.getString(R.string.no_tides) else tide.table.name ?: ""
-        return onMain {
-            chartContent(
-                context,
-                WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.TIDES))
-            ) {
-                TideChart(
-                    context,
-                    title,
-                    tide?.today?.waterLevels.orEmpty(),
-                    tide?.today?.waterLevelRange,
-                    currentWaterLevel
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun TideChart(
-        context: Context,
-        title: String,
-        waterLevels: List<Reading<Float>>,
-        range: Range<Float>?,
-        currentWaterLevel: Reading<Float>?
-    ) {
-        run {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                WidgetTideChart(
-                    waterLevels = waterLevels,
-                    range = range,
-                    currentWaterLevel = currentWaterLevel,
-                    noDataText = context.getString(R.string.no_data),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                )
-            }
-        }
+        val levels = tide?.today?.waterLevels.orEmpty()
+        val range = tide?.today?.waterLevelRange
+        val hasData = levels.isNotEmpty() && range != null
+        return ToolWidgetContent.Chart(
+            title = title,
+            drawing = if (hasData) TideWidgetChart(levels, range!!, currentWaterLevel) else null,
+            emptyText = if (hasData) null else context.getString(R.string.no_data),
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.TIDES))
+        )
     }
 }
 
-@Composable
-private fun WidgetTideChart(
-    waterLevels: List<Reading<Float>>,
-    range: Range<Float>?,
-    currentWaterLevel: Reading<Float>?,
-    noDataText: String,
-    modifier: Modifier = Modifier
-) {
-    val levelColor = MaterialTheme.colorScheme.primary
-    val grid = MaterialTheme.colorScheme.outlineVariant
-    val highlightColor = MaterialTheme.colorScheme.onSurface
-    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+/** Today's water level as a filled curve over the hours, with now marked. */
+private class TideWidgetChart(
+    private val waterLevels: List<Reading<Float>>,
+    private val waterLevelRange: Range<Float>,
+    private val currentWaterLevel: Reading<Float>?
+) : WidgetChart {
+    override fun DrawScope.draw(scheme: ColorScheme) {
+        val startTime = waterLevels.firstOrNull()?.time ?: Instant.now()
+        val totalRange = waterLevelRange.end - waterLevelRange.start
+        val rangeDelta = (totalRange * 0.25f).coerceAtLeast(0.2f)
+        val minimum = waterLevelRange.start - rangeDelta
+        val maximum = waterLevelRange.end + rangeDelta
+        val valueRange = (maximum - minimum).takeIf { it > 0f } ?: 1f
 
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        val waterLevelRange = range
-        if (waterLevels.isEmpty() || waterLevelRange == null) {
-            Text(
-                text = noDataText,
-                color = textColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            return@Box
+        fun x(time: Instant): Float {
+            val hours = Duration.between(startTime, time).toMillis() / 3_600_000f
+            return (hours / 24f).coerceIn(0f, 1f) * size.width
         }
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val startTime = waterLevels.firstOrNull()?.time ?: Instant.now()
-            val totalRange = waterLevelRange.end - waterLevelRange.start
-            val rangeDelta = (totalRange * 0.25f).coerceAtLeast(0.2f)
-            val minimum = waterLevelRange.start - rangeDelta
-            val maximum = waterLevelRange.end + rangeDelta
-            val valueRange = (maximum - minimum).takeIf { it > 0f } ?: 1f
+        fun y(value: Float): Float {
+            val normalized = ((value - minimum) / valueRange).coerceIn(0f, 1f)
+            return size.height - normalized * size.height
+        }
 
-            fun x(time: Instant): Float {
-                val hours = Duration.between(startTime, time).toMillis() / 3_600_000f
-                return (hours / 24f).coerceIn(0f, 1f) * size.width
-            }
+        repeat(7) { index ->
+            val x = index / 6f * size.width
+            drawLine(
+                color = scheme.outlineVariant,
+                start = Offset(x, 0f),
+                end = Offset(x, size.height),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
 
-            fun y(value: Float): Float {
-                val normalized = ((value - minimum) / valueRange).coerceIn(0f, 1f)
-                return size.height - normalized * size.height
+        val path = Path()
+        waterLevels.forEachIndexed { index, reading ->
+            val pointX = x(reading.time)
+            val pointY = y(reading.value)
+            if (index == 0) {
+                path.moveTo(pointX, size.height)
+                path.lineTo(pointX, pointY)
+            } else {
+                path.lineTo(pointX, pointY)
             }
+        }
+        val last = waterLevels.last()
+        path.lineTo(x(last.time), size.height)
+        path.close()
+        drawPath(path, scheme.primary.copy(alpha = 0.2f))
 
-            repeat(7) { index ->
-                val x = index / 6f * size.width
-                drawLine(
-                    color = grid,
-                    start = Offset(x, 0f),
-                    end = Offset(x, size.height),
-                    strokeWidth = 1.dp.toPx()
-                )
-            }
+        waterLevels.zipWithNext().forEach { (start, end) ->
+            drawLine(
+                color = scheme.primary,
+                start = Offset(x(start.time), y(start.value)),
+                end = Offset(x(end.time), y(end.value)),
+                strokeWidth = 2.dp.toPx()
+            )
+        }
 
-            val path = Path()
-            waterLevels.forEachIndexed { index, reading ->
-                val pointX = x(reading.time)
-                val pointY = y(reading.value)
-                if (index == 0) {
-                    path.moveTo(pointX, size.height)
-                    path.lineTo(pointX, pointY)
-                } else {
-                    path.lineTo(pointX, pointY)
-                }
-            }
-            val last = waterLevels.last()
-            path.lineTo(x(last.time), size.height)
-            path.close()
-            drawPath(path, levelColor.copy(alpha = 0.2f))
-
-            waterLevels.zipWithNext().forEach { (start, end) ->
-                drawLine(
-                    color = levelColor,
-                    start = Offset(x(start.time), y(start.value)),
-                    end = Offset(x(end.time), y(end.value)),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
-
-            currentWaterLevel?.let {
-                drawCircle(
-                    color = highlightColor,
-                    radius = 4.dp.toPx(),
-                    center = Offset(x(it.time), y(it.value))
-                )
-            }
+        currentWaterLevel?.let {
+            drawCircle(
+                color = scheme.onSurface,
+                radius = 4.dp.toPx(),
+                center = Offset(x(it.time), y(it.value))
+            )
         }
     }
 }

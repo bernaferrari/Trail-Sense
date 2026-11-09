@@ -118,9 +118,18 @@ private fun ChartContent(content: ToolWidgetContent.Chart) {
             )
             Spacer(Modifier.height(4.dp))
         }
-        val chart = content.chart
-        if (chart != null) {
-            Box(modifier = Modifier.fillMaxSize()) { chart() }
+        val drawing = content.drawing
+        val emptyText = content.emptyText
+        if (emptyText != null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = emptyText.toString(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        } else if (drawing != null) {
+            WidgetChartCanvas(drawing, Modifier.fillMaxSize())
         } else content.bitmap?.let {
             Image(
                 bitmap = it.asImageBitmap(),
