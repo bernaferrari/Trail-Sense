@@ -1,5 +1,9 @@
 package com.kylecorry.sol.science.astronomy.navigation
 
+import kotlin.time.Instant
+import kotlin.time.Duration.Companion.seconds
+import kotlin.math.PI
+
 import com.kylecorry.sol.math.Vector3Precise
 import com.kylecorry.sol.math.geometry.Rotation
 import com.kylecorry.sol.science.optics.PinholeCamera
@@ -10,10 +14,6 @@ import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import kotlin.time.toKotlinInstant
 
 /**
  * Generates star photos from the star catalog with lens, sensor and detection errors
@@ -38,9 +38,9 @@ class SyntheticSky(private val random: Random) {
         return Coordinate(random.nextDouble(-55.0, 60.0), random.nextDouble(-180.0, 180.0))
     }
 
-    fun randomTime(): ZonedDateTime {
+    fun randomTime(): Instant {
         val start = Instant.parse("2026-01-01T00:00:00Z")
-        return ZonedDateTime.ofInstant(start.plusSeconds(random.nextLong(0, 365L * 24 * 3600)), ZoneOffset.UTC)
+        return start + random.nextLong(0, 365L * 24 * 3600).seconds
     }
 
     /**
@@ -69,7 +69,7 @@ class SyntheticSky(private val random: Random) {
     fun generate(
         errors: Errors,
         location: Coordinate = randomLocation(),
-        time: ZonedDateTime = randomTime(),
+        time: Instant = randomTime(),
         deviceToEnu: Rotation = randomOrientation(),
         gravityBias: Vector3Precise = Vector3Precise.zero,
         actualCamera: PinholeCamera? = null
@@ -80,7 +80,7 @@ class SyntheticSky(private val random: Random) {
         )
         val enuToDevice = deviceToEnu.inverse()
         val stars = mutableListOf<ImageStar>()
-        for (position in SkyCatalog.getPositions(SkyCatalog.getBodies(errors.limitingMagnitude), time.toInstant().toKotlinInstant(), location, true, 0.0)) {
+        for (position in SkyCatalog.getPositions(SkyCatalog.getBodies(errors.limitingMagnitude), time, location, true, 0.0)) {
             if (random.nextDouble() < errors.dropout) continue
             val (px, py) = camera.toPixel(enuToDevice.rotate(position.vector)) ?: continue
             val x = px + gaussian() * errors.pixelNoise
@@ -103,7 +103,7 @@ class SyntheticSky(private val random: Random) {
         val trueUp = enuToDevice.rotate(HorizonVectors.up)
         val noise = perpendicular(trueUp, errors.tiltNoiseDegrees * gaussian())
         val up = tilt(tilt(trueUp, gravityBias), noise)
-        return Photo(SkyImage(stars, nominalCamera, up, time.toInstant().toKotlinInstant()), location, deviceToEnu)
+        return Photo(SkyImage(stars, nominalCamera, up, time), location, deviceToEnu)
     }
 
     fun nearby(location: Coordinate, km: Double): Coordinate {
@@ -125,7 +125,7 @@ class SyntheticSky(private val random: Random) {
     }
 
     fun gaussian(): Double {
-        return sqrt(-2 * ln(random.nextDouble(1e-12, 1.0))) * cos(2 * Math.PI * random.nextDouble())
+        return sqrt(-2 * ln(random.nextDouble(1e-12, 1.0))) * cos(2 * PI * random.nextDouble())
     }
 
     private fun uniform(max: Double): Double {

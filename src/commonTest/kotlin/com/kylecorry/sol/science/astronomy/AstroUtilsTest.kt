@@ -1,13 +1,13 @@
 package com.kylecorry.sol.science.astronomy
 
-import com.kylecorry.sol.science.astronomy.locators.Moon
-import com.kylecorry.sol.science.astronomy.locators.Sun
-import com.kylecorry.sol.science.astronomy.units.fromJulianDayJvm
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+import com.kylecorry.sol.science.astronomy.locators.MoonPositionModel
+import com.kylecorry.sol.science.astronomy.locators.SunModel
+import com.kylecorry.sol.science.astronomy.units.fromJulianDay
 
 class AstroUtilsTest {
-
 
 //    @Test
 //    fun hourToAngle() {
@@ -17,7 +17,6 @@ class AstroUtilsTest {
 //            0.00000001
 //        )
 //    }
-
 
 //    @Test
 //    fun julianDay() {
@@ -79,7 +78,6 @@ class AstroUtilsTest {
 //        )
 //    }
 
-
 //    @Test
 //    fun riseSetTransitTimes() {
 //        val times = Astro.riseSetTransitTimes(
@@ -93,17 +91,16 @@ class AstroUtilsTest {
 
     @Test
     fun solarCoordinates() {
-        val coords = Sun().getCoordinates(fromJulianDayJvm(2448908.5))
+        val coords = SunModel().getCoordinates(fromJulianDay(2448908.5))
         assertEquals(-7.7853035, coords.declination, 0.0001)
         assertEquals(198.381404, coords.rightAscension, 0.0001)
     }
 
     @Test
     fun lunarCoordinates() {
-        val coords = Moon().getCoordinates(fromJulianDayJvm(2448724.5))
+        val coords = MoonPositionModel().getCoordinates(fromJulianDay(2448724.5))
         assertEquals(13.7652847499, coords.declination, 0.001)
         assertEquals(134.6971088, coords.rightAscension, 0.001)
     }
-
 
 }
