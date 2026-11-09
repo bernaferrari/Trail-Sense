@@ -1,27 +1,16 @@
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.os.Bundle
-import android.widget.FrameLayout
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.view.setPadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.Views
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -45,7 +34,6 @@ class ToolWidgetViewBinder(
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     fun bind() {
         val selectedWidgets = prefs.toolWidgets
         val allWidgets = Tools.getTools(context)
@@ -56,21 +44,7 @@ class ToolWidgetViewBinder(
         // Only show the selected widgets
         val widgets = allWidgets.filter { selectedWidgets.contains(it.id) }
 
-        // 2 cells on a Pixel phone = 102dp
-        val halfSummaryHeight = Resources.dp(context, 102f).toInt()
-        val fullSummaryHeight = halfSummaryHeight * 2
-        val summaryGap = Resources.dp(context, 4f).toInt()
-
         widgets.forEach { widget ->
-            val layout = FrameLayout(context)
-
-            val height = when (widget.size) {
-                ToolSummarySize.Half -> halfSummaryHeight
-                ToolSummarySize.Full -> fullSummaryHeight
-                ToolSummarySize.TallFull -> (fullSummaryHeight * 1.5f).safeRoundToInt()
-            }
-            layout.setPadding(summaryGap)
-
             val widgetId = widget.id
 
             val updateFunction = {
@@ -87,7 +61,7 @@ class ToolWidgetViewBinder(
                 Unit
             }
 
-            this.widgets.add(WidgetInstance(widget, layout, height, updateFunction = updateFunction))
+            this.widgets.add(WidgetInstance(widget, updateFunction = updateFunction))
             updateWidgetSnapshot(widgetId, widget.widgetView.getLoadingContent(context, null))
         }
 
@@ -173,8 +147,6 @@ class ToolWidgetViewBinder(
 
     private data class WidgetInstance(
         val widget: ToolWidget,
-        val layout: FrameLayout,
-        val height: Int,
         var snapshot: ToolWidgetSnapshot? = null,
         val updateFunction: () -> Unit = {}
     )
