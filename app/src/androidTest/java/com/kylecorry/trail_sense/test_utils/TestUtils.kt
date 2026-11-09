@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.test_utils
 
+import java.util.regex.Pattern
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.views.TestView
 import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -241,16 +243,22 @@ object TestUtils {
     }
 
     fun openQuickActions() {
+        // Long pressing any bottom navigation tab opens the quick actions. The tabs have no tags, so the tab is the
+        // long-clickable node lowest on the screen.
         waitFor {
-            view(R.id.bottom_navigation, packageName = packageName).longClick()
+            val pkg = packageName ?: context.packageName
+            val tab = device.findObjects(By.longClickable(true).pkg(pkg))
+                .maxByOrNull { it.visibleBounds.bottom }
+                ?: throw AssertionError("Bottom navigation not found")
+            tab.longClick()
         }
         waitFor {
-            view(R.id.quick_actions_sheet, packageName = packageName)
+            view(By.text(getString(R.string.quick_actions)))
         }
     }
 
     fun closeQuickActions() {
-        click(R.id.close_button)
+        click(desc(getString(android.R.string.cancel)))
     }
 
     // PERMISSIONS
@@ -388,26 +396,19 @@ object TestUtils {
         return null
     }
 
+    /**
+     * Picks a date in the Material 3 date picker: switch it to text input, then type the date as digits (the field
+     * adds the separators for the locale's pattern, month first in en-US).
+     */
     fun pickDate(year: Int, month: Int, day: Int, waitForClose: Boolean = true) {
         waitFor {
-            view(
-                com.google.android.material.R.id.mtrl_picker_header_toggle,
-                packageName = packageName
-            ).click()
+            view(By.desc(Pattern.compile("(?i).*(text input|input mode).*"))).click()
         }
 
         waitFor {
-            view(
-                com.google.android.material.R.id.mtrl_picker_text_input_date,
-                packageName = packageName
+            view(By.clazz("android.widget.EditText")).input(
+                month.toString().padStart(2, '0') + day.toString().padStart(2, '0') + year.toString()
             )
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .input(
-                    "${month.toString().padStart(2, '0')}/${
-                        day.toString().padStart(2, '0')
-                    }/${year}"
-                )
         }
 
         waitFor {
@@ -416,69 +417,28 @@ object TestUtils {
 
         if (waitForClose) {
             waitFor {
-                not {
-                    view(
-                        com.google.android.material.R.id.mtrl_calendar_main_pane,
-                        packageName = packageName
-                    )
-                }
+                not { view(By.clazz("android.widget.EditText")) }
             }
         }
     }
 
+    /**
+     * Picks a time on the Material 3 clock dial: tap the hour, then the minute (the dial labels every 5 minutes),
+     * then AM or PM. The header repeats the current hour and minute, so the dial's copy is the lowest match.
+     */
     fun pickTime(hour: Int, minute: Int, am: Boolean, waitForClose: Boolean = true) {
+        require(minute % 5 == 0) { "The clock dial can only be tapped on multiples of 5 minutes" }
+
         waitFor {
-            view(
-                com.google.android.material.R.id.material_timepicker_mode_button,
-                packageName = packageName
-            ).click()
+            lowestWithText(hour.toString()).click()
         }
 
         waitFor {
-            view(
-                com.google.android.material.R.id.material_hour_text_input,
-                packageName = packageName
-            ).click()
-            view(
-                com.google.android.material.R.id.material_hour_text_input,
-                packageName = packageName
-            )
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .input(
-                    hour.toString()
-                )
+            lowestWithText(minute.toString().padStart(2, '0')).click()
         }
-
-        view(
-            com.google.android.material.R.id.material_minute_text_input,
-            packageName = packageName
-        ).click()
 
         waitFor {
-            view(
-                com.google.android.material.R.id.material_minute_text_input,
-                packageName = packageName
-            )
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .input(
-                    minute.toString()
-                )
-        }
-
-        if (am) {
-            view(
-                com.google.android.material.R.id.material_clock_period_am_button,
-                packageName = packageName
-            ).click()
-        } else {
-            view(
-                com.google.android.material.R.id.material_clock_period_pm_button,
-                packageName = packageName
-            ).click()
+            view(By.text(if (am) "AM" else "PM")).click()
         }
 
         waitFor {
@@ -490,6 +450,12 @@ object TestUtils {
                 not { viewWithText(android.R.string.ok) }
             }
         }
+    }
+
+    private fun lowestWithText(text: String): TestView {
+        val node = device.findObjects(By.text(text)).maxByOrNull { it.visibleBounds.top }
+            ?: throw AssertionError("Text not found: $text")
+        return TestView(node)
     }
 
     fun isCameraInUse(isBackFacing: Boolean? = null): Boolean {
