@@ -10,6 +10,6 @@ data class ZonedDateTime(val instant: Instant, val timeZone: TimeZone) {
     val localDateTime: LocalDateTime get() = instant.toLocalDateTime(timeZone)
 }
 
-fun interface IZonedDateTimeProvider {
+fun interface ZonedDateTimeProvider {
     fun getTime(): ZonedDateTime
 }
