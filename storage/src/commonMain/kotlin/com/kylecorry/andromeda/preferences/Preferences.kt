@@ -2,13 +2,33 @@ package com.kylecorry.andromeda.preferences
 
 import com.kylecorry.sol.units.Coordinate
 import com.russhwolf.settings.Settings
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-/** Typed access to platform settings. Supply a Settings instance to choose a named or encrypted store. */
-class Preferences(val settings: Settings = Settings()) {
+/**
+ * Typed access to platform settings. Supply a Settings instance to choose a named or encrypted store.
+ * @param keyChangeSource registers a callback for changes to any key and returns a function that unregisters it.
+ * Platform factories supply this when the backing store can report every change; without it [observeChanges] never emits.
+ */
+class Preferences(
+    val settings: Settings = Settings(),
+    private val keyChangeSource: ((onChange: (key: String) -> Unit) -> (() -> Unit))? = null
+) {
+    /** Emits the key of every preference that changes while collected. */
+    fun observeChanges(): Flow<String> {
+        val source = keyChangeSource ?: return emptyFlow()
+        return callbackFlow {
+            val unregister = source { trySend(it) }
+            awaitClose { unregister() }
+        }
+    }
+
     fun contains(key: String): Boolean = settings.hasKey(key)
     fun remove(key: String) = settings.remove(key)
     fun clear() = settings.clear()

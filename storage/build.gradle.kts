@@ -22,6 +22,10 @@ kotlin {
         api("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
         api("com.squareup.okio:okio:3.18.2")
     }
+    sourceSets.jvmTest.dependencies {
+        implementation(kotlin("test"))
+        implementation("com.russhwolf:multiplatform-settings-test:1.3.0")
+    }
 }
 
 group = "com.kylecorry.andromeda"
