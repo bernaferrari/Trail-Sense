@@ -33,16 +33,24 @@ class MarkdownAnnotatedStringTest {
 
     @Test
     fun rendersLists() {
-        val text = Markdown.toAnnotatedString("Steps:\n\n- one\n- two\n  - nested\n\n1. first\n2. second\n\nDone")
-        // Each item is a hanging paragraph; the blank line between the lists ends the last item's paragraph
-        assertEquals("Steps:\n• one• two• nested\n1. first2. second\nDone", text.text)
-        val items = text.paragraphStyles.map { text.text.substring(it.start, it.end).trimEnd('\n') to it.item.textIndent }
-        assertEquals(listOf("• one", "• two", "• nested", "1. first", "2. second"), items.map { it.first })
-        val (bullet, nested, numbered) = listOf(items[0].second!!, items[2].second!!, items[3].second!!)
-        assertEquals(0f, bullet.firstLine.value)
-        assertEquals(1.5f, nested.firstLine.value)
-        assertTrue(nested.restLine.value > nested.firstLine.value)
-        assertTrue(numbered.restLine.value > bullet.restLine.value)
+        val text = Markdown.toAnnotatedString("Steps:\n\n- one\n- two\n  - nested\n\n1. first\n2. second\n\n   more on second\n\nDone")
+        // Copied text has one item per line; nested items and further paragraphs are indented with em spaces
+        assertEquals(
+            listOf("Steps:", "• one", "• two", "\u2003\u2005\u2005• nested", "1. first", "2. second", "\u2003more on second", "Done"),
+            text.text.lines().filter { it.isNotBlank() }
+        )
+        assertTrue("• one\n• two\n\u2003\u2005\u2005• nested" in text.text)
+        assertTrue("1. first\n2. second\n\u2003more on second" in text.text)
+        if (indentsEachLine) {
+            // Each list is one paragraph whose wrapped lines hang after the markers
+            val lists = text.paragraphStyles
+            assertEquals(2, lists.size)
+            assertTrue(text.text.substring(lists[0].start, lists[0].end).startsWith("• one"))
+            assertTrue(lists.all { it.item.textIndent!!.restLine.value > it.item.textIndent!!.firstLine.value })
+        } else {
+            assertEquals("Steps:\n\n• one\n• two\n\u2003\u2005\u2005• nested\n\n1. first\n2. second\n\u2003more on second\n\nDone", text.text)
+            assertTrue(text.paragraphStyles.isEmpty())
+        }
     }
 
     @Test

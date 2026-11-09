@@ -11,9 +11,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.text.style.TextIndent
+import kotlin.math.roundToInt
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
@@ -35,8 +35,8 @@ data class MarkdownTextStyles(
     /** Relative sizes of headings 1 to 6, which are also bold. */
     val headingScales: List<Float> = listOf(2f, 1.5f, 1.17f, 1f, 0.83f, 0.67f),
     val bullet: String = "•",
-    /** How far each list level is indented; wrapped lines of an item line up after its marker. */
-    val listIndent: TextUnit = 1.5.em
+    /** How far each nested list level is indented, in ems. */
+    val listIndent: Float = 1.5f
 )
 
 /**
@@ -62,7 +62,7 @@ data class MarkdownDelimiter(val delimiter: String, val effect: Effect) {
 
 /** Text that becomes a link without markdown link syntax. */
 enum class MarkdownAutoLink {
-    /** Bare web addresses, such as `www.example.com` or `https://example.com`. */
+    /** Bare web addresses, such as `www.example.com`, `https://example.com` or `example.com/path`. */
     Web,
 
     /** Bare email addresses, linked with `mailto:`. */
@@ -84,8 +84,7 @@ sealed interface MarkdownBlock {
  * Renders GitHub-flavored [markdown] as styled text: emphasis, headings, code, strikethrough, lists, block quotes,
  * tables and links (inline, reference, and the [autoLinks] found in plain text) as [LinkAnnotation.Url]s. Images
  * and raw HTML are left out; use [toBlocks] to keep the images. Blocks are separated by a blank line and soft line
- * breaks become spaces. List items are hanging paragraphs ([ParagraphStyle]s with a [TextIndent]), which break
- * lines themselves, so no newline separates them in the text.
+ * breaks become spaces. Each list item is on its own line, and a list's wrapped lines hang after its markers.
  */
 fun Markdown.toAnnotatedString(
     markdown: String,
@@ -202,49 +201,68 @@ private class AnnotatedMarkdownRenderer(
         }
     }
 
+    /**
+     * A list with one item per line. The items keep real line breaks, so copied text has one item per line; a top
+     * level list is one paragraph whose wrapped lines hang after the widest marker (where the platform indents each
+     * line after a break, see [indentsEachLine]). Nested items and further paragraphs of an item are indented with
+     * spaces, since a paragraph boundary next to a line break would show as an empty line.
+     */
     private fun list(node: ASTNode, depth: Int): AnnotatedString {
         val ordered = node.type == MarkdownElementTypes.ORDERED_LIST
-        val items = node.children.filter { it.type == MarkdownElementTypes.LIST_ITEM }.map { item ->
+        val items = node.children.filter { it.type == MarkdownElementTypes.LIST_ITEM }
+        val markers = items.map { item ->
             val marker = if (ordered) {
                 item.child(MarkdownTokenTypes.LIST_NUMBER)?.getTextInNode(source)?.trim() ?: "1."
             } else {
                 styles.bullet
             }
-            listItem(item, "$marker ", depth)
+            "$marker "
         }
-        return joinBlocks(items, LINE_SEPARATOR)
+        val text = buildAnnotatedString {
+            items.forEachIndexed { index, item ->
+                if (index > 0) append('\n')
+                append(listItem(item, markers[index], depth))
+            }
+        }
+        if (depth > 0 || !indentsEachLine || text.paragraphStyles.isNotEmpty() || markers.isEmpty()) return text
+        val textStart = markers.maxOf(::markerWidth).em
+        return buildAnnotatedString {
+            withStyle(ParagraphStyle(textIndent = TextIndent(0.em, textStart))) { append(text) }
+        }
     }
 
-    /**
-     * A list item as hanging paragraphs: the marker indented for its level, and the item's wrapped lines and further
-     * paragraphs lined up after the marker. Nested lists indent themselves.
-     */
+    /** An item's lines: its marker indented for its level, then its paragraphs and nested lists. */
     private fun listItem(item: ASTNode, marker: String, depth: Int): AnnotatedString {
-        val indent = styles.listIndent.value * depth
-        val textStart = (indent + markerWidth(marker)).em
-        val markerParagraph = TextIndent(indent.em, textStart)
+        val indent = styles.listIndent * depth
+        val prefix = spaces(indent)
+        val continuation = spaces(indent + markerWidth(marker))
         val parts = item.children.mapNotNull { child ->
             block(child, depth + 1)?.takeIf { it.isNotEmpty() }?.let { child.isList() to it }
         }
         val lines = parts.mapIndexed { index, (isList, text) ->
             when {
                 isList -> text
-                index == 0 -> hanging(buildAnnotatedString { append(marker); append(text) }, markerParagraph)
-                else -> hanging(text, TextIndent(textStart, textStart))
+                index == 0 -> buildAnnotatedString { append(prefix); append(marker); append(text) }
+                else -> buildAnnotatedString { append(continuation); append(text) }
+            }
+        }.toMutableList()
+        // An empty item, or one that starts with a nested list, still shows its marker on its own line
+        if (parts.firstOrNull()?.first != false) lines.add(0, AnnotatedString(prefix + marker.trimEnd()))
+        return buildAnnotatedString {
+            lines.forEachIndexed { index, line ->
+                if (index > 0) append('\n')
+                append(line)
             }
         }
-        if (parts.firstOrNull()?.first == false) return joinBlocks(lines, LINE_SEPARATOR)
-        // An empty item, or one that starts with a nested list, still shows its marker on its own line
-        return joinBlocks(listOf(hanging(AnnotatedString(marker.trimEnd()), markerParagraph)) + lines, LINE_SEPARATOR)
     }
 
     private fun ASTNode.isList() =
         type == MarkdownElementTypes.UNORDERED_LIST || type == MarkdownElementTypes.ORDERED_LIST
 
-    /** [text] as one paragraph indented by [indent], unless it already sets its own paragraph style. */
-    private fun hanging(text: AnnotatedString, indent: TextIndent): AnnotatedString {
-        if (text.paragraphStyles.isNotEmpty()) return text
-        return buildAnnotatedString { withStyle(ParagraphStyle(textIndent = indent)) { append(text) } }
+    /** Spaces about [ems] wide, in em and quarter-em spaces. */
+    private fun spaces(ems: Float): String {
+        val quarters = (ems * 4).roundToInt()
+        return EM_SPACE.repeat(quarters / 4) + QUARTER_EM_SPACE.repeat(quarters % 4)
     }
 
     /** Roughly how wide a list marker and its space are, in ems of the body text. */
@@ -488,13 +506,16 @@ private class AnnotatedMarkdownRenderer(
     }
 
     /**
-     * The bare emails and phone numbers in plain [text] that [autoLinks] asks for, in order and not overlapping.
-     * Bare web addresses are found by the GFM parser.
+     * The bare emails, web domains and phone numbers in plain [text] that [autoLinks] asks for, in order and not
+     * overlapping. Addresses starting with `www.` or a scheme are found by the GFM parser.
      */
     private fun autoLinksIn(text: String): List<Pair<IntRange, String>> {
         val found = mutableListOf<Pair<IntRange, String>>()
         if (MarkdownAutoLink.Email in autoLinks) {
             EMAIL.findAll(text).forEach { found += it.range to "mailto:${it.value}" }
+        }
+        if (MarkdownAutoLink.Web in autoLinks) {
+            WebDomainLinkifier.find(text).forEach { found += it.range to it.url }
         }
         if (MarkdownAutoLink.Phone in autoLinks) {
             PhoneNumberLinkifier.find(text).forEach { found += it.range to it.url }
@@ -676,6 +697,8 @@ private class AnnotatedMarkdownRenderer(
         const val HORIZONTAL_RULE = "———"
         const val CODE_INDENT = "    "
         val WHITESPACE = Regex("\\s+")
+        const val EM_SPACE = "\u2003"
+        const val QUARTER_EM_SPACE = "\u2005"
         val EMAIL = Regex("""(?<![\p{L}\p{N}._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\p{L}\p{N}_-])""")
         /** Leaf tokens that are not plain text. */
         val SPECIAL_LEAVES = setOf(

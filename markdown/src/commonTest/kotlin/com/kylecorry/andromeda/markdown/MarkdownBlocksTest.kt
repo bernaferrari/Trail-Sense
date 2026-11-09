@@ -69,11 +69,13 @@ class MarkdownBlocksTest {
 
     @Test
     fun autoLinksCanBeTurnedOff() {
-        val markdown = "Mail a@example.com, visit www.example.com or call 555-123-4567. [Explicit](https://e.com)"
+        val markdown = "Mail a@example.com, visit www.example.com or example.org/maps or call 555-123-4567. " +
+            "[Explicit](https://e.com)"
         assertEquals(
             listOf(
                 "a@example.com" to "mailto:a@example.com",
                 "www.example.com" to "http://www.example.com",
+                "example.org/maps" to "http://example.org/maps",
                 "555-123-4567" to "tel:5551234567",
                 "Explicit" to "https://e.com"
             ),
@@ -81,7 +83,18 @@ class MarkdownBlocksTest {
         )
         val none = Markdown.toAnnotatedString(markdown, autoLinks = emptySet())
         assertEquals(listOf("Explicit" to "https://e.com"), none.links())
-        assertTrue(none.text.startsWith("Mail a@example.com, visit www.example.com or call 555-123-4567."))
+        assertTrue(none.text.startsWith("Mail a@example.com, visit www.example.com or example.org/maps or call"))
+    }
+
+    @Test
+    fun doesNotLinkDomainsInLinksCodeOrFileNames() {
+        val text = Markdown.toAnnotatedString(
+            "[see example.com](https://other.org), `example.com`, photo.jpg and notes.md, but sub.example.org/a."
+        )
+        assertEquals(
+            listOf("see example.com" to "https://other.org", "sub.example.org/a" to "http://sub.example.org/a"),
+            text.links()
+        )
     }
 
     private fun AnnotatedString.links(): List<Pair<String, String>> {
