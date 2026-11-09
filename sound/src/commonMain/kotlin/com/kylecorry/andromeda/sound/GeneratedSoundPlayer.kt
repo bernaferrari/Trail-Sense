@@ -11,16 +11,45 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.sin
+import com.kylecorry.andromeda.sound.stream.AudioStream
+import com.kylecorry.andromeda.sound.stream.nextBuffer
+import kotlinx.coroutines.ensureActive
+
+private fun interface SoundPlayback {
+    suspend fun play(volume: () -> Float)
+}
 
 /**
  * Plays a generated waveform until stopped. Control methods are safe to call concurrently;
  * playback errors are delivered to [scope]'s coroutine exception handler.
  */
-class GeneratedSoundPlayer(
+class GeneratedSoundPlayer private constructor(
     private val scope: CoroutineScope,
     private val sampleRate: Int = 44100,
-    private val sample: (Long) -> Double,
+    private val playbackSource: SoundPlayback,
 ) : ISoundPlayer {
+    constructor(scope: CoroutineScope, sampleRate: Int = 44100, sample: (Long) -> Double) :
+        this(scope, sampleRate, SoundPlayback { volume ->
+            playGeneratedSound(sampleRate) { index -> sample(index) * volume() }
+        })
+
+    internal constructor(scope: CoroutineScope, sampleRate: Int, stream: AudioStream) :
+        this(scope, sampleRate, SoundPlayback { volume ->
+            val speaker = PcmSpeaker(sampleRate)
+            try {
+                stream.reset()
+                val buffer = ShortArray((sampleRate / 20).coerceAtLeast(1))
+                while (true) {
+                    currentCoroutineContext().ensureActive()
+                    stream.nextBuffer(sampleRate, buffer)
+                    val gain = volume()
+                    for (index in buffer.indices) buffer[index] = (buffer[index] * gain).toInt().toShort()
+                    speaker.write(buffer)
+                }
+            } finally {
+                speaker.close()
+            }
+        })
     private val lock = SynchronizedObject()
     private val volume = atomic(1f)
     private var playback: Job? = null
@@ -42,7 +71,7 @@ class GeneratedSoundPlayer(
             val job = scope.launch(start = CoroutineStart.LAZY) {
                 try {
                     previous?.join()
-                    playGeneratedSound(sampleRate) { index -> sample(index) * volume.value }
+                    playbackSource.play { volume.value }
                 } finally {
                     val current = currentCoroutineContext()[Job]
                     synchronized(lock) { if (playback === current) playback = null }
@@ -137,3 +166,7 @@ fun tonePlayer(scope: CoroutineScope, frequencyHz: Double, sampleRate: Int = 441
     val cyclesPerSample = (frequencyHz % sampleRate) / sampleRate
     return GeneratedSoundPlayer(scope, sampleRate) { index -> sin(2.0 * PI * ((index * cyclesPerSample) % 1.0)) }
 }
+
+/** Plays an audio stream while the player is on; starting playback resets the stream. */
+fun streamPlayer(scope: CoroutineScope, stream: AudioStream, sampleRate: Int = 44100): GeneratedSoundPlayer =
+    GeneratedSoundPlayer(scope, sampleRate, stream)
