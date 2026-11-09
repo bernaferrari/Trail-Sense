@@ -44,6 +44,7 @@ kotlin {
             api(libs.andromeda.signal)
             api(libs.andromeda.torch)
             api(libs.andromeda.preferences)
+            api(libs.andromeda.geojson)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

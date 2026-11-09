@@ -114,9 +114,9 @@ fun TideListToolScreen() {
         },
         onEdit = { navigator.navigate(Route.CreateTide(editTideId = it.id)) },
         onDelete = { tide ->
-            val title = tide.name ?: if (tide.location != null) {
-                formatService.formatLocation(tide.location)
-            } else {
+            val title = tide.name ?: tide.location?.let {
+                formatService.formatLocation(it)
+            } ?: run {
                 context.getString(android.R.string.untitled)
             }
             Alerts.dialog(
@@ -385,7 +385,8 @@ private fun getTideDescription(tide: TideTable): String {
 
 private fun getTideTitle(tide: TideTable, formatter: FormatService): String {
     return tide.name
-        ?: if (tide.location != null) formatter.formatLocation(tide.location) else ""
+        ?: tide.location?.let { formatter.formatLocation(it) }
+        ?: ""
 }
 
 @Preview(showBackground = true)

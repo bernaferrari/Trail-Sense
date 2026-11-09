@@ -21,15 +21,16 @@ class WeatherToolWidgetView : SimpleToolWidgetView() {
         val formatter = FormatService.getInstance(context)
         val prefs = UserPreferences(context)
         val current = weather.getWeather()
+        val temperature = current.observation?.temperature
 
         return ToolWidgetContent.Simple(
             title = context.getString(R.string.weather),
-            subtitle = if (current.observation?.temperature != null) {
+            subtitle = if (temperature != null) {
                 context.getString(
                     R.string.dot_separated_pair,
                     formatter.formatWeather(current.prediction.primaryHourly),
                     formatter.formatTemperature(
-                        current.observation.temperature.convertTo(prefs.temperatureUnits)
+                        temperature.convertTo(prefs.temperatureUnits)
                     )
                 )
             } else {

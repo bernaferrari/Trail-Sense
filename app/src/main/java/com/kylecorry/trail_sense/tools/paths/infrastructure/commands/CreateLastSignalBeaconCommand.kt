@@ -17,7 +17,7 @@ class CreateLastSignalBeaconCommand(private val context: Context) {
     private val formatter = FormatService.getInstance(context)
 
     suspend fun execute(point: PathPoint) {
-        point.cellSignal ?: return
+        val cellSignal = point.cellSignal ?: return
         onIO {
             beaconService.add(
                 Beacon(
@@ -26,9 +26,9 @@ class CreateLastSignalBeaconCommand(private val context: Context) {
                         R.string.last_signal_beacon_name,
                         formatter.formatCellNetwork(
                             CellNetwork.entries
-                                .first { it.id == point.cellSignal.network.id }
+                                .first { it.id == cellSignal.network.id }
                         ),
-                        formatter.formatQuality(point.cellSignal.quality)
+                        formatter.formatQuality(cellSignal.quality)
                     ),
                     point.coordinate,
                     false,

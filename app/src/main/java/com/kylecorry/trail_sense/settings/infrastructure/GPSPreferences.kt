@@ -29,13 +29,14 @@ class GPSPreferences(context: Context) : PreferenceRepo(context), IGPSPreference
             return GPSAccuracyFilter.custom(accuracy, wait)
         }
         set(value) {
-            if (value.minAccuracy == null || value.maxAccuracyWait == null) {
+            val accuracy = value.minAccuracy
+            val maxWait = value.maxAccuracyWait
+            if (accuracy == null || maxWait == null) {
                 cache.putFloat(getString(R.string.pref_gps_accuracy_meters), 0f)
                 cache.putInt(getString(R.string.pref_gps_accuracy_wait_seconds), 0)
                 return
             }
-            val accuracy = value.minAccuracy
-            val wait = value.maxAccuracyWait.inWholeSeconds.toInt()
+            val wait = maxWait.inWholeSeconds.toInt()
             cache.putFloat(
                 getString(R.string.pref_gps_accuracy_meters),
                 accuracy.coerceIn(

@@ -193,9 +193,10 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
         }
 
         // If the lunitidal interval is specified, use it
-        if (table.lunitidalInterval != null) {
+        val lunitidalInterval = table.lunitidalInterval
+        if (lunitidalInterval != null) {
             return LunitidalWaterLevelCalculator(
-                table.lunitidalInterval,
+                lunitidalInterval,
                 if (table.lunitidalIntervalIsUtc) Coordinate.zero else table.location
                     ?: Coordinate.zero,
                 null,
