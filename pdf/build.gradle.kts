@@ -25,6 +25,7 @@ kotlin {
         jvmMain { dependsOn(jvmSharedMain) }
         androidMain { dependsOn(jvmSharedMain) }
         commonMain.dependencies {
+            api("com.kylecorry:sol:19.4.0")
             api(project(":shared"))
             api(project(":bitmaps"))
             implementation(project(":wkt"))
