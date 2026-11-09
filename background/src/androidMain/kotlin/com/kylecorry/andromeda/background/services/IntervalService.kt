@@ -5,9 +5,14 @@ import android.content.IntentFilter
 import android.os.Bundle
 import com.kylecorry.andromeda.background.BroadcastWorker
 import com.kylecorry.andromeda.background.TaskSchedulerFactory
-import com.kylecorry.andromeda.core.system.BroadcastReceiverTopic
+import com.kylecorry.andromeda.core.system.broadcasts
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.ITimer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -30,9 +35,7 @@ abstract class IntervalService(
         return CoroutineTimer { action() }
     }
 
-    private val receiver by lazy {
-        BroadcastReceiverTopic(applicationContext, IntentFilter(action))
-    }
+    private var workerBroadcasts: Job? = null
 
     private val periodicWorker by lazy {
         TaskSchedulerFactory(this).interval(
@@ -90,7 +93,10 @@ abstract class IntervalService(
             timer.interval(period.inWholeMilliseconds)
         } else {
             isWakelockManaged = true
-            receiver.subscribe(this::onReceive)
+            workerBroadcasts?.cancel()
+            workerBroadcasts = broadcasts(applicationContext, IntentFilter(action), includeSticky = false)
+                .onEach { onWorkerBroadcast() }
+                .launchIn(CoroutineScope(Dispatchers.Main.immediate))
             if (useOneTimeWorkers) {
                 oneTimeWorker.start()
             } else {
@@ -103,7 +109,8 @@ abstract class IntervalService(
     override fun onDestroy() {
         isEnabled = false
         releaseWakelock()
-        receiver.unsubscribe(this::onReceive)
+        workerBroadcasts?.cancel()
+        workerBroadcasts = null
         timer.stop()
         if (useOneTimeWorkers) {
             oneTimeWorker.cancel()
@@ -113,15 +120,14 @@ abstract class IntervalService(
         super.onDestroy()
     }
 
-    private fun onReceive(@Suppress("UNUSED_PARAMETER") intent: Intent): Boolean {
+    private fun onWorkerBroadcast() {
         if (!isEnabled) {
-            return false
+            return
         }
         timer.once(0L)
         if (useOneTimeWorkers) {
             oneTimeWorker.cancel()
             oneTimeWorker.once(period)
         }
-        return true
     }
 }

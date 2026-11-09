@@ -36,7 +36,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-internal class CellSignalSensor(
+internal class AndroidCellSignalSensor(
     private val context: Context,
     private val updateCellCache: Boolean,
     private val removeUnregisteredSignals: Boolean = true,

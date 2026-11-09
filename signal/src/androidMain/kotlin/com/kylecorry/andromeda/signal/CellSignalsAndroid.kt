@@ -15,7 +15,7 @@ actual val cellularSignalSupported: Boolean
 actual fun cellSignals(options: CellSignalOptions): Flow<List<CellSignal>> = callbackFlow {
     val context = KSensorContext.get()
     if (!AndroidPermissions.canGetFineLocation(context)) throw SecurityException("Fine location permission is required")
-    val sensor = CellSignalSensor(context, options.updateCellCache, !options.includeUnregistered, options.pathLossFactor)
+    val sensor = AndroidCellSignalSensor(context, options.updateCellCache, !options.includeUnregistered, options.pathLossFactor)
     var emitted = false
     val listener: () -> Boolean = {
         if (sensor.hasValidReading) {

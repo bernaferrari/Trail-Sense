@@ -28,7 +28,7 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
         MutableSharedFlow<CameraFrame>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     }
     val camera = remember(context, owner, preview, frameAnalysis) {
-        Camera(
+        AndroidCamera(
             context, owner, previewState = preview, analyze = frameAnalysis,
             captureSettings = ImageCaptureSettings(),
             onAnalysisFrame = if (!frameAnalysis) null else { image ->

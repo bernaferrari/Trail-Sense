@@ -6,7 +6,7 @@ import com.kylecorry.andromeda.battery.BatteryHealth
 
 import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.andromeda.core.sensors.Thermometer
-interface IBattery : Sensor, Thermometer {
+interface Battery : Sensor, Thermometer {
     val percent: Float
     val capacity: Float
     val maxCapacity: Float

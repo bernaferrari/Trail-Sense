@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import com.kylecorry.andromeda.core.sensors.BaseBroadcastReceiverSensor
 
-class Battery(context: Context) : IBattery,
+class AndroidBattery(context: Context) : Battery,
     BaseBroadcastReceiverSensor(
         context,
         IntentFilter("android.intent.action.BATTERY_CHANGED"),
