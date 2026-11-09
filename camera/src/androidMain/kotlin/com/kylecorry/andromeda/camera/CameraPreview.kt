@@ -12,16 +12,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 
-internal class CameraPreviewState(val fill: Boolean = true) {
+class CameraPreviewState(val fill: Boolean = true) {
     internal var surfaceRequest by mutableStateOf<SurfaceRequest?>(null)
     internal var size by mutableStateOf(IntSize.Zero)
 }
 
 @Composable
-internal fun rememberCameraPreviewState(fill: Boolean = true): CameraPreviewState = remember(fill) { CameraPreviewState(fill) }
+fun rememberCameraPreviewState(fill: Boolean = true): CameraPreviewState = remember(fill) { CameraPreviewState(fill) }
 
 @Composable
-internal fun CameraPreview(state: CameraPreviewState, modifier: Modifier = Modifier) {
+fun CameraPreview(state: CameraPreviewState, modifier: Modifier = Modifier) {
     val request = state.surfaceRequest ?: return
     CameraXViewfinder(
         surfaceRequest = request,

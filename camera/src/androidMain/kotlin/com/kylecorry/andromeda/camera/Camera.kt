@@ -63,7 +63,7 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.nanoseconds
 
 
-internal class Camera(
+class Camera(
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,
     private val isBackCamera: Boolean = true,
