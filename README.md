@@ -1,15 +1,27 @@
 # Sol
-A Kotlin library for science and math in the real world.
+A Kotlin Multiplatform library for science and math in the real world.
 
 The core logic behind [Trail Sense](https://github.com/kylecorry31/Trail-Sense). This is intended for my use only at this point, so there isn't any documentation on it. 
 
 ## Installation (Gradle)
 Available on Maven Central.
 
-```gradle
+```kotlin
 dependencies {
-    implementation 'com.kylecorry:sol:<version>'
+    implementation("com.kylecorry:sol:<version>")
 }
+```
+
+Targets: JVM (including Android), iOS (`iosArm64`, `iosSimulatorArm64`), macOS (`macosArm64`) and Wasm/JS.
+
+On Wasm/JS, kotlinx-datetime needs the IANA time zone database from js-joda. Add
+`implementation(npm("@js-joda/timezone", "<version>"))` to `wasmJsMain` and load it once:
+
+```kotlin
+@JsModule("@js-joda/timezone")
+external object JsJodaTimeZoneModule
+
+private val jsJodaTz = JsJodaTimeZoneModule
 ```
 
 ## References
