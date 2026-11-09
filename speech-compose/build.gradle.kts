@@ -3,14 +3,7 @@ plugins {
 }
 
 kotlin {
-    applyDefaultHierarchyTemplate {
-        common {
-            group("desktopApple") {
-                withJvm()
-                group("ios")
-            }
-        }
-    }
+    sharedSourceSets(SharedSourceSet.DesktopApple)
     sourceSets {
         commonMain.dependencies {
             api(project(":speech"))

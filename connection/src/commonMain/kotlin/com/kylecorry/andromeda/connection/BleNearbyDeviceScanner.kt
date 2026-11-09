@@ -25,7 +25,7 @@ public class BleNearbyDeviceScanner(
     private val writeType: WriteType = WriteType.WithResponse,
     private val matches: (Advertisement) -> Boolean = { true },
     private val advertisements: () -> Flow<Advertisement> = ::scanBluetooth,
-    private val identity: (Advertisement) -> String = { it.identifier.toString() },
+    private val identity: (Advertisement) -> String = { "${it.identifier}" },
 ) : SharedSensor(), NearbyDeviceScanner {
     private val lock = SynchronizedObject()
     private val found = linkedMapOf<String, BleNearbyDevice>()

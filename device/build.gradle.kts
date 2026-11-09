@@ -3,14 +3,7 @@ plugins {
 }
 
 kotlin {
-    applyDefaultHierarchyTemplate {
-        common {
-            group("mobile") {
-                withAndroidLibrary()
-                group("ios")
-            }
-        }
-    }
+    sharedSourceSets(SharedSourceSet.Mobile)
     sourceSets {
         commonMain.dependencies {
             api(libs.sol)

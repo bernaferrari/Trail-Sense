@@ -126,7 +126,7 @@ public fun Markdown.toBlocks(
 
 private fun normalizeLineBreaks(markdown: String) = markdown.replace("\r\n", "\n").replace("\r", "\n")
 
-private fun parse(text: String): ASTNode {
+private fun parse(text: CharSequence): ASTNode {
     return MarkdownParser(GFMFlavourDescriptor(), cancellationToken = CancellationToken.NonCancellable)
         .buildMarkdownTreeFromString(text)
 }

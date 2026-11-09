@@ -3,14 +3,7 @@ plugins {
 }
 
 kotlin {
-    applyDefaultHierarchyTemplate {
-        common {
-            group("jvmShared") {
-                withJvm()
-                withAndroidLibrary()
-            }
-        }
-    }
+    sharedSourceSets(SharedSourceSet.JvmShared)
     sourceSets {
         commonMain.dependencies { implementation(libs.korlibs.compression) }
         jvmTest.dependencies {

@@ -6,6 +6,7 @@ import android.graphics.pdf.PdfDocument
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.util.TypedValue
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -39,7 +40,7 @@ public object PdfConvert {
         val document = PdfDocument()
         val paint = TextPaint().apply {
             color = Color.BLACK
-            this.textSize = textSize * context.resources.displayMetrics.scaledDensity
+            this.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize, context.resources.displayMetrics)
         }
         val width = 595 - margins * 2
         val height = 842 - margins * 2

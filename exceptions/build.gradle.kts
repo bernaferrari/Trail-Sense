@@ -6,14 +6,7 @@ kotlin {
     android {
         namespace = "com.kylecorry.andromeda.exceptions.shared"
     }
-    applyDefaultHierarchyTemplate {
-        common {
-            group("jvmShared") {
-                withJvm()
-                withAndroidLibrary()
-            }
-        }
-    }
+    sharedSourceSets(SharedSourceSet.JvmShared)
     sourceSets {
         commonMain.dependencies {
             api(project(":shared"))

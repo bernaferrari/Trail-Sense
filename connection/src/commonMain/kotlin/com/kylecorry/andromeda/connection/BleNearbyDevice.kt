@@ -46,7 +46,7 @@ public class BleNearbyDevice(
     /** Most recent connection or observation failure; cleared on the next connection attempt. */
     public val failure: StateFlow<Throwable?> = mutableFailure.asStateFlow()
     override val name: String get() = advertisement.name ?: advertisement.peripheralName.orEmpty()
-    override val address: String get() = advertisement.identifier.toString()
+    override val address: String get() = "${advertisement.identifier}"
     override val isConnected: Boolean get() = synchronized(lock) { connected }
     override val isConnecting: Boolean get() = synchronized(lock) { connecting }
     override val hasValidReading: Boolean get() = isConnected
