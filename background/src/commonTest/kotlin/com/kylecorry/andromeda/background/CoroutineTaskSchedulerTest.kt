@@ -19,12 +19,12 @@ class CoroutineTaskSchedulerTest {
             count++
             if (count == 1 || count == 3) complete.complete(Unit)
         }
-        val once: IOneTimeTaskScheduler = scheduler
+        val once: OneTimeTaskScheduler = scheduler
         once.once(Instant.fromEpochSeconds(0))
         withTimeout(1000) { complete.await() }
         assertEquals(1, count)
         complete = CompletableDeferred()
-        val periodic: IPeriodicTaskScheduler = scheduler
+        val periodic: PeriodicTaskScheduler = scheduler
         periodic.interval(10.milliseconds)
         withTimeout(1000) { complete.await() }
         periodic.cancel()

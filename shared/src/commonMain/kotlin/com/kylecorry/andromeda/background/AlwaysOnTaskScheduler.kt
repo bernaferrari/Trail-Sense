@@ -1,5 +1,5 @@
 package com.kylecorry.andromeda.background
 
-interface IAlwaysOnTaskScheduler: ITaskScheduler {
+interface AlwaysOnTaskScheduler: TaskScheduler {
     fun start()
 }

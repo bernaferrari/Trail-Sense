@@ -1,5 +1,5 @@
 package com.kylecorry.andromeda.background
 
-interface ITaskScheduler {
+interface TaskScheduler {
     fun cancel()
 }

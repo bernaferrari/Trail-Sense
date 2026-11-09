@@ -14,7 +14,7 @@ class AdaptivePeriodicScheduler(
     private val background: PeriodicBackgroundScheduler,
     task: suspend () -> Unit,
     private val backgroundThreshold: Duration = 15.minutes,
-) : IPeriodicTaskScheduler {
+) : PeriodicTaskScheduler {
     private val foreground = CoroutineTaskScheduler(scope, task)
 
     init { require(backgroundThreshold.isFinite() && backgroundThreshold > Duration.ZERO) }

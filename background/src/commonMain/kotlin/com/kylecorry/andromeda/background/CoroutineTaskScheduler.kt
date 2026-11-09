@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration
 
 /** Schedules work while the supplied coroutine scope is alive. */
-class CoroutineTaskScheduler(private val scope: CoroutineScope, private val task: suspend () -> Unit) : IOneTimeTaskScheduler, IPeriodicTaskScheduler {
+class CoroutineTaskScheduler(private val scope: CoroutineScope, private val task: suspend () -> Unit) : OneTimeTaskScheduler, PeriodicTaskScheduler {
     private var job: Job? = null
 
     override fun once(delay: Duration) {

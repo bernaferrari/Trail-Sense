@@ -5,7 +5,7 @@ import kotlin.time.Duration
 import kotlin.time.Instant
 
 /** Requests platform-managed work no earlier than the specified time. */
-interface BackgroundScheduler : IOneTimeTaskScheduler {
+interface BackgroundScheduler : OneTimeTaskScheduler {
     fun schedule(earliest: Instant)
 
     override fun once(delay: Duration) {
