@@ -6,7 +6,7 @@ import kotlin.math.abs
 import kotlin.math.hypot
 
 /** Rectifies a four-corner image region. Coordinates describe the outer pixel edges. */
-fun PixelImage.correctPerspective(
+public fun PixelImage.correctPerspective(
     bounds: PixelBounds,
     outputWidth: Int = averageDistance(bounds.topLeft, bounds.topRight, bounds.bottomLeft, bounds.bottomRight),
     outputHeight: Int = averageDistance(bounds.topLeft, bounds.bottomLeft, bounds.topRight, bounds.bottomRight),

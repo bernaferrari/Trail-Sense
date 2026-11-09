@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
-actual val cellularSignalSupported: Boolean
+public actual val cellularSignalSupported: Boolean
     get() = KSensorContext.get().packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY)
 
-actual fun cellSignals(options: CellSignalOptions): Flow<List<CellSignal>> = callbackFlow {
+public actual fun cellSignals(options: CellSignalOptions): Flow<List<CellSignal>> = callbackFlow {
     val context = KSensorContext.get()
     if (!AndroidPermissions.canGetFineLocation(context)) throw SecurityException("Fine location permission is required")
     val sensor = AndroidCellSignalSensor(context, options.updateCellCache, !options.includeUnregistered, options.pathLossFactor)

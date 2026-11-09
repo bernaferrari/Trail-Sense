@@ -12,7 +12,7 @@ import com.kylecorry.andromeda.permissions.Permissions
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-object Alarms {
+public object Alarms {
 
     /**
      * Create an alarm
@@ -24,7 +24,7 @@ object Alarms {
      * @param isWindowCentered True if the inexact window should be centered around the time, false if the window should be after the time.
      */
     @SuppressLint("MissingPermission")
-    fun set(
+    public fun set(
         context: Context,
         time: Instant,
         pendingIntent: PendingIntent,
@@ -114,7 +114,7 @@ object Alarms {
      * @param pendingIntent The pending intent to launch when the alarm fires
      */
     @SuppressLint("MissingPermission")
-    fun setRepeating(
+    public fun setRepeating(
         context: Context,
         time: Instant,
         interval: Duration,
@@ -136,7 +136,7 @@ object Alarms {
      * @param viewAlarmPendingIntent The pending intent to launch when the user wants to view or edit the alarm
      */
     @SuppressLint("MissingPermission")
-    fun setAlarmClock(
+    public fun setAlarmClock(
         context: Context,
         time: Instant,
         pendingIntent: PendingIntent,
@@ -151,7 +151,7 @@ object Alarms {
      * Cancel the alarm associated with the pending intent
      * @param pendingIntent The pending intent to cancel
      */
-    fun cancel(context: Context, pendingIntent: PendingIntent) {
+    public fun cancel(context: Context, pendingIntent: PendingIntent) {
         try {
             val alarmManager = getAlarmManager(context)
             alarmManager?.cancel(pendingIntent)
@@ -167,7 +167,7 @@ object Alarms {
      * @param intent The intent used for the pending intent
      * @return true if the alarm is running, false otherwise
      */
-    fun isAlarmRunning(context: Context, requestCode: Int, intent: Intent): Boolean {
+    public fun isAlarmRunning(context: Context, requestCode: Int, intent: Intent): Boolean {
         return Intents.pendingIntentExists(context, requestCode, intent)
     }
 

@@ -19,7 +19,7 @@ import io.github.yuroyami.kitepdf.core.parser.PdfString
 import kotlin.math.absoluteValue
 
 @OptIn(KiteRawApi::class)
-actual fun parseGeospatialPDF(bytes: ByteArray): GeospatialPDFMetadata? {
+public actual fun parseGeospatialPDF(bytes: ByteArray): GeospatialPDFMetadata? {
     val document = PdfDocument.open(bytes)
     fun resolve(value: PdfObject?): PdfObject? = if (value is PdfReference) document.resolve(value) else value
     fun dictionary(value: PdfObject?): PdfDictionary? = resolve(value) as? PdfDictionary

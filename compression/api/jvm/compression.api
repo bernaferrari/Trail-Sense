@@ -1,0 +1,30 @@
+public final class com/kylecorry/andromeda/compression/ByteArrayExtensionsKt {
+	public static final fun bitsToByte ([BII)Ljava/lang/Byte;
+	public static synthetic fun bitsToByte$default ([BIIILjava/lang/Object;)Ljava/lang/Byte;
+	public static final fun bitsToInt ([BII)Ljava/lang/Integer;
+	public static synthetic fun bitsToInt$default ([BIIILjava/lang/Object;)Ljava/lang/Integer;
+	public static final fun toInt ([B)I
+	public static final fun toShort ([B)S
+}
+
+public final class com/kylecorry/andromeda/compression/CompressionUtils {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/compression/CompressionUtils;
+	public final fun getByte ([BII)Ljava/lang/Byte;
+	public static synthetic fun getByte$default (Lcom/kylecorry/andromeda/compression/CompressionUtils;[BIIILjava/lang/Object;)Ljava/lang/Byte;
+	public final fun getBytes ([BIII)[B
+	public static synthetic fun getBytes$default (Lcom/kylecorry/andromeda/compression/CompressionUtils;[BIIIILjava/lang/Object;)[B
+	public final fun getInt ([BI)Ljava/lang/Integer;
+	public final fun getShort ([BI)Ljava/lang/Short;
+}
+
+public final class com/kylecorry/andromeda/compression/Zlib {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/compression/Zlib;
+	public final fun decompress ([B)[B
+}
+
+public final class com/kylecorry/andromeda/compression/ZlibStreamsKt {
+	public static final fun decompress (Lcom/kylecorry/andromeda/compression/Zlib;Ljava/io/InputStream;)[B
+	public static final fun decompress (Lcom/kylecorry/andromeda/compression/Zlib;Ljava/io/InputStream;Ljava/io/OutputStream;Z)V
+	public static synthetic fun decompress$default (Lcom/kylecorry/andromeda/compression/Zlib;Ljava/io/InputStream;Ljava/io/OutputStream;ZILjava/lang/Object;)V
+}
+

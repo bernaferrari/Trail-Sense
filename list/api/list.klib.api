@@ -1,0 +1,10 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:list>
+final fun <#A: kotlin/Any?> com.kylecorry.andromeda.list/ItemGrid(kotlin.collections/List<#A>, kotlin/Int, androidx.compose.ui/Modifier?, androidx.compose.foundation.lazy.grid/LazyGridState?, kotlin/Boolean, kotlin/Boolean, kotlin/Boolean, kotlin/Function1<#A, kotlin/Any>?, kotlin/Function1<#A, kotlin/Int>?, kotlin/Function3<#A, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.list/ItemGrid|ItemGrid(kotlin.collections.List<0:0>;kotlin.Int;androidx.compose.ui.Modifier?;androidx.compose.foundation.lazy.grid.LazyGridState?;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean;kotlin.Function1<0:0,kotlin.Any>?;kotlin.Function1<0:0,kotlin.Int>?;kotlin.Function3<0:0,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> com.kylecorry.andromeda.list/ItemList(kotlin.collections/List<#A>, androidx.compose.ui/Modifier?, androidx.compose.foundation.lazy/LazyListState?, kotlin/Boolean, kotlin/Boolean, kotlin/Boolean, kotlin/Function1<#A, kotlin/Any>?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<#A, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.list/ItemList|ItemList(kotlin.collections.List<0:0>;androidx.compose.ui.Modifier?;androidx.compose.foundation.lazy.LazyListState?;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean;kotlin.Function1<0:0,kotlin.Any>?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<0:0,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){0§<kotlin.Any?>}[0]

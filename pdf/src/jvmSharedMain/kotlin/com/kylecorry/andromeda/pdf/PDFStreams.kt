@@ -4,14 +4,14 @@ import com.kylecorry.luna.streams.readText
 import java.io.InputStream
 import java.io.OutputStream
 
-class PDFInputStream(val stream: InputStream) : PDFValue {
-    override fun equals(other: Any?) = other is PDFInputStream && stream == other.stream
-    override fun hashCode() = stream.hashCode()
-    override fun toString() = "stream\n${stream.readText()}\nendstream"
-    override fun toByteArray() = "stream\n".encodeToByteArray() + stream.readBytes() + "\nendstream".encodeToByteArray()
+public class PDFInputStream(public val stream: InputStream) : PDFValue {
+    override fun equals(other: Any?): Boolean = other is PDFInputStream && stream == other.stream
+    override fun hashCode(): Int = stream.hashCode()
+    override fun toString(): String = "stream\n${stream.readText()}\nendstream"
+    override fun toByteArray(): ByteArray = "stream\n".encodeToByteArray() + stream.readBytes() + "\nendstream".encodeToByteArray()
 }
 
-fun PDFValue.write(output: OutputStream): Long = when (this) {
+public fun PDFValue.write(output: OutputStream): Long = when (this) {
     is PDFInputStream -> {
         val header = "stream\n".encodeToByteArray()
         val footer = "\nendstream".encodeToByteArray()

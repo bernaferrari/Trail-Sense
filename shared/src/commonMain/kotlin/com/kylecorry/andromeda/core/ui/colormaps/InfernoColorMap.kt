@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
 
-class InfernoColorMap : RgbInterpolationColorMap(
+public class InfernoColorMap : RgbInterpolationColorMap(
     arrayOf(
         PackedColor.rgb(0, 0, 4),
         PackedColor.rgb(40, 11, 84),

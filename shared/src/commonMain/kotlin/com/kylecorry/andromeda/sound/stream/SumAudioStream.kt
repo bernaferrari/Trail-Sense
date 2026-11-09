@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.sound.stream
 
-class SumAudioStream(private vararg val streams: Pair<Float, AudioStream>) : AudioStream {
+public class SumAudioStream(private vararg val streams: Pair<Float, AudioStream>) : AudioStream {
     override suspend fun next(sampleRate: Int): Float {
         var amplitude = 0.0
         var totalVolume = 0.0

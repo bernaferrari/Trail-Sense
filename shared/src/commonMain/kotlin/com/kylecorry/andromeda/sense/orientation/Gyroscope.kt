@@ -2,15 +2,15 @@ package com.kylecorry.andromeda.sense.orientation
 
 import com.kylecorry.sol.math.Euler
 
-interface Gyroscope : OrientationSensor {
+public interface Gyroscope : OrientationSensor {
 
     /**
      * The angular rate of the device in degrees per second
      */
-    val angularRate: Euler
+    public val angularRate: Euler
 
     /**
      * The raw angular rate of the device in degrees per second
      */
-    val rawAngularRate: FloatArray
+    public val rawAngularRate: FloatArray
 }

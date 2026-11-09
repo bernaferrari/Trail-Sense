@@ -8,7 +8,7 @@ import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 
 @Composable
-actual fun rememberPermissionAccess(): PermissionAccess {
+public actual fun rememberPermissionAccess(): PermissionAccess {
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     BindEffect(controller)

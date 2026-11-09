@@ -9,7 +9,7 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import java.io.*
 
-open class BaseFileSystem(private val context: Context, private val basePath: String = "") :
+public open class BaseFileSystem(private val context: Context, private val basePath: String = "") :
     IFileSystem {
 
     override fun getUri(path: String, authority: String, create: Boolean): Uri {

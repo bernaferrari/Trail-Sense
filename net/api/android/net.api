@@ -1,0 +1,30 @@
+public final class com/kylecorry/andromeda/net/HttpClient : java/lang/AutoCloseable {
+	public fun <init> ()V
+	public fun close ()V
+	public final fun send-RT5A-rY (Ljava/lang/String;Lcom/kylecorry/andromeda/net/HttpMethod;[BLjava/util/Map;Lkotlin/time/Duration;Lkotlin/time/Duration;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun send-RT5A-rY$default (Lcom/kylecorry/andromeda/net/HttpClient;Ljava/lang/String;Lcom/kylecorry/andromeda/net/HttpMethod;[BLjava/util/Map;Lkotlin/time/Duration;Lkotlin/time/Duration;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/net/HttpMethod : java/lang/Enum {
+	public static final field DELETE Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static final field GET Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static final field HEAD Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static final field OPTIONS Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static final field PATCH Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static final field POST Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static final field PUT Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static final field TRACE Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/net/HttpMethod;
+	public static fun values ()[Lcom/kylecorry/andromeda/net/HttpMethod;
+}
+
+public final class com/kylecorry/andromeda/net/HttpResponse {
+	public fun <init> (ILjava/util/Map;[B)V
+	public final fun contentAsString ()Ljava/lang/String;
+	public final fun getCode ()I
+	public final fun getContent ()[B
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun isSuccessful ()Z
+}
+

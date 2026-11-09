@@ -15,14 +15,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class FlowGPS(private val readings: Flow<Reading<LocationReading>>, private val scope: CoroutineScope) : SharedSensor(), GpsSensor {
-    override var hasValidReading = false
+public class FlowGPS(private val readings: Flow<Reading<LocationReading>>, private val scope: CoroutineScope) : SharedSensor(), GpsSensor {
+    override var hasValidReading: Boolean = false
         private set
-    override var quality = Quality.Unknown
+    override var quality: Quality = Quality.Unknown
         private set
-    override var location = Coordinate.zero
+    override var location: Coordinate = Coordinate.zero
         private set
-    override var altitude = 0f
+    override var altitude: Float = 0f
         private set
     override var mslAltitude: Float? = null
         private set
@@ -30,7 +30,7 @@ class FlowGPS(private val readings: Flow<Reading<LocationReading>>, private val 
         private set
     override var verticalAccuracy: Float? = null
         private set
-    override var speed = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
+    override var speed: Speed = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
         private set
     override var speedAccuracy: Float? = null
         private set

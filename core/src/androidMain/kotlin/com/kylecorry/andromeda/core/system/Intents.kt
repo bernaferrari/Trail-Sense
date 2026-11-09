@@ -16,9 +16,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.kylecorry.sol.units.Coordinate
 
-object Intents {
+public object Intents {
 
-    inline fun <reified T> getParcelableExtra(intent: Intent, name: String): T? {
+    public inline fun <reified T> getParcelableExtra(intent: Intent, name: String): T? {
         return if (Build.VERSION.SDK_INT >= 33) {
             intent.getParcelableExtra(name, T::class.java)
         } else {
@@ -27,13 +27,13 @@ object Intents {
         }
     }
 
-    fun localIntent(context: Context, action: String): Intent {
+    public fun localIntent(context: Context, action: String): Intent {
         return Intent(action).apply {
             `package` = context.packageName
         }
     }
 
-    fun startService(
+    public fun startService(
         context: Context,
         intent: Intent,
         foreground: Boolean = false,
@@ -48,7 +48,7 @@ object Intents {
         }
     }
 
-    fun pendingIntentExists(context: Context, requestCode: Int, intent: Intent): Boolean {
+    public fun pendingIntentExists(context: Context, requestCode: Int, intent: Intent): Boolean {
         return PendingIntent.getBroadcast(
             context,
             requestCode,
@@ -57,7 +57,7 @@ object Intents {
         ) != null
     }
 
-    fun email(to: String, subject: String, body: String = ""): Intent {
+    public fun email(to: String, subject: String, body: String = ""): Intent {
         return Intent(Intent.ACTION_SENDTO).apply {
             data = "mailto:".toUri()
             putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
@@ -66,24 +66,24 @@ object Intents {
         }
     }
 
-    fun url(url: String): Intent {
+    public fun url(url: String): Intent {
         return Intent(Intent.ACTION_VIEW).apply {
             data = url.toUri()
         }
     }
 
-    fun geo(location: Coordinate): Intent {
+    public fun geo(location: Coordinate): Intent {
         return url(GeoUri(location).toString())
     }
 
-    fun appSettings(context: Context): Intent {
+    public fun appSettings(context: Context): Intent {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         val uri = Uri.fromParts("package", Package.getPackageName(context), null)
         intent.data = uri
         return intent
     }
 
-    fun notificationSettings(context: Context, channel: String? = null): Intent {
+    public fun notificationSettings(context: Context, channel: String? = null): Intent {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return appSettings(context)
         }
@@ -101,18 +101,18 @@ object Intents {
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
-    fun alarmAndReminderSettings(context: Context): Intent {
+    public fun alarmAndReminderSettings(context: Context): Intent {
         val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
         val uri = Uri.fromParts("package", Package.getPackageName(context), null)
         intent.data = uri
         return intent
     }
 
-    fun batteryOptimizationSettings(): Intent {
+    public fun batteryOptimizationSettings(): Intent {
         return Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
     }
 
-    fun createFile(filename: String, type: String, message: String = filename): Intent {
+    public fun createFile(filename: String, type: String, message: String = filename): Intent {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = type
@@ -120,7 +120,7 @@ object Intents {
         return Intent.createChooser(intent, message)
     }
 
-    fun createFile(filename: String, types: List<String>, message: String = filename): Intent {
+    public fun createFile(filename: String, types: List<String>, message: String = filename): Intent {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "*/*"
@@ -129,7 +129,7 @@ object Intents {
         return Intent.createChooser(intent, message)
     }
 
-    fun pickFile(
+    public fun pickFile(
         type: String,
         message: String,
         useSAF: Boolean = true,
@@ -143,7 +143,7 @@ object Intents {
         return Intent.createChooser(requestFileIntent, message)
     }
 
-    fun pickFile(
+    public fun pickFile(
         types: List<String>,
         message: String,
         useSAF: Boolean = true,
@@ -158,7 +158,7 @@ object Intents {
         return Intent.createChooser(requestFileIntent, message)
     }
 
-    fun pickDirectory(
+    public fun pickDirectory(
         message: String,
         access: UriAccess = UriAccess()
     ): Intent {
@@ -167,7 +167,7 @@ object Intents {
         return Intent.createChooser(intent, message)
     }
 
-    fun acceptPersistentUri(
+    public fun acceptPersistentUri(
         context: Context,
         uri: Uri,
         takeRead: Boolean = true,
@@ -179,18 +179,18 @@ object Intents {
         )
     }
 
-    fun openChooser(context: Context, intent: Intent, title: String) {
+    public fun openChooser(context: Context, intent: Intent, title: String) {
         context.startActivity(Intent.createChooser(intent, title))
     }
 
-    fun restart(context: Context, packageName: String = Package.getPackageName(context)): Intent {
+    public fun restart(context: Context, packageName: String = Package.getPackageName(context)): Intent {
         val intent = context.packageManager.getLaunchIntentForPackage(packageName)
         val componentName = intent!!.component
         return Intent.makeRestartActivityTask(componentName)
     }
 
     @SuppressLint("QueryPermissionsNeeded")
-    fun hasReceiver(context: Context, intent: Intent): Boolean {
+    public fun hasReceiver(context: Context, intent: Intent): Boolean {
         return intent.resolveActivity(context.packageManager) != null
     }
 

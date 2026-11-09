@@ -21,18 +21,18 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.kylecorry.andromeda.core.system.Resources
 
-object Notify {
+public object Notify {
 
-    fun getSoundUri(context: Context, channelId: String): Uri? {
+    public fun getSoundUri(context: Context, channelId: String): Uri? {
         return getNotificationManagerCompat(context).getNotificationChannelCompat(channelId)?.sound
     }
 
-    fun isActive(context: Context, notificationId: Int): Boolean {
+    public fun isActive(context: Context, notificationId: Int): Boolean {
         return getNotificationManagerCompat(context).activeNotifications.any { it.id == notificationId }
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    fun send(
+    public fun send(
         context: Context,
         notificationId: Int,
         notification: Notification,
@@ -58,18 +58,18 @@ object Notify {
      * Sends a notification if the notification is already shown, otherwise it is a no-op
      */
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    fun update(context: Context, notificationId: Int, notification: Notification) {
+    public fun update(context: Context, notificationId: Int, notification: Notification) {
         if (!isActive(context, notificationId)) {
             return
         }
         send(context, notificationId, notification)
     }
 
-    fun cancel(context: Context, notificationId: Int) {
+    public fun cancel(context: Context, notificationId: Int) {
         getNotificationManagerCompat(context).cancel(notificationId)
     }
 
-    fun createChannel(
+    public fun createChannel(
         context: Context,
         id: String,
         name: String,
@@ -103,15 +103,15 @@ object Notify {
         getNotificationManagerCompat(context).createNotificationChannel(channel)
     }
 
-    fun deleteChannel(context: Context, id: String) {
+    public fun deleteChannel(context: Context, id: String) {
         getNotificationManagerCompat(context).deleteNotificationChannel(id)
     }
 
-    fun channels(context: Context): List<NotificationChannel> {
+    public fun channels(context: Context): List<NotificationChannel> {
         return getNotificationManagerCompat(context).notificationChannels
     }
 
-    fun createChannelGroup(
+    public fun createChannelGroup(
         context: Context,
         id: String,
         name: CharSequence?,
@@ -124,18 +124,18 @@ object Notify {
         getNotificationManagerCompat(context).createNotificationChannelGroup(group)
     }
 
-    fun deleteChannelGroup(context: Context, id: String) {
+    public fun deleteChannelGroup(context: Context, id: String) {
         getNotificationManagerCompat(context).deleteNotificationChannelGroup(id)
     }
 
-    fun channelGroups(context: Context): List<NotificationChannelGroupCompat> {
+    public fun channelGroups(context: Context): List<NotificationChannelGroupCompat> {
         return getNotificationManagerCompat(context).notificationChannelGroupsCompat
     }
 
     /**
      * Determines if a channel is blocked
      */
-    fun isChannelBlocked(context: Context, channelId: String): Boolean {
+    public fun isChannelBlocked(context: Context, channelId: String): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return false
         }
@@ -154,7 +154,7 @@ object Notify {
     /**
      * Determines if notifications are blocked for the app
      */
-    fun areNotificationsBlocked(context: Context): Boolean {
+    public fun areNotificationsBlocked(context: Context): Boolean {
         return !getNotificationManagerCompat(context).areNotificationsEnabled()
     }
 
@@ -162,7 +162,7 @@ object Notify {
      * Used for alerts which require the user's attention
      * @param category the category of the notification. If isAlarm is true, this will be ignored.
      */
-    fun alert(
+    public fun alert(
         context: Context,
         channel: String,
         title: String,
@@ -240,7 +240,7 @@ object Notify {
      *
      * Basically alerts that don't require the user's immediate attention
      */
-    fun status(
+    public fun status(
         context: Context,
         channel: String,
         title: String,
@@ -294,7 +294,7 @@ object Notify {
     /**
      * Used for notifications connected to a process which give the user useful information
      */
-    fun persistent(
+    public fun persistent(
         context: Context,
         channel: String,
         title: String,
@@ -355,7 +355,7 @@ object Notify {
     /**
      * Used for notifications which are connected to a process (aka required) but the user doesn't care about them
      */
-    fun background(
+    public fun background(
         context: Context,
         channel: String,
         title: String,
@@ -403,7 +403,7 @@ object Notify {
         return notification
     }
 
-    fun action(
+    public fun action(
         name: String,
         intent: PendingIntent,
         @DrawableRes icon: Int? = null
@@ -411,7 +411,7 @@ object Notify {
         return NotificationCompat.Action(icon ?: 0, name, intent)
     }
 
-    fun action(
+    public fun action(
         name: String,
         intent: PendingIntent,
         icon: IconCompat? = null
@@ -423,10 +423,10 @@ object Notify {
         return NotificationManagerCompat.from(context)
     }
 
-    val CHANNEL_IMPORTANCE_MAX = NotificationManagerCompat.IMPORTANCE_MAX
-    val CHANNEL_IMPORTANCE_HIGH = NotificationManagerCompat.IMPORTANCE_HIGH
-    val CHANNEL_IMPORTANCE_DEFAULT = NotificationManagerCompat.IMPORTANCE_DEFAULT
-    val CHANNEL_IMPORTANCE_LOW = NotificationManagerCompat.IMPORTANCE_LOW
-    val CHANNEL_IMPORTANCE_MIN = NotificationManagerCompat.IMPORTANCE_MIN
-    val CHANNEL_IMPORTANCE_NONE = NotificationManagerCompat.IMPORTANCE_NONE
+    public val CHANNEL_IMPORTANCE_MAX: Int = NotificationManagerCompat.IMPORTANCE_MAX
+    public val CHANNEL_IMPORTANCE_HIGH: Int = NotificationManagerCompat.IMPORTANCE_HIGH
+    public val CHANNEL_IMPORTANCE_DEFAULT: Int = NotificationManagerCompat.IMPORTANCE_DEFAULT
+    public val CHANNEL_IMPORTANCE_LOW: Int = NotificationManagerCompat.IMPORTANCE_LOW
+    public val CHANNEL_IMPORTANCE_MIN: Int = NotificationManagerCompat.IMPORTANCE_MIN
+    public val CHANNEL_IMPORTANCE_NONE: Int = NotificationManagerCompat.IMPORTANCE_NONE
 }

@@ -1,14 +1,14 @@
 package com.kylecorry.andromeda.pdf
 
-interface PDFValue {
+public interface PDFValue {
 
-    fun toByteArray(): ByteArray {
+    public fun toByteArray(): ByteArray {
         return toString().encodeToByteArray()
     }
 
-    class PDFObject(val id: Int, val generation: Int = 0, val content: List<PDFValue>) : PDFValue {
+    public class PDFObject(public val id: Int, public val generation: Int = 0, public val content: List<PDFValue>) : PDFValue {
 
-        val reference: PDFIndirectObject
+        public val reference: PDFIndirectObject
             get() = PDFIndirectObject(id, generation)
 
         override fun equals(other: Any?): Boolean {
@@ -24,22 +24,22 @@ interface PDFValue {
             return result
         }
 
-        fun hasProperty(key: PDFName): Boolean {
+        public fun hasProperty(key: PDFName): Boolean {
             return content.any { it is PDFDictionary && it.contains(key) }
         }
 
-        fun hasProperty(key: String): Boolean {
+        public fun hasProperty(key: String): Boolean {
             return content.any { it is PDFDictionary && it.contains(key) }
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun <T : PDFValue> getProperty(key: PDFName): T? {
+        public fun <T : PDFValue> getProperty(key: PDFName): T? {
             return content.firstOrNull { it is PDFDictionary }?.let { it as PDFDictionary }
                 ?.get(key) as? T
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun <T : PDFValue> getProperty(key: String): T? {
+        public fun <T : PDFValue> getProperty(key: String): T? {
             return content.firstOrNull { it is PDFDictionary }?.let { it as PDFDictionary }
                 ?.get(key) as? T
         }
@@ -66,7 +66,7 @@ interface PDFValue {
         }
     }
 
-    class PDFStream(val content: ByteArray) : PDFValue {
+    public class PDFStream(public val content: ByteArray) : PDFValue {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is PDFStream) return false
@@ -87,8 +87,8 @@ interface PDFValue {
 
     }
 
-    class PDFName(_name: String) : PDFValue {
-        val name = (if (_name.startsWith("/")) _name else "/$_name")
+    public class PDFName(_name: String) : PDFValue {
+        public val name: String = (if (_name.startsWith("/")) _name else "/$_name")
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -105,38 +105,38 @@ interface PDFValue {
         }
     }
 
-    class PDFDictionary(val properties: Map<PDFName, PDFValue>) : PDFValue {
-        operator fun get(key: PDFName): PDFValue? {
+    public class PDFDictionary(public val properties: Map<PDFName, PDFValue>) : PDFValue {
+        public operator fun get(key: PDFName): PDFValue? {
             return properties[key]
         }
 
-        operator fun get(key: String): PDFValue? {
+        public operator fun get(key: String): PDFValue? {
             return properties[PDFName(key)]
         }
 
-        fun hasValue(key: PDFName, value: PDFValue): Boolean {
+        public fun hasValue(key: PDFName, value: PDFValue): Boolean {
             return properties[key] == value
         }
 
-        fun hasValue(key: String, value: PDFValue): Boolean {
+        public fun hasValue(key: String, value: PDFValue): Boolean {
             return properties[PDFName(key)] == value
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun <T : PDFValue> getAs(key: PDFName): T? {
+        public fun <T : PDFValue> getAs(key: PDFName): T? {
             return properties[key] as? T
         }
 
         @Suppress("UNCHECKED_CAST")
-        fun <T : PDFValue> getAs(key: String): T? {
+        public fun <T : PDFValue> getAs(key: String): T? {
             return properties[PDFName(key)] as? T
         }
 
-        fun contains(key: PDFName): Boolean {
+        public fun contains(key: PDFName): Boolean {
             return properties.containsKey(key)
         }
 
-        fun contains(key: String): Boolean {
+        public fun contains(key: String): Boolean {
             return properties.containsKey(PDFName(key))
         }
 
@@ -159,7 +159,7 @@ interface PDFValue {
         }
     }
 
-    class PDFString(val value: String) : PDFValue {
+    public class PDFString(public val value: String) : PDFValue {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is PDFString) return false
@@ -175,7 +175,7 @@ interface PDFValue {
         }
     }
 
-    class PDFNumber(val value: Number) : PDFValue {
+    public class PDFNumber(public val value: Number) : PDFValue {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is PDFNumber) return false
@@ -191,7 +191,7 @@ interface PDFValue {
         }
     }
 
-    class PDFBoolean(val value: Boolean) : PDFValue {
+    public class PDFBoolean(public val value: Boolean) : PDFValue {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is PDFBoolean) return false
@@ -207,7 +207,7 @@ interface PDFValue {
         }
     }
 
-    class PDFArray(val values: List<PDFValue>) : PDFValue {
+    public class PDFArray(public val values: List<PDFValue>) : PDFValue {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is PDFArray) return false
@@ -223,7 +223,7 @@ interface PDFValue {
         }
     }
 
-    class PDFNull : PDFValue {
+    public class PDFNull : PDFValue {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is PDFNull) return false
@@ -239,9 +239,9 @@ interface PDFValue {
         }
     }
 
-    class PDFIndirectObject(
-        val id: Int,
-        val generation: Int = 0,
+    public class PDFIndirectObject(
+        public val id: Int,
+        public val generation: Int = 0,
     ) : PDFValue {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

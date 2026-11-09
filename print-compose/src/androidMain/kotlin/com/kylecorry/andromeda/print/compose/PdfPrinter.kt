@@ -12,7 +12,7 @@ import com.kylecorry.andromeda.print.imagePrinter
 import com.kylecorry.andromeda.print.pdfPrinter
 
 @Composable
-actual fun rememberPdfPrinter(): PdfPrinter {
+public actual fun rememberPdfPrinter(): PdfPrinter {
     val context = LocalContext.current
     val activity = checkNotNull(context.findActivity()) { "Printing requires an Activity context" }
     return remember(activity) { pdfPrinter(activity) }
@@ -25,7 +25,7 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 }
 
 @Composable
-actual fun rememberImagePrinter(): ImagePrinter {
+public actual fun rememberImagePrinter(): ImagePrinter {
     val activity = checkNotNull(LocalContext.current.findActivity()) { "Printing requires an Activity context" }
     return remember(activity) { imagePrinter(activity) }
 }

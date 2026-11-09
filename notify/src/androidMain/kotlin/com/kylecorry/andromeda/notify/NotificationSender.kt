@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
-fun notificationSender(context: Context, channelId: String, smallIcon: Int): NotificationSender =
+public fun notificationSender(context: Context, channelId: String, smallIcon: Int): NotificationSender =
     object : NotificationSender {
         @SuppressLint("MissingPermission")
         override fun send(id: Int, title: String, body: String) {

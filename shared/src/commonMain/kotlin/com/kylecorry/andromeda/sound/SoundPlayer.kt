@@ -1,11 +1,11 @@
 package com.kylecorry.andromeda.sound
 
-interface SoundPlayer {
-    fun on()
-    fun off()
-    fun isOn(): Boolean
-    fun fadeOn()
-    fun fadeOff(releaseWhenOff: Boolean)
-    fun setVolume(volume: Float)
-    fun release()
+public interface SoundPlayer {
+    public fun on()
+    public fun off()
+    public fun isOn(): Boolean
+    public fun fadeOn()
+    public fun fadeOff(releaseWhenOff: Boolean)
+    public fun setVolume(volume: Float)
+    public fun release()
 }

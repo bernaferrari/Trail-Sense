@@ -1,0 +1,15 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:speech>
+abstract interface com.kylecorry.andromeda.speech/SpeechSynthesizer : kotlin/AutoCloseable { // com.kylecorry.andromeda.speech/SpeechSynthesizer|null[0]
+    abstract fun cancel() // com.kylecorry.andromeda.speech/SpeechSynthesizer.cancel|cancel(){}[0]
+    abstract fun speak(kotlin/String, kotlin/String? = ...) // com.kylecorry.andromeda.speech/SpeechSynthesizer.speak|speak(kotlin.String;kotlin.String?){}[0]
+    open fun close() // com.kylecorry.andromeda.speech/SpeechSynthesizer.close|close(){}[0]
+}
+
+final fun com.kylecorry.andromeda.speech/textToSpeech(): com.kylecorry.andromeda.speech/SpeechSynthesizer // com.kylecorry.andromeda.speech/textToSpeech|textToSpeech(){}[0]

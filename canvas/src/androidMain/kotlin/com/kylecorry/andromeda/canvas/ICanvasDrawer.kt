@@ -17,47 +17,47 @@ import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.core.graphics.createBitmap
 
-interface ICanvasDrawer {
-    var canvas: Canvas
-    fun background(@ColorInt color: Int)
-    fun clear()
+public interface ICanvasDrawer {
+    public var canvas: Canvas
+    public fun background(@ColorInt color: Int)
+    public fun clear()
 
     @ColorInt
-    fun color(r: Int, g: Int = r, b: Int = g, a: Int? = null): Int
-    fun fill(@ColorInt color: Int)
-    fun tint(@ColorInt color: Int)
-    fun noTint()
-    fun stroke(@ColorInt color: Int)
-    fun pathEffect(effect: PathEffect)
-    fun noPathEffect()
-    fun noStroke()
-    fun noFill()
-    fun strokeWeight(pixels: Float)
-    fun strokeCap(cap: StrokeCap)
-    fun strokeJoin(join: StrokeJoin)
-    fun opacity(value: Int)
-    fun erase()
-    fun noErase()
-    fun smooth()
-    fun noSmooth()
-    fun shader(shader: Shader?)
+    public fun color(r: Int, g: Int = r, b: Int = g, a: Int? = null): Int
+    public fun fill(@ColorInt color: Int)
+    public fun tint(@ColorInt color: Int)
+    public fun noTint()
+    public fun stroke(@ColorInt color: Int)
+    public fun pathEffect(effect: PathEffect)
+    public fun noPathEffect()
+    public fun noStroke()
+    public fun noFill()
+    public fun strokeWeight(pixels: Float)
+    public fun strokeCap(cap: StrokeCap)
+    public fun strokeJoin(join: StrokeJoin)
+    public fun opacity(value: Int)
+    public fun erase()
+    public fun noErase()
+    public fun smooth()
+    public fun noSmooth()
+    public fun shader(shader: Shader?)
 
     // TEXT HELPERS
-    fun textAlign(align: TextAlign)
-    fun textSize(pixels: Float)
-    fun textStyle(style: TextStyle)
-    fun textWidth(text: String): Float
-    fun textHeight(text: String): Float
-    fun textDimensions(text: String): Pair<Float, Float>
-    fun pathWidth(path: Path): Float
-    fun pathHeight(path: Path): Float
-    fun pathDimensions(path: Path): Pair<Float, Float>
-    fun textAscent(): Float
-    fun textDescent(): Float
-    fun text(str: String, x: Float, y: Float)
+    public fun textAlign(align: TextAlign)
+    public fun textSize(pixels: Float)
+    public fun textStyle(style: TextStyle)
+    public fun textWidth(text: String): Float
+    public fun textHeight(text: String): Float
+    public fun textDimensions(text: String): Pair<Float, Float>
+    public fun pathWidth(path: Path): Float
+    public fun pathHeight(path: Path): Float
+    public fun pathDimensions(path: Path): Pair<Float, Float>
+    public fun textAscent(): Float
+    public fun textDescent(): Float
+    public fun text(str: String, x: Float, y: Float)
 
     // SHAPE HELPERS
-    fun arc(
+    public fun arc(
         x: Float,
         y: Float,
         w: Float,
@@ -67,20 +67,20 @@ interface ICanvasDrawer {
         mode: ArcMode = ArcMode.Pie
     )
 
-    fun ellipse(x: Float, y: Float, w: Float, h: Float = w)
-    fun circle(x: Float, y: Float, diameter: Float)
-    fun line(x1: Float, y1: Float, x2: Float, y2: Float)
-    fun lines(points: FloatArray)
-    fun grid(
+    public fun ellipse(x: Float, y: Float, w: Float, h: Float = w)
+    public fun circle(x: Float, y: Float, diameter: Float)
+    public fun line(x1: Float, y1: Float, x2: Float, y2: Float)
+    public fun lines(points: FloatArray)
+    public fun grid(
         spacing: Float,
         width: Float = canvas.width.toFloat(),
         height: Float = canvas.height.toFloat()
     )
 
-    fun point(x: Float, y: Float)
+    public fun point(x: Float, y: Float)
 
     // TODO: Support different radius for each corner
-    fun rect(
+    public fun rect(
         x: Float,
         y: Float,
         w: Float,
@@ -88,31 +88,31 @@ interface ICanvasDrawer {
         radius: Float = 0f
     )
 
-    fun square(
+    public fun square(
         x: Float,
         y: Float,
         size: Float,
         radius: Float = 0f
     )
 
-    fun path(value: Path)
-    fun triangle(x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float)
+    public fun path(value: Path)
+    public fun triangle(x1: Float, y1: Float, x2: Float, y2: Float, x3: Float, y3: Float)
 
     // Transforms
     // TODO: Add the transforms
-    fun push()
-    fun pop()
-    fun rotate(
+    public fun push()
+    public fun pop()
+    public fun rotate(
         degrees: Float,
         originX: Float = canvas.width / 2f,
         originY: Float = canvas.height / 2f
     )
 
-    fun scale(x: Float, y: Float = x)
-    fun scale(x: Float, y: Float = x, pivotX: Float, pivotY: Float)
-    fun translate(x: Float, y: Float)
-    fun loadImage(@DrawableRes id: Int, w: Int? = null, h: Int? = null): Bitmap
-    fun image(
+    public fun scale(x: Float, y: Float = x)
+    public fun scale(x: Float, y: Float = x, pivotX: Float, pivotY: Float)
+    public fun translate(x: Float, y: Float)
+    public fun loadImage(@DrawableRes id: Int, w: Int? = null, h: Int? = null): Bitmap
+    public fun image(
         img: Bitmap,
         x: Float,
         y: Float,
@@ -120,7 +120,7 @@ interface ICanvasDrawer {
         h: Float = img.height.toFloat()
     )
 
-    fun image(
+    public fun image(
         img: Bitmap,
         dx: Float,
         dy: Float,
@@ -132,16 +132,16 @@ interface ICanvasDrawer {
         sh: Float = img.height.toFloat()
     )
 
-    fun imageMode(imageMode: ImageMode)
-    fun textMode(textMode: TextMode)
-    fun clip(path: Path)
-    fun clipInverse(path: Path)
-    fun mask(
+    public fun imageMode(imageMode: ImageMode)
+    public fun textMode(textMode: TextMode)
+    public fun clip(path: Path)
+    public fun clipInverse(path: Path)
+    public fun mask(
         mask: Bitmap,
         tempBitmap: Bitmap = createBitmap(mask.width, mask.height),
         block: () -> Unit
     ): Bitmap
 
-    fun dp(size: Float): Float
-    fun sp(size: Float): Float
+    public fun dp(size: Float): Float
+    public fun sp(size: Float): Float
 }

@@ -1,5 +1,6 @@
 package com.kylecorry.andromeda.sense.orientation
 
+import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
 import com.kylecorry.sol.math.Quaternion
@@ -8,7 +9,7 @@ import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 
 /** Estimates tilt from gravity. Gravity alone cannot determine a magnetic heading. */
-class GravityRotationSensor(
+public class GravityRotationSensor(
     private val accelerometer: Accelerometer,
     private val maintainStateOnRestart: Boolean = false
 ) : SharedSensor(), OrientationSensor {
@@ -20,7 +21,7 @@ class GravityRotationSensor(
     override val orientation: Quaternion get() = synchronized(lock) { reading }
     override val rawOrientation: FloatArray get() = orientation.toFloatArray()
     override val hasValidReading: Boolean get() = synchronized(lock) { valid } && accelerometer.hasValidReading
-    override val quality get() = accelerometer.quality
+    override val quality: Quality get() = accelerometer.quality
 
     override fun startImpl() {
         synchronized(lock) {
@@ -31,7 +32,7 @@ class GravityRotationSensor(
         accelerometer.start(this::onSensorUpdate)
     }
 
-    override fun stopImpl() = accelerometer.stop(this::onSensorUpdate)
+    override fun stopImpl(): Unit = accelerometer.stop(this::onSensorUpdate)
 
     private fun onSensorUpdate(): Boolean {
         val attitude = if (accelerometer.hasValidReading) gravityAttitude(accelerometer.acceleration) else null

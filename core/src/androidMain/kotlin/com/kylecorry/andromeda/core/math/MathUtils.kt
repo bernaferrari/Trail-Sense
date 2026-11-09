@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.core.math
 
 import android.util.Size
 
-object MathUtils {
+public object MathUtils {
 
     /**
      * Scales the original size to fit within the max size while maintaining the aspect ratio
@@ -10,7 +10,7 @@ object MathUtils {
      * @param maxSize the max size
      * @return the scaled size
      */
-    fun scaleToBounds(original: Size, maxSize: Size): Size {
+    public fun scaleToBounds(original: Size, maxSize: Size): Size {
         val ratioOriginal = original.width.toFloat() / original.height.toFloat()
         val ratioMax = maxSize.width.toFloat() / maxSize.height.toFloat()
         var finalWidth = maxSize.width

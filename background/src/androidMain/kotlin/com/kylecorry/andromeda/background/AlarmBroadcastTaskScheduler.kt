@@ -18,7 +18,7 @@ import kotlin.time.Clock
  * @param allowWhileIdle determines if this should be run while the device is idle. Defaults to false.
  * @param intentExtras extras to add to the intent
  */
-class AlarmBroadcastTaskScheduler(
+public class AlarmBroadcastTaskScheduler(
     private val context: Context,
     private val receiver: Class<out BroadcastReceiver>,
     private val uniqueId: Int,

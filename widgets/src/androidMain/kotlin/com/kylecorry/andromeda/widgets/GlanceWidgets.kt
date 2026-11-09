@@ -6,7 +6,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.updateAll
 
 /** Creates a shared widget manager backed by an Android Glance widget. */
-fun widgetManager(context: Context, widget: GlanceAppWidget): WidgetManager {
+public fun widgetManager(context: Context, widget: GlanceAppWidget): WidgetManager {
     val app = context.applicationContext
     return WidgetManager(
         updateWidget = { widget.updateAll(app) },

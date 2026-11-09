@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlin.time.Instant
 
 @SuppressLint("MissingPermission")
-actual fun nmeaMessages(): Flow<Reading<Nmea>> = callbackFlow {
+public actual fun nmeaMessages(): Flow<Reading<Nmea>> = callbackFlow {
     val manager = KSensorContext.get().getSystemService(Context.LOCATION_SERVICE) as? LocationManager
         ?: throw UnsupportedOperationException("Location service is unavailable")
     val listener = OnNmeaMessageListener { message, timestamp ->

@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.pdf
 
-fun List<PDFValue.PDFObject>.getByProperty(
+public fun List<PDFValue.PDFObject>.getByProperty(
     property: String,
     value: PDFValue
 ): List<PDFValue.PDFObject> {
@@ -9,16 +9,16 @@ fun List<PDFValue.PDFObject>.getByProperty(
     }
 }
 
-fun List<PDFValue.PDFObject>.getById(id: Int): PDFValue.PDFObject? {
+public fun List<PDFValue.PDFObject>.getById(id: Int): PDFValue.PDFObject? {
     return this.firstOrNull { it.id == id }
 }
 
-fun PDFValue.PDFObject.getProperties(): PDFValue.PDFDictionary {
+public fun PDFValue.PDFObject.getProperties(): PDFValue.PDFDictionary {
     return content.firstOrNull { it is PDFValue.PDFDictionary } as? PDFValue.PDFDictionary
         ?: PDFValue.PDFDictionary(emptyMap())
 }
 
-fun PDFValue.PDFDictionary.getProperties(
+public fun PDFValue.PDFDictionary.getProperties(
     key: String,
     objects: List<PDFValue.PDFObject>
 ): PDFValue.PDFDictionary? {

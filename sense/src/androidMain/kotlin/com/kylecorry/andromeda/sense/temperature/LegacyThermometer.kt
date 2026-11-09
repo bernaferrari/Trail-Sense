@@ -8,7 +8,7 @@ import com.kylecorry.andromeda.core.sensors.Thermometer
 import com.kylecorry.andromeda.sense.BaseSensor
 
 @Suppress("DEPRECATION")
-class LegacyThermometer(
+public class LegacyThermometer(
     context: Context,
     sensorDelay: Int = SensorManager.SENSOR_DELAY_NORMAL
 ) :

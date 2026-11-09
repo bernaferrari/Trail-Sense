@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.sense.location
 
 
-data class Nmea(val message: String) {
+public data class Nmea(val message: String) {
     val mslAltitude: Float?
         get() {
             val validProtocols = listOf("\$GPGGA", "\$GNGNS", "\$GNGGA")

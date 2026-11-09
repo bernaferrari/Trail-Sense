@@ -1,0 +1,63 @@
+public final class com/kylecorry/andromeda/print/ImagePrintOptions {
+	public fun <init> ()V
+	public fun <init> (Lcom/kylecorry/andromeda/print/PrintScaleMode;Lcom/kylecorry/andromeda/print/PrintColorMode;Lcom/kylecorry/andromeda/print/PrintOrientation;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/print/PrintScaleMode;Lcom/kylecorry/andromeda/print/PrintColorMode;Lcom/kylecorry/andromeda/print/PrintOrientation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/print/PrintScaleMode;
+	public final fun component2 ()Lcom/kylecorry/andromeda/print/PrintColorMode;
+	public final fun component3 ()Lcom/kylecorry/andromeda/print/PrintOrientation;
+	public final fun copy (Lcom/kylecorry/andromeda/print/PrintScaleMode;Lcom/kylecorry/andromeda/print/PrintColorMode;Lcom/kylecorry/andromeda/print/PrintOrientation;)Lcom/kylecorry/andromeda/print/ImagePrintOptions;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/print/ImagePrintOptions;Lcom/kylecorry/andromeda/print/PrintScaleMode;Lcom/kylecorry/andromeda/print/PrintColorMode;Lcom/kylecorry/andromeda/print/PrintOrientation;ILjava/lang/Object;)Lcom/kylecorry/andromeda/print/ImagePrintOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getColor ()Lcom/kylecorry/andromeda/print/PrintColorMode;
+	public final fun getOrientation ()Lcom/kylecorry/andromeda/print/PrintOrientation;
+	public final fun getScale ()Lcom/kylecorry/andromeda/print/PrintScaleMode;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/print/ImagePrinter {
+	public fun print (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Ljava/lang/String;)V
+	public abstract fun print (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Ljava/lang/String;Lcom/kylecorry/andromeda/print/ImagePrintOptions;)V
+}
+
+public final class com/kylecorry/andromeda/print/ImagePrinter$DefaultImpls {
+	public static fun print (Lcom/kylecorry/andromeda/print/ImagePrinter;Lcom/kylecorry/andromeda/bitmaps/PixelImage;Ljava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/print/ImagePrinterJvmKt {
+	public static final fun imagePrinter ()Lcom/kylecorry/andromeda/print/ImagePrinter;
+}
+
+public abstract interface class com/kylecorry/andromeda/print/PdfPrinter {
+	public abstract fun print ([BLjava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/print/PdfPrinterKt {
+	public static final fun pdfPrinter ()Lcom/kylecorry/andromeda/print/PdfPrinter;
+}
+
+public final class com/kylecorry/andromeda/print/PrintColorMode : java/lang/Enum {
+	public static final field Color Lcom/kylecorry/andromeda/print/PrintColorMode;
+	public static final field Monochrome Lcom/kylecorry/andromeda/print/PrintColorMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/print/PrintColorMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/print/PrintColorMode;
+}
+
+public final class com/kylecorry/andromeda/print/PrintOrientation : java/lang/Enum {
+	public static final field Auto Lcom/kylecorry/andromeda/print/PrintOrientation;
+	public static final field Landscape Lcom/kylecorry/andromeda/print/PrintOrientation;
+	public static final field Portrait Lcom/kylecorry/andromeda/print/PrintOrientation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/print/PrintOrientation;
+	public static fun values ()[Lcom/kylecorry/andromeda/print/PrintOrientation;
+}
+
+public final class com/kylecorry/andromeda/print/PrintScaleMode : java/lang/Enum {
+	public static final field Fill Lcom/kylecorry/andromeda/print/PrintScaleMode;
+	public static final field Fit Lcom/kylecorry/andromeda/print/PrintScaleMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/print/PrintScaleMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/print/PrintScaleMode;
+}
+

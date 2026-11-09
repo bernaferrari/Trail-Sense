@@ -16,7 +16,7 @@ import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.core.system.Screen
 import java.io.Closeable
 
-class PDFRenderer2(
+public class PDFRenderer2(
     private val context: Context,
     private val uri: Uri,
     private val inchesToPixels: Float? = null,
@@ -61,12 +61,12 @@ class PDFRenderer2(
         }
     }
 
-    fun getSize(): Size {
+    public fun getSize(): Size {
         val pdfPage = open(0)
         return Size(pdfPage.width, pdfPage.height)
     }
 
-    fun toBitmap(
+    public fun toBitmap(
         outputSize: Size,
         page: Int = 0,
         @ColorInt backgroundColor: Int = Color.WHITE,

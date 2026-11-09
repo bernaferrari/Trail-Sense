@@ -7,7 +7,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-abstract class SharedSensor : Sensor {
+public abstract class SharedSensor : Sensor {
     private val lock = SynchronizedObject()
     private val subscribers = mutableSetOf<SensorSubscriber>()
     override val quality: Quality get() = Quality.Unknown
@@ -16,20 +16,20 @@ abstract class SharedSensor : Sensor {
     override var timestamp: Instant = Instant.fromEpochSeconds(0)
         protected set
 
-    override fun subscribe(subscriber: SensorSubscriber) = synchronized(lock) {
+    override fun subscribe(subscriber: SensorSubscriber): Unit = synchronized(lock) {
         val wasEmpty = subscribers.isEmpty()
         if (subscribers.add(subscriber) && wasEmpty) startImpl()
     }
-    override fun unsubscribe(subscriber: SensorSubscriber) = synchronized(lock) {
+    override fun unsubscribe(subscriber: SensorSubscriber): Unit = synchronized(lock) {
         if (subscribers.remove(subscriber) && subscribers.isEmpty()) stopImpl()
     }
-    override fun unsubscribeAll() = synchronized(lock) {
+    override fun unsubscribeAll(): Unit = synchronized(lock) {
         if (subscribers.isNotEmpty()) {
             subscribers.clear()
             stopImpl()
         }
     }
-    override fun start(subscriber: SensorSubscriber) = subscribe(subscriber)
+    override fun start(subscriber: SensorSubscriber): Unit = subscribe(subscriber)
     override fun stop(subscriber: SensorSubscriber?) {
         if (subscriber == null) unsubscribeAll() else unsubscribe(subscriber)
     }

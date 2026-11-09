@@ -26,7 +26,7 @@ import org.intellij.markdown.parser.CancellationToken
 import org.intellij.markdown.parser.MarkdownParser
 
 /** How markdown renders into an [AnnotatedString]. */
-data class MarkdownTextStyles(
+public data class MarkdownTextStyles(
     val strong: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold),
     val emphasis: SpanStyle = SpanStyle(fontStyle = FontStyle.Italic),
     val strikethrough: SpanStyle = SpanStyle(textDecoration = TextDecoration.LineThrough),
@@ -43,25 +43,25 @@ data class MarkdownTextStyles(
  * A custom inline delimiter pair, such as `%%hidden%%` or `+centered+`. A pair opens before a non-space character
  * that does not follow a letter or digit and closes after a non-space character that is not followed by one.
  */
-data class MarkdownDelimiter(val delimiter: String, val effect: Effect) {
+public data class MarkdownDelimiter(val delimiter: String, val effect: Effect) {
     init {
         require(delimiter.isNotEmpty()) { "The delimiter must not be empty" }
     }
 
-    sealed interface Effect {
+    public sealed interface Effect {
         /** Drops the delimited text. */
-        data object Hide : Effect
+        public data object Hide : Effect
 
         /** Styles the delimited text. */
-        data class Style(val style: SpanStyle) : Effect
+        public data class Style(val style: SpanStyle) : Effect
 
         /** Styles the paragraph that holds the delimited text, such as centering it. */
-        data class Paragraph(val style: ParagraphStyle) : Effect
+        public data class Paragraph(val style: ParagraphStyle) : Effect
     }
 }
 
 /** Text that becomes a link without markdown link syntax. */
-enum class MarkdownAutoLink {
+public enum class MarkdownAutoLink {
     /** Bare web addresses, such as `www.example.com`, `https://example.com` or `example.com/path`. */
     Web,
 
@@ -73,11 +73,11 @@ enum class MarkdownAutoLink {
 }
 
 /** A piece of rendered markdown: a run of styled text or an image between them. */
-sealed interface MarkdownBlock {
-    data class Text(val text: AnnotatedString) : MarkdownBlock
+public sealed interface MarkdownBlock {
+    public data class Text(val text: AnnotatedString) : MarkdownBlock
 
     /** An image to load from [source] (a URI such as `file:///android_asset/a.webp`), described by [description]. */
-    data class Image(val source: String, val description: String, val title: String? = null) : MarkdownBlock
+    public data class Image(val source: String, val description: String, val title: String? = null) : MarkdownBlock
 }
 
 /**
@@ -86,7 +86,7 @@ sealed interface MarkdownBlock {
  * and raw HTML are left out; use [toBlocks] to keep the images. Blocks are separated by a blank line and soft line
  * breaks become spaces. Each list item is on its own line, and a list's wrapped lines hang after its markers.
  */
-fun Markdown.toAnnotatedString(
+public fun Markdown.toAnnotatedString(
     markdown: String,
     styles: MarkdownTextStyles = MarkdownTextStyles(),
     delimiters: List<MarkdownDelimiter> = emptyList(),
@@ -100,7 +100,7 @@ fun Markdown.toAnnotatedString(
  * Renders [markdown] like [toAnnotatedString], split around its images: text runs become [MarkdownBlock.Text] and
  * each image a [MarkdownBlock.Image], in reading order, so images can be shown at full width between the text.
  */
-fun Markdown.toBlocks(
+public fun Markdown.toBlocks(
     markdown: String,
     styles: MarkdownTextStyles = MarkdownTextStyles(),
     delimiters: List<MarkdownDelimiter> = emptyList(),

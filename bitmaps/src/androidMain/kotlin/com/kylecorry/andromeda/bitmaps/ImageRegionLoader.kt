@@ -11,9 +11,9 @@ import java.io.InputStream
 import kotlin.math.max
 import kotlin.math.min
 
-object ImageRegionLoader {
+public object ImageRegionLoader {
 
-    fun decodeBitmapRegionWrapped(
+    public fun decodeBitmapRegionWrapped(
         stream: InputStream,
         rect: Rect,
         imageSize: Size,

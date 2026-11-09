@@ -5,7 +5,7 @@ import android.media.RingtoneManager
 import android.net.Uri
 import com.ksensor.core.context.KSensorContext
 
-actual fun defaultSystemSoundUri(sound: DefaultSystemSound): String? {
+public actual fun defaultSystemSoundUri(sound: DefaultSystemSound): String? {
     val type = when (sound) {
         DefaultSystemSound.Alarm -> RingtoneManager.TYPE_ALARM
         DefaultSystemSound.Notification -> RingtoneManager.TYPE_NOTIFICATION
@@ -14,7 +14,7 @@ actual fun defaultSystemSoundUri(sound: DefaultSystemSound): String? {
     return RingtoneManager.getActualDefaultRingtoneUri(KSensorContext.get(), type)?.toString()
 }
 
-actual fun openSystemSound(uri: String, channel: SoundChannel): SystemSound? {
+public actual fun openSystemSound(uri: String, channel: SoundChannel): SystemSound? {
     val sound = RingtoneManager.getRingtone(KSensorContext.get(), Uri.parse(uri)) ?: return null
     val usage = when (channel) {
         SoundChannel.Media -> AudioAttributes.USAGE_MEDIA

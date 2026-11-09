@@ -6,19 +6,19 @@ import java.awt.image.BufferedImage
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.rendering.PDFRenderer
 
-actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
+public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
     private val lock = Any()
     private val document = Loader.loadPDF(bytes)
     private val renderer = PDFRenderer(document)
     private var closed = false
-    actual val pageCount: Int get() = synchronized(lock) { check(!closed); document.numberOfPages }
-    actual fun pageSize(page: Int): PdfPageSize = synchronized(lock) {
+    public actual val pageCount: Int get() = synchronized(lock) { check(!closed); document.numberOfPages }
+    public actual fun pageSize(page: Int): PdfPageSize = synchronized(lock) {
         check(!closed)
         val source = document.getPage(page)
         val box = source.cropBox
         if (source.rotation % 180 == 0) PdfPageSize(box.width, box.height) else PdfPageSize(box.height, box.width)
     }
-    actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = synchronized(lock) {
+    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = synchronized(lock) {
         check(!closed)
         requireRenderSize(width, height)
         val size = pageSize(page)
@@ -32,7 +32,7 @@ actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
         } finally { graphics.dispose() }
         PixelImage(width, height, image.getRGB(0, 0, width, height, null, 0, width))
     }
-    actual override fun close() = synchronized(lock) {
+    actual override fun close(): Unit = synchronized(lock) {
         if (!closed) { closed = true; document.close() }
     }
 }

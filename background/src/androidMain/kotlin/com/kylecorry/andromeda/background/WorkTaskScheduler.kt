@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
  * @param flexDuration the flex duration for the task (only for periodic tasks)
  * @param constraints the constraints around the work
  */
-class WorkTaskScheduler(
+public class WorkTaskScheduler(
     private val context: Context,
     private val task: Class<out ListenableWorker>,
     private val uniqueId: String,
@@ -95,8 +95,8 @@ class WorkTaskScheduler(
         workManager.cancelUniqueWork(uniqueId)
     }
 
-    companion object {
-        fun createStringId(context: Context, uniqueId: Int): String {
+    public companion object {
+        public fun createStringId(context: Context, uniqueId: Int): String {
             return Package.getPackageName(context) + "." + uniqueId
         }
     }

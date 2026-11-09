@@ -1,5 +1,5 @@
 package com.kylecorry.andromeda.alerts
 
-interface AlertPresenter {
-    suspend fun confirm(title: String, message: String, confirm: String, cancel: String): Boolean
+public interface AlertPresenter {
+    public suspend fun confirm(title: String, message: String, confirm: String, cancel: String): Boolean
 }

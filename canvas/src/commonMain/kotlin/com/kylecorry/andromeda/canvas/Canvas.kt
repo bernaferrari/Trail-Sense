@@ -7,6 +7,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 
 /** Draw with Compose's multiplatform graphics and coordinate APIs. */
 @Composable
-fun Drawing(modifier: Modifier, draw: DrawScope.() -> Unit) {
+public fun Drawing(modifier: Modifier, draw: DrawScope.() -> Unit) {
     Canvas(modifier, onDraw = draw)
 }

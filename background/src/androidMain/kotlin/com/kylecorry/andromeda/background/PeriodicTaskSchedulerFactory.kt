@@ -6,8 +6,8 @@ import androidx.work.ListenableWorker
 import com.kylecorry.andromeda.core.annotations.ExperimentalUsage
 
 @ExperimentalUsage("This class may change significantly to accommodate generic tasks")
-class PeriodicTaskSchedulerFactory(private val context: Context) {
-    fun deferrable(
+public class PeriodicTaskSchedulerFactory(private val context: Context) {
+    public fun deferrable(
         task: Class<out ListenableWorker>,
         uniqueId: Int,
         data: Bundle? = null

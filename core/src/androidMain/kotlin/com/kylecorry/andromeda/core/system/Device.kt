@@ -5,8 +5,8 @@ import android.content.Context
 import android.os.Build
 import androidx.core.content.getSystemService
 
-object Device {
-    fun isLowMemory(context: Context): Boolean {
+public object Device {
+    public fun isLowMemory(context: Context): Boolean {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?
         if (activityManager != null) {
             val memoryInfo = ActivityManager.MemoryInfo()
@@ -17,7 +17,7 @@ object Device {
         }
     }
 
-    fun getAvailableBitmapMemoryBytes(context: Context): Long {
+    public fun getAvailableBitmapMemoryBytes(context: Context): Long {
         // Android O and higher store bitmaps in native heap
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val memoryInfo = ActivityManager.MemoryInfo()

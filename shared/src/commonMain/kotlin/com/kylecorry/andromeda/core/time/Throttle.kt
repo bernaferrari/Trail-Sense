@@ -2,11 +2,11 @@ package com.kylecorry.andromeda.core.time
 
 import kotlin.time.Clock
 
-class Throttle(private val maxTimeMs: Long) {
+public class Throttle(private val maxTimeMs: Long) {
 
     private var lastTime = 0L
 
-    fun isThrottled(): Boolean {
+    public fun isThrottled(): Boolean {
         val throttled = Clock.System.now().toEpochMilliseconds() - lastTime < maxTimeMs
         if (!throttled) {
             lastTime = Clock.System.now().toEpochMilliseconds()

@@ -6,7 +6,7 @@ import android.media.AudioManager
 import com.ksensor.core.context.KSensorContext
 
 /** Requires KSensor's application context to be initialized. */
-actual fun audioDevices(): List<AudioDevice> {
+public actual fun audioDevices(): List<AudioDevice> {
     val manager = KSensorContext.get().getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return emptyList()
     return manager.getDevices(AudioManager.GET_DEVICES_INPUTS or AudioManager.GET_DEVICES_OUTPUTS).map { device ->
         val kind = when (device.type) {

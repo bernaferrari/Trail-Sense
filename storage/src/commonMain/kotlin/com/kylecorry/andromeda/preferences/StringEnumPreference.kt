@@ -6,7 +6,7 @@ import com.kylecorry.andromeda.preferences.value
 
 import kotlin.reflect.KProperty
 
-class StringEnumPreference<T>(
+public class StringEnumPreference<T>(
     private val preferences: Preferences,
     private val name: String,
     private val mappings: Map<String, T>,
@@ -14,7 +14,7 @@ class StringEnumPreference<T>(
     private val saveDefault: Boolean = false
 ) {
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
         val raw = preferences.getString(name)
         if (raw == null && saveDefault) {
             val defaultKey = mappings.entries.firstOrNull { it.value == defaultValue }?.key ?: return defaultValue
@@ -26,7 +26,7 @@ class StringEnumPreference<T>(
         return mappings[raw] ?: defaultValue
     }
 
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+    public operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
         val key = mappings.entries.firstOrNull { it.value == value }?.key ?: return
         preferences.putString(name, key)
     }

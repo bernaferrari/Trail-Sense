@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.battery
 
-enum class BatteryChargingStatus {
+public enum class BatteryChargingStatus {
     Charging,
     Discharging,
     Full,

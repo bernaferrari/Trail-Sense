@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.files
 import android.net.Uri
 import kotlin.time.Instant
 
-data class ContentDocument(
+public data class ContentDocument(
     val uri: Uri,
     val displayName: String?,
     val mimeType: String?,

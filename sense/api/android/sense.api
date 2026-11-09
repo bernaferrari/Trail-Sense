@@ -1,0 +1,498 @@
+public final class com/kylecorry/andromeda/sense/AndroidSensorInfo {
+	public fun <init> (ILjava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (ILjava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/sense/AndroidSensorInfo;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sense/AndroidSensorInfo;ILjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/AndroidSensorInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()I
+	public final fun getVendor ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sense/AndroidSensorReading {
+	public fun <init> ([FIJLkotlin/time/Instant;)V
+	public final fun component1 ()[F
+	public final fun component2 ()I
+	public final fun component3 ()J
+	public final fun component4 ()Lkotlin/time/Instant;
+	public final fun copy ([FIJLkotlin/time/Instant;)Lcom/kylecorry/andromeda/sense/AndroidSensorReading;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sense/AndroidSensorReading;[FIJLkotlin/time/Instant;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/AndroidSensorReading;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccuracy ()I
+	public final fun getElapsedRealtimeNanos ()J
+	public final fun getTime ()Lkotlin/time/Instant;
+	public final fun getValues ()[F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sense/AndroidSensorsKt {
+	public static final fun androidSensorReadings (Landroid/content/Context;III)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun androidSensorReadings$default (Landroid/content/Context;IIIILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun androidSensors (Landroid/content/Context;)Ljava/util/List;
+}
+
+public abstract class com/kylecorry/andromeda/sense/BaseSensor : com/kylecorry/andromeda/core/sensors/SharedSensor {
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	protected abstract fun handleSensorEvent (Landroid/hardware/SensorEvent;)V
+	protected fun startImpl ()V
+	protected fun stopImpl ()V
+}
+
+public final class com/kylecorry/andromeda/sense/Sensors {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/sense/Sensors;
+	public final fun hasBarometer (Landroid/content/Context;)Z
+	public final fun hasCompass (Landroid/content/Context;)Z
+	public final fun hasGravity (Landroid/content/Context;)Z
+	public final fun hasGyroscope (Landroid/content/Context;)Z
+	public final fun hasHygrometer (Landroid/content/Context;)Z
+	public final fun hasSensor (Landroid/content/Context;I)Z
+	public final fun hasSensorLike (Landroid/content/Context;Ljava/lang/String;)Z
+	public final fun hasThermometer (Landroid/content/Context;)Z
+}
+
+public final class com/kylecorry/andromeda/sense/accelerometer/AndroidAccelerometer : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public fun <init> (Landroid/content/Context;I)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getHasValidReading ()Z
+	public fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/accelerometer/GravitySensor : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public fun <init> (Landroid/content/Context;I)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getHasValidReading ()Z
+	public fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/accelerometer/LowPassAccelerometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;FZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getHasValidReading ()Z
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/accelerometer/WorldAccelerometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Lkotlinx/coroutines/CoroutineScope;JZIZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Lkotlinx/coroutines/CoroutineScope;JZIZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public final fun getDeclination ()F
+	public fun getHasValidReading ()Z
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawAcceleration ()[F
+	public final fun getSurfaceRotation ()I
+	public final fun getUseAROrientation ()Z
+	public final fun getUseTrueNorth ()Z
+	public final fun setDeclination (F)V
+	public final fun setSurfaceRotation (I)V
+	public final fun setUseAROrientation (Z)V
+	public final fun setUseTrueNorth (Z)V
+}
+
+public final class com/kylecorry/andromeda/sense/altitude/FusedAltimeter : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/core/sensors/Altimeter {
+	public static final field Companion Lcom/kylecorry/andromeda/sense/altitude/FusedAltimeter$Companion;
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/location/GpsSensor;Lcom/kylecorry/andromeda/sense/barometer/Barometer;Lcom/kylecorry/andromeda/preferences/Preferences;ZLcom/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator;JZLkotlin/jvm/functions/Function1;JJLkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/location/GpsSensor;Lcom/kylecorry/andromeda/sense/barometer/Barometer;Lcom/kylecorry/andromeda/preferences/Preferences;ZLcom/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator;JZLkotlin/jvm/functions/Function1;JJLkotlinx/coroutines/CoroutineScope;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAltitude ()F
+	public fun getHasValidReading ()Z
+}
+
+public final class com/kylecorry/andromeda/sense/altitude/FusedAltimeter$Companion {
+	public final fun clearCachedCalibration (Lcom/kylecorry/andromeda/preferences/Preferences;)V
+}
+
+public final class com/kylecorry/andromeda/sense/barometer/AndroidBarometer : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/barometer/Barometer {
+	public synthetic fun <init> (Landroid/content/Context;ILkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;ILkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getPressure ()F
+}
+
+public final class com/kylecorry/andromeda/sense/clinometer/Clinometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/clinometer/ClinometerSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAngle ()F
+	public fun getHasValidReading ()Z
+	public fun getIncline ()F
+	public final fun isAugmentedReality ()Z
+	public final fun setAugmentedReality (Z)V
+}
+
+public final class com/kylecorry/andromeda/sense/compass/Compass : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/compass/CompassSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;ZZIF)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;ZZIFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getBearing-xhh9egc ()F
+	public fun getDeclination ()F
+	public fun getHasValidReading ()Z
+	public final fun getOffset ()F
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawBearing ()F
+	public final fun getSurfaceRotation ()I
+	public final fun getUseTrueNorth ()Z
+	public final fun isAugmentedReality ()Z
+	public final fun setAugmentedReality (Z)V
+	public fun setDeclination (F)V
+	public final fun setOffset (F)V
+	public final fun setSurfaceRotation (I)V
+	public final fun setUseTrueNorth (Z)V
+}
+
+public final class com/kylecorry/andromeda/sense/compass/LegacyCompass : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/compass/CompassSensor {
+	public fun <init> (Landroid/content/Context;ZI)V
+	public synthetic fun <init> (Landroid/content/Context;ZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getBearing-xhh9egc ()F
+	public fun getDeclination ()F
+	public fun getHasValidReading ()Z
+	public fun getRawBearing ()F
+	public fun setDeclination (F)V
+}
+
+public final class com/kylecorry/andromeda/sense/hygrometer/AndroidHygrometer : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/hygrometer/Hygrometer {
+	public fun <init> (Landroid/content/Context;I)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHumidity ()F
+}
+
+public final class com/kylecorry/andromeda/sense/level/Level : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/level/LevelSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;I)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public final fun getSurfaceRotation ()I
+	public fun getX ()F
+	public fun getY ()F
+	public final fun setSurfaceRotation (I)V
+}
+
+public final class com/kylecorry/andromeda/sense/light/AndroidLightSensor : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/light/LightSensor {
+	public fun <init> (Landroid/content/Context;I)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getIlluminance ()F
+}
+
+public final class com/kylecorry/andromeda/sense/location/AndroidLocationKt {
+	public static final fun androidLocationProviderAvailable (Landroid/content/Context;Ljava/lang/String;)Z
+	public static final fun androidLocationReadings (Landroid/content/Context;Ljava/lang/String;Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun androidLocationReadings$default (Landroid/content/Context;Ljava/lang/String;Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/sense/location/AndroidLocationReading {
+	public fun <init> (Lcom/kylecorry/andromeda/device/LocationReading;Lkotlin/time/Instant;J)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/device/LocationReading;
+	public final fun component2 ()Lkotlin/time/Instant;
+	public final fun component3 ()J
+	public final fun copy (Lcom/kylecorry/andromeda/device/LocationReading;Lkotlin/time/Instant;J)Lcom/kylecorry/andromeda/sense/location/AndroidLocationReading;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sense/location/AndroidLocationReading;Lcom/kylecorry/andromeda/device/LocationReading;Lkotlin/time/Instant;JILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/location/AndroidLocationReading;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getElapsedRealtimeNanos ()J
+	public final fun getTime ()Lkotlin/time/Instant;
+	public final fun getValue ()Lcom/kylecorry/andromeda/device/LocationReading;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sense/location/AndroidProximityAlertKt {
+	public static final fun registerProximityAlert-mgvuBKE (Landroid/content/Context;JJLandroid/app/PendingIntent;Lkotlin/time/Duration;)Ljava/lang/AutoCloseable;
+	public static synthetic fun registerProximityAlert-mgvuBKE$default (Landroid/content/Context;JJLandroid/app/PendingIntent;Lkotlin/time/Duration;ILjava/lang/Object;)Ljava/lang/AutoCloseable;
+}
+
+public abstract class com/kylecorry/andromeda/sense/location/BaseGPS : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/location/GpsSensor {
+	public static final field ACCURACY_HIGH_THRESHOLD F
+	public static final field ACCURACY_MEDIUM_THRESHOLD F
+	public static final field Companion Lcom/kylecorry/andromeda/sense/location/BaseGPS$Companion;
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAltitude ()F
+	public fun getBearing-nRD8NRo ()Lcom/kylecorry/sol/units/Bearing;
+	public fun getBearingAccuracy ()Ljava/lang/Float;
+	protected final fun getContext ()Landroid/content/Context;
+	public fun getHasValidReading ()Z
+	public fun getHorizontalAccuracy ()Ljava/lang/Float;
+	public fun getLocation-VMd8-xo ()J
+	protected final fun getLocationManager ()Landroid/location/LocationManager;
+	public fun getMslAltitude ()Ljava/lang/Float;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawBearing ()Ljava/lang/Float;
+	public fun getSpeed-1elyFk4 ()J
+	public fun getSpeedAccuracy ()Ljava/lang/Float;
+	public fun getVerticalAccuracy ()Ljava/lang/Float;
+	protected fun setAltitude (F)V
+	protected fun setBearingAccuracy (Ljava/lang/Float;)V
+	protected fun setHorizontalAccuracy (Ljava/lang/Float;)V
+	protected fun setLocation-ICx_NKw (J)V
+	protected fun setMslAltitude (Ljava/lang/Float;)V
+	protected fun setQuality (Lcom/kylecorry/andromeda/core/sensors/Quality;)V
+	protected fun setRawBearing (Ljava/lang/Float;)V
+	protected fun setSpeed-9ocjHt0 (J)V
+	protected fun setSpeedAccuracy (Ljava/lang/Float;)V
+	protected fun setVerticalAccuracy (Ljava/lang/Float;)V
+	protected fun startImpl ()V
+	protected fun stopImpl ()V
+	protected fun updateLastLocation (Landroid/location/Location;Z)V
+	public static synthetic fun updateLastLocation$default (Lcom/kylecorry/andromeda/sense/location/BaseGPS;Landroid/location/Location;ZILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/sense/location/BaseGPS$Companion {
+	public final fun isAvailable (Landroid/content/Context;Ljava/lang/String;)Z
+}
+
+public final class com/kylecorry/andromeda/sense/location/GNSSSatelliteStatusSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/location/SatelliteStatusSensor {
+	public fun <init> (Landroid/content/Context;)V
+	public fun getHasValidReading ()Z
+	public fun getSatelliteDetails ()Ljava/util/List;
+	public fun getSatellites ()Ljava/lang/Integer;
+}
+
+public final class com/kylecorry/andromeda/sense/location/GPS : com/kylecorry/andromeda/sense/location/BaseGPS {
+	public static final field Companion Lcom/kylecorry/andromeda/sense/location/GPS$Companion;
+	public fun <init> (Landroid/content/Context;Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;)V
+	public synthetic fun <init> (Landroid/content/Context;Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/kylecorry/andromeda/sense/location/GPS$Companion {
+	public final fun isAvailable (Landroid/content/Context;)Z
+}
+
+public final class com/kylecorry/andromeda/sense/location/GPSPowerUsage : java/lang/Enum {
+	public static final field Balanced Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static final field High Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static final field Low Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static fun values ()[Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+}
+
+public final class com/kylecorry/andromeda/sense/location/GPSPowerUsageKt {
+	public static final fun toLocationRequestQuality (Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;)I
+}
+
+public final class com/kylecorry/andromeda/sense/location/LocationRequestConfig {
+	public fun <init> ()V
+	public synthetic fun <init> (JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-UwyO8pc ()J
+	public final fun component2-rO3TonU ()J
+	public final fun component3-FghU774 ()Lkotlin/time/Duration;
+	public final fun component4-FghU774 ()Lkotlin/time/Duration;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun component6-FghU774 ()Lkotlin/time/Duration;
+	public final fun component7 ()Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public final fun copy-h9EQbXg (JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;)Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;
+	public static synthetic fun copy-h9EQbXg$default (Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrequency-UwyO8pc ()J
+	public final fun getMaximumDuration-FghU774 ()Lkotlin/time/Duration;
+	public final fun getMaximumUpdateDelay-FghU774 ()Lkotlin/time/Duration;
+	public final fun getMaximumUpdates ()Ljava/lang/Integer;
+	public final fun getMinimumDistance-rO3TonU ()J
+	public final fun getMinimumFrequency-FghU774 ()Lkotlin/time/Duration;
+	public final fun getPowerUsage ()Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sense/location/NmeaMessagesAndroidKt {
+	public static final fun nmeaMessages ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/sense/location/NmeaMessagesKt {
+	public static final fun nmeaMslAltitudes ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/sense/magnetometer/AndroidMagnetometer : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/magnetometer/Magnetometer {
+	public fun <init> (Landroid/content/Context;I)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getMagneticField ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getRawMagneticField ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/magnetometer/LowPassMagnetometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/magnetometer/Magnetometer {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;FZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getMagneticField ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawMagneticField ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockAccelerometer : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public fun <init> ()V
+	public fun <init> ([FJ)V
+	public synthetic fun <init> ([FJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockBarometer : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/barometer/Barometer {
+	public fun <init> ()V
+	public fun <init> (FJ)V
+	public synthetic fun <init> (FJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getPressure ()F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockGyroscope : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/orientation/Gyroscope {
+	public fun <init> ()V
+	public fun <init> (J)V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAngularRate ()Lcom/kylecorry/sol/math/Euler;
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getRawAngularRate ()[F
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockMagnetometer : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/magnetometer/Magnetometer {
+	public fun <init> ()V
+	public fun <init> ([FJ)V
+	public synthetic fun <init> ([FJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMagneticField ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getRawMagneticField ()[F
+}
+
+public abstract class com/kylecorry/andromeda/sense/mock/MockSensor : com/kylecorry/andromeda/core/sensors/SharedSensor {
+	public fun <init> ()V
+	public fun <init> (J)V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	protected fun startImpl ()V
+	protected fun stopImpl ()V
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/AndroidGyroscope : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/orientation/Gyroscope {
+	public fun <init> (Landroid/content/Context;IFZ)V
+	public synthetic fun <init> (Landroid/content/Context;IFZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAngularRate ()Lcom/kylecorry/sol/math/Euler;
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getRawAngularRate ()[F
+	public fun getRawOrientation ()[F
+}
+
+public abstract class com/kylecorry/andromeda/sense/orientation/BaseRotationSensor : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public fun <init> (Landroid/content/Context;IIZ)V
+	public synthetic fun <init> (Landroid/content/Context;IIZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getRawOrientation ()[F
+	protected fun handleSensorEvent (Landroid/hardware/SensorEvent;)V
+	protected fun onHandleSensorEvent (Landroid/hardware/SensorEvent;)V
+	protected fun startImpl ()V
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/CustomGeomagneticRotationSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;ZZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/CustomRotationSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/Gyroscope;Lkotlinx/coroutines/CoroutineScope;FFJLkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/Gyroscope;Lkotlinx/coroutines/CoroutineScope;FFJLkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;ZZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/DeviceOrientation : com/kylecorry/andromeda/core/sensors/SharedSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;)V
+	public fun getHasValidReading ()Z
+	public final fun getOrientation ()Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation : java/lang/Enum {
+	public static final field Flat Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field FlatInverse Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field Landscape Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field LandscapeInverse Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field Portrait Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field PortraitInverse Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static fun values ()[Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/DeviceOrientationsKt {
+	public static final fun fusedOrientationSensor-exY8QGI (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/sense/orientation/CustomRotationSensor;
+	public static synthetic fun fusedOrientationSensor-exY8QGI$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/orientation/CustomRotationSensor;
+	public static final fun geomagneticOrientationSensor-exY8QGI (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/sense/orientation/CustomGeomagneticRotationSensor;
+	public static synthetic fun geomagneticOrientationSensor-exY8QGI$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/orientation/CustomGeomagneticRotationSensor;
+	public static final fun tiltSensor-exY8QGI (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/sense/orientation/GravityRotationSensor;
+	public static synthetic fun tiltSensor-exY8QGI$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/orientation/GravityRotationSensor;
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/GameRotationSensor : com/kylecorry/andromeda/sense/orientation/BaseRotationSensor {
+	public fun <init> (Landroid/content/Context;IZ)V
+	public synthetic fun <init> (Landroid/content/Context;IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/GeomagneticRotationSensor : com/kylecorry/andromeda/sense/orientation/BaseRotationSensor {
+	public fun <init> (Landroid/content/Context;IZ)V
+	public synthetic fun <init> (Landroid/content/Context;IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/GravityRotationSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/OrientationUtils {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;
+	public final fun getAROrientation (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;)V
+	public static synthetic fun getAROrientation$default (Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;ILjava/lang/Object;)V
+	public final fun getCompassOrientation (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;)V
+	public static synthetic fun getCompassOrientation$default (Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;ILjava/lang/Object;)V
+	public final fun getOrientation (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;II[F[FLjava/lang/Float;)V
+	public static synthetic fun getOrientation$default (Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;II[F[FLjava/lang/Float;ILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/RotationSensor : com/kylecorry/andromeda/sense/orientation/BaseRotationSensor {
+	public fun <init> (Landroid/content/Context;IZ)V
+	public synthetic fun <init> (Landroid/content/Context;IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/kylecorry/andromeda/sense/pedometer/AndroidPedometer : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/sense/pedometer/Pedometer {
+	public synthetic fun <init> (Landroid/content/Context;ILkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;ILkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getSteps ()I
+}
+
+public final class com/kylecorry/andromeda/sense/temperature/AmbientThermometer : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/core/sensors/Thermometer {
+	public fun <init> (Landroid/content/Context;I)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getTemperature ()F
+}
+
+public final class com/kylecorry/andromeda/sense/temperature/LegacyThermometer : com/kylecorry/andromeda/sense/BaseSensor, com/kylecorry/andromeda/core/sensors/Thermometer {
+	public fun <init> (Landroid/content/Context;I)V
+	public synthetic fun <init> (Landroid/content/Context;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getTemperature ()F
+}
+

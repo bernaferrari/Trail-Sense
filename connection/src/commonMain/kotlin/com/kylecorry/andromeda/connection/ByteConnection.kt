@@ -4,16 +4,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /** A bidirectional byte stream. Closing it also interrupts pending operations. */
-interface ByteConnection : AutoCloseable {
+public interface ByteConnection : AutoCloseable {
     /** Reads up to [maxBytes], or returns null when the peer closes the stream. */
-    suspend fun read(maxBytes: Int = 4096): ByteArray?
+    public suspend fun read(maxBytes: Int = 4096): ByteArray?
 
     /** Writes all bytes to the connection. */
-    suspend fun write(bytes: ByteArray)
+    public suspend fun write(bytes: ByteArray)
 }
 
 /** Reads UTF-8 lines, including a final unterminated line. Line terminators are removed. */
-fun ByteConnection.lines(maxLineBytes: Int = 1024 * 1024): Flow<String> = flow {
+public fun ByteConnection.lines(maxLineBytes: Int = 1024 * 1024): Flow<String> = flow {
     require(maxLineBytes > 0)
     var line = ByteArray(minOf(256, maxLineBytes))
     var size = 0
@@ -35,4 +35,4 @@ fun ByteConnection.lines(maxLineBytes: Int = 1024 * 1024): Flow<String> = flow {
 }
 
 /** Writes a UTF-8 line terminated by a newline. */
-suspend fun ByteConnection.writeLine(line: String) = write("$line\n".encodeToByteArray())
+public suspend fun ByteConnection.writeLine(line: String): Unit = write("$line\n".encodeToByteArray())

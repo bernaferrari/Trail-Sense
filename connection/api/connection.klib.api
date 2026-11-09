@@ -1,0 +1,164 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:connection>
+final enum class com.kylecorry.andromeda.connection/RfcommSecurity : kotlin/Enum<com.kylecorry.andromeda.connection/RfcommSecurity> { // com.kylecorry.andromeda.connection/RfcommSecurity|null[0]
+    enum entry Insecure // com.kylecorry.andromeda.connection/RfcommSecurity.Insecure|null[0]
+    enum entry Secure // com.kylecorry.andromeda.connection/RfcommSecurity.Secure|null[0]
+
+    final val entries // com.kylecorry.andromeda.connection/RfcommSecurity.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.connection/RfcommSecurity> // com.kylecorry.andromeda.connection/RfcommSecurity.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.connection/RfcommSecurity // com.kylecorry.andromeda.connection/RfcommSecurity.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.connection/RfcommSecurity> // com.kylecorry.andromeda.connection/RfcommSecurity.values|values#static(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.connection/ByteConnection : kotlin/AutoCloseable { // com.kylecorry.andromeda.connection/ByteConnection|null[0]
+    abstract suspend fun read(kotlin/Int = ...): kotlin/ByteArray? // com.kylecorry.andromeda.connection/ByteConnection.read|read(kotlin.Int){}[0]
+    abstract suspend fun write(kotlin/ByteArray) // com.kylecorry.andromeda.connection/ByteConnection.write|write(kotlin.ByteArray){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.connection/RfcommConnection : com.kylecorry.andromeda.connection/ByteConnection // com.kylecorry.andromeda.connection/RfcommConnection|null[0]
+
+abstract interface com.kylecorry.andromeda.connection/WifiDirectConnection : com.kylecorry.andromeda.connection/ByteConnection // com.kylecorry.andromeda.connection/WifiDirectConnection|null[0]
+
+abstract interface com.kylecorry.andromeda.connection/WifiDirectGroup : kotlin/AutoCloseable { // com.kylecorry.andromeda.connection/WifiDirectGroup|null[0]
+    abstract val isOwner // com.kylecorry.andromeda.connection/WifiDirectGroup.isOwner|{}isOwner[0]
+        abstract fun <get-isOwner>(): kotlin/Boolean // com.kylecorry.andromeda.connection/WifiDirectGroup.isOwner.<get-isOwner>|<get-isOwner>(){}[0]
+    abstract val ownerAddress // com.kylecorry.andromeda.connection/WifiDirectGroup.ownerAddress|{}ownerAddress[0]
+        abstract fun <get-ownerAddress>(): kotlin/String // com.kylecorry.andromeda.connection/WifiDirectGroup.ownerAddress.<get-ownerAddress>|<get-ownerAddress>(){}[0]
+
+    abstract suspend fun openConnection(kotlin/Int = ...): com.kylecorry.andromeda.connection/WifiDirectConnection // com.kylecorry.andromeda.connection/WifiDirectGroup.openConnection|openConnection(kotlin.Int){}[0]
+}
+
+final class com.kylecorry.andromeda.connection/BleNearbyDevice : com.kylecorry.andromeda.connection/NearbyDevice, com.kylecorry.andromeda.core.sensors/SharedSensor { // com.kylecorry.andromeda.connection/BleNearbyDevice|null[0]
+    constructor <init>(com.juul.kable/Advertisement, com.juul.kable/Characteristic, com.juul.kable/Characteristic, kotlinx.coroutines/CoroutineScope, com.juul.kable/WriteType = ..., kotlin/Function1<com.juul.kable/Advertisement, com.juul.kable/Peripheral> = ...) // com.kylecorry.andromeda.connection/BleNearbyDevice.<init>|<init>(com.juul.kable.Advertisement;com.juul.kable.Characteristic;com.juul.kable.Characteristic;kotlinx.coroutines.CoroutineScope;com.juul.kable.WriteType;kotlin.Function1<com.juul.kable.Advertisement,com.juul.kable.Peripheral>){}[0]
+
+    final val address // com.kylecorry.andromeda.connection/BleNearbyDevice.address|{}address[0]
+        final fun <get-address>(): kotlin/String // com.kylecorry.andromeda.connection/BleNearbyDevice.address.<get-address>|<get-address>(){}[0]
+    final val failure // com.kylecorry.andromeda.connection/BleNearbyDevice.failure|{}failure[0]
+        final fun <get-failure>(): kotlinx.coroutines.flow/StateFlow<kotlin/Throwable?> // com.kylecorry.andromeda.connection/BleNearbyDevice.failure.<get-failure>|<get-failure>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.connection/BleNearbyDevice.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.connection/BleNearbyDevice.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val isConnected // com.kylecorry.andromeda.connection/BleNearbyDevice.isConnected|{}isConnected[0]
+        final fun <get-isConnected>(): kotlin/Boolean // com.kylecorry.andromeda.connection/BleNearbyDevice.isConnected.<get-isConnected>|<get-isConnected>(){}[0]
+    final val isConnecting // com.kylecorry.andromeda.connection/BleNearbyDevice.isConnecting|{}isConnecting[0]
+        final fun <get-isConnecting>(): kotlin/Boolean // com.kylecorry.andromeda.connection/BleNearbyDevice.isConnecting.<get-isConnecting>|<get-isConnecting>(){}[0]
+    final val messages // com.kylecorry.andromeda.connection/BleNearbyDevice.messages|{}messages[0]
+        final fun <get-messages>(): kotlin.collections/List<com.kylecorry.andromeda.connection/NearbyDeviceMessage> // com.kylecorry.andromeda.connection/BleNearbyDevice.messages.<get-messages>|<get-messages>(){}[0]
+    final val name // com.kylecorry.andromeda.connection/BleNearbyDevice.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.kylecorry.andromeda.connection/BleNearbyDevice.name.<get-name>|<get-name>(){}[0]
+
+    final var messageHistorySize // com.kylecorry.andromeda.connection/BleNearbyDevice.messageHistorySize|{}messageHistorySize[0]
+        final fun <get-messageHistorySize>(): kotlin/Int // com.kylecorry.andromeda.connection/BleNearbyDevice.messageHistorySize.<get-messageHistorySize>|<get-messageHistorySize>(){}[0]
+        final fun <set-messageHistorySize>(kotlin/Int) // com.kylecorry.andromeda.connection/BleNearbyDevice.messageHistorySize.<set-messageHistorySize>|<set-messageHistorySize>(kotlin.Int){}[0]
+
+    final suspend fun send(kotlin/ByteArray) // com.kylecorry.andromeda.connection/BleNearbyDevice.send|send(kotlin.ByteArray){}[0]
+}
+
+final class com.kylecorry.andromeda.connection/BleNearbyDeviceScanner : com.kylecorry.andromeda.connection/NearbyDeviceScanner, com.kylecorry.andromeda.core.sensors/SharedSensor { // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner|null[0]
+    constructor <init>(kotlinx.coroutines/CoroutineScope, com.juul.kable/Characteristic, com.juul.kable/Characteristic, com.juul.kable/WriteType = ..., kotlin/Function1<com.juul.kable/Advertisement, kotlin/Boolean> = ..., kotlin/Function0<kotlinx.coroutines.flow/Flow<com.juul.kable/Advertisement>> = ..., kotlin/Function1<com.juul.kable/Advertisement, kotlin/String> = ...) // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.<init>|<init>(kotlinx.coroutines.CoroutineScope;com.juul.kable.Characteristic;com.juul.kable.Characteristic;com.juul.kable.WriteType;kotlin.Function1<com.juul.kable.Advertisement,kotlin.Boolean>;kotlin.Function0<kotlinx.coroutines.flow.Flow<com.juul.kable.Advertisement>>;kotlin.Function1<com.juul.kable.Advertisement,kotlin.String>){}[0]
+
+    final val devices // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.devices|{}devices[0]
+        final fun <get-devices>(): kotlin.collections/List<com.kylecorry.andromeda.connection/NearbyDevice> // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.devices.<get-devices>|<get-devices>(){}[0]
+    final val failure // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.failure|{}failure[0]
+        final fun <get-failure>(): kotlinx.coroutines.flow/StateFlow<kotlin/Throwable?> // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.failure.<get-failure>|<get-failure>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val isScanning // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.isScanning|{}isScanning[0]
+        final fun <get-isScanning>(): kotlin/Boolean // com.kylecorry.andromeda.connection/BleNearbyDeviceScanner.isScanning.<get-isScanning>|<get-isScanning>(){}[0]
+}
+
+final class com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice { // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice|null[0]
+    constructor <init>(kotlin/String, kotlin/String?, kotlin/Int?, kotlin/Boolean) // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.<init>|<init>(kotlin.String;kotlin.String?;kotlin.Int?;kotlin.Boolean){}[0]
+
+    final val address // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.address|{}address[0]
+        final fun <get-address>(): kotlin/String // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.address.<get-address>|<get-address>(){}[0]
+    final val bonded // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.bonded|{}bonded[0]
+        final fun <get-bonded>(): kotlin/Boolean // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.bonded.<get-bonded>|<get-bonded>(){}[0]
+    final val name // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.name.<get-name>|<get-name>(){}[0]
+    final val rssi // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.rssi|{}rssi[0]
+        final fun <get-rssi>(): kotlin/Int? // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.rssi.<get-rssi>|<get-rssi>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.component2|component2(){}[0]
+    final fun component3(): kotlin/Int? // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.component3|component3(){}[0]
+    final fun component4(): kotlin/Boolean // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.copy|copy(kotlin.String;kotlin.String?;kotlin.Int?;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.connection/PairedBluetoothDevice { // com.kylecorry.andromeda.connection/PairedBluetoothDevice|null[0]
+    constructor <init>(kotlin/String, kotlin/String?) // com.kylecorry.andromeda.connection/PairedBluetoothDevice.<init>|<init>(kotlin.String;kotlin.String?){}[0]
+
+    final val address // com.kylecorry.andromeda.connection/PairedBluetoothDevice.address|{}address[0]
+        final fun <get-address>(): kotlin/String // com.kylecorry.andromeda.connection/PairedBluetoothDevice.address.<get-address>|<get-address>(){}[0]
+    final val name // com.kylecorry.andromeda.connection/PairedBluetoothDevice.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // com.kylecorry.andromeda.connection/PairedBluetoothDevice.name.<get-name>|<get-name>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.connection/PairedBluetoothDevice.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // com.kylecorry.andromeda.connection/PairedBluetoothDevice.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ...): com.kylecorry.andromeda.connection/PairedBluetoothDevice // com.kylecorry.andromeda.connection/PairedBluetoothDevice.copy|copy(kotlin.String;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.connection/PairedBluetoothDevice.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.connection/PairedBluetoothDevice.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.connection/PairedBluetoothDevice.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.connection/RfcommPeer { // com.kylecorry.andromeda.connection/RfcommPeer|null[0]
+    constructor <init>(com.kylecorry.andromeda.connection/PairedBluetoothDevice, com.kylecorry.andromeda.connection/RfcommConnection) // com.kylecorry.andromeda.connection/RfcommPeer.<init>|<init>(com.kylecorry.andromeda.connection.PairedBluetoothDevice;com.kylecorry.andromeda.connection.RfcommConnection){}[0]
+
+    final val connection // com.kylecorry.andromeda.connection/RfcommPeer.connection|{}connection[0]
+        final fun <get-connection>(): com.kylecorry.andromeda.connection/RfcommConnection // com.kylecorry.andromeda.connection/RfcommPeer.connection.<get-connection>|<get-connection>(){}[0]
+    final val device // com.kylecorry.andromeda.connection/RfcommPeer.device|{}device[0]
+        final fun <get-device>(): com.kylecorry.andromeda.connection/PairedBluetoothDevice // com.kylecorry.andromeda.connection/RfcommPeer.device.<get-device>|<get-device>(){}[0]
+
+    final fun component1(): com.kylecorry.andromeda.connection/PairedBluetoothDevice // com.kylecorry.andromeda.connection/RfcommPeer.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.connection/RfcommConnection // com.kylecorry.andromeda.connection/RfcommPeer.component2|component2(){}[0]
+    final fun copy(com.kylecorry.andromeda.connection/PairedBluetoothDevice = ..., com.kylecorry.andromeda.connection/RfcommConnection = ...): com.kylecorry.andromeda.connection/RfcommPeer // com.kylecorry.andromeda.connection/RfcommPeer.copy|copy(com.kylecorry.andromeda.connection.PairedBluetoothDevice;com.kylecorry.andromeda.connection.RfcommConnection){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.connection/RfcommPeer.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.connection/RfcommPeer.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.connection/RfcommPeer.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.connection/WifiDirectPeer { // com.kylecorry.andromeda.connection/WifiDirectPeer|null[0]
+    constructor <init>(kotlin/String, kotlin/String) // com.kylecorry.andromeda.connection/WifiDirectPeer.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val address // com.kylecorry.andromeda.connection/WifiDirectPeer.address|{}address[0]
+        final fun <get-address>(): kotlin/String // com.kylecorry.andromeda.connection/WifiDirectPeer.address.<get-address>|<get-address>(){}[0]
+    final val name // com.kylecorry.andromeda.connection/WifiDirectPeer.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.kylecorry.andromeda.connection/WifiDirectPeer.name.<get-name>|<get-name>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.connection/WifiDirectPeer.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.kylecorry.andromeda.connection/WifiDirectPeer.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ...): com.kylecorry.andromeda.connection/WifiDirectPeer // com.kylecorry.andromeda.connection/WifiDirectPeer.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.connection/WifiDirectPeer.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.connection/WifiDirectPeer.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.connection/WifiDirectPeer.toString|toString(){}[0]
+}
+
+final val com.kylecorry.andromeda.connection/SerialPortService // com.kylecorry.andromeda.connection/SerialPortService|{}SerialPortService[0]
+    final fun <get-SerialPortService>(): kotlin.uuid/Uuid // com.kylecorry.andromeda.connection/SerialPortService.<get-SerialPortService>|<get-SerialPortService>(){}[0]
+final val com.kylecorry.andromeda.connection/rfcommAvailable // com.kylecorry.andromeda.connection/rfcommAvailable|{}rfcommAvailable[0]
+    final fun <get-rfcommAvailable>(): kotlin/Boolean // com.kylecorry.andromeda.connection/rfcommAvailable.<get-rfcommAvailable>|<get-rfcommAvailable>(){}[0]
+final val com.kylecorry.andromeda.connection/wifiDirectAvailable // com.kylecorry.andromeda.connection/wifiDirectAvailable|{}wifiDirectAvailable[0]
+    final fun <get-wifiDirectAvailable>(): kotlin/Boolean // com.kylecorry.andromeda.connection/wifiDirectAvailable.<get-wifiDirectAvailable>|<get-wifiDirectAvailable>(){}[0]
+
+final fun (com.kylecorry.andromeda.connection/ByteConnection).com.kylecorry.andromeda.connection/lines(kotlin/Int = ...): kotlinx.coroutines.flow/Flow<kotlin/String> // com.kylecorry.andromeda.connection/lines|lines@com.kylecorry.andromeda.connection.ByteConnection(kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.connection/pairedBluetoothDevices(): kotlin.collections/List<com.kylecorry.andromeda.connection/PairedBluetoothDevice> // com.kylecorry.andromeda.connection/pairedBluetoothDevices|pairedBluetoothDevices(){}[0]
+final fun com.kylecorry.andromeda.connection/scanBluetooth(): kotlinx.coroutines.flow/Flow<com.juul.kable/Advertisement> // com.kylecorry.andromeda.connection/scanBluetooth|scanBluetooth(){}[0]
+final fun com.kylecorry.andromeda.connection/scanClassicBluetooth(): kotlinx.coroutines.flow/Flow<com.kylecorry.andromeda.connection/DiscoveredBluetoothDevice> // com.kylecorry.andromeda.connection/scanClassicBluetooth|scanClassicBluetooth(){}[0]
+final fun com.kylecorry.andromeda.connection/scanWifiDirect(): kotlinx.coroutines.flow/Flow<kotlin.collections/List<com.kylecorry.andromeda.connection/WifiDirectPeer>> // com.kylecorry.andromeda.connection/scanWifiDirect|scanWifiDirect(){}[0]
+final suspend fun (com.juul.kable/Advertisement).com.kylecorry.andromeda.connection/connectBluetooth(): com.juul.kable/Peripheral // com.kylecorry.andromeda.connection/connectBluetooth|connectBluetooth@com.juul.kable.Advertisement(){}[0]
+final suspend fun (com.kylecorry.andromeda.connection/ByteConnection).com.kylecorry.andromeda.connection/writeLine(kotlin/String) // com.kylecorry.andromeda.connection/writeLine|writeLine@com.kylecorry.andromeda.connection.ByteConnection(kotlin.String){}[0]
+final suspend fun <#A: kotlin/Any?> (com.juul.kable/Advertisement).com.kylecorry.andromeda.connection/withBluetoothConnection(kotlin.coroutines/SuspendFunction1<com.juul.kable/Peripheral, #A>): #A // com.kylecorry.andromeda.connection/withBluetoothConnection|withBluetoothConnection@com.juul.kable.Advertisement(kotlin.coroutines.SuspendFunction1<com.juul.kable.Peripheral,0:0>){0§<kotlin.Any?>}[0]
+final suspend fun com.kylecorry.andromeda.connection/acceptRfcomm(kotlin/String, kotlin.uuid/Uuid, com.kylecorry.andromeda.connection/RfcommSecurity = ...): com.kylecorry.andromeda.connection/RfcommPeer // com.kylecorry.andromeda.connection/acceptRfcomm|acceptRfcomm(kotlin.String;kotlin.uuid.Uuid;com.kylecorry.andromeda.connection.RfcommSecurity){}[0]
+final suspend fun com.kylecorry.andromeda.connection/awaitWifiDirectGroup(): com.kylecorry.andromeda.connection/WifiDirectGroup // com.kylecorry.andromeda.connection/awaitWifiDirectGroup|awaitWifiDirectGroup(){}[0]
+final suspend fun com.kylecorry.andromeda.connection/connectRfcomm(kotlin/String, kotlin.uuid/Uuid, com.kylecorry.andromeda.connection/RfcommSecurity = ...): com.kylecorry.andromeda.connection/RfcommConnection // com.kylecorry.andromeda.connection/connectRfcomm|connectRfcomm(kotlin.String;kotlin.uuid.Uuid;com.kylecorry.andromeda.connection.RfcommSecurity){}[0]
+final suspend fun com.kylecorry.andromeda.connection/connectWifiDirect(com.kylecorry.andromeda.connection/WifiDirectPeer): com.kylecorry.andromeda.connection/WifiDirectGroup // com.kylecorry.andromeda.connection/connectWifiDirect|connectWifiDirect(com.kylecorry.andromeda.connection.WifiDirectPeer){}[0]

@@ -7,10 +7,10 @@ import okio.Source
 import okio.source
 
 private fun assetLoader(): ClassLoader = Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader()
-actual fun openAsset(path: String): Source =
+public actual fun openAsset(path: String): Source =
     (assetLoader().getResourceAsStream(assetPath(path)) ?: error("Asset not found: $path")).source()
 
-actual fun listAssets(path: String): List<String> {
+public actual fun listAssets(path: String): List<String> {
     val prefix = assetPath(path).let { if (it.isEmpty()) "" else "$it/" }
     val names = linkedSetOf<String>()
     fun add(name: String) {

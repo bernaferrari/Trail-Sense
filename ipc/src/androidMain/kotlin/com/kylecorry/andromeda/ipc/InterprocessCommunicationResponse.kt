@@ -2,8 +2,8 @@ package com.kylecorry.andromeda.ipc
 
 import android.os.Bundle
 
-class InterprocessCommunicationResponse(
-    val code: Int,
-    val headers: Bundle,
-    val payload: ByteArray?
+public class InterprocessCommunicationResponse(
+    public val code: Int,
+    public val headers: Bundle,
+    public val payload: ByteArray?
 )

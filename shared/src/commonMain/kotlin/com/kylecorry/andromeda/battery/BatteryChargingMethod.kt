@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.battery
 
-enum class BatteryChargingMethod {
+public enum class BatteryChargingMethod {
     Unknown,
     NotCharging,
     AC,

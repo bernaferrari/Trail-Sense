@@ -5,7 +5,7 @@ import com.kylecorry.sol.units.Coordinate
 import io.ktor.http.decodeURLPart
 import io.ktor.http.encodeURLParameter
 
-data class GeoUri(
+public data class GeoUri(
     val coordinate: Coordinate,
     val altitude: Float? = null,
     val queryParameters: Map<String, String> = emptyMap(),
@@ -19,8 +19,8 @@ data class GeoUri(
         return base + elevation + query
     }
 
-    companion object {
-        fun parse(uri: String): GeoUri? {
+    public companion object {
+        public fun parse(uri: String): GeoUri? {
             val pattern = Regex("geo:(-?[0-9]*\\.?[0-9]+),(-?[0-9]*\\.?[0-9]+)(?:,(-?[0-9]*\\.?[0-9]+))?(?:\\?(.*))?")
             val match = pattern.find(uri) ?: return null
             val latitude = match.groupValues[1].toDoubleOrNull() ?: return null

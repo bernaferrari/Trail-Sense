@@ -16,7 +16,7 @@ import androidx.core.location.LocationManagerCompat
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.permissions.Permissions
 
-class GNSSSatelliteStatusSensor(private val context: Context) : SharedSensor(),
+public class GNSSSatelliteStatusSensor(private val context: Context) : SharedSensor(),
     SatelliteStatusSensor {
     override var satellites: Int? = null
         private set

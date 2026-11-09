@@ -7,7 +7,7 @@ import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.bitmaps.operations.BitmapOperation
 import kotlin.also
 
-class Dither(private val destinationConfig: Bitmap.Config? = null) : BitmapOperation {
+public class Dither(private val destinationConfig: Bitmap.Config? = null) : BitmapOperation {
 
     private val paint = Paint().also {
         it.isDither = true

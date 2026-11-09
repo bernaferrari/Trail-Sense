@@ -12,16 +12,16 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 /** Android-specific sensor details for hardware not covered by DeviceSensors. */
-data class AndroidSensorInfo(val type: Int, val name: String, val vendor: String)
-data class AndroidSensorReading(val values: FloatArray, val accuracy: Int, val elapsedRealtimeNanos: Long, val time: Instant)
+public data class AndroidSensorInfo(val type: Int, val name: String, val vendor: String)
+public data class AndroidSensorReading(val values: FloatArray, val accuracy: Int, val elapsedRealtimeNanos: Long, val time: Instant)
 
-fun androidSensors(context: Context): List<AndroidSensorInfo> {
+public fun androidSensors(context: Context): List<AndroidSensorInfo> {
     val manager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager ?: return emptyList()
     return manager.getSensorList(Sensor.TYPE_ALL).map { AndroidSensorInfo(it.type, it.name, it.vendor) }
 }
 
 /** Collects a raw Android sensor; cancellation unregisters the listener. */
-fun androidSensorReadings(
+public fun androidSensorReadings(
     context: Context,
     type: Int,
     samplingPeriodMicros: Int = SensorManager.SENSOR_DELAY_GAME,

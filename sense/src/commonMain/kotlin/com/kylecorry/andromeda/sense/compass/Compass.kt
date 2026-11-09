@@ -13,12 +13,12 @@ import com.kylecorry.sol.units.Bearing
  * @param surfaceRotation The surface rotation of the device (0, 1, 2, 3)
  * @param offset The offset to apply to the bearing (in addition to declination, in degrees)
  */
-class Compass(
+public class Compass(
     private val orientationSensor: OrientationSensor,
-    var useTrueNorth: Boolean = false,
-    var isAugmentedReality: Boolean = false,
-    var surfaceRotation: Int = 0,
-    var offset: Float = 0f
+    public var useTrueNorth: Boolean = false,
+    public var isAugmentedReality: Boolean = false,
+    public var surfaceRotation: Int = 0,
+    public var offset: Float = 0f
 ) : SharedSensor(), CompassSensor {
 
     private var _bearing = 0f

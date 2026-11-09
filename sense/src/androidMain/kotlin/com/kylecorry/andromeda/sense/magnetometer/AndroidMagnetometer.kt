@@ -9,7 +9,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import com.kylecorry.sol.math.Vector3
 
-class AndroidMagnetometer(context: Context, sensorDelay: Int = SensorManager.SENSOR_DELAY_GAME) :
+public class AndroidMagnetometer(context: Context, sensorDelay: Int = SensorManager.SENSOR_DELAY_GAME) :
     BaseSensor(context, Sensor.TYPE_MAGNETIC_FIELD, sensorDelay),
     Magnetometer {
 
@@ -17,7 +17,7 @@ class AndroidMagnetometer(context: Context, sensorDelay: Int = SensorManager.SEN
         get() = gotReading
     private var gotReading = false
 
-    override val rawMagneticField = FloatArray(3)
+    override val rawMagneticField: FloatArray = FloatArray(3)
 
     override val magneticField: Vector3
         get() = Vector3(rawMagneticField[0], rawMagneticField[1], rawMagneticField[2])

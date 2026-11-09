@@ -1,5 +1,5 @@
 package com.kylecorry.andromeda.gpx
 
-data class GPXTrackSegment(
+public data class GPXTrackSegment(
     val points: List<GPXWaypoint>
 )

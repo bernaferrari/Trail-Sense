@@ -6,27 +6,27 @@ import androidx.documentfile.provider.DocumentFile
 import kotlin.time.Instant
 import kotlin.collections.toList
 
-class ContentFileSystem(context: Context, treeUri: Uri) {
+public class ContentFileSystem(context: Context, treeUri: Uri) {
 
     private val tree = DocumentFile.fromTreeUri(context, treeUri)
 
-    fun createFile(displayName: String, mimeType: String): ContentDocument? {
+    public fun createFile(displayName: String, mimeType: String): ContentDocument? {
         return tree?.createFile(mimeType, displayName)?.toContentDocument()
     }
 
-    fun getFile(displayName: String): ContentDocument? {
+    public fun getFile(displayName: String): ContentDocument? {
         return findFile(displayName)?.toContentDocument()
     }
 
-    fun deleteFile(displayName: String): Boolean {
+    public fun deleteFile(displayName: String): Boolean {
         return findFile(displayName)?.delete() == true
     }
 
-    fun listFiles(): List<DocumentFile> {
+    public fun listFiles(): List<DocumentFile> {
         return tree?.listFiles()?.toList() ?: emptyList()
     }
 
-    fun canWrite(displayName: String? = null): Boolean {
+    public fun canWrite(displayName: String? = null): Boolean {
         return if (displayName == null) {
             tree?.canWrite() == true
         } else {
@@ -34,7 +34,7 @@ class ContentFileSystem(context: Context, treeUri: Uri) {
         }
     }
 
-    fun canRead(displayName: String? = null): Boolean {
+    public fun canRead(displayName: String? = null): Boolean {
         return if (displayName == null) {
             tree?.canRead() == true
         } else {
@@ -46,8 +46,8 @@ class ContentFileSystem(context: Context, treeUri: Uri) {
         return tree?.findFile(displayName)
     }
 
-    companion object {
-        fun getDocumentFromUri(context: Context, uri: Uri): ContentDocument? {
+    public companion object {
+        public fun getDocumentFromUri(context: Context, uri: Uri): ContentDocument? {
             return DocumentFile.fromSingleUri(context, uri)?.toContentDocument()
         }
 

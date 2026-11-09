@@ -9,7 +9,7 @@ import com.kylecorry.andromeda.sense.BaseSensor
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Quaternion
 
-abstract class BaseRotationSensor(
+public abstract class BaseRotationSensor(
     context: Context,
     type: Int,
     sensorDelay: Int,

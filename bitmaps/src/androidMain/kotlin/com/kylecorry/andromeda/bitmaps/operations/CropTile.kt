@@ -6,7 +6,7 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import kotlin.math.roundToInt
 
-class CropTile(
+public class CropTile(
     private val imageBounds: CoordinateBounds,
     private val tileBounds: CoordinateBounds,
     private val tileSize: Size,

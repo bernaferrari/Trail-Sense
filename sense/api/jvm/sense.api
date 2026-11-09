@@ -1,0 +1,238 @@
+public final class com/kylecorry/andromeda/sense/accelerometer/LowPassAccelerometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;FZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getHasValidReading ()Z
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/accelerometer/WorldAccelerometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Lkotlinx/coroutines/CoroutineScope;JZIZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Lkotlinx/coroutines/CoroutineScope;JZIZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public final fun getDeclination ()F
+	public fun getHasValidReading ()Z
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawAcceleration ()[F
+	public final fun getSurfaceRotation ()I
+	public final fun getUseAROrientation ()Z
+	public final fun getUseTrueNorth ()Z
+	public final fun setDeclination (F)V
+	public final fun setSurfaceRotation (I)V
+	public final fun setUseAROrientation (Z)V
+	public final fun setUseTrueNorth (Z)V
+}
+
+public final class com/kylecorry/andromeda/sense/altitude/FusedAltimeter : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/core/sensors/Altimeter {
+	public static final field Companion Lcom/kylecorry/andromeda/sense/altitude/FusedAltimeter$Companion;
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/location/GpsSensor;Lcom/kylecorry/andromeda/sense/barometer/Barometer;Lcom/kylecorry/andromeda/preferences/Preferences;ZLcom/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator;JZLkotlin/jvm/functions/Function1;JJLkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/location/GpsSensor;Lcom/kylecorry/andromeda/sense/barometer/Barometer;Lcom/kylecorry/andromeda/preferences/Preferences;ZLcom/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator;JZLkotlin/jvm/functions/Function1;JJLkotlinx/coroutines/CoroutineScope;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAltitude ()F
+	public fun getHasValidReading ()Z
+}
+
+public final class com/kylecorry/andromeda/sense/altitude/FusedAltimeter$Companion {
+	public final fun clearCachedCalibration (Lcom/kylecorry/andromeda/preferences/Preferences;)V
+}
+
+public final class com/kylecorry/andromeda/sense/clinometer/Clinometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/clinometer/ClinometerSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAngle ()F
+	public fun getHasValidReading ()Z
+	public fun getIncline ()F
+	public final fun isAugmentedReality ()Z
+	public final fun setAugmentedReality (Z)V
+}
+
+public final class com/kylecorry/andromeda/sense/compass/Compass : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/compass/CompassSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;ZZIF)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;ZZIFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getBearing-xhh9egc ()F
+	public fun getDeclination ()F
+	public fun getHasValidReading ()Z
+	public final fun getOffset ()F
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawBearing ()F
+	public final fun getSurfaceRotation ()I
+	public final fun getUseTrueNorth ()Z
+	public final fun isAugmentedReality ()Z
+	public final fun setAugmentedReality (Z)V
+	public fun setDeclination (F)V
+	public final fun setOffset (F)V
+	public final fun setSurfaceRotation (I)V
+	public final fun setUseTrueNorth (Z)V
+}
+
+public final class com/kylecorry/andromeda/sense/level/Level : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/level/LevelSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;I)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public final fun getSurfaceRotation ()I
+	public fun getX ()F
+	public fun getY ()F
+	public final fun setSurfaceRotation (I)V
+}
+
+public final class com/kylecorry/andromeda/sense/location/GPSPowerUsage : java/lang/Enum {
+	public static final field Balanced Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static final field High Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static final field Low Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public static fun values ()[Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+}
+
+public final class com/kylecorry/andromeda/sense/location/LocationRequestConfig {
+	public fun <init> ()V
+	public synthetic fun <init> (JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-UwyO8pc ()J
+	public final fun component2-rO3TonU ()J
+	public final fun component3-FghU774 ()Lkotlin/time/Duration;
+	public final fun component4-FghU774 ()Lkotlin/time/Duration;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun component6-FghU774 ()Lkotlin/time/Duration;
+	public final fun component7 ()Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public final fun copy-h9EQbXg (JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;)Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;
+	public static synthetic fun copy-h9EQbXg$default (Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;JJLkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/location/LocationRequestConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrequency-UwyO8pc ()J
+	public final fun getMaximumDuration-FghU774 ()Lkotlin/time/Duration;
+	public final fun getMaximumUpdateDelay-FghU774 ()Lkotlin/time/Duration;
+	public final fun getMaximumUpdates ()Ljava/lang/Integer;
+	public final fun getMinimumDistance-rO3TonU ()J
+	public final fun getMinimumFrequency-FghU774 ()Lkotlin/time/Duration;
+	public final fun getPowerUsage ()Lcom/kylecorry/andromeda/sense/location/GPSPowerUsage;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sense/location/NmeaMessagesKt {
+	public static final fun nmeaMslAltitudes ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/sense/location/NmeaMessagesjvmKt {
+	public static final fun nmeaMessages ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/sense/magnetometer/LowPassMagnetometer : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/magnetometer/Magnetometer {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;FZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getMagneticField ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawMagneticField ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockAccelerometer : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public fun <init> ()V
+	public fun <init> ([FJ)V
+	public synthetic fun <init> ([FJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockBarometer : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/barometer/Barometer {
+	public fun <init> ()V
+	public fun <init> (FJ)V
+	public synthetic fun <init> (FJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getPressure ()F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockGyroscope : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/orientation/Gyroscope {
+	public fun <init> ()V
+	public fun <init> (J)V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAngularRate ()Lcom/kylecorry/sol/math/Euler;
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getRawAngularRate ()[F
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/mock/MockMagnetometer : com/kylecorry/andromeda/sense/mock/MockSensor, com/kylecorry/andromeda/sense/magnetometer/Magnetometer {
+	public fun <init> ()V
+	public fun <init> ([FJ)V
+	public synthetic fun <init> ([FJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMagneticField ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getRawMagneticField ()[F
+}
+
+public abstract class com/kylecorry/andromeda/sense/mock/MockSensor : com/kylecorry/andromeda/core/sensors/SharedSensor {
+	public fun <init> ()V
+	public fun <init> (J)V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	protected fun startImpl ()V
+	protected fun stopImpl ()V
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/CustomGeomagneticRotationSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;ZZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/CustomRotationSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/Gyroscope;Lkotlinx/coroutines/CoroutineScope;FFJLkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/magnetometer/Magnetometer;Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Lcom/kylecorry/andromeda/sense/orientation/Gyroscope;Lkotlinx/coroutines/CoroutineScope;FFJLkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;ZZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/DeviceOrientation : com/kylecorry/andromeda/core/sensors/SharedSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;)V
+	public fun getHasValidReading ()Z
+	public final fun getOrientation ()Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation : java/lang/Enum {
+	public static final field Flat Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field FlatInverse Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field Landscape Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field LandscapeInverse Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field Portrait Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static final field PortraitInverse Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+	public static fun values ()[Lcom/kylecorry/andromeda/sense/orientation/DeviceOrientation$Orientation;
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/DeviceOrientationsKt {
+	public static final fun fusedOrientationSensor-exY8QGI (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/sense/orientation/CustomRotationSensor;
+	public static synthetic fun fusedOrientationSensor-exY8QGI$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/orientation/CustomRotationSensor;
+	public static final fun geomagneticOrientationSensor-exY8QGI (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/sense/orientation/CustomGeomagneticRotationSensor;
+	public static synthetic fun geomagneticOrientationSensor-exY8QGI$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/orientation/CustomGeomagneticRotationSensor;
+	public static final fun tiltSensor-exY8QGI (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/sense/orientation/GravityRotationSensor;
+	public static synthetic fun tiltSensor-exY8QGI$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/orientation/GravityRotationSensor;
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/GravityRotationSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/accelerometer/Accelerometer;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/OrientationUtils {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;
+	public final fun getAROrientation (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;)V
+	public static synthetic fun getAROrientation$default (Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;ILjava/lang/Object;)V
+	public final fun getCompassOrientation (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;)V
+	public static synthetic fun getCompassOrientation$default (Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;[F[FILjava/lang/Float;ILjava/lang/Object;)V
+	public final fun getOrientation (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;II[F[FLjava/lang/Float;)V
+	public static synthetic fun getOrientation$default (Lcom/kylecorry/andromeda/sense/orientation/OrientationUtils;Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;II[F[FLjava/lang/Float;ILjava/lang/Object;)V
+}
+

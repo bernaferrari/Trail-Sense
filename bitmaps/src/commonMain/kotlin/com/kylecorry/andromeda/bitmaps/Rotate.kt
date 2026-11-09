@@ -7,7 +7,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /** Rotates clockwise in screen coordinates, expanding the result to contain the image. */
-fun PixelImage.rotate(degrees: Float, background: Int = 0): PixelImage {
+public fun PixelImage.rotate(degrees: Float, background: Int = 0): PixelImage {
     require(degrees.isFinite())
     val radians = (degrees % 360).toDouble() * PI / 180
     val cosine = cos(radians).let { if (abs(it) < 1e-12) 0.0 else it }

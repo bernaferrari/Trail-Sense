@@ -10,7 +10,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
-actual fun imageClassifier(
+public actual fun imageClassifier(
     modelPath: String,
     prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,

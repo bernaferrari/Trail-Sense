@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 
 @SuppressLint("MissingPermission")
-actual fun microphoneFrames(sampleRate: Int, processing: MicrophoneProcessing): Flow<MicrophoneFrame> = flow {
+public actual fun microphoneFrames(sampleRate: Int, processing: MicrophoneProcessing): Flow<MicrophoneFrame> = flow {
     require(sampleRate > 0)
     val minimum = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
     check(minimum > 0) { "Unsupported microphone sample rate" }

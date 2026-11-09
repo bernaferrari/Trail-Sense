@@ -6,7 +6,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Resizes to fit inside the given bounds while preserving aspect ratio. */
-fun PixelImage.resizeToFit(
+public fun PixelImage.resizeToFit(
     maxWidth: Int,
     maxHeight: Int,
     interpolation: ImageInterpolation = ImageInterpolation.Bilinear,
@@ -20,7 +20,7 @@ fun PixelImage.resizeToFit(
 }
 
 /** Samples a geographic tile from a rectangular equirectangular image, including antimeridian crossings. */
-fun PixelImage.cropTile(
+public fun PixelImage.cropTile(
     imageBounds: CoordinateBounds,
     tileBounds: CoordinateBounds,
     tileWidth: Int,

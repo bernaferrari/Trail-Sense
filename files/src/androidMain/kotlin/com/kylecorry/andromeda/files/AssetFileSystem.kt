@@ -8,19 +8,19 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.Exception
 
-class AssetFileSystem(private val context: Context) {
+public class AssetFileSystem(private val context: Context) {
 
-    suspend fun read(path: String): String = withContext(Dispatchers.IO) {
+    public suspend fun read(path: String): String = withContext(Dispatchers.IO) {
         stream(path).use {
             it.bufferedReader().readText()
         }
     }
 
-    suspend fun stream(path: String): InputStream = withContext(Dispatchers.IO) {
+    public suspend fun stream(path: String): InputStream = withContext(Dispatchers.IO) {
         context.assets.open(path)
     }
 
-    fun list(path: String): List<String> {
+    public fun list(path: String): List<String> {
         return (context.assets.list(path) ?: emptyArray()).toList()
     }
 }

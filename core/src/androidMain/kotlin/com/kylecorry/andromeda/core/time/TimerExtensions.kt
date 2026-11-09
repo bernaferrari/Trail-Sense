@@ -9,11 +9,11 @@ import kotlin.time.Duration
  */
 
 /** Runs the timer's action every [period], first after [initialDelay]. */
-fun ITimer.interval(period: Duration, initialDelay: Duration = Duration.ZERO) {
+public fun ITimer.interval(period: Duration, initialDelay: Duration = Duration.ZERO) {
     interval(period.inWholeMilliseconds, initialDelay.inWholeMilliseconds)
 }
 
 /** Runs the timer's action once after [delay]. */
-fun ITimer.once(delay: Duration) {
+public fun ITimer.once(delay: Duration) {
     once(delay.inWholeMilliseconds)
 }

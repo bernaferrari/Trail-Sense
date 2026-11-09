@@ -4,9 +4,9 @@ import android.graphics.Path
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Paths {
+public object Paths {
 
-    fun dialTicks(
+    public fun dialTicks(
         x: Float,
         y: Float,
         radius: Float,

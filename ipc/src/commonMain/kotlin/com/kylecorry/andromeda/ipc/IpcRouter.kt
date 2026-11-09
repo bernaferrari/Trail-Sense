@@ -3,15 +3,15 @@ package com.kylecorry.andromeda.ipc
 import kotlinx.coroutines.CancellationException
 
 /** A transport capable of sending an IPC request to a named route. */
-fun interface IpcClient {
-    suspend fun send(
+public fun interface IpcClient {
+    public suspend fun send(
         path: String,
         request: IpcRequest,
     ): IpcResponse
 }
 
 /** Dispatches requests to shared suspend handlers. Handlers may capture platform services. */
-class IpcRouter(
+public class IpcRouter(
     private val routes: Map<String, suspend (IpcRequest) -> IpcResponse>,
     private val onError: (Exception) -> Unit = {},
 ) : IpcClient {
@@ -29,5 +29,5 @@ class IpcRouter(
 }
 
 /** Sends a request without headers or a payload. */
-suspend fun IpcClient.send(path: String): IpcResponse =
+public suspend fun IpcClient.send(path: String): IpcResponse =
     send(path, IpcRequest())

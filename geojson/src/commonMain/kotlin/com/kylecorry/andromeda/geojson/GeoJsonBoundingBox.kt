@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.geojson
 
 import com.kylecorry.sol.science.geology.CoordinateBounds
 
-data class GeoJsonBoundingBox(
+public data class GeoJsonBoundingBox(
     val west: Double,
     val south: Double,
     val east: Double,

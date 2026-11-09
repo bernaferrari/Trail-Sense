@@ -3,12 +3,12 @@ package com.kylecorry.andromeda.tensorflow
 import com.kylecorry.andromeda.bitmaps.ImageInterpolation
 
 /** RGB encoding and normalization expected by a model's input tensor. */
-sealed interface RgbTensorEncoding {
-    data class Float32(val mean: Float = 0f, val standardDeviation: Float = 1f) : RgbTensorEncoding {
+public sealed interface RgbTensorEncoding {
+    public data class Float32(val mean: Float = 0f, val standardDeviation: Float = 1f) : RgbTensorEncoding {
         init { require(mean.isFinite() && standardDeviation.isFinite() && standardDeviation > 0f) }
     }
-    data object Uint8 : RgbTensorEncoding
-    data class Quantized(
+    public data object Uint8 : RgbTensorEncoding
+    public data class Quantized(
         val scale: Float,
         val zeroPoint: Int,
         val signed: Boolean,
@@ -23,14 +23,14 @@ sealed interface RgbTensorEncoding {
 }
 
 /** Output tensor encoding and, for quantized output, its quantization parameters. */
-sealed interface ClassifierOutputEncoding {
-    data object Float32 : ClassifierOutputEncoding
-    data class Quantized(val scale: Float, val zeroPoint: Int, val signed: Boolean) : ClassifierOutputEncoding {
+public sealed interface ClassifierOutputEncoding {
+    public data object Float32 : ClassifierOutputEncoding
+    public data class Quantized(val scale: Float, val zeroPoint: Int, val signed: Boolean) : ClassifierOutputEncoding {
         init { require(scale.isFinite() && scale > 0f && zeroPoint in if (signed) -128..127 else 0..255) }
     }
 }
 
-data class RgbModelInput(
+public data class RgbModelInput(
     val width: Int,
     val height: Int,
     val encoding: RgbTensorEncoding,
@@ -42,7 +42,7 @@ data class RgbModelInput(
 }
 
 /** Loads a single-input RGB classifier with built-in image preparation and output decoding. */
-fun rgbImageClassifier(
+public fun rgbImageClassifier(
     modelPath: String,
     input: RgbModelInput,
     output: ClassifierOutputEncoding,

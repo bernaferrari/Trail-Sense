@@ -1,0 +1,285 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:geojson>
+abstract interface com.kylecorry.andromeda.geojson/GeoJsonGeometry : com.kylecorry.andromeda.geojson/GeoJsonObject { // com.kylecorry.andromeda.geojson/GeoJsonGeometry|null[0]
+    final object Companion // com.kylecorry.andromeda.geojson/GeoJsonGeometry.Companion|null[0]
+}
+
+abstract interface com.kylecorry.andromeda.geojson/GeoJsonObject { // com.kylecorry.andromeda.geojson/GeoJsonObject|null[0]
+    abstract val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonObject.boundingBox|{}boundingBox[0]
+        abstract fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonObject.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    abstract val type // com.kylecorry.andromeda.geojson/GeoJsonObject.type|{}type[0]
+        abstract fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonObject.type.<get-type>|<get-type>(){}[0]
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonBoundingBox { // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double? = ..., kotlin/Double? = ...) // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double?;kotlin.Double?){}[0]
+
+    final val bounds // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.bounds|{}bounds[0]
+        final fun <get-bounds>(): com.kylecorry.sol.science.geology/CoordinateBounds // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.bounds.<get-bounds>|<get-bounds>(){}[0]
+    final val east // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.east|{}east[0]
+        final fun <get-east>(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.east.<get-east>|<get-east>(){}[0]
+    final val maxZ // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.maxZ|{}maxZ[0]
+        final fun <get-maxZ>(): kotlin/Double? // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.maxZ.<get-maxZ>|<get-maxZ>(){}[0]
+    final val minZ // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.minZ|{}minZ[0]
+        final fun <get-minZ>(): kotlin/Double? // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.minZ.<get-minZ>|<get-minZ>(){}[0]
+    final val north // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.north|{}north[0]
+        final fun <get-north>(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.north.<get-north>|<get-north>(){}[0]
+    final val south // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.south|{}south[0]
+        final fun <get-south>(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.south.<get-south>|<get-south>(){}[0]
+    final val west // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.west|{}west[0]
+        final fun <get-west>(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.west.<get-west>|<get-west>(){}[0]
+
+    final fun component1(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.component2|component2(){}[0]
+    final fun component3(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.component3|component3(){}[0]
+    final fun component4(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.component4|component4(){}[0]
+    final fun component5(): kotlin/Double? // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.component5|component5(){}[0]
+    final fun component6(): kotlin/Double? // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.component6|component6(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double? = ..., kotlin/Double? = ...): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double?;kotlin.Double?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonBoundingBox.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonFeature : com.kylecorry.andromeda.geojson/GeoJsonObject { // com.kylecorry.andromeda.geojson/GeoJsonFeature|null[0]
+    constructor <init>(kotlin/Any?, com.kylecorry.andromeda.geojson/GeoJsonGeometry?, kotlin.collections/Map<kotlin/String, kotlin/Any?>? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonFeature.<init>|<init>(kotlin.Any?;com.kylecorry.andromeda.geojson.GeoJsonGeometry?;kotlin.collections.Map<kotlin.String,kotlin.Any?>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonFeature.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonFeature.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val geometry // com.kylecorry.andromeda.geojson/GeoJsonFeature.geometry|{}geometry[0]
+        final fun <get-geometry>(): com.kylecorry.andromeda.geojson/GeoJsonGeometry? // com.kylecorry.andromeda.geojson/GeoJsonFeature.geometry.<get-geometry>|<get-geometry>(){}[0]
+    final val id // com.kylecorry.andromeda.geojson/GeoJsonFeature.id|{}id[0]
+        final fun <get-id>(): kotlin/Any? // com.kylecorry.andromeda.geojson/GeoJsonFeature.id.<get-id>|<get-id>(){}[0]
+    final val properties // com.kylecorry.andromeda.geojson/GeoJsonFeature.properties|{}properties[0]
+        final fun <get-properties>(): kotlin.collections/Map<kotlin/String, kotlin/Any?>? // com.kylecorry.andromeda.geojson/GeoJsonFeature.properties.<get-properties>|<get-properties>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonFeature.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonFeature.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Any? // com.kylecorry.andromeda.geojson/GeoJsonFeature.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonGeometry? // com.kylecorry.andromeda.geojson/GeoJsonFeature.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/Map<kotlin/String, kotlin/Any?>? // com.kylecorry.andromeda.geojson/GeoJsonFeature.component3|component3(){}[0]
+    final fun component4(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonFeature.component4|component4(){}[0]
+    final fun copy(kotlin/Any? = ..., com.kylecorry.andromeda.geojson/GeoJsonGeometry? = ..., kotlin.collections/Map<kotlin/String, kotlin/Any?>? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonFeature // com.kylecorry.andromeda.geojson/GeoJsonFeature.copy|copy(kotlin.Any?;com.kylecorry.andromeda.geojson.GeoJsonGeometry?;kotlin.collections.Map<kotlin.String,kotlin.Any?>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonFeature.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonFeature.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonFeature.toString|toString(){}[0]
+
+    final object Companion // com.kylecorry.andromeda.geojson/GeoJsonFeature.Companion|null[0]
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection : com.kylecorry.andromeda.geojson/GeoJsonObject { // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection|null[0]
+    constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonFeature>, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonFeature>;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val features // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.features|{}features[0]
+        final fun <get-features>(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonFeature> // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.features.<get-features>|<get-features>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonFeature> // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonFeature> = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.copy|copy(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonFeature>;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.toString|toString(){}[0]
+
+    final object Companion // com.kylecorry.andromeda.geojson/GeoJsonFeatureCollection.Companion|null[0]
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection : com.kylecorry.andromeda.geojson/GeoJsonGeometry { // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection|null[0]
+    constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonGeometry>, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonGeometry>;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val geometries // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.geometries|{}geometries[0]
+        final fun <get-geometries>(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonGeometry> // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.geometries.<get-geometries>|<get-geometries>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonGeometry> // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonGeometry> = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.copy|copy(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonGeometry>;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.Companion|null[0]
+        final const val TYPE // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.Companion.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonGeometryCollection.Companion.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonLineString : com.kylecorry.andromeda.geojson/GeoJsonGeometry { // com.kylecorry.andromeda.geojson/GeoJsonLineString|null[0]
+    constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>?, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonLineString.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonLineString.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonLineString.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val line // com.kylecorry.andromeda.geojson/GeoJsonLineString.line|{}line[0]
+        final fun <get-line>(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>? // com.kylecorry.andromeda.geojson/GeoJsonLineString.line.<get-line>|<get-line>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonLineString.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonLineString.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>? // com.kylecorry.andromeda.geojson/GeoJsonLineString.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonLineString.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonLineString // com.kylecorry.andromeda.geojson/GeoJsonLineString.copy|copy(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonLineString.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonLineString.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonLineString.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.geojson/GeoJsonLineString.Companion|null[0]
+        final const val TYPE // com.kylecorry.andromeda.geojson/GeoJsonLineString.Companion.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonLineString.Companion.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonMultiLineString : com.kylecorry.andromeda.geojson/GeoJsonGeometry { // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString|null[0]
+    constructor <init>(kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>?, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.<init>|<init>(kotlin.collections.List<kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val lines // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.lines|{}lines[0]
+        final fun <get-lines>(): kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>? // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.lines.<get-lines>|<get-lines>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>? // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonMultiLineString // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.copy|copy(kotlin.collections.List<kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.Companion|null[0]
+        final const val TYPE // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.Companion.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiLineString.Companion.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonMultiPoint : com.kylecorry.andromeda.geojson/GeoJsonGeometry { // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint|null[0]
+    constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>?, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val points // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.points|{}points[0]
+        final fun <get-points>(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>? // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.points.<get-points>|<get-points>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>? // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonMultiPoint // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.copy|copy(kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.Companion|null[0]
+        final const val TYPE // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.Companion.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiPoint.Companion.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon : com.kylecorry.andromeda.geojson/GeoJsonGeometry { // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon|null[0]
+    constructor <init>(kotlin.collections/List<kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>>?, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.<init>|<init>(kotlin.collections.List<kotlin.collections.List<kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>>>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val polygons // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.polygons|{}polygons[0]
+        final fun <get-polygons>(): kotlin.collections/List<kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>>? // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.polygons.<get-polygons>|<get-polygons>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin.collections/List<kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>>? // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>>? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.copy|copy(kotlin.collections.List<kotlin.collections.List<kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>>>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.hashCode|hashCode(){}[0]
+    final fun isHole(kotlin/Int, kotlin/Int): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.isHole|isHole(kotlin.Int;kotlin.Int){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.Companion|null[0]
+        final const val TYPE // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.Companion.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonMultiPolygon.Companion.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonPoint : com.kylecorry.andromeda.geojson/GeoJsonGeometry { // com.kylecorry.andromeda.geojson/GeoJsonPoint|null[0]
+    constructor <init>(com.kylecorry.andromeda.geojson/GeoJsonPosition?, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonPoint.<init>|<init>(com.kylecorry.andromeda.geojson.GeoJsonPosition?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonPoint.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonPoint.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val point // com.kylecorry.andromeda.geojson/GeoJsonPoint.point|{}point[0]
+        final fun <get-point>(): com.kylecorry.andromeda.geojson/GeoJsonPosition? // com.kylecorry.andromeda.geojson/GeoJsonPoint.point.<get-point>|<get-point>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonPoint.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonPoint.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): com.kylecorry.andromeda.geojson/GeoJsonPosition? // com.kylecorry.andromeda.geojson/GeoJsonPoint.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonPoint.component2|component2(){}[0]
+    final fun copy(com.kylecorry.andromeda.geojson/GeoJsonPosition? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonPoint // com.kylecorry.andromeda.geojson/GeoJsonPoint.copy|copy(com.kylecorry.andromeda.geojson.GeoJsonPosition?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonPoint.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonPoint.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonPoint.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.geojson/GeoJsonPoint.Companion|null[0]
+        final const val TYPE // com.kylecorry.andromeda.geojson/GeoJsonPoint.Companion.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonPoint.Companion.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonPolygon : com.kylecorry.andromeda.geojson/GeoJsonGeometry { // com.kylecorry.andromeda.geojson/GeoJsonPolygon|null[0]
+    constructor <init>(kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>?, com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...) // com.kylecorry.andromeda.geojson/GeoJsonPolygon.<init>|<init>(kotlin.collections.List<kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+
+    final val boundingBox // com.kylecorry.andromeda.geojson/GeoJsonPolygon.boundingBox|{}boundingBox[0]
+        final fun <get-boundingBox>(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonPolygon.boundingBox.<get-boundingBox>|<get-boundingBox>(){}[0]
+    final val polygon // com.kylecorry.andromeda.geojson/GeoJsonPolygon.polygon|{}polygon[0]
+        final fun <get-polygon>(): kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>? // com.kylecorry.andromeda.geojson/GeoJsonPolygon.polygon.<get-polygon>|<get-polygon>(){}[0]
+    final val type // com.kylecorry.andromeda.geojson/GeoJsonPolygon.type|{}type[0]
+        final fun <get-type>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonPolygon.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>? // com.kylecorry.andromeda.geojson/GeoJsonPolygon.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? // com.kylecorry.andromeda.geojson/GeoJsonPolygon.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<kotlin.collections/List<com.kylecorry.andromeda.geojson/GeoJsonPosition>>? = ..., com.kylecorry.andromeda.geojson/GeoJsonBoundingBox? = ...): com.kylecorry.andromeda.geojson/GeoJsonPolygon // com.kylecorry.andromeda.geojson/GeoJsonPolygon.copy|copy(kotlin.collections.List<kotlin.collections.List<com.kylecorry.andromeda.geojson.GeoJsonPosition>>?;com.kylecorry.andromeda.geojson.GeoJsonBoundingBox?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonPolygon.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonPolygon.hashCode|hashCode(){}[0]
+    final fun isHole(kotlin/Int): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonPolygon.isHole|isHole(kotlin.Int){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonPolygon.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.geojson/GeoJsonPolygon.Companion|null[0]
+        final const val TYPE // com.kylecorry.andromeda.geojson/GeoJsonPolygon.Companion.TYPE|{}TYPE[0]
+            final fun <get-TYPE>(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonPolygon.Companion.TYPE.<get-TYPE>|<get-TYPE>(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.geojson/GeoJsonPosition { // com.kylecorry.andromeda.geojson/GeoJsonPosition|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double? = ...) // com.kylecorry.andromeda.geojson/GeoJsonPosition.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double?){}[0]
+
+    final val altitude // com.kylecorry.andromeda.geojson/GeoJsonPosition.altitude|{}altitude[0]
+        final fun <get-altitude>(): com.kylecorry.sol.units/Distance? // com.kylecorry.andromeda.geojson/GeoJsonPosition.altitude.<get-altitude>|<get-altitude>(){}[0]
+    final val coordinate // com.kylecorry.andromeda.geojson/GeoJsonPosition.coordinate|{}coordinate[0]
+        final fun <get-coordinate>(): com.kylecorry.sol.units/Coordinate // com.kylecorry.andromeda.geojson/GeoJsonPosition.coordinate.<get-coordinate>|<get-coordinate>(){}[0]
+    final val x // com.kylecorry.andromeda.geojson/GeoJsonPosition.x|{}x[0]
+        final fun <get-x>(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonPosition.x.<get-x>|<get-x>(){}[0]
+    final val y // com.kylecorry.andromeda.geojson/GeoJsonPosition.y|{}y[0]
+        final fun <get-y>(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonPosition.y.<get-y>|<get-y>(){}[0]
+    final val z // com.kylecorry.andromeda.geojson/GeoJsonPosition.z|{}z[0]
+        final fun <get-z>(): kotlin/Double? // com.kylecorry.andromeda.geojson/GeoJsonPosition.z.<get-z>|<get-z>(){}[0]
+
+    final fun component1(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonPosition.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.kylecorry.andromeda.geojson/GeoJsonPosition.component2|component2(){}[0]
+    final fun component3(): kotlin/Double? // com.kylecorry.andromeda.geojson/GeoJsonPosition.component3|component3(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double? = ...): com.kylecorry.andromeda.geojson/GeoJsonPosition // com.kylecorry.andromeda.geojson/GeoJsonPosition.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.geojson/GeoJsonPosition.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.geojson/GeoJsonPosition.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonPosition.toString|toString(){}[0]
+}
+
+final object com.kylecorry.andromeda.geojson/GeoJsonConvert { // com.kylecorry.andromeda.geojson/GeoJsonConvert|null[0]
+    final fun fromJson(kotlin/String): com.kylecorry.andromeda.geojson/GeoJsonObject? // com.kylecorry.andromeda.geojson/GeoJsonConvert.fromJson|fromJson(kotlin.String){}[0]
+    final fun toJson(com.kylecorry.andromeda.geojson/GeoJsonObject): kotlin/String // com.kylecorry.andromeda.geojson/GeoJsonConvert.toJson|toJson(com.kylecorry.andromeda.geojson.GeoJsonObject){}[0]
+}

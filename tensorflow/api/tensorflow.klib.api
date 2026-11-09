@@ -1,0 +1,167 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:tensorflow>
+final enum class com.kylecorry.andromeda.tensorflow/ClassifierAcceleration : kotlin/Enum<com.kylecorry.andromeda.tensorflow/ClassifierAcceleration> { // com.kylecorry.andromeda.tensorflow/ClassifierAcceleration|null[0]
+    enum entry AndroidNnapi // com.kylecorry.andromeda.tensorflow/ClassifierAcceleration.AndroidNnapi|null[0]
+    enum entry Cpu // com.kylecorry.andromeda.tensorflow/ClassifierAcceleration.Cpu|null[0]
+
+    final val entries // com.kylecorry.andromeda.tensorflow/ClassifierAcceleration.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.tensorflow/ClassifierAcceleration> // com.kylecorry.andromeda.tensorflow/ClassifierAcceleration.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.tensorflow/ClassifierAcceleration // com.kylecorry.andromeda.tensorflow/ClassifierAcceleration.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.tensorflow/ClassifierAcceleration> // com.kylecorry.andromeda.tensorflow/ClassifierAcceleration.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.tensorflow/ImageResizeMode : kotlin/Enum<com.kylecorry.andromeda.tensorflow/ImageResizeMode> { // com.kylecorry.andromeda.tensorflow/ImageResizeMode|null[0]
+    enum entry CenterCrop // com.kylecorry.andromeda.tensorflow/ImageResizeMode.CenterCrop|null[0]
+    enum entry Fit // com.kylecorry.andromeda.tensorflow/ImageResizeMode.Fit|null[0]
+    enum entry Stretch // com.kylecorry.andromeda.tensorflow/ImageResizeMode.Stretch|null[0]
+
+    final val entries // com.kylecorry.andromeda.tensorflow/ImageResizeMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.tensorflow/ImageResizeMode> // com.kylecorry.andromeda.tensorflow/ImageResizeMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.tensorflow/ImageResizeMode // com.kylecorry.andromeda.tensorflow/ImageResizeMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.tensorflow/ImageResizeMode> // com.kylecorry.andromeda.tensorflow/ImageResizeMode.values|values#static(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.tensorflow/ImageClassifier : kotlin/AutoCloseable { // com.kylecorry.andromeda.tensorflow/ImageClassifier|null[0]
+    abstract suspend fun classify(com.kylecorry.andromeda.bitmaps/PixelImage): kotlin.collections/List<kotlin/Float> // com.kylecorry.andromeda.tensorflow/ImageClassifier.classify|classify(com.kylecorry.andromeda.bitmaps.PixelImage){}[0]
+}
+
+sealed interface com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding { // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding|null[0]
+    final class Quantized : com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding { // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized|null[0]
+        constructor <init>(kotlin/Float, kotlin/Int, kotlin/Boolean) // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.<init>|<init>(kotlin.Float;kotlin.Int;kotlin.Boolean){}[0]
+
+        final val scale // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.scale|{}scale[0]
+            final fun <get-scale>(): kotlin/Float // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.scale.<get-scale>|<get-scale>(){}[0]
+        final val signed // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.signed|{}signed[0]
+            final fun <get-signed>(): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.signed.<get-signed>|<get-signed>(){}[0]
+        final val zeroPoint // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.zeroPoint|{}zeroPoint[0]
+            final fun <get-zeroPoint>(): kotlin/Int // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.zeroPoint.<get-zeroPoint>|<get-zeroPoint>(){}[0]
+
+        final fun component1(): kotlin/Float // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.component2|component2(){}[0]
+        final fun component3(): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.component3|component3(){}[0]
+        final fun copy(kotlin/Float = ..., kotlin/Int = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.copy|copy(kotlin.Float;kotlin.Int;kotlin.Boolean){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Quantized.toString|toString(){}[0]
+    }
+
+    final object Float32 : com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding { // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Float32|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Float32.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Float32.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding.Float32.toString|toString(){}[0]
+    }
+}
+
+sealed interface com.kylecorry.andromeda.tensorflow/RgbTensorEncoding { // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding|null[0]
+    final class Float32 : com.kylecorry.andromeda.tensorflow/RgbTensorEncoding { // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32|null[0]
+        constructor <init>(kotlin/Float = ..., kotlin/Float = ...) // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.<init>|<init>(kotlin.Float;kotlin.Float){}[0]
+
+        final val mean // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.mean|{}mean[0]
+            final fun <get-mean>(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.mean.<get-mean>|<get-mean>(){}[0]
+        final val standardDeviation // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.standardDeviation|{}standardDeviation[0]
+            final fun <get-standardDeviation>(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.standardDeviation.<get-standardDeviation>|<get-standardDeviation>(){}[0]
+
+        final fun component1(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.component1|component1(){}[0]
+        final fun component2(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.component2|component2(){}[0]
+        final fun copy(kotlin/Float = ..., kotlin/Float = ...): com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32 // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.copy|copy(kotlin.Float;kotlin.Float){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Float32.toString|toString(){}[0]
+    }
+
+    final class Quantized : com.kylecorry.andromeda.tensorflow/RgbTensorEncoding { // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized|null[0]
+        constructor <init>(kotlin/Float, kotlin/Int, kotlin/Boolean, kotlin/Float = ..., kotlin/Float = ...) // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.<init>|<init>(kotlin.Float;kotlin.Int;kotlin.Boolean;kotlin.Float;kotlin.Float){}[0]
+
+        final val mean // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.mean|{}mean[0]
+            final fun <get-mean>(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.mean.<get-mean>|<get-mean>(){}[0]
+        final val scale // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.scale|{}scale[0]
+            final fun <get-scale>(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.scale.<get-scale>|<get-scale>(){}[0]
+        final val signed // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.signed|{}signed[0]
+            final fun <get-signed>(): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.signed.<get-signed>|<get-signed>(){}[0]
+        final val standardDeviation // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.standardDeviation|{}standardDeviation[0]
+            final fun <get-standardDeviation>(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.standardDeviation.<get-standardDeviation>|<get-standardDeviation>(){}[0]
+        final val zeroPoint // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.zeroPoint|{}zeroPoint[0]
+            final fun <get-zeroPoint>(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.zeroPoint.<get-zeroPoint>|<get-zeroPoint>(){}[0]
+
+        final fun component1(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.component2|component2(){}[0]
+        final fun component3(): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.component3|component3(){}[0]
+        final fun component4(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.component4|component4(){}[0]
+        final fun component5(): kotlin/Float // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.component5|component5(){}[0]
+        final fun copy(kotlin/Float = ..., kotlin/Int = ..., kotlin/Boolean = ..., kotlin/Float = ..., kotlin/Float = ...): com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.copy|copy(kotlin.Float;kotlin.Int;kotlin.Boolean;kotlin.Float;kotlin.Float){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Quantized.toString|toString(){}[0]
+    }
+
+    final object Uint8 : com.kylecorry.andromeda.tensorflow/RgbTensorEncoding { // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Uint8|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Uint8.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Uint8.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.tensorflow/RgbTensorEncoding.Uint8.toString|toString(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.tensorflow/ClassifierOptions { // com.kylecorry.andromeda.tensorflow/ClassifierOptions|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Boolean = ..., com.kylecorry.andromeda.tensorflow/ClassifierAcceleration = ...) // com.kylecorry.andromeda.tensorflow/ClassifierOptions.<init>|<init>(kotlin.Int;kotlin.Boolean;com.kylecorry.andromeda.tensorflow.ClassifierAcceleration){}[0]
+
+    final val acceleration // com.kylecorry.andromeda.tensorflow/ClassifierOptions.acceleration|{}acceleration[0]
+        final fun <get-acceleration>(): com.kylecorry.andromeda.tensorflow/ClassifierAcceleration // com.kylecorry.andromeda.tensorflow/ClassifierOptions.acceleration.<get-acceleration>|<get-acceleration>(){}[0]
+    final val applySoftmax // com.kylecorry.andromeda.tensorflow/ClassifierOptions.applySoftmax|{}applySoftmax[0]
+        final fun <get-applySoftmax>(): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/ClassifierOptions.applySoftmax.<get-applySoftmax>|<get-applySoftmax>(){}[0]
+    final val numThreads // com.kylecorry.andromeda.tensorflow/ClassifierOptions.numThreads|{}numThreads[0]
+        final fun <get-numThreads>(): kotlin/Int // com.kylecorry.andromeda.tensorflow/ClassifierOptions.numThreads.<get-numThreads>|<get-numThreads>(){}[0]
+
+    final fun component1(): kotlin/Int // com.kylecorry.andromeda.tensorflow/ClassifierOptions.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/ClassifierOptions.component2|component2(){}[0]
+    final fun component3(): com.kylecorry.andromeda.tensorflow/ClassifierAcceleration // com.kylecorry.andromeda.tensorflow/ClassifierOptions.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Boolean = ..., com.kylecorry.andromeda.tensorflow/ClassifierAcceleration = ...): com.kylecorry.andromeda.tensorflow/ClassifierOptions // com.kylecorry.andromeda.tensorflow/ClassifierOptions.copy|copy(kotlin.Int;kotlin.Boolean;com.kylecorry.andromeda.tensorflow.ClassifierAcceleration){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/ClassifierOptions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.tensorflow/ClassifierOptions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.tensorflow/ClassifierOptions.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.tensorflow/RgbModelInput { // com.kylecorry.andromeda.tensorflow/RgbModelInput|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, com.kylecorry.andromeda.tensorflow/RgbTensorEncoding, com.kylecorry.andromeda.tensorflow/ImageResizeMode = ..., com.kylecorry.andromeda.bitmaps/ImageInterpolation = ..., kotlin/Int = ...) // com.kylecorry.andromeda.tensorflow/RgbModelInput.<init>|<init>(kotlin.Int;kotlin.Int;com.kylecorry.andromeda.tensorflow.RgbTensorEncoding;com.kylecorry.andromeda.tensorflow.ImageResizeMode;com.kylecorry.andromeda.bitmaps.ImageInterpolation;kotlin.Int){}[0]
+
+    final val background // com.kylecorry.andromeda.tensorflow/RgbModelInput.background|{}background[0]
+        final fun <get-background>(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbModelInput.background.<get-background>|<get-background>(){}[0]
+    final val encoding // com.kylecorry.andromeda.tensorflow/RgbModelInput.encoding|{}encoding[0]
+        final fun <get-encoding>(): com.kylecorry.andromeda.tensorflow/RgbTensorEncoding // com.kylecorry.andromeda.tensorflow/RgbModelInput.encoding.<get-encoding>|<get-encoding>(){}[0]
+    final val height // com.kylecorry.andromeda.tensorflow/RgbModelInput.height|{}height[0]
+        final fun <get-height>(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbModelInput.height.<get-height>|<get-height>(){}[0]
+    final val interpolation // com.kylecorry.andromeda.tensorflow/RgbModelInput.interpolation|{}interpolation[0]
+        final fun <get-interpolation>(): com.kylecorry.andromeda.bitmaps/ImageInterpolation // com.kylecorry.andromeda.tensorflow/RgbModelInput.interpolation.<get-interpolation>|<get-interpolation>(){}[0]
+    final val resizeMode // com.kylecorry.andromeda.tensorflow/RgbModelInput.resizeMode|{}resizeMode[0]
+        final fun <get-resizeMode>(): com.kylecorry.andromeda.tensorflow/ImageResizeMode // com.kylecorry.andromeda.tensorflow/RgbModelInput.resizeMode.<get-resizeMode>|<get-resizeMode>(){}[0]
+    final val width // com.kylecorry.andromeda.tensorflow/RgbModelInput.width|{}width[0]
+        final fun <get-width>(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbModelInput.width.<get-width>|<get-width>(){}[0]
+
+    final fun component1(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbModelInput.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbModelInput.component2|component2(){}[0]
+    final fun component3(): com.kylecorry.andromeda.tensorflow/RgbTensorEncoding // com.kylecorry.andromeda.tensorflow/RgbModelInput.component3|component3(){}[0]
+    final fun component4(): com.kylecorry.andromeda.tensorflow/ImageResizeMode // com.kylecorry.andromeda.tensorflow/RgbModelInput.component4|component4(){}[0]
+    final fun component5(): com.kylecorry.andromeda.bitmaps/ImageInterpolation // com.kylecorry.andromeda.tensorflow/RgbModelInput.component5|component5(){}[0]
+    final fun component6(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbModelInput.component6|component6(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., com.kylecorry.andromeda.tensorflow/RgbTensorEncoding = ..., com.kylecorry.andromeda.tensorflow/ImageResizeMode = ..., com.kylecorry.andromeda.bitmaps/ImageInterpolation = ..., kotlin/Int = ...): com.kylecorry.andromeda.tensorflow/RgbModelInput // com.kylecorry.andromeda.tensorflow/RgbModelInput.copy|copy(kotlin.Int;kotlin.Int;com.kylecorry.andromeda.tensorflow.RgbTensorEncoding;com.kylecorry.andromeda.tensorflow.ImageResizeMode;com.kylecorry.andromeda.bitmaps.ImageInterpolation;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.tensorflow/RgbModelInput.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.tensorflow/RgbModelInput.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.tensorflow/RgbModelInput.toString|toString(){}[0]
+}
+
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.tensorflow/resizeForModel(kotlin/Int, kotlin/Int, com.kylecorry.andromeda.tensorflow/ImageResizeMode = ..., com.kylecorry.andromeda.bitmaps/ImageInterpolation = ..., kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.tensorflow/resizeForModel|resizeForModel@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Int;kotlin.Int;com.kylecorry.andromeda.tensorflow.ImageResizeMode;com.kylecorry.andromeda.bitmaps.ImageInterpolation;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.tensorflow/rgbFloat32(kotlin/Float = ..., kotlin/Float = ...): kotlin/ByteArray // com.kylecorry.andromeda.tensorflow/rgbFloat32|rgbFloat32@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Float;kotlin.Float){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.tensorflow/rgbQuantized(kotlin/Float, kotlin/Int, kotlin/Boolean, kotlin/Float = ..., kotlin/Float = ...): kotlin/ByteArray // com.kylecorry.andromeda.tensorflow/rgbQuantized|rgbQuantized@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Float;kotlin.Int;kotlin.Boolean;kotlin.Float;kotlin.Float){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.tensorflow/rgbUint8(): kotlin/ByteArray // com.kylecorry.andromeda.tensorflow/rgbUint8|rgbUint8@com.kylecorry.andromeda.bitmaps.PixelImage(){}[0]
+final fun (kotlin.collections/List<kotlin/Float>).com.kylecorry.andromeda.tensorflow/softmax(): kotlin.collections/List<kotlin/Float> // com.kylecorry.andromeda.tensorflow/softmax|softmax@kotlin.collections.List<kotlin.Float>(){}[0]
+final fun com.kylecorry.andromeda.tensorflow/decodeFloat32Tensor(kotlin/ByteArray): kotlin.collections/List<kotlin/Float> // com.kylecorry.andromeda.tensorflow/decodeFloat32Tensor|decodeFloat32Tensor(kotlin.ByteArray){}[0]
+final fun com.kylecorry.andromeda.tensorflow/decodeQuantizedTensor(kotlin/ByteArray, kotlin/Float, kotlin/Int, kotlin/Boolean): kotlin.collections/List<kotlin/Float> // com.kylecorry.andromeda.tensorflow/decodeQuantizedTensor|decodeQuantizedTensor(kotlin.ByteArray;kotlin.Float;kotlin.Int;kotlin.Boolean){}[0]
+final fun com.kylecorry.andromeda.tensorflow/imageClassifier(kotlin/String, kotlin/Function1<com.kylecorry.andromeda.bitmaps/PixelImage, kotlin/ByteArray>, kotlin/Function1<kotlin/ByteArray, kotlin.collections/List<kotlin/Float>>, com.kylecorry.andromeda.tensorflow/ClassifierOptions = ...): com.kylecorry.andromeda.tensorflow/ImageClassifier // com.kylecorry.andromeda.tensorflow/imageClassifier|imageClassifier(kotlin.String;kotlin.Function1<com.kylecorry.andromeda.bitmaps.PixelImage,kotlin.ByteArray>;kotlin.Function1<kotlin.ByteArray,kotlin.collections.List<kotlin.Float>>;com.kylecorry.andromeda.tensorflow.ClassifierOptions){}[0]
+final fun com.kylecorry.andromeda.tensorflow/rgbImageClassifier(kotlin/String, com.kylecorry.andromeda.tensorflow/RgbModelInput, com.kylecorry.andromeda.tensorflow/ClassifierOutputEncoding, com.kylecorry.andromeda.tensorflow/ClassifierOptions = ...): com.kylecorry.andromeda.tensorflow/ImageClassifier // com.kylecorry.andromeda.tensorflow/rgbImageClassifier|rgbImageClassifier(kotlin.String;com.kylecorry.andromeda.tensorflow.RgbModelInput;com.kylecorry.andromeda.tensorflow.ClassifierOutputEncoding;com.kylecorry.andromeda.tensorflow.ClassifierOptions){}[0]

@@ -11,20 +11,20 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.UUID
 import kotlin.coroutines.resume
 
-class Printer(context: Context) {
+public class Printer(context: Context) {
 
     private val helper = PrintHelper(context)
     private val printManager = context.getSystemService<PrintManager>()
     private val attributesBuilder = PrintAttributes.Builder()
 
-    fun setScaleMode(scaleMode: ScaleMode) {
+    public fun setScaleMode(scaleMode: ScaleMode) {
         helper.scaleMode = when (scaleMode) {
             ScaleMode.Fit -> PrintHelper.SCALE_MODE_FIT
             ScaleMode.Fill -> PrintHelper.SCALE_MODE_FILL
         }
     }
 
-    fun setColorMode(colorMode: ColorMode) {
+    public fun setColorMode(colorMode: ColorMode) {
         helper.colorMode = when (colorMode) {
             ColorMode.Color -> PrintHelper.COLOR_MODE_COLOR
             ColorMode.Monochrome -> PrintHelper.COLOR_MODE_MONOCHROME
@@ -37,7 +37,7 @@ class Printer(context: Context) {
         )
     }
 
-    fun setOrientation(orientation: Orientation) {
+    public fun setOrientation(orientation: Orientation) {
         helper.orientation = when (orientation) {
             Orientation.Portrait -> PrintHelper.ORIENTATION_PORTRAIT
             Orientation.Landscape -> PrintHelper.ORIENTATION_LANDSCAPE
@@ -50,13 +50,13 @@ class Printer(context: Context) {
         )
     }
 
-    fun print(bitmap: Bitmap, onFinished: (String) -> Unit = {}): String {
+    public fun print(bitmap: Bitmap, onFinished: (String) -> Unit = {}): String {
         val jobName = createJobName()
         helper.printBitmap(jobName, bitmap) { onFinished(jobName) }
         return jobName
     }
 
-    fun print(uri: Uri, onFinished: (String) -> Unit = {}): String {
+    public fun print(uri: Uri, onFinished: (String) -> Unit = {}): String {
         val jobName = createJobName()
         // If it is a PDF, print it using the print manager
         if (uri.toString().endsWith(".pdf", true)) {
@@ -71,13 +71,13 @@ class Printer(context: Context) {
         return jobName
     }
 
-    suspend fun print(uri: Uri): String = suspendCancellableCoroutine { cont ->
+    public suspend fun print(uri: Uri): String = suspendCancellableCoroutine { cont ->
         print(uri) {
             cont.resume(it)
         }
     }
 
-    suspend fun print(bitmap: Bitmap): String = suspendCancellableCoroutine { cont ->
+    public suspend fun print(bitmap: Bitmap): String = suspendCancellableCoroutine { cont ->
         print(bitmap) {
             cont.resume(it)
         }
@@ -88,8 +88,8 @@ class Printer(context: Context) {
         return "PrintJob-$guid"
     }
 
-    companion object {
-        fun canPrint(): Boolean {
+    public companion object {
+        public fun canPrint(): Boolean {
             return PrintHelper.systemSupportsPrint()
         }
     }

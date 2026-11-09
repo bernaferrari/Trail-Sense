@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.notify
 
 import platform.UserNotifications.*
 
-fun notificationSender(): NotificationSender = object : NotificationSender {
+public fun notificationSender(): NotificationSender = object : NotificationSender {
     private val center = UNUserNotificationCenter.currentNotificationCenter()
     override fun send(id: Int, title: String, body: String) {
         val content = UNMutableNotificationContent().apply {

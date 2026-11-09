@@ -5,7 +5,7 @@ import com.kylecorry.andromeda.sense.location.LocationRequestConfig
 import android.content.Context
 import android.location.LocationManager
 
-class GPS(
+public class GPS(
     context: Context,
     requestConfig: LocationRequestConfig = LocationRequestConfig()
 ) : BaseGPS(
@@ -13,8 +13,8 @@ class GPS(
     LocationManager.GPS_PROVIDER,
     requestConfig
 ) {
-    companion object {
-        fun isAvailable(context: Context): Boolean {
+    public companion object {
+        public fun isAvailable(context: Context): Boolean {
             return isAvailable(context, LocationManager.GPS_PROVIDER)
         }
     }

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.flow
 import kotlin.time.Instant
 
 /** A circular region; [expiresAt] is exclusive when set. */
-data class Geofence(
+public data class Geofence(
     val id: String,
     val center: Coordinate,
     val radiusMeters: Float,
@@ -19,9 +19,9 @@ data class Geofence(
     }
 }
 
-enum class GeofenceTransitionType { Enter, Exit }
+public enum class GeofenceTransitionType { Enter, Exit }
 
-data class GeofenceTransition(
+public data class GeofenceTransition(
     val fence: Geofence,
     val type: GeofenceTransitionType,
     val location: LocationReading,
@@ -33,7 +33,7 @@ data class GeofenceTransition(
  * region emits Enter; an initial reading outside does not emit Exit. Each collector keeps its
  * own state. Expired regions and out-of-order location readings are ignored.
  */
-fun Flow<Reading<LocationReading>>.geofenceTransitions(fences: List<Geofence>): Flow<GeofenceTransition> {
+public fun Flow<Reading<LocationReading>>.geofenceTransitions(fences: List<Geofence>): Flow<GeofenceTransition> {
     val regions = fences.toList()
     require(regions.map { it.id }.toSet().size == regions.size) { "Geofence IDs must be unique" }
     return flow {

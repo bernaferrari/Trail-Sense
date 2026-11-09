@@ -7,14 +7,14 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 /** Tilt from gravity; heading cannot be measured without a magnetic reference. */
-fun DeviceSensors.tiltSensor(
+public fun DeviceSensors.tiltSensor(
     scope: CoroutineScope,
     interval: Duration = 20.milliseconds,
     accuracy: SensorAccuracy = SensorAccuracy.Balanced,
 ): GravityRotationSensor = GravityRotationSensor(gravitySensor(scope, interval, accuracy))
 
 /** Magnetic attitude derived from the gravity and magnetic-field sensors. */
-fun DeviceSensors.geomagneticOrientationSensor(
+public fun DeviceSensors.geomagneticOrientationSensor(
     scope: CoroutineScope,
     interval: Duration = 20.milliseconds,
     accuracy: SensorAccuracy = SensorAccuracy.Balanced,
@@ -23,7 +23,7 @@ fun DeviceSensors.geomagneticOrientationSensor(
 )
 
 /** Magnetic attitude stabilized with angular velocity from the gyroscope. */
-fun DeviceSensors.fusedOrientationSensor(
+public fun DeviceSensors.fusedOrientationSensor(
     scope: CoroutineScope,
     interval: Duration = 20.milliseconds,
     accuracy: SensorAccuracy = SensorAccuracy.Balanced,

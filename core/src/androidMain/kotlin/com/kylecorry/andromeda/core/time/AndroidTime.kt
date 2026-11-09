@@ -5,13 +5,13 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
-object AndroidTime {
+public object AndroidTime {
 
     /**
      * Gets the time in milliseconds since boot (excluding time spent in deep sleep)
      * @return the uptime in milliseconds
      */
-    fun uptimeMillis(): Long {
+    public fun uptimeMillis(): Long {
         return SystemClock.uptimeMillis()
     }
 
@@ -19,7 +19,7 @@ object AndroidTime {
      * Gets the time since boot (excluding time spent in deep sleep)
      * @return the uptime
      */
-    fun uptime(): Duration {
+    public fun uptime(): Duration {
         return uptimeMillis().milliseconds
     }
 
@@ -27,7 +27,7 @@ object AndroidTime {
      * Gets the time in milliseconds since boot (including time spent in deep sleep)
      * @return the time since boot
      */
-    fun millisSinceBoot(): Long {
+    public fun millisSinceBoot(): Long {
         return SystemClock.elapsedRealtime()
     }
 
@@ -35,7 +35,7 @@ object AndroidTime {
      * Gets the time since boot (including time spent in deep sleep)
      * @return the time since boot
      */
-    fun timeSinceBoot(): Duration {
+    public fun timeSinceBoot(): Duration {
         return millisSinceBoot().milliseconds
     }
 
@@ -44,7 +44,7 @@ object AndroidTime {
      * @param millisSinceBoot the time since boot
      * @return the Unix time in milliseconds
      */
-    fun millisSinceBootToTime(millisSinceBoot: Long): Long {
+    public fun millisSinceBootToTime(millisSinceBoot: Long): Long {
         val currentTimeSinceBoot = millisSinceBoot()
         val delta = currentTimeSinceBoot - millisSinceBoot
         return System.currentTimeMillis() - delta
@@ -55,7 +55,7 @@ object AndroidTime {
      * @param millisSinceBoot the time since boot
      * @return the Instant
      */
-    fun millisSinceBootToInstant(millisSinceBoot: Long): Instant {
+    public fun millisSinceBootToInstant(millisSinceBoot: Long): Instant {
         return Instant.fromEpochMilliseconds(millisSinceBootToTime(millisSinceBoot))
     }
 

@@ -7,7 +7,7 @@ import android.hardware.SensorManager
 import com.kylecorry.andromeda.core.sensors.Thermometer
 import com.kylecorry.andromeda.sense.BaseSensor
 
-class AmbientThermometer(
+public class AmbientThermometer(
     context: Context,
     sensorDelay: Int = SensorManager.SENSOR_DELAY_NORMAL
 ) :

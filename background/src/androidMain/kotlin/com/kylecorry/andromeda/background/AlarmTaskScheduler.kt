@@ -14,7 +14,7 @@ import kotlin.time.Clock
  * @param inexactWindow the window of time to run the task in if exact is false. Defaults to 10 minutes, which is the minimum allowed by the system.
  * @param task the task to run - if you are just calling a broadcast receiver, it is recommend to use the AlarmBroadcastTaskScheduler
  */
-class AlarmTaskScheduler(
+public class AlarmTaskScheduler(
     private val context: Context,
     private val exact: Boolean = true,
     private val allowWhileIdle: Boolean = false,

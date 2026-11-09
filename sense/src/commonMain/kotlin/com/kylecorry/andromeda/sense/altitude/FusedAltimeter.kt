@@ -44,7 +44,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param maxGPSFixAge The maximum age of the GPS fix before it is considered too old to use
  * @param recalibrationTimeout The maximum time to wait for the GPS when recalibrating. If exceeded, the expired sea level pressure continues to be used and recalibration is retried later.
  */
-class FusedAltimeter(
+public class FusedAltimeter(
     private val gps: GpsSensor,
     private val barometer: Barometer,
     private val cache: Preferences,
@@ -281,7 +281,7 @@ class FusedAltimeter(
         }
     }
 
-    companion object {
+    public companion object {
         private const val LAST_SEA_LEVEL_PRESSURE_KEY =
             "andromeda_fused_altimeter_last_sea_level_pressure"
         private const val LAST_SEA_LEVEL_PRESSURE_TIME_KEY =
@@ -300,7 +300,7 @@ class FusedAltimeter(
          * Clear the cached calibration data
          * @param cache The cache to clear from
          */
-        fun clearCachedCalibration(cache: Preferences) {
+        public fun clearCachedCalibration(cache: Preferences) {
             cache.remove(LAST_SEA_LEVEL_PRESSURE_KEY)
             cache.remove(LAST_SEA_LEVEL_PRESSURE_TIME_KEY)
             cache.remove(LAST_GPS_USED_TIME_KEY)

@@ -8,26 +8,26 @@ import android.media.RingtoneManager
 import android.net.Uri
 import androidx.core.content.getSystemService
 
-class SystemSoundPlayer(private val context: Context) {
+public class SystemSoundPlayer(private val context: Context) {
 
     private val audioManager = context.getSystemService<AudioManager>()
 
-    fun getAlarmUri(): Uri? {
+    public fun getAlarmUri(): Uri? {
         return RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_ALARM)
     }
 
-    fun getNotificationUri(): Uri? {
+    public fun getNotificationUri(): Uri? {
         return RingtoneManager.getActualDefaultRingtoneUri(
             context,
             RingtoneManager.TYPE_NOTIFICATION
         )
     }
 
-    fun getRingtoneUri(): Uri? {
+    public fun getRingtoneUri(): Uri? {
         return RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_RINGTONE)
     }
 
-    fun player(soundUri: Uri, channel: AudioChannel): MediaPlayer? {
+    public fun player(soundUri: Uri, channel: AudioChannel): MediaPlayer? {
         return MediaPlayer.create(
             context,
             soundUri,
@@ -46,7 +46,7 @@ class SystemSoundPlayer(private val context: Context) {
         }
     }
 
-    enum class AudioChannel {
+    public enum class AudioChannel {
         Media,
         Notification,
         Event,

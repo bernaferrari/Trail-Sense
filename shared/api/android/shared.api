@@ -1,0 +1,1107 @@
+public abstract interface class com/kylecorry/andromeda/alerts/loading/LoadingIndicator {
+	public abstract fun hide ()V
+	public abstract fun show ()V
+}
+
+public final class com/kylecorry/andromeda/alerts/loading/ResettableLoadingIndicator : com/kylecorry/andromeda/alerts/loading/LoadingIndicator {
+	public fun <init> (Lcom/kylecorry/andromeda/alerts/loading/LoadingIndicator;)V
+	public fun hide ()V
+	public final fun reset ()V
+	public fun show ()V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/AlwaysOnTaskScheduler : com/kylecorry/andromeda/background/TaskScheduler {
+	public abstract fun start ()V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/TaskScheduler {
+	public abstract fun cancel ()V
+}
+
+public final class com/kylecorry/andromeda/battery/BatteryChargingMethod : java/lang/Enum {
+	public static final field AC Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public static final field NotCharging Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public static final field USB Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public static final field Unknown Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public static final field Wireless Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public static fun values ()[Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+}
+
+public final class com/kylecorry/andromeda/battery/BatteryChargingStatus : java/lang/Enum {
+	public static final field Charging Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public static final field Discharging Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public static final field Full Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public static final field NotCharging Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public static final field Unknown Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public static fun values ()[Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+}
+
+public final class com/kylecorry/andromeda/battery/BatteryHealth : java/lang/Enum {
+	public static final field Cold Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public static final field Dead Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public static final field Good Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public static final field OverVoltage Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public static final field Overheat Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public static final field Unknown Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public static fun values ()[Lcom/kylecorry/andromeda/battery/BatteryHealth;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/BlendingMode : java/lang/Enum {
+	public static final field ADD Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field CLEAR Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field DST Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field DST_ATOP Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field DST_IN Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field DST_OUT Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field DST_OVER Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field MULTIPLY Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field SRC Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field SRC_ATOP Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field SRC_IN Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field SRC_OUT Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field SRC_OVER Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field SUBTRACT Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static final field XOR Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/bitmaps/BlendingMode;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ColorChannel : java/lang/Enum {
+	public static final field Alpha Lcom/kylecorry/andromeda/bitmaps/ColorChannel;
+	public static final field Blue Lcom/kylecorry/andromeda/bitmaps/ColorChannel;
+	public static final field Green Lcom/kylecorry/andromeda/bitmaps/ColorChannel;
+	public static final field Red Lcom/kylecorry/andromeda/bitmaps/ColorChannel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getIndex ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/bitmaps/ColorChannel;
+	public static fun values ()[Lcom/kylecorry/andromeda/bitmaps/ColorChannel;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/FloatBitmap {
+	public fun <init> (III)V
+	public final fun get (III)F
+	public final fun getChannels ()I
+	public final fun getData ()[F
+	public final fun getHeight ()I
+	public final fun getOrNull (III)Ljava/lang/Float;
+	public final fun getWidth ()I
+	public final fun getX (I)I
+	public final fun getY (I)I
+	public final fun set (IIIF)V
+	public final fun upscale (IIFFFFI)Lcom/kylecorry/andromeda/bitmaps/FloatBitmap;
+	public static synthetic fun upscale$default (Lcom/kylecorry/andromeda/bitmaps/FloatBitmap;IIFFFFIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/FloatBitmap;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/LookupTable {
+	public fun <init> ()V
+	public final fun getAlpha ()[B
+	public final fun getBlue ()[B
+	public final fun getGreen ()[B
+	public final fun getRed ()[B
+	public final fun setAlpha ([B)V
+	public final fun setBlue ([B)V
+	public final fun setGreen ([B)V
+	public final fun setRed ([B)V
+}
+
+public final class com/kylecorry/andromeda/bitmaps/Rgba3dArray {
+	public fun <init> ([BIII)V
+	public final fun get (III)[B
+	public final fun getSizeX ()I
+	public final fun getSizeY ()I
+	public final fun getSizeZ ()I
+	public final fun getValues ()[B
+	public final fun set (III[B)V
+}
+
+public final class com/kylecorry/andromeda/bitmaps/YuvFormat : java/lang/Enum {
+	public static final field NV21 Lcom/kylecorry/andromeda/bitmaps/YuvFormat;
+	public static final field YV12 Lcom/kylecorry/andromeda/bitmaps/YuvFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/bitmaps/YuvFormat;
+	public static fun values ()[Lcom/kylecorry/andromeda/bitmaps/YuvFormat;
+}
+
+public final class com/kylecorry/andromeda/camera/ZoomInfo {
+	public fun <init> (FFLcom/kylecorry/sol/math/Range;)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun component3 ()Lcom/kylecorry/sol/math/Range;
+	public final fun copy (FFLcom/kylecorry/sol/math/Range;)Lcom/kylecorry/andromeda/camera/ZoomInfo;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/camera/ZoomInfo;FFLcom/kylecorry/sol/math/Range;ILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/ZoomInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLinear ()F
+	public final fun getRatio ()F
+	public final fun getRatioRange ()Lcom/kylecorry/sol/math/Range;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/canvas/ArcMode : java/lang/Enum {
+	public static final field Open Lcom/kylecorry/andromeda/canvas/ArcMode;
+	public static final field Pie Lcom/kylecorry/andromeda/canvas/ArcMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/ArcMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/ArcMode;
+}
+
+public final class com/kylecorry/andromeda/canvas/ImageMode : java/lang/Enum {
+	public static final field Center Lcom/kylecorry/andromeda/canvas/ImageMode;
+	public static final field Corner Lcom/kylecorry/andromeda/canvas/ImageMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/ImageMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/ImageMode;
+}
+
+public final class com/kylecorry/andromeda/canvas/PaintStyle : java/lang/Enum {
+	public static final field Fill Lcom/kylecorry/andromeda/canvas/PaintStyle;
+	public static final field FillAndStroke Lcom/kylecorry/andromeda/canvas/PaintStyle;
+	public static final field None Lcom/kylecorry/andromeda/canvas/PaintStyle;
+	public static final field Stroke Lcom/kylecorry/andromeda/canvas/PaintStyle;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/PaintStyle;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/PaintStyle;
+}
+
+public final class com/kylecorry/andromeda/canvas/StrokeCap : java/lang/Enum {
+	public static final field Project Lcom/kylecorry/andromeda/canvas/StrokeCap;
+	public static final field Round Lcom/kylecorry/andromeda/canvas/StrokeCap;
+	public static final field Square Lcom/kylecorry/andromeda/canvas/StrokeCap;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/StrokeCap;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/StrokeCap;
+}
+
+public final class com/kylecorry/andromeda/canvas/StrokeJoin : java/lang/Enum {
+	public static final field Bevel Lcom/kylecorry/andromeda/canvas/StrokeJoin;
+	public static final field Miter Lcom/kylecorry/andromeda/canvas/StrokeJoin;
+	public static final field Round Lcom/kylecorry/andromeda/canvas/StrokeJoin;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/StrokeJoin;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/StrokeJoin;
+}
+
+public final class com/kylecorry/andromeda/canvas/TextAlign : java/lang/Enum {
+	public static final field Center Lcom/kylecorry/andromeda/canvas/TextAlign;
+	public static final field Left Lcom/kylecorry/andromeda/canvas/TextAlign;
+	public static final field Right Lcom/kylecorry/andromeda/canvas/TextAlign;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/TextAlign;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/TextAlign;
+}
+
+public final class com/kylecorry/andromeda/canvas/TextMode : java/lang/Enum {
+	public static final field Center Lcom/kylecorry/andromeda/canvas/TextMode;
+	public static final field Corner Lcom/kylecorry/andromeda/canvas/TextMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/TextMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/TextMode;
+}
+
+public final class com/kylecorry/andromeda/canvas/TextStyle : java/lang/Enum {
+	public static final field Bold Lcom/kylecorry/andromeda/canvas/TextStyle;
+	public static final field BoldItalic Lcom/kylecorry/andromeda/canvas/TextStyle;
+	public static final field Italic Lcom/kylecorry/andromeda/canvas/TextStyle;
+	public static final field Normal Lcom/kylecorry/andromeda/canvas/TextStyle;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/canvas/TextStyle;
+	public static fun values ()[Lcom/kylecorry/andromeda/canvas/TextStyle;
+}
+
+public abstract interface class com/kylecorry/andromeda/connection/NearbyDevice : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getAddress ()Ljava/lang/String;
+	public abstract fun getMessageHistorySize ()I
+	public abstract fun getMessages ()Ljava/util/List;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun isConnected ()Z
+	public abstract fun isConnecting ()Z
+	public abstract fun send ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun setMessageHistorySize (I)V
+}
+
+public final class com/kylecorry/andromeda/connection/NearbyDeviceMessage {
+	public fun <init> (Lkotlin/time/Instant;[B)V
+	public final fun getMessage ()[B
+	public final fun getTime ()Lkotlin/time/Instant;
+}
+
+public abstract interface class com/kylecorry/andromeda/connection/NearbyDeviceScanner : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getDevices ()Ljava/util/List;
+}
+
+public final class com/kylecorry/andromeda/connection/nearby/ConnectionStatus : java/lang/Enum {
+	public static final field Connected Lcom/kylecorry/andromeda/connection/nearby/ConnectionStatus;
+	public static final field Connecting Lcom/kylecorry/andromeda/connection/nearby/ConnectionStatus;
+	public static final field Disconnected Lcom/kylecorry/andromeda/connection/nearby/ConnectionStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/connection/nearby/ConnectionStatus;
+	public static fun values ()[Lcom/kylecorry/andromeda/connection/nearby/ConnectionStatus;
+}
+
+public final class com/kylecorry/andromeda/connection/nearby/NearbyDeviceType : java/lang/Enum {
+	public static final field Bluetooth Lcom/kylecorry/andromeda/connection/nearby/NearbyDeviceType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/connection/nearby/NearbyDeviceType;
+	public static fun values ()[Lcom/kylecorry/andromeda/connection/nearby/NearbyDeviceType;
+}
+
+public final class com/kylecorry/andromeda/core/ErrorHandlingKt {
+	public static final fun tryOrDefault (Ljava/lang/Object;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+	public static final fun tryOrLog (Lkotlin/jvm/functions/Function0;)V
+	public static final fun tryOrNothing (Lkotlin/jvm/functions/Function0;)V
+}
+
+public abstract interface annotation class com/kylecorry/andromeda/core/annotations/ExperimentalUsage : java/lang/annotation/Annotation {
+	public abstract fun message ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/cache/DependencyRegistry {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/cache/DependencyRegistry;
+	public final fun addSingleton (Lkotlin/reflect/KClass;Ljava/lang/Object;)V
+	public final fun addSingleton (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function0;)V
+	public final fun addTransient (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function0;)V
+	public final fun get (Lkotlin/reflect/KClass;)Ljava/lang/Object;
+	public final fun remove (Lkotlin/reflect/KClass;)V
+}
+
+public final class com/kylecorry/andromeda/core/cache/GeospatialCache {
+	public synthetic fun <init> (JLjava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/core/cache/GeospatialCache$RemovalStrategy;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLjava/lang/Integer;Lkotlin/time/Duration;Lcom/kylecorry/andromeda/core/cache/GeospatialCache$RemovalStrategy;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun get-YceEwCk (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getAll (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getOrPut-TbpPH1g (JLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun invalidate-YceEwCk (JLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun invalidateAll (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun put-TbpPH1g (JLjava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun putAll (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/core/cache/GeospatialCache$RemovalStrategy : java/lang/Enum {
+	public static final field Furthest Lcom/kylecorry/andromeda/core/cache/GeospatialCache$RemovalStrategy;
+	public static final field LeastRecentlyUsed Lcom/kylecorry/andromeda/core/cache/GeospatialCache$RemovalStrategy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/core/cache/GeospatialCache$RemovalStrategy;
+	public static fun values ()[Lcom/kylecorry/andromeda/core/cache/GeospatialCache$RemovalStrategy;
+}
+
+public final class com/kylecorry/andromeda/core/coroutines/BackgroundMinimumState : java/lang/Enum {
+	public static final field Any Lcom/kylecorry/andromeda/core/coroutines/BackgroundMinimumState;
+	public static final field Created Lcom/kylecorry/andromeda/core/coroutines/BackgroundMinimumState;
+	public static final field Resumed Lcom/kylecorry/andromeda/core/coroutines/BackgroundMinimumState;
+	public static final field Started Lcom/kylecorry/andromeda/core/coroutines/BackgroundMinimumState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/core/coroutines/BackgroundMinimumState;
+	public static fun values ()[Lcom/kylecorry/andromeda/core/coroutines/BackgroundMinimumState;
+}
+
+public final class com/kylecorry/andromeda/core/math/DecimalFormatter {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/math/DecimalFormatter;
+	public final fun format (Ljava/lang/Number;IZ)Ljava/lang/String;
+	public static synthetic fun format$default (Lcom/kylecorry/andromeda/core/math/DecimalFormatter;Ljava/lang/Number;IZILjava/lang/Object;)Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/core/sensors/Altimeter : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getAltitude ()F
+}
+
+public final class com/kylecorry/andromeda/core/sensors/Quality : java/lang/Enum {
+	public static final field Good Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public static final field Moderate Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public static final field Poor Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public static final field Unknown Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public static fun values ()[Lcom/kylecorry/andromeda/core/sensors/Quality;
+}
+
+public abstract interface class com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getEventTimeElapsedNanos ()J
+	public abstract fun getHasValidReading ()Z
+	public abstract fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public abstract fun getTimestamp ()Lkotlin/time/Instant;
+	public abstract fun start (Lkotlin/jvm/functions/Function0;)V
+	public abstract fun stop (Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun stop$default (Lcom/kylecorry/andromeda/core/sensors/Sensor;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public abstract fun subscribe (Lkotlin/jvm/functions/Function0;)V
+	public abstract fun unsubscribe (Lkotlin/jvm/functions/Function0;)V
+	public abstract fun unsubscribeAll ()V
+}
+
+public final class com/kylecorry/andromeda/core/sensors/Sensor$DefaultImpls {
+	public static synthetic fun stop$default (Lcom/kylecorry/andromeda/core/sensors/Sensor;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/core/sensors/SensorKt {
+	public static final fun read (Lcom/kylecorry/andromeda/core/sensors/Sensor;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun read$default (Lcom/kylecorry/andromeda/core/sensors/Sensor;Lkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class com/kylecorry/andromeda/core/sensors/SharedSensor : com/kylecorry/andromeda/core/sensors/Sensor {
+	public fun <init> ()V
+	public fun getEventTimeElapsedNanos ()J
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getTimestamp ()Lkotlin/time/Instant;
+	protected final fun notifyListeners ()V
+	protected final fun resetSessionMetadata ()V
+	protected final fun setEventTime (Lkotlin/time/Instant;)V
+	protected fun setEventTimeElapsedNanos (J)V
+	protected final fun setEventTimeFrom (Lcom/kylecorry/andromeda/core/sensors/Sensor;)V
+	protected final fun setEventTimeToNow ()V
+	protected fun setTimestamp (Lkotlin/time/Instant;)V
+	public fun start (Lkotlin/jvm/functions/Function0;)V
+	protected abstract fun startImpl ()V
+	public fun stop (Lkotlin/jvm/functions/Function0;)V
+	protected abstract fun stopImpl ()V
+	public fun subscribe (Lkotlin/jvm/functions/Function0;)V
+	public fun unsubscribe (Lkotlin/jvm/functions/Function0;)V
+	public fun unsubscribeAll ()V
+}
+
+public abstract interface class com/kylecorry/andromeda/core/sensors/Speedometer : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getSpeed-1elyFk4 ()J
+}
+
+public abstract interface class com/kylecorry/andromeda/core/sensors/Thermometer : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getTemperature ()F
+}
+
+public final class com/kylecorry/andromeda/core/system/UriAccess {
+	public fun <init> ()V
+	public fun <init> (ZZZ)V
+	public synthetic fun <init> (ZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun copy (ZZZ)Lcom/kylecorry/andromeda/core/system/UriAccess;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/system/UriAccess;ZZZILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/UriAccess;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRequirePersistentAccess ()Z
+	public final fun getRequireReadAccess ()Z
+	public final fun getRequireWriteAccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/time/SystemTimeProvider : com/kylecorry/andromeda/core/time/TimeProvider {
+	public fun <init> ()V
+	public fun currentTimeMillis ()J
+	public fun elapsedRealtime ()J
+}
+
+public final class com/kylecorry/andromeda/core/time/SystemZonedDateTimeProvider : com/kylecorry/andromeda/core/time/ZonedDateTimeProvider {
+	public fun <init> ()V
+	public fun getTime ()Lcom/kylecorry/andromeda/core/time/ZonedDateTime;
+}
+
+public final class com/kylecorry/andromeda/core/time/Throttle {
+	public fun <init> (J)V
+	public final fun isThrottled ()Z
+}
+
+public abstract interface class com/kylecorry/andromeda/core/time/TimeProvider {
+	public abstract fun currentTimeMillis ()J
+	public abstract fun elapsedRealtime ()J
+}
+
+public final class com/kylecorry/andromeda/core/time/ZonedDateTime {
+	public fun <init> (Lkotlin/time/Instant;Lkotlinx/datetime/TimeZone;)V
+	public final fun component1 ()Lkotlin/time/Instant;
+	public final fun component2 ()Lkotlinx/datetime/TimeZone;
+	public final fun copy (Lkotlin/time/Instant;Lkotlinx/datetime/TimeZone;)Lcom/kylecorry/andromeda/core/time/ZonedDateTime;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/time/ZonedDateTime;Lkotlin/time/Instant;Lkotlinx/datetime/TimeZone;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/time/ZonedDateTime;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInstant ()Lkotlin/time/Instant;
+	public final fun getLocalDateTime ()Lkotlinx/datetime/LocalDateTime;
+	public final fun getTimeZone ()Lkotlinx/datetime/TimeZone;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/core/time/ZonedDateTimeProvider {
+	public abstract fun getTime ()Lcom/kylecorry/andromeda/core/time/ZonedDateTime;
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/AlphaColorMap : com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public fun <init> ()V
+	public fun <init> (II)V
+	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getColor (F)I
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/BinnedColorMap : com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public fun <init> (Ljava/util/List;)V
+	public fun getColor (F)I
+}
+
+public abstract interface class com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public abstract fun getColor (F)I
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/GrayscaleColorMap : com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public fun <init> ()V
+	public fun getColor (F)I
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/InfernoColorMap : com/kylecorry/andromeda/core/ui/colormaps/RgbInterpolationColorMap {
+	public fun <init> ()V
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/PlasmaColorMap : com/kylecorry/andromeda/core/ui/colormaps/RgbInterpolationColorMap {
+	public fun <init> ()V
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/PrecalculatedColorMap : com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public fun <init> (Lcom/kylecorry/andromeda/core/ui/colormaps/ColorMap;I)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/core/ui/colormaps/ColorMap;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getColor (F)I
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/ReversedColorMap : com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public fun <init> (Lcom/kylecorry/andromeda/core/ui/colormaps/ColorMap;)V
+	public fun getColor (F)I
+}
+
+public class com/kylecorry/andromeda/core/ui/colormaps/RgbInterpolationColorMap : com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public fun <init> ([Ljava/lang/Integer;)V
+	public fun getColor (F)I
+}
+
+public class com/kylecorry/andromeda/core/ui/colormaps/SampledColorMap : com/kylecorry/andromeda/core/ui/colormaps/ColorMap {
+	public fun <init> (Ljava/util/Map;F)V
+	public synthetic fun <init> (Ljava/util/Map;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getColor (F)I
+}
+
+public final class com/kylecorry/andromeda/core/ui/colormaps/ViridisColorMap : com/kylecorry/andromeda/core/ui/colormaps/RgbInterpolationColorMap {
+	public fun <init> ()V
+}
+
+public final class com/kylecorry/andromeda/core/units/PercentBounds {
+	public fun <init> (Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun component2 ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun component3 ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun component4 ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun copy (Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;)Lcom/kylecorry/andromeda/core/units/PercentBounds;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/units/PercentBounds;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;Lcom/kylecorry/andromeda/core/units/PercentCoordinate;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/units/PercentBounds;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBottomLeft ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun getBottomRight ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun getTopLeft ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun getTopRight ()Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public fun hashCode ()I
+	public final fun toPixelBounds (FF)Lcom/kylecorry/andromeda/core/units/PixelBounds;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/units/PercentCoordinate {
+	public fun <init> (FF)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun copy (FF)Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/units/PercentCoordinate;FFILjava/lang/Object;)Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getX ()F
+	public final fun getY ()F
+	public fun hashCode ()I
+	public final fun rotate (I)Lcom/kylecorry/andromeda/core/units/PercentCoordinate;
+	public final fun toPixels-qLXQif4 (FF)J
+	public final fun toPixels-qLXQif4 (II)J
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/units/PixelBounds {
+	public synthetic fun <init> (JJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-y9x4rFw ()J
+	public final fun component2-y9x4rFw ()J
+	public final fun component3-y9x4rFw ()J
+	public final fun component4-y9x4rFw ()J
+	public final fun copy-R-SKqlw (JJJJ)Lcom/kylecorry/andromeda/core/units/PixelBounds;
+	public static synthetic fun copy-R-SKqlw$default (Lcom/kylecorry/andromeda/core/units/PixelBounds;JJJJILjava/lang/Object;)Lcom/kylecorry/andromeda/core/units/PixelBounds;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBottomLeft-y9x4rFw ()J
+	public final fun getBottomRight-y9x4rFw ()J
+	public final fun getTopLeft-y9x4rFw ()J
+	public final fun getTopRight-y9x4rFw ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/exceptions/BugReportEmailMessage {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/exceptions/BugReportEmailMessage;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/exceptions/BugReportEmailMessage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/exceptions/BugReportEmailMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getEmailAction ()Ljava/lang/String;
+	public final fun getEmailAddress ()Ljava/lang/String;
+	public final fun getEmailSubject ()Ljava/lang/String;
+	public final fun getIgnoreAction ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/forms/FormValue {
+	public abstract fun getId ()Ljava/lang/String;
+	public abstract fun getValue ()Ljava/lang/Object;
+	public abstract fun setValue (Ljava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/forms/MutableFormValue : com/kylecorry/andromeda/forms/FormValue {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;)V
+	public fun getId ()Ljava/lang/String;
+	public fun getValue ()Ljava/lang/Object;
+	public fun setValue (Ljava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/ipc/ConstantsKt {
+	public static final field CODE_BAD_REQUEST I
+	public static final field CODE_FORBIDDEN I
+	public static final field CODE_INTERNAL_ERROR I
+	public static final field CODE_NOT_FOUND I
+	public static final field CODE_OK I
+	public static final field CODE_SERVICE_UNAVAILABLE I
+	public static final field CODE_UNAUTHORIZED I
+	public static final field PROPERTY_CODE Ljava/lang/String;
+	public static final field PROPERTY_HEADERS Ljava/lang/String;
+	public static final field PROPERTY_PAYLOAD Ljava/lang/String;
+	public static final field PROPERTY_ROUTE Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/Datum {
+	public fun <init> (Ljava/lang/String;Lcom/kylecorry/andromeda/pdf/Spheroid;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/kylecorry/andromeda/pdf/Spheroid;
+	public final fun copy (Ljava/lang/String;Lcom/kylecorry/andromeda/pdf/Spheroid;)Lcom/kylecorry/andromeda/pdf/Datum;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/pdf/Datum;Ljava/lang/String;Lcom/kylecorry/andromeda/pdf/Spheroid;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/Datum;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSpheroid ()Lcom/kylecorry/andromeda/pdf/Spheroid;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/GeographicCoordinateSystem {
+	public fun <init> (Lcom/kylecorry/andromeda/pdf/Datum;D)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/pdf/Datum;
+	public final fun component2 ()D
+	public final fun copy (Lcom/kylecorry/andromeda/pdf/Datum;D)Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;Lcom/kylecorry/andromeda/pdf/Datum;DILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDatum ()Lcom/kylecorry/andromeda/pdf/Datum;
+	public final fun getPrimeMeridian ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/GeospatialPDFMetadata {
+	public fun <init> (Ljava/util/List;Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;
+	public final fun copy (Ljava/util/List;Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;)Lcom/kylecorry/andromeda/pdf/GeospatialPDFMetadata;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/pdf/GeospatialPDFMetadata;Ljava/util/List;Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/GeospatialPDFMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPoints ()Ljava/util/List;
+	public final fun getProjection ()Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/ProjectedCoordinateSystem {
+	public fun <init> (Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;Ljava/lang/String;)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;Ljava/lang/String;)Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGeographic ()Lcom/kylecorry/andromeda/pdf/GeographicCoordinateSystem;
+	public final fun getProjection ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/Spheroid {
+	public fun <init> (Ljava/lang/String;FF)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()F
+	public final fun component3 ()F
+	public final fun copy (Ljava/lang/String;FF)Lcom/kylecorry/andromeda/pdf/Spheroid;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/pdf/Spheroid;Ljava/lang/String;FFILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/Spheroid;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInverseFlattening ()F
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSemiMajorAxis ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/permissions/NoPermissionException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/kylecorry/andromeda/permissions/NoPermissionException;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/permissions/NoPermissionException;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/permissions/NoPermissionException;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRequiredPermission ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/permissions/PermissionRationale {
+	public fun <init> (Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/CharSequence;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/permissions/PermissionRationale;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/permissions/PermissionRationale;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/permissions/PermissionRationale;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCancel ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/CharSequence;
+	public final fun getOk ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/permissions/SpecialPermission : java/lang/Enum {
+	public static final field IGNORE_BATTERY_OPTIMIZATIONS Lcom/kylecorry/andromeda/permissions/SpecialPermission;
+	public static final field SCHEDULE_EXACT_ALARMS Lcom/kylecorry/andromeda/permissions/SpecialPermission;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/permissions/SpecialPermission;
+	public static fun values ()[Lcom/kylecorry/andromeda/permissions/SpecialPermission;
+}
+
+public final class com/kylecorry/andromeda/pickers/MenuItem {
+	public fun <init> (Ljava/lang/CharSequence;Lkotlin/jvm/functions/Function0;)V
+	public final fun component1 ()Ljava/lang/CharSequence;
+	public final fun component2 ()Lkotlin/jvm/functions/Function0;
+	public final fun copy (Ljava/lang/CharSequence;Lkotlin/jvm/functions/Function0;)Lcom/kylecorry/andromeda/pickers/MenuItem;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/pickers/MenuItem;Ljava/lang/CharSequence;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pickers/MenuItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAction ()Lkotlin/jvm/functions/Function0;
+	public final fun getName ()Ljava/lang/CharSequence;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/print/ColorMode : java/lang/Enum {
+	public static final field Color Lcom/kylecorry/andromeda/print/ColorMode;
+	public static final field Monochrome Lcom/kylecorry/andromeda/print/ColorMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/print/ColorMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/print/ColorMode;
+}
+
+public final class com/kylecorry/andromeda/print/Orientation : java/lang/Enum {
+	public static final field Landscape Lcom/kylecorry/andromeda/print/Orientation;
+	public static final field Portrait Lcom/kylecorry/andromeda/print/Orientation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/print/Orientation;
+	public static fun values ()[Lcom/kylecorry/andromeda/print/Orientation;
+}
+
+public final class com/kylecorry/andromeda/print/ScaleMode : java/lang/Enum {
+	public static final field Fill Lcom/kylecorry/andromeda/print/ScaleMode;
+	public static final field Fit Lcom/kylecorry/andromeda/print/ScaleMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/print/ScaleMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/print/ScaleMode;
+}
+
+public final class com/kylecorry/andromeda/qr/QRErrorCorrection : java/lang/Enum {
+	public static final field H Lcom/kylecorry/andromeda/qr/QRErrorCorrection;
+	public static final field L Lcom/kylecorry/andromeda/qr/QRErrorCorrection;
+	public static final field M Lcom/kylecorry/andromeda/qr/QRErrorCorrection;
+	public static final field Q Lcom/kylecorry/andromeda/qr/QRErrorCorrection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/qr/QRErrorCorrection;
+	public static fun values ()[Lcom/kylecorry/andromeda/qr/QRErrorCorrection;
+}
+
+public final class com/kylecorry/andromeda/sense/SensorExtensionsKt {
+	public static final fun readAll-NcHsxvU (Ljava/util/List;JLkotlinx/coroutines/CoroutineDispatcher;ZZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun readAll-NcHsxvU$default (Ljava/util/List;JLkotlinx/coroutines/CoroutineDispatcher;ZZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/accelerometer/Accelerometer : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public abstract fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/altitude/BarometricAltimeter : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/core/sensors/Altimeter {
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/barometer/Barometer;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/barometer/Barometer;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAltitude ()F
+	public fun getHasValidReading ()Z
+	public final fun getSeaLevelPressure-8C0t9uI ()J
+	public final fun setSeaLevelPressure-lbd69Go (J)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/barometer/Barometer : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getPressure ()F
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/clinometer/ClinometerSensor : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getAngle ()F
+	public abstract fun getIncline ()F
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/compass/CompassSensor : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getBearing-xhh9egc ()F
+	public abstract fun getDeclination ()F
+	public abstract fun getRawBearing ()F
+	public abstract fun setDeclination (F)V
+}
+
+public final class com/kylecorry/andromeda/sense/compass/FilteredCompass : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/compass/CompassSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/compass/CompassSensor;Lcom/kylecorry/sol/math/filters/IFilter;)V
+	public fun getBearing-xhh9egc ()F
+	public fun getDeclination ()F
+	public fun getHasValidReading ()Z
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawBearing ()F
+	public fun setDeclination (F)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/hygrometer/Hygrometer : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getHumidity ()F
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/level/LevelSensor : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getX ()F
+	public abstract fun getY ()F
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/light/LightSensor : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getIlluminance ()F
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/location/GpsSensor : com/kylecorry/andromeda/core/sensors/Altimeter, com/kylecorry/andromeda/core/sensors/Sensor, com/kylecorry/andromeda/core/sensors/Speedometer {
+	public abstract fun getBearing-nRD8NRo ()Lcom/kylecorry/sol/units/Bearing;
+	public abstract fun getBearingAccuracy ()Ljava/lang/Float;
+	public abstract fun getHorizontalAccuracy ()Ljava/lang/Float;
+	public abstract fun getLocation-VMd8-xo ()J
+	public abstract fun getMslAltitude ()Ljava/lang/Float;
+	public abstract fun getRawBearing ()Ljava/lang/Float;
+	public abstract fun getSpeedAccuracy ()Ljava/lang/Float;
+	public abstract fun getVerticalAccuracy ()Ljava/lang/Float;
+}
+
+public final class com/kylecorry/andromeda/sense/location/GpsSensorKt {
+	public static final fun hasFix-HG0u8IE (Lcom/kylecorry/andromeda/sense/location/GpsSensor;J)Z
+	public static synthetic fun hasFix-HG0u8IE$default (Lcom/kylecorry/andromeda/sense/location/GpsSensor;JILjava/lang/Object;)Z
+}
+
+public final class com/kylecorry/andromeda/sense/location/Nmea {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/kylecorry/andromeda/sense/location/Nmea;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sense/location/Nmea;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/location/Nmea;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getMslAltitude ()Ljava/lang/Float;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sense/location/Satellite {
+	public static final field Companion Lcom/kylecorry/andromeda/sense/location/Satellite$Companion;
+	public fun <init> (ILcom/kylecorry/andromeda/sense/location/SatelliteConstellation;FFZ)V
+	public final fun component1 ()I
+	public final fun component2 ()Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public final fun component3 ()F
+	public final fun component4 ()F
+	public final fun component5 ()Z
+	public final fun copy (ILcom/kylecorry/andromeda/sense/location/SatelliteConstellation;FFZ)Lcom/kylecorry/andromeda/sense/location/Satellite;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sense/location/Satellite;ILcom/kylecorry/andromeda/sense/location/SatelliteConstellation;FFZILjava/lang/Object;)Lcom/kylecorry/andromeda/sense/location/Satellite;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAzimuth ()F
+	public final fun getConstellation ()Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public final fun getElevation ()F
+	public final fun getId ()I
+	public final fun getUsedInFix ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sense/location/Satellite$Companion {
+}
+
+public final class com/kylecorry/andromeda/sense/location/SatelliteConstellation : java/lang/Enum {
+	public static final field BEIDOU Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static final field GALILEO Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static final field GLONASS Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static final field GPS Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static final field IRNSS Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static final field QZSS Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static final field SBAS Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+	public static fun values ()[Lcom/kylecorry/andromeda/sense/location/SatelliteConstellation;
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/location/SatelliteStatusSensor {
+	public abstract fun getSatelliteDetails ()Ljava/util/List;
+	public abstract fun getSatellites ()Ljava/lang/Integer;
+}
+
+public final class com/kylecorry/andromeda/sense/location/filters/GPSAltitudeFilter : com/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator {
+	public fun <init> (Lkotlin/jvm/functions/Function1;I)V
+	public fun getAccuracy ()Ljava/lang/Float;
+	public fun getAltitude ()F
+	public fun getHasValidReading ()Z
+	public fun reset ()V
+	public fun setHasValidReading (Z)V
+	public fun update (FLjava/lang/Float;J)V
+}
+
+public final class com/kylecorry/andromeda/sense/location/filters/GPSGaussianAltitudeFilter : com/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAccuracy ()Ljava/lang/Float;
+	public fun getAltitude ()F
+	public fun getHasValidReading ()Z
+	public fun reset ()V
+	public fun update (FLjava/lang/Float;J)V
+}
+
+public final class com/kylecorry/andromeda/sense/location/filters/GPSPassThroughAltitudeFilter : com/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator {
+	public fun <init> ()V
+	public fun getAccuracy ()Ljava/lang/Float;
+	public fun getAltitude ()F
+	public fun getHasValidReading ()Z
+	public fun reset ()V
+	public fun update (FLjava/lang/Float;J)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/location/filters/GpsAltitudeEstimator {
+	public abstract fun getAccuracy ()Ljava/lang/Float;
+	public abstract fun getAltitude ()F
+	public abstract fun getHasValidReading ()Z
+	public abstract fun reset ()V
+	public abstract fun update (FLjava/lang/Float;J)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/magnetometer/Magnetometer : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getMagneticField ()Lcom/kylecorry/sol/math/Vector3;
+	public abstract fun getRawMagneticField ()[F
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/orientation/Gyroscope : com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public abstract fun getAngularRate ()Lcom/kylecorry/sol/math/Euler;
+	public abstract fun getRawAngularRate ()[F
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/orientation/OrientationSensor : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getHeadingAccuracy ()Ljava/lang/Float;
+	public abstract fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public abstract fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/filter/FilteredOrientationSensor : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Lcom/kylecorry/andromeda/sense/orientation/filter/OrientationSensorFilter;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sense/orientation/OrientationSensor;Lcom/kylecorry/andromeda/sense/orientation/filter/OrientationSensorFilter;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/sense/orientation/filter/LowPassOrientationSensorFilter : com/kylecorry/andromeda/sense/orientation/filter/OrientationSensorFilter {
+	public fun <init> (FZ)V
+	public synthetic fun <init> (FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun filter ([F[F)V
+	public final fun getAlpha ()F
+	public final fun getUseSlerp ()Z
+	public final fun getValue ()[F
+	public fun reset ([F)V
+	public final fun setAlpha (F)V
+	public final fun setUseSlerp (Z)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/orientation/filter/OrientationSensorFilter {
+	public abstract fun filter ([F[F)V
+	public abstract fun reset ([F)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sense/pedometer/Pedometer : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getSteps ()I
+}
+
+public final class com/kylecorry/andromeda/signal/CellNetwork : java/lang/Enum {
+	public static final field Cdma Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public static final field Gsm Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public static final field Lte Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public static final field Nr Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public static final field Tdscdma Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public static final field Wcdma Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getId ()I
+	public final fun getMaxDbm ()I
+	public final fun getMinDbm ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public static fun values ()[Lcom/kylecorry/andromeda/signal/CellNetwork;
+}
+
+public final class com/kylecorry/andromeda/signal/CellNetworkQuality {
+	public fun <init> (Lcom/kylecorry/andromeda/signal/CellNetwork;Lcom/kylecorry/andromeda/core/sensors/Quality;)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public final fun component2 ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public final fun copy (Lcom/kylecorry/andromeda/signal/CellNetwork;Lcom/kylecorry/andromeda/core/sensors/Quality;)Lcom/kylecorry/andromeda/signal/CellNetworkQuality;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/signal/CellNetworkQuality;Lcom/kylecorry/andromeda/signal/CellNetwork;Lcom/kylecorry/andromeda/core/sensors/Quality;ILjava/lang/Object;)Lcom/kylecorry/andromeda/signal/CellNetworkQuality;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNetwork ()Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public final fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/signal/CellSignal {
+	public fun <init> (Ljava/lang/String;FILcom/kylecorry/andromeda/core/sensors/Quality;Lcom/kylecorry/andromeda/signal/CellNetwork;ZLkotlin/time/Instant;Ljava/lang/Float;Ljava/lang/Float;)V
+	public synthetic fun <init> (Ljava/lang/String;FILcom/kylecorry/andromeda/core/sensors/Quality;Lcom/kylecorry/andromeda/signal/CellNetwork;ZLkotlin/time/Instant;Ljava/lang/Float;Ljava/lang/Float;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()F
+	public final fun component3 ()I
+	public final fun component4 ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public final fun component5 ()Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public final fun component6 ()Z
+	public final fun component7 ()Lkotlin/time/Instant;
+	public final fun component8 ()Ljava/lang/Float;
+	public final fun component9 ()Ljava/lang/Float;
+	public final fun copy (Ljava/lang/String;FILcom/kylecorry/andromeda/core/sensors/Quality;Lcom/kylecorry/andromeda/signal/CellNetwork;ZLkotlin/time/Instant;Ljava/lang/Float;Ljava/lang/Float;)Lcom/kylecorry/andromeda/signal/CellSignal;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/signal/CellSignal;Ljava/lang/String;FILcom/kylecorry/andromeda/core/sensors/Quality;Lcom/kylecorry/andromeda/signal/CellNetwork;ZLkotlin/time/Instant;Ljava/lang/Float;Ljava/lang/Float;ILjava/lang/Object;)Lcom/kylecorry/andromeda/signal/CellSignal;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDbm ()I
+	public final fun getId ()Ljava/lang/String;
+	public final fun getNetwork ()Lcom/kylecorry/andromeda/signal/CellNetwork;
+	public final fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public final fun getStrength ()F
+	public final fun getTime ()Lkotlin/time/Instant;
+	public final fun getTimingDistanceErrorMeters ()Ljava/lang/Float;
+	public final fun getTimingDistanceMeters ()Ljava/lang/Float;
+	public fun hashCode ()I
+	public final fun isRegistered ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/signal/CellSignalDistanceCalculator {
+	public abstract fun getTimingAdvanceDistance (I)F
+	public abstract fun getTimingAdvanceDistanceError (I)F
+}
+
+public final class com/kylecorry/andromeda/signal/GsmCellSignalDistanceCalculator : com/kylecorry/andromeda/signal/CellSignalDistanceCalculator {
+	public fun <init> ()V
+	public fun getTimingAdvanceDistance (I)F
+	public fun getTimingAdvanceDistanceError (I)F
+}
+
+public final class com/kylecorry/andromeda/signal/LteCellSignalDistanceCalculator : com/kylecorry/andromeda/signal/CellSignalDistanceCalculator {
+	public fun <init> ()V
+	public fun getTimingAdvanceDistance (I)F
+	public fun getTimingAdvanceDistanceError (I)F
+}
+
+public final class com/kylecorry/andromeda/signal/NrCellSignalDistanceCalculator : com/kylecorry/andromeda/signal/CellSignalDistanceCalculator {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getTimingAdvanceDistance (I)F
+	public fun getTimingAdvanceDistanceError (I)F
+}
+
+public final class com/kylecorry/andromeda/sms/IncomingSmsMessage {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/sms/IncomingSmsMessage;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sms/IncomingSmsMessage;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sms/IncomingSmsMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrom ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/sound/SoundPlayer {
+	public abstract fun fadeOff (Z)V
+	public abstract fun fadeOn ()V
+	public abstract fun isOn ()Z
+	public abstract fun off ()V
+	public abstract fun on ()V
+	public abstract fun release ()V
+	public abstract fun setVolume (F)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sound/stream/AudioStream {
+	public abstract fun next (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun reset (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/sound/stream/AudioStreamKt {
+	public static final fun nextBuffer (Lcom/kylecorry/andromeda/sound/stream/AudioStream;I[SLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/sound/stream/PrecomputedAudioStream : com/kylecorry/andromeda/sound/stream/SeekableAudioStream {
+	public fun <init> (Lcom/kylecorry/andromeda/sound/stream/AudioStream;DD)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sound/stream/AudioStream;DDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun next (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun peek (DILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun reset (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/kylecorry/andromeda/sound/stream/SeekableAudioStream : com/kylecorry/andromeda/sound/stream/AudioStream {
+	public abstract fun peek (DILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/sound/stream/SineWaveAudioStream : com/kylecorry/andromeda/sound/stream/SeekableAudioStream {
+	public fun <init> (DDI)V
+	public synthetic fun <init> (DDIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun next (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun peek (DILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun reset (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/sound/stream/SumAudioStream : com/kylecorry/andromeda/sound/stream/AudioStream {
+	public fun <init> ([Lkotlin/Pair;)V
+	public fun next (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun reset (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/kylecorry/andromeda/torch/Torch {
+	public abstract fun getBrightnessLevels ()I
+	public abstract fun isAvailable ()Z
+	public abstract fun isDimmable ()Z
+	public abstract fun off ()V
+	public abstract fun on ()V
+	public abstract fun on (F)V
+}
+
+public abstract interface class com/kylecorry/andromeda/views/chart/label/ChartLabelFormatter {
+	public abstract fun format (F)Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/views/chart/label/NumberChartLabelFormatter : com/kylecorry/andromeda/views/chart/label/ChartLabelFormatter {
+	public fun <init> ()V
+	public fun <init> (IZ)V
+	public synthetic fun <init> (IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun format (F)Ljava/lang/String;
+}
+

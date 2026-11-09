@@ -1,9 +1,9 @@
 package com.kylecorry.andromeda.wkt
 
 
-object CRSWellKnownTextConvert {
+public object CRSWellKnownTextConvert {
 
-    fun toWKT(data: String): WKTValue? {
+    public fun toWKT(data: String): WKTValue? {
         if (data.isEmpty()) {
             return null
         }
@@ -75,7 +75,7 @@ object CRSWellKnownTextConvert {
         return WKTSection(name, wkt) to text.substring(1)
     }
 
-    fun fromWKT(wkt: WKTValue): String {
+    public fun fromWKT(wkt: WKTValue): String {
         return when (wkt) {
             is WKTString -> fromWKTString(wkt)
             is WKTNumber -> fromWKTNumber(wkt)

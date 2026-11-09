@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-enum class SensorAccuracy { PowerSave, Balanced, HighPrecision }
+public enum class SensorAccuracy { PowerSave, Balanced, HighPrecision }
 
 /** Device-to-world orientation in the magnetic east–north–up frame. */
-data class DeviceAttitude(val orientation: Quaternion, val headingAccuracyDegrees: Float? = null)
+public data class DeviceAttitude(val orientation: Quaternion, val headingAccuracyDegrees: Float? = null)
 
 internal fun northWestUpToEastNorthUp(value: Quaternion): Quaternion {
     val c = kotlin.math.sqrt(0.5f)
@@ -25,7 +25,7 @@ internal fun northWestUpToEastNorthUp(value: Quaternion): Quaternion {
 }
 
 /** Altitude uses the platform location datum; mslAltitudeMeters is mean sea level where available. */
-data class LocationReading(
+public data class LocationReading(
     val coordinate: Coordinate,
     val altitudeMeters: Double?,
     val horizontalAccuracyMeters: Float? = null,
@@ -36,7 +36,7 @@ data class LocationReading(
     val bearingAccuracyDegrees: Float? = null,
     val mslAltitudeMeters: Double? = null
 )
-data class BatteryReading(
+public data class BatteryReading(
     val percent: Int?,
     val chargingStatus: BatteryChargingStatus,
     val health: BatteryHealth?,
@@ -49,125 +49,125 @@ data class BatteryReading(
 )
 
 /** Cross-platform device observations. */
-class DeviceSensors {
+public class DeviceSensors {
     internal val backend = createDeviceBackend()
 
-    fun barometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun barometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowBarometer =
         FlowBarometer(pressure(interval, accuracy), scope)
 
     /** Atmospheric pressure in hectopascals. */
-    fun pressure(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+    public fun pressure(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.pressure(interval, accuracy)
 
-    fun accelerometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun accelerometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowAccelerometer =
         FlowAccelerometer(acceleration(interval, accuracy), scope)
 
     /** Acceleration including gravity, in meters per second squared. */
-    fun acceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+    public fun acceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.acceleration(interval, accuracy)
 
-    fun compass(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun compass(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowCompass =
         FlowCompass(magneticHeading(interval, accuracy), scope)
 
     /** Magnetic heading in degrees clockwise from magnetic north. */
-    fun magneticHeading(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+    public fun magneticHeading(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.magneticHeading(interval, accuracy)
 
     /** Fused device attitude in the magnetic east–north–up frame, where available. */
-    fun attitude(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<DeviceAttitude>> =
+    public fun attitude(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<DeviceAttitude>> =
         backend.attitude(interval, accuracy)
 
-    fun orientationSensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun orientationSensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowOrientationSensor =
         FlowOrientationSensor(attitude(interval, accuracy), scope)
 
-    fun gravitySensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun gravitySensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowAccelerometer =
         FlowAccelerometer(gravity(interval, accuracy), scope)
 
     /** Gravity acceleration in meters per second squared. */
-    fun gravity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+    public fun gravity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.gravity(interval, accuracy)
 
-    fun linearAccelerometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun linearAccelerometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowAccelerometer =
         FlowAccelerometer(linearAcceleration(interval, accuracy), scope)
 
     /** Acceleration excluding gravity, in meters per second squared. */
-    fun linearAcceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+    public fun linearAcceleration(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.linearAcceleration(interval, accuracy)
 
     /** Gyroscope with an integrated relative orientation. */
-    fun gyroscope(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun gyroscope(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowGyroscope =
         FlowGyroscope(angularVelocity(interval, accuracy), scope)
 
     /** Angular velocity in degrees per second. */
-    fun angularVelocity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+    public fun angularVelocity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.angularVelocity(interval, accuracy)
 
-    fun magnetometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun magnetometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowMagnetometer =
         FlowMagnetometer(magneticField(interval, accuracy), scope)
 
     /** Magnetic field in microteslas. */
-    fun magneticField(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
+    public fun magneticField(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Vector3>> =
         backend.magneticField(interval, accuracy)
 
-    fun battery(): Flow<Reading<BatteryReading>> = backend.battery()
+    public fun battery(): Flow<Reading<BatteryReading>> = backend.battery()
 
-    fun lightSensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun lightSensor(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowLightSensor =
         FlowLightSensor(illuminance(interval, accuracy), scope)
 
-    fun hygrometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun hygrometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowHygrometer =
         FlowHygrometer(relativeHumidity(interval, accuracy), scope)
 
-    fun thermometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun thermometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowThermometer =
         FlowThermometer(ambientTemperature(interval, accuracy), scope)
 
-    fun pedometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun pedometer(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowPedometer =
         FlowPedometer(steps(interval, accuracy), scope)
 
     /** Ambient illuminance in lux, where supported. */
-    fun illuminance(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+    public fun illuminance(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.illuminance(interval, accuracy)
 
     /** Ambient temperature in degrees Celsius, where supported. */
-    fun ambientTemperature(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+    public fun ambientTemperature(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.ambientTemperature(interval, accuracy)
 
     /** Relative humidity in percent, where supported. */
-    fun relativeHumidity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+    public fun relativeHumidity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         backend.relativeHumidity(interval, accuracy)
 
     /** Cumulative step count reported by the platform. */
-    fun steps(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Int>> =
+    public fun steps(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Int>> =
         backend.steps(interval, accuracy)
 
     /** Whether an object is close to the device, where supported. */
-    fun proximity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Boolean>> =
+    public fun proximity(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Boolean>> =
         backend.proximity(interval, accuracy)
 
     /** Mean-sea-level altitude in meters, when the platform supplies it. */
-    fun mslAltitude(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
+    public fun mslAltitude(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<Float>> =
         location(interval, accuracy).mapNotNull { reading ->
             reading.value.mslAltitudeMeters?.let { Reading(it.toFloat(), reading.time) }
         }
 
-    fun mslAltimeter(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun mslAltimeter(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowAltimeter =
         FlowAltimeter(mslAltitude(interval, accuracy), scope)
 
     /** GNSS satellite details where the platform provides them. */
-    fun satelliteStatus(): Flow<Reading<List<Satellite>>> = platformSatelliteStatus()
+    public fun satelliteStatus(): Flow<Reading<List<Satellite>>> = platformSatelliteStatus()
 
-    fun satelliteStatusSensor(scope: CoroutineScope) = FlowSatelliteStatus(satelliteStatus(), scope)
+    public fun satelliteStatusSensor(scope: CoroutineScope): FlowSatelliteStatus = FlowSatelliteStatus(satelliteStatus(), scope)
 
     /** Monitor circular geofences while location is being collected. */
-    fun geofenceTransitions(
+    public fun geofenceTransitions(
         fences: List<Geofence>,
         interval: Duration = 1.seconds,
         accuracy: SensorAccuracy = SensorAccuracy.Balanced,
     ): Flow<GeofenceTransition> = location(interval, accuracy).geofenceTransitions(fences)
 
-    fun gps(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced) =
+    public fun gps(scope: CoroutineScope, interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): FlowGPS =
         FlowGPS(location(interval, accuracy), scope)
 
-    fun location(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<LocationReading>> =
+    public fun location(interval: Duration = 1.seconds, accuracy: SensorAccuracy = SensorAccuracy.Balanced): Flow<Reading<LocationReading>> =
         backend.location(interval, accuracy)
 }
 

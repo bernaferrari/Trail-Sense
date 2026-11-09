@@ -1,4 +1,4 @@
 package com.kylecorry.andromeda.pdf
 
-actual fun parseGeospatialPDF(bytes: ByteArray): GeospatialPDFMetadata? =
+public actual fun parseGeospatialPDF(bytes: ByteArray): GeospatialPDFMetadata? =
     bytes.inputStream().use { GeospatialPDFParser().parse(it) }

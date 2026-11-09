@@ -78,4 +78,4 @@ private fun startSpeechProcess(locale: String?): Process {
     throw IOException("No supported text-to-speech engine is available", lastError)
 }
 
-actual fun textToSpeech(): SpeechSynthesizer = JvmSpeechSynthesizer()
+public actual fun textToSpeech(): SpeechSynthesizer = JvmSpeechSynthesizer()

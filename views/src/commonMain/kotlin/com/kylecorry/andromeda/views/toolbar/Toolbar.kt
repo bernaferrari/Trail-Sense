@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Toolbar(
+public fun Toolbar(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,

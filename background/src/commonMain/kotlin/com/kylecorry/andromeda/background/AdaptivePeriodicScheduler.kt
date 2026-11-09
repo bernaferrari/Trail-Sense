@@ -9,7 +9,7 @@ import kotlin.time.Duration.Companion.minutes
  * The host is responsible for connecting the platform task to the same work and, on platforms
  * that need it, keeping the process alive for short intervals.
  */
-class AdaptivePeriodicScheduler(
+public class AdaptivePeriodicScheduler(
     scope: CoroutineScope,
     private val background: PeriodicBackgroundScheduler,
     task: suspend () -> Unit,

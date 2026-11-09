@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.print
 
-enum class Orientation {
+public enum class Orientation {
     Portrait,
     Landscape
 }

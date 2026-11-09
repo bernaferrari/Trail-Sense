@@ -8,10 +8,10 @@ import kotlin.math.abs
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-enum class DeviceOrientation { Portrait, PortraitInverse, Landscape, LandscapeInverse, Flat, FlatInverse }
+public enum class DeviceOrientation { Portrait, PortraitInverse, Landscape, LandscapeInverse, Flat, FlatInverse }
 
 /** Classifies a gravity vector in the device coordinate system. */
-fun Vector3.deviceOrientation(): DeviceOrientation {
+public fun Vector3.deviceOrientation(): DeviceOrientation {
     val xMagnitude = abs(x)
     val yMagnitude = abs(y)
     val zMagnitude = abs(z)
@@ -24,7 +24,7 @@ fun Vector3.deviceOrientation(): DeviceOrientation {
 }
 
 /** Emits the device's orientation from gravity readings where the platform provides them. */
-fun DeviceSensors.orientation(
+public fun DeviceSensors.orientation(
     interval: Duration = 1.seconds,
     accuracy: SensorAccuracy = SensorAccuracy.Balanced,
 ): Flow<Reading<DeviceOrientation>> = gravity(interval, accuracy).map { Reading(it.value.deviceOrientation(), it.time) }

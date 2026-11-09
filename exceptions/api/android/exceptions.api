@@ -1,0 +1,45 @@
+public final class com/kylecorry/andromeda/exceptions/AndroidAppDetailsReportKt {
+	public static final fun AppDetailsReport (Landroid/content/Context;Ljava/lang/String;Ljava/lang/Boolean;)Lcom/kylecorry/andromeda/exceptions/AppDetailsReport;
+	public static synthetic fun AppDetailsReport$default (Landroid/content/Context;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Lcom/kylecorry/andromeda/exceptions/AppDetailsReport;
+}
+
+public final class com/kylecorry/andromeda/exceptions/AppDetailsReport : com/kylecorry/andromeda/exceptions/BugReportGenerator {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun generate (Ljava/lang/Throwable;)Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/exceptions/BugReportGenerator {
+	public abstract fun generate (Ljava/lang/Throwable;)Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/exceptions/CombinedBugReport : com/kylecorry/andromeda/exceptions/BugReportGenerator {
+	public fun <init> (Ljava/util/List;)V
+	public fun generate (Ljava/lang/Throwable;)Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/exceptions/CrashReportStore {
+	public fun <init> (Lokio/Path;Lcom/kylecorry/andromeda/exceptions/BugReportGenerator;Lokio/FileSystem;)V
+	public synthetic fun <init> (Lokio/Path;Lcom/kylecorry/andromeda/exceptions/BugReportGenerator;Lokio/FileSystem;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clearPending (Ljava/lang/String;)Z
+	public final fun install ()Ljava/lang/AutoCloseable;
+	public final fun readPending ()Ljava/lang/String;
+	public final fun record (Ljava/lang/Throwable;)V
+}
+
+public final class com/kylecorry/andromeda/exceptions/DeviceDetailsReport : com/kylecorry/andromeda/exceptions/BugReportGenerator {
+	public fun <init> ()V
+	public fun <init> (Lcom/kylecorry/andromeda/core/system/DeviceInfo;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/core/system/DeviceInfo;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun generate (Ljava/lang/Throwable;)Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/exceptions/ExceptionHookKt {
+	public static final fun installExceptionHook (Lkotlin/jvm/functions/Function1;)Ljava/lang/AutoCloseable;
+}
+
+public final class com/kylecorry/andromeda/exceptions/StackTraceReport : com/kylecorry/andromeda/exceptions/BugReportGenerator {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/exceptions/StackTraceReport;
+	public fun generate (Ljava/lang/Throwable;)Ljava/lang/String;
+}
+

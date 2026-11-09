@@ -1,14 +1,14 @@
 package com.kylecorry.andromeda.ipc
 
-const val PROPERTY_ROUTE = "route"
-const val PROPERTY_PAYLOAD = "payload"
-const val PROPERTY_CODE = "code"
-const val PROPERTY_HEADERS = "headers"
+public const val PROPERTY_ROUTE: String = "route"
+public const val PROPERTY_PAYLOAD: String = "payload"
+public const val PROPERTY_CODE: String = "code"
+public const val PROPERTY_HEADERS: String = "headers"
 
-const val CODE_OK = 200
-const val CODE_BAD_REQUEST = 400
-const val CODE_UNAUTHORIZED = 401
-const val CODE_FORBIDDEN = 403
-const val CODE_NOT_FOUND = 404
-const val CODE_INTERNAL_ERROR = 500
-const val CODE_SERVICE_UNAVAILABLE = 503
+public const val CODE_OK: Int = 200
+public const val CODE_BAD_REQUEST: Int = 400
+public const val CODE_UNAUTHORIZED: Int = 401
+public const val CODE_FORBIDDEN: Int = 403
+public const val CODE_NOT_FOUND: Int = 404
+public const val CODE_INTERNAL_ERROR: Int = 500
+public const val CODE_SERVICE_UNAVAILABLE: Int = 503

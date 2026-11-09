@@ -8,4 +8,4 @@ private val unsupportedComposer = SmsComposer { _, _ ->
 }
 
 @Composable
-actual fun rememberSmsComposer(): SmsComposer = unsupportedComposer
+public actual fun rememberSmsComposer(): SmsComposer = unsupportedComposer

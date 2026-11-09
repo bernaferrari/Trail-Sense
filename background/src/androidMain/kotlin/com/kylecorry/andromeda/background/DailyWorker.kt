@@ -21,7 +21,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-abstract class DailyWorker(
+public abstract class DailyWorker(
     context: Context,
     params: WorkerParameters,
     private val tolerance: Duration = 30.minutes,

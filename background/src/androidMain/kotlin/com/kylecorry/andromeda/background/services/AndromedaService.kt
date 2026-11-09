@@ -12,8 +12,8 @@ import kotlin.time.Duration
 /**
  * To run as a foreground service, override [getForegroundInfo] and return a [ForegroundInfo] object.
  */
-abstract class AndromedaService : Service() {
-    open val tag: String
+public abstract class AndromedaService : Service() {
+    public open val tag: String
         get() = javaClass.name
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -35,7 +35,7 @@ abstract class AndromedaService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    fun stopService(removeNotification: Boolean = true) {
+    public fun stopService(removeNotification: Boolean = true) {
         stopForeground(if (removeNotification) STOP_FOREGROUND_REMOVE else STOP_FOREGROUND_DETACH)
         stopSelf()
     }
@@ -48,7 +48,7 @@ abstract class AndromedaService : Service() {
     private var wakelock: PowerManager.WakeLock? = null
 
     @SuppressLint("WakelockTimeout")
-    fun acquireWakelock(tag: String = this.tag, duration: Duration? = null) {
+    public fun acquireWakelock(tag: String = this.tag, duration: Duration? = null) {
         try {
             if (wakelock?.isHeld != true) {
                 wakelock = Wakelocks.get(this, tag)
@@ -66,7 +66,7 @@ abstract class AndromedaService : Service() {
         }
     }
 
-    fun releaseWakelock() {
+    public fun releaseWakelock() {
         try {
             if (wakelock?.isHeld == true) {
                 wakelock?.release()
@@ -76,7 +76,7 @@ abstract class AndromedaService : Service() {
         }
     }
 
-    open fun getForegroundInfo(): ForegroundInfo? {
+    public open fun getForegroundInfo(): ForegroundInfo? {
         return null
     }
 }

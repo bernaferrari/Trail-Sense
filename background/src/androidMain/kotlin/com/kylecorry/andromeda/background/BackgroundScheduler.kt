@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 /** Schedules a WorkManager worker; the worker type must be constructible by WorkManager. */
-fun backgroundScheduler(
+public fun backgroundScheduler(
     context: Context,
     identifier: String,
     worker: Class<out ListenableWorker>,
@@ -40,7 +40,7 @@ fun backgroundScheduler(
     }
 
 /** Schedules recurring WorkManager work; Android reschedules it automatically. */
-fun periodicBackgroundScheduler(
+public fun periodicBackgroundScheduler(
     context: Context,
     identifier: String,
     worker: Class<out ListenableWorker>,

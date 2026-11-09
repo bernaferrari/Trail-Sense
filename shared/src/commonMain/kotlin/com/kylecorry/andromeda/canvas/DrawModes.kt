@@ -1,46 +1,46 @@
 package com.kylecorry.andromeda.canvas
 
-enum class ArcMode {
+public enum class ArcMode {
     Pie,
     Open
 }
 
-enum class StrokeCap {
+public enum class StrokeCap {
     Round,
     Square,
     Project
 }
 
-enum class StrokeJoin {
+public enum class StrokeJoin {
     Miter,
     Bevel,
     Round
 }
 
-enum class TextAlign {
+public enum class TextAlign {
     Right, Center, Left
 }
 
-enum class TextStyle {
+public enum class TextStyle {
     Normal,
     Italic,
     Bold,
     BoldItalic
 }
 
-enum class PaintStyle {
+public enum class PaintStyle {
     Fill,
     Stroke,
     FillAndStroke,
     None
 }
 
-enum class ImageMode {
+public enum class ImageMode {
     Corner,
     Center
 }
 
-enum class TextMode {
+public enum class TextMode {
     Corner,
     Center
 }

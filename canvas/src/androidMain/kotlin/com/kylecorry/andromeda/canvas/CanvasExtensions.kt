@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.canvas
 import android.graphics.*
 import androidx.core.graphics.createBitmap
 
-inline fun Canvas.getMaskedBitmap(
+public inline fun Canvas.getMaskedBitmap(
     mask: Bitmap,
     tempBitmap: Bitmap = createBitmap(width, height),
     block: (canvas: Canvas) -> Unit
@@ -17,11 +17,11 @@ inline fun Canvas.getMaskedBitmap(
     return tempBitmap
 }
 
-fun ICanvasDrawer.layerOpacity(opacity: Int) {
+public fun ICanvasDrawer.layerOpacity(opacity: Int) {
     canvas.saveLayerAlpha(null, opacity)
 }
 
-inline fun ICanvasDrawer.withLayerOpacity(
+public inline fun ICanvasDrawer.withLayerOpacity(
     opacity: Int,
     ignoreFullOpacity: Boolean = true,
     crossinline block: () -> Unit

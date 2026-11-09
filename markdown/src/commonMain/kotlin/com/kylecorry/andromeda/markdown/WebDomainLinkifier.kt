@@ -6,12 +6,12 @@ package com.kylecorry.andromeda.markdown
  * (`photo.jpg`, `notes.md`), decimals, abbreviations (`e.g.`) and sentences missing a space (`end.It`) are not
  * links. Addresses that are part of an email or another word are skipped, and trailing punctuation is left out.
  */
-object WebDomainLinkifier {
+public object WebDomainLinkifier {
 
     /** A web address at [range] in the text, opened with [url]. */
-    data class Match(val range: IntRange, val url: String)
+    public data class Match(val range: IntRange, val url: String)
 
-    fun find(text: CharSequence): List<Match> {
+    public fun find(text: CharSequence): List<Match> {
         return CANDIDATE.findAll(text).mapNotNull { candidate ->
             val tld = candidate.groupValues[1]
             if (tld !in TOP_LEVEL_DOMAINS) return@mapNotNull null

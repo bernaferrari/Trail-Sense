@@ -8,7 +8,7 @@ import com.kylecorry.andromeda.bitmaps.BitmapUtils.fixPerspective
 import com.kylecorry.andromeda.core.units.PercentBounds
 import com.kylecorry.andromeda.core.units.PixelBounds
 
-class CorrectPerspective : BitmapOperation {
+public class CorrectPerspective : BitmapOperation {
 
     private var bounds: PixelBounds? = null
     private var percentBounds: PercentBounds? = null
@@ -18,7 +18,7 @@ class CorrectPerspective : BitmapOperation {
 
     private val paint = Paint()
 
-    constructor(
+    public constructor(
         bounds: PixelBounds,
         @ColorInt backgroundColor: Int? = null,
         maxSize: Size? = null,
@@ -33,7 +33,7 @@ class CorrectPerspective : BitmapOperation {
         paint.isFilterBitmap = interpolate
     }
 
-    constructor(
+    public constructor(
         bounds: PercentBounds,
         @ColorInt backgroundColor: Int? = null,
         maxSize: Size? = null,

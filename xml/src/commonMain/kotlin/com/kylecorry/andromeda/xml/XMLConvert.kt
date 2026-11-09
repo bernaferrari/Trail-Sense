@@ -4,8 +4,8 @@ import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.XmlReader
 import nl.adaptivity.xmlutil.xmlStreaming
 
-object XMLConvert {
-    fun toString(xml: XMLNode, isRoot: Boolean = true): String = buildString {
+public object XMLConvert {
+    public fun toString(xml: XMLNode, isRoot: Boolean = true): String = buildString {
         if (isRoot) append("<?xml version=\"1.0\"?>")
         fun escape(value: String) = value.replace("&", "&amp;").replace("<", "&lt;")
             .replace(">", "&gt;").replace("\"", "&quot;")
@@ -20,7 +20,7 @@ object XMLConvert {
         write(xml)
     }
 
-    fun parse(xml: String): XMLNode {
+    public fun parse(xml: String): XMLNode {
         val reader = xmlStreaming.newGenericReader(xml, expandEntities = true)
         while (reader.hasNext() && reader.next() != EventType.START_ELEMENT) { }
         return readNode(reader)

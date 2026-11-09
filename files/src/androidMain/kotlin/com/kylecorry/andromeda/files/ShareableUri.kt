@@ -7,5 +7,5 @@ import okio.Path
 import java.io.File
 
 /** Creates a content URI using a FileProvider configured by the host application. */
-fun shareableUri(context: Context, authority: String, path: Path): Uri =
+public fun shareableUri(context: Context, authority: String, path: Path): Uri =
     FileProvider.getUriForFile(context, authority, File(path.toString()))

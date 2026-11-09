@@ -2,13 +2,13 @@ package com.kylecorry.andromeda.bitmaps.operations
 
 import android.graphics.Bitmap
 
-class Conditional : BitmapOperation {
+public class Conditional : BitmapOperation {
 
     private val predicate: (Bitmap) -> Boolean
     private val operation: BitmapOperation
     private val falseOperation: BitmapOperation
 
-    constructor(
+    public constructor(
         shouldRun: Boolean,
         operation: BitmapOperation,
         falseOperation: BitmapOperation = NoOp()
@@ -18,7 +18,7 @@ class Conditional : BitmapOperation {
         this.falseOperation = falseOperation
     }
 
-    constructor(
+    public constructor(
         operation: BitmapOperation,
         predicate: (Bitmap) -> Boolean,
         falseOperation: BitmapOperation = NoOp()

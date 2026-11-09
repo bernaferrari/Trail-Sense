@@ -1,0 +1,28 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:battery>
+abstract interface com.kylecorry.andromeda.battery/Battery : com.kylecorry.andromeda.core.sensors/Sensor, com.kylecorry.andromeda.core.sensors/Thermometer { // com.kylecorry.andromeda.battery/Battery|null[0]
+    abstract val capacity // com.kylecorry.andromeda.battery/Battery.capacity|{}capacity[0]
+        abstract fun <get-capacity>(): kotlin/Float // com.kylecorry.andromeda.battery/Battery.capacity.<get-capacity>|<get-capacity>(){}[0]
+    abstract val chargingMethod // com.kylecorry.andromeda.battery/Battery.chargingMethod|{}chargingMethod[0]
+        abstract fun <get-chargingMethod>(): com.kylecorry.andromeda.battery/BatteryChargingMethod // com.kylecorry.andromeda.battery/Battery.chargingMethod.<get-chargingMethod>|<get-chargingMethod>(){}[0]
+    abstract val chargingStatus // com.kylecorry.andromeda.battery/Battery.chargingStatus|{}chargingStatus[0]
+        abstract fun <get-chargingStatus>(): com.kylecorry.andromeda.battery/BatteryChargingStatus // com.kylecorry.andromeda.battery/Battery.chargingStatus.<get-chargingStatus>|<get-chargingStatus>(){}[0]
+    abstract val current // com.kylecorry.andromeda.battery/Battery.current|{}current[0]
+        abstract fun <get-current>(): kotlin/Float // com.kylecorry.andromeda.battery/Battery.current.<get-current>|<get-current>(){}[0]
+    abstract val health // com.kylecorry.andromeda.battery/Battery.health|{}health[0]
+        abstract fun <get-health>(): com.kylecorry.andromeda.battery/BatteryHealth // com.kylecorry.andromeda.battery/Battery.health.<get-health>|<get-health>(){}[0]
+    abstract val maxCapacity // com.kylecorry.andromeda.battery/Battery.maxCapacity|{}maxCapacity[0]
+        abstract fun <get-maxCapacity>(): kotlin/Float // com.kylecorry.andromeda.battery/Battery.maxCapacity.<get-maxCapacity>|<get-maxCapacity>(){}[0]
+    abstract val percent // com.kylecorry.andromeda.battery/Battery.percent|{}percent[0]
+        abstract fun <get-percent>(): kotlin/Float // com.kylecorry.andromeda.battery/Battery.percent.<get-percent>|<get-percent>(){}[0]
+    abstract val voltage // com.kylecorry.andromeda.battery/Battery.voltage|{}voltage[0]
+        abstract fun <get-voltage>(): kotlin/Float // com.kylecorry.andromeda.battery/Battery.voltage.<get-voltage>|<get-voltage>(){}[0]
+}
+
+final fun com.kylecorry.andromeda.battery/batteryReadings(): kotlinx.coroutines.flow/Flow<com.kylecorry.sol.units/Reading<com.kylecorry.andromeda.device/BatteryReading>> // com.kylecorry.andromeda.battery/batteryReadings|batteryReadings(){}[0]

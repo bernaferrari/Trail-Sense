@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.crop
 import com.kylecorry.andromeda.bitmaps.operations.BitmapOperation
 
-class Crop(
+public class Crop(
     private val x: Float,
     private val y: Float,
     private val width: Float,

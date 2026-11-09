@@ -15,7 +15,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class AndroidGyroscope(
+public class AndroidGyroscope(
     context: Context,
     sensorDelay: Int = SensorManager.SENSOR_DELAY_GAME,
     private val threshold: Float = 0.00001f,

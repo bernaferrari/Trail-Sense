@@ -4,7 +4,7 @@ package com.kylecorry.andromeda.bitmaps
  * Determines how a source buffer is blended into a destination buffer.
  * In the descriptions below, ".a" represents the alpha channel.
  */
-enum class BlendingMode(val value: Int) {
+public enum class BlendingMode(public val value: Int) {
     /**
      * dest = 0
      *
@@ -96,10 +96,10 @@ enum class BlendingMode(val value: Int) {
  * The fields are initialized to be a no-op operation, i.e. replace 1 by 1, 2 by 2, etc.
  * You can modify just the values you're interested in having a translation.
  */
-class LookupTable {
-    var red = ByteArray(256) { it.toByte() }
-    var green = ByteArray(256) { it.toByte() }
-    var blue = ByteArray(256) { it.toByte() }
-    var alpha = ByteArray(256) { it.toByte() }
+public class LookupTable {
+    public var red: ByteArray = ByteArray(256) { it.toByte() }
+    public var green: ByteArray = ByteArray(256) { it.toByte() }
+    public var blue: ByteArray = ByteArray(256) { it.toByte() }
+    public var alpha: ByteArray = ByteArray(256) { it.toByte() }
 }
 

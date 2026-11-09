@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
-class PrecalculatedColorMap(private val map: ColorMap, private val buckets: Int = 256) : ColorMap {
+public class PrecalculatedColorMap(private val map: ColorMap, private val buckets: Int = 256) : ColorMap {
 
     private val colors = Array(buckets) { map.getColor(it.toFloat() / (buckets - 1)) }
 

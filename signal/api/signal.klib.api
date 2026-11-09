@@ -1,0 +1,36 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:signal>
+abstract interface com.kylecorry.andromeda.signal/CellSignalSensor : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.signal/CellSignalSensor|null[0]
+    abstract val signals // com.kylecorry.andromeda.signal/CellSignalSensor.signals|{}signals[0]
+        abstract fun <get-signals>(): kotlin.collections/List<com.kylecorry.andromeda.signal/CellSignal> // com.kylecorry.andromeda.signal/CellSignalSensor.signals.<get-signals>|<get-signals>(){}[0]
+}
+
+final class com.kylecorry.andromeda.signal/CellSignalOptions { // com.kylecorry.andromeda.signal/CellSignalOptions|null[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Float = ...) // com.kylecorry.andromeda.signal/CellSignalOptions.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Float){}[0]
+
+    final val includeUnregistered // com.kylecorry.andromeda.signal/CellSignalOptions.includeUnregistered|{}includeUnregistered[0]
+        final fun <get-includeUnregistered>(): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignalOptions.includeUnregistered.<get-includeUnregistered>|<get-includeUnregistered>(){}[0]
+    final val pathLossFactor // com.kylecorry.andromeda.signal/CellSignalOptions.pathLossFactor|{}pathLossFactor[0]
+        final fun <get-pathLossFactor>(): kotlin/Float // com.kylecorry.andromeda.signal/CellSignalOptions.pathLossFactor.<get-pathLossFactor>|<get-pathLossFactor>(){}[0]
+    final val updateCellCache // com.kylecorry.andromeda.signal/CellSignalOptions.updateCellCache|{}updateCellCache[0]
+        final fun <get-updateCellCache>(): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignalOptions.updateCellCache.<get-updateCellCache>|<get-updateCellCache>(){}[0]
+
+    final fun component1(): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignalOptions.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignalOptions.component2|component2(){}[0]
+    final fun component3(): kotlin/Float // com.kylecorry.andromeda.signal/CellSignalOptions.component3|component3(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Float = ...): com.kylecorry.andromeda.signal/CellSignalOptions // com.kylecorry.andromeda.signal/CellSignalOptions.copy|copy(kotlin.Boolean;kotlin.Boolean;kotlin.Float){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignalOptions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.signal/CellSignalOptions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.signal/CellSignalOptions.toString|toString(){}[0]
+}
+
+final val com.kylecorry.andromeda.signal/cellularSignalSupported // com.kylecorry.andromeda.signal/cellularSignalSupported|{}cellularSignalSupported[0]
+    final fun <get-cellularSignalSupported>(): kotlin/Boolean // com.kylecorry.andromeda.signal/cellularSignalSupported.<get-cellularSignalSupported>|<get-cellularSignalSupported>(){}[0]
+
+final fun com.kylecorry.andromeda.signal/cellSignals(com.kylecorry.andromeda.signal/CellSignalOptions = ...): kotlinx.coroutines.flow/Flow<kotlin.collections/List<com.kylecorry.andromeda.signal/CellSignal>> // com.kylecorry.andromeda.signal/cellSignals|cellSignals(com.kylecorry.andromeda.signal.CellSignalOptions){}[0]

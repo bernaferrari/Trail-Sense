@@ -40,6 +40,6 @@ private class AndroidSpeechSynthesizer(private val context: Context) : SpeechSyn
 
 }
 
-actual fun textToSpeech(): SpeechSynthesizer = AndroidSpeechSynthesizer(KSensorContext.get())
+public actual fun textToSpeech(): SpeechSynthesizer = AndroidSpeechSynthesizer(KSensorContext.get())
 
-fun textToSpeech(context: Context): SpeechSynthesizer = AndroidSpeechSynthesizer(context.applicationContext)
+public fun textToSpeech(context: Context): SpeechSynthesizer = AndroidSpeechSynthesizer(context.applicationContext)

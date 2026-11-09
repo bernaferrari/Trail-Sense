@@ -7,7 +7,7 @@ import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.bitmaps.operations.BitmapOperation
 import kotlin.also
 
-class Pad(private val padding: Int, private val color: Int) : BitmapOperation {
+public class Pad(private val padding: Int, private val color: Int) : BitmapOperation {
 
     private val paint = Paint().also {
         it.isFilterBitmap = false

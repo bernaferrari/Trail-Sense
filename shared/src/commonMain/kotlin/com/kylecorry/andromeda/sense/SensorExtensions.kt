@@ -13,13 +13,13 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
-suspend fun readAll(
+public suspend fun readAll(
     sensors: List<Sensor>,
     timeout: Duration = 1.minutes,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     onlyIfInvalid: Boolean = false,
     forceStopOnCompletion: Boolean = false
-) = withContext(dispatcher) {
+): Unit = withContext(dispatcher) {
     try {
         withTimeoutOrNull(timeout.inWholeMilliseconds) {
             val jobs = mutableListOf<Job>()

@@ -1,18 +1,18 @@
 package com.kylecorry.andromeda.bitmaps
 
-class Rgba3dArray(val values: ByteArray, val sizeX: Int, val sizeY: Int, val sizeZ: Int) {
+public class Rgba3dArray(public val values: ByteArray, public val sizeX: Int, public val sizeY: Int, public val sizeZ: Int) {
     init {
         require(sizeX > 0 && sizeY > 0 && sizeZ > 0)
         require(sizeX.toLong() * sizeY <= Int.MAX_VALUE / 4L / sizeZ)
         require(values.size.toLong() >= sizeX.toLong() * sizeY * sizeZ * 4)
     }
 
-    operator fun get(x: Int, y: Int, z: Int): ByteArray {
+    public operator fun get(x: Int, y: Int, z: Int): ByteArray {
         val index = indexOfVector(x, y, z)
         return ByteArray(4) { values[index + it] }
     }
 
-    operator fun set(x: Int, y: Int, z: Int, value: ByteArray) {
+    public operator fun set(x: Int, y: Int, z: Int, value: ByteArray) {
         require(value.size == 4)
         val index = indexOfVector(x, y, z)
         for (i in 0..3) {

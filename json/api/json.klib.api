@@ -1,0 +1,26 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:json>
+final class <#A: kotlin/Any?> com.kylecorry.andromeda.json/KotlinJsonSerializer { // com.kylecorry.andromeda.json/KotlinJsonSerializer|null[0]
+    constructor <init>(kotlinx.serialization/KSerializer<#A>, kotlinx.serialization.json/Json = ...) // com.kylecorry.andromeda.json/KotlinJsonSerializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>;kotlinx.serialization.json.Json){}[0]
+
+    final fun deserialize(kotlin/ByteArray): #A // com.kylecorry.andromeda.json/KotlinJsonSerializer.deserialize|deserialize(kotlin.ByteArray){}[0]
+    final fun serialize(#A): kotlin/ByteArray // com.kylecorry.andromeda.json/KotlinJsonSerializer.serialize|serialize(1:0){}[0]
+}
+
+final object com.kylecorry.andromeda.json/JsonConvert { // com.kylecorry.andromeda.json/JsonConvert|null[0]
+    final val format // com.kylecorry.andromeda.json/JsonConvert.format|{}format[0]
+        final fun <get-format>(): kotlinx.serialization.json/Json // com.kylecorry.andromeda.json/JsonConvert.format.<get-format>|<get-format>(){}[0]
+
+    final inline fun <#A1: reified kotlin/Any?> fromJson(kotlin/String): #A1? // com.kylecorry.andromeda.json/JsonConvert.fromJson|fromJson(kotlin.String){0§<kotlin.Any?>}[0]
+    final inline fun <#A1: reified kotlin/Any?> toJson(#A1): kotlin/String // com.kylecorry.andromeda.json/JsonConvert.toJson|toJson(0:0){0§<kotlin.Any?>}[0]
+}
+
+final inline fun <#A: reified kotlin/Any?> (#A).com.kylecorry.andromeda.json/toJson(): kotlin/String // com.kylecorry.andromeda.json/toJson|toJson@0:0(){0§<kotlin.Any?>}[0]
+final inline fun <#A: reified kotlin/Any?> (#A).com.kylecorry.andromeda.json/toJsonBytes(): kotlin/ByteArray // com.kylecorry.andromeda.json/toJsonBytes|toJsonBytes@0:0(){0§<kotlin.Any?>}[0]
+final inline fun <#A: reified kotlin/Any?> (kotlin/ByteArray).com.kylecorry.andromeda.json/fromJson(): #A? // com.kylecorry.andromeda.json/fromJson|fromJson@kotlin.ByteArray(){0§<kotlin.Any?>}[0]

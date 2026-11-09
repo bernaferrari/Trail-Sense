@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.onEach
  * A sensor whose readings come from Android broadcasts matching [intentFilter].
  * While started it collects [broadcasts] on the main thread and passes each intent to [handleIntent].
  */
-abstract class BaseBroadcastReceiverSensor(
+public abstract class BaseBroadcastReceiverSensor(
     protected val context: Context,
     private val intentFilter: IntentFilter,
     private val listenToBroadcastsFromOtherApps: Boolean = false,

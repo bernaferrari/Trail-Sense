@@ -22,7 +22,7 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /** Fuses gyroscope rotation with a gravity and magnetometer attitude. */
-class CustomRotationSensor(
+public class CustomRotationSensor(
     private val magnetometer: Magnetometer,
     private val accelerometer: Accelerometer,
     private val gyro: Gyroscope,

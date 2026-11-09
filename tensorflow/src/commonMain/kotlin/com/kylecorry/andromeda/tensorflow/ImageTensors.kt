@@ -6,7 +6,7 @@ import kotlin.math.exp
 import kotlin.math.roundToInt
 
 /** Packs row-major RGB channels as little-endian float32, applying `(channel - mean) / standardDeviation`. */
-fun PixelImage.rgbFloat32(mean: Float = 0f, standardDeviation: Float = 1f): ByteArray {
+public fun PixelImage.rgbFloat32(mean: Float = 0f, standardDeviation: Float = 1f): ByteArray {
     require(mean.isFinite() && standardDeviation.isFinite() && standardDeviation > 0f)
     require(pixels.size <= Int.MAX_VALUE / 12)
     val output = ByteArray(pixels.size * 12)
@@ -21,7 +21,7 @@ fun PixelImage.rgbFloat32(mean: Float = 0f, standardDeviation: Float = 1f): Byte
 }
 
 /** Packs row-major RGB channels as unsigned bytes. */
-fun PixelImage.rgbUint8(): ByteArray {
+public fun PixelImage.rgbUint8(): ByteArray {
     require(pixels.size <= Int.MAX_VALUE / 3)
     val output = ByteArray(pixels.size * 3)
     var offset = 0
@@ -34,7 +34,7 @@ fun PixelImage.rgbUint8(): ByteArray {
 }
 
 /** Packs normalized RGB values using the tensor's quantization scale and zero point. */
-fun PixelImage.rgbQuantized(
+public fun PixelImage.rgbQuantized(
     scale: Float,
     zeroPoint: Int,
     signed: Boolean,
@@ -56,7 +56,7 @@ fun PixelImage.rgbQuantized(
 }
 
 /** Reads little-endian float32 output tensor values. */
-fun decodeFloat32Tensor(bytes: ByteArray): List<Float> {
+public fun decodeFloat32Tensor(bytes: ByteArray): List<Float> {
     require(bytes.size % 4 == 0)
     return List(bytes.size / 4) { index ->
         val offset = index * 4
@@ -67,13 +67,13 @@ fun decodeFloat32Tensor(bytes: ByteArray): List<Float> {
 }
 
 /** Dequantizes signed or unsigned 8-bit output values. */
-fun decodeQuantizedTensor(bytes: ByteArray, scale: Float, zeroPoint: Int, signed: Boolean): List<Float> {
+public fun decodeQuantizedTensor(bytes: ByteArray, scale: Float, zeroPoint: Int, signed: Boolean): List<Float> {
     require(scale.isFinite() && scale > 0f && zeroPoint in if (signed) -128..127 else 0..255)
     return bytes.map { ((if (signed) it.toInt() else it.toInt() and 0xff) - zeroPoint) * scale }
 }
 
 /** Converts finite logits to probabilities without overflowing for large inputs. */
-fun List<Float>.softmax(): List<Float> {
+public fun List<Float>.softmax(): List<Float> {
     if (isEmpty()) return emptyList()
     require(all(Float::isFinite))
     val maximum = max()

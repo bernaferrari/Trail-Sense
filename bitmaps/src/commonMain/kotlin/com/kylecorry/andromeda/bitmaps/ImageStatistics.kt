@@ -3,12 +3,12 @@ package com.kylecorry.andromeda.bitmaps
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-data class ChannelStatistics(val minimum: Double, val maximum: Double, val mean: Double, val standardDeviation: Double)
+public data class ChannelStatistics(val minimum: Double, val maximum: Double, val mean: Double, val standardDeviation: Double)
 
-data class ImagePoint(val x: Double, val y: Double)
+public data class ImagePoint(val x: Double, val y: Double)
 
 /** Bounds use inclusive left/top and exclusive right/bottom coordinates. */
-data class ImageBounds(val left: Int, val top: Int, val right: Int, val bottom: Int)
+public data class ImageBounds(val left: Int, val top: Int, val right: Int, val bottom: Int)
 
 internal fun Int.channelValue(channel: ColorChannel?): Double = when (channel) {
     ColorChannel.Red -> ((this ushr 16) and 255).toDouble()
@@ -19,7 +19,7 @@ internal fun Int.channelValue(channel: ColorChannel?): Double = when (channel) {
 }
 
 /** Computes population statistics for one channel over the image. */
-fun PixelImage.statistics(channel: ColorChannel? = null): ChannelStatistics {
+public fun PixelImage.statistics(channel: ColorChannel? = null): ChannelStatistics {
     var minimum = Double.POSITIVE_INFINITY
     var maximum = Double.NEGATIVE_INFINITY
     var mean = 0.0
@@ -36,7 +36,7 @@ fun PixelImage.statistics(channel: ColorChannel? = null): ChannelStatistics {
 }
 
 /** Returns the intensity-weighted center, or the origin for an entirely black channel. */
-fun PixelImage.moment(channel: ColorChannel? = null): ImagePoint {
+public fun PixelImage.moment(channel: ColorChannel? = null): ImagePoint {
     var total = 0.0
     var x = 0.0
     var y = 0.0
@@ -50,7 +50,7 @@ fun PixelImage.moment(channel: ColorChannel? = null): ImagePoint {
 }
 
 /** Finds four-connected regions at or above [threshold], largest bounding boxes first. */
-fun PixelImage.findBlobs(
+public fun PixelImage.findBlobs(
     threshold: Double,
     channel: ColorChannel? = null,
     maxBlobs: Int = Int.MAX_VALUE,
@@ -96,7 +96,7 @@ fun PixelImage.findBlobs(
 }
 
 /** Combines each ARGB channel independently, clamping results to the byte range. */
-fun PixelImage.weightedAdd(other: PixelImage, weight: Float, otherWeight: Float, absolute: Boolean = false): PixelImage {
+public fun PixelImage.weightedAdd(other: PixelImage, weight: Float, otherWeight: Float, absolute: Boolean = false): PixelImage {
     require(width == other.width && height == other.height)
     require(weight.isFinite() && otherWeight.isFinite())
     return PixelImage(width, height, IntArray(pixels.size) { index ->

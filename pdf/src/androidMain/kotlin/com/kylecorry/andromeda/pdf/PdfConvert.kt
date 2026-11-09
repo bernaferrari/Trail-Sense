@@ -10,24 +10,24 @@ import java.io.InputStream
 import java.io.OutputStream
 
 
-object PdfConvert {
+public object PdfConvert {
 
     private val generator = PDFGenerator()
     private val parser = PDFParser()
 
-    fun toPDF(objects: List<PDFValue.PDFObject>): String {
+    public fun toPDF(objects: List<PDFValue.PDFObject>): String {
         return generator.toPDF(objects)
     }
 
-    fun toPDF(objects: List<PDFValue.PDFObject>, out: OutputStream) {
+    public fun toPDF(objects: List<PDFValue.PDFObject>, out: OutputStream) {
         generator.toPDF(objects, out)
     }
 
-    fun fromPDF(input: InputStream, ignoreStreams: Boolean = false): List<PDFValue.PDFObject> {
+    public fun fromPDF(input: InputStream, ignoreStreams: Boolean = false): List<PDFValue.PDFObject> {
         return parser.parse(input, ignoreStreams)
     }
 
-    fun toPdf(
+    public fun toPdf(
         context: Context,
         text: CharSequence,
         out: OutputStream,

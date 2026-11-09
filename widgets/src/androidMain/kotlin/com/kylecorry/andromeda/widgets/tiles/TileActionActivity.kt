@@ -18,7 +18,7 @@ internal object TileActionRegistry {
 }
 
 /** A transparent Compose host that lets a tile start work while its app is visible. */
-class TileActionActivity : ComponentActivity() {
+public class TileActionActivity : ComponentActivity() {
     private var started = false
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -2,11 +2,11 @@ package com.kylecorry.andromeda.core.system
 
 import android.os.Build
 
-object Android {
-    val sdk = Build.VERSION.SDK_INT
-    val version = Build.VERSION.RELEASE
-    val manufacturer = Build.MANUFACTURER
-    val device = Build.PRODUCT
-    val model = Build.MODEL
-    val fullDeviceName = "$manufacturer $device"
+public object Android {
+    public val sdk: Int = Build.VERSION.SDK_INT
+    public val version: String = Build.VERSION.RELEASE
+    public val manufacturer: String = Build.MANUFACTURER
+    public val device: String = Build.PRODUCT
+    public val model: String = Build.MODEL
+    public val fullDeviceName: String = "$manufacturer $device"
 }

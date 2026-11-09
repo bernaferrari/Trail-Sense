@@ -32,7 +32,7 @@ class AndromedaLibraryPlugin : Plugin<Project> {
         val libraryVersion = libs.version("andromeda")
 
         extensions.configure<KotlinMultiplatformExtension> {
-            explicitApiWarning()
+            explicitApi()
             jvmToolchain(libs.version("jvmToolchain").toInt())
 
             (this as ExtensionAware).extensions.configure<KotlinMultiplatformAndroidLibraryExtension>("android") {

@@ -12,7 +12,7 @@ import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePNGRepresentation
 import platform.posix.memcpy
 
-actual fun decodeImage(bytes: ByteArray): PixelImage {
+public actual fun decodeImage(bytes: ByteArray): PixelImage {
     require(bytes.isNotEmpty()) { "Unable to decode image" }
     val data = bytes.usePinned { NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()) }
     val image = CGImageRetain(requireNotNull(UIImage.imageWithData(data)?.CGImage) { "Unable to decode image" })
@@ -40,8 +40,8 @@ internal fun pixelImageFromCGImage(image: CGImageRef): PixelImage {
     })
 }
 
-actual fun PixelImage.encodePng(): ByteArray = encode { UIImagePNGRepresentation(it) }
-actual fun PixelImage.encodeJpeg(quality: Int): ByteArray {
+public actual fun PixelImage.encodePng(): ByteArray = encode { UIImagePNGRepresentation(it) }
+public actual fun PixelImage.encodeJpeg(quality: Int): ByteArray {
     require(quality in 0..100)
     return encode { UIImageJPEGRepresentation(it, quality / 100.0) }
 }

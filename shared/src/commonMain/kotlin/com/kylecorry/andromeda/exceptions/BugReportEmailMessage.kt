@@ -8,7 +8,7 @@ package com.kylecorry.andromeda.exceptions
  * @param emailAddress the email address to send the exception log to
  * @param emailSubject the subject of the email
  */
-data class BugReportEmailMessage(
+public data class BugReportEmailMessage(
     val title: String,
     val description: String,
     val emailAction: String,

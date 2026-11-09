@@ -2,10 +2,10 @@ package com.kylecorry.andromeda.sense.location
 
 import androidx.core.location.GnssStatusCompat
 
-fun Satellite.Companion.fromStatus(status: GnssStatusCompat): List<Satellite> =
+public fun Satellite.Companion.fromStatus(status: GnssStatusCompat): List<Satellite> =
     (0 until status.satelliteCount).map { fromStatus(status, it) }
 
-fun Satellite.Companion.fromStatus(status: GnssStatusCompat, index: Int): Satellite = Satellite(
+public fun Satellite.Companion.fromStatus(status: GnssStatusCompat, index: Int): Satellite = Satellite(
     status.getSvid(index),
     when (status.getConstellationType(index)) {
         GnssStatusCompat.CONSTELLATION_GPS -> SatelliteConstellation.GPS

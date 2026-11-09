@@ -13,7 +13,7 @@ private val cleanupExecutor = Executors.newSingleThreadScheduledExecutor { runna
 }
 
 /** Sends transient desktop notifications using the system tray. */
-fun notificationSender(icon: Image = defaultNotificationIcon()): NotificationSender = object : NotificationSender {
+public fun notificationSender(icon: Image = defaultNotificationIcon()): NotificationSender = object : NotificationSender {
     private val lock = Any()
     private val icons = mutableMapOf<Int, TrayIcon>()
 

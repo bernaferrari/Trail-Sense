@@ -18,13 +18,13 @@ import kotlin.math.roundToInt
  * @param interpolate Whether to interpolate between pixels
  * @param config The bitmap config to use
  */
-class ImagePixelReader(
+public class ImagePixelReader(
     private val imageSize: Size,
     private val interpolate: Boolean = true,
     private val config: Bitmap.Config = Bitmap.Config.ARGB_8888
 ) {
 
-    suspend fun getPixel(
+    public suspend fun getPixel(
         image: InputStream,
         x: Float,
         y: Float,

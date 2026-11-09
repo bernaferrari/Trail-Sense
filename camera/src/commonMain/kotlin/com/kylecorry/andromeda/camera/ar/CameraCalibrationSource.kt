@@ -1,14 +1,14 @@
 package com.kylecorry.andromeda.camera.ar
 
 /** Supplies camera calibration in active sensor pixels. Values may be unavailable on a device. */
-interface CameraCalibrationSource {
+public interface CameraCalibrationSource {
     /** Changes when the active physical camera changes, if the platform can identify it. */
-    val calibrationId: String? get() = null
-    val sensorRotationDegrees: Int
-    val zoomRatio: Float?
-    fun intrinsicCalibration(onlyUseEstimated: Boolean = false): FloatArray?
-    fun activeArray(preCorrection: Boolean = false): ImageBounds?
-    fun distortionCorrection(): FloatArray?
+    public val calibrationId: String? get() = null
+    public val sensorRotationDegrees: Int
+    public val zoomRatio: Float?
+    public fun intrinsicCalibration(onlyUseEstimated: Boolean = false): FloatArray?
+    public fun activeArray(preCorrection: Boolean = false): ImageBounds?
+    public fun distortionCorrection(): FloatArray?
 }
 
 /** Estimates centered pinhole intrinsics from a horizontal field of view in degrees. */
@@ -23,7 +23,7 @@ internal fun estimateCameraIntrinsics(width: Int, height: Int, horizontalFov: Fl
  * Field of view in degrees for the current zoom, derived from available pinhole intrinsics.
  * The result follows [CameraCalibrationSource.sensorRotationDegrees] and ignores lens distortion.
  */
-fun CameraCalibrationSource.fieldOfView(): com.kylecorry.sol.math.geometry.Size? {
+public fun CameraCalibrationSource.fieldOfView(): com.kylecorry.sol.math.geometry.Size? {
     val intrinsic = intrinsicCalibration() ?: return null
     val bounds = activeArray() ?: return null
     if (intrinsic.size < 4 || !bounds.left.isFinite() || !bounds.top.isFinite() ||

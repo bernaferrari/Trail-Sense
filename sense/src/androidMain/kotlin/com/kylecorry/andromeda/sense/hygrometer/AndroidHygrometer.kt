@@ -8,7 +8,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorManager
 
-class AndroidHygrometer(context: Context, sensorDelay: Int = SensorManager.SENSOR_DELAY_NORMAL) :
+public class AndroidHygrometer(context: Context, sensorDelay: Int = SensorManager.SENSOR_DELAY_NORMAL) :
     BaseSensor(context, Sensor.TYPE_RELATIVE_HUMIDITY, sensorDelay),
     Hygrometer {
 

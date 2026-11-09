@@ -1,0 +1,37 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:alerts>
+abstract interface com.kylecorry.andromeda.alerts/AlertPresenter { // com.kylecorry.andromeda.alerts/AlertPresenter|null[0]
+    abstract suspend fun confirm(kotlin/String, kotlin/String, kotlin/String, kotlin/String): kotlin/Boolean // com.kylecorry.andromeda.alerts/AlertPresenter.confirm|confirm(kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+}
+
+final class com.kylecorry.andromeda.alerts/AlertState : com.kylecorry.andromeda.alerts/AlertPresenter { // com.kylecorry.andromeda.alerts/AlertState|null[0]
+    constructor <init>() // com.kylecorry.andromeda.alerts/AlertState.<init>|<init>(){}[0]
+
+    final suspend fun confirm(kotlin/String, kotlin/String, kotlin/String, kotlin/String): kotlin/Boolean // com.kylecorry.andromeda.alerts/AlertState.confirm|confirm(kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+}
+
+final class com.kylecorry.andromeda.alerts/LoadingState : com.kylecorry.andromeda.alerts.loading/LoadingIndicator { // com.kylecorry.andromeda.alerts/LoadingState|null[0]
+    constructor <init>() // com.kylecorry.andromeda.alerts/LoadingState.<init>|<init>(){}[0]
+
+    final var visible // com.kylecorry.andromeda.alerts/LoadingState.visible|{}visible[0]
+        final fun <get-visible>(): kotlin/Boolean // com.kylecorry.andromeda.alerts/LoadingState.visible.<get-visible>|<get-visible>(){}[0]
+
+    final fun hide() // com.kylecorry.andromeda.alerts/LoadingState.hide|hide(){}[0]
+    final fun show() // com.kylecorry.andromeda.alerts/LoadingState.show|show(){}[0]
+}
+
+final val com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_AlertState$stableprop // com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_AlertState$stableprop|#static{}com_kylecorry_andromeda_alerts_AlertState$stableprop[0]
+final val com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_LoadingState$stableprop // com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_LoadingState$stableprop|#static{}com_kylecorry_andromeda_alerts_LoadingState$stableprop[0]
+
+final fun com.kylecorry.andromeda.alerts/AlertHost(com.kylecorry.andromeda.alerts/AlertState, androidx.compose.runtime/Composer?, kotlin/Int) // com.kylecorry.andromeda.alerts/AlertHost|AlertHost(com.kylecorry.andromeda.alerts.AlertState;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.alerts/LoadingIndicator(com.kylecorry.andromeda.alerts/LoadingState, androidx.compose.ui/Modifier?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.alerts/LoadingIndicator|LoadingIndicator(com.kylecorry.andromeda.alerts.LoadingState;androidx.compose.ui.Modifier?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_AlertState$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_AlertState$stableprop_getter|com_kylecorry_andromeda_alerts_AlertState$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_LoadingState$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.alerts/com_kylecorry_andromeda_alerts_LoadingState$stableprop_getter|com_kylecorry_andromeda_alerts_LoadingState$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.alerts/rememberAlertState(androidx.compose.runtime/Composer?, kotlin/Int): com.kylecorry.andromeda.alerts/AlertState // com.kylecorry.andromeda.alerts/rememberAlertState|rememberAlertState(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.alerts/rememberLoadingState(androidx.compose.runtime/Composer?, kotlin/Int): com.kylecorry.andromeda.alerts/LoadingState // com.kylecorry.andromeda.alerts/rememberLoadingState|rememberLoadingState(androidx.compose.runtime.Composer?;kotlin.Int){}[0]

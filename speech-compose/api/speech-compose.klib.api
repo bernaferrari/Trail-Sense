@@ -1,0 +1,9 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:speech-compose>
+final fun com.kylecorry.andromeda.speech.compose/rememberTextToSpeech(androidx.compose.runtime/Composer?, kotlin/Int): com.kylecorry.andromeda.speech/SpeechSynthesizer // com.kylecorry.andromeda.speech.compose/rememberTextToSpeech|rememberTextToSpeech(androidx.compose.runtime.Composer?;kotlin.Int){}[0]

@@ -6,7 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
 /** Adapts pressure readings in hectopascals to the shared barometer contract. */
-class FlowBarometer(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
+public class FlowBarometer(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
     FlowMeasurement<Float>(readings, scope, 0f), Barometer {
     override val pressure: Float get() = value
 }

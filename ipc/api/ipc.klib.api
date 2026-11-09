@@ -1,0 +1,149 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:ipc>
+abstract fun interface com.kylecorry.andromeda.ipc/IpcClient { // com.kylecorry.andromeda.ipc/IpcClient|null[0]
+    abstract suspend fun send(kotlin/String, com.kylecorry.andromeda.ipc/IpcRequest): com.kylecorry.andromeda.ipc/IpcResponse // com.kylecorry.andromeda.ipc/IpcClient.send|send(kotlin.String;com.kylecorry.andromeda.ipc.IpcRequest){}[0]
+}
+
+sealed interface com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue|null[0]
+    final class Bool : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Bool|null[0]
+        constructor <init>(kotlin/Boolean) // com.kylecorry.andromeda.ipc/IpcValue.Bool.<init>|<init>(kotlin.Boolean){}[0]
+
+        final val value // com.kylecorry.andromeda.ipc/IpcValue.Bool.value|{}value[0]
+            final fun <get-value>(): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Bool.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Bool.component1|component1(){}[0]
+        final fun copy(kotlin/Boolean = ...): com.kylecorry.andromeda.ipc/IpcValue.Bool // com.kylecorry.andromeda.ipc/IpcValue.Bool.copy|copy(kotlin.Boolean){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Bool.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Bool.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Bool.toString|toString(){}[0]
+    }
+
+    final class Bytes : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Bytes|null[0]
+        constructor <init>(kotlin/ByteArray) // com.kylecorry.andromeda.ipc/IpcValue.Bytes.<init>|<init>(kotlin.ByteArray){}[0]
+
+        final val value // com.kylecorry.andromeda.ipc/IpcValue.Bytes.value|{}value[0]
+            final fun <get-value>(): kotlin/ByteArray // com.kylecorry.andromeda.ipc/IpcValue.Bytes.value.<get-value>|<get-value>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Bytes.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Bytes.hashCode|hashCode(){}[0]
+    }
+
+    final class Float32 : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Float32|null[0]
+        constructor <init>(kotlin/Float) // com.kylecorry.andromeda.ipc/IpcValue.Float32.<init>|<init>(kotlin.Float){}[0]
+
+        final val value // com.kylecorry.andromeda.ipc/IpcValue.Float32.value|{}value[0]
+            final fun <get-value>(): kotlin/Float // com.kylecorry.andromeda.ipc/IpcValue.Float32.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): kotlin/Float // com.kylecorry.andromeda.ipc/IpcValue.Float32.component1|component1(){}[0]
+        final fun copy(kotlin/Float = ...): com.kylecorry.andromeda.ipc/IpcValue.Float32 // com.kylecorry.andromeda.ipc/IpcValue.Float32.copy|copy(kotlin.Float){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Float32.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Float32.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Float32.toString|toString(){}[0]
+    }
+
+    final class Float64 : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Float64|null[0]
+        constructor <init>(kotlin/Double) // com.kylecorry.andromeda.ipc/IpcValue.Float64.<init>|<init>(kotlin.Double){}[0]
+
+        final val value // com.kylecorry.andromeda.ipc/IpcValue.Float64.value|{}value[0]
+            final fun <get-value>(): kotlin/Double // com.kylecorry.andromeda.ipc/IpcValue.Float64.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): kotlin/Double // com.kylecorry.andromeda.ipc/IpcValue.Float64.component1|component1(){}[0]
+        final fun copy(kotlin/Double = ...): com.kylecorry.andromeda.ipc/IpcValue.Float64 // com.kylecorry.andromeda.ipc/IpcValue.Float64.copy|copy(kotlin.Double){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Float64.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Float64.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Float64.toString|toString(){}[0]
+    }
+
+    final class Int32 : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Int32|null[0]
+        constructor <init>(kotlin/Int) // com.kylecorry.andromeda.ipc/IpcValue.Int32.<init>|<init>(kotlin.Int){}[0]
+
+        final val value // com.kylecorry.andromeda.ipc/IpcValue.Int32.value|{}value[0]
+            final fun <get-value>(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Int32.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Int32.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): com.kylecorry.andromeda.ipc/IpcValue.Int32 // com.kylecorry.andromeda.ipc/IpcValue.Int32.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Int32.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Int32.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Int32.toString|toString(){}[0]
+    }
+
+    final class Int64 : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Int64|null[0]
+        constructor <init>(kotlin/Long) // com.kylecorry.andromeda.ipc/IpcValue.Int64.<init>|<init>(kotlin.Long){}[0]
+
+        final val value // com.kylecorry.andromeda.ipc/IpcValue.Int64.value|{}value[0]
+            final fun <get-value>(): kotlin/Long // com.kylecorry.andromeda.ipc/IpcValue.Int64.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): kotlin/Long // com.kylecorry.andromeda.ipc/IpcValue.Int64.component1|component1(){}[0]
+        final fun copy(kotlin/Long = ...): com.kylecorry.andromeda.ipc/IpcValue.Int64 // com.kylecorry.andromeda.ipc/IpcValue.Int64.copy|copy(kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Int64.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Int64.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Int64.toString|toString(){}[0]
+    }
+
+    final class Text : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Text|null[0]
+        constructor <init>(kotlin/String) // com.kylecorry.andromeda.ipc/IpcValue.Text.<init>|<init>(kotlin.String){}[0]
+
+        final val value // com.kylecorry.andromeda.ipc/IpcValue.Text.value|{}value[0]
+            final fun <get-value>(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Text.value.<get-value>|<get-value>(){}[0]
+
+        final fun component1(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Text.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): com.kylecorry.andromeda.ipc/IpcValue.Text // com.kylecorry.andromeda.ipc/IpcValue.Text.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Text.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Text.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Text.toString|toString(){}[0]
+    }
+
+    final object Null : com.kylecorry.andromeda.ipc/IpcValue { // com.kylecorry.andromeda.ipc/IpcValue.Null|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.ipc/IpcValue.Null.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcValue.Null.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.ipc/IpcValue.Null.toString|toString(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.ipc/IpcRequest { // com.kylecorry.andromeda.ipc/IpcRequest|null[0]
+    constructor <init>(kotlin.collections/Map<kotlin/String, com.kylecorry.andromeda.ipc/IpcValue> = ..., kotlin/ByteArray? = ...) // com.kylecorry.andromeda.ipc/IpcRequest.<init>|<init>(kotlin.collections.Map<kotlin.String,com.kylecorry.andromeda.ipc.IpcValue>;kotlin.ByteArray?){}[0]
+
+    final val headers // com.kylecorry.andromeda.ipc/IpcRequest.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, com.kylecorry.andromeda.ipc/IpcValue> // com.kylecorry.andromeda.ipc/IpcRequest.headers.<get-headers>|<get-headers>(){}[0]
+    final val payload // com.kylecorry.andromeda.ipc/IpcRequest.payload|{}payload[0]
+        final fun <get-payload>(): kotlin/ByteArray? // com.kylecorry.andromeda.ipc/IpcRequest.payload.<get-payload>|<get-payload>(){}[0]
+}
+
+final class com.kylecorry.andromeda.ipc/IpcResponse { // com.kylecorry.andromeda.ipc/IpcResponse|null[0]
+    constructor <init>(kotlin/Int, kotlin.collections/Map<kotlin/String, com.kylecorry.andromeda.ipc/IpcValue> = ..., kotlin/ByteArray? = ...) // com.kylecorry.andromeda.ipc/IpcResponse.<init>|<init>(kotlin.Int;kotlin.collections.Map<kotlin.String,com.kylecorry.andromeda.ipc.IpcValue>;kotlin.ByteArray?){}[0]
+
+    final val code // com.kylecorry.andromeda.ipc/IpcResponse.code|{}code[0]
+        final fun <get-code>(): kotlin/Int // com.kylecorry.andromeda.ipc/IpcResponse.code.<get-code>|<get-code>(){}[0]
+    final val headers // com.kylecorry.andromeda.ipc/IpcResponse.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, com.kylecorry.andromeda.ipc/IpcValue> // com.kylecorry.andromeda.ipc/IpcResponse.headers.<get-headers>|<get-headers>(){}[0]
+    final val payload // com.kylecorry.andromeda.ipc/IpcResponse.payload|{}payload[0]
+        final fun <get-payload>(): kotlin/ByteArray? // com.kylecorry.andromeda.ipc/IpcResponse.payload.<get-payload>|<get-payload>(){}[0]
+}
+
+final class com.kylecorry.andromeda.ipc/IpcRouter : com.kylecorry.andromeda.ipc/IpcClient { // com.kylecorry.andromeda.ipc/IpcRouter|null[0]
+    constructor <init>(kotlin.collections/Map<kotlin/String, kotlin.coroutines/SuspendFunction1<com.kylecorry.andromeda.ipc/IpcRequest, com.kylecorry.andromeda.ipc/IpcResponse>>, kotlin/Function1<kotlin/Exception, kotlin/Unit> = ...) // com.kylecorry.andromeda.ipc/IpcRouter.<init>|<init>(kotlin.collections.Map<kotlin.String,kotlin.coroutines.SuspendFunction1<com.kylecorry.andromeda.ipc.IpcRequest,com.kylecorry.andromeda.ipc.IpcResponse>>;kotlin.Function1<kotlin.Exception,kotlin.Unit>){}[0]
+
+    final suspend fun send(kotlin/String, com.kylecorry.andromeda.ipc/IpcRequest): com.kylecorry.andromeda.ipc/IpcResponse // com.kylecorry.andromeda.ipc/IpcRouter.send|send(kotlin.String;com.kylecorry.andromeda.ipc.IpcRequest){}[0]
+}
+
+final class com.kylecorry.andromeda.ipc/LocalIpcClient : com.kylecorry.andromeda.ipc/IpcClient { // com.kylecorry.andromeda.ipc/LocalIpcClient|null[0]
+    constructor <init>(kotlin/Int, kotlin/String, kotlin.time/Duration = ..., kotlin/Int = ...) // com.kylecorry.andromeda.ipc/LocalIpcClient.<init>|<init>(kotlin.Int;kotlin.String;kotlin.time.Duration;kotlin.Int){}[0]
+
+    final suspend fun send(kotlin/String, com.kylecorry.andromeda.ipc/IpcRequest): com.kylecorry.andromeda.ipc/IpcResponse // com.kylecorry.andromeda.ipc/LocalIpcClient.send|send(kotlin.String;com.kylecorry.andromeda.ipc.IpcRequest){}[0]
+}
+
+final class com.kylecorry.andromeda.ipc/LocalIpcServer : kotlin/AutoCloseable { // com.kylecorry.andromeda.ipc/LocalIpcServer|null[0]
+    final val port // com.kylecorry.andromeda.ipc/LocalIpcServer.port|{}port[0]
+        final fun <get-port>(): kotlin/Int // com.kylecorry.andromeda.ipc/LocalIpcServer.port.<get-port>|<get-port>(){}[0]
+
+    final fun close() // com.kylecorry.andromeda.ipc/LocalIpcServer.close|close(){}[0]
+}
+
+final suspend fun (com.kylecorry.andromeda.ipc/IpcClient).com.kylecorry.andromeda.ipc/send(kotlin/String): com.kylecorry.andromeda.ipc/IpcResponse // com.kylecorry.andromeda.ipc/send|send@com.kylecorry.andromeda.ipc.IpcClient(kotlin.String){}[0]
+final suspend fun com.kylecorry.andromeda.ipc/localIpcServer(com.kylecorry.andromeda.ipc/IpcClient, kotlin/String, kotlinx.coroutines/CoroutineScope, kotlin/Int = ..., kotlin.time/Duration = ..., kotlin/Int = ..., kotlin/Int = ...): com.kylecorry.andromeda.ipc/LocalIpcServer // com.kylecorry.andromeda.ipc/localIpcServer|localIpcServer(com.kylecorry.andromeda.ipc.IpcClient;kotlin.String;kotlinx.coroutines.CoroutineScope;kotlin.Int;kotlin.time.Duration;kotlin.Int;kotlin.Int){}[0]

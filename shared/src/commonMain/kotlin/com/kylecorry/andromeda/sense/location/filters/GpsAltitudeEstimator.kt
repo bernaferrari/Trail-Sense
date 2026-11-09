@@ -1,9 +1,9 @@
 package com.kylecorry.andromeda.sense.location.filters
 
-interface GpsAltitudeEstimator {
-    val altitude: Float
-    val accuracy: Float?
-    val hasValidReading: Boolean
-    fun update(altitude: Float, accuracy: Float?, fixTimeElapsedNanos: Long)
-    fun reset()
+public interface GpsAltitudeEstimator {
+    public val altitude: Float
+    public val accuracy: Float?
+    public val hasValidReading: Boolean
+    public fun update(altitude: Float, accuracy: Float?, fixTimeElapsedNanos: Long)
+    public fun reset()
 }

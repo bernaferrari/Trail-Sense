@@ -1,0 +1,29 @@
+public final class com/kylecorry/andromeda/battery/AndroidBattery : com/kylecorry/andromeda/core/sensors/BaseBroadcastReceiverSensor, com/kylecorry/andromeda/battery/Battery {
+	public fun <init> (Landroid/content/Context;)V
+	public fun getCapacity ()F
+	public fun getChargingMethod ()Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public fun getChargingStatus ()Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public fun getCurrent ()F
+	public fun getHasValidReading ()Z
+	public fun getHealth ()Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public fun getMaxCapacity ()F
+	public fun getPercent ()F
+	public fun getTemperature ()F
+	public fun getVoltage ()F
+}
+
+public abstract interface class com/kylecorry/andromeda/battery/Battery : com/kylecorry/andromeda/core/sensors/Sensor, com/kylecorry/andromeda/core/sensors/Thermometer {
+	public abstract fun getCapacity ()F
+	public abstract fun getChargingMethod ()Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public abstract fun getChargingStatus ()Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public abstract fun getCurrent ()F
+	public abstract fun getHealth ()Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public abstract fun getMaxCapacity ()F
+	public abstract fun getPercent ()F
+	public abstract fun getVoltage ()F
+}
+
+public final class com/kylecorry/andromeda/battery/BatteryReadingsKt {
+	public static final fun batteryReadings ()Lkotlinx/coroutines/flow/Flow;
+}
+

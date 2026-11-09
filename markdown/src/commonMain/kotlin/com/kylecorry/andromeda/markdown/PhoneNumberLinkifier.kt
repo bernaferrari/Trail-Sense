@@ -6,12 +6,12 @@ package com.kylecorry.andromeda.markdown
  * hyphens (`555-123-4567`, `555.123.4567`), with 7 to 15 digits. Dates, decimals, coordinates and IP addresses are
  * not phone numbers.
  */
-object PhoneNumberLinkifier {
+public object PhoneNumberLinkifier {
 
     /** A phone number at [range] in the text, dialed with [url] (`tel:` and its digits). */
-    data class Match(val range: IntRange, val url: String)
+    public data class Match(val range: IntRange, val url: String)
 
-    fun find(text: CharSequence): List<Match> {
+    public fun find(text: CharSequence): List<Match> {
         return CANDIDATE.findAll(text).mapNotNull { candidate ->
             val value = candidate.value
             if (!isPhoneNumber(value)) return@mapNotNull null

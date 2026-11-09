@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.bitmaps
 import kotlin.math.roundToInt
 
 /** Counts the 256 values of one color channel. */
-fun PixelImage.histogram(channel: ColorChannel): IntArray {
+public fun PixelImage.histogram(channel: ColorChannel): IntArray {
     val shift = when (channel) {
         ColorChannel.Red -> 16
         ColorChannel.Green -> 8
@@ -14,7 +14,7 @@ fun PixelImage.histogram(channel: ColorChannel): IntArray {
 }
 
 /** Reduces each channel independently, optionally distributing quantization error to nearby pixels. */
-fun PixelImage.quantize(
+public fun PixelImage.quantize(
     redLevels: Int,
     greenLevels: Int,
     blueLevels: Int,

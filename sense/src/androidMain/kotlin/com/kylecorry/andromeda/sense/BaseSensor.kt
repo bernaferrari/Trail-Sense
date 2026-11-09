@@ -10,7 +10,7 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import kotlin.time.Duration
 
-abstract class BaseSensor(
+public abstract class BaseSensor(
     context: Context,
     private val sensorType: Int,
     private val sensorDelay: Int,

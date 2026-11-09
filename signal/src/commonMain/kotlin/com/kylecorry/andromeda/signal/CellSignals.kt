@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.signal
 
 import kotlinx.coroutines.flow.Flow
 
-data class CellSignalOptions(
+public data class CellSignalOptions(
     val updateCellCache: Boolean = true,
     val includeUnregistered: Boolean = false,
     val pathLossFactor: Float = 1f,
@@ -11,7 +11,7 @@ data class CellSignalOptions(
 }
 
 /** Whether the platform exposes cellular signal details; permissions and radio availability vary. */
-expect val cellularSignalSupported: Boolean
+public expect val cellularSignalSupported: Boolean
 
 /** Observes cellular signal details while collected. */
-expect fun cellSignals(options: CellSignalOptions = CellSignalOptions()): Flow<List<CellSignal>>
+public expect fun cellSignals(options: CellSignalOptions = CellSignalOptions()): Flow<List<CellSignal>>

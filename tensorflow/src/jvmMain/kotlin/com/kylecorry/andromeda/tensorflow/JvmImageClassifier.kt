@@ -8,7 +8,7 @@ import org.bytedeco.javacpp.BytePointer
 import org.bytedeco.tensorflowlite.global.tensorflowlite.*
 
 /** Loads a fixed-size, single-input, single-output TensorFlow Lite model from a file. */
-actual fun imageClassifier(
+public actual fun imageClassifier(
     modelPath: String,
     prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,

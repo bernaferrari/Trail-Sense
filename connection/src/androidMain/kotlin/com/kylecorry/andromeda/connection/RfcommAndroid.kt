@@ -26,12 +26,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-actual val rfcommAvailable: Boolean
+public actual val rfcommAvailable: Boolean
     @Suppress("DEPRECATION") get() = BluetoothAdapter.getDefaultAdapter() != null
 
 @SuppressLint("MissingPermission")
 @Suppress("DEPRECATION")
-actual suspend fun connectRfcomm(address: String, service: Uuid, security: RfcommSecurity): RfcommConnection {
+public actual suspend fun connectRfcomm(address: String, service: Uuid, security: RfcommSecurity): RfcommConnection {
     val adapter = checkNotNull(BluetoothAdapter.getDefaultAdapter()) { "Bluetooth is unavailable" }
     val device = adapter.getRemoteDevice(address)
     val uuid = UUID.fromString(service.toString())
@@ -90,12 +90,12 @@ private class AndroidRfcommConnection(private val socket: BluetoothSocket) : Rfc
 
 @SuppressLint("MissingPermission")
 @Suppress("DEPRECATION")
-actual fun pairedBluetoothDevices(): List<PairedBluetoothDevice> =
+public actual fun pairedBluetoothDevices(): List<PairedBluetoothDevice> =
     BluetoothAdapter.getDefaultAdapter()?.bondedDevices?.map { PairedBluetoothDevice(it.address, it.name) }.orEmpty()
 
 @SuppressLint("MissingPermission")
 @Suppress("DEPRECATION")
-actual suspend fun acceptRfcomm(name: String, service: Uuid, security: RfcommSecurity): RfcommPeer {
+public actual suspend fun acceptRfcomm(name: String, service: Uuid, security: RfcommSecurity): RfcommPeer {
     require(name.isNotBlank())
     val adapter = checkNotNull(BluetoothAdapter.getDefaultAdapter()) { "Bluetooth is unavailable" }
     val uuid = UUID.fromString(service.toString())
@@ -130,7 +130,7 @@ actual suspend fun acceptRfcomm(name: String, service: Uuid, security: RfcommSec
 
 @SuppressLint("MissingPermission")
 @Suppress("DEPRECATION")
-actual fun scanClassicBluetooth(): Flow<DiscoveredBluetoothDevice> = callbackFlow {
+public actual fun scanClassicBluetooth(): Flow<DiscoveredBluetoothDevice> = callbackFlow {
     val context = KSensorContext.get()
     val adapter = checkNotNull(BluetoothAdapter.getDefaultAdapter()) { "Bluetooth is unavailable" }
     var started = false

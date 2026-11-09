@@ -1,0 +1,1394 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:shared>
+open annotation class com.kylecorry.andromeda.core.annotations/ExperimentalUsage : kotlin/Annotation { // com.kylecorry.andromeda.core.annotations/ExperimentalUsage|null[0]
+    constructor <init>(kotlin/String) // com.kylecorry.andromeda.core.annotations/ExperimentalUsage.<init>|<init>(kotlin.String){}[0]
+
+    final val message // com.kylecorry.andromeda.core.annotations/ExperimentalUsage.message|{}message[0]
+        final fun <get-message>(): kotlin/String // com.kylecorry.andromeda.core.annotations/ExperimentalUsage.message.<get-message>|<get-message>(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.battery/BatteryChargingMethod : kotlin/Enum<com.kylecorry.andromeda.battery/BatteryChargingMethod> { // com.kylecorry.andromeda.battery/BatteryChargingMethod|null[0]
+    enum entry AC // com.kylecorry.andromeda.battery/BatteryChargingMethod.AC|null[0]
+    enum entry NotCharging // com.kylecorry.andromeda.battery/BatteryChargingMethod.NotCharging|null[0]
+    enum entry USB // com.kylecorry.andromeda.battery/BatteryChargingMethod.USB|null[0]
+    enum entry Unknown // com.kylecorry.andromeda.battery/BatteryChargingMethod.Unknown|null[0]
+    enum entry Wireless // com.kylecorry.andromeda.battery/BatteryChargingMethod.Wireless|null[0]
+
+    final val entries // com.kylecorry.andromeda.battery/BatteryChargingMethod.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.battery/BatteryChargingMethod> // com.kylecorry.andromeda.battery/BatteryChargingMethod.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.battery/BatteryChargingMethod // com.kylecorry.andromeda.battery/BatteryChargingMethod.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.battery/BatteryChargingMethod> // com.kylecorry.andromeda.battery/BatteryChargingMethod.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.battery/BatteryChargingStatus : kotlin/Enum<com.kylecorry.andromeda.battery/BatteryChargingStatus> { // com.kylecorry.andromeda.battery/BatteryChargingStatus|null[0]
+    enum entry Charging // com.kylecorry.andromeda.battery/BatteryChargingStatus.Charging|null[0]
+    enum entry Discharging // com.kylecorry.andromeda.battery/BatteryChargingStatus.Discharging|null[0]
+    enum entry Full // com.kylecorry.andromeda.battery/BatteryChargingStatus.Full|null[0]
+    enum entry NotCharging // com.kylecorry.andromeda.battery/BatteryChargingStatus.NotCharging|null[0]
+    enum entry Unknown // com.kylecorry.andromeda.battery/BatteryChargingStatus.Unknown|null[0]
+
+    final val entries // com.kylecorry.andromeda.battery/BatteryChargingStatus.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.battery/BatteryChargingStatus> // com.kylecorry.andromeda.battery/BatteryChargingStatus.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.battery/BatteryChargingStatus // com.kylecorry.andromeda.battery/BatteryChargingStatus.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.battery/BatteryChargingStatus> // com.kylecorry.andromeda.battery/BatteryChargingStatus.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.battery/BatteryHealth : kotlin/Enum<com.kylecorry.andromeda.battery/BatteryHealth> { // com.kylecorry.andromeda.battery/BatteryHealth|null[0]
+    enum entry Cold // com.kylecorry.andromeda.battery/BatteryHealth.Cold|null[0]
+    enum entry Dead // com.kylecorry.andromeda.battery/BatteryHealth.Dead|null[0]
+    enum entry Good // com.kylecorry.andromeda.battery/BatteryHealth.Good|null[0]
+    enum entry OverVoltage // com.kylecorry.andromeda.battery/BatteryHealth.OverVoltage|null[0]
+    enum entry Overheat // com.kylecorry.andromeda.battery/BatteryHealth.Overheat|null[0]
+    enum entry Unknown // com.kylecorry.andromeda.battery/BatteryHealth.Unknown|null[0]
+
+    final val entries // com.kylecorry.andromeda.battery/BatteryHealth.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.battery/BatteryHealth> // com.kylecorry.andromeda.battery/BatteryHealth.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.battery/BatteryHealth // com.kylecorry.andromeda.battery/BatteryHealth.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.battery/BatteryHealth> // com.kylecorry.andromeda.battery/BatteryHealth.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.bitmaps/BlendingMode : kotlin/Enum<com.kylecorry.andromeda.bitmaps/BlendingMode> { // com.kylecorry.andromeda.bitmaps/BlendingMode|null[0]
+    enum entry ADD // com.kylecorry.andromeda.bitmaps/BlendingMode.ADD|null[0]
+    enum entry CLEAR // com.kylecorry.andromeda.bitmaps/BlendingMode.CLEAR|null[0]
+    enum entry DST // com.kylecorry.andromeda.bitmaps/BlendingMode.DST|null[0]
+    enum entry DST_ATOP // com.kylecorry.andromeda.bitmaps/BlendingMode.DST_ATOP|null[0]
+    enum entry DST_IN // com.kylecorry.andromeda.bitmaps/BlendingMode.DST_IN|null[0]
+    enum entry DST_OUT // com.kylecorry.andromeda.bitmaps/BlendingMode.DST_OUT|null[0]
+    enum entry DST_OVER // com.kylecorry.andromeda.bitmaps/BlendingMode.DST_OVER|null[0]
+    enum entry MULTIPLY // com.kylecorry.andromeda.bitmaps/BlendingMode.MULTIPLY|null[0]
+    enum entry SRC // com.kylecorry.andromeda.bitmaps/BlendingMode.SRC|null[0]
+    enum entry SRC_ATOP // com.kylecorry.andromeda.bitmaps/BlendingMode.SRC_ATOP|null[0]
+    enum entry SRC_IN // com.kylecorry.andromeda.bitmaps/BlendingMode.SRC_IN|null[0]
+    enum entry SRC_OUT // com.kylecorry.andromeda.bitmaps/BlendingMode.SRC_OUT|null[0]
+    enum entry SRC_OVER // com.kylecorry.andromeda.bitmaps/BlendingMode.SRC_OVER|null[0]
+    enum entry SUBTRACT // com.kylecorry.andromeda.bitmaps/BlendingMode.SUBTRACT|null[0]
+    enum entry XOR // com.kylecorry.andromeda.bitmaps/BlendingMode.XOR|null[0]
+
+    final val entries // com.kylecorry.andromeda.bitmaps/BlendingMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.bitmaps/BlendingMode> // com.kylecorry.andromeda.bitmaps/BlendingMode.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // com.kylecorry.andromeda.bitmaps/BlendingMode.value|{}value[0]
+        final fun <get-value>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/BlendingMode.value.<get-value>|<get-value>(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.bitmaps/BlendingMode // com.kylecorry.andromeda.bitmaps/BlendingMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.bitmaps/BlendingMode> // com.kylecorry.andromeda.bitmaps/BlendingMode.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.bitmaps/ColorChannel : kotlin/Enum<com.kylecorry.andromeda.bitmaps/ColorChannel> { // com.kylecorry.andromeda.bitmaps/ColorChannel|null[0]
+    enum entry Alpha // com.kylecorry.andromeda.bitmaps/ColorChannel.Alpha|null[0]
+    enum entry Blue // com.kylecorry.andromeda.bitmaps/ColorChannel.Blue|null[0]
+    enum entry Green // com.kylecorry.andromeda.bitmaps/ColorChannel.Green|null[0]
+    enum entry Red // com.kylecorry.andromeda.bitmaps/ColorChannel.Red|null[0]
+
+    final val entries // com.kylecorry.andromeda.bitmaps/ColorChannel.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.bitmaps/ColorChannel> // com.kylecorry.andromeda.bitmaps/ColorChannel.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val index // com.kylecorry.andromeda.bitmaps/ColorChannel.index|{}index[0]
+        final fun <get-index>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ColorChannel.index.<get-index>|<get-index>(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.bitmaps/ColorChannel // com.kylecorry.andromeda.bitmaps/ColorChannel.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.bitmaps/ColorChannel> // com.kylecorry.andromeda.bitmaps/ColorChannel.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.bitmaps/YuvFormat : kotlin/Enum<com.kylecorry.andromeda.bitmaps/YuvFormat> { // com.kylecorry.andromeda.bitmaps/YuvFormat|null[0]
+    enum entry NV21 // com.kylecorry.andromeda.bitmaps/YuvFormat.NV21|null[0]
+    enum entry YV12 // com.kylecorry.andromeda.bitmaps/YuvFormat.YV12|null[0]
+
+    final val entries // com.kylecorry.andromeda.bitmaps/YuvFormat.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.bitmaps/YuvFormat> // com.kylecorry.andromeda.bitmaps/YuvFormat.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val value // com.kylecorry.andromeda.bitmaps/YuvFormat.value|{}value[0]
+        final fun <get-value>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/YuvFormat.value.<get-value>|<get-value>(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.bitmaps/YuvFormat // com.kylecorry.andromeda.bitmaps/YuvFormat.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.bitmaps/YuvFormat> // com.kylecorry.andromeda.bitmaps/YuvFormat.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/ArcMode : kotlin/Enum<com.kylecorry.andromeda.canvas/ArcMode> { // com.kylecorry.andromeda.canvas/ArcMode|null[0]
+    enum entry Open // com.kylecorry.andromeda.canvas/ArcMode.Open|null[0]
+    enum entry Pie // com.kylecorry.andromeda.canvas/ArcMode.Pie|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/ArcMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/ArcMode> // com.kylecorry.andromeda.canvas/ArcMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/ArcMode // com.kylecorry.andromeda.canvas/ArcMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/ArcMode> // com.kylecorry.andromeda.canvas/ArcMode.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/ImageMode : kotlin/Enum<com.kylecorry.andromeda.canvas/ImageMode> { // com.kylecorry.andromeda.canvas/ImageMode|null[0]
+    enum entry Center // com.kylecorry.andromeda.canvas/ImageMode.Center|null[0]
+    enum entry Corner // com.kylecorry.andromeda.canvas/ImageMode.Corner|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/ImageMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/ImageMode> // com.kylecorry.andromeda.canvas/ImageMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/ImageMode // com.kylecorry.andromeda.canvas/ImageMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/ImageMode> // com.kylecorry.andromeda.canvas/ImageMode.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/PaintStyle : kotlin/Enum<com.kylecorry.andromeda.canvas/PaintStyle> { // com.kylecorry.andromeda.canvas/PaintStyle|null[0]
+    enum entry Fill // com.kylecorry.andromeda.canvas/PaintStyle.Fill|null[0]
+    enum entry FillAndStroke // com.kylecorry.andromeda.canvas/PaintStyle.FillAndStroke|null[0]
+    enum entry None // com.kylecorry.andromeda.canvas/PaintStyle.None|null[0]
+    enum entry Stroke // com.kylecorry.andromeda.canvas/PaintStyle.Stroke|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/PaintStyle.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/PaintStyle> // com.kylecorry.andromeda.canvas/PaintStyle.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/PaintStyle // com.kylecorry.andromeda.canvas/PaintStyle.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/PaintStyle> // com.kylecorry.andromeda.canvas/PaintStyle.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/StrokeCap : kotlin/Enum<com.kylecorry.andromeda.canvas/StrokeCap> { // com.kylecorry.andromeda.canvas/StrokeCap|null[0]
+    enum entry Project // com.kylecorry.andromeda.canvas/StrokeCap.Project|null[0]
+    enum entry Round // com.kylecorry.andromeda.canvas/StrokeCap.Round|null[0]
+    enum entry Square // com.kylecorry.andromeda.canvas/StrokeCap.Square|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/StrokeCap.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/StrokeCap> // com.kylecorry.andromeda.canvas/StrokeCap.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/StrokeCap // com.kylecorry.andromeda.canvas/StrokeCap.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/StrokeCap> // com.kylecorry.andromeda.canvas/StrokeCap.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/StrokeJoin : kotlin/Enum<com.kylecorry.andromeda.canvas/StrokeJoin> { // com.kylecorry.andromeda.canvas/StrokeJoin|null[0]
+    enum entry Bevel // com.kylecorry.andromeda.canvas/StrokeJoin.Bevel|null[0]
+    enum entry Miter // com.kylecorry.andromeda.canvas/StrokeJoin.Miter|null[0]
+    enum entry Round // com.kylecorry.andromeda.canvas/StrokeJoin.Round|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/StrokeJoin.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/StrokeJoin> // com.kylecorry.andromeda.canvas/StrokeJoin.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/StrokeJoin // com.kylecorry.andromeda.canvas/StrokeJoin.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/StrokeJoin> // com.kylecorry.andromeda.canvas/StrokeJoin.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/TextAlign : kotlin/Enum<com.kylecorry.andromeda.canvas/TextAlign> { // com.kylecorry.andromeda.canvas/TextAlign|null[0]
+    enum entry Center // com.kylecorry.andromeda.canvas/TextAlign.Center|null[0]
+    enum entry Left // com.kylecorry.andromeda.canvas/TextAlign.Left|null[0]
+    enum entry Right // com.kylecorry.andromeda.canvas/TextAlign.Right|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/TextAlign.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/TextAlign> // com.kylecorry.andromeda.canvas/TextAlign.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/TextAlign // com.kylecorry.andromeda.canvas/TextAlign.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/TextAlign> // com.kylecorry.andromeda.canvas/TextAlign.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/TextMode : kotlin/Enum<com.kylecorry.andromeda.canvas/TextMode> { // com.kylecorry.andromeda.canvas/TextMode|null[0]
+    enum entry Center // com.kylecorry.andromeda.canvas/TextMode.Center|null[0]
+    enum entry Corner // com.kylecorry.andromeda.canvas/TextMode.Corner|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/TextMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/TextMode> // com.kylecorry.andromeda.canvas/TextMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/TextMode // com.kylecorry.andromeda.canvas/TextMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/TextMode> // com.kylecorry.andromeda.canvas/TextMode.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.canvas/TextStyle : kotlin/Enum<com.kylecorry.andromeda.canvas/TextStyle> { // com.kylecorry.andromeda.canvas/TextStyle|null[0]
+    enum entry Bold // com.kylecorry.andromeda.canvas/TextStyle.Bold|null[0]
+    enum entry BoldItalic // com.kylecorry.andromeda.canvas/TextStyle.BoldItalic|null[0]
+    enum entry Italic // com.kylecorry.andromeda.canvas/TextStyle.Italic|null[0]
+    enum entry Normal // com.kylecorry.andromeda.canvas/TextStyle.Normal|null[0]
+
+    final val entries // com.kylecorry.andromeda.canvas/TextStyle.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.canvas/TextStyle> // com.kylecorry.andromeda.canvas/TextStyle.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.canvas/TextStyle // com.kylecorry.andromeda.canvas/TextStyle.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.canvas/TextStyle> // com.kylecorry.andromeda.canvas/TextStyle.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.connection.nearby/ConnectionStatus : kotlin/Enum<com.kylecorry.andromeda.connection.nearby/ConnectionStatus> { // com.kylecorry.andromeda.connection.nearby/ConnectionStatus|null[0]
+    enum entry Connected // com.kylecorry.andromeda.connection.nearby/ConnectionStatus.Connected|null[0]
+    enum entry Connecting // com.kylecorry.andromeda.connection.nearby/ConnectionStatus.Connecting|null[0]
+    enum entry Disconnected // com.kylecorry.andromeda.connection.nearby/ConnectionStatus.Disconnected|null[0]
+
+    final val entries // com.kylecorry.andromeda.connection.nearby/ConnectionStatus.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.connection.nearby/ConnectionStatus> // com.kylecorry.andromeda.connection.nearby/ConnectionStatus.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.connection.nearby/ConnectionStatus // com.kylecorry.andromeda.connection.nearby/ConnectionStatus.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.connection.nearby/ConnectionStatus> // com.kylecorry.andromeda.connection.nearby/ConnectionStatus.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.connection.nearby/NearbyDeviceType : kotlin/Enum<com.kylecorry.andromeda.connection.nearby/NearbyDeviceType> { // com.kylecorry.andromeda.connection.nearby/NearbyDeviceType|null[0]
+    enum entry Bluetooth // com.kylecorry.andromeda.connection.nearby/NearbyDeviceType.Bluetooth|null[0]
+
+    final val entries // com.kylecorry.andromeda.connection.nearby/NearbyDeviceType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.connection.nearby/NearbyDeviceType> // com.kylecorry.andromeda.connection.nearby/NearbyDeviceType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.connection.nearby/NearbyDeviceType // com.kylecorry.andromeda.connection.nearby/NearbyDeviceType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.connection.nearby/NearbyDeviceType> // com.kylecorry.andromeda.connection.nearby/NearbyDeviceType.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState : kotlin/Enum<com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState> { // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState|null[0]
+    enum entry Any // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.Any|null[0]
+    enum entry Created // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.Created|null[0]
+    enum entry Resumed // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.Resumed|null[0]
+    enum entry Started // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.Started|null[0]
+
+    final val entries // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState> // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState> // com.kylecorry.andromeda.core.coroutines/BackgroundMinimumState.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.core.sensors/Quality : kotlin/Enum<com.kylecorry.andromeda.core.sensors/Quality> { // com.kylecorry.andromeda.core.sensors/Quality|null[0]
+    enum entry Good // com.kylecorry.andromeda.core.sensors/Quality.Good|null[0]
+    enum entry Moderate // com.kylecorry.andromeda.core.sensors/Quality.Moderate|null[0]
+    enum entry Poor // com.kylecorry.andromeda.core.sensors/Quality.Poor|null[0]
+    enum entry Unknown // com.kylecorry.andromeda.core.sensors/Quality.Unknown|null[0]
+
+    final val entries // com.kylecorry.andromeda.core.sensors/Quality.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.core.sensors/Quality> // com.kylecorry.andromeda.core.sensors/Quality.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.core.sensors/Quality.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.core.sensors/Quality> // com.kylecorry.andromeda.core.sensors/Quality.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.permissions/SpecialPermission : kotlin/Enum<com.kylecorry.andromeda.permissions/SpecialPermission> { // com.kylecorry.andromeda.permissions/SpecialPermission|null[0]
+    enum entry IGNORE_BATTERY_OPTIMIZATIONS // com.kylecorry.andromeda.permissions/SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS|null[0]
+    enum entry SCHEDULE_EXACT_ALARMS // com.kylecorry.andromeda.permissions/SpecialPermission.SCHEDULE_EXACT_ALARMS|null[0]
+
+    final val entries // com.kylecorry.andromeda.permissions/SpecialPermission.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.permissions/SpecialPermission> // com.kylecorry.andromeda.permissions/SpecialPermission.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.permissions/SpecialPermission // com.kylecorry.andromeda.permissions/SpecialPermission.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.permissions/SpecialPermission> // com.kylecorry.andromeda.permissions/SpecialPermission.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.print/ColorMode : kotlin/Enum<com.kylecorry.andromeda.print/ColorMode> { // com.kylecorry.andromeda.print/ColorMode|null[0]
+    enum entry Color // com.kylecorry.andromeda.print/ColorMode.Color|null[0]
+    enum entry Monochrome // com.kylecorry.andromeda.print/ColorMode.Monochrome|null[0]
+
+    final val entries // com.kylecorry.andromeda.print/ColorMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.print/ColorMode> // com.kylecorry.andromeda.print/ColorMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.print/ColorMode // com.kylecorry.andromeda.print/ColorMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.print/ColorMode> // com.kylecorry.andromeda.print/ColorMode.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.print/Orientation : kotlin/Enum<com.kylecorry.andromeda.print/Orientation> { // com.kylecorry.andromeda.print/Orientation|null[0]
+    enum entry Landscape // com.kylecorry.andromeda.print/Orientation.Landscape|null[0]
+    enum entry Portrait // com.kylecorry.andromeda.print/Orientation.Portrait|null[0]
+
+    final val entries // com.kylecorry.andromeda.print/Orientation.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.print/Orientation> // com.kylecorry.andromeda.print/Orientation.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.print/Orientation // com.kylecorry.andromeda.print/Orientation.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.print/Orientation> // com.kylecorry.andromeda.print/Orientation.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.print/ScaleMode : kotlin/Enum<com.kylecorry.andromeda.print/ScaleMode> { // com.kylecorry.andromeda.print/ScaleMode|null[0]
+    enum entry Fill // com.kylecorry.andromeda.print/ScaleMode.Fill|null[0]
+    enum entry Fit // com.kylecorry.andromeda.print/ScaleMode.Fit|null[0]
+
+    final val entries // com.kylecorry.andromeda.print/ScaleMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.print/ScaleMode> // com.kylecorry.andromeda.print/ScaleMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.print/ScaleMode // com.kylecorry.andromeda.print/ScaleMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.print/ScaleMode> // com.kylecorry.andromeda.print/ScaleMode.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.qr/QRErrorCorrection : kotlin/Enum<com.kylecorry.andromeda.qr/QRErrorCorrection> { // com.kylecorry.andromeda.qr/QRErrorCorrection|null[0]
+    enum entry H // com.kylecorry.andromeda.qr/QRErrorCorrection.H|null[0]
+    enum entry L // com.kylecorry.andromeda.qr/QRErrorCorrection.L|null[0]
+    enum entry M // com.kylecorry.andromeda.qr/QRErrorCorrection.M|null[0]
+    enum entry Q // com.kylecorry.andromeda.qr/QRErrorCorrection.Q|null[0]
+
+    final val entries // com.kylecorry.andromeda.qr/QRErrorCorrection.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.qr/QRErrorCorrection> // com.kylecorry.andromeda.qr/QRErrorCorrection.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.qr/QRErrorCorrection // com.kylecorry.andromeda.qr/QRErrorCorrection.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.qr/QRErrorCorrection> // com.kylecorry.andromeda.qr/QRErrorCorrection.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.sense.location/SatelliteConstellation : kotlin/Enum<com.kylecorry.andromeda.sense.location/SatelliteConstellation> { // com.kylecorry.andromeda.sense.location/SatelliteConstellation|null[0]
+    enum entry BEIDOU // com.kylecorry.andromeda.sense.location/SatelliteConstellation.BEIDOU|null[0]
+    enum entry GALILEO // com.kylecorry.andromeda.sense.location/SatelliteConstellation.GALILEO|null[0]
+    enum entry GLONASS // com.kylecorry.andromeda.sense.location/SatelliteConstellation.GLONASS|null[0]
+    enum entry GPS // com.kylecorry.andromeda.sense.location/SatelliteConstellation.GPS|null[0]
+    enum entry IRNSS // com.kylecorry.andromeda.sense.location/SatelliteConstellation.IRNSS|null[0]
+    enum entry QZSS // com.kylecorry.andromeda.sense.location/SatelliteConstellation.QZSS|null[0]
+    enum entry SBAS // com.kylecorry.andromeda.sense.location/SatelliteConstellation.SBAS|null[0]
+
+    final val entries // com.kylecorry.andromeda.sense.location/SatelliteConstellation.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.sense.location/SatelliteConstellation> // com.kylecorry.andromeda.sense.location/SatelliteConstellation.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.sense.location/SatelliteConstellation // com.kylecorry.andromeda.sense.location/SatelliteConstellation.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.sense.location/SatelliteConstellation> // com.kylecorry.andromeda.sense.location/SatelliteConstellation.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.signal/CellNetwork : kotlin/Enum<com.kylecorry.andromeda.signal/CellNetwork> { // com.kylecorry.andromeda.signal/CellNetwork|null[0]
+    enum entry Cdma // com.kylecorry.andromeda.signal/CellNetwork.Cdma|null[0]
+    enum entry Gsm // com.kylecorry.andromeda.signal/CellNetwork.Gsm|null[0]
+    enum entry Lte // com.kylecorry.andromeda.signal/CellNetwork.Lte|null[0]
+    enum entry Nr // com.kylecorry.andromeda.signal/CellNetwork.Nr|null[0]
+    enum entry Tdscdma // com.kylecorry.andromeda.signal/CellNetwork.Tdscdma|null[0]
+    enum entry Wcdma // com.kylecorry.andromeda.signal/CellNetwork.Wcdma|null[0]
+
+    final val entries // com.kylecorry.andromeda.signal/CellNetwork.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.signal/CellNetwork> // com.kylecorry.andromeda.signal/CellNetwork.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val id // com.kylecorry.andromeda.signal/CellNetwork.id|{}id[0]
+        final fun <get-id>(): kotlin/Int // com.kylecorry.andromeda.signal/CellNetwork.id.<get-id>|<get-id>(){}[0]
+    final val maxDbm // com.kylecorry.andromeda.signal/CellNetwork.maxDbm|{}maxDbm[0]
+        final fun <get-maxDbm>(): kotlin/Int // com.kylecorry.andromeda.signal/CellNetwork.maxDbm.<get-maxDbm>|<get-maxDbm>(){}[0]
+    final val minDbm // com.kylecorry.andromeda.signal/CellNetwork.minDbm|{}minDbm[0]
+        final fun <get-minDbm>(): kotlin/Int // com.kylecorry.andromeda.signal/CellNetwork.minDbm.<get-minDbm>|<get-minDbm>(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.signal/CellNetwork // com.kylecorry.andromeda.signal/CellNetwork.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.signal/CellNetwork> // com.kylecorry.andromeda.signal/CellNetwork.values|values#static(){}[0]
+}
+
+abstract fun interface com.kylecorry.andromeda.core.time/ZonedDateTimeProvider { // com.kylecorry.andromeda.core.time/ZonedDateTimeProvider|null[0]
+    abstract fun getTime(): com.kylecorry.andromeda.core.time/ZonedDateTime // com.kylecorry.andromeda.core.time/ZonedDateTimeProvider.getTime|getTime(){}[0]
+}
+
+abstract interface <#A: kotlin/Any?> com.kylecorry.andromeda.forms/FormValue { // com.kylecorry.andromeda.forms/FormValue|null[0]
+    abstract val id // com.kylecorry.andromeda.forms/FormValue.id|{}id[0]
+        abstract fun <get-id>(): kotlin/String // com.kylecorry.andromeda.forms/FormValue.id.<get-id>|<get-id>(){}[0]
+
+    abstract var value // com.kylecorry.andromeda.forms/FormValue.value|{}value[0]
+        abstract fun <get-value>(): #A // com.kylecorry.andromeda.forms/FormValue.value.<get-value>|<get-value>(){}[0]
+        abstract fun <set-value>(#A) // com.kylecorry.andromeda.forms/FormValue.value.<set-value>|<set-value>(1:0){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.alerts.loading/LoadingIndicator { // com.kylecorry.andromeda.alerts.loading/LoadingIndicator|null[0]
+    abstract fun hide() // com.kylecorry.andromeda.alerts.loading/LoadingIndicator.hide|hide(){}[0]
+    abstract fun show() // com.kylecorry.andromeda.alerts.loading/LoadingIndicator.show|show(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.background/AlwaysOnTaskScheduler : com.kylecorry.andromeda.background/TaskScheduler { // com.kylecorry.andromeda.background/AlwaysOnTaskScheduler|null[0]
+    abstract fun start() // com.kylecorry.andromeda.background/AlwaysOnTaskScheduler.start|start(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.background/TaskScheduler { // com.kylecorry.andromeda.background/TaskScheduler|null[0]
+    abstract fun cancel() // com.kylecorry.andromeda.background/TaskScheduler.cancel|cancel(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.connection/NearbyDevice : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.connection/NearbyDevice|null[0]
+    abstract val address // com.kylecorry.andromeda.connection/NearbyDevice.address|{}address[0]
+        abstract fun <get-address>(): kotlin/String // com.kylecorry.andromeda.connection/NearbyDevice.address.<get-address>|<get-address>(){}[0]
+    abstract val isConnected // com.kylecorry.andromeda.connection/NearbyDevice.isConnected|{}isConnected[0]
+        abstract fun <get-isConnected>(): kotlin/Boolean // com.kylecorry.andromeda.connection/NearbyDevice.isConnected.<get-isConnected>|<get-isConnected>(){}[0]
+    abstract val isConnecting // com.kylecorry.andromeda.connection/NearbyDevice.isConnecting|{}isConnecting[0]
+        abstract fun <get-isConnecting>(): kotlin/Boolean // com.kylecorry.andromeda.connection/NearbyDevice.isConnecting.<get-isConnecting>|<get-isConnecting>(){}[0]
+    abstract val messages // com.kylecorry.andromeda.connection/NearbyDevice.messages|{}messages[0]
+        abstract fun <get-messages>(): kotlin.collections/List<com.kylecorry.andromeda.connection/NearbyDeviceMessage> // com.kylecorry.andromeda.connection/NearbyDevice.messages.<get-messages>|<get-messages>(){}[0]
+    abstract val name // com.kylecorry.andromeda.connection/NearbyDevice.name|{}name[0]
+        abstract fun <get-name>(): kotlin/String // com.kylecorry.andromeda.connection/NearbyDevice.name.<get-name>|<get-name>(){}[0]
+
+    abstract var messageHistorySize // com.kylecorry.andromeda.connection/NearbyDevice.messageHistorySize|{}messageHistorySize[0]
+        abstract fun <get-messageHistorySize>(): kotlin/Int // com.kylecorry.andromeda.connection/NearbyDevice.messageHistorySize.<get-messageHistorySize>|<get-messageHistorySize>(){}[0]
+        abstract fun <set-messageHistorySize>(kotlin/Int) // com.kylecorry.andromeda.connection/NearbyDevice.messageHistorySize.<set-messageHistorySize>|<set-messageHistorySize>(kotlin.Int){}[0]
+
+    abstract suspend fun send(kotlin/ByteArray) // com.kylecorry.andromeda.connection/NearbyDevice.send|send(kotlin.ByteArray){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.connection/NearbyDeviceScanner : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.connection/NearbyDeviceScanner|null[0]
+    abstract val devices // com.kylecorry.andromeda.connection/NearbyDeviceScanner.devices|{}devices[0]
+        abstract fun <get-devices>(): kotlin.collections/List<com.kylecorry.andromeda.connection/NearbyDevice> // com.kylecorry.andromeda.connection/NearbyDeviceScanner.devices.<get-devices>|<get-devices>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.core.sensors/Altimeter : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.core.sensors/Altimeter|null[0]
+    abstract val altitude // com.kylecorry.andromeda.core.sensors/Altimeter.altitude|{}altitude[0]
+        abstract fun <get-altitude>(): kotlin/Float // com.kylecorry.andromeda.core.sensors/Altimeter.altitude.<get-altitude>|<get-altitude>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.core.sensors/Sensor|null[0]
+    abstract val eventTimeElapsedNanos // com.kylecorry.andromeda.core.sensors/Sensor.eventTimeElapsedNanos|{}eventTimeElapsedNanos[0]
+        abstract fun <get-eventTimeElapsedNanos>(): kotlin/Long // com.kylecorry.andromeda.core.sensors/Sensor.eventTimeElapsedNanos.<get-eventTimeElapsedNanos>|<get-eventTimeElapsedNanos>(){}[0]
+    abstract val hasValidReading // com.kylecorry.andromeda.core.sensors/Sensor.hasValidReading|{}hasValidReading[0]
+        abstract fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.core.sensors/Sensor.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    abstract val quality // com.kylecorry.andromeda.core.sensors/Sensor.quality|{}quality[0]
+        abstract fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.core.sensors/Sensor.quality.<get-quality>|<get-quality>(){}[0]
+    abstract val timestamp // com.kylecorry.andromeda.core.sensors/Sensor.timestamp|{}timestamp[0]
+        abstract fun <get-timestamp>(): kotlin.time/Instant // com.kylecorry.andromeda.core.sensors/Sensor.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+
+    abstract fun start(kotlin/Function0<kotlin/Boolean>) // com.kylecorry.andromeda.core.sensors/Sensor.start|start(kotlin.Function0<kotlin.Boolean>){}[0]
+    abstract fun stop(kotlin/Function0<kotlin/Boolean>? = ...) // com.kylecorry.andromeda.core.sensors/Sensor.stop|stop(kotlin.Function0<kotlin.Boolean>?){}[0]
+    abstract fun subscribe(kotlin/Function0<kotlin/Boolean>) // com.kylecorry.andromeda.core.sensors/Sensor.subscribe|subscribe(kotlin.Function0<kotlin.Boolean>){}[0]
+    abstract fun unsubscribe(kotlin/Function0<kotlin/Boolean>) // com.kylecorry.andromeda.core.sensors/Sensor.unsubscribe|unsubscribe(kotlin.Function0<kotlin.Boolean>){}[0]
+    abstract fun unsubscribeAll() // com.kylecorry.andromeda.core.sensors/Sensor.unsubscribeAll|unsubscribeAll(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.core.sensors/Speedometer : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.core.sensors/Speedometer|null[0]
+    abstract val speed // com.kylecorry.andromeda.core.sensors/Speedometer.speed|{}speed[0]
+        abstract fun <get-speed>(): com.kylecorry.sol.units/Speed // com.kylecorry.andromeda.core.sensors/Speedometer.speed.<get-speed>|<get-speed>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.core.sensors/Thermometer : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.core.sensors/Thermometer|null[0]
+    abstract val temperature // com.kylecorry.andromeda.core.sensors/Thermometer.temperature|{}temperature[0]
+        abstract fun <get-temperature>(): kotlin/Float // com.kylecorry.andromeda.core.sensors/Thermometer.temperature.<get-temperature>|<get-temperature>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.core.time/TimeProvider { // com.kylecorry.andromeda.core.time/TimeProvider|null[0]
+    abstract fun currentTimeMillis(): kotlin/Long // com.kylecorry.andromeda.core.time/TimeProvider.currentTimeMillis|currentTimeMillis(){}[0]
+    abstract fun elapsedRealtime(): kotlin/Long // com.kylecorry.andromeda.core.time/TimeProvider.elapsedRealtime|elapsedRealtime(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/ColorMap|null[0]
+    abstract fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/ColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.accelerometer/Accelerometer : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.accelerometer/Accelerometer|null[0]
+    abstract val acceleration // com.kylecorry.andromeda.sense.accelerometer/Accelerometer.acceleration|{}acceleration[0]
+        abstract fun <get-acceleration>(): com.kylecorry.sol.math/Vector3 // com.kylecorry.andromeda.sense.accelerometer/Accelerometer.acceleration.<get-acceleration>|<get-acceleration>(){}[0]
+    abstract val rawAcceleration // com.kylecorry.andromeda.sense.accelerometer/Accelerometer.rawAcceleration|{}rawAcceleration[0]
+        abstract fun <get-rawAcceleration>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.accelerometer/Accelerometer.rawAcceleration.<get-rawAcceleration>|<get-rawAcceleration>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.barometer/Barometer : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.barometer/Barometer|null[0]
+    abstract val pressure // com.kylecorry.andromeda.sense.barometer/Barometer.pressure|{}pressure[0]
+        abstract fun <get-pressure>(): kotlin/Float // com.kylecorry.andromeda.sense.barometer/Barometer.pressure.<get-pressure>|<get-pressure>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.clinometer/ClinometerSensor : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.clinometer/ClinometerSensor|null[0]
+    abstract val angle // com.kylecorry.andromeda.sense.clinometer/ClinometerSensor.angle|{}angle[0]
+        abstract fun <get-angle>(): kotlin/Float // com.kylecorry.andromeda.sense.clinometer/ClinometerSensor.angle.<get-angle>|<get-angle>(){}[0]
+    abstract val incline // com.kylecorry.andromeda.sense.clinometer/ClinometerSensor.incline|{}incline[0]
+        abstract fun <get-incline>(): kotlin/Float // com.kylecorry.andromeda.sense.clinometer/ClinometerSensor.incline.<get-incline>|<get-incline>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.compass/CompassSensor : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.compass/CompassSensor|null[0]
+    abstract val bearing // com.kylecorry.andromeda.sense.compass/CompassSensor.bearing|{}bearing[0]
+        abstract fun <get-bearing>(): com.kylecorry.sol.units/Bearing // com.kylecorry.andromeda.sense.compass/CompassSensor.bearing.<get-bearing>|<get-bearing>(){}[0]
+    abstract val rawBearing // com.kylecorry.andromeda.sense.compass/CompassSensor.rawBearing|{}rawBearing[0]
+        abstract fun <get-rawBearing>(): kotlin/Float // com.kylecorry.andromeda.sense.compass/CompassSensor.rawBearing.<get-rawBearing>|<get-rawBearing>(){}[0]
+
+    abstract var declination // com.kylecorry.andromeda.sense.compass/CompassSensor.declination|{}declination[0]
+        abstract fun <get-declination>(): kotlin/Float // com.kylecorry.andromeda.sense.compass/CompassSensor.declination.<get-declination>|<get-declination>(){}[0]
+        abstract fun <set-declination>(kotlin/Float) // com.kylecorry.andromeda.sense.compass/CompassSensor.declination.<set-declination>|<set-declination>(kotlin.Float){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.hygrometer/Hygrometer : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.hygrometer/Hygrometer|null[0]
+    abstract val humidity // com.kylecorry.andromeda.sense.hygrometer/Hygrometer.humidity|{}humidity[0]
+        abstract fun <get-humidity>(): kotlin/Float // com.kylecorry.andromeda.sense.hygrometer/Hygrometer.humidity.<get-humidity>|<get-humidity>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.level/LevelSensor : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.level/LevelSensor|null[0]
+    abstract val x // com.kylecorry.andromeda.sense.level/LevelSensor.x|{}x[0]
+        abstract fun <get-x>(): kotlin/Float // com.kylecorry.andromeda.sense.level/LevelSensor.x.<get-x>|<get-x>(){}[0]
+    abstract val y // com.kylecorry.andromeda.sense.level/LevelSensor.y|{}y[0]
+        abstract fun <get-y>(): kotlin/Float // com.kylecorry.andromeda.sense.level/LevelSensor.y.<get-y>|<get-y>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.light/LightSensor : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.light/LightSensor|null[0]
+    abstract val illuminance // com.kylecorry.andromeda.sense.light/LightSensor.illuminance|{}illuminance[0]
+        abstract fun <get-illuminance>(): kotlin/Float // com.kylecorry.andromeda.sense.light/LightSensor.illuminance.<get-illuminance>|<get-illuminance>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator { // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator|null[0]
+    abstract val accuracy // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.accuracy|{}accuracy[0]
+        abstract fun <get-accuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.accuracy.<get-accuracy>|<get-accuracy>(){}[0]
+    abstract val altitude // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.altitude|{}altitude[0]
+        abstract fun <get-altitude>(): kotlin/Float // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.altitude.<get-altitude>|<get-altitude>(){}[0]
+    abstract val hasValidReading // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.hasValidReading|{}hasValidReading[0]
+        abstract fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    abstract fun reset() // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.reset|reset(){}[0]
+    abstract fun update(kotlin/Float, kotlin/Float?, kotlin/Long) // com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator.update|update(kotlin.Float;kotlin.Float?;kotlin.Long){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.location/GpsSensor : com.kylecorry.andromeda.core.sensors/Altimeter, com.kylecorry.andromeda.core.sensors/Sensor, com.kylecorry.andromeda.core.sensors/Speedometer { // com.kylecorry.andromeda.sense.location/GpsSensor|null[0]
+    abstract val bearing // com.kylecorry.andromeda.sense.location/GpsSensor.bearing|{}bearing[0]
+        abstract fun <get-bearing>(): com.kylecorry.sol.units/Bearing? // com.kylecorry.andromeda.sense.location/GpsSensor.bearing.<get-bearing>|<get-bearing>(){}[0]
+    abstract val bearingAccuracy // com.kylecorry.andromeda.sense.location/GpsSensor.bearingAccuracy|{}bearingAccuracy[0]
+        abstract fun <get-bearingAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location/GpsSensor.bearingAccuracy.<get-bearingAccuracy>|<get-bearingAccuracy>(){}[0]
+    abstract val horizontalAccuracy // com.kylecorry.andromeda.sense.location/GpsSensor.horizontalAccuracy|{}horizontalAccuracy[0]
+        abstract fun <get-horizontalAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location/GpsSensor.horizontalAccuracy.<get-horizontalAccuracy>|<get-horizontalAccuracy>(){}[0]
+    abstract val location // com.kylecorry.andromeda.sense.location/GpsSensor.location|{}location[0]
+        abstract fun <get-location>(): com.kylecorry.sol.units/Coordinate // com.kylecorry.andromeda.sense.location/GpsSensor.location.<get-location>|<get-location>(){}[0]
+    abstract val mslAltitude // com.kylecorry.andromeda.sense.location/GpsSensor.mslAltitude|{}mslAltitude[0]
+        abstract fun <get-mslAltitude>(): kotlin/Float? // com.kylecorry.andromeda.sense.location/GpsSensor.mslAltitude.<get-mslAltitude>|<get-mslAltitude>(){}[0]
+    abstract val rawBearing // com.kylecorry.andromeda.sense.location/GpsSensor.rawBearing|{}rawBearing[0]
+        abstract fun <get-rawBearing>(): kotlin/Float? // com.kylecorry.andromeda.sense.location/GpsSensor.rawBearing.<get-rawBearing>|<get-rawBearing>(){}[0]
+    abstract val speedAccuracy // com.kylecorry.andromeda.sense.location/GpsSensor.speedAccuracy|{}speedAccuracy[0]
+        abstract fun <get-speedAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location/GpsSensor.speedAccuracy.<get-speedAccuracy>|<get-speedAccuracy>(){}[0]
+    abstract val verticalAccuracy // com.kylecorry.andromeda.sense.location/GpsSensor.verticalAccuracy|{}verticalAccuracy[0]
+        abstract fun <get-verticalAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location/GpsSensor.verticalAccuracy.<get-verticalAccuracy>|<get-verticalAccuracy>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.location/SatelliteStatusSensor { // com.kylecorry.andromeda.sense.location/SatelliteStatusSensor|null[0]
+    abstract val satelliteDetails // com.kylecorry.andromeda.sense.location/SatelliteStatusSensor.satelliteDetails|{}satelliteDetails[0]
+        abstract fun <get-satelliteDetails>(): kotlin.collections/List<com.kylecorry.andromeda.sense.location/Satellite>? // com.kylecorry.andromeda.sense.location/SatelliteStatusSensor.satelliteDetails.<get-satelliteDetails>|<get-satelliteDetails>(){}[0]
+    abstract val satellites // com.kylecorry.andromeda.sense.location/SatelliteStatusSensor.satellites|{}satellites[0]
+        abstract fun <get-satellites>(): kotlin/Int? // com.kylecorry.andromeda.sense.location/SatelliteStatusSensor.satellites.<get-satellites>|<get-satellites>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.magnetometer/Magnetometer : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.magnetometer/Magnetometer|null[0]
+    abstract val magneticField // com.kylecorry.andromeda.sense.magnetometer/Magnetometer.magneticField|{}magneticField[0]
+        abstract fun <get-magneticField>(): com.kylecorry.sol.math/Vector3 // com.kylecorry.andromeda.sense.magnetometer/Magnetometer.magneticField.<get-magneticField>|<get-magneticField>(){}[0]
+    abstract val rawMagneticField // com.kylecorry.andromeda.sense.magnetometer/Magnetometer.rawMagneticField|{}rawMagneticField[0]
+        abstract fun <get-rawMagneticField>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.magnetometer/Magnetometer.rawMagneticField.<get-rawMagneticField>|<get-rawMagneticField>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.orientation.filter/OrientationSensorFilter { // com.kylecorry.andromeda.sense.orientation.filter/OrientationSensorFilter|null[0]
+    abstract fun filter(kotlin/FloatArray, kotlin/FloatArray) // com.kylecorry.andromeda.sense.orientation.filter/OrientationSensorFilter.filter|filter(kotlin.FloatArray;kotlin.FloatArray){}[0]
+    abstract fun reset(kotlin/FloatArray) // com.kylecorry.andromeda.sense.orientation.filter/OrientationSensorFilter.reset|reset(kotlin.FloatArray){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.orientation/Gyroscope : com.kylecorry.andromeda.sense.orientation/OrientationSensor { // com.kylecorry.andromeda.sense.orientation/Gyroscope|null[0]
+    abstract val angularRate // com.kylecorry.andromeda.sense.orientation/Gyroscope.angularRate|{}angularRate[0]
+        abstract fun <get-angularRate>(): com.kylecorry.sol.math/Euler // com.kylecorry.andromeda.sense.orientation/Gyroscope.angularRate.<get-angularRate>|<get-angularRate>(){}[0]
+    abstract val rawAngularRate // com.kylecorry.andromeda.sense.orientation/Gyroscope.rawAngularRate|{}rawAngularRate[0]
+        abstract fun <get-rawAngularRate>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.orientation/Gyroscope.rawAngularRate.<get-rawAngularRate>|<get-rawAngularRate>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.orientation/OrientationSensor : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.orientation/OrientationSensor|null[0]
+    abstract val headingAccuracy // com.kylecorry.andromeda.sense.orientation/OrientationSensor.headingAccuracy|{}headingAccuracy[0]
+        abstract fun <get-headingAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.orientation/OrientationSensor.headingAccuracy.<get-headingAccuracy>|<get-headingAccuracy>(){}[0]
+    abstract val orientation // com.kylecorry.andromeda.sense.orientation/OrientationSensor.orientation|{}orientation[0]
+        abstract fun <get-orientation>(): com.kylecorry.sol.math/Quaternion // com.kylecorry.andromeda.sense.orientation/OrientationSensor.orientation.<get-orientation>|<get-orientation>(){}[0]
+    abstract val rawOrientation // com.kylecorry.andromeda.sense.orientation/OrientationSensor.rawOrientation|{}rawOrientation[0]
+        abstract fun <get-rawOrientation>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.orientation/OrientationSensor.rawOrientation.<get-rawOrientation>|<get-rawOrientation>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sense.pedometer/Pedometer : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.sense.pedometer/Pedometer|null[0]
+    abstract val steps // com.kylecorry.andromeda.sense.pedometer/Pedometer.steps|{}steps[0]
+        abstract fun <get-steps>(): kotlin/Int // com.kylecorry.andromeda.sense.pedometer/Pedometer.steps.<get-steps>|<get-steps>(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.signal/CellSignalDistanceCalculator { // com.kylecorry.andromeda.signal/CellSignalDistanceCalculator|null[0]
+    abstract fun getTimingAdvanceDistance(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/CellSignalDistanceCalculator.getTimingAdvanceDistance|getTimingAdvanceDistance(kotlin.Int){}[0]
+    abstract fun getTimingAdvanceDistanceError(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/CellSignalDistanceCalculator.getTimingAdvanceDistanceError|getTimingAdvanceDistanceError(kotlin.Int){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sound.stream/AudioStream { // com.kylecorry.andromeda.sound.stream/AudioStream|null[0]
+    abstract suspend fun next(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.sound.stream/AudioStream.next|next(kotlin.Int){}[0]
+    abstract suspend fun reset() // com.kylecorry.andromeda.sound.stream/AudioStream.reset|reset(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sound.stream/SeekableAudioStream : com.kylecorry.andromeda.sound.stream/AudioStream { // com.kylecorry.andromeda.sound.stream/SeekableAudioStream|null[0]
+    abstract suspend fun peek(kotlin/Double, kotlin/Int): kotlin/Float // com.kylecorry.andromeda.sound.stream/SeekableAudioStream.peek|peek(kotlin.Double;kotlin.Int){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sound/SoundPlayer { // com.kylecorry.andromeda.sound/SoundPlayer|null[0]
+    abstract fun fadeOff(kotlin/Boolean) // com.kylecorry.andromeda.sound/SoundPlayer.fadeOff|fadeOff(kotlin.Boolean){}[0]
+    abstract fun fadeOn() // com.kylecorry.andromeda.sound/SoundPlayer.fadeOn|fadeOn(){}[0]
+    abstract fun isOn(): kotlin/Boolean // com.kylecorry.andromeda.sound/SoundPlayer.isOn|isOn(){}[0]
+    abstract fun off() // com.kylecorry.andromeda.sound/SoundPlayer.off|off(){}[0]
+    abstract fun on() // com.kylecorry.andromeda.sound/SoundPlayer.on|on(){}[0]
+    abstract fun release() // com.kylecorry.andromeda.sound/SoundPlayer.release|release(){}[0]
+    abstract fun setVolume(kotlin/Float) // com.kylecorry.andromeda.sound/SoundPlayer.setVolume|setVolume(kotlin.Float){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.torch/Torch { // com.kylecorry.andromeda.torch/Torch|null[0]
+    abstract val brightnessLevels // com.kylecorry.andromeda.torch/Torch.brightnessLevels|{}brightnessLevels[0]
+        abstract fun <get-brightnessLevels>(): kotlin/Int // com.kylecorry.andromeda.torch/Torch.brightnessLevels.<get-brightnessLevels>|<get-brightnessLevels>(){}[0]
+
+    abstract fun isAvailable(): kotlin/Boolean // com.kylecorry.andromeda.torch/Torch.isAvailable|isAvailable(){}[0]
+    abstract fun isDimmable(): kotlin/Boolean // com.kylecorry.andromeda.torch/Torch.isDimmable|isDimmable(){}[0]
+    abstract fun off() // com.kylecorry.andromeda.torch/Torch.off|off(){}[0]
+    abstract fun on() // com.kylecorry.andromeda.torch/Torch.on|on(){}[0]
+    abstract fun on(kotlin/Float) // com.kylecorry.andromeda.torch/Torch.on|on(kotlin.Float){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.views.chart.label/ChartLabelFormatter { // com.kylecorry.andromeda.views.chart.label/ChartLabelFormatter|null[0]
+    abstract fun format(kotlin/Float): kotlin/String // com.kylecorry.andromeda.views.chart.label/ChartLabelFormatter.format|format(kotlin.Float){}[0]
+}
+
+abstract class com.kylecorry.andromeda.core.sensors/SharedSensor : com.kylecorry.andromeda.core.sensors/Sensor { // com.kylecorry.andromeda.core.sensors/SharedSensor|null[0]
+    constructor <init>() // com.kylecorry.andromeda.core.sensors/SharedSensor.<init>|<init>(){}[0]
+
+    open val quality // com.kylecorry.andromeda.core.sensors/SharedSensor.quality|{}quality[0]
+        open fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.core.sensors/SharedSensor.quality.<get-quality>|<get-quality>(){}[0]
+
+    open var eventTimeElapsedNanos // com.kylecorry.andromeda.core.sensors/SharedSensor.eventTimeElapsedNanos|{}eventTimeElapsedNanos[0]
+        open fun <get-eventTimeElapsedNanos>(): kotlin/Long // com.kylecorry.andromeda.core.sensors/SharedSensor.eventTimeElapsedNanos.<get-eventTimeElapsedNanos>|<get-eventTimeElapsedNanos>(){}[0]
+        open fun <set-eventTimeElapsedNanos>(kotlin/Long) // com.kylecorry.andromeda.core.sensors/SharedSensor.eventTimeElapsedNanos.<set-eventTimeElapsedNanos>|<set-eventTimeElapsedNanos>(kotlin.Long){}[0]
+    open var timestamp // com.kylecorry.andromeda.core.sensors/SharedSensor.timestamp|{}timestamp[0]
+        open fun <get-timestamp>(): kotlin.time/Instant // com.kylecorry.andromeda.core.sensors/SharedSensor.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+        open fun <set-timestamp>(kotlin.time/Instant) // com.kylecorry.andromeda.core.sensors/SharedSensor.timestamp.<set-timestamp>|<set-timestamp>(kotlin.time.Instant){}[0]
+
+    abstract fun startImpl() // com.kylecorry.andromeda.core.sensors/SharedSensor.startImpl|startImpl(){}[0]
+    abstract fun stopImpl() // com.kylecorry.andromeda.core.sensors/SharedSensor.stopImpl|stopImpl(){}[0]
+    final fun notifyListeners() // com.kylecorry.andromeda.core.sensors/SharedSensor.notifyListeners|notifyListeners(){}[0]
+    final fun resetSessionMetadata() // com.kylecorry.andromeda.core.sensors/SharedSensor.resetSessionMetadata|resetSessionMetadata(){}[0]
+    final fun setEventTime(kotlin.time/Instant) // com.kylecorry.andromeda.core.sensors/SharedSensor.setEventTime|setEventTime(kotlin.time.Instant){}[0]
+    final fun setEventTimeFrom(com.kylecorry.andromeda.core.sensors/Sensor) // com.kylecorry.andromeda.core.sensors/SharedSensor.setEventTimeFrom|setEventTimeFrom(com.kylecorry.andromeda.core.sensors.Sensor){}[0]
+    final fun setEventTimeToNow() // com.kylecorry.andromeda.core.sensors/SharedSensor.setEventTimeToNow|setEventTimeToNow(){}[0]
+    open fun start(kotlin/Function0<kotlin/Boolean>) // com.kylecorry.andromeda.core.sensors/SharedSensor.start|start(kotlin.Function0<kotlin.Boolean>){}[0]
+    open fun stop(kotlin/Function0<kotlin/Boolean>?) // com.kylecorry.andromeda.core.sensors/SharedSensor.stop|stop(kotlin.Function0<kotlin.Boolean>?){}[0]
+    open fun subscribe(kotlin/Function0<kotlin/Boolean>) // com.kylecorry.andromeda.core.sensors/SharedSensor.subscribe|subscribe(kotlin.Function0<kotlin.Boolean>){}[0]
+    open fun unsubscribe(kotlin/Function0<kotlin/Boolean>) // com.kylecorry.andromeda.core.sensors/SharedSensor.unsubscribe|unsubscribe(kotlin.Function0<kotlin.Boolean>){}[0]
+    open fun unsubscribeAll() // com.kylecorry.andromeda.core.sensors/SharedSensor.unsubscribeAll|unsubscribeAll(){}[0]
+}
+
+final class <#A: kotlin/Any?> com.kylecorry.andromeda.core.cache/GeospatialCache { // com.kylecorry.andromeda.core.cache/GeospatialCache|null[0]
+    constructor <init>(com.kylecorry.sol.units/Distance, kotlin/Int? = ..., kotlin.time/Duration? = ..., com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy = ..., kotlin/Function0<kotlin.time/Instant> = ...) // com.kylecorry.andromeda.core.cache/GeospatialCache.<init>|<init>(com.kylecorry.sol.units.Distance;kotlin.Int?;kotlin.time.Duration?;com.kylecorry.andromeda.core.cache.GeospatialCache.RemovalStrategy;kotlin.Function0<kotlin.time.Instant>){}[0]
+
+    final suspend fun get(com.kylecorry.sol.units/Coordinate): #A? // com.kylecorry.andromeda.core.cache/GeospatialCache.get|get(com.kylecorry.sol.units.Coordinate){}[0]
+    final suspend fun getAll(kotlin.collections/List<com.kylecorry.sol.units/Coordinate>): kotlin.collections/Map<com.kylecorry.sol.units/Coordinate, #A> // com.kylecorry.andromeda.core.cache/GeospatialCache.getAll|getAll(kotlin.collections.List<com.kylecorry.sol.units.Coordinate>){}[0]
+    final suspend fun getOrPut(com.kylecorry.sol.units/Coordinate, kotlin.coroutines/SuspendFunction0<#A>): #A // com.kylecorry.andromeda.core.cache/GeospatialCache.getOrPut|getOrPut(com.kylecorry.sol.units.Coordinate;kotlin.coroutines.SuspendFunction0<1:0>){}[0]
+    final suspend fun invalidate(com.kylecorry.sol.units/Coordinate) // com.kylecorry.andromeda.core.cache/GeospatialCache.invalidate|invalidate(com.kylecorry.sol.units.Coordinate){}[0]
+    final suspend fun invalidateAll() // com.kylecorry.andromeda.core.cache/GeospatialCache.invalidateAll|invalidateAll(){}[0]
+    final suspend fun put(com.kylecorry.sol.units/Coordinate, #A) // com.kylecorry.andromeda.core.cache/GeospatialCache.put|put(com.kylecorry.sol.units.Coordinate;1:0){}[0]
+    final suspend fun putAll(kotlin.collections/Map<com.kylecorry.sol.units/Coordinate, #A>) // com.kylecorry.andromeda.core.cache/GeospatialCache.putAll|putAll(kotlin.collections.Map<com.kylecorry.sol.units.Coordinate,1:0>){}[0]
+
+    final enum class RemovalStrategy : kotlin/Enum<com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy> { // com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy|null[0]
+        enum entry Furthest // com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy.Furthest|null[0]
+        enum entry LeastRecentlyUsed // com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy.LeastRecentlyUsed|null[0]
+
+        final val entries // com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy> // com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy // com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy> // com.kylecorry.andromeda.core.cache/GeospatialCache.RemovalStrategy.values|values#static(){}[0]
+    }
+}
+
+final class <#A: kotlin/Any?> com.kylecorry.andromeda.forms/MutableFormValue : com.kylecorry.andromeda.forms/FormValue<#A> { // com.kylecorry.andromeda.forms/MutableFormValue|null[0]
+    constructor <init>(kotlin/String, #A) // com.kylecorry.andromeda.forms/MutableFormValue.<init>|<init>(kotlin.String;1:0){}[0]
+
+    final val id // com.kylecorry.andromeda.forms/MutableFormValue.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.kylecorry.andromeda.forms/MutableFormValue.id.<get-id>|<get-id>(){}[0]
+
+    final var value // com.kylecorry.andromeda.forms/MutableFormValue.value|{}value[0]
+        final fun <get-value>(): #A // com.kylecorry.andromeda.forms/MutableFormValue.value.<get-value>|<get-value>(){}[0]
+        final fun <set-value>(#A) // com.kylecorry.andromeda.forms/MutableFormValue.value.<set-value>|<set-value>(1:0){}[0]
+}
+
+final class com.kylecorry.andromeda.alerts.loading/ResettableLoadingIndicator : com.kylecorry.andromeda.alerts.loading/LoadingIndicator { // com.kylecorry.andromeda.alerts.loading/ResettableLoadingIndicator|null[0]
+    constructor <init>(com.kylecorry.andromeda.alerts.loading/LoadingIndicator) // com.kylecorry.andromeda.alerts.loading/ResettableLoadingIndicator.<init>|<init>(com.kylecorry.andromeda.alerts.loading.LoadingIndicator){}[0]
+
+    final fun hide() // com.kylecorry.andromeda.alerts.loading/ResettableLoadingIndicator.hide|hide(){}[0]
+    final fun reset() // com.kylecorry.andromeda.alerts.loading/ResettableLoadingIndicator.reset|reset(){}[0]
+    final fun show() // com.kylecorry.andromeda.alerts.loading/ResettableLoadingIndicator.show|show(){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/FloatBitmap { // com.kylecorry.andromeda.bitmaps/FloatBitmap|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.bitmaps/FloatBitmap.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val channels // com.kylecorry.andromeda.bitmaps/FloatBitmap.channels|{}channels[0]
+        final fun <get-channels>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/FloatBitmap.channels.<get-channels>|<get-channels>(){}[0]
+    final val data // com.kylecorry.andromeda.bitmaps/FloatBitmap.data|{}data[0]
+        final fun <get-data>(): kotlin/FloatArray // com.kylecorry.andromeda.bitmaps/FloatBitmap.data.<get-data>|<get-data>(){}[0]
+    final val height // com.kylecorry.andromeda.bitmaps/FloatBitmap.height|{}height[0]
+        final fun <get-height>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/FloatBitmap.height.<get-height>|<get-height>(){}[0]
+    final val width // com.kylecorry.andromeda.bitmaps/FloatBitmap.width|{}width[0]
+        final fun <get-width>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/FloatBitmap.width.<get-width>|<get-width>(){}[0]
+
+    final fun get(kotlin/Int, kotlin/Int, kotlin/Int): kotlin/Float // com.kylecorry.andromeda.bitmaps/FloatBitmap.get|get(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun getOrNull(kotlin/Int, kotlin/Int, kotlin/Int): kotlin/Float? // com.kylecorry.andromeda.bitmaps/FloatBitmap.getOrNull|getOrNull(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun getX(kotlin/Int): kotlin/Int // com.kylecorry.andromeda.bitmaps/FloatBitmap.getX|getX(kotlin.Int){}[0]
+    final fun getY(kotlin/Int): kotlin/Int // com.kylecorry.andromeda.bitmaps/FloatBitmap.getY|getY(kotlin.Int){}[0]
+    final fun set(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Float) // com.kylecorry.andromeda.bitmaps/FloatBitmap.set|set(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Float){}[0]
+    final fun upscale(kotlin/Int, kotlin/Int, kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/FloatBitmap // com.kylecorry.andromeda.bitmaps/FloatBitmap.upscale|upscale(kotlin.Int;kotlin.Int;kotlin.Float;kotlin.Float;kotlin.Float;kotlin.Float;kotlin.Int){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/LookupTable { // com.kylecorry.andromeda.bitmaps/LookupTable|null[0]
+    constructor <init>() // com.kylecorry.andromeda.bitmaps/LookupTable.<init>|<init>(){}[0]
+
+    final var alpha // com.kylecorry.andromeda.bitmaps/LookupTable.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/LookupTable.alpha.<get-alpha>|<get-alpha>(){}[0]
+        final fun <set-alpha>(kotlin/ByteArray) // com.kylecorry.andromeda.bitmaps/LookupTable.alpha.<set-alpha>|<set-alpha>(kotlin.ByteArray){}[0]
+    final var blue // com.kylecorry.andromeda.bitmaps/LookupTable.blue|{}blue[0]
+        final fun <get-blue>(): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/LookupTable.blue.<get-blue>|<get-blue>(){}[0]
+        final fun <set-blue>(kotlin/ByteArray) // com.kylecorry.andromeda.bitmaps/LookupTable.blue.<set-blue>|<set-blue>(kotlin.ByteArray){}[0]
+    final var green // com.kylecorry.andromeda.bitmaps/LookupTable.green|{}green[0]
+        final fun <get-green>(): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/LookupTable.green.<get-green>|<get-green>(){}[0]
+        final fun <set-green>(kotlin/ByteArray) // com.kylecorry.andromeda.bitmaps/LookupTable.green.<set-green>|<set-green>(kotlin.ByteArray){}[0]
+    final var red // com.kylecorry.andromeda.bitmaps/LookupTable.red|{}red[0]
+        final fun <get-red>(): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/LookupTable.red.<get-red>|<get-red>(){}[0]
+        final fun <set-red>(kotlin/ByteArray) // com.kylecorry.andromeda.bitmaps/LookupTable.red.<set-red>|<set-red>(kotlin.ByteArray){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/Rgba3dArray { // com.kylecorry.andromeda.bitmaps/Rgba3dArray|null[0]
+    constructor <init>(kotlin/ByteArray, kotlin/Int, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.bitmaps/Rgba3dArray.<init>|<init>(kotlin.ByteArray;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val sizeX // com.kylecorry.andromeda.bitmaps/Rgba3dArray.sizeX|{}sizeX[0]
+        final fun <get-sizeX>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/Rgba3dArray.sizeX.<get-sizeX>|<get-sizeX>(){}[0]
+    final val sizeY // com.kylecorry.andromeda.bitmaps/Rgba3dArray.sizeY|{}sizeY[0]
+        final fun <get-sizeY>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/Rgba3dArray.sizeY.<get-sizeY>|<get-sizeY>(){}[0]
+    final val sizeZ // com.kylecorry.andromeda.bitmaps/Rgba3dArray.sizeZ|{}sizeZ[0]
+        final fun <get-sizeZ>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/Rgba3dArray.sizeZ.<get-sizeZ>|<get-sizeZ>(){}[0]
+    final val values // com.kylecorry.andromeda.bitmaps/Rgba3dArray.values|{}values[0]
+        final fun <get-values>(): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/Rgba3dArray.values.<get-values>|<get-values>(){}[0]
+
+    final fun get(kotlin/Int, kotlin/Int, kotlin/Int): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/Rgba3dArray.get|get(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun set(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/ByteArray) // com.kylecorry.andromeda.bitmaps/Rgba3dArray.set|set(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.ByteArray){}[0]
+}
+
+final class com.kylecorry.andromeda.camera/ZoomInfo { // com.kylecorry.andromeda.camera/ZoomInfo|null[0]
+    constructor <init>(kotlin/Float, kotlin/Float, com.kylecorry.sol.math/Range<kotlin/Float>) // com.kylecorry.andromeda.camera/ZoomInfo.<init>|<init>(kotlin.Float;kotlin.Float;com.kylecorry.sol.math.Range<kotlin.Float>){}[0]
+
+    final val linear // com.kylecorry.andromeda.camera/ZoomInfo.linear|{}linear[0]
+        final fun <get-linear>(): kotlin/Float // com.kylecorry.andromeda.camera/ZoomInfo.linear.<get-linear>|<get-linear>(){}[0]
+    final val ratio // com.kylecorry.andromeda.camera/ZoomInfo.ratio|{}ratio[0]
+        final fun <get-ratio>(): kotlin/Float // com.kylecorry.andromeda.camera/ZoomInfo.ratio.<get-ratio>|<get-ratio>(){}[0]
+    final val ratioRange // com.kylecorry.andromeda.camera/ZoomInfo.ratioRange|{}ratioRange[0]
+        final fun <get-ratioRange>(): com.kylecorry.sol.math/Range<kotlin/Float> // com.kylecorry.andromeda.camera/ZoomInfo.ratioRange.<get-ratioRange>|<get-ratioRange>(){}[0]
+
+    final fun component1(): kotlin/Float // com.kylecorry.andromeda.camera/ZoomInfo.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.camera/ZoomInfo.component2|component2(){}[0]
+    final fun component3(): com.kylecorry.sol.math/Range<kotlin/Float> // com.kylecorry.andromeda.camera/ZoomInfo.component3|component3(){}[0]
+    final fun copy(kotlin/Float = ..., kotlin/Float = ..., com.kylecorry.sol.math/Range<kotlin/Float> = ...): com.kylecorry.andromeda.camera/ZoomInfo // com.kylecorry.andromeda.camera/ZoomInfo.copy|copy(kotlin.Float;kotlin.Float;com.kylecorry.sol.math.Range<kotlin.Float>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.camera/ZoomInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.camera/ZoomInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.camera/ZoomInfo.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.connection/NearbyDeviceMessage { // com.kylecorry.andromeda.connection/NearbyDeviceMessage|null[0]
+    constructor <init>(kotlin.time/Instant, kotlin/ByteArray) // com.kylecorry.andromeda.connection/NearbyDeviceMessage.<init>|<init>(kotlin.time.Instant;kotlin.ByteArray){}[0]
+
+    final val message // com.kylecorry.andromeda.connection/NearbyDeviceMessage.message|{}message[0]
+        final fun <get-message>(): kotlin/ByteArray // com.kylecorry.andromeda.connection/NearbyDeviceMessage.message.<get-message>|<get-message>(){}[0]
+    final val time // com.kylecorry.andromeda.connection/NearbyDeviceMessage.time|{}time[0]
+        final fun <get-time>(): kotlin.time/Instant // com.kylecorry.andromeda.connection/NearbyDeviceMessage.time.<get-time>|<get-time>(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.system/UriAccess { // com.kylecorry.andromeda.core.system/UriAccess|null[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.core.system/UriAccess.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val requirePersistentAccess // com.kylecorry.andromeda.core.system/UriAccess.requirePersistentAccess|{}requirePersistentAccess[0]
+        final fun <get-requirePersistentAccess>(): kotlin/Boolean // com.kylecorry.andromeda.core.system/UriAccess.requirePersistentAccess.<get-requirePersistentAccess>|<get-requirePersistentAccess>(){}[0]
+    final val requireReadAccess // com.kylecorry.andromeda.core.system/UriAccess.requireReadAccess|{}requireReadAccess[0]
+        final fun <get-requireReadAccess>(): kotlin/Boolean // com.kylecorry.andromeda.core.system/UriAccess.requireReadAccess.<get-requireReadAccess>|<get-requireReadAccess>(){}[0]
+    final val requireWriteAccess // com.kylecorry.andromeda.core.system/UriAccess.requireWriteAccess|{}requireWriteAccess[0]
+        final fun <get-requireWriteAccess>(): kotlin/Boolean // com.kylecorry.andromeda.core.system/UriAccess.requireWriteAccess.<get-requireWriteAccess>|<get-requireWriteAccess>(){}[0]
+
+    final fun component1(): kotlin/Boolean // com.kylecorry.andromeda.core.system/UriAccess.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // com.kylecorry.andromeda.core.system/UriAccess.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean // com.kylecorry.andromeda.core.system/UriAccess.component3|component3(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.core.system/UriAccess // com.kylecorry.andromeda.core.system/UriAccess.copy|copy(kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.system/UriAccess.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.system/UriAccess.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.system/UriAccess.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.time/SystemTimeProvider : com.kylecorry.andromeda.core.time/TimeProvider { // com.kylecorry.andromeda.core.time/SystemTimeProvider|null[0]
+    constructor <init>() // com.kylecorry.andromeda.core.time/SystemTimeProvider.<init>|<init>(){}[0]
+
+    final fun currentTimeMillis(): kotlin/Long // com.kylecorry.andromeda.core.time/SystemTimeProvider.currentTimeMillis|currentTimeMillis(){}[0]
+    final fun elapsedRealtime(): kotlin/Long // com.kylecorry.andromeda.core.time/SystemTimeProvider.elapsedRealtime|elapsedRealtime(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.time/SystemZonedDateTimeProvider : com.kylecorry.andromeda.core.time/ZonedDateTimeProvider { // com.kylecorry.andromeda.core.time/SystemZonedDateTimeProvider|null[0]
+    constructor <init>() // com.kylecorry.andromeda.core.time/SystemZonedDateTimeProvider.<init>|<init>(){}[0]
+
+    final fun getTime(): com.kylecorry.andromeda.core.time/ZonedDateTime // com.kylecorry.andromeda.core.time/SystemZonedDateTimeProvider.getTime|getTime(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.time/Throttle { // com.kylecorry.andromeda.core.time/Throttle|null[0]
+    constructor <init>(kotlin/Long) // com.kylecorry.andromeda.core.time/Throttle.<init>|<init>(kotlin.Long){}[0]
+
+    final fun isThrottled(): kotlin/Boolean // com.kylecorry.andromeda.core.time/Throttle.isThrottled|isThrottled(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.time/ZonedDateTime { // com.kylecorry.andromeda.core.time/ZonedDateTime|null[0]
+    constructor <init>(kotlin.time/Instant, kotlinx.datetime/TimeZone) // com.kylecorry.andromeda.core.time/ZonedDateTime.<init>|<init>(kotlin.time.Instant;kotlinx.datetime.TimeZone){}[0]
+
+    final val instant // com.kylecorry.andromeda.core.time/ZonedDateTime.instant|{}instant[0]
+        final fun <get-instant>(): kotlin.time/Instant // com.kylecorry.andromeda.core.time/ZonedDateTime.instant.<get-instant>|<get-instant>(){}[0]
+    final val localDateTime // com.kylecorry.andromeda.core.time/ZonedDateTime.localDateTime|{}localDateTime[0]
+        final fun <get-localDateTime>(): kotlinx.datetime/LocalDateTime // com.kylecorry.andromeda.core.time/ZonedDateTime.localDateTime.<get-localDateTime>|<get-localDateTime>(){}[0]
+    final val timeZone // com.kylecorry.andromeda.core.time/ZonedDateTime.timeZone|{}timeZone[0]
+        final fun <get-timeZone>(): kotlinx.datetime/TimeZone // com.kylecorry.andromeda.core.time/ZonedDateTime.timeZone.<get-timeZone>|<get-timeZone>(){}[0]
+
+    final fun component1(): kotlin.time/Instant // com.kylecorry.andromeda.core.time/ZonedDateTime.component1|component1(){}[0]
+    final fun component2(): kotlinx.datetime/TimeZone // com.kylecorry.andromeda.core.time/ZonedDateTime.component2|component2(){}[0]
+    final fun copy(kotlin.time/Instant = ..., kotlinx.datetime/TimeZone = ...): com.kylecorry.andromeda.core.time/ZonedDateTime // com.kylecorry.andromeda.core.time/ZonedDateTime.copy|copy(kotlin.time.Instant;kotlinx.datetime.TimeZone){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.time/ZonedDateTime.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.time/ZonedDateTime.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.time/ZonedDateTime.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/AlphaColorMap : com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/AlphaColorMap|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Int = ...) // com.kylecorry.andromeda.core.ui.colormaps/AlphaColorMap.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+    final fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/AlphaColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/BinnedColorMap : com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/BinnedColorMap|null[0]
+    constructor <init>(kotlin.collections/List<kotlin/Int>) // com.kylecorry.andromeda.core.ui.colormaps/BinnedColorMap.<init>|<init>(kotlin.collections.List<kotlin.Int>){}[0]
+
+    final fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/BinnedColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/GrayscaleColorMap : com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/GrayscaleColorMap|null[0]
+    constructor <init>() // com.kylecorry.andromeda.core.ui.colormaps/GrayscaleColorMap.<init>|<init>(){}[0]
+
+    final fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/GrayscaleColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/InfernoColorMap : com.kylecorry.andromeda.core.ui.colormaps/RgbInterpolationColorMap { // com.kylecorry.andromeda.core.ui.colormaps/InfernoColorMap|null[0]
+    constructor <init>() // com.kylecorry.andromeda.core.ui.colormaps/InfernoColorMap.<init>|<init>(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/PlasmaColorMap : com.kylecorry.andromeda.core.ui.colormaps/RgbInterpolationColorMap { // com.kylecorry.andromeda.core.ui.colormaps/PlasmaColorMap|null[0]
+    constructor <init>() // com.kylecorry.andromeda.core.ui.colormaps/PlasmaColorMap.<init>|<init>(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/PrecalculatedColorMap : com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/PrecalculatedColorMap|null[0]
+    constructor <init>(com.kylecorry.andromeda.core.ui.colormaps/ColorMap, kotlin/Int = ...) // com.kylecorry.andromeda.core.ui.colormaps/PrecalculatedColorMap.<init>|<init>(com.kylecorry.andromeda.core.ui.colormaps.ColorMap;kotlin.Int){}[0]
+
+    final fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/PrecalculatedColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/ReversedColorMap : com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/ReversedColorMap|null[0]
+    constructor <init>(com.kylecorry.andromeda.core.ui.colormaps/ColorMap) // com.kylecorry.andromeda.core.ui.colormaps/ReversedColorMap.<init>|<init>(com.kylecorry.andromeda.core.ui.colormaps.ColorMap){}[0]
+
+    final fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/ReversedColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui.colormaps/ViridisColorMap : com.kylecorry.andromeda.core.ui.colormaps/RgbInterpolationColorMap { // com.kylecorry.andromeda.core.ui.colormaps/ViridisColorMap|null[0]
+    constructor <init>() // com.kylecorry.andromeda.core.ui.colormaps/ViridisColorMap.<init>|<init>(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.units/PercentBounds { // com.kylecorry.andromeda.core.units/PercentBounds|null[0]
+    constructor <init>(com.kylecorry.andromeda.core.units/PercentCoordinate, com.kylecorry.andromeda.core.units/PercentCoordinate, com.kylecorry.andromeda.core.units/PercentCoordinate, com.kylecorry.andromeda.core.units/PercentCoordinate) // com.kylecorry.andromeda.core.units/PercentBounds.<init>|<init>(com.kylecorry.andromeda.core.units.PercentCoordinate;com.kylecorry.andromeda.core.units.PercentCoordinate;com.kylecorry.andromeda.core.units.PercentCoordinate;com.kylecorry.andromeda.core.units.PercentCoordinate){}[0]
+
+    final val bottomLeft // com.kylecorry.andromeda.core.units/PercentBounds.bottomLeft|{}bottomLeft[0]
+        final fun <get-bottomLeft>(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.bottomLeft.<get-bottomLeft>|<get-bottomLeft>(){}[0]
+    final val bottomRight // com.kylecorry.andromeda.core.units/PercentBounds.bottomRight|{}bottomRight[0]
+        final fun <get-bottomRight>(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.bottomRight.<get-bottomRight>|<get-bottomRight>(){}[0]
+    final val topLeft // com.kylecorry.andromeda.core.units/PercentBounds.topLeft|{}topLeft[0]
+        final fun <get-topLeft>(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.topLeft.<get-topLeft>|<get-topLeft>(){}[0]
+    final val topRight // com.kylecorry.andromeda.core.units/PercentBounds.topRight|{}topRight[0]
+        final fun <get-topRight>(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.topRight.<get-topRight>|<get-topRight>(){}[0]
+
+    final fun component1(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.component2|component2(){}[0]
+    final fun component3(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.component3|component3(){}[0]
+    final fun component4(): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentBounds.component4|component4(){}[0]
+    final fun copy(com.kylecorry.andromeda.core.units/PercentCoordinate = ..., com.kylecorry.andromeda.core.units/PercentCoordinate = ..., com.kylecorry.andromeda.core.units/PercentCoordinate = ..., com.kylecorry.andromeda.core.units/PercentCoordinate = ...): com.kylecorry.andromeda.core.units/PercentBounds // com.kylecorry.andromeda.core.units/PercentBounds.copy|copy(com.kylecorry.andromeda.core.units.PercentCoordinate;com.kylecorry.andromeda.core.units.PercentCoordinate;com.kylecorry.andromeda.core.units.PercentCoordinate;com.kylecorry.andromeda.core.units.PercentCoordinate){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.units/PercentBounds.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.units/PercentBounds.hashCode|hashCode(){}[0]
+    final fun toPixelBounds(kotlin/Float, kotlin/Float): com.kylecorry.andromeda.core.units/PixelBounds // com.kylecorry.andromeda.core.units/PercentBounds.toPixelBounds|toPixelBounds(kotlin.Float;kotlin.Float){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.units/PercentBounds.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.units/PercentCoordinate { // com.kylecorry.andromeda.core.units/PercentCoordinate|null[0]
+    constructor <init>(kotlin/Float, kotlin/Float) // com.kylecorry.andromeda.core.units/PercentCoordinate.<init>|<init>(kotlin.Float;kotlin.Float){}[0]
+
+    final val x // com.kylecorry.andromeda.core.units/PercentCoordinate.x|{}x[0]
+        final fun <get-x>(): kotlin/Float // com.kylecorry.andromeda.core.units/PercentCoordinate.x.<get-x>|<get-x>(){}[0]
+    final val y // com.kylecorry.andromeda.core.units/PercentCoordinate.y|{}y[0]
+        final fun <get-y>(): kotlin/Float // com.kylecorry.andromeda.core.units/PercentCoordinate.y.<get-y>|<get-y>(){}[0]
+
+    final fun component1(): kotlin/Float // com.kylecorry.andromeda.core.units/PercentCoordinate.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.core.units/PercentCoordinate.component2|component2(){}[0]
+    final fun copy(kotlin/Float = ..., kotlin/Float = ...): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentCoordinate.copy|copy(kotlin.Float;kotlin.Float){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.units/PercentCoordinate.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.units/PercentCoordinate.hashCode|hashCode(){}[0]
+    final fun rotate(kotlin/Int): com.kylecorry.andromeda.core.units/PercentCoordinate // com.kylecorry.andromeda.core.units/PercentCoordinate.rotate|rotate(kotlin.Int){}[0]
+    final fun toPixels(kotlin/Float, kotlin/Float): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PercentCoordinate.toPixels|toPixels(kotlin.Float;kotlin.Float){}[0]
+    final fun toPixels(kotlin/Int, kotlin/Int): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PercentCoordinate.toPixels|toPixels(kotlin.Int;kotlin.Int){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.units/PercentCoordinate.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.units/PixelBounds { // com.kylecorry.andromeda.core.units/PixelBounds|null[0]
+    constructor <init>(com.kylecorry.sol.math/Vector2, com.kylecorry.sol.math/Vector2, com.kylecorry.sol.math/Vector2, com.kylecorry.sol.math/Vector2) // com.kylecorry.andromeda.core.units/PixelBounds.<init>|<init>(com.kylecorry.sol.math.Vector2;com.kylecorry.sol.math.Vector2;com.kylecorry.sol.math.Vector2;com.kylecorry.sol.math.Vector2){}[0]
+
+    final val bottomLeft // com.kylecorry.andromeda.core.units/PixelBounds.bottomLeft|{}bottomLeft[0]
+        final fun <get-bottomLeft>(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.bottomLeft.<get-bottomLeft>|<get-bottomLeft>(){}[0]
+    final val bottomRight // com.kylecorry.andromeda.core.units/PixelBounds.bottomRight|{}bottomRight[0]
+        final fun <get-bottomRight>(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.bottomRight.<get-bottomRight>|<get-bottomRight>(){}[0]
+    final val topLeft // com.kylecorry.andromeda.core.units/PixelBounds.topLeft|{}topLeft[0]
+        final fun <get-topLeft>(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.topLeft.<get-topLeft>|<get-topLeft>(){}[0]
+    final val topRight // com.kylecorry.andromeda.core.units/PixelBounds.topRight|{}topRight[0]
+        final fun <get-topRight>(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.topRight.<get-topRight>|<get-topRight>(){}[0]
+
+    final fun component1(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.component2|component2(){}[0]
+    final fun component3(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.component3|component3(){}[0]
+    final fun component4(): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.core.units/PixelBounds.component4|component4(){}[0]
+    final fun copy(com.kylecorry.sol.math/Vector2 = ..., com.kylecorry.sol.math/Vector2 = ..., com.kylecorry.sol.math/Vector2 = ..., com.kylecorry.sol.math/Vector2 = ...): com.kylecorry.andromeda.core.units/PixelBounds // com.kylecorry.andromeda.core.units/PixelBounds.copy|copy(com.kylecorry.sol.math.Vector2;com.kylecorry.sol.math.Vector2;com.kylecorry.sol.math.Vector2;com.kylecorry.sol.math.Vector2){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.units/PixelBounds.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.units/PixelBounds.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.units/PixelBounds.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.exceptions/BugReportEmailMessage { // com.kylecorry.andromeda.exceptions/BugReportEmailMessage|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String) // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val description // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.description|{}description[0]
+        final fun <get-description>(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.description.<get-description>|<get-description>(){}[0]
+    final val emailAction // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.emailAction|{}emailAction[0]
+        final fun <get-emailAction>(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.emailAction.<get-emailAction>|<get-emailAction>(){}[0]
+    final val emailAddress // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.emailAddress|{}emailAddress[0]
+        final fun <get-emailAddress>(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.emailAddress.<get-emailAddress>|<get-emailAddress>(){}[0]
+    final val emailSubject // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.emailSubject|{}emailSubject[0]
+        final fun <get-emailSubject>(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.emailSubject.<get-emailSubject>|<get-emailSubject>(){}[0]
+    final val ignoreAction // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.ignoreAction|{}ignoreAction[0]
+        final fun <get-ignoreAction>(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.ignoreAction.<get-ignoreAction>|<get-ignoreAction>(){}[0]
+    final val title // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.title|{}title[0]
+        final fun <get-title>(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.title.<get-title>|<get-title>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.component2|component2(){}[0]
+    final fun component3(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.component3|component3(){}[0]
+    final fun component4(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.component4|component4(){}[0]
+    final fun component5(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.component5|component5(){}[0]
+    final fun component6(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.component6|component6(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): com.kylecorry.andromeda.exceptions/BugReportEmailMessage // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportEmailMessage.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.pdf/Datum { // com.kylecorry.andromeda.pdf/Datum|null[0]
+    constructor <init>(kotlin/String, com.kylecorry.andromeda.pdf/Spheroid) // com.kylecorry.andromeda.pdf/Datum.<init>|<init>(kotlin.String;com.kylecorry.andromeda.pdf.Spheroid){}[0]
+
+    final val name // com.kylecorry.andromeda.pdf/Datum.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.kylecorry.andromeda.pdf/Datum.name.<get-name>|<get-name>(){}[0]
+    final val spheroid // com.kylecorry.andromeda.pdf/Datum.spheroid|{}spheroid[0]
+        final fun <get-spheroid>(): com.kylecorry.andromeda.pdf/Spheroid // com.kylecorry.andromeda.pdf/Datum.spheroid.<get-spheroid>|<get-spheroid>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.pdf/Datum.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.pdf/Spheroid // com.kylecorry.andromeda.pdf/Datum.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., com.kylecorry.andromeda.pdf/Spheroid = ...): com.kylecorry.andromeda.pdf/Datum // com.kylecorry.andromeda.pdf/Datum.copy|copy(kotlin.String;com.kylecorry.andromeda.pdf.Spheroid){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/Datum.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/Datum.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/Datum.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.pdf/GeographicCoordinateSystem { // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem|null[0]
+    constructor <init>(com.kylecorry.andromeda.pdf/Datum, kotlin/Double) // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.<init>|<init>(com.kylecorry.andromeda.pdf.Datum;kotlin.Double){}[0]
+
+    final val datum // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.datum|{}datum[0]
+        final fun <get-datum>(): com.kylecorry.andromeda.pdf/Datum // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.datum.<get-datum>|<get-datum>(){}[0]
+    final val primeMeridian // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.primeMeridian|{}primeMeridian[0]
+        final fun <get-primeMeridian>(): kotlin/Double // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.primeMeridian.<get-primeMeridian>|<get-primeMeridian>(){}[0]
+
+    final fun component1(): com.kylecorry.andromeda.pdf/Datum // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.component2|component2(){}[0]
+    final fun copy(com.kylecorry.andromeda.pdf/Datum = ..., kotlin/Double = ...): com.kylecorry.andromeda.pdf/GeographicCoordinateSystem // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.copy|copy(com.kylecorry.andromeda.pdf.Datum;kotlin.Double){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/GeographicCoordinateSystem.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.pdf/GeospatialPDFMetadata { // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata|null[0]
+    constructor <init>(kotlin.collections/List<kotlin/Pair<com.kylecorry.sol.math/Vector2, com.kylecorry.sol.units/Coordinate>>, com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem?) // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.<init>|<init>(kotlin.collections.List<kotlin.Pair<com.kylecorry.sol.math.Vector2,com.kylecorry.sol.units.Coordinate>>;com.kylecorry.andromeda.pdf.ProjectedCoordinateSystem?){}[0]
+
+    final val points // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.points|{}points[0]
+        final fun <get-points>(): kotlin.collections/List<kotlin/Pair<com.kylecorry.sol.math/Vector2, com.kylecorry.sol.units/Coordinate>> // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.points.<get-points>|<get-points>(){}[0]
+    final val projection // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.projection|{}projection[0]
+        final fun <get-projection>(): com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem? // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.projection.<get-projection>|<get-projection>(){}[0]
+
+    final fun component1(): kotlin.collections/List<kotlin/Pair<com.kylecorry.sol.math/Vector2, com.kylecorry.sol.units/Coordinate>> // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem? // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<kotlin/Pair<com.kylecorry.sol.math/Vector2, com.kylecorry.sol.units/Coordinate>> = ..., com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem? = ...): com.kylecorry.andromeda.pdf/GeospatialPDFMetadata // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.copy|copy(kotlin.collections.List<kotlin.Pair<com.kylecorry.sol.math.Vector2,com.kylecorry.sol.units.Coordinate>>;com.kylecorry.andromeda.pdf.ProjectedCoordinateSystem?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/GeospatialPDFMetadata.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem { // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem|null[0]
+    constructor <init>(com.kylecorry.andromeda.pdf/GeographicCoordinateSystem, kotlin/String) // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.<init>|<init>(com.kylecorry.andromeda.pdf.GeographicCoordinateSystem;kotlin.String){}[0]
+
+    final val geographic // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.geographic|{}geographic[0]
+        final fun <get-geographic>(): com.kylecorry.andromeda.pdf/GeographicCoordinateSystem // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.geographic.<get-geographic>|<get-geographic>(){}[0]
+    final val projection // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.projection|{}projection[0]
+        final fun <get-projection>(): kotlin/String // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.projection.<get-projection>|<get-projection>(){}[0]
+
+    final fun component1(): com.kylecorry.andromeda.pdf/GeographicCoordinateSystem // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.component2|component2(){}[0]
+    final fun copy(com.kylecorry.andromeda.pdf/GeographicCoordinateSystem = ..., kotlin/String = ...): com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.copy|copy(com.kylecorry.andromeda.pdf.GeographicCoordinateSystem;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.pdf/Spheroid { // com.kylecorry.andromeda.pdf/Spheroid|null[0]
+    constructor <init>(kotlin/String, kotlin/Float, kotlin/Float) // com.kylecorry.andromeda.pdf/Spheroid.<init>|<init>(kotlin.String;kotlin.Float;kotlin.Float){}[0]
+
+    final val inverseFlattening // com.kylecorry.andromeda.pdf/Spheroid.inverseFlattening|{}inverseFlattening[0]
+        final fun <get-inverseFlattening>(): kotlin/Float // com.kylecorry.andromeda.pdf/Spheroid.inverseFlattening.<get-inverseFlattening>|<get-inverseFlattening>(){}[0]
+    final val name // com.kylecorry.andromeda.pdf/Spheroid.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.kylecorry.andromeda.pdf/Spheroid.name.<get-name>|<get-name>(){}[0]
+    final val semiMajorAxis // com.kylecorry.andromeda.pdf/Spheroid.semiMajorAxis|{}semiMajorAxis[0]
+        final fun <get-semiMajorAxis>(): kotlin/Float // com.kylecorry.andromeda.pdf/Spheroid.semiMajorAxis.<get-semiMajorAxis>|<get-semiMajorAxis>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.pdf/Spheroid.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.pdf/Spheroid.component2|component2(){}[0]
+    final fun component3(): kotlin/Float // com.kylecorry.andromeda.pdf/Spheroid.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Float = ..., kotlin/Float = ...): com.kylecorry.andromeda.pdf/Spheroid // com.kylecorry.andromeda.pdf/Spheroid.copy|copy(kotlin.String;kotlin.Float;kotlin.Float){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/Spheroid.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/Spheroid.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/Spheroid.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.permissions/NoPermissionException : kotlin/Exception { // com.kylecorry.andromeda.permissions/NoPermissionException|null[0]
+    constructor <init>(kotlin/String) // com.kylecorry.andromeda.permissions/NoPermissionException.<init>|<init>(kotlin.String){}[0]
+
+    final val requiredPermission // com.kylecorry.andromeda.permissions/NoPermissionException.requiredPermission|{}requiredPermission[0]
+        final fun <get-requiredPermission>(): kotlin/String // com.kylecorry.andromeda.permissions/NoPermissionException.requiredPermission.<get-requiredPermission>|<get-requiredPermission>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.permissions/NoPermissionException.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): com.kylecorry.andromeda.permissions/NoPermissionException // com.kylecorry.andromeda.permissions/NoPermissionException.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.permissions/NoPermissionException.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.permissions/NoPermissionException.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.permissions/NoPermissionException.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.permissions/PermissionRationale { // com.kylecorry.andromeda.permissions/PermissionRationale|null[0]
+    constructor <init>(kotlin/String, kotlin/CharSequence, kotlin/String? = ..., kotlin/String? = ...) // com.kylecorry.andromeda.permissions/PermissionRationale.<init>|<init>(kotlin.String;kotlin.CharSequence;kotlin.String?;kotlin.String?){}[0]
+
+    final val cancel // com.kylecorry.andromeda.permissions/PermissionRationale.cancel|{}cancel[0]
+        final fun <get-cancel>(): kotlin/String? // com.kylecorry.andromeda.permissions/PermissionRationale.cancel.<get-cancel>|<get-cancel>(){}[0]
+    final val message // com.kylecorry.andromeda.permissions/PermissionRationale.message|{}message[0]
+        final fun <get-message>(): kotlin/CharSequence // com.kylecorry.andromeda.permissions/PermissionRationale.message.<get-message>|<get-message>(){}[0]
+    final val ok // com.kylecorry.andromeda.permissions/PermissionRationale.ok|{}ok[0]
+        final fun <get-ok>(): kotlin/String? // com.kylecorry.andromeda.permissions/PermissionRationale.ok.<get-ok>|<get-ok>(){}[0]
+    final val title // com.kylecorry.andromeda.permissions/PermissionRationale.title|{}title[0]
+        final fun <get-title>(): kotlin/String // com.kylecorry.andromeda.permissions/PermissionRationale.title.<get-title>|<get-title>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.permissions/PermissionRationale.component1|component1(){}[0]
+    final fun component2(): kotlin/CharSequence // com.kylecorry.andromeda.permissions/PermissionRationale.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // com.kylecorry.andromeda.permissions/PermissionRationale.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // com.kylecorry.andromeda.permissions/PermissionRationale.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/CharSequence = ..., kotlin/String? = ..., kotlin/String? = ...): com.kylecorry.andromeda.permissions/PermissionRationale // com.kylecorry.andromeda.permissions/PermissionRationale.copy|copy(kotlin.String;kotlin.CharSequence;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.permissions/PermissionRationale.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.permissions/PermissionRationale.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.permissions/PermissionRationale.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.pickers/MenuItem { // com.kylecorry.andromeda.pickers/MenuItem|null[0]
+    constructor <init>(kotlin/CharSequence, kotlin/Function0<kotlin/Boolean>) // com.kylecorry.andromeda.pickers/MenuItem.<init>|<init>(kotlin.CharSequence;kotlin.Function0<kotlin.Boolean>){}[0]
+
+    final val action // com.kylecorry.andromeda.pickers/MenuItem.action|{}action[0]
+        final fun <get-action>(): kotlin/Function0<kotlin/Boolean> // com.kylecorry.andromeda.pickers/MenuItem.action.<get-action>|<get-action>(){}[0]
+    final val name // com.kylecorry.andromeda.pickers/MenuItem.name|{}name[0]
+        final fun <get-name>(): kotlin/CharSequence // com.kylecorry.andromeda.pickers/MenuItem.name.<get-name>|<get-name>(){}[0]
+
+    final fun component1(): kotlin/CharSequence // com.kylecorry.andromeda.pickers/MenuItem.component1|component1(){}[0]
+    final fun component2(): kotlin/Function0<kotlin/Boolean> // com.kylecorry.andromeda.pickers/MenuItem.component2|component2(){}[0]
+    final fun copy(kotlin/CharSequence = ..., kotlin/Function0<kotlin/Boolean> = ...): com.kylecorry.andromeda.pickers/MenuItem // com.kylecorry.andromeda.pickers/MenuItem.copy|copy(kotlin.CharSequence;kotlin.Function0<kotlin.Boolean>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pickers/MenuItem.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pickers/MenuItem.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.pickers/MenuItem.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.altitude/BarometricAltimeter : com.kylecorry.andromeda.core.sensors/Altimeter, com.kylecorry.andromeda.core.sensors/SharedSensor { // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.barometer/Barometer, com.kylecorry.sol.units/Pressure = ...) // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.<init>|<init>(com.kylecorry.andromeda.sense.barometer.Barometer;com.kylecorry.sol.units.Pressure){}[0]
+
+    final val altitude // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.altitude|{}altitude[0]
+        final fun <get-altitude>(): kotlin/Float // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.altitude.<get-altitude>|<get-altitude>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    final var seaLevelPressure // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.seaLevelPressure|{}seaLevelPressure[0]
+        final fun <get-seaLevelPressure>(): com.kylecorry.sol.units/Pressure // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.seaLevelPressure.<get-seaLevelPressure>|<get-seaLevelPressure>(){}[0]
+        final fun <set-seaLevelPressure>(com.kylecorry.sol.units/Pressure) // com.kylecorry.andromeda.sense.altitude/BarometricAltimeter.seaLevelPressure.<set-seaLevelPressure>|<set-seaLevelPressure>(com.kylecorry.sol.units.Pressure){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.compass/FilteredCompass : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.compass/CompassSensor { // com.kylecorry.andromeda.sense.compass/FilteredCompass|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.compass/CompassSensor, com.kylecorry.sol.math.filters/IFilter) // com.kylecorry.andromeda.sense.compass/FilteredCompass.<init>|<init>(com.kylecorry.andromeda.sense.compass.CompassSensor;com.kylecorry.sol.math.filters.IFilter){}[0]
+
+    final val bearing // com.kylecorry.andromeda.sense.compass/FilteredCompass.bearing|{}bearing[0]
+        final fun <get-bearing>(): com.kylecorry.sol.units/Bearing // com.kylecorry.andromeda.sense.compass/FilteredCompass.bearing.<get-bearing>|<get-bearing>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.sense.compass/FilteredCompass.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.compass/FilteredCompass.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.compass/FilteredCompass.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.compass/FilteredCompass.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawBearing // com.kylecorry.andromeda.sense.compass/FilteredCompass.rawBearing|{}rawBearing[0]
+        final fun <get-rawBearing>(): kotlin/Float // com.kylecorry.andromeda.sense.compass/FilteredCompass.rawBearing.<get-rawBearing>|<get-rawBearing>(){}[0]
+
+    final var declination // com.kylecorry.andromeda.sense.compass/FilteredCompass.declination|{}declination[0]
+        final fun <get-declination>(): kotlin/Float // com.kylecorry.andromeda.sense.compass/FilteredCompass.declination.<get-declination>|<get-declination>(){}[0]
+        final fun <set-declination>(kotlin/Float) // com.kylecorry.andromeda.sense.compass/FilteredCompass.declination.<set-declination>|<set-declination>(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter : com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator { // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter|null[0]
+    constructor <init>(kotlin/Function1<kotlin/Float, com.kylecorry.sol.math.filters/IFilter>, kotlin/Int) // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.<init>|<init>(kotlin.Function1<kotlin.Float,com.kylecorry.sol.math.filters.IFilter>;kotlin.Int){}[0]
+
+    final var accuracy // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.accuracy|{}accuracy[0]
+        final fun <get-accuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.accuracy.<get-accuracy>|<get-accuracy>(){}[0]
+    final var altitude // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.altitude|{}altitude[0]
+        final fun <get-altitude>(): kotlin/Float // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.altitude.<get-altitude>|<get-altitude>(){}[0]
+    final var hasValidReading // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+        final fun <set-hasValidReading>(kotlin/Boolean) // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.hasValidReading.<set-hasValidReading>|<set-hasValidReading>(kotlin.Boolean){}[0]
+
+    final fun reset() // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.reset|reset(){}[0]
+    final fun update(kotlin/Float, kotlin/Float?, kotlin/Long) // com.kylecorry.andromeda.sense.location.filters/GPSAltitudeFilter.update|update(kotlin.Float;kotlin.Float?;kotlin.Long){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter : com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator { // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter|null[0]
+    constructor <init>(kotlin/Int = ...) // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.<init>|<init>(kotlin.Int){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    final var accuracy // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.accuracy|{}accuracy[0]
+        final fun <get-accuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.accuracy.<get-accuracy>|<get-accuracy>(){}[0]
+    final var altitude // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.altitude|{}altitude[0]
+        final fun <get-altitude>(): kotlin/Float // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.altitude.<get-altitude>|<get-altitude>(){}[0]
+
+    final fun reset() // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.reset|reset(){}[0]
+    final fun update(kotlin/Float, kotlin/Float?, kotlin/Long) // com.kylecorry.andromeda.sense.location.filters/GPSGaussianAltitudeFilter.update|update(kotlin.Float;kotlin.Float?;kotlin.Long){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter : com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator { // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter|null[0]
+    constructor <init>() // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.<init>|<init>(){}[0]
+
+    final var accuracy // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.accuracy|{}accuracy[0]
+        final fun <get-accuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.accuracy.<get-accuracy>|<get-accuracy>(){}[0]
+    final var altitude // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.altitude|{}altitude[0]
+        final fun <get-altitude>(): kotlin/Float // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.altitude.<get-altitude>|<get-altitude>(){}[0]
+    final var hasValidReading // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    final fun reset() // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.reset|reset(){}[0]
+    final fun update(kotlin/Float, kotlin/Float?, kotlin/Long) // com.kylecorry.andromeda.sense.location.filters/GPSPassThroughAltitudeFilter.update|update(kotlin.Float;kotlin.Float?;kotlin.Long){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.location/Nmea { // com.kylecorry.andromeda.sense.location/Nmea|null[0]
+    constructor <init>(kotlin/String) // com.kylecorry.andromeda.sense.location/Nmea.<init>|<init>(kotlin.String){}[0]
+
+    final val message // com.kylecorry.andromeda.sense.location/Nmea.message|{}message[0]
+        final fun <get-message>(): kotlin/String // com.kylecorry.andromeda.sense.location/Nmea.message.<get-message>|<get-message>(){}[0]
+    final val mslAltitude // com.kylecorry.andromeda.sense.location/Nmea.mslAltitude|{}mslAltitude[0]
+        final fun <get-mslAltitude>(): kotlin/Float? // com.kylecorry.andromeda.sense.location/Nmea.mslAltitude.<get-mslAltitude>|<get-mslAltitude>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.sense.location/Nmea.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): com.kylecorry.andromeda.sense.location/Nmea // com.kylecorry.andromeda.sense.location/Nmea.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sense.location/Nmea.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sense.location/Nmea.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sense.location/Nmea.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.location/Satellite { // com.kylecorry.andromeda.sense.location/Satellite|null[0]
+    constructor <init>(kotlin/Int, com.kylecorry.andromeda.sense.location/SatelliteConstellation?, kotlin/Float, kotlin/Float, kotlin/Boolean) // com.kylecorry.andromeda.sense.location/Satellite.<init>|<init>(kotlin.Int;com.kylecorry.andromeda.sense.location.SatelliteConstellation?;kotlin.Float;kotlin.Float;kotlin.Boolean){}[0]
+
+    final val azimuth // com.kylecorry.andromeda.sense.location/Satellite.azimuth|{}azimuth[0]
+        final fun <get-azimuth>(): kotlin/Float // com.kylecorry.andromeda.sense.location/Satellite.azimuth.<get-azimuth>|<get-azimuth>(){}[0]
+    final val constellation // com.kylecorry.andromeda.sense.location/Satellite.constellation|{}constellation[0]
+        final fun <get-constellation>(): com.kylecorry.andromeda.sense.location/SatelliteConstellation? // com.kylecorry.andromeda.sense.location/Satellite.constellation.<get-constellation>|<get-constellation>(){}[0]
+    final val elevation // com.kylecorry.andromeda.sense.location/Satellite.elevation|{}elevation[0]
+        final fun <get-elevation>(): kotlin/Float // com.kylecorry.andromeda.sense.location/Satellite.elevation.<get-elevation>|<get-elevation>(){}[0]
+    final val id // com.kylecorry.andromeda.sense.location/Satellite.id|{}id[0]
+        final fun <get-id>(): kotlin/Int // com.kylecorry.andromeda.sense.location/Satellite.id.<get-id>|<get-id>(){}[0]
+    final val usedInFix // com.kylecorry.andromeda.sense.location/Satellite.usedInFix|{}usedInFix[0]
+        final fun <get-usedInFix>(): kotlin/Boolean // com.kylecorry.andromeda.sense.location/Satellite.usedInFix.<get-usedInFix>|<get-usedInFix>(){}[0]
+
+    final fun component1(): kotlin/Int // com.kylecorry.andromeda.sense.location/Satellite.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.sense.location/SatelliteConstellation? // com.kylecorry.andromeda.sense.location/Satellite.component2|component2(){}[0]
+    final fun component3(): kotlin/Float // com.kylecorry.andromeda.sense.location/Satellite.component3|component3(){}[0]
+    final fun component4(): kotlin/Float // com.kylecorry.andromeda.sense.location/Satellite.component4|component4(){}[0]
+    final fun component5(): kotlin/Boolean // com.kylecorry.andromeda.sense.location/Satellite.component5|component5(){}[0]
+    final fun copy(kotlin/Int = ..., com.kylecorry.andromeda.sense.location/SatelliteConstellation? = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.sense.location/Satellite // com.kylecorry.andromeda.sense.location/Satellite.copy|copy(kotlin.Int;com.kylecorry.andromeda.sense.location.SatelliteConstellation?;kotlin.Float;kotlin.Float;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sense.location/Satellite.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sense.location/Satellite.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sense.location/Satellite.toString|toString(){}[0]
+
+    final object Companion // com.kylecorry.andromeda.sense.location/Satellite.Companion|null[0]
+}
+
+final class com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.orientation/OrientationSensor { // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.orientation/OrientationSensor, com.kylecorry.andromeda.sense.orientation.filter/OrientationSensorFilter, kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.<init>|<init>(com.kylecorry.andromeda.sense.orientation.OrientationSensor;com.kylecorry.andromeda.sense.orientation.filter.OrientationSensorFilter;kotlin.Boolean){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val headingAccuracy // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.headingAccuracy|{}headingAccuracy[0]
+        final fun <get-headingAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.headingAccuracy.<get-headingAccuracy>|<get-headingAccuracy>(){}[0]
+    final val orientation // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.orientation|{}orientation[0]
+        final fun <get-orientation>(): com.kylecorry.sol.math/Quaternion // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.orientation.<get-orientation>|<get-orientation>(){}[0]
+    final val rawOrientation // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.rawOrientation|{}rawOrientation[0]
+        final fun <get-rawOrientation>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.orientation.filter/FilteredOrientationSensor.rawOrientation.<get-rawOrientation>|<get-rawOrientation>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter : com.kylecorry.andromeda.sense.orientation.filter/OrientationSensorFilter { // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter|null[0]
+    constructor <init>(kotlin/Float, kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.<init>|<init>(kotlin.Float;kotlin.Boolean){}[0]
+
+    final val value // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.value|{}value[0]
+        final fun <get-value>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.value.<get-value>|<get-value>(){}[0]
+
+    final var alpha // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Float // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.alpha.<get-alpha>|<get-alpha>(){}[0]
+        final fun <set-alpha>(kotlin/Float) // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.alpha.<set-alpha>|<set-alpha>(kotlin.Float){}[0]
+    final var useSlerp // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.useSlerp|{}useSlerp[0]
+        final fun <get-useSlerp>(): kotlin/Boolean // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.useSlerp.<get-useSlerp>|<get-useSlerp>(){}[0]
+        final fun <set-useSlerp>(kotlin/Boolean) // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.useSlerp.<set-useSlerp>|<set-useSlerp>(kotlin.Boolean){}[0]
+
+    final fun filter(kotlin/FloatArray, kotlin/FloatArray) // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.filter|filter(kotlin.FloatArray;kotlin.FloatArray){}[0]
+    final fun reset(kotlin/FloatArray) // com.kylecorry.andromeda.sense.orientation.filter/LowPassOrientationSensorFilter.reset|reset(kotlin.FloatArray){}[0]
+}
+
+final class com.kylecorry.andromeda.signal/CellNetworkQuality { // com.kylecorry.andromeda.signal/CellNetworkQuality|null[0]
+    constructor <init>(com.kylecorry.andromeda.signal/CellNetwork, com.kylecorry.andromeda.core.sensors/Quality) // com.kylecorry.andromeda.signal/CellNetworkQuality.<init>|<init>(com.kylecorry.andromeda.signal.CellNetwork;com.kylecorry.andromeda.core.sensors.Quality){}[0]
+
+    final val network // com.kylecorry.andromeda.signal/CellNetworkQuality.network|{}network[0]
+        final fun <get-network>(): com.kylecorry.andromeda.signal/CellNetwork // com.kylecorry.andromeda.signal/CellNetworkQuality.network.<get-network>|<get-network>(){}[0]
+    final val quality // com.kylecorry.andromeda.signal/CellNetworkQuality.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.signal/CellNetworkQuality.quality.<get-quality>|<get-quality>(){}[0]
+
+    final fun component1(): com.kylecorry.andromeda.signal/CellNetwork // com.kylecorry.andromeda.signal/CellNetworkQuality.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.signal/CellNetworkQuality.component2|component2(){}[0]
+    final fun copy(com.kylecorry.andromeda.signal/CellNetwork = ..., com.kylecorry.andromeda.core.sensors/Quality = ...): com.kylecorry.andromeda.signal/CellNetworkQuality // com.kylecorry.andromeda.signal/CellNetworkQuality.copy|copy(com.kylecorry.andromeda.signal.CellNetwork;com.kylecorry.andromeda.core.sensors.Quality){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.signal/CellNetworkQuality.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.signal/CellNetworkQuality.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.signal/CellNetworkQuality.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.signal/CellSignal { // com.kylecorry.andromeda.signal/CellSignal|null[0]
+    constructor <init>(kotlin/String, kotlin/Float, kotlin/Int, com.kylecorry.andromeda.core.sensors/Quality, com.kylecorry.andromeda.signal/CellNetwork, kotlin/Boolean, kotlin.time/Instant, kotlin/Float? = ..., kotlin/Float? = ...) // com.kylecorry.andromeda.signal/CellSignal.<init>|<init>(kotlin.String;kotlin.Float;kotlin.Int;com.kylecorry.andromeda.core.sensors.Quality;com.kylecorry.andromeda.signal.CellNetwork;kotlin.Boolean;kotlin.time.Instant;kotlin.Float?;kotlin.Float?){}[0]
+
+    final val dbm // com.kylecorry.andromeda.signal/CellSignal.dbm|{}dbm[0]
+        final fun <get-dbm>(): kotlin/Int // com.kylecorry.andromeda.signal/CellSignal.dbm.<get-dbm>|<get-dbm>(){}[0]
+    final val id // com.kylecorry.andromeda.signal/CellSignal.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.kylecorry.andromeda.signal/CellSignal.id.<get-id>|<get-id>(){}[0]
+    final val isRegistered // com.kylecorry.andromeda.signal/CellSignal.isRegistered|{}isRegistered[0]
+        final fun <get-isRegistered>(): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignal.isRegistered.<get-isRegistered>|<get-isRegistered>(){}[0]
+    final val network // com.kylecorry.andromeda.signal/CellSignal.network|{}network[0]
+        final fun <get-network>(): com.kylecorry.andromeda.signal/CellNetwork // com.kylecorry.andromeda.signal/CellSignal.network.<get-network>|<get-network>(){}[0]
+    final val quality // com.kylecorry.andromeda.signal/CellSignal.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.signal/CellSignal.quality.<get-quality>|<get-quality>(){}[0]
+    final val strength // com.kylecorry.andromeda.signal/CellSignal.strength|{}strength[0]
+        final fun <get-strength>(): kotlin/Float // com.kylecorry.andromeda.signal/CellSignal.strength.<get-strength>|<get-strength>(){}[0]
+    final val time // com.kylecorry.andromeda.signal/CellSignal.time|{}time[0]
+        final fun <get-time>(): kotlin.time/Instant // com.kylecorry.andromeda.signal/CellSignal.time.<get-time>|<get-time>(){}[0]
+    final val timingDistanceErrorMeters // com.kylecorry.andromeda.signal/CellSignal.timingDistanceErrorMeters|{}timingDistanceErrorMeters[0]
+        final fun <get-timingDistanceErrorMeters>(): kotlin/Float? // com.kylecorry.andromeda.signal/CellSignal.timingDistanceErrorMeters.<get-timingDistanceErrorMeters>|<get-timingDistanceErrorMeters>(){}[0]
+    final val timingDistanceMeters // com.kylecorry.andromeda.signal/CellSignal.timingDistanceMeters|{}timingDistanceMeters[0]
+        final fun <get-timingDistanceMeters>(): kotlin/Float? // com.kylecorry.andromeda.signal/CellSignal.timingDistanceMeters.<get-timingDistanceMeters>|<get-timingDistanceMeters>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.signal/CellSignal.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.signal/CellSignal.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // com.kylecorry.andromeda.signal/CellSignal.component3|component3(){}[0]
+    final fun component4(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.signal/CellSignal.component4|component4(){}[0]
+    final fun component5(): com.kylecorry.andromeda.signal/CellNetwork // com.kylecorry.andromeda.signal/CellSignal.component5|component5(){}[0]
+    final fun component6(): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignal.component6|component6(){}[0]
+    final fun component7(): kotlin.time/Instant // com.kylecorry.andromeda.signal/CellSignal.component7|component7(){}[0]
+    final fun component8(): kotlin/Float? // com.kylecorry.andromeda.signal/CellSignal.component8|component8(){}[0]
+    final fun component9(): kotlin/Float? // com.kylecorry.andromeda.signal/CellSignal.component9|component9(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Float = ..., kotlin/Int = ..., com.kylecorry.andromeda.core.sensors/Quality = ..., com.kylecorry.andromeda.signal/CellNetwork = ..., kotlin/Boolean = ..., kotlin.time/Instant = ..., kotlin/Float? = ..., kotlin/Float? = ...): com.kylecorry.andromeda.signal/CellSignal // com.kylecorry.andromeda.signal/CellSignal.copy|copy(kotlin.String;kotlin.Float;kotlin.Int;com.kylecorry.andromeda.core.sensors.Quality;com.kylecorry.andromeda.signal.CellNetwork;kotlin.Boolean;kotlin.time.Instant;kotlin.Float?;kotlin.Float?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.signal/CellSignal.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.signal/CellSignal.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.signal/CellSignal.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.signal/GsmCellSignalDistanceCalculator : com.kylecorry.andromeda.signal/CellSignalDistanceCalculator { // com.kylecorry.andromeda.signal/GsmCellSignalDistanceCalculator|null[0]
+    constructor <init>() // com.kylecorry.andromeda.signal/GsmCellSignalDistanceCalculator.<init>|<init>(){}[0]
+
+    final fun getTimingAdvanceDistance(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/GsmCellSignalDistanceCalculator.getTimingAdvanceDistance|getTimingAdvanceDistance(kotlin.Int){}[0]
+    final fun getTimingAdvanceDistanceError(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/GsmCellSignalDistanceCalculator.getTimingAdvanceDistanceError|getTimingAdvanceDistanceError(kotlin.Int){}[0]
+}
+
+final class com.kylecorry.andromeda.signal/LteCellSignalDistanceCalculator : com.kylecorry.andromeda.signal/CellSignalDistanceCalculator { // com.kylecorry.andromeda.signal/LteCellSignalDistanceCalculator|null[0]
+    constructor <init>() // com.kylecorry.andromeda.signal/LteCellSignalDistanceCalculator.<init>|<init>(){}[0]
+
+    final fun getTimingAdvanceDistance(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/LteCellSignalDistanceCalculator.getTimingAdvanceDistance|getTimingAdvanceDistance(kotlin.Int){}[0]
+    final fun getTimingAdvanceDistanceError(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/LteCellSignalDistanceCalculator.getTimingAdvanceDistanceError|getTimingAdvanceDistanceError(kotlin.Int){}[0]
+}
+
+final class com.kylecorry.andromeda.signal/NrCellSignalDistanceCalculator : com.kylecorry.andromeda.signal/CellSignalDistanceCalculator { // com.kylecorry.andromeda.signal/NrCellSignalDistanceCalculator|null[0]
+    constructor <init>(kotlin/Int = ...) // com.kylecorry.andromeda.signal/NrCellSignalDistanceCalculator.<init>|<init>(kotlin.Int){}[0]
+
+    final fun getTimingAdvanceDistance(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/NrCellSignalDistanceCalculator.getTimingAdvanceDistance|getTimingAdvanceDistance(kotlin.Int){}[0]
+    final fun getTimingAdvanceDistanceError(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.signal/NrCellSignalDistanceCalculator.getTimingAdvanceDistanceError|getTimingAdvanceDistanceError(kotlin.Int){}[0]
+}
+
+final class com.kylecorry.andromeda.sms/IncomingSmsMessage { // com.kylecorry.andromeda.sms/IncomingSmsMessage|null[0]
+    constructor <init>(kotlin/String, kotlin/String) // com.kylecorry.andromeda.sms/IncomingSmsMessage.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val from // com.kylecorry.andromeda.sms/IncomingSmsMessage.from|{}from[0]
+        final fun <get-from>(): kotlin/String // com.kylecorry.andromeda.sms/IncomingSmsMessage.from.<get-from>|<get-from>(){}[0]
+    final val message // com.kylecorry.andromeda.sms/IncomingSmsMessage.message|{}message[0]
+        final fun <get-message>(): kotlin/String // com.kylecorry.andromeda.sms/IncomingSmsMessage.message.<get-message>|<get-message>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.sms/IncomingSmsMessage.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.kylecorry.andromeda.sms/IncomingSmsMessage.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ...): com.kylecorry.andromeda.sms/IncomingSmsMessage // com.kylecorry.andromeda.sms/IncomingSmsMessage.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sms/IncomingSmsMessage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sms/IncomingSmsMessage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sms/IncomingSmsMessage.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound.stream/PrecomputedAudioStream : com.kylecorry.andromeda.sound.stream/SeekableAudioStream { // com.kylecorry.andromeda.sound.stream/PrecomputedAudioStream|null[0]
+    constructor <init>(com.kylecorry.andromeda.sound.stream/AudioStream, kotlin/Double = ..., kotlin/Double = ...) // com.kylecorry.andromeda.sound.stream/PrecomputedAudioStream.<init>|<init>(com.kylecorry.andromeda.sound.stream.AudioStream;kotlin.Double;kotlin.Double){}[0]
+
+    final suspend fun next(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.sound.stream/PrecomputedAudioStream.next|next(kotlin.Int){}[0]
+    final suspend fun peek(kotlin/Double, kotlin/Int): kotlin/Float // com.kylecorry.andromeda.sound.stream/PrecomputedAudioStream.peek|peek(kotlin.Double;kotlin.Int){}[0]
+    final suspend fun reset() // com.kylecorry.andromeda.sound.stream/PrecomputedAudioStream.reset|reset(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound.stream/SineWaveAudioStream : com.kylecorry.andromeda.sound.stream/SeekableAudioStream { // com.kylecorry.andromeda.sound.stream/SineWaveAudioStream|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Int = ...) // com.kylecorry.andromeda.sound.stream/SineWaveAudioStream.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
+
+    final suspend fun next(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.sound.stream/SineWaveAudioStream.next|next(kotlin.Int){}[0]
+    final suspend fun peek(kotlin/Double, kotlin/Int): kotlin/Float // com.kylecorry.andromeda.sound.stream/SineWaveAudioStream.peek|peek(kotlin.Double;kotlin.Int){}[0]
+    final suspend fun reset() // com.kylecorry.andromeda.sound.stream/SineWaveAudioStream.reset|reset(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound.stream/SumAudioStream : com.kylecorry.andromeda.sound.stream/AudioStream { // com.kylecorry.andromeda.sound.stream/SumAudioStream|null[0]
+    constructor <init>(kotlin/Array<out kotlin/Pair<kotlin/Float, com.kylecorry.andromeda.sound.stream/AudioStream>>...) // com.kylecorry.andromeda.sound.stream/SumAudioStream.<init>|<init>(kotlin.Array<out|kotlin.Pair<kotlin.Float,com.kylecorry.andromeda.sound.stream.AudioStream>>...){}[0]
+
+    final suspend fun next(kotlin/Int): kotlin/Float // com.kylecorry.andromeda.sound.stream/SumAudioStream.next|next(kotlin.Int){}[0]
+    final suspend fun reset() // com.kylecorry.andromeda.sound.stream/SumAudioStream.reset|reset(){}[0]
+}
+
+final class com.kylecorry.andromeda.views.chart.label/NumberChartLabelFormatter : com.kylecorry.andromeda.views.chart.label/ChartLabelFormatter { // com.kylecorry.andromeda.views.chart.label/NumberChartLabelFormatter|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.views.chart.label/NumberChartLabelFormatter.<init>|<init>(kotlin.Int;kotlin.Boolean){}[0]
+
+    final fun format(kotlin/Float): kotlin/String // com.kylecorry.andromeda.views.chart.label/NumberChartLabelFormatter.format|format(kotlin.Float){}[0]
+}
+
+open class com.kylecorry.andromeda.core.ui.colormaps/RgbInterpolationColorMap : com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/RgbInterpolationColorMap|null[0]
+    constructor <init>(kotlin/Array<kotlin/Int>) // com.kylecorry.andromeda.core.ui.colormaps/RgbInterpolationColorMap.<init>|<init>(kotlin.Array<kotlin.Int>){}[0]
+
+    open fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/RgbInterpolationColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+open class com.kylecorry.andromeda.core.ui.colormaps/SampledColorMap : com.kylecorry.andromeda.core.ui.colormaps/ColorMap { // com.kylecorry.andromeda.core.ui.colormaps/SampledColorMap|null[0]
+    constructor <init>(kotlin.collections/Map<kotlin/Float, kotlin/Int>, kotlin/Float = ...) // com.kylecorry.andromeda.core.ui.colormaps/SampledColorMap.<init>|<init>(kotlin.collections.Map<kotlin.Float,kotlin.Int>;kotlin.Float){}[0]
+
+    open fun getColor(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui.colormaps/SampledColorMap.getColor|getColor(kotlin.Float){}[0]
+}
+
+final object com.kylecorry.andromeda.core.cache/DependencyRegistry { // com.kylecorry.andromeda.core.cache/DependencyRegistry|null[0]
+    final fun <#A1: kotlin/Any> addSingleton(kotlin.reflect/KClass<#A1>, #A1) // com.kylecorry.andromeda.core.cache/DependencyRegistry.addSingleton|addSingleton(kotlin.reflect.KClass<0:0>;0:0){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> addSingleton(kotlin.reflect/KClass<#A1>, kotlin/Function0<#A1>) // com.kylecorry.andromeda.core.cache/DependencyRegistry.addSingleton|addSingleton(kotlin.reflect.KClass<0:0>;kotlin.Function0<0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> addTransient(kotlin.reflect/KClass<#A1>, kotlin/Function0<#A1>) // com.kylecorry.andromeda.core.cache/DependencyRegistry.addTransient|addTransient(kotlin.reflect.KClass<0:0>;kotlin.Function0<0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> get(kotlin.reflect/KClass<#A1>): #A1 // com.kylecorry.andromeda.core.cache/DependencyRegistry.get|get(kotlin.reflect.KClass<0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> remove(kotlin.reflect/KClass<#A1>) // com.kylecorry.andromeda.core.cache/DependencyRegistry.remove|remove(kotlin.reflect.KClass<0:0>){0§<kotlin.Any>}[0]
+    final inline fun <#A1: reified kotlin/Any> addSingleton(#A1) // com.kylecorry.andromeda.core.cache/DependencyRegistry.addSingleton|addSingleton(0:0){0§<kotlin.Any>}[0]
+    final inline fun <#A1: reified kotlin/Any> addTransient(noinline kotlin/Function0<#A1>) // com.kylecorry.andromeda.core.cache/DependencyRegistry.addTransient|addTransient(kotlin.Function0<0:0>){0§<kotlin.Any>}[0]
+    final inline fun <#A1: reified kotlin/Any> get(): #A1 // com.kylecorry.andromeda.core.cache/DependencyRegistry.get|get(){0§<kotlin.Any>}[0]
+    final inline fun <#A1: reified kotlin/Any> remove() // com.kylecorry.andromeda.core.cache/DependencyRegistry.remove|remove(){0§<kotlin.Any>}[0]
+}
+
+final object com.kylecorry.andromeda.core.math/DecimalFormatter { // com.kylecorry.andromeda.core.math/DecimalFormatter|null[0]
+    final fun format(kotlin/Number, kotlin/Int, kotlin/Boolean = ...): kotlin/String // com.kylecorry.andromeda.core.math/DecimalFormatter.format|format(kotlin.Number;kotlin.Int;kotlin.Boolean){}[0]
+}
+
+final const val com.kylecorry.andromeda.ipc/CODE_BAD_REQUEST // com.kylecorry.andromeda.ipc/CODE_BAD_REQUEST|{}CODE_BAD_REQUEST[0]
+    final fun <get-CODE_BAD_REQUEST>(): kotlin/Int // com.kylecorry.andromeda.ipc/CODE_BAD_REQUEST.<get-CODE_BAD_REQUEST>|<get-CODE_BAD_REQUEST>(){}[0]
+final const val com.kylecorry.andromeda.ipc/CODE_FORBIDDEN // com.kylecorry.andromeda.ipc/CODE_FORBIDDEN|{}CODE_FORBIDDEN[0]
+    final fun <get-CODE_FORBIDDEN>(): kotlin/Int // com.kylecorry.andromeda.ipc/CODE_FORBIDDEN.<get-CODE_FORBIDDEN>|<get-CODE_FORBIDDEN>(){}[0]
+final const val com.kylecorry.andromeda.ipc/CODE_INTERNAL_ERROR // com.kylecorry.andromeda.ipc/CODE_INTERNAL_ERROR|{}CODE_INTERNAL_ERROR[0]
+    final fun <get-CODE_INTERNAL_ERROR>(): kotlin/Int // com.kylecorry.andromeda.ipc/CODE_INTERNAL_ERROR.<get-CODE_INTERNAL_ERROR>|<get-CODE_INTERNAL_ERROR>(){}[0]
+final const val com.kylecorry.andromeda.ipc/CODE_NOT_FOUND // com.kylecorry.andromeda.ipc/CODE_NOT_FOUND|{}CODE_NOT_FOUND[0]
+    final fun <get-CODE_NOT_FOUND>(): kotlin/Int // com.kylecorry.andromeda.ipc/CODE_NOT_FOUND.<get-CODE_NOT_FOUND>|<get-CODE_NOT_FOUND>(){}[0]
+final const val com.kylecorry.andromeda.ipc/CODE_OK // com.kylecorry.andromeda.ipc/CODE_OK|{}CODE_OK[0]
+    final fun <get-CODE_OK>(): kotlin/Int // com.kylecorry.andromeda.ipc/CODE_OK.<get-CODE_OK>|<get-CODE_OK>(){}[0]
+final const val com.kylecorry.andromeda.ipc/CODE_SERVICE_UNAVAILABLE // com.kylecorry.andromeda.ipc/CODE_SERVICE_UNAVAILABLE|{}CODE_SERVICE_UNAVAILABLE[0]
+    final fun <get-CODE_SERVICE_UNAVAILABLE>(): kotlin/Int // com.kylecorry.andromeda.ipc/CODE_SERVICE_UNAVAILABLE.<get-CODE_SERVICE_UNAVAILABLE>|<get-CODE_SERVICE_UNAVAILABLE>(){}[0]
+final const val com.kylecorry.andromeda.ipc/CODE_UNAUTHORIZED // com.kylecorry.andromeda.ipc/CODE_UNAUTHORIZED|{}CODE_UNAUTHORIZED[0]
+    final fun <get-CODE_UNAUTHORIZED>(): kotlin/Int // com.kylecorry.andromeda.ipc/CODE_UNAUTHORIZED.<get-CODE_UNAUTHORIZED>|<get-CODE_UNAUTHORIZED>(){}[0]
+final const val com.kylecorry.andromeda.ipc/PROPERTY_CODE // com.kylecorry.andromeda.ipc/PROPERTY_CODE|{}PROPERTY_CODE[0]
+    final fun <get-PROPERTY_CODE>(): kotlin/String // com.kylecorry.andromeda.ipc/PROPERTY_CODE.<get-PROPERTY_CODE>|<get-PROPERTY_CODE>(){}[0]
+final const val com.kylecorry.andromeda.ipc/PROPERTY_HEADERS // com.kylecorry.andromeda.ipc/PROPERTY_HEADERS|{}PROPERTY_HEADERS[0]
+    final fun <get-PROPERTY_HEADERS>(): kotlin/String // com.kylecorry.andromeda.ipc/PROPERTY_HEADERS.<get-PROPERTY_HEADERS>|<get-PROPERTY_HEADERS>(){}[0]
+final const val com.kylecorry.andromeda.ipc/PROPERTY_PAYLOAD // com.kylecorry.andromeda.ipc/PROPERTY_PAYLOAD|{}PROPERTY_PAYLOAD[0]
+    final fun <get-PROPERTY_PAYLOAD>(): kotlin/String // com.kylecorry.andromeda.ipc/PROPERTY_PAYLOAD.<get-PROPERTY_PAYLOAD>|<get-PROPERTY_PAYLOAD>(){}[0]
+final const val com.kylecorry.andromeda.ipc/PROPERTY_ROUTE // com.kylecorry.andromeda.ipc/PROPERTY_ROUTE|{}PROPERTY_ROUTE[0]
+    final fun <get-PROPERTY_ROUTE>(): kotlin/String // com.kylecorry.andromeda.ipc/PROPERTY_ROUTE.<get-PROPERTY_ROUTE>|<get-PROPERTY_ROUTE>(){}[0]
+
+final fun (com.kylecorry.andromeda.sense.location/GpsSensor).com.kylecorry.andromeda.sense.location/hasFix(kotlin.time/Duration = ...): kotlin/Boolean // com.kylecorry.andromeda.sense.location/hasFix|hasFix@com.kylecorry.andromeda.sense.location.GpsSensor(kotlin.time.Duration){}[0]
+final inline fun <#A: kotlin/Any?> com.kylecorry.andromeda.core/tryOrDefault(#A, kotlin/Function0<#A>): #A // com.kylecorry.andromeda.core/tryOrDefault|tryOrDefault(0:0;kotlin.Function0<0:0>){0§<kotlin.Any?>}[0]
+final inline fun com.kylecorry.andromeda.core/tryOrLog(kotlin/Function0<kotlin/Unit>) // com.kylecorry.andromeda.core/tryOrLog|tryOrLog(kotlin.Function0<kotlin.Unit>){}[0]
+final inline fun com.kylecorry.andromeda.core/tryOrNothing(kotlin/Function0<kotlin/Unit>) // com.kylecorry.andromeda.core/tryOrNothing|tryOrNothing(kotlin.Function0<kotlin.Unit>){}[0]
+final suspend fun (com.kylecorry.andromeda.core.sensors/Sensor).com.kylecorry.andromeda.core.sensors/read(kotlin/Function0<kotlin/Boolean> = ...) // com.kylecorry.andromeda.core.sensors/read|read@com.kylecorry.andromeda.core.sensors.Sensor(kotlin.Function0<kotlin.Boolean>){}[0]
+final suspend fun (com.kylecorry.andromeda.sound.stream/AudioStream).com.kylecorry.andromeda.sound.stream/nextBuffer(kotlin/Int, kotlin/ShortArray) // com.kylecorry.andromeda.sound.stream/nextBuffer|nextBuffer@com.kylecorry.andromeda.sound.stream.AudioStream(kotlin.Int;kotlin.ShortArray){}[0]
+final suspend fun com.kylecorry.andromeda.sense/readAll(kotlin.collections/List<com.kylecorry.andromeda.core.sensors/Sensor>, kotlin.time/Duration = ..., kotlinx.coroutines/CoroutineDispatcher = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.sense/readAll|readAll(kotlin.collections.List<com.kylecorry.andromeda.core.sensors.Sensor>;kotlin.time.Duration;kotlinx.coroutines.CoroutineDispatcher;kotlin.Boolean;kotlin.Boolean){}[0]

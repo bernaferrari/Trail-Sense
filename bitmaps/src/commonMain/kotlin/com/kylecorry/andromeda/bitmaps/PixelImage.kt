@@ -1,33 +1,33 @@
 package com.kylecorry.andromeda.bitmaps
 
-enum class ImageInterpolation { Nearest, Bilinear, Bicubic }
+public enum class ImageInterpolation { Nearest, Bilinear, Bicubic }
 
 /** An ARGB image that can be processed without a platform bitmap. */
-class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
+public class PixelImage(public val width: Int, public val height: Int, public val pixels: IntArray) {
     init {
         require(width > 0 && height > 0 && width.toLong() * height == pixels.size.toLong())
     }
 
-    operator fun get(x: Int, y: Int): Int {
+    public operator fun get(x: Int, y: Int): Int {
         require(x in 0 until width && y in 0 until height)
         return pixels[y * width + x]
     }
 
-    fun map(transform: (Int) -> Int): PixelImage = PixelImage(width, height, IntArray(pixels.size) { transform(pixels[it]) })
+    public fun map(transform: (Int) -> Int): PixelImage = PixelImage(width, height, IntArray(pixels.size) { transform(pixels[it]) })
 
-    fun crop(left: Int, top: Int, width: Int, height: Int): PixelImage {
+    public fun crop(left: Int, top: Int, width: Int, height: Int): PixelImage {
         require(left >= 0 && top >= 0 && width > 0 && height > 0 && left.toLong() + width <= this.width && top.toLong() + height <= this.height)
         return PixelImage(width, height, IntArray(width * height) { index -> this[left + index % width, top + index / width] })
     }
 
-    fun flip(horizontal: Boolean = false, vertical: Boolean = false): PixelImage =
+    public fun flip(horizontal: Boolean = false, vertical: Boolean = false): PixelImage =
         PixelImage(width, height, IntArray(pixels.size) { index ->
             val x = index % width
             val y = index / width
             this[if (horizontal) width - 1 - x else x, if (vertical) height - 1 - y else y]
         })
 
-    fun resize(width: Int, height: Int, interpolation: ImageInterpolation = ImageInterpolation.Nearest): PixelImage {
+    public fun resize(width: Int, height: Int, interpolation: ImageInterpolation = ImageInterpolation.Nearest): PixelImage {
         require(width > 0 && height > 0 && width.toLong() * height <= Int.MAX_VALUE)
         return PixelImage(width, height, IntArray(width * height) { index ->
             val x = index % width
@@ -46,7 +46,7 @@ class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
         })
     }
 
-    fun pad(left: Int, top: Int, right: Int, bottom: Int, color: Int = 0): PixelImage {
+    public fun pad(left: Int, top: Int, right: Int, bottom: Int, color: Int = 0): PixelImage {
         require(left >= 0 && top >= 0 && right >= 0 && bottom >= 0)
         val newWidth = width.toLong() + left + right
         val newHeight = height.toLong() + top + bottom
@@ -57,7 +57,7 @@ class PixelImage(val width: Int, val height: Int, val pixels: IntArray) {
     }
 
     /** Replaces colors within an RGBA distance, optionally fading the replacement toward the tolerance boundary. */
-    fun replaceColor(from: Int, to: Int, tolerance: Float = 0f, interpolate: Boolean = false): PixelImage {
+    public fun replaceColor(from: Int, to: Int, tolerance: Float = 0f, interpolate: Boolean = false): PixelImage {
         require(tolerance.isFinite() && tolerance >= 0f)
         return map { color ->
             var distanceSquared = 0
@@ -105,7 +105,7 @@ internal fun PixelImage.interpolateBicubic(x: Double, y: Double): Int {
 }
 
 /** Converts RGB to grayscale while preserving alpha. Set [average] for equal channel weights. */
-fun PixelImage.grayscale(average: Boolean = false): PixelImage = map { color ->
+public fun PixelImage.grayscale(average: Boolean = false): PixelImage = map { color ->
     val red = (color ushr 16) and 0xff
     val green = (color ushr 8) and 0xff
     val blue = color and 0xff
@@ -114,7 +114,7 @@ fun PixelImage.grayscale(average: Boolean = false): PixelImage = map { color ->
 }
 
 /** Counts pixels in each of the 256 grayscale luminance buckets. */
-fun PixelImage.luminanceHistogram(): IntArray {
+public fun PixelImage.luminanceHistogram(): IntArray {
     val histogram = IntArray(256)
     for (color in pixels) {
         val red = (color ushr 16) and 0xff
@@ -127,7 +127,7 @@ fun PixelImage.luminanceHistogram(): IntArray {
 }
 
 /** Replaces each pixel with black or white based on normalized luminance. */
-fun PixelImage.threshold(luminance: Float): PixelImage {
+public fun PixelImage.threshold(luminance: Float): PixelImage {
     require(luminance in 0f..1f)
     return grayscale().map { color ->
         val value = if ((color and 0xff) / 255f >= luminance) 0x00ffffff else 0
@@ -136,7 +136,7 @@ fun PixelImage.threshold(luminance: Float): PixelImage {
 }
 
 /** Thresholds one channel, or average RGB when [channel] is null, on the 0–255 scale. */
-fun PixelImage.threshold(value: Float, binary: Boolean, channel: ColorChannel? = null): PixelImage {
+public fun PixelImage.threshold(value: Float, binary: Boolean, channel: ColorChannel? = null): PixelImage {
     require(value.isFinite())
     return map { color ->
         val above = color.channelValue(channel) > value
@@ -158,7 +158,7 @@ fun PixelImage.threshold(value: Float, binary: Boolean, channel: ColorChannel? =
 }
 
 /** Applies an odd square convolution kernel to ARGB channels with clamped edges. */
-fun PixelImage.convolve(kernel: FloatArray): PixelImage {
+public fun PixelImage.convolve(kernel: FloatArray): PixelImage {
     val side = kotlin.math.sqrt(kernel.size.toDouble()).toInt()
     require(side > 0 && side % 2 == 1 && side * side == kernel.size)
     val radius = side / 2
@@ -181,7 +181,7 @@ fun PixelImage.convolve(kernel: FloatArray): PixelImage {
 }
 
 /** Returns the bilinearly interpolated ARGB value, or null outside the image. */
-fun PixelImage.interpolate(x: Float, y: Float): Int? {
+public fun PixelImage.interpolate(x: Float, y: Float): Int? {
     if (!x.isFinite() || !y.isFinite() || x < 0f || y < 0f || x > width - 1 || y > height - 1) return null
     val left = x.toInt()
     val top = y.toInt()
@@ -201,7 +201,7 @@ fun PixelImage.interpolate(x: Float, y: Float): Int? {
 }
 
 /** Reduces each RGB channel to the given number of evenly spaced values. */
-fun PixelImage.quantize(levels: Int): PixelImage {
+public fun PixelImage.quantize(levels: Int): PixelImage {
     require(levels in 2..256)
     fun channel(value: Int): Int {
         val bucket = (value * (levels - 1) + 127) / 255

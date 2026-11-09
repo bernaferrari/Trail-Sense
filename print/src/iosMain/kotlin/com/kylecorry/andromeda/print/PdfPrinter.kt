@@ -14,7 +14,7 @@ import platform.UIKit.UIUserInterfaceIdiomPad
 import platform.UIKit.UIPrintInteractionController
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-fun pdfPrinter(): PdfPrinter = PdfPrinter { pdf, jobName ->
+public fun pdfPrinter(): PdfPrinter = PdfPrinter { pdf, jobName ->
     check(NSThread.isMainThread) { "The print dialog must be presented on the main thread" }
     require(pdf.isNotEmpty())
     val data = pdf.usePinned { NSData.create(bytes = it.addressOf(0), length = pdf.size.toULong()) }

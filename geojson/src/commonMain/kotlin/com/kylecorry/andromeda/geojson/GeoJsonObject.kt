@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.geojson
 
-interface GeoJsonObject {
-    val type: String
-    val boundingBox: GeoJsonBoundingBox?
+public interface GeoJsonObject {
+    public val type: String
+    public val boundingBox: GeoJsonBoundingBox?
 }

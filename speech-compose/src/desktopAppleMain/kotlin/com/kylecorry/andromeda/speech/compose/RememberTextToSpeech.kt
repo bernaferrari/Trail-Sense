@@ -7,7 +7,7 @@ import com.kylecorry.andromeda.speech.SpeechSynthesizer
 import com.kylecorry.andromeda.speech.textToSpeech
 
 @Composable
-actual fun rememberTextToSpeech(): SpeechSynthesizer {
+public actual fun rememberTextToSpeech(): SpeechSynthesizer {
     val speech = remember { textToSpeech() }
     DisposableEffect(speech) { onDispose { speech.cancel() } }
     return speech

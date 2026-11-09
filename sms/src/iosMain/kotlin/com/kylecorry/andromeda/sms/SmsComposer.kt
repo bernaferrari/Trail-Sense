@@ -9,7 +9,7 @@ import platform.darwin.NSObject
 
 private val delegates = mutableMapOf<MFMessageComposeViewController, MessageDelegate>()
 
-fun smsComposer(): SmsComposer = SmsComposer { recipient, message ->
+public fun smsComposer(): SmsComposer = SmsComposer { recipient, message ->
     check(NSThread.isMainThread) { "The message composer must be presented on the main thread" }
     check(MFMessageComposeViewController.canSendText()) { "Messaging is not available on this device" }
     val controller = MFMessageComposeViewController()

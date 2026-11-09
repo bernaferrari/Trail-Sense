@@ -42,9 +42,9 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-object BitmapUtils {
+public object BitmapUtils {
 
-    fun decodeBitmapScaled(
+    public fun decodeBitmapScaled(
         path: String,
         maxWidth: Int,
         maxHeight: Int
@@ -58,7 +58,7 @@ object BitmapUtils {
         }
     }
 
-    fun getSizeWithSampleSize(sampleSize: Int, originalSize: Size): Size {
+    public fun getSizeWithSampleSize(sampleSize: Int, originalSize: Size): Size {
         return Size(
             originalSize.width / sampleSize,
             originalSize.height / sampleSize
@@ -72,7 +72,7 @@ object BitmapUtils {
      * @param options The options to use when decoding
      * @param autoClose Whether to close the stream after decoding
      */
-    fun decodeRegion(
+    public fun decodeRegion(
         stream: InputStream,
         region: Rect,
         options: Options? = null,
@@ -124,7 +124,7 @@ object BitmapUtils {
         }
     }
 
-    fun getBitmapSize(path: String): Size? {
+    public fun getBitmapSize(path: String): Size? {
         val opts = BitmapFactory.Options().run {
             inJustDecodeBounds = true
             BitmapFactory.decodeFile(path, this)
@@ -162,7 +162,7 @@ object BitmapUtils {
         return inSampleSize
     }
 
-    fun Image.toBitmap(rotation: Float = 90f): Bitmap {
+    public fun Image.toBitmap(rotation: Float = 90f): Bitmap {
         val bmp = if (format == YUV_420_888) {
             val yuvBuffer = YuvByteBuffer(this, null)
             val bytes = ByteArray(yuvBuffer.buffer.capacity())
@@ -188,15 +188,15 @@ object BitmapUtils {
         }
     }
 
-    fun Bitmap.convolve(kernel: FloatArray): Bitmap {
+    public fun Bitmap.convolve(kernel: FloatArray): Bitmap {
         return toPixelImage().convolve(kernel).toBitmap()
     }
 
-    fun Bitmap.gray(average: Boolean = false, inPlace: Boolean = false): Bitmap {
+    public fun Bitmap.gray(average: Boolean = false, inPlace: Boolean = false): Bitmap {
         return output(toPixelImage().grayscale(average), inPlace)
     }
 
-    fun Bitmap.histogram(): IntArray {
+    public fun Bitmap.histogram(): IntArray {
         // Interleaved RGBA counts: index = value * 4 + channel
         val histogram = IntArray(256 * 4)
         for (pixel in toPixelImage().pixels) {
@@ -208,11 +208,11 @@ object BitmapUtils {
         return histogram
     }
 
-    fun Bitmap.blur(radius: Int): Bitmap {
+    public fun Bitmap.blur(radius: Int): Bitmap {
         return toPixelImage().blur(radius).toBitmap()
     }
 
-    fun blend(source: Bitmap, destination: Bitmap, mode: BlendMode) {
+    public fun blend(source: Bitmap, destination: Bitmap, mode: BlendMode) {
         val blendingMode = when (mode) {
             BlendMode.CLEAR -> BlendingMode.CLEAR
             BlendMode.SRC -> BlendingMode.SRC
@@ -233,7 +233,7 @@ object BitmapUtils {
         destination.writePixels(destination.toPixelImage().blend(source.toPixelImage(), blendingMode))
     }
 
-    fun Bitmap.threshold(
+    public fun Bitmap.threshold(
         threshold: Float,
         binary: Boolean = true,
         channel: ColorChannel? = null,
@@ -242,23 +242,23 @@ object BitmapUtils {
         return output(toPixelImage().threshold(threshold, binary, channel), inPlace)
     }
 
-    fun Bitmap.rotate(degrees: Float): Bitmap {
+    public fun Bitmap.rotate(degrees: Float): Bitmap {
         val matrix = Matrix().apply { postRotate(degrees) }
         return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
-    fun Bitmap.resizeExact(width: Int, height: Int): Bitmap {
+    public fun Bitmap.resizeExact(width: Int, height: Int): Bitmap {
         return toPixelImage().resize(width, height, ImageInterpolation.Bicubic).toBitmap()
     }
 
     /**
      * Upscale (2x) the bitmap to preserve the pixel-art palette (xBR algorithm)
      */
-    fun Bitmap.xbr2xUpscale(): Bitmap {
+    public fun Bitmap.xbr2xUpscale(): Bitmap {
         return toPixelImage().upscalePixelArt2x().toBitmap()
     }
 
-    fun getExactRegion(rect: Rect, imageSize: Size, blockSize: Int = 16): Rect {
+    public fun getExactRegion(rect: Rect, imageSize: Size, blockSize: Int = 16): Rect {
         val left = rect.left.coerceIn(0, imageSize.width)
         val top = rect.top.coerceIn(0, imageSize.height)
         val right = rect.right.coerceIn(0, imageSize.width)
@@ -277,7 +277,7 @@ object BitmapUtils {
         )
     }
 
-    fun Bitmap.resizeToFit(
+    public fun Bitmap.resizeToFit(
         maxWidth: Int,
         maxHeight: Int,
         useBilinearScaling: Boolean = true
@@ -290,7 +290,7 @@ object BitmapUtils {
         }
     }
 
-    fun Bitmap.fixPerspective(
+    public fun Bitmap.fixPerspective(
         topLeft: PixelCoordinate,
         topRight: PixelCoordinate,
         bottomLeft: PixelCoordinate,
@@ -365,7 +365,7 @@ object BitmapUtils {
     }
 
     // TODO: Don't allow concave polygons
-    fun Bitmap.fixPerspective(
+    public fun Bitmap.fixPerspective(
         bounds: PixelBounds,
         shouldRecycleOriginal: Boolean = false,
         @ColorInt backgroundColor: Int? = null,
@@ -386,7 +386,7 @@ object BitmapUtils {
         )
     }
 
-    fun Bitmap.crop(
+    public fun Bitmap.crop(
         x: Float,
         y: Float,
         width: Float,
@@ -408,11 +408,11 @@ object BitmapUtils {
         return blank
     }
 
-    fun Bitmap.quantize(bins: Int): Bitmap {
+    public fun Bitmap.quantize(bins: Int): Bitmap {
         return quantize(bins, bins, bins, bins)
     }
 
-    fun Bitmap.quantize(redBins: Int, blueBins: Int, greenBins: Int, alphaBins: Int): Bitmap {
+    public fun Bitmap.quantize(redBins: Int, blueBins: Int, greenBins: Int, alphaBins: Int): Bitmap {
         val table = LookupTable()
         quantize(table.red, redBins)
         quantize(table.green, greenBins)
@@ -421,15 +421,15 @@ object BitmapUtils {
         return lut(table)
     }
 
-    fun Bitmap.lut(table: LookupTable): Bitmap {
+    public fun Bitmap.lut(table: LookupTable): Bitmap {
         return toPixelImage().lookup(table).toBitmap()
     }
 
-    fun Bitmap.average(channel: ColorChannel? = null, rect: Rect? = null): Float {
+    public fun Bitmap.average(channel: ColorChannel? = null, rect: Rect? = null): Float {
         return regionPixels(rect).statistics(channel).mean.toFloat()
     }
 
-    fun Bitmap.standardDeviation(
+    public fun Bitmap.standardDeviation(
         channel: ColorChannel? = null,
         average: Float? = null,
         rect: Rect? = null
@@ -446,19 +446,19 @@ object BitmapUtils {
         return kotlin.math.sqrt(sum / image.pixels.size).toFloat()
     }
 
-    fun Bitmap.minMax(channel: ColorChannel? = null, rect: Rect? = null): Range<Float> {
+    public fun Bitmap.minMax(channel: ColorChannel? = null, rect: Rect? = null): Range<Float> {
         return regionPixels(rect).statistics(channel).let {
             Range(it.minimum.toFloat(), it.maximum.toFloat())
         }
     }
 
-    fun Bitmap.moment(channel: ColorChannel? = null, rect: Rect? = null): PixelCoordinate {
+    public fun Bitmap.moment(channel: ColorChannel? = null, rect: Rect? = null): PixelCoordinate {
         return regionPixels(rect).moment(channel).let {
             PixelCoordinate(it.x.toFloat() + (rect?.left ?: 0), it.y.toFloat() + (rect?.top ?: 0))
         }
     }
 
-    fun Bitmap.blobs(
+    public fun Bitmap.blobs(
         threshold: Float,
         channel: ColorChannel? = null,
         maxBlobs: Int = 100,
@@ -471,7 +471,7 @@ object BitmapUtils {
         }
     }
 
-    fun Bitmap.add(
+    public fun Bitmap.add(
         bitmap: Bitmap,
         selfWeight: Float = 1f,
         otherWeight: Float = 1f,
@@ -524,7 +524,7 @@ object BitmapUtils {
      * @param normed if true, the matrix will sum up to 1
      * @param levels the levels of gray for each pixel, defaults to 256
      */
-    fun Bitmap.glcm(
+    public fun Bitmap.glcm(
         steps: List<Pair<Int, Int>>,
         channel: ColorChannel? = null,
         excludeTransparent: Boolean = false,
@@ -536,7 +536,7 @@ object BitmapUtils {
         return regionPixels(region).glcm(steps, channel, excludeTransparent, symmetric, normed, levels)
     }
 
-    fun Bitmap.replaceColor(
+    public fun Bitmap.replaceColor(
         oldColor: Int,
         newColor: Int,
         tolerance: Float = 0f,
@@ -587,7 +587,7 @@ object BitmapUtils {
         return image.toBitmap()
     }
 
-    fun Int.getChannel(channel: ColorChannel): Int {
+    public fun Int.getChannel(channel: ColorChannel): Int {
         return when (channel) {
             ColorChannel.Red -> Color.red(this)
             ColorChannel.Green -> Color.green(this)
@@ -597,12 +597,12 @@ object BitmapUtils {
     }
 
     @ColorInt
-    fun Bitmap.nearestPixel(x: Float, y: Float): Int? {
+    public fun Bitmap.nearestPixel(x: Float, y: Float): Int? {
         return nearestPixel(x.roundToInt(), y.roundToInt())
     }
 
     @ColorInt
-    fun Bitmap.nearestPixel(x: Int, y: Int): Int? {
+    public fun Bitmap.nearestPixel(x: Int, y: Int): Int? {
         val x1 = x.coerceIn(0, width - 1)
         val y1 = y.coerceIn(0, height - 1)
 
@@ -614,7 +614,7 @@ object BitmapUtils {
     }
 
     @ColorInt
-    fun Bitmap.interpolateBilinear(x: Float, y: Float): Int? {
+    public fun Bitmap.interpolateBilinear(x: Float, y: Float): Int? {
         val x1 = x.toInt()
         val x2 = x1 + 1
         val y1 = y.toInt()
@@ -646,11 +646,11 @@ object BitmapUtils {
         return Color.argb(alpha.toInt(), red.toInt(), green.toInt(), blue.toInt())
     }
 
-    fun Bitmap.isInBounds(x: Int, y: Int): Boolean {
+    public fun Bitmap.isInBounds(x: Int, y: Int): Boolean {
         return x in 0 until width && y in 0 until height
     }
 
-    fun Bitmap.use(block: Bitmap.() -> Unit) {
+    public fun Bitmap.use(block: Bitmap.() -> Unit) {
         try {
             block()
         } finally {
@@ -659,7 +659,7 @@ object BitmapUtils {
     }
 
 
-    fun decodeRegion2(
+    public fun decodeRegion2(
         stream: InputStream,
         rect: Rect,
         imageSize: Size,
@@ -760,7 +760,7 @@ object BitmapUtils {
         return Rect(left, top, right, bottom)
     }
 
-    enum class BlendMode {
+    public enum class BlendMode {
         /**
          * dest = 0
          *

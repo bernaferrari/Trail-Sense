@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.core.system
 
-data class DeviceInfo(
+public data class DeviceInfo(
     val platform: String,
     val operatingSystemVersion: String,
     val model: String?,
@@ -8,4 +8,4 @@ data class DeviceInfo(
     val apiLevel: Int? = null,
 )
 
-expect fun deviceInfo(): DeviceInfo
+public expect fun deviceInfo(): DeviceInfo

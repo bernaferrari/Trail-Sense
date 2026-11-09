@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.ipc
 import android.os.Bundle
 import androidx.core.os.bundleOf
 
-class InterprocessCommunicationRequest(
-    val headers: Bundle = bundleOf(),
-    val payload: ByteArray? = null
+public class InterprocessCommunicationRequest(
+    public val headers: Bundle = bundleOf(),
+    public val payload: ByteArray? = null
 )

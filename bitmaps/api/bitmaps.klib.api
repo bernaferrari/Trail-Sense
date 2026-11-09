@@ -1,0 +1,143 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:bitmaps>
+final enum class com.kylecorry.andromeda.bitmaps/ImageInterpolation : kotlin/Enum<com.kylecorry.andromeda.bitmaps/ImageInterpolation> { // com.kylecorry.andromeda.bitmaps/ImageInterpolation|null[0]
+    enum entry Bicubic // com.kylecorry.andromeda.bitmaps/ImageInterpolation.Bicubic|null[0]
+    enum entry Bilinear // com.kylecorry.andromeda.bitmaps/ImageInterpolation.Bilinear|null[0]
+    enum entry Nearest // com.kylecorry.andromeda.bitmaps/ImageInterpolation.Nearest|null[0]
+
+    final val entries // com.kylecorry.andromeda.bitmaps/ImageInterpolation.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.bitmaps/ImageInterpolation> // com.kylecorry.andromeda.bitmaps/ImageInterpolation.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.bitmaps/ImageInterpolation // com.kylecorry.andromeda.bitmaps/ImageInterpolation.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.bitmaps/ImageInterpolation> // com.kylecorry.andromeda.bitmaps/ImageInterpolation.values|values#static(){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/ChannelStatistics { // com.kylecorry.andromeda.bitmaps/ChannelStatistics|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double) // com.kylecorry.andromeda.bitmaps/ChannelStatistics.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+
+    final val maximum // com.kylecorry.andromeda.bitmaps/ChannelStatistics.maximum|{}maximum[0]
+        final fun <get-maximum>(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.maximum.<get-maximum>|<get-maximum>(){}[0]
+    final val mean // com.kylecorry.andromeda.bitmaps/ChannelStatistics.mean|{}mean[0]
+        final fun <get-mean>(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.mean.<get-mean>|<get-mean>(){}[0]
+    final val minimum // com.kylecorry.andromeda.bitmaps/ChannelStatistics.minimum|{}minimum[0]
+        final fun <get-minimum>(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.minimum.<get-minimum>|<get-minimum>(){}[0]
+    final val standardDeviation // com.kylecorry.andromeda.bitmaps/ChannelStatistics.standardDeviation|{}standardDeviation[0]
+        final fun <get-standardDeviation>(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.standardDeviation.<get-standardDeviation>|<get-standardDeviation>(){}[0]
+
+    final fun component1(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.component2|component2(){}[0]
+    final fun component3(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.component3|component3(){}[0]
+    final fun component4(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ChannelStatistics.component4|component4(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.kylecorry.andromeda.bitmaps/ChannelStatistics // com.kylecorry.andromeda.bitmaps/ChannelStatistics.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.bitmaps/ChannelStatistics.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ChannelStatistics.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.bitmaps/ChannelStatistics.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/ImageBounds { // com.kylecorry.andromeda.bitmaps/ImageBounds|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.bitmaps/ImageBounds.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val bottom // com.kylecorry.andromeda.bitmaps/ImageBounds.bottom|{}bottom[0]
+        final fun <get-bottom>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.bottom.<get-bottom>|<get-bottom>(){}[0]
+    final val left // com.kylecorry.andromeda.bitmaps/ImageBounds.left|{}left[0]
+        final fun <get-left>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.left.<get-left>|<get-left>(){}[0]
+    final val right // com.kylecorry.andromeda.bitmaps/ImageBounds.right|{}right[0]
+        final fun <get-right>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.right.<get-right>|<get-right>(){}[0]
+    final val top // com.kylecorry.andromeda.bitmaps/ImageBounds.top|{}top[0]
+        final fun <get-top>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.top.<get-top>|<get-top>(){}[0]
+
+    final fun component1(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.component4|component4(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/ImageBounds // com.kylecorry.andromeda.bitmaps/ImageBounds.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.bitmaps/ImageBounds.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageBounds.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.bitmaps/ImageBounds.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/ImagePoint { // com.kylecorry.andromeda.bitmaps/ImagePoint|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double) // com.kylecorry.andromeda.bitmaps/ImagePoint.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
+
+    final val x // com.kylecorry.andromeda.bitmaps/ImagePoint.x|{}x[0]
+        final fun <get-x>(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ImagePoint.x.<get-x>|<get-x>(){}[0]
+    final val y // com.kylecorry.andromeda.bitmaps/ImagePoint.y|{}y[0]
+        final fun <get-y>(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ImagePoint.y.<get-y>|<get-y>(){}[0]
+
+    final fun component1(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ImagePoint.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.kylecorry.andromeda.bitmaps/ImagePoint.component2|component2(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.kylecorry.andromeda.bitmaps/ImagePoint // com.kylecorry.andromeda.bitmaps/ImagePoint.copy|copy(kotlin.Double;kotlin.Double){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.bitmaps/ImagePoint.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImagePoint.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.bitmaps/ImagePoint.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/ImageRegionDecoder : kotlin/AutoCloseable { // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder|null[0]
+    constructor <init>(kotlin/ByteArray) // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.<init>|<init>(kotlin.ByteArray){}[0]
+    constructor <init>(kotlin/String) // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.<init>|<init>(kotlin.String){}[0]
+
+    final val height // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.height|{}height[0]
+        final fun <get-height>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.height.<get-height>|<get-height>(){}[0]
+    final val width // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.width|{}width[0]
+        final fun <get-width>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.width.<get-width>|<get-width>(){}[0]
+
+    final fun close() // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.close|close(){}[0]
+    final fun decode(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/ImageRegionDecoder.decode|decode(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+}
+
+final class com.kylecorry.andromeda.bitmaps/PixelImage { // com.kylecorry.andromeda.bitmaps/PixelImage|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/IntArray) // com.kylecorry.andromeda.bitmaps/PixelImage.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.IntArray){}[0]
+
+    final val height // com.kylecorry.andromeda.bitmaps/PixelImage.height|{}height[0]
+        final fun <get-height>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/PixelImage.height.<get-height>|<get-height>(){}[0]
+    final val pixels // com.kylecorry.andromeda.bitmaps/PixelImage.pixels|{}pixels[0]
+        final fun <get-pixels>(): kotlin/IntArray // com.kylecorry.andromeda.bitmaps/PixelImage.pixels.<get-pixels>|<get-pixels>(){}[0]
+    final val width // com.kylecorry.andromeda.bitmaps/PixelImage.width|{}width[0]
+        final fun <get-width>(): kotlin/Int // com.kylecorry.andromeda.bitmaps/PixelImage.width.<get-width>|<get-width>(){}[0]
+
+    final fun crop(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/PixelImage.crop|crop(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun flip(kotlin/Boolean = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/PixelImage.flip|flip(kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun get(kotlin/Int, kotlin/Int): kotlin/Int // com.kylecorry.andromeda.bitmaps/PixelImage.get|get(kotlin.Int;kotlin.Int){}[0]
+    final fun map(kotlin/Function1<kotlin/Int, kotlin/Int>): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/PixelImage.map|map(kotlin.Function1<kotlin.Int,kotlin.Int>){}[0]
+    final fun pad(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/PixelImage.pad|pad(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun replaceColor(kotlin/Int, kotlin/Int, kotlin/Float = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/PixelImage.replaceColor|replaceColor(kotlin.Int;kotlin.Int;kotlin.Float;kotlin.Boolean){}[0]
+    final fun resize(kotlin/Int, kotlin/Int, com.kylecorry.andromeda.bitmaps/ImageInterpolation = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/PixelImage.resize|resize(kotlin.Int;kotlin.Int;com.kylecorry.andromeda.bitmaps.ImageInterpolation){}[0]
+}
+
+final fun (com.kylecorry.andromeda.bitmaps/ImageRegionDecoder).com.kylecorry.andromeda.bitmaps/decodeWrappedRegion(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Boolean = ..., kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/decodeWrappedRegion|decodeWrappedRegion@com.kylecorry.andromeda.bitmaps.ImageRegionDecoder(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Boolean;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/ImageRegionDecoder).com.kylecorry.andromeda.bitmaps/samplePixel(kotlin/Float, kotlin/Float, kotlin/Boolean = ...): kotlin/Int? // com.kylecorry.andromeda.bitmaps/samplePixel|samplePixel@com.kylecorry.andromeda.bitmaps.ImageRegionDecoder(kotlin.Float;kotlin.Float;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/blend(com.kylecorry.andromeda.bitmaps/PixelImage, com.kylecorry.andromeda.bitmaps/BlendingMode = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/blend|blend@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.bitmaps.PixelImage;com.kylecorry.andromeda.bitmaps.BlendingMode){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/blur(kotlin/Int): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/blur|blur@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/colorMatrix(kotlin/FloatArray): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/colorMatrix|colorMatrix@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.FloatArray){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/convolve(kotlin/FloatArray): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/convolve|convolve@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.FloatArray){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/correctPerspective(com.kylecorry.andromeda.core.units/PixelBounds, kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/correctPerspective|correctPerspective@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.core.units.PixelBounds;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/cropTile(com.kylecorry.sol.science.geology/CoordinateBounds, com.kylecorry.sol.science.geology/CoordinateBounds, kotlin/Int, kotlin/Int, com.kylecorry.andromeda.bitmaps/ImageInterpolation = ..., kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/cropTile|cropTile@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.sol.science.geology.CoordinateBounds;com.kylecorry.sol.science.geology.CoordinateBounds;kotlin.Int;kotlin.Int;com.kylecorry.andromeda.bitmaps.ImageInterpolation;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/encodeJpeg(kotlin/Int = ...): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/encodeJpeg|encodeJpeg@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/encodePng(): kotlin/ByteArray // com.kylecorry.andromeda.bitmaps/encodePng|encodePng@com.kylecorry.andromeda.bitmaps.PixelImage(){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/findBlobs(kotlin/Double, com.kylecorry.andromeda.bitmaps/ColorChannel? = ..., kotlin/Int = ...): kotlin.collections/List<com.kylecorry.andromeda.bitmaps/ImageBounds> // com.kylecorry.andromeda.bitmaps/findBlobs|findBlobs@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Double;com.kylecorry.andromeda.bitmaps.ColorChannel?;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/glcm(kotlin.collections/List<kotlin/Pair<kotlin/Int, kotlin/Int>>, com.kylecorry.andromeda.bitmaps/ColorChannel? = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ...): com.kylecorry.sol.math.algebra/Matrix // com.kylecorry.andromeda.bitmaps/glcm|glcm@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.collections.List<kotlin.Pair<kotlin.Int,kotlin.Int>>;com.kylecorry.andromeda.bitmaps.ColorChannel?;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/grayscale(kotlin/Boolean = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/grayscale|grayscale@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/histogram(com.kylecorry.andromeda.bitmaps/ColorChannel): kotlin/IntArray // com.kylecorry.andromeda.bitmaps/histogram|histogram@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.bitmaps.ColorChannel){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/interpolate(kotlin/Float, kotlin/Float): kotlin/Int? // com.kylecorry.andromeda.bitmaps/interpolate|interpolate@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Float;kotlin.Float){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/lookup(com.kylecorry.andromeda.bitmaps/LookupTable): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/lookup|lookup@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.bitmaps.LookupTable){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/lookup(kotlin/ByteArray = ..., kotlin/ByteArray = ..., kotlin/ByteArray = ..., kotlin/ByteArray = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/lookup|lookup@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.ByteArray;kotlin.ByteArray;kotlin.ByteArray;kotlin.ByteArray){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/lookup3d(com.kylecorry.andromeda.bitmaps/Rgba3dArray): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/lookup3d|lookup3d@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.bitmaps.Rgba3dArray){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/luminanceHistogram(): kotlin/IntArray // com.kylecorry.andromeda.bitmaps/luminanceHistogram|luminanceHistogram@com.kylecorry.andromeda.bitmaps.PixelImage(){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/moment(com.kylecorry.andromeda.bitmaps/ColorChannel? = ...): com.kylecorry.andromeda.bitmaps/ImagePoint // com.kylecorry.andromeda.bitmaps/moment|moment@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.bitmaps.ColorChannel?){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/quantize(kotlin/Int): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/quantize|quantize@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/quantize(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/quantize|quantize@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/resizeToFit(kotlin/Int, kotlin/Int, com.kylecorry.andromeda.bitmaps/ImageInterpolation = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/resizeToFit|resizeToFit@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Int;kotlin.Int;com.kylecorry.andromeda.bitmaps.ImageInterpolation;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/rotate(kotlin/Float, kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/rotate|rotate@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Float;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/statistics(com.kylecorry.andromeda.bitmaps/ColorChannel? = ...): com.kylecorry.andromeda.bitmaps/ChannelStatistics // com.kylecorry.andromeda.bitmaps/statistics|statistics@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.bitmaps.ColorChannel?){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/threshold(kotlin/Float): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/threshold|threshold@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Float){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/threshold(kotlin/Float, kotlin/Boolean, com.kylecorry.andromeda.bitmaps/ColorChannel? = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/threshold|threshold@com.kylecorry.andromeda.bitmaps.PixelImage(kotlin.Float;kotlin.Boolean;com.kylecorry.andromeda.bitmaps.ColorChannel?){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/upscalePixelArt2x(): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/upscalePixelArt2x|upscalePixelArt2x@com.kylecorry.andromeda.bitmaps.PixelImage(){}[0]
+final fun (com.kylecorry.andromeda.bitmaps/PixelImage).com.kylecorry.andromeda.bitmaps/weightedAdd(com.kylecorry.andromeda.bitmaps/PixelImage, kotlin/Float, kotlin/Float, kotlin/Boolean = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/weightedAdd|weightedAdd@com.kylecorry.andromeda.bitmaps.PixelImage(com.kylecorry.andromeda.bitmaps.PixelImage;kotlin.Float;kotlin.Float;kotlin.Boolean){}[0]
+final fun (kotlin/ByteArray).com.kylecorry.andromeda.bitmaps/yuvToPixelImage(kotlin/Int, kotlin/Int, com.kylecorry.andromeda.bitmaps/YuvFormat): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/yuvToPixelImage|yuvToPixelImage@kotlin.ByteArray(kotlin.Int;kotlin.Int;com.kylecorry.andromeda.bitmaps.YuvFormat){}[0]
+final fun com.kylecorry.andromeda.bitmaps/decodeImage(kotlin/ByteArray): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.bitmaps/decodeImage|decodeImage(kotlin.ByteArray){}[0]

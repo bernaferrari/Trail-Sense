@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.bitmaps.operations
 import android.graphics.Bitmap
 import com.kylecorry.luna.concurrency.Parallel
 
-fun Bitmap.applyOperations(
+public fun Bitmap.applyOperations(
     vararg operations: BitmapOperation,
     recycleOriginal: Boolean = true,
     forceGarbageCollection: Boolean = false
@@ -15,7 +15,7 @@ fun Bitmap.applyOperations(
     )
 }
 
-fun Bitmap.applyOperationsOrNull(
+public fun Bitmap.applyOperationsOrNull(
     vararg operations: BitmapOperation,
     recycleOriginal: Boolean = true,
     recycleOriginalOnError: Boolean = true,
@@ -32,7 +32,7 @@ fun Bitmap.applyOperationsOrNull(
     }
 }
 
-fun Bitmap.applyOperations(
+public fun Bitmap.applyOperations(
     operations: List<BitmapOperation>,
     recycleOriginal: Boolean = true,
     forceGarbageCollection: Boolean = false
@@ -53,17 +53,17 @@ fun Bitmap.applyOperations(
     return current
 }
 
-fun Bitmap.getPixels(): IntArray {
+public fun Bitmap.getPixels(): IntArray {
     val pixels = IntArray(this.width * this.height)
     this.getPixels(pixels, 0, this.width, 0, 0, this.width, this.height)
     return pixels
 }
 
-fun Bitmap.setPixels(pixels: IntArray) {
+public fun Bitmap.setPixels(pixels: IntArray) {
     this.setPixels(pixels, 0, this.width, 0, 0, this.width, this.height)
 }
 
-suspend inline fun parallelForEachIndex(
+public suspend inline fun parallelForEachIndex(
     size: Int,
     maxParallel: Int = Runtime.getRuntime().availableProcessors(),
     crossinline action: (Int) -> Unit
@@ -87,7 +87,7 @@ suspend inline fun parallelForEachIndex(
     Parallel.forEach(coroutines, maxParallel)
 }
 
-suspend inline fun <reified T> parallelReduceIndex(
+public suspend inline fun <reified T> parallelReduceIndex(
     size: Int,
     initialValue: T,
     maxParallel: Int = Runtime.getRuntime().availableProcessors(),
@@ -123,7 +123,7 @@ suspend inline fun <reified T> parallelReduceIndex(
     return finalAcc
 }
 
-suspend inline fun <reified T> Bitmap.reducePixels(
+public suspend inline fun <reified T> Bitmap.reducePixels(
     initialValue: T,
     crossinline operation: (acc: T, pixel: Int) -> T,
     crossinline combiner: (a: T, b: T) -> T
@@ -134,10 +134,10 @@ suspend inline fun <reified T> Bitmap.reducePixels(
     }, combiner = combiner)
 }
 
-fun IntArray.get(x: Int, y: Int, width: Int): Int {
+public fun IntArray.get(x: Int, y: Int, width: Int): Int {
     return this[y * width + x]
 }
 
-fun IntArray.set(x: Int, y: Int, width: Int, value: Int) {
+public fun IntArray.set(x: Int, y: Int, width: Int, value: Int) {
     this[y * width + x] = value
 }

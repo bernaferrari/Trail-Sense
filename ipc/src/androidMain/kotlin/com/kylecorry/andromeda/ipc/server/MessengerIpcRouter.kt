@@ -28,7 +28,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 /** Android Messenger adapter for a shared [IpcRouter]. */
-class MessengerIpcRouter(
+public class MessengerIpcRouter(
     private val router: IpcRouter,
     private val looper: Looper = Looper.getMainLooper(),
     private val queueSize: Int = 256,
@@ -38,7 +38,7 @@ class MessengerIpcRouter(
 
     init { require(queueSize > 0) }
 
-    fun bind(): IBinder? {
+    public fun bind(): IBinder? {
         unbind()
         val workerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val queue = Channel<Message>(queueSize)
@@ -81,11 +81,11 @@ class MessengerIpcRouter(
         return messenger?.binder
     }
 
-    fun unbind() {
+    public fun unbind() {
         messenger = null
         scope?.cancel()
         scope = null
     }
 
-    override fun close() = unbind()
+    override fun close(): Unit = unbind()
 }

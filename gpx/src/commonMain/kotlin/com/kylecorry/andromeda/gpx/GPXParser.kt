@@ -5,11 +5,11 @@ import com.kylecorry.andromeda.xml.XMLNode
 import com.kylecorry.sol.units.Coordinate
 import kotlin.time.Instant
 
-object GPXParser {
+public object GPXParser {
 
     private val validWaypointTags = arrayOf("wpt", "trkpt", "rtept")
 
-    fun toGPX(data: GPXData, creator: String): String {
+    public fun toGPX(data: GPXData, creator: String): String {
         val children = mutableListOf<XMLNode>()
         for (waypoint in data.waypoints) {
             children.add(toXML(waypoint, "wpt"))
@@ -37,7 +37,7 @@ object GPXParser {
         return XMLConvert.toString(gpx)
     }
 
-    fun parse(gpx: String): GPXData {
+    public fun parse(gpx: String): GPXData {
         val tree = try {
             XMLConvert.parse(gpx)
         } catch (e: Exception) {

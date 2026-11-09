@@ -9,7 +9,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import kotlin.time.Duration
 
-class AndroidPedometer(
+public class AndroidPedometer(
     context: Context,
     sensorDelay: Int = SensorManager.SENSOR_DELAY_NORMAL,
     maxReportLatency: Duration? = null

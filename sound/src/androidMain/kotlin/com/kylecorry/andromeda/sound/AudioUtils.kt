@@ -12,7 +12,7 @@ import com.kylecorry.sol.math.interpolation.Interpolation
 import kotlin.math.log10
 import kotlin.math.pow
 
-object AudioUtils {
+public object AudioUtils {
 
     /**
      * Converts a PCM 16-bit buffer to a float array
@@ -21,7 +21,7 @@ object AudioUtils {
      * @param out the output array, must be exactly half the size of the input buffer
      * @return the float array (same as the out parameter). Range [-1, 1]
      */
-    fun pcm16ToFloat(
+    public fun pcm16ToFloat(
         buffer: ByteArray,
         out: FloatArray = FloatArray(buffer.size / 2)
     ): FloatArray {
@@ -49,7 +49,7 @@ object AudioUtils {
      * @return the dB value
      */
     @ExperimentalUsage("The decibel conversion has not been calibrated against reference hardware")
-    fun amplitudeToDecibels(
+    public fun amplitudeToDecibels(
         amplitude: Float,
         decibelRange: Range<Float>,
         sensitivity: Float = 0f,
@@ -70,7 +70,7 @@ object AudioUtils {
         return 20 * log10(readingSoundPressurePa / referenceSoundPressure)
     }
 
-    fun createStream(
+    public fun createStream(
         sampleRate: Int = 44100,
         bufferSizeInFrames: Int = 2048,
         channel: Int = AudioFormat.CHANNEL_OUT_MONO,

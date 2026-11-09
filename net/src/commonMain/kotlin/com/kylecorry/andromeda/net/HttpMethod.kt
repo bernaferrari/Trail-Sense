@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.net
 
-enum class HttpMethod {
+public enum class HttpMethod {
     GET,
     POST,
     PUT,

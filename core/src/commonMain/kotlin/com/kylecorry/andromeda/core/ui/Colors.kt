@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.core.ui.colormaps.RgbInterpolationColorMap
 import com.kylecorry.sol.math.interpolation.Interpolation
 import kotlin.math.absoluteValue
 
-object Colors {
+public object Colors {
     private fun red(color: Int) = (color ushr 16) and 0xff
     private fun green(color: Int) = (color ushr 8) and 0xff
     private fun blue(color: Int) = color and 0xff
@@ -13,7 +13,7 @@ object Colors {
     private fun rgb(r: Int, g: Int, b: Int) = argb(255, r, g, b)
 
 
-    fun mostContrastingColor(
+    public fun mostContrastingColor(
         foreground1: Int,
         foreground2: Int,
         background: Int
@@ -37,7 +37,7 @@ object Colors {
         return if (r1.absoluteValue > r2.absoluteValue) foreground1 else foreground2
     }
 
-    fun Int.withAlpha(alpha: Int): Int {
+    public fun Int.withAlpha(alpha: Int): Int {
         return argb(
             alpha,
             red(this),
@@ -46,11 +46,11 @@ object Colors {
         )
     }
 
-    fun toHex(color: Int): String {
+    public fun toHex(color: Int): String {
         return "#" + (0xFFFFFF and color).toString(16).padStart(6, '0').uppercase()
     }
 
-    fun interpolate(color1: Int, color2: Int, factor: Float): Int {
+    public fun interpolate(color1: Int, color2: Int, factor: Float): Int {
         val a1 = alpha(color1)
         val r1 = red(color1)
         val g1 = green(color1)
@@ -66,7 +66,7 @@ object Colors {
         return argb(a, r, g, b)
     }
 
-    fun fromColorTemperature(temp: Float): Int {
+    public fun fromColorTemperature(temp: Float): Int {
         // http://www.vendian.org/mncharity/dir3/blackbody/UnstableURLs/bbr_color.html
         val map = RgbInterpolationColorMap(
             arrayOf(

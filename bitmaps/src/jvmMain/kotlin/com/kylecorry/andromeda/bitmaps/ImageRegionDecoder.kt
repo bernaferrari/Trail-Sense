@@ -6,16 +6,16 @@ import java.io.File
 import javax.imageio.ImageIO
 import javax.imageio.stream.ImageInputStream
 
-actual class ImageRegionDecoder private constructor(private val input: ImageInputStream) : AutoCloseable {
-    actual constructor(bytes: ByteArray) : this(requireNotNull(ImageIO.createImageInputStream(ByteArrayInputStream(bytes))) { "Unable to open image" })
-    actual constructor(path: String) : this(requireNotNull(ImageIO.createImageInputStream(File(path))) { "Unable to open image" })
+public actual class ImageRegionDecoder private constructor(private val input: ImageInputStream) : AutoCloseable {
+    public actual constructor(bytes: ByteArray) : this(requireNotNull(ImageIO.createImageInputStream(ByteArrayInputStream(bytes))) { "Unable to open image" })
+    public actual constructor(path: String) : this(requireNotNull(ImageIO.createImageInputStream(File(path))) { "Unable to open image" })
     private val reader = ImageIO.getImageReaders(input).asSequence().firstOrNull() ?: run {
         input.close()
         throw IllegalArgumentException("Unable to decode image")
     }
     private var closed = false
-    actual val width: Int
-    actual val height: Int
+    public actual val width: Int
+    public actual val height: Int
 
     init {
         try {
@@ -29,7 +29,7 @@ actual class ImageRegionDecoder private constructor(private val input: ImageInpu
         }
     }
 
-    actual fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage {
+    public actual fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage {
         check(!closed) { "Image decoder is closed" }
         requireImageRegion(left, top, width, height, this.width, this.height)
         val parameters = reader.defaultReadParam.apply { sourceRegion = Rectangle(left, top, width, height) }

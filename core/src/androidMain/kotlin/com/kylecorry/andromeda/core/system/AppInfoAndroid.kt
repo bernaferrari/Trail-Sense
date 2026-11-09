@@ -4,7 +4,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import com.ksensor.core.context.KSensorContext
 
-actual fun appInfo(): AppInfo {
+public actual fun appInfo(): AppInfo {
     val context = KSensorContext.get()
     val manager = context.packageManager
     val info = if (Build.VERSION.SDK_INT >= 33) manager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))

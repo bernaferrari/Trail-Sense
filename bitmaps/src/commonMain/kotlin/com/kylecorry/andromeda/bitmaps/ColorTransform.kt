@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.bitmaps
 
 /** Maps each ARGB channel through its own 256-entry lookup table. */
-fun PixelImage.lookup(
+public fun PixelImage.lookup(
     red: ByteArray = identityLookup(),
     green: ByteArray = identityLookup(),
     blue: ByteArray = identityLookup(),
@@ -19,7 +19,7 @@ fun PixelImage.lookup(
 private fun identityLookup() = ByteArray(256) { it.toByte() }
 
 /** Applies a row-major 4 by 5 RGBA color matrix, including its per-channel offsets. */
-fun PixelImage.colorMatrix(matrix: FloatArray): PixelImage {
+public fun PixelImage.colorMatrix(matrix: FloatArray): PixelImage {
     require(matrix.size == 20 && matrix.all { it.isFinite() })
     return map { color ->
         val channels = intArrayOf((color ushr 16) and 255, (color ushr 8) and 255, color and 255, (color ushr 24) and 255)
@@ -36,10 +36,10 @@ fun PixelImage.colorMatrix(matrix: FloatArray): PixelImage {
 }
 
 /** Applies a reusable per-channel lookup table. */
-fun PixelImage.lookup(table: LookupTable): PixelImage = lookup(table.red, table.green, table.blue, table.alpha)
+public fun PixelImage.lookup(table: LookupTable): PixelImage = lookup(table.red, table.green, table.blue, table.alpha)
 
 /** Applies a trilinearly interpolated RGB color cube, retaining each input pixel's alpha. */
-fun PixelImage.lookup3d(cube: Rgba3dArray): PixelImage {
+public fun PixelImage.lookup3d(cube: Rgba3dArray): PixelImage {
     require(cube.sizeX in 2..256 && cube.sizeY in 2..256 && cube.sizeZ in 2..256)
     return map { color ->
         val x = ((color ushr 16) and 255) * (cube.sizeX - 1) / 255f

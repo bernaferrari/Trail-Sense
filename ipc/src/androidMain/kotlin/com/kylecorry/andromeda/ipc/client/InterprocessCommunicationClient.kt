@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.coroutines.resume
 
-class InterprocessCommunicationClient(
+public class InterprocessCommunicationClient(
     private val context: Context,
     private val intent: Intent,
     private val looper: Looper = Looper.getMainLooper()
@@ -59,7 +59,7 @@ class InterprocessCommunicationClient(
         }
     }
 
-    fun connect(): Boolean {
+    public fun connect(): Boolean {
         synchronized(lock) {
             if (isConnecting || isBound) {
                 return true
@@ -77,13 +77,13 @@ class InterprocessCommunicationClient(
         }
     }
 
-    fun isConnected(): Boolean {
+    public fun isConnected(): Boolean {
         synchronized(lock) {
             return isBound
         }
     }
 
-    suspend fun waitUntilConnected(timeoutMillis: Long = 1000): Unit = onDefault {
+    public suspend fun waitUntilConnected(timeoutMillis: Long = 1000): Unit = onDefault {
         var isNowConnected = false
         synchronized(lock) {
             if (!isConnecting && !isBound) {
@@ -102,7 +102,7 @@ class InterprocessCommunicationClient(
         }
     }
 
-    suspend fun send(
+    public suspend fun send(
         path: String,
         request: InterprocessCommunicationRequest = InterprocessCommunicationRequest(),
     ): InterprocessCommunicationResponse =
@@ -136,7 +136,7 @@ class InterprocessCommunicationClient(
             )
         }
 
-    suspend fun connectAndSend(
+    public suspend fun connectAndSend(
         route: String,
         request: InterprocessCommunicationRequest = InterprocessCommunicationRequest(),
         connectTimeout: Duration = 10.seconds,

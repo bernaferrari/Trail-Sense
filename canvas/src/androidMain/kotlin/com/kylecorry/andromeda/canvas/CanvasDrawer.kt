@@ -18,7 +18,7 @@ import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 
-class CanvasDrawer(private val context: Context, override var canvas: Canvas) : ICanvasDrawer {
+public class CanvasDrawer(private val context: Context, override var canvas: Canvas) : ICanvasDrawer {
     private val fillPaint = Paint().also {
         it.style = Paint.Style.FILL
     }

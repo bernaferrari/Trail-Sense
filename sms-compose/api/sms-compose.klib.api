@@ -1,0 +1,9 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:sms-compose>
+final fun com.kylecorry.andromeda.sms.compose/rememberSmsComposer(androidx.compose.runtime/Composer?, kotlin/Int): com.kylecorry.andromeda.sms/SmsComposer // com.kylecorry.andromeda.sms.compose/rememberSmsComposer|rememberSmsComposer(androidx.compose.runtime.Composer?;kotlin.Int){}[0]

@@ -1,0 +1,322 @@
+public final class com/kylecorry/andromeda/core/CollectionRangesKt {
+	public static final fun rangeOrNull (Ljava/lang/Iterable;)Lkotlin/ranges/ClosedRange;
+}
+
+public final class com/kylecorry/andromeda/core/math/MathUtils {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/math/MathUtils;
+	public final fun scaleToBounds (Landroid/util/Size;Landroid/util/Size;)Landroid/util/Size;
+}
+
+public final class com/kylecorry/andromeda/core/math/SizeExtensionsKt {
+	public static final fun scaleToFit (Lcom/kylecorry/sol/math/geometry/Size;Lcom/kylecorry/sol/math/geometry/Size;)Lcom/kylecorry/sol/math/geometry/Size;
+}
+
+public abstract class com/kylecorry/andromeda/core/sensors/BaseBroadcastReceiverSensor : com/kylecorry/andromeda/core/sensors/SharedSensor {
+	public fun <init> (Landroid/content/Context;Landroid/content/IntentFilter;ZZ)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/content/IntentFilter;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun getContext ()Landroid/content/Context;
+	protected abstract fun handleIntent (Landroid/content/Context;Landroid/content/Intent;)V
+	protected fun startImpl ()V
+	protected fun stopImpl ()V
+}
+
+public final class com/kylecorry/andromeda/core/system/Android {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/Android;
+	public final fun getDevice ()Ljava/lang/String;
+	public final fun getFullDeviceName ()Ljava/lang/String;
+	public final fun getManufacturer ()Ljava/lang/String;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getSdk ()I
+	public final fun getVersion ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/AppData {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/AppData;
+	public final fun getCacheDirectory (Landroid/content/Context;)Ljava/io/File;
+	public final fun getDataDirectory (Landroid/content/Context;)Ljava/io/File;
+	public final fun getDatabaseDirectory (Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+	public static synthetic fun getDatabaseDirectory$default (Lcom/kylecorry/andromeda/core/system/AppData;Landroid/content/Context;Ljava/lang/String;ILjava/lang/Object;)Ljava/io/File;
+	public final fun getFilesDirectory (Landroid/content/Context;)Ljava/io/File;
+	public final fun getSharedPrefsDirectory (Landroid/content/Context;)Ljava/io/File;
+	public final fun getSharedPrefsFile (Landroid/content/Context;Ljava/lang/String;)Ljava/io/File;
+	public static synthetic fun getSharedPrefsFile$default (Lcom/kylecorry/andromeda/core/system/AppData;Landroid/content/Context;Ljava/lang/String;ILjava/lang/Object;)Ljava/io/File;
+	public final fun getSharedPrefsFiles (Landroid/content/Context;)Ljava/util/List;
+}
+
+public final class com/kylecorry/andromeda/core/system/AppInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/core/system/AppInfo;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/system/AppInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/AppInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBuild ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/AppInfoAndroidKt {
+	public static final fun appInfo ()Lcom/kylecorry/andromeda/core/system/AppInfo;
+}
+
+public final class com/kylecorry/andromeda/core/system/BroadcastsKt {
+	public static final fun broadcasts (Landroid/content/Context;Landroid/content/IntentFilter;ZZ)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun broadcasts$default (Landroid/content/Context;Landroid/content/IntentFilter;ZZILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/core/system/CurrentApp {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/CurrentApp;
+	public final fun isInForeground (Z)Z
+	public static synthetic fun isInForeground$default (Lcom/kylecorry/andromeda/core/system/CurrentApp;ZILjava/lang/Object;)Z
+	public final fun kill ()V
+	public final fun restart (Landroid/content/Context;)V
+}
+
+public final class com/kylecorry/andromeda/core/system/Device {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/Device;
+	public final fun getAvailableBitmapMemoryBytes (Landroid/content/Context;)J
+	public final fun isLowMemory (Landroid/content/Context;)Z
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)Lcom/kylecorry/andromeda/core/system/DeviceInfo;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/system/DeviceInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/DeviceInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApiLevel ()Ljava/lang/Integer;
+	public final fun getManufacturer ()Ljava/lang/String;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getOperatingSystemVersion ()Ljava/lang/String;
+	public final fun getPlatform ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceInfoKt {
+	public static final fun deviceInfo ()Lcom/kylecorry/andromeda/core/system/DeviceInfo;
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceMemory {
+	public fun <init> (Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;)V
+	public final fun component1 ()Ljava/lang/Long;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun component3 ()Ljava/lang/Boolean;
+	public final fun copy (Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;)Lcom/kylecorry/andromeda/core/system/DeviceMemory;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/system/DeviceMemory;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/DeviceMemory;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailableBytes ()Ljava/lang/Long;
+	public final fun getLowMemory ()Ljava/lang/Boolean;
+	public final fun getTotalBytes ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceMemoryAndroidKt {
+	public static final fun deviceMemory ()Lcom/kylecorry/andromeda/core/system/DeviceMemory;
+}
+
+public final class com/kylecorry/andromeda/core/system/GeoUri {
+	public static final field Companion Lcom/kylecorry/andromeda/core/system/GeoUri$Companion;
+	public synthetic fun <init> (JLjava/lang/Float;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLjava/lang/Float;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-VMd8-xo ()J
+	public final fun component2 ()Ljava/lang/Float;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy-TbpPH1g (JLjava/lang/Float;Ljava/util/Map;)Lcom/kylecorry/andromeda/core/system/GeoUri;
+	public static synthetic fun copy-TbpPH1g$default (Lcom/kylecorry/andromeda/core/system/GeoUri;JLjava/lang/Float;Ljava/util/Map;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/GeoUri;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAltitude ()Ljava/lang/Float;
+	public final fun getCoordinate-VMd8-xo ()J
+	public final fun getQueryParameters ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/GeoUri$Companion {
+	public final fun parse (Ljava/lang/String;)Lcom/kylecorry/andromeda/core/system/GeoUri;
+}
+
+public final class com/kylecorry/andromeda/core/system/GeoUriAndroidKt {
+	public static final fun from (Lcom/kylecorry/andromeda/core/system/GeoUri$Companion;Landroid/net/Uri;)Lcom/kylecorry/andromeda/core/system/GeoUri;
+	public static final fun getUri (Lcom/kylecorry/andromeda/core/system/GeoUri;)Landroid/net/Uri;
+}
+
+public abstract interface class com/kylecorry/andromeda/core/system/IntentResultRetriever {
+	public abstract fun getResult (Landroid/content/Intent;Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class com/kylecorry/andromeda/core/system/IntentResultRetrieverExtensionsKt {
+	public static final fun createFile (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static final fun createFile (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun createFile$default (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun createFile$default (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static final fun pickDirectory (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Lcom/kylecorry/andromeda/core/system/UriAccess;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun pickDirectory$default (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Lcom/kylecorry/andromeda/core/system/UriAccess;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static final fun pickFile (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;Lkotlin/jvm/functions/Function1;)V
+	public static final fun pickFile (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/util/List;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun pickFile$default (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/lang/String;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun pickFile$default (Lcom/kylecorry/andromeda/core/system/IntentResultRetriever;Ljava/util/List;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/core/system/Intents {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/Intents;
+	public final fun acceptPersistentUri (Landroid/content/Context;Landroid/net/Uri;ZZ)V
+	public static synthetic fun acceptPersistentUri$default (Lcom/kylecorry/andromeda/core/system/Intents;Landroid/content/Context;Landroid/net/Uri;ZZILjava/lang/Object;)V
+	public final fun alarmAndReminderSettings (Landroid/content/Context;)Landroid/content/Intent;
+	public final fun appSettings (Landroid/content/Context;)Landroid/content/Intent;
+	public final fun batteryOptimizationSettings ()Landroid/content/Intent;
+	public final fun createFile (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
+	public final fun createFile (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)Landroid/content/Intent;
+	public static synthetic fun createFile$default (Lcom/kylecorry/andromeda/core/system/Intents;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Landroid/content/Intent;
+	public static synthetic fun createFile$default (Lcom/kylecorry/andromeda/core/system/Intents;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Landroid/content/Intent;
+	public final fun email (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
+	public static synthetic fun email$default (Lcom/kylecorry/andromeda/core/system/Intents;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Landroid/content/Intent;
+	public final fun geo-ICx_NKw (J)Landroid/content/Intent;
+	public final fun hasReceiver (Landroid/content/Context;Landroid/content/Intent;)Z
+	public final fun localIntent (Landroid/content/Context;Ljava/lang/String;)Landroid/content/Intent;
+	public final fun notificationSettings (Landroid/content/Context;Ljava/lang/String;)Landroid/content/Intent;
+	public static synthetic fun notificationSettings$default (Lcom/kylecorry/andromeda/core/system/Intents;Landroid/content/Context;Ljava/lang/String;ILjava/lang/Object;)Landroid/content/Intent;
+	public final fun openChooser (Landroid/content/Context;Landroid/content/Intent;Ljava/lang/String;)V
+	public final fun pendingIntentExists (Landroid/content/Context;ILandroid/content/Intent;)Z
+	public final fun pickDirectory (Ljava/lang/String;Lcom/kylecorry/andromeda/core/system/UriAccess;)Landroid/content/Intent;
+	public static synthetic fun pickDirectory$default (Lcom/kylecorry/andromeda/core/system/Intents;Ljava/lang/String;Lcom/kylecorry/andromeda/core/system/UriAccess;ILjava/lang/Object;)Landroid/content/Intent;
+	public final fun pickFile (Ljava/lang/String;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;)Landroid/content/Intent;
+	public final fun pickFile (Ljava/util/List;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;)Landroid/content/Intent;
+	public static synthetic fun pickFile$default (Lcom/kylecorry/andromeda/core/system/Intents;Ljava/lang/String;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;ILjava/lang/Object;)Landroid/content/Intent;
+	public static synthetic fun pickFile$default (Lcom/kylecorry/andromeda/core/system/Intents;Ljava/util/List;Ljava/lang/String;ZLcom/kylecorry/andromeda/core/system/UriAccess;ILjava/lang/Object;)Landroid/content/Intent;
+	public final fun restart (Landroid/content/Context;Ljava/lang/String;)Landroid/content/Intent;
+	public static synthetic fun restart$default (Lcom/kylecorry/andromeda/core/system/Intents;Landroid/content/Context;Ljava/lang/String;ILjava/lang/Object;)Landroid/content/Intent;
+	public final fun startService (Landroid/content/Context;Landroid/content/Intent;ZZ)V
+	public static synthetic fun startService$default (Lcom/kylecorry/andromeda/core/system/Intents;Landroid/content/Context;Landroid/content/Intent;ZZILjava/lang/Object;)V
+	public final fun url (Ljava/lang/String;)Landroid/content/Intent;
+}
+
+public final class com/kylecorry/andromeda/core/system/Package {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/Package;
+	public final fun getPackageInfo (Landroid/content/Context;Ljava/lang/String;I)Landroid/content/pm/PackageInfo;
+	public static synthetic fun getPackageInfo$default (Lcom/kylecorry/andromeda/core/system/Package;Landroid/content/Context;Ljava/lang/String;IILjava/lang/Object;)Landroid/content/pm/PackageInfo;
+	public final fun getPackageName (Landroid/content/Context;)Ljava/lang/String;
+	public final fun getSelfSignatureSha256Fingerprints (Landroid/content/Context;)Ljava/util/List;
+	public final fun getSignatureSha256Fingerprints (Landroid/content/Context;Ljava/lang/String;)Ljava/util/List;
+	public final fun getVersionCode (Landroid/content/Context;)J
+	public final fun getVersionName (Landroid/content/Context;)Ljava/lang/String;
+	public final fun isPackageInstalled (Landroid/content/Context;Ljava/lang/String;)Z
+	public final fun openApp (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun setComponentEnabled (Landroid/content/Context;Ljava/lang/String;Z)V
+}
+
+public final class com/kylecorry/andromeda/core/system/ResourceCache {
+	public fun <init> (Landroid/content/res/Resources;)V
+	public final fun getString (I)Ljava/lang/String;
+	public final fun getString (I[Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/Resources {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/Resources;
+	public final fun androidBackgroundColorPrimary (Landroid/content/Context;)I
+	public final fun androidBackgroundColorSecondary (Landroid/content/Context;)I
+	public final fun androidTextColorPrimary (Landroid/content/Context;)I
+	public final fun androidTextColorSecondary (Landroid/content/Context;)I
+	public final fun color (Landroid/content/Context;I)I
+	public final fun dp (Landroid/content/Context;F)F
+	public final fun drawable (Landroid/content/Context;I)Landroid/graphics/drawable/Drawable;
+	public final fun getAndroidColorAttr (Landroid/content/Context;I)I
+	public final fun getLocale (Landroid/content/Context;)Ljava/util/Locale;
+	public final fun getLocalizedContext (Landroid/content/Context;Ljava/util/Locale;)Landroid/content/Context;
+	public final fun getLocalizedResources (Landroid/content/Context;Ljava/util/Locale;)Landroid/content/res/Resources;
+	public final fun isMetricPreferred (Landroid/content/Context;)Z
+	public final fun reloadTheme (Landroid/content/Context;I)V
+	public final fun sp (Landroid/content/Context;F)F
+	public final fun uses24HourClock (Landroid/content/Context;)Z
+}
+
+public final class com/kylecorry/andromeda/core/system/Screen {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/Screen;
+	public final fun density (Landroid/content/Context;)F
+	public final fun dpi (Landroid/content/Context;)F
+	public final fun getWindowHeight (Landroid/content/Context;)I
+	public final fun getWindowSize (Landroid/content/Context;)Landroid/util/Size;
+	public final fun getWindowWidth (Landroid/content/Context;)I
+	public final fun resetBrightness (Landroid/view/Window;)V
+	public final fun setAllowScreenshots (Landroid/view/Window;Z)V
+	public final fun setBrightness (Landroid/view/Window;F)V
+	public final fun setKeepScreenOn (Landroid/view/Window;Z)V
+	public final fun setShowWhenLocked (Landroid/app/Activity;Z)V
+	public final fun xdpi (Landroid/content/Context;)F
+	public final fun ydpi (Landroid/content/Context;)F
+}
+
+public final class com/kylecorry/andromeda/core/system/Wakelocks {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/system/Wakelocks;
+	public final fun get (Landroid/content/Context;Ljava/lang/String;)Landroid/os/PowerManager$WakeLock;
+}
+
+public final class com/kylecorry/andromeda/core/time/AndroidTime {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/time/AndroidTime;
+	public final fun millisSinceBoot ()J
+	public final fun millisSinceBootToInstant (J)Lkotlin/time/Instant;
+	public final fun millisSinceBootToTime (J)J
+	public final fun timeSinceBoot-UwyO8pc ()J
+	public final fun uptime-UwyO8pc ()J
+	public final fun uptimeMillis ()J
+}
+
+public final class com/kylecorry/andromeda/core/time/TimeoutTracker {
+	public fun <init> ()V
+	public fun <init> (Lcom/kylecorry/andromeda/core/time/TimeProvider;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/core/time/TimeProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun elapsed-UwyO8pc ()J
+	public final fun isStarted ()Z
+	public final fun isTimedOut-VtjQ1oo (JZ)Z
+	public static synthetic fun isTimedOut-VtjQ1oo$default (Lcom/kylecorry/andromeda/core/time/TimeoutTracker;JZILjava/lang/Object;)Z
+	public final fun reset ()V
+	public final fun start ()V
+}
+
+public final class com/kylecorry/andromeda/core/time/TimerExtensionsKt {
+	public static final fun interval-5qebJ5I (Lcom/kylecorry/luna/time/ITimer;JJ)V
+	public static synthetic fun interval-5qebJ5I$default (Lcom/kylecorry/luna/time/ITimer;JJILjava/lang/Object;)V
+	public static final fun once-HG0u8IE (Lcom/kylecorry/luna/time/ITimer;J)V
+}
+
+public final class com/kylecorry/andromeda/core/ui/Colors {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/ui/Colors;
+	public final fun fromColorTemperature (F)I
+	public final fun interpolate (IIF)I
+	public final fun mostContrastingColor (III)I
+	public final fun toHex (I)Ljava/lang/String;
+	public final fun withAlpha (II)I
+}
+
+public final class com/kylecorry/andromeda/core/ui/Progress {
+	public fun <init> (IILjava/lang/String;)V
+	public synthetic fun <init> (IILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (IILjava/lang/String;)Lcom/kylecorry/andromeda/core/ui/Progress;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/ui/Progress;IILjava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/ui/Progress;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getPercent ()F
+	public final fun getProcessed ()I
+	public final fun getTotal ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/core/ui/ProgressReporter {
+	public abstract fun getProgress ()Lkotlinx/coroutines/flow/Flow;
+}
+

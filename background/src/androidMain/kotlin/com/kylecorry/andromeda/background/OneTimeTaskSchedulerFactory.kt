@@ -9,9 +9,9 @@ import androidx.work.ListenableWorker
 import com.kylecorry.andromeda.core.annotations.ExperimentalUsage
 
 @ExperimentalUsage("This class may change significantly to accommodate generic tasks")
-class OneTimeTaskSchedulerFactory(private val context: Context) {
+public class OneTimeTaskSchedulerFactory(private val context: Context) {
 
-    fun deferrable(
+    public fun deferrable(
         task: Class<out ListenableWorker>,
         uniqueId: Int,
         data: Bundle? = null
@@ -24,7 +24,7 @@ class OneTimeTaskSchedulerFactory(private val context: Context) {
         )
     }
 
-    fun exact(
+    public fun exact(
         task: Class<out BroadcastReceiver>,
         uniqueId: Int,
         data: Bundle? = null
@@ -39,7 +39,7 @@ class OneTimeTaskSchedulerFactory(private val context: Context) {
         )
     }
 
-    fun alarm(
+    public fun alarm(
         task: Class<out BroadcastReceiver>,
         viewTask: PendingIntent,
         uniqueId: Int,

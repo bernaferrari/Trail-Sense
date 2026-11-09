@@ -4,20 +4,20 @@ import com.kylecorry.andromeda.bitmaps.PixelImage
 import kotlin.math.max
 import kotlin.math.min
 
-enum class PrintScaleMode { Fit, Fill }
-enum class PrintColorMode { Color, Monochrome }
-enum class PrintOrientation { Auto, Portrait, Landscape }
+public enum class PrintScaleMode { Fit, Fill }
+public enum class PrintColorMode { Color, Monochrome }
+public enum class PrintOrientation { Auto, Portrait, Landscape }
 
-data class ImagePrintOptions(
+public data class ImagePrintOptions(
     val scale: PrintScaleMode = PrintScaleMode.Fit,
     val color: PrintColorMode = PrintColorMode.Color,
     val orientation: PrintOrientation = PrintOrientation.Auto,
 )
 
 /** Opens the system print dialog for an image. Invoke on the UI thread. */
-fun interface ImagePrinter {
-    fun print(image: PixelImage, jobName: String, options: ImagePrintOptions)
-    fun print(image: PixelImage, jobName: String) = print(image, jobName, ImagePrintOptions())
+public fun interface ImagePrinter {
+    public fun print(image: PixelImage, jobName: String, options: ImagePrintOptions)
+    public fun print(image: PixelImage, jobName: String): Unit = print(image, jobName, ImagePrintOptions())
 }
 
 internal data class ImagePrintLayout(val x: Double, val y: Double, val width: Double, val height: Double)

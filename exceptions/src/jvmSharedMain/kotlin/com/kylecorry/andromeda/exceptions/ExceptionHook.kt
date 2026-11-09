@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.exceptions
 
-actual fun installExceptionHook(report: (Throwable) -> Unit): AutoCloseable {
+public actual fun installExceptionHook(report: (Throwable) -> Unit): AutoCloseable {
     val previous = Thread.getDefaultUncaughtExceptionHandler()
     val handler = Thread.UncaughtExceptionHandler { thread, error ->
         try { report(error) } finally {

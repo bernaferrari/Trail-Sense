@@ -4,9 +4,9 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 
-class SoundGenerator {
+public class SoundGenerator {
 
-    fun getSound(
+    public fun getSound(
         sampleRate: Int = 64000,
         durationSeconds: Float = 1f,
         sampleGenerator: (i: Int) -> Double

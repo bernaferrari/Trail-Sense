@@ -17,15 +17,15 @@ import androidx.core.view.get
 import java.util.Locale
 import androidx.core.view.size
 
-object Resources {
-    fun dp(context: Context, size: Float): Float {
+public object Resources {
+    public fun dp(context: Context, size: Float): Float {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, size,
             context.resources.displayMetrics
         )
     }
 
-    fun sp(context: Context, size: Float): Float {
+    public fun sp(context: Context, size: Float): Float {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_SP, size,
             context.resources.displayMetrics
@@ -33,7 +33,7 @@ object Resources {
     }
 
     @ColorInt
-    fun getAndroidColorAttr(context: Context, @AttrRes attrRes: Int): Int {
+    public fun getAndroidColorAttr(context: Context, @AttrRes attrRes: Int): Int {
         val theme = context.theme
         val typedValue = TypedValue()
         theme.resolveAttribute(attrRes, typedValue, true)
@@ -42,42 +42,42 @@ object Resources {
     }
 
     @ColorInt
-    fun androidTextColorPrimary(context: Context): Int {
+    public fun androidTextColorPrimary(context: Context): Int {
         return getAndroidColorAttr(context, android.R.attr.textColorPrimary)
     }
 
     @ColorInt
-    fun androidBackgroundColorPrimary(context: Context): Int {
+    public fun androidBackgroundColorPrimary(context: Context): Int {
         return getAndroidColorAttr(context, android.R.attr.colorBackground)
     }
 
     @ColorInt
-    fun androidBackgroundColorSecondary(context: Context): Int {
+    public fun androidBackgroundColorSecondary(context: Context): Int {
         return getAndroidColorAttr(context, android.R.attr.colorBackgroundFloating)
     }
 
     @ColorInt
-    fun androidTextColorSecondary(context: Context): Int {
+    public fun androidTextColorSecondary(context: Context): Int {
         return getAndroidColorAttr(context, android.R.attr.textColorSecondary)
     }
 
     @ColorInt
-    fun color(context: Context, @ColorRes colorId: Int): Int {
+    public fun color(context: Context, @ColorRes colorId: Int): Int {
         return ResourcesCompat.getColor(context.resources, colorId, null)
     }
 
-    fun drawable(context: Context, @DrawableRes drawableId: Int): Drawable? {
+    public fun drawable(context: Context, @DrawableRes drawableId: Int): Drawable? {
         return ResourcesCompat.getDrawable(context.resources, drawableId, null)
     }
 
 
-    fun getLocale(context: Context): Locale {
+    public fun getLocale(context: Context): Locale {
         val config = context.applicationContext.resources.configuration
         val locales = ConfigurationCompat.getLocales(config)
         return locales.get(0) ?: Locale.getDefault()
     }
 
-    fun isMetricPreferred(context: Context): Boolean {
+    public fun isMetricPreferred(context: Context): Boolean {
         val locale = getLocale(context)
         // As of 2023, the US and Liberia are the only countries which heavily use imperial units
         // Myanmar is sometimes viewed as a third, but they use metric for most things and local units for others (which are not supported by my apps)
@@ -87,22 +87,22 @@ object Resources {
         }
     }
 
-    fun uses24HourClock(context: Context): Boolean {
+    public fun uses24HourClock(context: Context): Boolean {
         return DateFormat.is24HourFormat(context)
     }
 
-    fun getLocalizedContext(context: Context, locale: Locale): Context {
+    public fun getLocalizedContext(context: Context, locale: Locale): Context {
         val currentConfig = context.resources.configuration
         val configCopy = Configuration(currentConfig)
         configCopy.setLocale(locale)
         return context.createConfigurationContext(configCopy)
     }
 
-    fun getLocalizedResources(context: Context, locale: Locale): android.content.res.Resources {
+    public fun getLocalizedResources(context: Context, locale: Locale): android.content.res.Resources {
         return getLocalizedContext(context, locale).resources
     }
 
-    fun reloadTheme(context: Context, @StyleRes themeResId: Int) {
+    public fun reloadTheme(context: Context, @StyleRes themeResId: Int) {
         context.theme.applyStyle(themeResId, true)
     }
 }

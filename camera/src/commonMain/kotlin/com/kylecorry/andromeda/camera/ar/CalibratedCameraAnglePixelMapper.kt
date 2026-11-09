@@ -18,7 +18,7 @@ import kotlin.math.sin
  * @param fallback The fallback mapper to use if the camera does not have intrinsic calibration
  * @param applyDistortionCorrection Whether to apply distortion correction. Defaults to false.
  */
-class CalibratedCameraAnglePixelMapper(
+public class CalibratedCameraAnglePixelMapper(
     private val camera: CameraCalibrationSource,
     private val fallback: CameraAnglePixelMapper = LinearCameraAnglePixelMapper(),
     private val applyDistortionCorrection: Boolean = false,
@@ -33,7 +33,7 @@ class CalibratedCameraAnglePixelMapper(
     private var calibrationId = camera.calibrationId
 
     /** Clears cached metadata after a camera or calibration change. */
-    fun invalidateCalibration() {
+    public fun invalidateCalibration() {
         calibration = null
         preActiveArray = null
         activeArray = null

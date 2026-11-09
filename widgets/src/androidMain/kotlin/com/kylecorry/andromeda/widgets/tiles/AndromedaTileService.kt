@@ -17,7 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-abstract class AndromedaTileService : TileService() {
+public abstract class AndromedaTileService : TileService() {
 
     // Potential fix for a bug in Android where it fails to reach the IQSService
     // https://github.com/firemaples/EverTranslator/issues/130
@@ -29,31 +29,31 @@ abstract class AndromedaTileService : TileService() {
         }
     }
 
-    fun setState(state: Int) {
+    public fun setState(state: Int) {
         if (state != qsTile.state) {
             qsTile.state = state
             qsTile.updateTile()
         }
     }
 
-    fun setTitle(title: String) {
+    public fun setTitle(title: String) {
         qsTile.label = title
         qsTile.updateTile()
     }
 
-    fun setSubtitle(subtitle: String?) {
+    public fun setSubtitle(subtitle: String?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             qsTile.subtitle = subtitle
             qsTile.updateTile()
         }
     }
 
-    fun setIcon(icon: Icon) {
+    public fun setIcon(icon: Icon) {
         qsTile.icon = icon
         qsTile.updateTile()
     }
 
-    fun setIcon(@DrawableRes icon: Int) {
+    public fun setIcon(@DrawableRes icon: Int) {
         val drawable = ResourcesCompat.getDrawable(this.resources, icon, null)
         val bitmap = drawable?.toBitmap() ?: return
         val realIcon = Icon.createWithBitmap(bitmap)
@@ -62,7 +62,7 @@ abstract class AndromedaTileService : TileService() {
     }
 
     /** Starts foreground work from a tile click, showing a temporary activity when Android requires it. */
-    fun startForegroundService(action: suspend () -> Unit) {
+    public fun startForegroundService(action: suspend () -> Unit) {
         val powerManager = getSystemService(PowerManager::class.java)
         val needsActivity = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
             !isAppForeground() &&

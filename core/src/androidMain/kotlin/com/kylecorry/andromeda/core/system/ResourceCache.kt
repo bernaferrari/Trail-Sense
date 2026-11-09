@@ -4,13 +4,13 @@ import android.content.res.Resources
 import androidx.core.os.ConfigurationCompat
 import java.util.*
 
-class ResourceCache(private val resources: Resources) {
+public class ResourceCache(private val resources: Resources) {
 
     private var lastLocale = getLocale()
     private val cache = mutableMapOf<Int, String>()
     private val lock = Any()
 
-    fun getString(id: Int): String {
+    public fun getString(id: Int): String {
         synchronized(lock) {
             val currentLocale = getLocale()
             if (lastLocale != currentLocale) {
@@ -27,7 +27,7 @@ class ResourceCache(private val resources: Resources) {
         }
     }
 
-    fun getString(id: Int, vararg formatArgs: Any): String {
+    public fun getString(id: Int, vararg formatArgs: Any): String {
         val raw = getString(id)
         return String.format(lastLocale, raw, *formatArgs)
     }

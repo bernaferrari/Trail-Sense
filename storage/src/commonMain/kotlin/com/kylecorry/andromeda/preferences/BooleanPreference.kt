@@ -6,14 +6,14 @@ import com.kylecorry.andromeda.preferences.value
 
 import kotlin.reflect.KProperty
 
-class BooleanPreference(
+public class BooleanPreference(
     private val preferences: Preferences,
     private val name: String,
     private val defaultValue: Boolean,
     private val saveDefault: Boolean = false
 ) {
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): Boolean {
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): Boolean {
         val value = preferences.getBoolean(name)
         if (value == null && saveDefault) {
             preferences.putBoolean(name, defaultValue)
@@ -21,7 +21,7 @@ class BooleanPreference(
         return value ?: defaultValue
     }
 
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {
+    public operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Boolean) {
         preferences.putBoolean(name, value)
     }
 

@@ -26,34 +26,34 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** Immutable layers are redrawn whenever the caller supplies new data. */
-sealed interface PlotLayer {
-    val points: List<Vector2> get() = emptyList()
-    val onPointClick: ((Vector2) -> Unit)? get() = null
+public sealed interface PlotLayer {
+    public val points: List<Vector2> get() = emptyList()
+    public val onPointClick: ((Vector2) -> Unit)? get() = null
 
-    data class Line(override val points: List<Vector2>, val color: Color, val width: Float = 2f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
-    data class Scatter(override val points: List<Vector2>, val color: Color, val radius: Float = 6f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
-    data class Bars(override val points: List<Vector2>, val color: Color, val width: Float, val baseline: Float = 0f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
-    data class Area(override val points: List<Vector2>, val color: Color, val baseline: Float = 0f, val lineColor: Color = Color.Transparent, val lineWidth: Float = 2f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
-    data class Bounds(val upper: List<Vector2>, val lower: List<Vector2>, val color: Color) : PlotLayer { override val points get() = upper + lower }
-    data class Band(val top: Float, val bottom: Float, val color: Color) : PlotLayer
-    data class HorizontalLine(val value: Float, val color: Color, val width: Float = 2f) : PlotLayer
-    data class Markers(override val points: List<Vector2>, val image: ImageBitmap, val size: Float = 12f, val rotation: Float = 0f, val tint: Color? = null, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
-    data class Label(val position: Vector2, val text: String, val color: Color, val size: Float = 12f) : PlotLayer
-    data class Overlay(val draw: DrawScope.(PlotCoordinates) -> Unit) : PlotLayer
+    public data class Line(override val points: List<Vector2>, val color: Color, val width: Float = 2f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
+    public data class Scatter(override val points: List<Vector2>, val color: Color, val radius: Float = 6f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
+    public data class Bars(override val points: List<Vector2>, val color: Color, val width: Float, val baseline: Float = 0f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
+    public data class Area(override val points: List<Vector2>, val color: Color, val baseline: Float = 0f, val lineColor: Color = Color.Transparent, val lineWidth: Float = 2f, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
+    public data class Bounds(val upper: List<Vector2>, val lower: List<Vector2>, val color: Color) : PlotLayer { override val points: List<Vector2> get() = upper + lower }
+    public data class Band(val top: Float, val bottom: Float, val color: Color) : PlotLayer
+    public data class HorizontalLine(val value: Float, val color: Color, val width: Float = 2f) : PlotLayer
+    public data class Markers(override val points: List<Vector2>, val image: ImageBitmap, val size: Float = 12f, val rotation: Float = 0f, val tint: Color? = null, override val onPointClick: ((Vector2) -> Unit)? = null) : PlotLayer
+    public data class Label(val position: Vector2, val text: String, val color: Color, val size: Float = 12f) : PlotLayer
+    public data class Overlay(val draw: DrawScope.(PlotCoordinates) -> Unit) : PlotLayer
 }
 
 /** Converts between chart data and positions in the supplied drawing size. */
-class PlotCoordinates(
-    val xRange: ClosedFloatingPointRange<Float>,
-    val yRange: ClosedFloatingPointRange<Float>,
-    val size: Size,
+public class PlotCoordinates(
+    public val xRange: ClosedFloatingPointRange<Float>,
+    public val yRange: ClosedFloatingPointRange<Float>,
+    public val size: Size,
 ) {
-    fun toPixel(point: Vector2): Offset = Offset(
+    public fun toPixel(point: Vector2): Offset = Offset(
         (point.x - xRange.start) / (xRange.endInclusive - xRange.start) * size.width,
         size.height - (point.y - yRange.start) / (yRange.endInclusive - yRange.start) * size.height,
     )
 
-    fun toData(point: Offset): Vector2 = Vector2(
+    public fun toData(point: Offset): Vector2 = Vector2(
         xRange.start + point.x / size.width * (xRange.endInclusive - xRange.start),
         yRange.start + (size.height - point.y) / size.height * (yRange.endInclusive - yRange.start),
     )
@@ -61,7 +61,7 @@ class PlotCoordinates(
 
 /** A composable plot with ordered layers and optional point and background click handling. */
 @Composable
-fun Plot(
+public fun Plot(
     layers: List<PlotLayer>,
     xRange: ClosedFloatingPointRange<Float>,
     yRange: ClosedFloatingPointRange<Float>,
@@ -168,7 +168,7 @@ fun Plot(
 }
 
 /** Axis labels and grid can be configured independently for each dimension. */
-data class PlotAxis(
+public data class PlotAxis(
     val count: Int = 3,
     val grid: Boolean = true,
     val gridColor: Color = Color.LightGray,
@@ -177,7 +177,7 @@ data class PlotAxis(
     val format: (Float) -> String = { it.toString() },
 )
 
-fun plotRange(values: Iterable<Float>, margin: Float = 0f, minimumRange: Float = 1f): ClosedFloatingPointRange<Float> {
+public fun plotRange(values: Iterable<Float>, margin: Float = 0f, minimumRange: Float = 1f): ClosedFloatingPointRange<Float> {
     require(margin >= 0 && minimumRange > 0)
     val list = values.toList()
     val min = list.minOrNull() ?: 0f
@@ -186,10 +186,10 @@ fun plotRange(values: Iterable<Float>, margin: Float = 0f, minimumRange: Float =
     return minOf(min - margin, middle - minimumRange / 2)..maxOf(max + margin, middle + minimumRange / 2)
 }
 
-fun indexedPlotData(values: List<Float>): List<Vector2> = values.mapIndexed { index, value -> Vector2(index.toFloat(), value) }
+public fun indexedPlotData(values: List<Float>): List<Vector2> = values.mapIndexed { index, value -> Vector2(index.toFloat(), value) }
 
 /** Maps readings to hours since [startTime] and a caller-selected value. */
-fun <T> plotReadings(
+public fun <T> plotReadings(
     readings: List<com.kylecorry.sol.units.Reading<T>>,
     startTime: kotlin.time.Instant? = null,
     value: (T) -> Float,

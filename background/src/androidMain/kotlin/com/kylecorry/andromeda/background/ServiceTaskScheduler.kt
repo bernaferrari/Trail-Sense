@@ -6,7 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import com.kylecorry.andromeda.core.system.Intents
 
-class ServiceTaskScheduler(
+public class ServiceTaskScheduler(
     private val context: Context,
     private val service: Class<out Service>,
     private val foreground: Boolean = false,

@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.compression
 
 @ExperimentalUnsignedTypes
-fun ByteArray.toShort(): Short {
+public fun ByteArray.toShort(): Short {
     if (size != Short.SIZE_BYTES) {
         throw IllegalStateException("Byte array does not contain a short")
     }
@@ -10,7 +10,7 @@ fun ByteArray.toShort(): Short {
 
 @ExperimentalUnsignedTypes
 @Suppress("EXPERIMENTAL_UNSIGNED_LITERALS")
-fun ByteArray.toInt(): Int {
+public fun ByteArray.toInt(): Int {
     if (size != Int.SIZE_BYTES) {
         throw IllegalStateException("Byte array does not contain an int")
     }
@@ -23,7 +23,7 @@ fun ByteArray.toInt(): Int {
     return intValue.toInt()
 }
 
-fun ByteArray.bitsToInt(numBits: Int, startingOffsetBits: Int = 0): Int? {
+public fun ByteArray.bitsToInt(numBits: Int, startingOffsetBits: Int = 0): Int? {
     require(numBits in 0..Int.SIZE_BITS) { "Bit count must be between 0 and ${Int.SIZE_BITS}" }
     require(startingOffsetBits >= 0) { "Bit offset must be nonnegative" }
     var currentByteIndex = startingOffsetBits / 8
@@ -55,7 +55,7 @@ fun ByteArray.bitsToInt(numBits: Int, startingOffsetBits: Int = 0): Int? {
     return value
 }
 
-fun ByteArray.bitsToByte(numBits: Int, startingOffsetBits: Int = 0): Byte? {
+public fun ByteArray.bitsToByte(numBits: Int, startingOffsetBits: Int = 0): Byte? {
     if (numBits > Byte.SIZE_BITS) throw IllegalArgumentException("Cannot read more than 8 bits")
     return bitsToInt(numBits, startingOffsetBits)?.toByte()
 }

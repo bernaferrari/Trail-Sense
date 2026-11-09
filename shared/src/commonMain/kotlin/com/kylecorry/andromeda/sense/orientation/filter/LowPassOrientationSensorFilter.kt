@@ -5,12 +5,12 @@ import kotlinx.atomicfu.locks.synchronized
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.QuaternionMath
 
-class LowPassOrientationSensorFilter(
-    var alpha: Float,
-    var useSlerp: Boolean = true
+public class LowPassOrientationSensorFilter(
+    public var alpha: Float,
+    public var useSlerp: Boolean = true
 ) : OrientationSensorFilter {
 
-    val value: FloatArray
+    public val value: FloatArray
         get() = synchronized(lock) {
             _current.copyOf()
         }

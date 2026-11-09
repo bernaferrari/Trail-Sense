@@ -4,7 +4,7 @@ import android.media.AudioTrack
 import com.kylecorry.luna.time.CoroutineTimer
 
 /** Plays an [AudioTrack] with optional fade in/out. */
-open class AudioTrackSoundPlayer(private val sound: AudioTrack) : SoundPlayer {
+public open class AudioTrackSoundPlayer(private val sound: AudioTrack) : SoundPlayer {
 
     private var volume = 0f
 

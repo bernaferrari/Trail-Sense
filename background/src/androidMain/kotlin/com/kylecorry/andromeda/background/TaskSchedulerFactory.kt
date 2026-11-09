@@ -8,10 +8,10 @@ import androidx.work.ListenableWorker
 import com.kylecorry.andromeda.core.annotations.ExperimentalUsage
 
 @ExperimentalUsage("This class may change significantly to accommodate generic tasks")
-class TaskSchedulerFactory(private val context: Context) {
+public class TaskSchedulerFactory(private val context: Context) {
 
     @Suppress("UNCHECKED_CAST")
-    fun once(
+    public fun once(
         task: Class<*>,
         uniqueId: Int,
         data: Bundle? = null
@@ -40,7 +40,7 @@ class TaskSchedulerFactory(private val context: Context) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun interval(
+    public fun interval(
         task: Class<*>,
         uniqueId: Int,
         data: Bundle? = null
@@ -69,7 +69,7 @@ class TaskSchedulerFactory(private val context: Context) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun alwaysOn(
+    public fun alwaysOn(
         task: Class<*>,
         foreground: Boolean = false,
         data: Bundle? = null

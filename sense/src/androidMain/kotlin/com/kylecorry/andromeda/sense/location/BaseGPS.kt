@@ -27,7 +27,7 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 
 @SuppressLint("MissingPermission")
-abstract class BaseGPS(
+public abstract class BaseGPS(
     protected val context: Context,
     private val provider: String,
     private val requestConfig: LocationRequestConfig = LocationRequestConfig()
@@ -70,7 +70,7 @@ abstract class BaseGPS(
     override var speedAccuracy: Float? = null
         protected set
 
-    protected val locationManager by lazy { context.getSystemService<LocationManager>() }
+    protected val locationManager: LocationManager? by lazy { context.getSystemService<LocationManager>() }
     private val locationListener = SimpleLocationListener { updateLastLocation(it, true) }
 
     init {
@@ -189,11 +189,11 @@ abstract class BaseGPS(
         if (notify) notifyListeners()
     }
 
-    companion object {
-        const val ACCURACY_HIGH_THRESHOLD = 8f
-        const val ACCURACY_MEDIUM_THRESHOLD = 16f
+    public companion object {
+        public const val ACCURACY_HIGH_THRESHOLD: Float = 8f
+        public const val ACCURACY_MEDIUM_THRESHOLD: Float = 16f
 
-        fun isAvailable(context: Context, provider: String): Boolean {
+        public fun isAvailable(context: Context, provider: String): Boolean {
             if (!Permissions.canGetLocation(context)) {
                 return false
             }

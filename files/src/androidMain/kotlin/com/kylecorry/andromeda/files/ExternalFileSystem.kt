@@ -12,9 +12,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.Exception
 
-class ExternalFileSystem(private val context: Context) {
+public class ExternalFileSystem(private val context: Context) {
 
-    suspend fun read(uri: Uri): String? {
+    public suspend fun read(uri: Uri): String? {
         return withContext(Dispatchers.IO) {
             val inputStream = stream(uri)
 
@@ -29,13 +29,13 @@ class ExternalFileSystem(private val context: Context) {
     }
 
     @SuppressLint("Recycle")
-    suspend fun stream(uri: Uri): InputStream? {
+    public suspend fun stream(uri: Uri): InputStream? {
         return withContext(Dispatchers.IO) {
             context.contentResolver.openInputStream(uri)
         }
     }
 
-    suspend fun write(uri: Uri, text: String): Boolean {
+    public suspend fun write(uri: Uri, text: String): Boolean {
         return withContext(Dispatchers.IO) {
             val stream = outputStream(uri) ?: return@withContext false
 
@@ -51,7 +51,7 @@ class ExternalFileSystem(private val context: Context) {
     }
 
     @SuppressLint("Recycle")
-    suspend fun outputStream(uri: Uri): OutputStream? {
+    public suspend fun outputStream(uri: Uri): OutputStream? {
         return withContext(Dispatchers.IO) {
             try {
                 context.contentResolver.openOutputStream(uri)
@@ -61,11 +61,11 @@ class ExternalFileSystem(private val context: Context) {
         }
     }
 
-    fun getMimeType(uri: Uri): String? {
+    public fun getMimeType(uri: Uri): String? {
         return context.contentResolver.getType(uri)
     }
 
-    fun getFileName(
+    public fun getFileName(
         uri: Uri,
         withExtension: Boolean = true,
         fallbackToPath: Boolean = true
@@ -100,7 +100,7 @@ class ExternalFileSystem(private val context: Context) {
         }
     }
 
-    fun getExtension(uri: Uri): String? {
+    public fun getExtension(uri: Uri): String? {
         val name = getFileName(uri, withExtension = true, fallbackToPath = true) ?: return null
         return name.substringAfterLast(".")
     }

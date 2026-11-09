@@ -10,7 +10,7 @@ import com.kylecorry.andromeda.sense.BaseSensor
 import com.kylecorry.sol.units.Bearing
 
 @Suppress("DEPRECATION")
-class LegacyCompass(
+public class LegacyCompass(
     context: Context,
     private val useTrueNorth: Boolean,
     sensorDelay: Int = SensorManager.SENSOR_DELAY_GAME,
@@ -22,7 +22,7 @@ class LegacyCompass(
         get() = gotReading
     private var gotReading = false
 
-    override var declination = 0f
+    override var declination: Float = 0f
 
     override val bearing: Bearing
         get() = Bearing.from(rawBearing)

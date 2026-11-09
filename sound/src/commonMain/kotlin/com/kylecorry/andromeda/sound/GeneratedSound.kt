@@ -12,7 +12,7 @@ import kotlin.time.DurationUnit
  * Samples use the range -1 to 1; values outside that range are clipped. Use
  * [Duration.INFINITE] for continuous playback, and cancel the coroutine to stop it.
  */
-suspend fun playGeneratedSound(
+public suspend fun playGeneratedSound(
     sampleRate: Int = 44100,
     duration: Duration = Duration.INFINITE,
     sample: (index: Long) -> Double,
@@ -48,7 +48,7 @@ suspend fun playGeneratedSound(
 }
 
 /** Plays a sine tone, continuously by default. */
-suspend fun playTone(
+public suspend fun playTone(
     frequencyHz: Double,
     sampleRate: Int = 44100,
     duration: Duration = Duration.INFINITE,

@@ -9,43 +9,43 @@ import com.kylecorry.andromeda.wkt.WKTString
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.units.Coordinate
 
-fun obj(id: Int, vararg contents: PDFValue?): PDFValue.PDFObject {
+public fun obj(id: Int, vararg contents: PDFValue?): PDFValue.PDFObject {
     return PDFValue.PDFObject(id, 0, contents.toList().filterNotNull())
 }
 
-fun dict(vararg entries: Pair<PDFValue.PDFName, PDFValue>?): PDFValue.PDFDictionary {
+public fun dict(vararg entries: Pair<PDFValue.PDFName, PDFValue>?): PDFValue.PDFDictionary {
     return PDFValue.PDFDictionary(entries.filterNotNull().toMap())
 }
 
-fun name(name: String): PDFValue.PDFName {
+public fun name(name: String): PDFValue.PDFName {
     return PDFValue.PDFName(name)
 }
 
-fun string(value: String): PDFValue.PDFString {
+public fun string(value: String): PDFValue.PDFString {
     return PDFValue.PDFString(value)
 }
 
-fun number(value: Number): PDFValue.PDFNumber {
+public fun number(value: Number): PDFValue.PDFNumber {
     return PDFValue.PDFNumber(value)
 }
 
-fun array(vararg values: PDFValue): PDFValue.PDFArray {
+public fun array(vararg values: PDFValue): PDFValue.PDFArray {
     return PDFValue.PDFArray(values.toList())
 }
 
-fun ref(objectId: Int): PDFValue.PDFIndirectObject {
+public fun ref(objectId: Int): PDFValue.PDFIndirectObject {
     return PDFValue.PDFIndirectObject(objectId)
 }
 
-fun stream(bytes: ByteArray): PDFValue.PDFStream {
+public fun stream(bytes: ByteArray): PDFValue.PDFStream {
     return PDFValue.PDFStream(bytes)
 }
 
-fun stream(string: String): PDFValue.PDFStream {
+public fun stream(string: String): PDFValue.PDFStream {
     return PDFValue.PDFStream(string.encodeToByteArray())
 }
 
-fun catalog(objectId: Int, pagesObjectReference: Int): PDFValue.PDFObject {
+public fun catalog(objectId: Int, pagesObjectReference: Int): PDFValue.PDFObject {
     return obj(
         objectId,
         dict(
@@ -55,7 +55,7 @@ fun catalog(objectId: Int, pagesObjectReference: Int): PDFValue.PDFObject {
     )
 }
 
-fun pages(objectId: Int, childIds: List<Int>): PDFValue.PDFObject {
+public fun pages(objectId: Int, childIds: List<Int>): PDFValue.PDFObject {
     return obj(
         objectId,
         dict(
@@ -66,7 +66,7 @@ fun pages(objectId: Int, childIds: List<Int>): PDFValue.PDFObject {
     )
 }
 
-fun page(
+public fun page(
     id: Int,
     parent: Int,
     width: Int,
@@ -91,7 +91,7 @@ fun page(
     )
 }
 
-fun viewport(
+public fun viewport(
     id: Int,
     measureId: Int,
     bbox: DoubleArray,
@@ -108,7 +108,7 @@ fun viewport(
     )
 }
 
-fun geo(
+public fun geo(
     id: Int,
     gpts: List<Coordinate>,
     lpts: List<Vector2> = listOf(
@@ -147,7 +147,7 @@ fun geo(
     )
 }
 
-fun gcs(
+public fun gcs(
     id: Int,
     projcs: ProjectedCoordinateSystem,
     properties: PDFValue.PDFDictionary = dict()
@@ -193,7 +193,7 @@ fun gcs(
     )
 }
 
-fun stream(
+public fun stream(
     id: Int,
     contents: String,
     properties: PDFValue.PDFDictionary = dict()
@@ -201,7 +201,7 @@ fun stream(
     return stream(id, contents.encodeToByteArray(), properties)
 }
 
-fun stream(
+public fun stream(
     id: Int,
     contents: ByteArray,
     properties: PDFValue.PDFDictionary = dict()
@@ -217,7 +217,7 @@ fun stream(
 }
 
 
-fun jpg(
+public fun jpg(
     id: Int,
     jpeg: ByteArray,
     imageWidth: Int,
@@ -233,7 +233,7 @@ fun jpg(
     return stream(id, prefix + jpeg + " EI Q".encodeToByteArray(), properties)
 }
 
-fun image(
+public fun image(
     id: Int,
     image: PixelImage,
     x: Int = 0,
@@ -244,7 +244,7 @@ fun image(
     properties: PDFValue.PDFDictionary = dict(),
 ): PDFValue.PDFObject = jpg(id, image.encodeJpeg(quality), image.width, image.height, x, y, destWidth, destHeight, properties)
 
-fun text(
+public fun text(
     id: Int,
     text: String,
     x: Int = 0,

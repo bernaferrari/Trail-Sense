@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.core.coroutines
 
-enum class BackgroundMinimumState {
+public enum class BackgroundMinimumState {
     Resumed,
     Started,
     Created,

@@ -4,7 +4,7 @@ import kotlin.math.exp
 import kotlin.math.roundToInt
 
 /** Gaussian blur with clamped edges and the same radius-to-sigma curve as the Android toolkit. */
-fun PixelImage.blur(radius: Int): PixelImage {
+public fun PixelImage.blur(radius: Int): PixelImage {
     require(radius in 0..25)
     if (radius == 0) return PixelImage(width, height, pixels.copyOf())
     require(pixels.size <= Int.MAX_VALUE / 4)

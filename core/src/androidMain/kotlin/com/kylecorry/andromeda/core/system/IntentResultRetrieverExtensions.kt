@@ -5,7 +5,7 @@ import com.kylecorry.andromeda.core.system.uri
 
 import android.net.Uri
 
-fun IntentResultRetriever.createFile(
+public fun IntentResultRetriever.createFile(
     filename: String,
     type: String,
     message: String = filename,
@@ -21,7 +21,7 @@ fun IntentResultRetriever.createFile(
     }
 }
 
-fun IntentResultRetriever.createFile(
+public fun IntentResultRetriever.createFile(
     filename: String,
     types: List<String>,
     message: String = filename,
@@ -37,7 +37,7 @@ fun IntentResultRetriever.createFile(
     }
 }
 
-fun IntentResultRetriever.pickFile(
+public fun IntentResultRetriever.pickFile(
     type: String,
     message: String,
     useSAF: Boolean = true,
@@ -59,7 +59,7 @@ fun IntentResultRetriever.pickFile(
     }
 }
 
-fun IntentResultRetriever.pickFile(
+public fun IntentResultRetriever.pickFile(
     types: List<String>,
     message: String,
     useSAF: Boolean = true,
@@ -81,7 +81,7 @@ fun IntentResultRetriever.pickFile(
     }
 }
 
-fun IntentResultRetriever.pickDirectory(
+public fun IntentResultRetriever.pickDirectory(
     message: String,
     access: UriAccess = UriAccess(),
     action: (uri: Uri?) -> Unit

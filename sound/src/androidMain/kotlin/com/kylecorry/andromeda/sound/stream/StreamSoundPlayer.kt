@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-open class StreamSoundPlayer(
+public open class StreamSoundPlayer(
     private val stream: AudioStream,
     sampleRate: Int = 44100,
     bufferSize: Int = 2048,

@@ -14,24 +14,24 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.list.ItemList
 
-typealias ListIcon = @Composable () -> Unit
+public typealias ListIcon = @Composable () -> Unit
 
-data class ListMenuItem(val text: String, val action: () -> Unit)
-data class ListItemCheckbox(val checked: Boolean, val onClick: () -> Unit)
-data class ListItemTag(val text: String, val icon: ListIcon? = null, val color: Color = Color.LightGray)
-data class ListItemData(
+public data class ListMenuItem(val text: String, val action: () -> Unit)
+public data class ListItemCheckbox(val checked: Boolean, val onClick: () -> Unit)
+public data class ListItemTag(val text: String, val icon: ListIcon? = null, val color: Color = Color.LightGray)
+public data class ListItemData(
     val text: String,
     val icon: ListIcon? = null,
     val grow: Float = 0f,
     val modifier: Modifier = Modifier,
     val alignment: Alignment.Vertical = Alignment.CenterVertically
 )
-data class ListItemDataAlignment(
+public data class ListItemDataAlignment(
     val horizontal: Arrangement.Horizontal = Arrangement.Start,
     val vertical: Alignment.Vertical = Alignment.CenterVertically
 )
 
-data class ListItem(
+public data class ListItem(
     val id: Long,
     val title: String,
     val subtitle: String? = null,
@@ -51,10 +51,10 @@ data class ListItem(
     val subtitleContent: (@Composable () -> Unit)? = null
 )
 
-fun interface ListItemMapper<T> { fun map(value: T): ListItem }
+public fun interface ListItemMapper<T> { public fun map(value: T): ListItem }
 
 @Composable
-fun AndromedaList(
+public fun AndromedaList(
     items: List<ListItem>, modifier: Modifier = Modifier, state: LazyListState = rememberLazyListState(),
     menuLabel: String = "More options", emptyContent: (@Composable () -> Unit)? = null
 ) {
@@ -69,7 +69,7 @@ fun AndromedaList(
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
-fun AndromedaListItem(item: ListItem, menuLabel: String = "More options", modifier: Modifier = Modifier) {
+public fun AndromedaListItem(item: ListItem, menuLabel: String = "More options", modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth().combinedClickable(onClick = item.action, onLongClick = item.longClickAction).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         item.checkbox?.let { checkbox -> Checkbox(checkbox.checked, onCheckedChange = { checkbox.onClick() }) }

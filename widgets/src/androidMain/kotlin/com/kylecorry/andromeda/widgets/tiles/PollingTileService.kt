@@ -13,16 +13,16 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /** Refreshes a quick-settings tile while the system is listening. */
-abstract class PollingTileService(private val interval: Duration = 1.seconds) : AndromedaTileService() {
+public abstract class PollingTileService(private val interval: Duration = 1.seconds) : AndromedaTileService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var polling: Job? = null
 
     init { require(interval.isFinite() && interval > Duration.ZERO) }
 
-    abstract fun isOn(): Boolean
-    open fun isDisabled(): Boolean = false
-    open fun isOff(): Boolean = !isOn() && !isDisabled()
-    open fun onInterval() = Unit
+    public abstract fun isOn(): Boolean
+    public open fun isDisabled(): Boolean = false
+    public open fun isOff(): Boolean = !isOn() && !isDisabled()
+    public open fun onInterval(): Unit = Unit
 
     override fun onStartListening() {
         super.onStartListening()

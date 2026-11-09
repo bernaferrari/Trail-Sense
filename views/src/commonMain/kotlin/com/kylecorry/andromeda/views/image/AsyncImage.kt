@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun AsyncImage(
+public fun AsyncImage(
     model: Any?,
     contentDescription: String?,
     modifier: Modifier = Modifier,
@@ -22,7 +22,7 @@ fun AsyncImage(
 }
 
 @Composable
-fun AsyncImage(
+public fun AsyncImage(
     key: Any?,
     contentDescription: String?,
     modifier: Modifier = Modifier,

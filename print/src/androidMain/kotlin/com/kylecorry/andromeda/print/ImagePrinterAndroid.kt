@@ -18,7 +18,7 @@ import android.print.pdf.PrintedPdfDocument
 import com.kylecorry.andromeda.bitmaps.toBitmap
 import java.io.FileOutputStream
 
-fun imagePrinter(context: Context): ImagePrinter = ImagePrinter { image, jobName, options ->
+public fun imagePrinter(context: Context): ImagePrinter = ImagePrinter { image, jobName, options ->
     require(context is Activity) { "Printing requires an Activity context" }
     val bitmap = image.toBitmap()
     val landscape = when (options.orientation) {

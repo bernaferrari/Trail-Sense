@@ -1,0 +1,42 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:torch>
+final enum class com.kylecorry.andromeda.torch/TorchState : kotlin/Enum<com.kylecorry.andromeda.torch/TorchState> { // com.kylecorry.andromeda.torch/TorchState|null[0]
+    enum entry Off // com.kylecorry.andromeda.torch/TorchState.Off|null[0]
+    enum entry On // com.kylecorry.andromeda.torch/TorchState.On|null[0]
+    enum entry Unavailable // com.kylecorry.andromeda.torch/TorchState.Unavailable|null[0]
+
+    final val entries // com.kylecorry.andromeda.torch/TorchState.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.torch/TorchState> // com.kylecorry.andromeda.torch/TorchState.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.torch/TorchState // com.kylecorry.andromeda.torch/TorchState.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.torch/TorchState> // com.kylecorry.andromeda.torch/TorchState.values|values#static(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.torch/ScreenBrightness { // com.kylecorry.andromeda.torch/ScreenBrightness|null[0]
+    abstract var brightness // com.kylecorry.andromeda.torch/ScreenBrightness.brightness|{}brightness[0]
+        abstract fun <get-brightness>(): kotlin/Float // com.kylecorry.andromeda.torch/ScreenBrightness.brightness.<get-brightness>|<get-brightness>(){}[0]
+        abstract fun <set-brightness>(kotlin/Float) // com.kylecorry.andromeda.torch/ScreenBrightness.brightness.<set-brightness>|<set-brightness>(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.torch/ScreenTorch : com.kylecorry.andromeda.torch/Torch { // com.kylecorry.andromeda.torch/ScreenTorch|null[0]
+    constructor <init>(com.kylecorry.andromeda.torch/ScreenBrightness) // com.kylecorry.andromeda.torch/ScreenTorch.<init>|<init>(com.kylecorry.andromeda.torch.ScreenBrightness){}[0]
+
+    final val brightnessLevels // com.kylecorry.andromeda.torch/ScreenTorch.brightnessLevels|{}brightnessLevels[0]
+        final fun <get-brightnessLevels>(): kotlin/Int // com.kylecorry.andromeda.torch/ScreenTorch.brightnessLevels.<get-brightnessLevels>|<get-brightnessLevels>(){}[0]
+
+    final fun isAvailable(): kotlin/Boolean // com.kylecorry.andromeda.torch/ScreenTorch.isAvailable|isAvailable(){}[0]
+    final fun isDimmable(): kotlin/Boolean // com.kylecorry.andromeda.torch/ScreenTorch.isDimmable|isDimmable(){}[0]
+    final fun off() // com.kylecorry.andromeda.torch/ScreenTorch.off|off(){}[0]
+    final fun on() // com.kylecorry.andromeda.torch/ScreenTorch.on|on(){}[0]
+    final fun on(kotlin/Float) // com.kylecorry.andromeda.torch/ScreenTorch.on|on(kotlin.Float){}[0]
+}
+
+final fun com.kylecorry.andromeda.torch/deviceTorch(): com.kylecorry.andromeda.torch/Torch // com.kylecorry.andromeda.torch/deviceTorch|deviceTorch(){}[0]
+final fun com.kylecorry.andromeda.torch/screenBrightness(): com.kylecorry.andromeda.torch/ScreenBrightness? // com.kylecorry.andromeda.torch/screenBrightness|screenBrightness(){}[0]
+final fun com.kylecorry.andromeda.torch/torchStates(): kotlinx.coroutines.flow/Flow<com.kylecorry.andromeda.torch/TorchState> // com.kylecorry.andromeda.torch/torchStates|torchStates(){}[0]

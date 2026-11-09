@@ -1,0 +1,45 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:files>
+final class com.kylecorry.andromeda.files/ArchiveEntry { // com.kylecorry.andromeda.files/ArchiveEntry|null[0]
+    constructor <init>(kotlin/String, kotlin/Boolean, kotlin/Long, kotlin/Long) // com.kylecorry.andromeda.files/ArchiveEntry.<init>|<init>(kotlin.String;kotlin.Boolean;kotlin.Long;kotlin.Long){}[0]
+
+    final val compressedSize // com.kylecorry.andromeda.files/ArchiveEntry.compressedSize|{}compressedSize[0]
+        final fun <get-compressedSize>(): kotlin/Long // com.kylecorry.andromeda.files/ArchiveEntry.compressedSize.<get-compressedSize>|<get-compressedSize>(){}[0]
+    final val isDirectory // com.kylecorry.andromeda.files/ArchiveEntry.isDirectory|{}isDirectory[0]
+        final fun <get-isDirectory>(): kotlin/Boolean // com.kylecorry.andromeda.files/ArchiveEntry.isDirectory.<get-isDirectory>|<get-isDirectory>(){}[0]
+    final val name // com.kylecorry.andromeda.files/ArchiveEntry.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.kylecorry.andromeda.files/ArchiveEntry.name.<get-name>|<get-name>(){}[0]
+    final val size // com.kylecorry.andromeda.files/ArchiveEntry.size|{}size[0]
+        final fun <get-size>(): kotlin/Long // com.kylecorry.andromeda.files/ArchiveEntry.size.<get-size>|<get-size>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.files/ArchiveEntry.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // com.kylecorry.andromeda.files/ArchiveEntry.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // com.kylecorry.andromeda.files/ArchiveEntry.component3|component3(){}[0]
+    final fun component4(): kotlin/Long // com.kylecorry.andromeda.files/ArchiveEntry.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Boolean = ..., kotlin/Long = ..., kotlin/Long = ...): com.kylecorry.andromeda.files/ArchiveEntry // com.kylecorry.andromeda.files/ArchiveEntry.copy|copy(kotlin.String;kotlin.Boolean;kotlin.Long;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.files/ArchiveEntry.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.files/ArchiveEntry.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.files/ArchiveEntry.toString|toString(){}[0]
+}
+
+final object com.kylecorry.andromeda.files/MimeType { // com.kylecorry.andromeda.files/MimeType|null[0]
+    final fun toExtension(kotlin/String): kotlin/String? // com.kylecorry.andromeda.files/MimeType.toExtension|toExtension(kotlin.String){}[0]
+    final fun toMimeType(kotlin/String): kotlin/String? // com.kylecorry.andromeda.files/MimeType.toMimeType|toMimeType(kotlin.String){}[0]
+}
+
+final fun (com.kylecorry.andromeda.files/FileStorage).com.kylecorry.andromeda.files/listArchive(kotlin/String, kotlin/String? = ..., kotlin/Int = ...): kotlin.collections/List<com.kylecorry.andromeda.files/ArchiveEntry> // com.kylecorry.andromeda.files/listArchive|listArchive@com.kylecorry.andromeda.files.FileStorage(kotlin.String;kotlin.String?;kotlin.Int){}[0]
+final fun (com.kylecorry.andromeda.files/FileStorage).com.kylecorry.andromeda.files/readArchiveEntry(kotlin/String, kotlin/String, kotlin/String? = ...): kotlin/ByteArray? // com.kylecorry.andromeda.files/readArchiveEntry|readArchiveEntry@com.kylecorry.andromeda.files.FileStorage(kotlin.String;kotlin.String;kotlin.String?){}[0]
+final fun com.kylecorry.andromeda.files/appCache(): com.kylecorry.andromeda.files/FileStorage // com.kylecorry.andromeda.files/appCache|appCache(){}[0]
+final fun com.kylecorry.andromeda.files/appFiles(): com.kylecorry.andromeda.files/FileStorage // com.kylecorry.andromeda.files/appFiles|appFiles(){}[0]
+final fun com.kylecorry.andromeda.files/listAssets(kotlin/String = ...): kotlin.collections/List<kotlin/String> // com.kylecorry.andromeda.files/listAssets|listAssets(kotlin.String){}[0]
+final fun com.kylecorry.andromeda.files/openAsset(kotlin/String): okio/Source // com.kylecorry.andromeda.files/openAsset|openAsset(kotlin.String){}[0]
+final suspend fun (com.kylecorry.andromeda.files/FileStorage).com.kylecorry.andromeda.files/unzip(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/Int = ...) // com.kylecorry.andromeda.files/unzip|unzip@com.kylecorry.andromeda.files.FileStorage(kotlin.String;kotlin.String;kotlin.String?;kotlin.Int){}[0]
+final suspend fun (com.kylecorry.andromeda.files/FileStorage).com.kylecorry.andromeda.files/zip(kotlin/String, kotlin.collections/List<kotlin/String>, kotlin/String? = ..., kotlin.collections/Set<kotlin/String> = ...) // com.kylecorry.andromeda.files/zip|zip@com.kylecorry.andromeda.files.FileStorage(kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.String?;kotlin.collections.Set<kotlin.String>){}[0]
+final suspend fun com.kylecorry.andromeda.files/readAsset(kotlin/String): kotlin/ByteArray // com.kylecorry.andromeda.files/readAsset|readAsset(kotlin.String){}[0]
+final suspend fun com.kylecorry.andromeda.files/readAssetText(kotlin/String): kotlin/String // com.kylecorry.andromeda.files/readAssetText|readAssetText(kotlin.String){}[0]

@@ -2,16 +2,16 @@ package com.kylecorry.andromeda.pdf
 
 import com.kylecorry.andromeda.bitmaps.PixelImage
 
-data class PdfPageSize(val widthPoints: Float, val heightPoints: Float)
+public data class PdfPageSize(val widthPoints: Float, val heightPoints: Float)
 
 /** A PDF document opened from bytes. Page indices are zero-based. Close it when finished.
  * Android requires KSensor context initialization and stores a temporary copy in the app cache.
  */
-expect class PdfPages(bytes: ByteArray) : AutoCloseable {
-    val pageCount: Int
-    fun pageSize(page: Int): PdfPageSize
+public expect class PdfPages(bytes: ByteArray) : AutoCloseable {
+    public val pageCount: Int
+    public fun pageSize(page: Int): PdfPageSize
     /** Renders a page to the exact pixel dimensions, filling empty areas with [background]. */
-    fun render(page: Int, width: Int, height: Int, background: Int = -1): PixelImage
+    public fun render(page: Int, width: Int, height: Int, background: Int = -1): PixelImage
     override fun close()
 }
 

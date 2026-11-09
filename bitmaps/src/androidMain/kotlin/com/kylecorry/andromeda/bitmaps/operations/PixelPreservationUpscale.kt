@@ -8,7 +8,7 @@ import com.kylecorry.andromeda.bitmaps.operations.BitmapOperation
 /**
  * An upscaler that preserves the colors of the pixels but attempts to smooth edges
  */
-class PixelPreservationUpscale(
+public class PixelPreservationUpscale(
     private val size: Size
 ) : BitmapOperation {
     override fun execute(bitmap: Bitmap): Bitmap {

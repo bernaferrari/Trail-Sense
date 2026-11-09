@@ -6,7 +6,7 @@ import kotlin.math.abs
 import kotlin.math.withSign
 
 /** Classifies the device orientation from a gravity or low-pass accelerometer. */
-class DeviceOrientation(private val accelerometer: Accelerometer) : SharedSensor() {
+public class DeviceOrientation(private val accelerometer: Accelerometer) : SharedSensor() {
     override fun startImpl() {
         gotReading = false
         resetSessionMetadata()
@@ -20,7 +20,7 @@ class DeviceOrientation(private val accelerometer: Accelerometer) : SharedSensor
     override val hasValidReading: Boolean
         get() = gotReading
 
-    var orientation: Orientation = Orientation.Flat
+    public var orientation: Orientation = Orientation.Flat
         private set
 
     private var gotReading = false
@@ -53,7 +53,7 @@ class DeviceOrientation(private val accelerometer: Accelerometer) : SharedSensor
         return true
     }
 
-    enum class Orientation {
+    public enum class Orientation {
         Portrait,
         PortraitInverse,
         Flat,

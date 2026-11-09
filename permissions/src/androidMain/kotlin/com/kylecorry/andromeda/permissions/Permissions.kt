@@ -23,9 +23,9 @@ import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.tryOrDefault
 
-object Permissions {
+public object Permissions {
 
-    fun isBackgroundLocationEnabled(
+    public fun isBackgroundLocationEnabled(
         context: Context,
         requireFineLocation: Boolean = false
     ): Boolean {
@@ -36,22 +36,22 @@ object Permissions {
         }
     }
 
-    fun canGetLocation(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canGetLocation(context: Context, checkAppOps: Boolean = false): Boolean {
         return canGetFineLocation(context, checkAppOps) || canGetCoarseLocation(
             context,
             checkAppOps
         )
     }
 
-    fun canGetFineLocation(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canGetFineLocation(context: Context, checkAppOps: Boolean = false): Boolean {
         return hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION, checkAppOps)
     }
 
-    fun canGetCoarseLocation(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canGetCoarseLocation(context: Context, checkAppOps: Boolean = false): Boolean {
         return hasPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION, checkAppOps)
     }
 
-    fun canUseFlashlight(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canUseFlashlight(context: Context, checkAppOps: Boolean = false): Boolean {
         return hasPermission(
             context,
             "android.permission.FLASHLIGHT",
@@ -59,15 +59,15 @@ object Permissions {
         ) || isCameraEnabled(context, checkAppOps)
     }
 
-    fun isCameraEnabled(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun isCameraEnabled(context: Context, checkAppOps: Boolean = false): Boolean {
         return hasPermission(context, Manifest.permission.CAMERA, checkAppOps)
     }
 
-    fun canUseBluetooth(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canUseBluetooth(context: Context, checkAppOps: Boolean = false): Boolean {
         return hasPermission(context, Manifest.permission.BLUETOOTH, checkAppOps)
     }
 
-    fun canRecognizeActivity(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canRecognizeActivity(context: Context, checkAppOps: Boolean = false): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             hasPermission(context, Manifest.permission.ACTIVITY_RECOGNITION, checkAppOps)
         } else {
@@ -75,27 +75,27 @@ object Permissions {
         }
     }
 
-    fun canVibrate(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canVibrate(context: Context, checkAppOps: Boolean = false): Boolean {
         return hasPermission(context, Manifest.permission.VIBRATE, checkAppOps)
     }
 
-    fun canRecordAudio(context: Context, checkAppOps: Boolean = false): Boolean {
+    public fun canRecordAudio(context: Context, checkAppOps: Boolean = false): Boolean {
         return hasPermission(context, Manifest.permission.RECORD_AUDIO, checkAppOps)
     }
 
-    fun getPermissionName(context: Context, permission: String): String? {
+    public fun getPermissionName(context: Context, permission: String): String? {
         return tryOrDefault(null) {
             val info = context.packageManager.getPermissionInfo(permission, 0)
             info.loadLabel(context.packageManager).toString()
         }
     }
 
-    fun getRequestedPermissions(context: Context): List<String> {
+    public fun getRequestedPermissions(context: Context): List<String> {
         val info = Package.getPackageInfo(context, flags = PackageManager.GET_PERMISSIONS)
         return info.requestedPermissions?.asList() ?: emptyList()
     }
 
-    fun getGrantedPermissions(context: Context): List<String> {
+    public fun getGrantedPermissions(context: Context): List<String> {
         val info = Package.getPackageInfo(context, flags = PackageManager.GET_PERMISSIONS)
         return info.requestedPermissions?.filterIndexed { i, _ ->
             val flags = info.requestedPermissionsFlags ?: return@filterIndexed false
@@ -103,12 +103,12 @@ object Permissions {
         } ?: emptyList()
     }
 
-    fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+    public fun isIgnoringBatteryOptimizations(context: Context): Boolean {
         return context.getSystemService<PowerManager>()
             ?.isIgnoringBatteryOptimizations(Package.getPackageName(context)) ?: false
     }
 
-    fun hasPermission(context: Context, permission: String, checkAppOps: Boolean = false): Boolean {
+    public fun hasPermission(context: Context, permission: String, checkAppOps: Boolean = false): Boolean {
         val hasPermission = ContextCompat.checkSelfPermission(
             context,
             permission
@@ -122,7 +122,7 @@ object Permissions {
         return hasPermission && hasAppOps
     }
 
-    fun hasPermission(
+    public fun hasPermission(
         context: Context,
         packageName: String,
         permission: String
@@ -133,14 +133,14 @@ object Permissions {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun hasPermission(context: Context, permission: SpecialPermission): Boolean {
+    public fun hasPermission(context: Context, permission: SpecialPermission): Boolean {
         return when (permission) {
             SpecialPermission.SCHEDULE_EXACT_ALARMS -> canScheduleExactAlarms(context)
             SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS -> isIgnoringBatteryOptimizations(context)
         }
     }
 
-    fun enforceCallingPermission(
+    public fun enforceCallingPermission(
         context: Context,
         permission: String,
         callerOnly: Boolean = false
@@ -152,7 +152,7 @@ object Permissions {
         }
     }
 
-    fun enforceCallingSignature(
+    public fun enforceCallingSignature(
         context: Context,
         allowedSignatures: List<String>
     ) {
@@ -169,7 +169,7 @@ object Permissions {
         }
     }
 
-    fun requestPermission(context: Context, permission: SpecialPermission) {
+    public fun requestPermission(context: Context, permission: SpecialPermission) {
         when (permission) {
             SpecialPermission.SCHEDULE_EXACT_ALARMS -> requestScheduleExactAlarms(context)
             SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS -> requestIgnoreBatteryOptimization(
@@ -179,7 +179,7 @@ object Permissions {
     }
 
     @SuppressLint("BatteryLife")
-    fun requestIgnoreBatteryOptimization(context: Context) {
+    public fun requestIgnoreBatteryOptimization(context: Context) {
         if (isIgnoringBatteryOptimizations(context)) {
             return
         }
@@ -196,7 +196,7 @@ object Permissions {
         context.startActivity(intent)
     }
 
-    fun canScheduleExactAlarms(context: Context): Boolean {
+    public fun canScheduleExactAlarms(context: Context): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             return true
         }
@@ -215,7 +215,7 @@ object Permissions {
      * You should display a notice with instructions before calling this - unfortunately Android does not do that by default
      */
     @SuppressLint("NewApi")
-    fun requestScheduleExactAlarms(context: Context) {
+    public fun requestScheduleExactAlarms(context: Context) {
         if (canScheduleExactAlarms(context)) {
             return
         }
@@ -223,7 +223,7 @@ object Permissions {
         context.startActivity(Intents.alarmAndReminderSettings(context))
     }
 
-    fun canCreateForegroundServices(
+    public fun canCreateForegroundServices(
         context: Context,
         fromBackground: Boolean = false,
         foregroundServiceTypes: List<Int> = emptyList()
@@ -337,20 +337,20 @@ object Permissions {
     }
 
     // Requirements
-    fun requirePermission(context: Context, permission: String) {
+    public fun requirePermission(context: Context, permission: String) {
         if (!hasPermission(context, permission)) {
             throw NoPermissionException(permission)
         }
     }
 
     // Bluetooth
-    fun requireLegacyBluetooth(context: Context) =
+    public fun requireLegacyBluetooth(context: Context): Unit =
         requirePermission(context, Manifest.permission.BLUETOOTH)
 
-    fun requireLegacyBluetoothAdmin(context: Context) =
+    public fun requireLegacyBluetoothAdmin(context: Context): Unit =
         requirePermission(context, Manifest.permission.BLUETOOTH_ADMIN)
 
-    fun requireBluetoothConnect(context: Context, requireLegacyPermission: Boolean = true) {
+    public fun requireBluetoothConnect(context: Context, requireLegacyPermission: Boolean = true) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             if (requireLegacyPermission) {
                 requireLegacyBluetooth(context)
@@ -360,7 +360,7 @@ object Permissions {
         requirePermission(context, Manifest.permission.BLUETOOTH_CONNECT)
     }
 
-    fun requireBluetoothScan(context: Context, requireLegacyPermission: Boolean = true) {
+    public fun requireBluetoothScan(context: Context, requireLegacyPermission: Boolean = true) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             if (requireLegacyPermission) {
                 requireLegacyBluetoothAdmin(context)

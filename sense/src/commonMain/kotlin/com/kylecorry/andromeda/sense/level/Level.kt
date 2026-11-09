@@ -4,9 +4,9 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationUtils
 
-class Level(
+public class Level(
     private val orientationSensor: OrientationSensor,
-    var surfaceRotation: Int = 0,
+    public var surfaceRotation: Int = 0,
 ) :
     SharedSensor(), LevelSensor {
 

@@ -15,7 +15,7 @@ import com.kylecorry.andromeda.core.system.Intents
  * - category: The category of the intent (optional)
  * - dataUri: The data URI of the intent (optional)
  */
-class BroadcastWorker(context: Context, workerParams: WorkerParameters) :
+public class BroadcastWorker(context: Context, workerParams: WorkerParameters) :
     Worker(context, workerParams) {
     override fun doWork(): Result {
         val action = inputData.getString("action") ?: return Result.failure()

@@ -4,7 +4,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 
-class GeomagneticRotationSensor(
+public class GeomagneticRotationSensor(
     context: Context,
     sensorDelay: Int = SensorManager.SENSOR_DELAY_GAME,
     maintainStateOnRestart: Boolean = false

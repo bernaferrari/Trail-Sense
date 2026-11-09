@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.sound.stream
 import kotlin.math.cos
 import kotlin.math.sin
 
-class PrecomputedAudioStream(
+public class PrecomputedAudioStream(
     private val source: AudioStream,
     private val seconds: Double = 1.0,
     private val blendDuration: Double = seconds * 0.2

@@ -1,0 +1,239 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:camera>
+final enum class com.kylecorry.andromeda.camera/CameraFlash : kotlin/Enum<com.kylecorry.andromeda.camera/CameraFlash> { // com.kylecorry.andromeda.camera/CameraFlash|null[0]
+    enum entry Auto // com.kylecorry.andromeda.camera/CameraFlash.Auto|null[0]
+    enum entry Off // com.kylecorry.andromeda.camera/CameraFlash.Off|null[0]
+    enum entry On // com.kylecorry.andromeda.camera/CameraFlash.On|null[0]
+
+    final val entries // com.kylecorry.andromeda.camera/CameraFlash.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.camera/CameraFlash> // com.kylecorry.andromeda.camera/CameraFlash.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.camera/CameraFlash // com.kylecorry.andromeda.camera/CameraFlash.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.camera/CameraFlash> // com.kylecorry.andromeda.camera/CameraFlash.values|values#static(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper { // com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper|null[0]
+    abstract fun getAngle(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper.getAngle|getAngle(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size){}[0]
+    abstract fun getPixel(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size, kotlin/Float? = ...): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper.getPixel|getPixel(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size;kotlin.Float?){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.camera.ar/CameraCalibrationSource { // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource|null[0]
+    abstract val sensorRotationDegrees // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.sensorRotationDegrees|{}sensorRotationDegrees[0]
+        abstract fun <get-sensorRotationDegrees>(): kotlin/Int // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.sensorRotationDegrees.<get-sensorRotationDegrees>|<get-sensorRotationDegrees>(){}[0]
+    abstract val zoomRatio // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.zoomRatio|{}zoomRatio[0]
+        abstract fun <get-zoomRatio>(): kotlin/Float? // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.zoomRatio.<get-zoomRatio>|<get-zoomRatio>(){}[0]
+    open val calibrationId // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.calibrationId|{}calibrationId[0]
+        open fun <get-calibrationId>(): kotlin/String? // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.calibrationId.<get-calibrationId>|<get-calibrationId>(){}[0]
+
+    abstract fun activeArray(kotlin/Boolean = ...): com.kylecorry.andromeda.camera.ar/ImageBounds? // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.activeArray|activeArray(kotlin.Boolean){}[0]
+    abstract fun distortionCorrection(): kotlin/FloatArray? // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.distortionCorrection|distortionCorrection(){}[0]
+    abstract fun intrinsicCalibration(kotlin/Boolean = ...): kotlin/FloatArray? // com.kylecorry.andromeda.camera.ar/CameraCalibrationSource.intrinsicCalibration|intrinsicCalibration(kotlin.Boolean){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.camera/PhotoCamera { // com.kylecorry.andromeda.camera/PhotoCamera|null[0]
+    abstract val calibration // com.kylecorry.andromeda.camera/PhotoCamera.calibration|{}calibration[0]
+        abstract fun <get-calibration>(): com.kylecorry.andromeda.camera.ar/CameraCalibrationSource? // com.kylecorry.andromeda.camera/PhotoCamera.calibration.<get-calibration>|<get-calibration>(){}[0]
+    abstract val exposure // com.kylecorry.andromeda.camera/PhotoCamera.exposure|{}exposure[0]
+        abstract fun <get-exposure>(): com.kylecorry.andromeda.camera/CameraExposure? // com.kylecorry.andromeda.camera/PhotoCamera.exposure.<get-exposure>|<get-exposure>(){}[0]
+    abstract val frames // com.kylecorry.andromeda.camera/PhotoCamera.frames|{}frames[0]
+        abstract fun <get-frames>(): kotlinx.coroutines.flow/Flow<com.kylecorry.andromeda.camera/CameraFrame> // com.kylecorry.andromeda.camera/PhotoCamera.frames.<get-frames>|<get-frames>(){}[0]
+    abstract val manualExposure // com.kylecorry.andromeda.camera/PhotoCamera.manualExposure|{}manualExposure[0]
+        abstract fun <get-manualExposure>(): com.kylecorry.andromeda.camera/ManualExposureRange? // com.kylecorry.andromeda.camera/PhotoCamera.manualExposure.<get-manualExposure>|<get-manualExposure>(){}[0]
+    abstract val manualFocusSupported // com.kylecorry.andromeda.camera/PhotoCamera.manualFocusSupported|{}manualFocusSupported[0]
+        abstract fun <get-manualFocusSupported>(): kotlin/Boolean // com.kylecorry.andromeda.camera/PhotoCamera.manualFocusSupported.<get-manualFocusSupported>|<get-manualFocusSupported>(){}[0]
+    abstract val meteringSupported // com.kylecorry.andromeda.camera/PhotoCamera.meteringSupported|{}meteringSupported[0]
+        abstract fun <get-meteringSupported>(): kotlin/Boolean // com.kylecorry.andromeda.camera/PhotoCamera.meteringSupported.<get-meteringSupported>|<get-meteringSupported>(){}[0]
+    abstract val stabilizationSupport // com.kylecorry.andromeda.camera/PhotoCamera.stabilizationSupport|{}stabilizationSupport[0]
+        abstract fun <get-stabilizationSupport>(): com.kylecorry.andromeda.camera/CameraStabilizationSupport // com.kylecorry.andromeda.camera/PhotoCamera.stabilizationSupport.<get-stabilizationSupport>|<get-stabilizationSupport>(){}[0]
+    abstract val zoom // com.kylecorry.andromeda.camera/PhotoCamera.zoom|{}zoom[0]
+        abstract fun <get-zoom>(): com.kylecorry.andromeda.camera/CameraZoom? // com.kylecorry.andromeda.camera/PhotoCamera.zoom.<get-zoom>|<get-zoom>(){}[0]
+
+    abstract fun flip() // com.kylecorry.andromeda.camera/PhotoCamera.flip|flip(){}[0]
+    abstract fun focusAt(kotlin/Float, kotlin/Float) // com.kylecorry.andromeda.camera/PhotoCamera.focusAt|focusAt(kotlin.Float;kotlin.Float){}[0]
+    abstract fun resetFocusAndMetering() // com.kylecorry.andromeda.camera/PhotoCamera.resetFocusAndMetering|resetFocusAndMetering(){}[0]
+    abstract fun setExposure(kotlin/Float) // com.kylecorry.andromeda.camera/PhotoCamera.setExposure|setExposure(kotlin.Float){}[0]
+    abstract fun setFlash(com.kylecorry.andromeda.camera/CameraFlash) // com.kylecorry.andromeda.camera/PhotoCamera.setFlash|setFlash(com.kylecorry.andromeda.camera.CameraFlash){}[0]
+    abstract fun setFocus(kotlin/Float?) // com.kylecorry.andromeda.camera/PhotoCamera.setFocus|setFocus(kotlin.Float?){}[0]
+    abstract fun setManualExposure(kotlin.time/Duration?, kotlin/Int?) // com.kylecorry.andromeda.camera/PhotoCamera.setManualExposure|setManualExposure(kotlin.time.Duration?;kotlin.Int?){}[0]
+    abstract fun setStabilization(kotlin/Boolean, kotlin/Boolean) // com.kylecorry.andromeda.camera/PhotoCamera.setStabilization|setStabilization(kotlin.Boolean;kotlin.Boolean){}[0]
+    abstract fun setTorch(kotlin/Boolean) // com.kylecorry.andromeda.camera/PhotoCamera.setTorch|setTorch(kotlin.Boolean){}[0]
+    abstract fun setZoom(kotlin/Float) // com.kylecorry.andromeda.camera/PhotoCamera.setZoom|setZoom(kotlin.Float){}[0]
+    abstract suspend fun capture(): kotlin/ByteArray // com.kylecorry.andromeda.camera/PhotoCamera.capture|capture(){}[0]
+}
+
+final class com.kylecorry.andromeda.camera.ar/CalibratedCameraAnglePixelMapper : com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper { // com.kylecorry.andromeda.camera.ar/CalibratedCameraAnglePixelMapper|null[0]
+    constructor <init>(com.kylecorry.andromeda.camera.ar/CameraCalibrationSource, com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.camera.ar/CalibratedCameraAnglePixelMapper.<init>|<init>(com.kylecorry.andromeda.camera.ar.CameraCalibrationSource;com.kylecorry.andromeda.camera.ar.CameraAnglePixelMapper;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final fun getAngle(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/CalibratedCameraAnglePixelMapper.getAngle|getAngle(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size){}[0]
+    final fun getPixel(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size, kotlin/Float?): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/CalibratedCameraAnglePixelMapper.getPixel|getPixel(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size;kotlin.Float?){}[0]
+    final fun invalidateCalibration() // com.kylecorry.andromeda.camera.ar/CalibratedCameraAnglePixelMapper.invalidateCalibration|invalidateCalibration(){}[0]
+}
+
+final class com.kylecorry.andromeda.camera.ar/ImageBounds { // com.kylecorry.andromeda.camera.ar/ImageBounds|null[0]
+    constructor <init>(kotlin/Float, kotlin/Float, kotlin/Float, kotlin/Float) // com.kylecorry.andromeda.camera.ar/ImageBounds.<init>|<init>(kotlin.Float;kotlin.Float;kotlin.Float;kotlin.Float){}[0]
+
+    final val bottom // com.kylecorry.andromeda.camera.ar/ImageBounds.bottom|{}bottom[0]
+        final fun <get-bottom>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.bottom.<get-bottom>|<get-bottom>(){}[0]
+    final val centerX // com.kylecorry.andromeda.camera.ar/ImageBounds.centerX|{}centerX[0]
+        final fun <get-centerX>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.centerX.<get-centerX>|<get-centerX>(){}[0]
+    final val centerY // com.kylecorry.andromeda.camera.ar/ImageBounds.centerY|{}centerY[0]
+        final fun <get-centerY>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.centerY.<get-centerY>|<get-centerY>(){}[0]
+    final val height // com.kylecorry.andromeda.camera.ar/ImageBounds.height|{}height[0]
+        final fun <get-height>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.height.<get-height>|<get-height>(){}[0]
+    final val left // com.kylecorry.andromeda.camera.ar/ImageBounds.left|{}left[0]
+        final fun <get-left>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.left.<get-left>|<get-left>(){}[0]
+    final val right // com.kylecorry.andromeda.camera.ar/ImageBounds.right|{}right[0]
+        final fun <get-right>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.right.<get-right>|<get-right>(){}[0]
+    final val top // com.kylecorry.andromeda.camera.ar/ImageBounds.top|{}top[0]
+        final fun <get-top>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.top.<get-top>|<get-top>(){}[0]
+    final val width // com.kylecorry.andromeda.camera.ar/ImageBounds.width|{}width[0]
+        final fun <get-width>(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.width.<get-width>|<get-width>(){}[0]
+
+    final fun component1(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.component2|component2(){}[0]
+    final fun component3(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.component3|component3(){}[0]
+    final fun component4(): kotlin/Float // com.kylecorry.andromeda.camera.ar/ImageBounds.component4|component4(){}[0]
+    final fun copy(kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ...): com.kylecorry.andromeda.camera.ar/ImageBounds // com.kylecorry.andromeda.camera.ar/ImageBounds.copy|copy(kotlin.Float;kotlin.Float;kotlin.Float;kotlin.Float){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.camera.ar/ImageBounds.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.camera.ar/ImageBounds.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.camera.ar/ImageBounds.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.camera.ar/LinearCameraAnglePixelMapper : com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper { // com.kylecorry.andromeda.camera.ar/LinearCameraAnglePixelMapper|null[0]
+    constructor <init>() // com.kylecorry.andromeda.camera.ar/LinearCameraAnglePixelMapper.<init>|<init>(){}[0]
+
+    final fun getAngle(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/LinearCameraAnglePixelMapper.getAngle|getAngle(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size){}[0]
+    final fun getPixel(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size, kotlin/Float?): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/LinearCameraAnglePixelMapper.getPixel|getPixel(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size;kotlin.Float?){}[0]
+}
+
+final class com.kylecorry.andromeda.camera.ar/PerspectiveCameraAnglePixelMapper : com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper { // com.kylecorry.andromeda.camera.ar/PerspectiveCameraAnglePixelMapper|null[0]
+    constructor <init>(kotlin/Float, kotlin/Float) // com.kylecorry.andromeda.camera.ar/PerspectiveCameraAnglePixelMapper.<init>|<init>(kotlin.Float;kotlin.Float){}[0]
+
+    final fun getAngle(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/PerspectiveCameraAnglePixelMapper.getAngle|getAngle(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size){}[0]
+    final fun getPixel(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size, kotlin/Float?): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/PerspectiveCameraAnglePixelMapper.getPixel|getPixel(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size;kotlin.Float?){}[0]
+}
+
+final class com.kylecorry.andromeda.camera.ar/SimplePerspectiveCameraAnglePixelMapper : com.kylecorry.andromeda.camera.ar/CameraAnglePixelMapper { // com.kylecorry.andromeda.camera.ar/SimplePerspectiveCameraAnglePixelMapper|null[0]
+    constructor <init>() // com.kylecorry.andromeda.camera.ar/SimplePerspectiveCameraAnglePixelMapper.<init>|<init>(){}[0]
+
+    final fun getAngle(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/SimplePerspectiveCameraAnglePixelMapper.getAngle|getAngle(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size){}[0]
+    final fun getPixel(kotlin/Float, kotlin/Float, com.kylecorry.andromeda.camera.ar/ImageBounds, com.kylecorry.sol.math.geometry/Size, kotlin/Float?): com.kylecorry.sol.math/Vector2 // com.kylecorry.andromeda.camera.ar/SimplePerspectiveCameraAnglePixelMapper.getPixel|getPixel(kotlin.Float;kotlin.Float;com.kylecorry.andromeda.camera.ar.ImageBounds;com.kylecorry.sol.math.geometry.Size;kotlin.Float?){}[0]
+}
+
+final class com.kylecorry.andromeda.camera/CameraExposure { // com.kylecorry.andromeda.camera/CameraExposure|null[0]
+    constructor <init>(kotlin/Float, kotlin/Float, kotlin/Float, kotlin/Float? = ...) // com.kylecorry.andromeda.camera/CameraExposure.<init>|<init>(kotlin.Float;kotlin.Float;kotlin.Float;kotlin.Float?){}[0]
+
+    final val maximum // com.kylecorry.andromeda.camera/CameraExposure.maximum|{}maximum[0]
+        final fun <get-maximum>(): kotlin/Float // com.kylecorry.andromeda.camera/CameraExposure.maximum.<get-maximum>|<get-maximum>(){}[0]
+    final val minimum // com.kylecorry.andromeda.camera/CameraExposure.minimum|{}minimum[0]
+        final fun <get-minimum>(): kotlin/Float // com.kylecorry.andromeda.camera/CameraExposure.minimum.<get-minimum>|<get-minimum>(){}[0]
+    final val step // com.kylecorry.andromeda.camera/CameraExposure.step|{}step[0]
+        final fun <get-step>(): kotlin/Float? // com.kylecorry.andromeda.camera/CameraExposure.step.<get-step>|<get-step>(){}[0]
+    final val value // com.kylecorry.andromeda.camera/CameraExposure.value|{}value[0]
+        final fun <get-value>(): kotlin/Float // com.kylecorry.andromeda.camera/CameraExposure.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/Float // com.kylecorry.andromeda.camera/CameraExposure.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.camera/CameraExposure.component2|component2(){}[0]
+    final fun component3(): kotlin/Float // com.kylecorry.andromeda.camera/CameraExposure.component3|component3(){}[0]
+    final fun component4(): kotlin/Float? // com.kylecorry.andromeda.camera/CameraExposure.component4|component4(){}[0]
+    final fun copy(kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float? = ...): com.kylecorry.andromeda.camera/CameraExposure // com.kylecorry.andromeda.camera/CameraExposure.copy|copy(kotlin.Float;kotlin.Float;kotlin.Float;kotlin.Float?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.camera/CameraExposure.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.camera/CameraExposure.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.camera/CameraExposure.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.camera/CameraFrame { // com.kylecorry.andromeda.camera/CameraFrame|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/IntArray, kotlin.time/Instant, kotlin/Int? = ...) // com.kylecorry.andromeda.camera/CameraFrame.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.IntArray;kotlin.time.Instant;kotlin.Int?){}[0]
+
+    final val argb // com.kylecorry.andromeda.camera/CameraFrame.argb|{}argb[0]
+        final fun <get-argb>(): kotlin/IntArray // com.kylecorry.andromeda.camera/CameraFrame.argb.<get-argb>|<get-argb>(){}[0]
+    final val height // com.kylecorry.andromeda.camera/CameraFrame.height|{}height[0]
+        final fun <get-height>(): kotlin/Int // com.kylecorry.andromeda.camera/CameraFrame.height.<get-height>|<get-height>(){}[0]
+    final val rotationDegrees // com.kylecorry.andromeda.camera/CameraFrame.rotationDegrees|{}rotationDegrees[0]
+        final fun <get-rotationDegrees>(): kotlin/Int? // com.kylecorry.andromeda.camera/CameraFrame.rotationDegrees.<get-rotationDegrees>|<get-rotationDegrees>(){}[0]
+    final val timestamp // com.kylecorry.andromeda.camera/CameraFrame.timestamp|{}timestamp[0]
+        final fun <get-timestamp>(): kotlin.time/Instant // com.kylecorry.andromeda.camera/CameraFrame.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+    final val width // com.kylecorry.andromeda.camera/CameraFrame.width|{}width[0]
+        final fun <get-width>(): kotlin/Int // com.kylecorry.andromeda.camera/CameraFrame.width.<get-width>|<get-width>(){}[0]
+}
+
+final class com.kylecorry.andromeda.camera/CameraStabilizationSupport { // com.kylecorry.andromeda.camera/CameraStabilizationSupport|null[0]
+    constructor <init>(kotlin/Boolean, kotlin/Boolean) // com.kylecorry.andromeda.camera/CameraStabilizationSupport.<init>|<init>(kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val optical // com.kylecorry.andromeda.camera/CameraStabilizationSupport.optical|{}optical[0]
+        final fun <get-optical>(): kotlin/Boolean // com.kylecorry.andromeda.camera/CameraStabilizationSupport.optical.<get-optical>|<get-optical>(){}[0]
+    final val preview // com.kylecorry.andromeda.camera/CameraStabilizationSupport.preview|{}preview[0]
+        final fun <get-preview>(): kotlin/Boolean // com.kylecorry.andromeda.camera/CameraStabilizationSupport.preview.<get-preview>|<get-preview>(){}[0]
+
+    final fun component1(): kotlin/Boolean // com.kylecorry.andromeda.camera/CameraStabilizationSupport.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // com.kylecorry.andromeda.camera/CameraStabilizationSupport.component2|component2(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.camera/CameraStabilizationSupport // com.kylecorry.andromeda.camera/CameraStabilizationSupport.copy|copy(kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.camera/CameraStabilizationSupport.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.camera/CameraStabilizationSupport.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.camera/CameraStabilizationSupport.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.camera/CameraZoom { // com.kylecorry.andromeda.camera/CameraZoom|null[0]
+    constructor <init>(kotlin/Float, kotlin/Float, kotlin/Float) // com.kylecorry.andromeda.camera/CameraZoom.<init>|<init>(kotlin.Float;kotlin.Float;kotlin.Float){}[0]
+
+    final val maximum // com.kylecorry.andromeda.camera/CameraZoom.maximum|{}maximum[0]
+        final fun <get-maximum>(): kotlin/Float // com.kylecorry.andromeda.camera/CameraZoom.maximum.<get-maximum>|<get-maximum>(){}[0]
+    final val minimum // com.kylecorry.andromeda.camera/CameraZoom.minimum|{}minimum[0]
+        final fun <get-minimum>(): kotlin/Float // com.kylecorry.andromeda.camera/CameraZoom.minimum.<get-minimum>|<get-minimum>(){}[0]
+    final val ratio // com.kylecorry.andromeda.camera/CameraZoom.ratio|{}ratio[0]
+        final fun <get-ratio>(): kotlin/Float // com.kylecorry.andromeda.camera/CameraZoom.ratio.<get-ratio>|<get-ratio>(){}[0]
+
+    final fun component1(): kotlin/Float // com.kylecorry.andromeda.camera/CameraZoom.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.camera/CameraZoom.component2|component2(){}[0]
+    final fun component3(): kotlin/Float // com.kylecorry.andromeda.camera/CameraZoom.component3|component3(){}[0]
+    final fun copy(kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ...): com.kylecorry.andromeda.camera/CameraZoom // com.kylecorry.andromeda.camera/CameraZoom.copy|copy(kotlin.Float;kotlin.Float;kotlin.Float){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.camera/CameraZoom.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.camera/CameraZoom.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.camera/CameraZoom.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.camera/ManualExposureRange { // com.kylecorry.andromeda.camera/ManualExposureRange|null[0]
+    constructor <init>(kotlin.ranges/ClosedRange<kotlin.time/Duration>, kotlin.ranges/IntRange) // com.kylecorry.andromeda.camera/ManualExposureRange.<init>|<init>(kotlin.ranges.ClosedRange<kotlin.time.Duration>;kotlin.ranges.IntRange){}[0]
+
+    final val duration // com.kylecorry.andromeda.camera/ManualExposureRange.duration|{}duration[0]
+        final fun <get-duration>(): kotlin.ranges/ClosedRange<kotlin.time/Duration> // com.kylecorry.andromeda.camera/ManualExposureRange.duration.<get-duration>|<get-duration>(){}[0]
+    final val iso // com.kylecorry.andromeda.camera/ManualExposureRange.iso|{}iso[0]
+        final fun <get-iso>(): kotlin.ranges/IntRange // com.kylecorry.andromeda.camera/ManualExposureRange.iso.<get-iso>|<get-iso>(){}[0]
+
+    final fun component1(): kotlin.ranges/ClosedRange<kotlin.time/Duration> // com.kylecorry.andromeda.camera/ManualExposureRange.component1|component1(){}[0]
+    final fun component2(): kotlin.ranges/IntRange // com.kylecorry.andromeda.camera/ManualExposureRange.component2|component2(){}[0]
+    final fun copy(kotlin.ranges/ClosedRange<kotlin.time/Duration> = ..., kotlin.ranges/IntRange = ...): com.kylecorry.andromeda.camera/ManualExposureRange // com.kylecorry.andromeda.camera/ManualExposureRange.copy|copy(kotlin.ranges.ClosedRange<kotlin.time.Duration>;kotlin.ranges.IntRange){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.camera/ManualExposureRange.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.camera/ManualExposureRange.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.camera/ManualExposureRange.toString|toString(){}[0]
+}
+
+final val com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_CalibratedCameraAnglePixelMapper$stableprop // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_CalibratedCameraAnglePixelMapper$stableprop|#static{}com_kylecorry_andromeda_camera_ar_CalibratedCameraAnglePixelMapper$stableprop[0]
+final val com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_ImageBounds$stableprop // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_ImageBounds$stableprop|#static{}com_kylecorry_andromeda_camera_ar_ImageBounds$stableprop[0]
+final val com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_LinearCameraAnglePixelMapper$stableprop // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_LinearCameraAnglePixelMapper$stableprop|#static{}com_kylecorry_andromeda_camera_ar_LinearCameraAnglePixelMapper$stableprop[0]
+final val com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_PerspectiveCameraAnglePixelMapper$stableprop // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_PerspectiveCameraAnglePixelMapper$stableprop|#static{}com_kylecorry_andromeda_camera_ar_PerspectiveCameraAnglePixelMapper$stableprop[0]
+final val com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_SimplePerspectiveCameraAnglePixelMapper$stableprop // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_SimplePerspectiveCameraAnglePixelMapper$stableprop|#static{}com_kylecorry_andromeda_camera_ar_SimplePerspectiveCameraAnglePixelMapper$stableprop[0]
+final val com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraExposure$stableprop // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraExposure$stableprop|#static{}com_kylecorry_andromeda_camera_CameraExposure$stableprop[0]
+final val com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraFrame$stableprop // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraFrame$stableprop|#static{}com_kylecorry_andromeda_camera_CameraFrame$stableprop[0]
+final val com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraStabilizationSupport$stableprop // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraStabilizationSupport$stableprop|#static{}com_kylecorry_andromeda_camera_CameraStabilizationSupport$stableprop[0]
+final val com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraZoom$stableprop // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraZoom$stableprop|#static{}com_kylecorry_andromeda_camera_CameraZoom$stableprop[0]
+final val com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_ManualExposureRange$stableprop // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_ManualExposureRange$stableprop|#static{}com_kylecorry_andromeda_camera_ManualExposureRange$stableprop[0]
+
+final fun (com.kylecorry.andromeda.camera.ar/CameraCalibrationSource).com.kylecorry.andromeda.camera.ar/fieldOfView(): com.kylecorry.sol.math.geometry/Size? // com.kylecorry.andromeda.camera.ar/fieldOfView|fieldOfView@com.kylecorry.andromeda.camera.ar.CameraCalibrationSource(){}[0]
+final fun com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_CalibratedCameraAnglePixelMapper$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_CalibratedCameraAnglePixelMapper$stableprop_getter|com_kylecorry_andromeda_camera_ar_CalibratedCameraAnglePixelMapper$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_ImageBounds$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_ImageBounds$stableprop_getter|com_kylecorry_andromeda_camera_ar_ImageBounds$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_LinearCameraAnglePixelMapper$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_LinearCameraAnglePixelMapper$stableprop_getter|com_kylecorry_andromeda_camera_ar_LinearCameraAnglePixelMapper$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_PerspectiveCameraAnglePixelMapper$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_PerspectiveCameraAnglePixelMapper$stableprop_getter|com_kylecorry_andromeda_camera_ar_PerspectiveCameraAnglePixelMapper$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_SimplePerspectiveCameraAnglePixelMapper$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera.ar/com_kylecorry_andromeda_camera_ar_SimplePerspectiveCameraAnglePixelMapper$stableprop_getter|com_kylecorry_andromeda_camera_ar_SimplePerspectiveCameraAnglePixelMapper$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera/CameraSurface(androidx.compose.ui/Modifier?, kotlin/Function1<com.kylecorry.andromeda.camera/PhotoCamera?, kotlin/Unit>, kotlin/Function1<kotlin/Throwable, kotlin/Unit>?, kotlin/Boolean, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.camera/CameraSurface|CameraSurface(androidx.compose.ui.Modifier?;kotlin.Function1<com.kylecorry.andromeda.camera.PhotoCamera?,kotlin.Unit>;kotlin.Function1<kotlin.Throwable,kotlin.Unit>?;kotlin.Boolean;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraExposure$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraExposure$stableprop_getter|com_kylecorry_andromeda_camera_CameraExposure$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraFrame$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraFrame$stableprop_getter|com_kylecorry_andromeda_camera_CameraFrame$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraStabilizationSupport$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraStabilizationSupport$stableprop_getter|com_kylecorry_andromeda_camera_CameraStabilizationSupport$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraZoom$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_CameraZoom$stableprop_getter|com_kylecorry_andromeda_camera_CameraZoom$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_ManualExposureRange$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.camera/com_kylecorry_andromeda_camera_ManualExposureRange$stableprop_getter|com_kylecorry_andromeda_camera_ManualExposureRange$stableprop_getter(){}[0]

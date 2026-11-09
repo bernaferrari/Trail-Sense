@@ -10,15 +10,15 @@ import kotlin.time.Instant
 import kotlin.time.Clock
 
 /** Android alarm delivery policy. Exact alarms may require system permission. */
-sealed interface AlarmDelivery {
-    data class Exact(val allowWhileIdle: Boolean = true, val fallbackToInexact: Boolean = true) : AlarmDelivery
-    data class Inexact(val allowWhileIdle: Boolean = false) : AlarmDelivery
-    data class Window(val duration: Duration, val centered: Boolean = false) : AlarmDelivery
-    data class AlarmClock(val showIntent: PendingIntent) : AlarmDelivery
+public sealed interface AlarmDelivery {
+    public data class Exact(val allowWhileIdle: Boolean = true, val fallbackToInexact: Boolean = true) : AlarmDelivery
+    public data class Inexact(val allowWhileIdle: Boolean = false) : AlarmDelivery
+    public data class Window(val duration: Duration, val centered: Boolean = false) : AlarmDelivery
+    public data class AlarmClock(val showIntent: PendingIntent) : AlarmDelivery
 }
 
 /** Schedules a pending intent using Android's alarm service. The host supplies immutable intents and permissions. */
-fun alarmScheduler(context: Context, action: PendingIntent, delivery: AlarmDelivery = AlarmDelivery.Exact()): BackgroundScheduler =
+public fun alarmScheduler(context: Context, action: PendingIntent, delivery: AlarmDelivery = AlarmDelivery.Exact()): BackgroundScheduler =
     object : BackgroundScheduler {
         private val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -53,7 +53,7 @@ fun alarmScheduler(context: Context, action: PendingIntent, delivery: AlarmDeliv
     }
 
 /** Schedules an inexact repeating Android alarm. The OS may defer or batch delivery. */
-fun repeatingAlarmScheduler(context: Context, action: PendingIntent): PeriodicBackgroundScheduler =
+public fun repeatingAlarmScheduler(context: Context, action: PendingIntent): PeriodicBackgroundScheduler =
     object : PeriodicBackgroundScheduler {
         private val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         override fun interval(period: Duration, initialDelay: Duration) {

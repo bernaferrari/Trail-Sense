@@ -20,4 +20,4 @@ private class IosSpeechSynthesizer : SpeechSynthesizer {
     }
 }
 
-actual fun textToSpeech(): SpeechSynthesizer = IosSpeechSynthesizer()
+public actual fun textToSpeech(): SpeechSynthesizer = IosSpeechSynthesizer()

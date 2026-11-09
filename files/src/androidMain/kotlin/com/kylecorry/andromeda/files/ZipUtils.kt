@@ -13,19 +13,19 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-object ZipUtils {
+public object ZipUtils {
 
     /**
      * Zip files to a stream - does not support zipping directories yet
      */
-    fun zip(toFile: File, vararg files: File, excludedFiles: List<File> = emptyList()) {
+    public fun zip(toFile: File, vararg files: File, excludedFiles: List<File> = emptyList()) {
         zip(FileOutputStream(toFile), files = files, excludedFiles)
     }
 
     /**
      * Zip files to a stream
      */
-    fun zip(toStream: OutputStream, vararg files: File, excludedFiles: List<File> = emptyList()) {
+    public fun zip(toStream: OutputStream, vararg files: File, excludedFiles: List<File> = emptyList()) {
         val saver = FileSaver(false)
         val zip = ZipOutputStream(toStream)
         zip.use {
@@ -57,11 +57,11 @@ object ZipUtils {
         }
     }
 
-    fun unzip(fromFile: File, toDirectory: File, maxCount: Int = Int.MAX_VALUE) {
+    public fun unzip(fromFile: File, toDirectory: File, maxCount: Int = Int.MAX_VALUE) {
         unzip(FileInputStream(fromFile), toDirectory, maxCount)
     }
 
-    inline fun unzip(
+    public inline fun unzip(
         fromStream: InputStream,
         toDirectory: File,
         maxCount: Int = Int.MAX_VALUE,
@@ -100,11 +100,11 @@ object ZipUtils {
         }
     }
 
-    fun list(zipFile: File, maxCount: Int = Int.MAX_VALUE): List<ZipFile> {
+    public fun list(zipFile: File, maxCount: Int = Int.MAX_VALUE): List<ZipFile> {
         return list(FileInputStream(zipFile), maxCount)
     }
 
-    fun list(zipStream: InputStream, maxCount: Int = Int.MAX_VALUE): List<ZipFile> {
+    public fun list(zipStream: InputStream, maxCount: Int = Int.MAX_VALUE): List<ZipFile> {
         val zip = ZipInputStream(zipStream)
         val files = mutableListOf<ZipFile>()
         zip.forEach {
@@ -115,7 +115,7 @@ object ZipUtils {
     }
 
 
-    inline fun ZipInputStream.forEach(fn: (entry: ZipEntry) -> Boolean) {
+    public inline fun ZipInputStream.forEach(fn: (entry: ZipEntry) -> Boolean) {
         use {
             var entry = nextEntry
             var shouldContinue = true

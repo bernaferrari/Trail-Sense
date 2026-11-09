@@ -5,7 +5,7 @@ import androidx.annotation.ColorInt
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.replaceColor
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 
-class ReplaceColor(
+public class ReplaceColor(
     @param:ColorInt private val sourceColor: Int,
     @param:ColorInt private val destinationColor: Int,
     private val threshold: Float = Arithmetic.EPSILON_FLOAT,

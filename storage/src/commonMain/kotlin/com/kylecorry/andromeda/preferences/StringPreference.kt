@@ -6,14 +6,14 @@ import com.kylecorry.andromeda.preferences.value
 
 import kotlin.reflect.KProperty
 
-class StringPreference(
+public class StringPreference(
     private val preferences: Preferences,
     private val name: String,
     private val defaultValue: String,
     private val saveDefault: Boolean = false
 ) {
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
         val value = preferences.getString(name)
         if (value == null && saveDefault) {
             preferences.putString(name, defaultValue)
@@ -21,7 +21,7 @@ class StringPreference(
         return value ?: defaultValue
     }
 
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
+    public operator fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
         preferences.putString(name, value)
     }
 

@@ -12,8 +12,8 @@ import androidx.annotation.ColorInt
 import com.kylecorry.andromeda.core.system.Screen
 import androidx.core.graphics.createBitmap
 
-class PDFRenderer {
-    fun toBitmap(
+public class PDFRenderer {
+    public fun toBitmap(
         context: Context,
         uri: Uri,
         page: Int = 0,

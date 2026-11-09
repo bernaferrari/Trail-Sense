@@ -18,7 +18,7 @@ import kotlin.time.Clock
 import com.kylecorry.andromeda.camera.ar.calibrationSource
 
 @Composable
-actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit, frameAnalysis: Boolean) {
+public actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit, frameAnalysis: Boolean) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val preview = rememberCameraPreviewState()

@@ -4,7 +4,7 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 /** Creates a typed property delegate backed by this preferences store. */
-fun <T> Preferences.value(
+public fun <T> Preferences.value(
     key: String,
     default: T,
     read: Preferences.(String) -> T?,
@@ -19,37 +19,37 @@ fun <T> Preferences.value(
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) = write(key, value)
 }
 
-fun Preferences.string(key: String, default: String = "", saveDefault: Boolean = false) =
+public fun Preferences.string(key: String, default: String = "", saveDefault: Boolean = false): ReadWriteProperty<Any?, String> =
     value(key, default, Preferences::getString, Preferences::putString, saveDefault)
-fun Preferences.int(key: String, default: Int = 0, saveDefault: Boolean = false) =
+public fun Preferences.int(key: String, default: Int = 0, saveDefault: Boolean = false): ReadWriteProperty<Any?, Int> =
     value(key, default, Preferences::getInt, Preferences::putInt, saveDefault)
-fun Preferences.long(key: String, default: Long = 0, saveDefault: Boolean = false) =
+public fun Preferences.long(key: String, default: Long = 0, saveDefault: Boolean = false): ReadWriteProperty<Any?, Long> =
     value(key, default, Preferences::getLong, Preferences::putLong, saveDefault)
-fun Preferences.float(key: String, default: Float = 0f, saveDefault: Boolean = false) =
+public fun Preferences.float(key: String, default: Float = 0f, saveDefault: Boolean = false): ReadWriteProperty<Any?, Float> =
     value(key, default, Preferences::getFloat, Preferences::putFloat, saveDefault)
-fun Preferences.double(key: String, default: Double = 0.0, saveDefault: Boolean = false) =
+public fun Preferences.double(key: String, default: Double = 0.0, saveDefault: Boolean = false): ReadWriteProperty<Any?, Double> =
     value(key, default, Preferences::getDouble, Preferences::putDouble, saveDefault)
-fun Preferences.boolean(key: String, default: Boolean = false, saveDefault: Boolean = false) =
+public fun Preferences.boolean(key: String, default: Boolean = false, saveDefault: Boolean = false): ReadWriteProperty<Any?, Boolean> =
     value(key, default, Preferences::getBoolean, Preferences::putBoolean, saveDefault)
 
-fun Preferences.coordinate(key: String, default: com.kylecorry.sol.units.Coordinate, saveDefault: Boolean = false) =
+public fun Preferences.coordinate(key: String, default: com.kylecorry.sol.units.Coordinate, saveDefault: Boolean = false): ReadWriteProperty<Any?, com.kylecorry.sol.units.Coordinate> =
     value(key, default, Preferences::getCoordinate, Preferences::putCoordinate, saveDefault)
-fun Preferences.localDate(key: String, default: kotlinx.datetime.LocalDate, saveDefault: Boolean = false) =
+public fun Preferences.localDate(key: String, default: kotlinx.datetime.LocalDate, saveDefault: Boolean = false): ReadWriteProperty<Any?, kotlinx.datetime.LocalDate> =
     value(key, default, Preferences::getLocalDate, Preferences::putLocalDate, saveDefault)
-fun Preferences.instant(key: String, default: kotlin.time.Instant, saveDefault: Boolean = false) =
+public fun Preferences.instant(key: String, default: kotlin.time.Instant, saveDefault: Boolean = false): ReadWriteProperty<Any?, kotlin.time.Instant> =
     value(key, default, Preferences::getInstant, Preferences::putInstant, saveDefault)
-fun Preferences.duration(key: String, default: kotlin.time.Duration, saveDefault: Boolean = false) =
+public fun Preferences.duration(key: String, default: kotlin.time.Duration, saveDefault: Boolean = false): ReadWriteProperty<Any?, kotlin.time.Duration> =
     value(key, default, Preferences::getDuration, Preferences::putDuration, saveDefault)
-inline fun <reified T : Enum<T>> Preferences.enum(key: String, default: T, saveDefault: Boolean = false) =
+public inline fun <reified T : Enum<T>> Preferences.enum(key: String, default: T, saveDefault: Boolean = false): ReadWriteProperty<Any?, T> =
     value(key, default, { name -> getString(name)?.let { value -> enumValues<T>().find { it.name == value } } },
         { name, value -> putString(name, value.name) }, saveDefault)
 
 /** Persists a value using an explicit integer mapping, suitable for stable serialized IDs. */
-fun <T : Any> Preferences.intMapping(key: String, default: T, mappings: Map<Int, T>, saveDefault: Boolean = false) =
+public fun <T : Any> Preferences.intMapping(key: String, default: T, mappings: Map<Int, T>, saveDefault: Boolean = false): ReadWriteProperty<Any?, T> =
     mappedValue(key, default, mappings, Preferences::getInt, Preferences::putInt, saveDefault)
 
 /** Persists a value using an explicit string mapping. */
-fun <T : Any> Preferences.stringMapping(key: String, default: T, mappings: Map<String, T>, saveDefault: Boolean = false) =
+public fun <T : Any> Preferences.stringMapping(key: String, default: T, mappings: Map<String, T>, saveDefault: Boolean = false): ReadWriteProperty<Any?, T> =
     mappedValue(key, default, mappings, Preferences::getString, Preferences::putString, saveDefault)
 
 private fun <K : Any, T : Any> Preferences.mappedValue(

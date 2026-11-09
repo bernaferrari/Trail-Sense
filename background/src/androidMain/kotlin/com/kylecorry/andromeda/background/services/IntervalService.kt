@@ -23,12 +23,12 @@ import kotlin.time.Duration.Companion.minutes
  * @param wakelockDuration The wakelock duration per update when not holding a continuous wakelock
  * @param useOneTimeWorkers Use one time workers instead of a periodic worker when over the worker threshold. Using one time workers can lead to slightly more on time intervals and it also allows variable durations.
  */
-abstract class IntervalService(
+public abstract class IntervalService(
     private val workerThreshold: Duration = 15.minutes,
     private val wakelockDuration: Duration? = null,
     private val useOneTimeWorkers: Boolean = false,
 ) : AndromedaService() {
-    abstract val period: Duration
+    public abstract val period: Duration
     protected open val holdWakelockWhenBelowThreshold: Boolean = true
 
     protected open fun getNonWorkerTimer(action: suspend () -> Unit): ITimer {
@@ -75,12 +75,12 @@ abstract class IntervalService(
         }
     }
 
-    abstract suspend fun doWork()
+    public abstract suspend fun doWork()
 
-    open val action: String
+    public open val action: String
         get() = "$tag.INTERVAL_ACTION"
 
-    abstract val uniqueId: Int
+    public abstract val uniqueId: Int
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)

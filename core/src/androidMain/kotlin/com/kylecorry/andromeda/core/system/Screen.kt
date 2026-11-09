@@ -11,9 +11,9 @@ import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.core.content.getSystemService
 
-object Screen {
+public object Screen {
 
-    fun setKeepScreenOn(window: Window, keepOn: Boolean) {
+    public fun setKeepScreenOn(window: Window, keepOn: Boolean) {
         if (keepOn) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
@@ -21,19 +21,19 @@ object Screen {
         }
     }
 
-    fun setBrightness(window: Window, brightness: Float) {
+    public fun setBrightness(window: Window, brightness: Float) {
         val layoutParams = window.attributes
         layoutParams.screenBrightness = brightness.coerceIn(0f, 1f)
         window.attributes = layoutParams
     }
 
-    fun resetBrightness(window: Window) {
+    public fun resetBrightness(window: Window) {
         val layoutParams = window.attributes
         layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
         window.attributes = layoutParams
     }
 
-    fun setAllowScreenshots(window: Window, allowed: Boolean) {
+    public fun setAllowScreenshots(window: Window, allowed: Boolean) {
         if (allowed) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         } else {
@@ -45,24 +45,24 @@ object Screen {
 
 
 
-    fun dpi(context: Context): Float {
+    public fun dpi(context: Context): Float {
         return context.resources.displayMetrics.densityDpi.toFloat()
     }
 
-    fun ydpi(context: Context): Float {
+    public fun ydpi(context: Context): Float {
         return context.resources.displayMetrics.ydpi
     }
 
-    fun xdpi(context: Context): Float {
+    public fun xdpi(context: Context): Float {
         return context.resources.displayMetrics.xdpi
     }
 
-    fun density(context: Context): Float {
+    public fun density(context: Context): Float {
         return context.resources.displayMetrics.density
     }
 
     @Suppress("DEPRECATION")
-    fun setShowWhenLocked(activity: Activity, showWhenLocked: Boolean) {
+    public fun setShowWhenLocked(activity: Activity, showWhenLocked: Boolean) {
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 -> {
                 activity.setShowWhenLocked(showWhenLocked)
@@ -76,15 +76,15 @@ object Screen {
         }
     }
 
-    fun getWindowHeight(context: Context): Int {
+    public fun getWindowHeight(context: Context): Int {
         return getWindowSize(context).height
     }
 
-    fun getWindowWidth(context: Context): Int {
+    public fun getWindowWidth(context: Context): Int {
         return getWindowSize(context).width
     }
 
-    fun getWindowSize(context: Context): Size {
+    public fun getWindowSize(context: Context): Size {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             getWindowSizeSDK30(context)
         } else {

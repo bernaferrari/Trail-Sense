@@ -9,11 +9,11 @@ import io.ktor.client.request.setBody
 import io.ktor.http.HttpMethod as KtorMethod
 import kotlin.time.Duration
 
-class HttpClient : AutoCloseable {
+public class HttpClient : AutoCloseable {
     private val following = client(true)
     private val notFollowing = client(false)
 
-    suspend fun send(
+    public suspend fun send(
         url: String,
         method: HttpMethod = HttpMethod.GET,
         body: ByteArray? = null,

@@ -18,14 +18,14 @@ private fun imageFromBytes(bytes: ByteArray): CGImageRef {
     return retainedImage(UIImage.imageWithData(data))
 }
 
-actual class ImageRegionDecoder private constructor(private val image: CGImageRef) : AutoCloseable {
-    actual constructor(bytes: ByteArray) : this(imageFromBytes(bytes))
-    actual constructor(path: String) : this(retainedImage(UIImage.imageWithContentsOfFile(path)))
+public actual class ImageRegionDecoder private constructor(private val image: CGImageRef) : AutoCloseable {
+    public actual constructor(bytes: ByteArray) : this(imageFromBytes(bytes))
+    public actual constructor(path: String) : this(retainedImage(UIImage.imageWithContentsOfFile(path)))
     private var closed = false
-    actual val width: Int = CGImageGetWidth(image).toInt()
-    actual val height: Int = CGImageGetHeight(image).toInt()
+    public actual val width: Int = CGImageGetWidth(image).toInt()
+    public actual val height: Int = CGImageGetHeight(image).toInt()
 
-    actual fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage {
+    public actual fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage {
         check(!closed) { "Image decoder is closed" }
         requireImageRegion(left, top, width, height, this.width, this.height)
         val region = requireNotNull(CGImageCreateWithImageInRect(image, CGRectMake(left.toDouble(), top.toDouble(), width.toDouble(), height.toDouble()))) { "Unable to decode image region" }

@@ -7,17 +7,17 @@ import okio.buffer
 import okio.use
 
 /** Opens a bundled asset. The caller owns the returned source. */
-expect fun openAsset(path: String): Source
+public expect fun openAsset(path: String): Source
 
 /** Lists immediate child names in a bundled asset directory. */
-expect fun listAssets(path: String = ""): List<String>
+public expect fun listAssets(path: String = ""): List<String>
 
 /** Reads a bundled asset without blocking the calling coroutine dispatcher. */
-suspend fun readAsset(path: String): ByteArray = withContext(Dispatchers.Default) {
+public suspend fun readAsset(path: String): ByteArray = withContext(Dispatchers.Default) {
     openAsset(path).buffer().use { it.readByteArray() }
 }
 
-suspend fun readAssetText(path: String): String = readAsset(path).decodeToString()
+public suspend fun readAssetText(path: String): String = readAsset(path).decodeToString()
 
 internal fun assetPath(path: String): String {
     require(!path.startsWith('/') && '\\' !in path) { "Asset path must be relative" }

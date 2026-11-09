@@ -17,7 +17,7 @@ import coil3.compose.AsyncImage
  * through [image], [spacing] apart.
  */
 @Composable
-fun MarkdownContent(
+public fun MarkdownContent(
     blocks: List<MarkdownBlock>,
     modifier: Modifier = Modifier,
     spacing: Dp = 16.dp,
@@ -39,7 +39,7 @@ fun MarkdownContent(
  * asset (`file:///android_asset/…`), a resource (`android.resource://…`), a file (`file://…`) or a content URI.
  */
 @Composable
-fun MarkdownImage(image: MarkdownBlock.Image, modifier: Modifier = Modifier) {
+public fun MarkdownImage(image: MarkdownBlock.Image, modifier: Modifier = Modifier) {
     AsyncImage(
         model = image.source,
         contentDescription = image.description.ifBlank { image.title },

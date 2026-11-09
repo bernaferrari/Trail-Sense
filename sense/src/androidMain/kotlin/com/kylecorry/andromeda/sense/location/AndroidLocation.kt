@@ -17,14 +17,14 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlin.time.Instant
 
 /** Android location reading with the monotonic timestamp supplied by the platform. */
-data class AndroidLocationReading(val value: LocationReading, val time: Instant, val elapsedRealtimeNanos: Long)
+public data class AndroidLocationReading(val value: LocationReading, val time: Instant, val elapsedRealtimeNanos: Long)
 
-fun androidLocationProviderAvailable(context: Context, provider: String): Boolean =
+public fun androidLocationProviderAvailable(context: Context, provider: String): Boolean =
     (context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager)?.isProviderEnabled(provider) == true
 
 /** Observes a specific Android provider and request configuration; location permission is required. */
 @SuppressLint("MissingPermission")
-fun androidLocationReadings(
+public fun androidLocationReadings(
     context: Context,
     provider: String = LocationManager.GPS_PROVIDER,
     config: LocationRequestConfig = LocationRequestConfig(),

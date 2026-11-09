@@ -25,7 +25,7 @@ import kotlin.time.Clock
  * Each notification is one message; [send] writes one characteristic value, subject to the
  * peripheral's negotiated write size. Subscribing connects; unsubscribing closes the connection.
  */
-class BleNearbyDevice(
+public class BleNearbyDevice(
     private val advertisement: Advertisement,
     private val receiveCharacteristic: Characteristic,
     private val sendCharacteristic: Characteristic,
@@ -44,7 +44,7 @@ class BleNearbyDevice(
     private val mutableFailure = MutableStateFlow<Throwable?>(null)
 
     /** Most recent connection or observation failure; cleared on the next connection attempt. */
-    val failure: StateFlow<Throwable?> = mutableFailure.asStateFlow()
+    public val failure: StateFlow<Throwable?> = mutableFailure.asStateFlow()
     override val name: String get() = advertisement.name ?: advertisement.peripheralName.orEmpty()
     override val address: String get() = advertisement.identifier.toString()
     override val isConnected: Boolean get() = synchronized(lock) { connected }

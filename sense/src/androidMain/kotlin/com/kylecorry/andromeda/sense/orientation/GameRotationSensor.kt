@@ -4,7 +4,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 
-class GameRotationSensor(
+public class GameRotationSensor(
     context: Context,
     sensorDelay: Int = SensorManager.SENSOR_DELAY_GAME,
     maintainStateOnRestart: Boolean = false

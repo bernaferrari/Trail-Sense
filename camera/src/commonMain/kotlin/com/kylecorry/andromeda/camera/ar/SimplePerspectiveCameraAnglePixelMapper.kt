@@ -13,7 +13,7 @@ import kotlin.math.sin
  * A camera angle pixel mapper that uses a perspective projection to map angles to pixels.
  * This mapper does not use near and far clipping planes.
  */
-class SimplePerspectiveCameraAnglePixelMapper : CameraAnglePixelMapper {
+public class SimplePerspectiveCameraAnglePixelMapper : CameraAnglePixelMapper {
 
     private val linear = LinearCameraAnglePixelMapper()
 

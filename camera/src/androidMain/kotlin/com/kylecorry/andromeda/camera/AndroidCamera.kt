@@ -63,7 +63,7 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.nanoseconds
 
 
-class AndroidCamera(
+public class AndroidCamera(
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,
     private val isBackCamera: Boolean = true,
@@ -318,7 +318,7 @@ class AndroidCamera(
         return builder.build()
     }
 
-    fun setFlashMode(mode: Int) { imageCapture?.flashMode = mode }
+    public fun setFlashMode(mode: Int) { imageCapture?.flashMode = mode }
 
     override fun flipCamera() {
         cameraProvider?.let {
@@ -457,7 +457,7 @@ class AndroidCamera(
     }
 
     @OptIn(androidx.camera.camera2.interop.ExperimentalCamera2Interop::class)
-    fun getCameraId(): String? {
+    public fun getCameraId(): String? {
         try {
             val info = getCamera2Info() ?: return getDefaultCameraId(context, isBackCamera)
             return info.cameraId
@@ -733,23 +733,23 @@ class AndroidCamera(
         }
     }
 
-    companion object {
+    public companion object {
         @SuppressLint("UnsupportedChromeOsCameraSystemFeature")
-        fun isAvailable(context: Context): Boolean {
+        public fun isAvailable(context: Context): Boolean {
             if (!AndroidPermissions.isCameraEnabled(context)) {
                 return false
             }
             return context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA)
         }
 
-        fun hasBackCamera(context: Context): Boolean {
+        public fun hasBackCamera(context: Context): Boolean {
             val cameras = getCameras(context)
             return cameras.any {
                 it.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_BACK
             }
         }
 
-        fun hasFrontCamera(context: Context): Boolean {
+        public fun hasFrontCamera(context: Context): Boolean {
             val cameras = getCameras(context)
             return cameras.any {
                 it.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT

@@ -6,7 +6,7 @@ import androidx.core.graphics.scale
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeToFit
 
-class Resize(
+public class Resize(
     private val size: Size,
     private val exact: Boolean = true,
     private val useBilinearScaling: Boolean = true,

@@ -6,8 +6,8 @@ import com.kylecorry.andromeda.print.ImagePrinter
 
 /** Remembers a system PDF printer for use by a shared Compose screen. */
 @Composable
-expect fun rememberPdfPrinter(): PdfPrinter
+public expect fun rememberPdfPrinter(): PdfPrinter
 
 /** Remembers a system image printer for use by a shared Compose screen. */
 @Composable
-expect fun rememberImagePrinter(): ImagePrinter
+public expect fun rememberImagePrinter(): ImagePrinter

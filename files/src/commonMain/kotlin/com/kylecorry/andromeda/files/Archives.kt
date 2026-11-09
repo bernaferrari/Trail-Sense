@@ -17,7 +17,7 @@ import okio.Path
 import okio.buffer
 
 /** Creates a ZIP from files or directories in this store. */
-suspend fun FileStorage.zip(archive: String, sources: List<String>, password: String? = null, exclude: Set<String> = emptySet()) {
+public suspend fun FileStorage.zip(archive: String, sources: List<String>, password: String? = null, exclude: Set<String> = emptySet()) {
     val target = root.resolve(archive)
     target.parent?.let { fileSystem.createDirectories(it) }
     val canonicalTarget = if (fileSystem.exists(target)) fileSystem.canonicalize(target) else {
@@ -69,7 +69,7 @@ suspend fun FileStorage.zip(archive: String, sources: List<String>, password: St
 }
 
 /** Extracts a ZIP into this store, rejecting archive entries that escape the destination. */
-suspend fun FileStorage.unzip(archive: String, destination: String, password: String? = null, maxEntries: Int = Int.MAX_VALUE) {
+public suspend fun FileStorage.unzip(archive: String, destination: String, password: String? = null, maxEntries: Int = Int.MAX_VALUE) {
     require(maxEntries >= 0)
     withContext(Dispatchers.Default) {
         val target = root.resolve(destination)
@@ -115,10 +115,10 @@ suspend fun FileStorage.unzip(archive: String, destination: String, password: St
 }
 
 /** Metadata for a file or directory in a ZIP archive. */
-data class ArchiveEntry(val name: String, val isDirectory: Boolean, val size: Long, val compressedSize: Long)
+public data class ArchiveEntry(val name: String, val isDirectory: Boolean, val size: Long, val compressedSize: Long)
 
 /** Lists ZIP entries without loading their contents. */
-fun FileStorage.listArchive(archive: String, password: String? = null, maxEntries: Int = Int.MAX_VALUE): List<ArchiveEntry> =
+public fun FileStorage.listArchive(archive: String, password: String? = null, maxEntries: Int = Int.MAX_VALUE): List<ArchiveEntry> =
     fileSystem.openReadOnly(root.resolve(archive)).use { handle ->
         no.synth.kmpzip.okio.ZipFile(handle, password?.encodeToByteArray()).use { zip ->
             zip.entries.take(maxEntries).map { ArchiveEntry(it.name, it.isDirectory, it.size, it.compressedSize) }
@@ -126,7 +126,7 @@ fun FileStorage.listArchive(archive: String, password: String? = null, maxEntrie
     }
 
 /** Reads one named ZIP entry without extracting the rest of the archive. */
-fun FileStorage.readArchiveEntry(archive: String, name: String, password: String? = null): ByteArray? =
+public fun FileStorage.readArchiveEntry(archive: String, name: String, password: String? = null): ByteArray? =
     fileSystem.openReadOnly(root.resolve(archive)).use { handle ->
         no.synth.kmpzip.okio.ZipFile(handle, password?.encodeToByteArray()).use { zip ->
             val entry = zip.getEntry(name) ?: return null

@@ -11,7 +11,7 @@ import kotlin.time.Clock
  * @param viewTask the task to run when the user wants to view the alarm
  * @param task the task to run
  */
-class AlarmClockTaskScheduler(
+public class AlarmClockTaskScheduler(
     private val context: Context,
     private val viewTask: PendingIntent,
     private val task: () -> PendingIntent
