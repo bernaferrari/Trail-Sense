@@ -36,15 +36,21 @@ actual fun sendSms(recipient: String, message: String) {
     else manager.sendMultipartTextMessage(recipient, null, parts, null, null)
 }
 
+/** Decodes an SMS broadcast; usable by a host's manifest receiver when the app is not running. */
+fun decodeSmsBroadcast(intent: Intent): List<IncomingSmsMessage> {
+    if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return emptyList()
+    return Telephony.Sms.Intents.getMessagesFromIntent(intent).map { message ->
+        IncomingSmsMessage(message.originatingAddress.orEmpty(), message.messageBody.orEmpty())
+    }
+}
+
 actual fun incomingSms(): Flow<IncomingSmsMessage> = callbackFlow {
     val context = KSensorContext.get()
     val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
             try {
-                Telephony.Sms.Intents.getMessagesFromIntent(intent).forEach { message ->
-                    trySend(IncomingSmsMessage(message.originatingAddress.orEmpty(), message.messageBody.orEmpty()))
-                }
+                decodeSmsBroadcast(intent).forEach { trySend(it) }
             } catch (error: SecurityException) {
                 close(error)
             }
