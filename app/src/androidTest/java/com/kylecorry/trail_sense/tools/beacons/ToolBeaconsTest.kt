@@ -87,7 +87,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
             Regex("\\d+\\.?\\d* (mi|ft)"),
             waitForTime = AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
         )
-        hasText(id("beacon_distance"), string(R.string.distance))
+        // The distance is the page's unlabelled headline
+        hasText(id("beacon_distance"), Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText(Regex("\\d+ °F / \\d+ °F"))
         hasText(id("beacon_temperature"), string(R.string.temperature_high_low))
         hasText(Regex("\\d+:\\d+ (AM|PM)"))
@@ -264,7 +265,10 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         openWithSavedBeacons()
 
         hasTextsInVerticalOrder(listOf("Camp", "Trailheads", "Lake", "Summit"))
-        hasTextsInVerticalOrder(listOf("0.69 mi", "1 place", "14.86 mi", "40.41 mi"))
+        // Each row's subtitle reads direction · distance · elevation
+        hasTextsInVerticalOrder(
+            listOf("N 0° · 0.69 mi · 328 ft", "1 place", "SW 233° · 14.86 mi", "NE 36° · 40.41 mi · 1000 ft")
+        )
     }
 
     @Test

@@ -255,7 +255,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         input(id("elevation")(), "100")
         click(id("harvested"))
         click(id("show_on_map"))
-        input("Notes", "Test")
+        // The notes field's label sits above it, outside the field
+        input(id("notes")(), "Test")
         click(id("field_guide_sighting_save_btn"))
 
         // Sightings list

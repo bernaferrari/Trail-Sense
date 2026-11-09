@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.battery
 
+import androidx.test.uiautomator.Direction
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import kotlin.time.Duration.Companion.milliseconds
@@ -61,10 +62,11 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
         scrollUntil { isVisible(id("low_power_mode_switch")) }
         isNotChecked(id("low_power_mode_switch"))
         click(id("low_power_mode_switch"))
-        isChecked(id("low_power_mode_switch"))
+        // Turning on low power mode rebuilds the page at the top
+        scrollUntil { isChecked(id("low_power_mode_switch")) }
 
         // Stop the battery log
-        click(id("battery_service_stop_btn"))
+        scrollUntil(direction = Direction.UP) { click(id("battery_service_stop_btn")) }
         not { hasText("Battery log") }
 
         scrollUntil {

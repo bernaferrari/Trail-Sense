@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.convert
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.test_utils.views.TestView
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import androidx.test.uiautomator.Direction
@@ -45,9 +46,15 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
         }
         inputAmount("42, -72")
         val format = FormatService.getInstance(TestUtils.context)
-        pickUnit(
-            format.formatCoordinateType(BuiltInCoordinateFormat.entries.first()),
-            string(R.string.coordinate_format_usng)
+        // The converter remembers the output format, so the second pass (from the quick action) already shows USNG
+        any(
+            {
+                pickUnit(
+                    format.formatCoordinateType(BuiltInCoordinateFormat.entries.first()),
+                    string(R.string.coordinate_format_usng)
+                )
+            },
+            { hasText(string(R.string.coordinate_format_usng), exact = true, waitForTime = 0) }
         )
         hasText("19T BG 51535 54131", exact = true)
     }
