@@ -239,10 +239,10 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun searchPath() {
-        input(id("searchbox")(), "Path")
+        input(id("searchbox"), "Path")
         hasText("Empty Path")
         not { hasText("Dest Group") }
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText("Dest Group")
     }
 

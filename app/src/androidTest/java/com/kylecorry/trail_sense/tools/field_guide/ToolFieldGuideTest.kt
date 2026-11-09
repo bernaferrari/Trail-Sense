@@ -49,10 +49,10 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canSearch() {
         back(false)
-        input(id("search")(), "Rabbit")
+        input(id("search"), "Rabbit")
         hasText("Rabbit")
 
-        input(id("search")(), "Insect")
+        input(id("search"), "Insect")
         hasText("Ant")
 
         back(false)
@@ -137,7 +137,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click(id("field_guide_page_menu"))
         click("Edit")
         hasText(id("name"), "A Test")
-        input(id("name")(), "A Test 2")
+        input(id("name"), "A Test 2")
         click(id("create_field_guide_page_save_btn"))
 
         // Verify the changes
@@ -147,7 +147,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("A Test 2")
         click(id("field_guide_page_edit_btn"))
         hasText(id("name"), "A Test 2")
-        input(id("name")(), "A Test 3")
+        input(id("name"), "A Test 3")
         click(id("create_field_guide_page_save_btn"))
 
         // Verify the changes
@@ -187,12 +187,12 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canCreatePage() {
         click(id("add_btn"))
-        input(id("name")(), "A Test")
+        input(id("name"), "A Test")
         click(id("tag_classifications"))
         click("Bird")
         clickOk()
         hasText(id("tag_classifications"), "Animal, Bird")
-        scrollUntil { input(id("notes")(), "Notes") }
+        scrollUntil { input(id("notes"), "Notes") }
         scrollToEnd(id("scroll_view"))
 
         click(id("tag_locations"))
@@ -251,12 +251,12 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         pickDate(2025, 1, 1)
         pickTime(6, 0, true)
         hasText("January 1, 2025 6:00 AM")
-        input(id("location")(), "42, 72")
-        input(id("elevation")(), "100")
+        input(id("location"), "42, 72")
+        input(id("elevation"), "100")
         click(id("harvested"))
         click(id("show_on_map"))
         // The notes field's label sits above it, outside the field
-        input(id("notes")(), "Test")
+        input(id("notes"), "Test")
         click(id("field_guide_sighting_save_btn"))
 
         // Sightings list
@@ -301,7 +301,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         // Create beacon
         click(id("field_guide_sighting_menu"))
-        click("Create beacon")
+        click(string(R.string.create_beacon))
         hasText("Ant")
         hasText("42.000000°,  72.000000°")
         hasText("100")

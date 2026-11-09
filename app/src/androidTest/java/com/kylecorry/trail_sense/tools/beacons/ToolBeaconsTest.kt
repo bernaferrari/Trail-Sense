@@ -56,9 +56,9 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
 
         hasText(string(R.string.create_beacon))
 
-        input(id("beacon_name")(), "Test beacon")
-        input(id("beacon_location")(), "42, -72")
-        input(id("beacon_elevation")(), "1000")
+        input(id("beacon_name"), "Test beacon")
+        input(id("beacon_location"), "42, -72")
+        input(id("beacon_elevation"), "1000")
 
         isChecked(id("create_at_distance"), false)
 
@@ -68,7 +68,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         hasText(id("beacon_color_picker"), string(R.string.places_shape_and_color))
         hasText(id("beacon_icon_picker"), string(R.string.icon))
 
-        input(id("comment")(), "Test notes")
+        input(id("comment"), "Test notes")
 
         click(id("create_beacon_save_btn"))
 
@@ -126,7 +126,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         hasText(id("beacon_color_picker"), string(R.string.places_shape_and_color))
         hasText(id("beacon_icon_picker"), string(R.string.icon))
 
-        input(id("comment")(), "Test notes 2")
+        input(id("comment"), "Test notes 2")
 
         click(id("create_beacon_save_btn"))
 
@@ -181,8 +181,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         // The new group is empty, so its button saves a place directly.
         click(id("create_btn"))
 
-        input(id("beacon_name")(), "Test beacon 2")
-        input(id("beacon_location")(), "42, -72")
+        input(id("beacon_name"), "Test beacon 2")
+        input(id("beacon_location"), "42, -72")
 
         scrollToEnd(id("create_beacon_scroll"))
         hasText("Test group")
@@ -229,9 +229,9 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun search() {
-        input(id("searchbox")(), "2")
+        input(id("searchbox"), "2")
         hasText("Test beacon 2")
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText("Test group")
     }
 

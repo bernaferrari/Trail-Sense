@@ -93,7 +93,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
         // Verify the default layers are present
         scrollUntil { hasText("Location") }
-        scrollUntil { hasText("Beacons") }
+        scrollUntil { hasText(string(R.string.beacons)) }
         scrollUntil { hasText("Paths") }
         scrollUntil { hasText("Tides") }
         scrollUntil { hasText("Navigation") }
@@ -184,12 +184,12 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
         longPressCenter()
         hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
         hasText(Regex("Elevation: -?\\d+(\\.\\d+)?\\s*(ft|m)"))
-        hasText("Beacon")
+        hasText(string(R.string.beacon), exact = true)
         hasText("Navigate")
         hasText("Distance")
 
-        click("Beacon")
-        hasText("Create beacon")
+        click(string(R.string.beacon), exact = true)
+        hasText(string(R.string.create_beacon))
         hasText(Regex(".*-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°.*"))
         back()
         click("Leave")
@@ -246,8 +246,9 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
         longPressCenter()
 
         val shown = parseCoordinate(waitFor { coordinateText() })
-        assertEquals(location.latitude, shown.latitude, 0.0003)
-        assertEquals(location.longitude, shown.longitude, 0.0003)
+        // The screen centre lands about 60 m from the location (pixel and inset rounding), so allow ~110 m
+        assertEquals(location.latitude, shown.latitude, 0.001)
+        assertEquals(location.longitude, shown.longitude, 0.001)
     }
 
     @Test

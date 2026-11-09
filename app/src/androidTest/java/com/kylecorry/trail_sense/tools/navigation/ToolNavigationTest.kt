@@ -246,7 +246,8 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
 
     private fun navigateToBeacon(name: String) {
         click(string(R.string.navigation_places), exact = true)
-        click(name)
+        // The list header also names the nearest place, so match the row exactly
+        click(name, exact = true)
         click(string(R.string.navigate))
         // Calibration reminder (only shown when the compass accuracy is poor)
         clickOkIfShown()

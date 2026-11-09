@@ -342,9 +342,9 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         click(id("add_btn"))
         hasText(string(R.string.create_item_title))
 
-        input(id("name_edit")(), name)
-        input(id("count_edit")(), amount.toString())
-        input(id("desired_amount_edit")(), desiredAmount.toString())
+        input(id("name_edit"), name)
+        input(id("count_edit"), amount.toString())
+        input(id("desired_amount_edit"), desiredAmount.toString())
         click(id("category_spinner"))
 
         scrollUntil(direction = Direction.UP) {
@@ -352,7 +352,7 @@ class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
         }
         // Picking a category closes its list
         clickOkIfShown()
-        input(id("item_weight_input")(), weight.toString())
+        input(id("item_weight_input"), weight.toString())
         click(id("create_btn"))
     }
 

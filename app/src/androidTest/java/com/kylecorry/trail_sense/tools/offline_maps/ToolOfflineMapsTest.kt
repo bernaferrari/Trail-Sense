@@ -82,9 +82,9 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
 
         seedOfflineMap("Second Map")
         seedOfflineMap("Test Map")
-        input(id("searchbox")(), "Test")
+        input(id("searchbox"), "Test")
         waitFor { hasText("Test Map") }
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText("Second Map")
         hasText(id("map_list_title"), string(R.string.offline_maps))
 
@@ -177,16 +177,16 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canSearchOfflineMaps() {
-        input(id("searchbox")(), "Second")
+        input(id("searchbox"), "Second")
         hasText("Second Map")
         not { hasText("Test Map") }
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText("Test Group 2")
         hasText("Test Map")
     }
 
     private fun canRenameOfflineMap() {
-        input(id("searchbox")(), "Test Map")
+        input(id("searchbox"), "Test Map")
         hasText("Test Map")
         click(id("vector_map_menu_Test Map"))
         click(string(R.string.rename))
@@ -196,7 +196,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canEditOfflineMapAttribution() {
-        input(id("searchbox")(), "Test Map 2")
+        input(id("searchbox"), "Test Map 2")
         hasText("Test Map 2")
         click(id("vector_map_menu_Test Map 2"))
         click(string(R.string.attribution))
@@ -205,13 +205,13 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canMoveOfflineMap() {
-        input(id("searchbox")(), "Test Map 2")
+        input(id("searchbox"), "Test Map 2")
         hasText("Test Map 2")
         click(id("vector_map_menu_Test Map 2"))
         click(string(R.string.move_to))
         click("Test Group 2")
         click(string(R.string.move))
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText("Second Map")
         hasText("Test Group 2")
         hasText("1 map")
@@ -225,13 +225,13 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canDeleteOfflineMap() {
-        input(id("searchbox")(), "Second")
+        input(id("searchbox"), "Second")
         hasText("Second Map")
         click(id("vector_map_menu_Second Map"))
         click(string(R.string.delete))
         clickOk()
         not { hasText("Second Map") }
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText(string(R.string.no_offline_maps))
     }
 
@@ -263,7 +263,11 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click("Camera")
         click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
         input(string(R.string.name), "Test Map", index = 1)
-        clickOk()
+        // With the keyboard opening, the first tap on OK can be lost, so tap until the name dialog closes
+        waitFor {
+            clickOkIfShown()
+            not(waitForTime = 0) { hasText(string(android.R.string.cancel), exact = true, waitForTime = 0) }
+        }
 
         optional {
             click("Preview")
@@ -342,11 +346,11 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     }
 
     private fun canSearch() {
-        input(id("searchbox")(), "Blank")
+        input(id("searchbox"), "Blank")
         hasText("Blank Map")
         hasText("Blank Map", index = 1)
         not { hasText("Test Map") }
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText("Test Group 2")
     }
 
@@ -399,7 +403,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         longClick(R.id.map)
         hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
         hasText(Regex("Elevation: -?\\d+(\\.\\d+)?\\s*(ft|m)"))
-        hasText("Beacon")
+        hasText(string(R.string.beacon), exact = true)
         hasText("Navigate")
         hasText("Distance")
 
@@ -416,8 +420,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(toolbarButton(Side.Right))
 
         longClick(R.id.map)
-        click("Beacon")
-        hasText("Create beacon")
+        click(string(R.string.beacon), exact = true)
+        hasText(string(R.string.create_beacon))
         hasText(Regex(".*-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°.*"))
         back()
         click("Leave")
@@ -480,7 +484,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(id("map_menu_btn"))
         click("Layers")
         scrollUntil { hasText("Location") }
-        scrollUntil { hasText("Beacons") }
+        scrollUntil { hasText(string(R.string.beacons)) }
         scrollUntil { hasText("Paths") }
         scrollUntil { hasText("Tides") }
         scrollUntil { hasText("Navigation") }
