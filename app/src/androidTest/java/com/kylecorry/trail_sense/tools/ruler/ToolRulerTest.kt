@@ -22,7 +22,8 @@ class ToolRulerTest : ToolTestBase(Tools.RULER) {
         hasText(id("measurement"), Regex("\\d+\\.\\d+ in"))
 
         // Switch to CM
-        click(id("ruler_unit_btn"))
+        // The unit is a two way choice, so pick the option itself
+        click("cm", exact = true)
         hasText(id("ruler_unit_btn"), "cm")
         hasText(id("measurement"), Regex("\\d+\\.\\d+ cm"))
 

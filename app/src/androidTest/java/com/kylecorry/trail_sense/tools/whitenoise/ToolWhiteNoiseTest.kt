@@ -62,10 +62,10 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
     }
 
     private fun canChangeSleepSound() {
-        click("Pink noise")
-        click("Crickets")
-        clickOk()
-        hasText("Crickets")
+        // The sounds are listed inline and a tap selects one, no dialog
+        click("Pink noise", exact = true)
+        click("Crickets", exact = true)
+        hasText("Crickets", exact = true)
     }
 
     private fun canSetSleepTimer() {

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clouds
 
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.views.clickableIn
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
@@ -37,7 +38,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
 
         click(string(R.string.camera))
 
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
 
         hasText(string(R.string.clouds))
 

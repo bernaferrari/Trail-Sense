@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.battery
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.hours
@@ -47,9 +49,16 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
         hasText(Regex("\\d+%"))
         hasText(Regex("(Charging|Discharging).*"))
         hasText("Battery log")
-        hasText("Updates every 1h - Low battery usage")
+        hasText(
+            string(
+                R.string.dot_separated_pair,
+                string(R.string.service_update_frequency, "1h"),
+                string(R.string.battery_use_short, string(R.string.low))
+            )
+        )
         verifyDeepSleep()
 
+        scrollUntil { isVisible(id("low_power_mode_switch")) }
         isNotChecked(id("low_power_mode_switch"))
         click(id("low_power_mode_switch"))
         isChecked(id("low_power_mode_switch"))
@@ -78,7 +87,9 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
             return
         }
         // The device stays awake while the test runs, so the percent drops slightly below 75%
-        hasText(R.id.battery_deep_sleep, Regex("Deep sleep: 7[45]% \\(last 1h\\)"))
+        // The row shows the label, the window and the percent separately
+        hasDataPoint(Regex("7[45]%"), string(R.string.battery_deep_sleep_label))
+        hasText(string(R.string.last_duration, "1h"))
     }
 
     private fun hasListItems(vararg items: String) {

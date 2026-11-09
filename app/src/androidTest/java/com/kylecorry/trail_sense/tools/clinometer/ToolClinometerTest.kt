@@ -89,8 +89,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
         click(string(R.string.measure), exact = true)
 
         click(string(R.string.distance))
-
-        clickOk()
+        // Picking from the list opens the distance dialog, there is no confirmation
 
         input(distanceField(0), "5")
         input(distanceField(1), "5")
@@ -110,8 +109,7 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
         click(string(R.string.distance), exact = true)
 
         click(string(R.string.height))
-
-        clickOk()
+        // Picking from the list opens the distance dialog, there is no confirmation
 
         input(distanceField(0), "5")
 

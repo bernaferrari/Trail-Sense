@@ -44,7 +44,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.datetime.LocalDate
 
 @RunWith(AndroidJUnit4::class)
@@ -177,8 +177,8 @@ class PreferenceMigratorTest {
         migrate(8)
 
         val userPrefs = UserPreferences(context)
-        assertEquals(Duration.ofMinutes(30), userPrefs.paths.backtrackRecordFrequency)
-        assertEquals(Duration.ofMinutes(45), userPrefs.weather.weatherUpdateFrequency)
+        assertEquals(30.minutes, userPrefs.paths.backtrackRecordFrequency)
+        assertEquals(45.minutes, userPrefs.weather.weatherUpdateFrequency)
     }
 
     @Test

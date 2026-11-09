@@ -35,6 +35,8 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
     }
 
     private fun canConvertCoordinates() {
+        // The converter opens on distance, so pick the coordinates category first
+        click(string(R.string.coordinates_tab), exact = true)
         inputAmount("42, -72")
         val format = FormatService.getInstance(TestUtils.context)
         pickUnit(

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.field_guide
 
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
@@ -216,7 +217,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         scrollToStart(id("scroll_view"))
         click("Take photo")
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
 
         isVisible(id("image"))
 

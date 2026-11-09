@@ -1,9 +1,15 @@
 package com.kylecorry.trail_sense.tools.astronomy
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.byResName
+import java.util.regex.Pattern
+import androidx.test.uiautomator.By
+import org.junit.Assert.assertEquals
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -41,7 +47,7 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
         hasText(R.id.astronomy_title, Regex("([0-9]+h)? ?([0-9]+m)?"))
 
         // Verify that today is selected
-        hasText(R.id.display_date, string(R.string.today))
+        hasText(id("date"), string(R.string.today))
 
         // Verify the list of astronomy events is displayed
         hasText(id("astronomy_detail_title")) {
@@ -62,18 +68,17 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
                     string(R.string.sunset_alerts_background_location_disclaimer)
                 )
             }
-            click(R.id.button_3d)
+            scrollUntil { click(id("button_3d")) }
 
             // Verify the AR tool is open
             delay(500)
-            click("Cancel")
             clickOk()
             if (!Sensors.hasGyroscope(TestUtils.context)) {
                 clickOk()
             }
-            isVisible(R.id.ar_view)
+            isVisible(desc(string(R.string.calibrate)))
         } else {
-            isNotVisible(R.id.button_3d)
+            not { isVisible(id("button_3d"), waitForTime = 0) }
         }
     }
 
@@ -84,11 +89,10 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
 
         // TODO: Need to find a way to test this on staging builds
         if (AutomationLibrary.packageName == null) {
+            // MainActivity is a ComponentActivity, so night mode is drawn by the Compose theme from the theme
+            // preference instead of the activity's uiMode
             waitFor {
-                scenario.onActivity {
-                    assertTrue(it.isDarkThemeOn())
-                    // TODO: Verify the color filter is applied
-                }
+                assertEquals(UserPreferences.Theme.Night, UserPreferences(TestUtils.context).theme)
             }
         }
 
@@ -148,13 +152,24 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
     fun timeSeekerFollowsTapsOnTheChart() {
         goToDate(2025, 6, 21)
 
-        click(R.id.sunMoonChart, xPercent = 0.5f, yPercent = 0.5f)
-        val middle = waitFor { view(R.id.seek_time).uiObject.text }
+        click(id("sunMoonChart"), xPercent = 0.5f, yPercent = 0.5f)
+        val middle = waitFor { seekTime() }
 
-        click(R.id.sunMoonChart, xPercent = 0.9f, yPercent = 0.5f)
+        click(id("sunMoonChart"), xPercent = 0.9f, yPercent = 0.5f)
         waitFor {
-            assertTrue(view(R.id.seek_time).uiObject.text != middle)
+            assertTrue(seekTime() != middle)
         }
+    }
+
+    /**
+     * The time shown for the time seeker, which is the time label just above the seek bar.
+     */
+    private fun seekTime(): String {
+        val seeker = view(byResName("time_seeker")).uiObject.visibleBounds
+        return TestUtils.device.findObjects(By.text(Pattern.compile("\\d{1,2}:\\d{2}.*")))
+            .filter { it.visibleBounds.bottom <= seeker.top }
+            .maxBy { it.visibleBounds.bottom }
+            .text
     }
 
     private fun goToDate(year: Int, month: Int, day: Int) {
@@ -163,9 +178,9 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
     }
 
     private fun findNext(event: String) {
-        click(R.id.search_btn)
+        click(id("search_btn"))
+        // Picking an event starts the search, there is no confirmation
         click(event, exact = true)
-        clickOk()
     }
 
     companion object {

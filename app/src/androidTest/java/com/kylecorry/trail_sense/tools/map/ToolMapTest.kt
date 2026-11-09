@@ -37,6 +37,11 @@ import kotlin.math.sqrt
 
 class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
+    // The map tool only draws when there is a visible offline map
+    override fun seedData() {
+        TestData.addOfflineMap(MAP_NAME)
+    }
+
     @Test
     fun verifyBasicFunctionality() {
         // Disclaimer
@@ -226,7 +231,10 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
     private fun openWithCamp() {
         assumeFalse(isStagingBuild)
-        relaunchTool { TestData.addBeacon("Camp", campLocation, elevation = 100f) }
+        relaunchTool {
+            TestData.addOfflineMap(MAP_NAME)
+            TestData.addBeacon("Camp", campLocation, elevation = 100f)
+        }
     }
 
     @Test
@@ -493,6 +501,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
     companion object {
         private const val DOUBLE_TAP_PAUSE_MS = 500L
+        private const val MAP_NAME = "Test Map"
         private val COORDINATE = Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°")
         private val location = Coordinate(42.03, -71.97)
         // About 167 m north of the current location

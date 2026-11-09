@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.turn_back
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
@@ -18,7 +19,8 @@ class ToolTurnBackTest : ToolTestBase(Tools.TURN_BACK) {
 
     @Test
     fun verifyBasicFunctionality() {
-        hasText(R.string.instructions, string(R.string.time_not_set))
+        // With no return time the screen asks for one
+        hasText(id("instructions"), string(R.string.places_turn_back_idle_title))
 
         // Enter a time
         click(id("edittext"))
@@ -29,10 +31,10 @@ class ToolTurnBackTest : ToolTestBase(Tools.TURN_BACK) {
         hasText(id("edittext"), "8:00 PM")
         hasText(
             id("instructions"),
-            Regex("Turn around by \\d+:\\d+ (AM|PM) \\(.*\\) to return at 8:00 PM")
+            Regex("(?s).*(Turn around at \\d+:\\d+ (AM|PM)|${string(R.string.places_turn_back_turn_around_now)}).*")
         )
-        click(id("cancel_button"))
-        hasText(id("instructions"), string(R.string.time_not_set))
+        scrollUntil { click(id("cancel_button")) }
+        hasText(id("instructions"), string(R.string.places_turn_back_idle_title))
 
         // Return before dark
         click(id("sunset_button"))

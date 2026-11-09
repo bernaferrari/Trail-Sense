@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
+import com.kylecorry.trail_sense.test_utils.TestUtils
 import kotlin.time.Clock
 import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.views.desc
@@ -39,12 +40,12 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     @Test
     fun verifyPhotoMapsBasicFunctionality() {
         // Disclaimer
-        clickOk()
+        clickOkIfShown()
 
         hasText(id("map_list_title"), string(R.string.offline_maps))
 
         // No maps by default
-        hasText(string(R.string.no_maps))
+        hasText(string(R.string.no_offline_maps))
 
         canCreateMapFromCamera()
         canToggleVisibility()
@@ -74,7 +75,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         clickOkIfShown()
 
         hasText(id("map_list_title"), string(R.string.offline_maps))
-        hasText(string(R.string.no_maps))
+        hasText(string(R.string.no_offline_maps))
 
         canOpenOfflineMapFilePicker()
         canCreateOfflineMapGroup()
@@ -231,7 +232,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         clickOk()
         not { hasText("Second Map") }
         input(id("searchbox")(), "")
-        hasText(string(R.string.no_maps))
+        hasText(string(R.string.no_offline_maps))
     }
 
     private fun seedOfflineMap(name: String) = runBlocking {
@@ -260,7 +261,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canCreateMapFromCamera(goBack: Boolean = true) {
         click(id("add_btn"))
         click("Camera")
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
         input(string(R.string.name), "Test Map", index = 1)
         clickOk()
 
@@ -327,7 +328,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Test Group")
         hasText("0 maps")
         click("Test Group")
-        hasText(string(R.string.no_maps))
+        hasText(string(R.string.no_offline_maps))
 
         // Create a map in the group
         canCreateBlankMap("Blank Map")

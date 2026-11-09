@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.test_utils.views.id
 import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
@@ -53,13 +54,11 @@ class ToolsTabTest : ToolTestBase(0L) {
     private fun canPinTools() {
         hasText(string(R.string.pinned))
 
-        // Unpin the core tools, each from its long-press menu (the pinned tile comes first)
-        val pinned = listOfNotNull(
-            string(R.string.astronomy),
-            if (Tools.isToolAvailable(context, Tools.WEATHER)) string(R.string.weather) else null,
-            string(R.string.navigation),
-            string(R.string.tool_user_guide_title)
-        )
+        // Unpin the default pins, each from its long-press menu (the pinned tile comes first). The defaults
+        // come from the preferences so the test follows the app's choice of starting pins.
+        val pinned = UserPreferences(context).toolPinnedIds
+            .filter { Tools.isToolAvailable(context, it) }
+            .mapNotNull { Tools.getTool(context, it)?.name }
         pinned.forEach {
             longClick(it)
             click(string(R.string.unpin), exact = true)

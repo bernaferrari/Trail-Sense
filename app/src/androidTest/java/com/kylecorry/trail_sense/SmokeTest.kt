@@ -148,7 +148,7 @@ class SmokeTest {
 
         click({ viewWithResourceId("$packageName:id/add_btn") })
         click("Camera")
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
         input("Name", "Test Map", index = 1)
         clickOk()
 
@@ -177,7 +177,7 @@ class SmokeTest {
     private fun smokeTestClouds() {
         click({ viewWithResourceId("$packageName:id/add_btn") })
         click("Camera")
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
         // Verify a cloud is selected (the top one)
         isChecked({ viewWithResourceId("$packageName:id/checkbox") })
         back()

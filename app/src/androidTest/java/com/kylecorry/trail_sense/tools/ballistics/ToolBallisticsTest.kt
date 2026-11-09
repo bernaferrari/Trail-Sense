@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
+import com.kylecorry.trail_sense.test_utils.views.option
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotChecked
@@ -33,8 +33,8 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
         click("Scope")
 
         click(id("click_amount"))
-        click("1/4 MOA")
-        clickOk()
+        // Choosing an option closes the dialog
+        click(option("1/4 MOA"))
 
         input(id("distance_to_target"), "100")
 
