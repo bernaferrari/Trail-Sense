@@ -3,6 +3,15 @@
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
+import com.kylecorry.trail_sense.shared.time.toJavaSeconds
+import com.kylecorry.trail_sense.shared.time.toInstant
+
+import com.kylecorry.trail_sense.shared.time.minus
+
+import com.kylecorry.trail_sense.shared.time.plus
+
+import kotlinx.datetime.LocalDateTime
+
 import com.kylecorry.trail_sense.shared.time.toLocalTime
 
 import kotlin.time.Clock
@@ -102,7 +111,6 @@ import kotlin.time.toKotlinInstant
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.nanoseconds
 import com.kylecorry.trail_sense.shared.time.toLocalDateTime
-import com.kylecorry.trail_sense.shared.time.truncateTo
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -444,15 +452,20 @@ private fun sendNextMinuteNotification(
     val systemDiff = (Clock.System.now() - systemTime)
     val currentTime = gpsTime.plus(systemDiff)
     val clockError = (gpsTime - systemTime)
+    // Wall-clock arithmetic in the system zone, as before: the next whole local minute (skipping one when
+    // fewer than 15 seconds remain), shifted by the clock error and resolved back to an instant.
     val displayTimeWithSeconds = currentTime.toLocalDateTime()
-    val minuteStart = currentTime.truncateTo(1.minutes)
+    val minuteStart = LocalDateTime(
+        displayTimeWithSeconds.date,
+        LocalTime(displayTimeWithSeconds.hour, displayTimeWithSeconds.minute)
+    )
     val displayTime = if (displayTimeWithSeconds.second > 45) {
         minuteStart + 2.minutes
     } else {
         minuteStart + 1.minutes
     }
-    val sendTime = displayTime - clockError
-    val formattedTime = formatService.formatTime(displayTime.toLocalTime())
+    val sendTime = (displayTime - clockError).toInstant()
+    val formattedTime = formatService.formatTime(displayTime.time)
 
     Alerts.dialog(
         context,
@@ -505,7 +518,7 @@ internal enum class ClockOffsetDirection {
 }
 
 private fun getClockOffset(duration: Duration): ClockOffset {
-    val seconds = kotlin.math.abs(duration.inWholeSeconds)
+    val seconds = kotlin.math.abs(duration.toJavaSeconds())
     val direction = when {
         seconds == 0L -> ClockOffsetDirection.Accurate
         duration.isNegative() -> ClockOffsetDirection.Fast

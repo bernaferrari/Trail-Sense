@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared
 
+import com.kylecorry.trail_sense.shared.time.toJavaSeconds
+import com.kylecorry.trail_sense.shared.time.toJavaMinutes
+import com.kylecorry.trail_sense.shared.time.toJavaHours
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
@@ -487,9 +490,9 @@ class FormatService private constructor(private val context: Context) {
         short: Boolean = false,
         includeSeconds: Boolean = false
     ): String {
-        val hours = duration.inWholeHours
-        val minutes = duration.inWholeMinutes % 60
-        val seconds = duration.inWholeSeconds % 60
+        val hours = duration.toJavaHours()
+        val minutes = duration.toJavaMinutes() % 60
+        val seconds = duration.toJavaSeconds() % 60
 
         val h = strings.getString(R.string.duration_hour_format, hours)
         val m = strings.getString(R.string.duration_minute_format, minutes)

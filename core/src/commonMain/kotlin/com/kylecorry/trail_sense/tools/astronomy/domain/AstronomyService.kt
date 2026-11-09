@@ -277,7 +277,7 @@ class AstronomyService(
     ): MeteorShowerPeak? {
         val noon = date.atNoon()
         return Astronomy.getMeteorShower(location, noon, zone)
-            ?: Astronomy.getMeteorShower(location, noon + 1.days, zone)
+            ?: Astronomy.getMeteorShower(location, noon.plusDays(1, zone), zone)
     }
 
     fun getMeteorShowerPeakAltitude(peak: MeteorShowerPeak, location: Coordinate): Float {

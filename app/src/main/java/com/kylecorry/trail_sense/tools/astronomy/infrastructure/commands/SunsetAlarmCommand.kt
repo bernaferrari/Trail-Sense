@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 import com.kylecorry.trail_sense.shared.time.today
 
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.days
+import com.kylecorry.trail_sense.shared.time.plusDays
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -46,7 +46,7 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
         val now = Clock.System.now()
 
         if (location.location == Coordinate.zero) {
-            setAlarm((now + 1.days), "no location available")
+            setAlarm(now.plusDays(1), "no location available")
             return@onDefault
         }
 
@@ -64,7 +64,7 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
                     // Missed the sunset, schedule the alarm for tomorrow
                     setAlarm(
                         tomorrowSunset?.minus(alertDuration)
-                            ?: (todaySunset + 1.days),
+                            ?: todaySunset.plusDays(1),
                         "past today's sunset at $todaySunset"
                     )
                 }
@@ -74,7 +74,7 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
                     sendNotification(todaySunset)
                     setAlarm(
                         tomorrowSunset?.minus(alertDuration)
-                            ?: (todaySunset + 1.days),
+                            ?: todaySunset.plusDays(1),
                         "within alert window for today's sunset at $todaySunset"
                     )
                 }
@@ -89,7 +89,7 @@ class SunsetAlarmCommand(private val context: Context) : CoroutineCommand {
             }
         } else {
             // There isn't a sunset today, schedule it for tomorrow
-            setAlarm(tomorrowSunset?.minus(alertDuration) ?: (now + 1.days), "no sunset today")
+            setAlarm(tomorrowSunset?.minus(alertDuration) ?: now.plusDays(1), "no sunset today")
         }
     }
 
