@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ruler
 
+import com.kylecorry.trail_sense.test_utils.views.field
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -27,27 +28,27 @@ class ToolRulerTest : ToolTestBase(Tools.RULER) {
         hasText(id("ruler_unit_btn"), "cm")
         hasText(id("measurement"), Regex("\\d+\\.\\d+ cm"))
 
-        // Enter a to ratio
+        // Enter a to ratio. The scale editor is a sheet, which hides test tags, so its fields are found by label.
         click(id("map_scale"))
         click(string(R.string.map_scale_ratio), exact = true)
-        input(id("fractional_map_to"), "10")
-        hasText(id("fractional_map_from"), "1")
+        input(field(string(R.string.distance_to)), "10")
+        hasText(field(string(R.string.distance_from)), "1")
         click(string(R.string.done), exact = true)
         hasText(id("map_distance"), Regex("\\d+\\.\\d+ m"))
 
         // Switch to verbal scale
         click(id("map_scale"))
         click(string(R.string.map_scale_verbal), exact = true)
-        input(id("verbal_map_scale_from"), "1")
-        input(id("verbal_map_scale_to"), "10")
+        input(field(string(R.string.distance_from)), "1")
+        input(field(string(R.string.distance_to)), "10")
         click(string(R.string.done), exact = true)
         hasText(id("map_distance"), Regex("\\d+(\\.\\d+)? ft"))
 
         // Switch back to ratio and verify it's still there
         click(id("map_scale"))
         click(string(R.string.map_scale_ratio), exact = true)
-        hasText(id("fractional_map_from"), "1")
-        hasText(id("fractional_map_to"), "10")
+        hasText(field(string(R.string.distance_from)), "1")
+        hasText(field(string(R.string.distance_to)), "10")
         click(string(R.string.done), exact = true)
         hasText(id("map_distance"), Regex("\\d+\\.\\d+ m"))
 

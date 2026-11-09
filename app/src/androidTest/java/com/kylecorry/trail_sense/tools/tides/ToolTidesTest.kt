@@ -91,18 +91,19 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         click(id("tide_type"))
         hasText(id("tide_type"), string(R.string.high_tide_letter))
 
-        click(id("tide_time", index = 1))
+        // The table starts with one tide entry (the old layout had a header row first)
+        click(id("tide_time"))
         clickOk()
         clickOk()
 
         // TODO: Verify the time is set
-        hasText(id("tide_time", index = 1)) { it.isNotBlank() }
+        hasText(id("tide_time")) { it.isNotBlank() }
 
-        click(id("tide_height", index = 1))
+        click(id("tide_height"))
         input(string(R.string.distance), "1.0")
         clickOk()
 
-        hasText(id("tide_height", index = 1), "1.00 ft")
+        hasText(id("tide_height"), "1.00 ft")
 
         click(id("add_tide_entry"))
 

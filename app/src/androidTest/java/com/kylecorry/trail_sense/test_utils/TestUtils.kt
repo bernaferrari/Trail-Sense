@@ -454,12 +454,16 @@ object TestUtils {
     fun pickTime(hour: Int, minute: Int, am: Boolean, waitForClose: Boolean = true) {
         require(minute % 5 == 0) { "The clock dial can only be tapped on multiples of 5 minutes" }
 
+        // The View clock labels its numbers with text; the Compose clock only describes them ("8 o'clock")
         waitFor {
-            lowestWithText(hour.toString()).click()
+            lowestWithTextOrDesc(hour.toString(), Pattern.compile("${hour} o'clock")).click()
         }
 
         waitFor {
-            lowestWithText(minute.toString().padStart(2, '0')).click()
+            lowestWithTextOrDesc(
+                minute.toString().padStart(2, '0'),
+                Pattern.compile("0?${minute} minutes?")
+            ).click()
         }
 
         waitFor {
@@ -477,11 +481,13 @@ object TestUtils {
         }
     }
 
-    private fun lowestWithText(text: String): TestView {
-        val node = device.findObjects(By.text(text)).maxByOrNull { it.visibleBounds.top }
+    private fun lowestWithTextOrDesc(text: String, desc: Pattern): TestView {
+        val node = (device.findObjects(By.text(text)) + device.findObjects(By.desc(desc)))
+            .maxByOrNull { it.visibleBounds.top }
             ?: throw AssertionError("Text not found: $text")
         return TestView(node)
     }
+
 
     fun isCameraInUse(isBackFacing: Boolean? = null): Boolean {
         val manager = context.getSystemService<CameraManager>() ?: return false

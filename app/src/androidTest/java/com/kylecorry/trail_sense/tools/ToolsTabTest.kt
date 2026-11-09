@@ -79,7 +79,9 @@ class ToolsTabTest : ToolTestBase(0L) {
     }
 
     private fun canUseQuickActions() {
-        click(quickAction(Tools.QUICK_ACTION_WHISTLE))
+        // The Compose tools tab has no quick action buttons in its toolbar any more, only settings, so the quick
+        // actions are reached from the bottom sheet (canUseBottomSheetQuickActions)
+        not { isVisible({ quickAction(Tools.QUICK_ACTION_WHISTLE) }, waitForTime = 0) }
     }
 
     private fun canUseBottomSheetQuickActions() {

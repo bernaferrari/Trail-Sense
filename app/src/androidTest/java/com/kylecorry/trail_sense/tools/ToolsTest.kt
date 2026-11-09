@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
-import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
@@ -67,15 +67,15 @@ class ToolsTest : ToolTestBase(0L) {
             calledOriginalHandler = true
         }
 
-        // The Compose field guide no longer reads its repo from the registry, so break the pedometer instead: its
-        // screen reads the step tracker from the registry when it is first composed
-        val stepTracker = DependencyRegistry.get<StepTrackerService>()
-        DependencyRegistry.remove<StepTrackerService>()
-        scenario = TestUtils.startWithTool(Tools.PEDOMETER)
+        // The Compose field guide no longer reads its repo from the registry, so break astronomy instead: its screen
+        // reads the markdown service from the registry when it is first composed (and it is on every device)
+        val markdown = DependencyRegistry.get<MarkdownService>()
+        DependencyRegistry.remove<MarkdownService>()
+        scenario = TestUtils.startWithTool(Tools.ASTRONOMY)
 
         isTrue { calledOriginalHandler }
         hasText("An error occurred")
-        hasText(string(R.string.pedometer))
+        hasText(string(R.string.astronomy))
 
         // Settings
         scrollUntil { click(string(R.string.settings), exact = true) }
@@ -95,9 +95,9 @@ class ToolsTest : ToolTestBase(0L) {
         hasText(string(R.string.restart_app), exact = true)
 
         // Fix the issue and reopen tool
-        DependencyRegistry.addSingleton(stepTracker)
+        DependencyRegistry.addSingleton(markdown)
         click(string(R.string.reopen_tool), exact = true)
         not { hasText("An error occurred") }
-        hasText(string(R.string.pedometer))
+        hasText(string(R.string.astronomy))
     }
 }
