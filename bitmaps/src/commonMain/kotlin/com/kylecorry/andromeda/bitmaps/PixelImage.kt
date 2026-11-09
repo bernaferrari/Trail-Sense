@@ -104,12 +104,12 @@ internal fun PixelImage.interpolateBicubic(x: Double, y: Double): Int {
     return color
 }
 
-/** Converts RGB to grayscale while preserving alpha. */
-fun PixelImage.grayscale(): PixelImage = map { color ->
+/** Converts RGB to grayscale while preserving alpha. Set [average] for equal channel weights. */
+fun PixelImage.grayscale(average: Boolean = false): PixelImage = map { color ->
     val red = (color ushr 16) and 0xff
     val green = (color ushr 8) and 0xff
     val blue = color and 0xff
-    val gray = (0.299f * red + 0.587f * green + 0.114f * blue).toInt().coerceIn(0, 255)
+    val gray = if (average) (red + green + blue) / 3 else (0.299f * red + 0.587f * green + 0.114f * blue).toInt().coerceIn(0, 255)
     (color and -0x1000000) or (gray shl 16) or (gray shl 8) or gray
 }
 
