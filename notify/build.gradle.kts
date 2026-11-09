@@ -18,8 +18,7 @@ kotlin {
         api("io.github.mirzemehdi:kmpnotifier-local:2.0.2")
     }
     sourceSets.androidMain.dependencies {
-        implementation(project(":core"))
-        implementation(libs.androidx.core.ktx)
+        api(libs.androidx.core.ktx)
     }
 }
 group = "com.kylecorry.andromeda"
