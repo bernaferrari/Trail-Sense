@@ -3,11 +3,11 @@ package com.kylecorry.andromeda.device
 import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Thermometer
-import com.kylecorry.andromeda.sense.hygrometer.IHygrometer
-import com.kylecorry.andromeda.sense.light.ILightSensor
-import com.kylecorry.andromeda.sense.location.ISatelliteStatusSensor
+import com.kylecorry.andromeda.sense.hygrometer.Hygrometer
+import com.kylecorry.andromeda.sense.light.LightSensor
+import com.kylecorry.andromeda.sense.location.SatelliteStatusSensor
 import com.kylecorry.andromeda.sense.location.Satellite
-import com.kylecorry.andromeda.sense.pedometer.IPedometer
+import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.sol.units.Reading
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -52,18 +52,18 @@ class FlowAltimeter(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
 
 /** Adapts GNSS status readings to the shared satellite sensor contract. */
 class FlowSatelliteStatus(readings: Flow<Reading<List<Satellite>>>, scope: CoroutineScope) :
-    FlowMeasurement<List<Satellite>>(readings, scope, emptyList()), ISatelliteStatusSensor {
+    FlowMeasurement<List<Satellite>>(readings, scope, emptyList()), SatelliteStatusSensor {
     override val satelliteDetails: List<Satellite>? get() = value.takeIf { hasValidReading }
     override val satellites: Int? get() = satelliteDetails?.count { it.usedInFix }
 }
 
 class FlowLightSensor(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
-    FlowMeasurement<Float>(readings, scope, 0f), ILightSensor {
+    FlowMeasurement<Float>(readings, scope, 0f), LightSensor {
     override val illuminance: Float get() = value
 }
 
 class FlowHygrometer(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
-    FlowMeasurement<Float>(readings, scope, 0f), IHygrometer {
+    FlowMeasurement<Float>(readings, scope, 0f), Hygrometer {
     override val humidity: Float get() = value
 }
 
@@ -73,6 +73,6 @@ class FlowThermometer(readings: Flow<Reading<Float>>, scope: CoroutineScope) :
 }
 
 class FlowPedometer(readings: Flow<Reading<Int>>, scope: CoroutineScope) :
-    FlowMeasurement<Int>(readings, scope, 0), IPedometer {
+    FlowMeasurement<Int>(readings, scope, 0), Pedometer {
     override val steps: Int get() = value
 }

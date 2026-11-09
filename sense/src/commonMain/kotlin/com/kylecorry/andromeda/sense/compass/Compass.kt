@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.sense.compass
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationUtils
 import com.kylecorry.sol.units.Bearing
 
@@ -14,12 +14,12 @@ import com.kylecorry.sol.units.Bearing
  * @param offset The offset to apply to the bearing (in addition to declination, in degrees)
  */
 class Compass(
-    private val orientationSensor: IOrientationSensor,
+    private val orientationSensor: OrientationSensor,
     var useTrueNorth: Boolean = false,
     var isAugmentedReality: Boolean = false,
     var surfaceRotation: Int = 0,
     var offset: Float = 0f
-) : SharedSensor(), ICompass {
+) : SharedSensor(), CompassSensor {
 
     private var _bearing = 0f
     private val orientation = FloatArray(3)

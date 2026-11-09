@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.sense.level
 
 import com.kylecorry.andromeda.core.sensors.Sensor
 
-interface ILevel : Sensor {
+interface LevelSensor : Sensor {
     /**
      * The X level in degrees
      */

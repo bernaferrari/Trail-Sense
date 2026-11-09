@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.device
 
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
@@ -15,7 +15,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class FlowGPS(private val readings: Flow<Reading<LocationReading>>, private val scope: CoroutineScope) : SharedSensor(), IGPS {
+class FlowGPS(private val readings: Flow<Reading<LocationReading>>, private val scope: CoroutineScope) : SharedSensor(), GpsSensor {
     override var hasValidReading = false
         private set
     override var quality = Quality.Unknown

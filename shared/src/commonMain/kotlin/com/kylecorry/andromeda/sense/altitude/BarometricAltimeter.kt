@@ -2,12 +2,12 @@ package com.kylecorry.andromeda.sense.altitude
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Altimeter
-import com.kylecorry.andromeda.sense.barometer.IBarometer
+import com.kylecorry.andromeda.sense.barometer.Barometer
 import kotlin.math.pow
 import com.kylecorry.sol.units.Pressure
 
 class BarometricAltimeter(
-    private val barometer: IBarometer,
+    private val barometer: Barometer,
     var seaLevelPressure: Pressure = Pressure.hpa(1013.25f)
 ) : SharedSensor(), Altimeter {
 

@@ -9,7 +9,7 @@ import com.kylecorry.sol.units.Coordinate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-interface IGPS : Sensor, Altimeter, Speedometer {
+interface GpsSensor : Sensor, Altimeter, Speedometer {
     /**
      * The location
      */
@@ -55,7 +55,7 @@ interface IGPS : Sensor, Altimeter, Speedometer {
  * Determines if there is a recent location fix
  * @param maxFixAge the age at which a fix is considered lost
  */
-fun IGPS.hasFix(maxFixAge: Duration = 30.seconds): Boolean {
+fun GpsSensor.hasFix(maxFixAge: Duration = 30.seconds): Boolean {
     if (!hasValidReading) {
         return false
     }

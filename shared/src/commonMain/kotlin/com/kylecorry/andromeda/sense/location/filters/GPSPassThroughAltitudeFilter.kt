@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.sense.location.filters
 
-class GPSPassThroughAltitudeFilter : IGPSAltitudeFilter {
+class GPSPassThroughAltitudeFilter : GpsAltitudeEstimator {
     override var altitude: Float = 0f
         private set
 

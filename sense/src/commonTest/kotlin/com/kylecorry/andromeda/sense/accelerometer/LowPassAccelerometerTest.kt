@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 class LowPassAccelerometerTest {
-    private class Input : SharedSensor(), IAccelerometer {
+    private class Input : SharedSensor(), Accelerometer {
         override val hasValidReading = true
         override val rawAcceleration = FloatArray(3)
         override val acceleration get() = Vector3(rawAcceleration[0], rawAcceleration[1], rawAcceleration[2])

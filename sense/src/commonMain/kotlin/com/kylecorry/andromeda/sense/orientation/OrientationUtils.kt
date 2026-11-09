@@ -14,7 +14,7 @@ object OrientationUtils {
      * @param declination The declination to use (default null)
      */
     fun getCompassOrientation(
-        orientationSensor: IOrientationSensor,
+        orientationSensor: OrientationSensor,
         rotationMatrix: FloatArray,
         orientation: FloatArray,
         surfaceRotation: Int = 0,
@@ -55,7 +55,7 @@ object OrientationUtils {
      * @param declination The declination to use (default null)
      */
     fun getAROrientation(
-        orientationSensor: IOrientationSensor,
+        orientationSensor: OrientationSensor,
         rotationMatrix: FloatArray,
         orientation: FloatArray,
         surfaceRotation: Int = 0,
@@ -100,7 +100,7 @@ object OrientationUtils {
      * @param declination The declination to use (default null)
      */
     fun getOrientation(
-        orientationSensor: IOrientationSensor,
+        orientationSensor: OrientationSensor,
         xAxis: Int,
         yAxis: Int,
         rotationMatrix: FloatArray,

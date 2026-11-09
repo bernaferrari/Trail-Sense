@@ -5,7 +5,7 @@ import com.kylecorry.sol.math.filters.IFilter
 class GPSAltitudeFilter(
     private val filterProvider: (initialValue: Float) -> IFilter,
     private val minimumSamples: Int
-) : IGPSAltitudeFilter {
+) : GpsAltitudeEstimator {
     override var altitude: Float = 0f
         private set
 

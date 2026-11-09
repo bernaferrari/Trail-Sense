@@ -1,8 +1,8 @@
 package com.kylecorry.andromeda.sense.orientation
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.accelerometer.IAccelerometer
-import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
+import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
+import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.sol.math.Euler
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class CustomRotationSensorTest {
-    private class Accelerometer : SharedSensor(), IAccelerometer {
+    private class TestAccelerometer : SharedSensor(), Accelerometer {
         override val hasValidReading = true
         override val rawAcceleration = floatArrayOf(0f, 0f, 9.81f)
         override val acceleration get() = Vector3.from(rawAcceleration)
@@ -24,7 +24,7 @@ class CustomRotationSensorTest {
         override fun stopImpl() = Unit
         fun emit() = notifyListeners()
     }
-    private class Magnetometer : SharedSensor(), IMagnetometer {
+    private class TestMagnetometer : SharedSensor(), Magnetometer {
         override val hasValidReading = true
         override val rawMagneticField = floatArrayOf(0f, 50f, 0f)
         override val magneticField get() = Vector3.from(rawMagneticField)
@@ -32,7 +32,7 @@ class CustomRotationSensorTest {
         override fun stopImpl() = Unit
         fun emit() = notifyListeners()
     }
-    private class Gyro : SharedSensor(), IGyroscope {
+    private class Gyro : SharedSensor(), Gyroscope {
         override val hasValidReading = true
         override var orientation = Quaternion.zero
         override val rawOrientation get() = orientation.toFloatArray()
@@ -46,8 +46,8 @@ class CustomRotationSensorTest {
 
     @Test
     fun fusesGyroRotationAfterInitialAttitude() = runBlocking {
-        val acceleration = Accelerometer()
-        val magnetic = Magnetometer()
+        val acceleration = TestAccelerometer()
+        val magnetic = TestMagnetometer()
         val gyro = Gyro()
         val sensor = CustomRotationSensor(magnetic, acceleration, gyro, this, gyroWeight = 1f)
         val initialized = CompletableDeferred<Unit>()

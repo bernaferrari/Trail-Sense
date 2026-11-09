@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.device
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.orientation.IGyroscope
+import com.kylecorry.andromeda.sense.orientation.Gyroscope
 import com.kylecorry.sol.math.Euler
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
@@ -23,7 +23,7 @@ class FlowGyroscope(
     private val readings: Flow<Reading<Vector3>>,
     private val scope: CoroutineScope,
     private val maintainStateOnRestart: Boolean = false,
-) : SharedSensor(), IGyroscope {
+) : SharedSensor(), Gyroscope {
     private val lock = SynchronizedObject()
     private var quaternion = Quaternion.zero
     private var rate = Vector3.zero

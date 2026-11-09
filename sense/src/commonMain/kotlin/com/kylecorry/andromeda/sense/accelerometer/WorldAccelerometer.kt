@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.sense.accelerometer
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationUtils
 import com.kylecorry.sol.math.Vector3
 import kotlinx.coroutines.CoroutineScope
@@ -25,14 +25,14 @@ import kotlin.math.min
  * @param useAROrientation True to use AR orientation, false to use compass orientation
  */
 class WorldAccelerometer(
-    private val accelerometer: IAccelerometer,
-    private val orientation: IOrientationSensor,
+    private val accelerometer: Accelerometer,
+    private val orientation: OrientationSensor,
     private val scope: CoroutineScope,
     private val interval: Duration = 20.milliseconds,
     var useTrueNorth: Boolean = false,
     var surfaceRotation: Int = 0,
     var useAROrientation: Boolean = false
-) : IAccelerometer, SharedSensor() {
+) : Accelerometer, SharedSensor() {
 
     private val rotationMatrix = FloatArray(16)
     private val tempOrientation = FloatArray(3)

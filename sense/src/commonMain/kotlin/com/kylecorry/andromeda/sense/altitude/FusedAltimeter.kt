@@ -6,10 +6,10 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.time.Throttle
 import com.kylecorry.andromeda.preferences.Preferences
-import com.kylecorry.andromeda.sense.barometer.IBarometer
-import com.kylecorry.andromeda.sense.location.IGPS
+import com.kylecorry.andromeda.sense.barometer.Barometer
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.andromeda.sense.location.filters.GPSPassThroughAltitudeFilter
-import com.kylecorry.andromeda.sense.location.filters.IGPSAltitudeFilter
+import com.kylecorry.andromeda.sense.location.filters.GpsAltitudeEstimator
 import com.kylecorry.andromeda.sense.location.hasFix
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.meteorology.Meteorology
@@ -45,11 +45,11 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param recalibrationTimeout The maximum time to wait for the GPS when recalibrating. If exceeded, the expired sea level pressure continues to be used and recalibration is retried later.
  */
 class FusedAltimeter(
-    private val gps: IGPS,
-    private val barometer: IBarometer,
+    private val gps: GpsSensor,
+    private val barometer: Barometer,
     private val cache: Preferences,
     private val useContinuousCalibration: Boolean = true,
-    private val gpsFilter: IGPSAltitudeFilter = GPSPassThroughAltitudeFilter(),
+    private val gpsFilter: GpsAltitudeEstimator = GPSPassThroughAltitudeFilter(),
     private val recalibrationInterval: Duration = 1.hours,
     private val useMSLAltitude: Boolean = true,
     private val logger: ((String) -> Unit)? = null,

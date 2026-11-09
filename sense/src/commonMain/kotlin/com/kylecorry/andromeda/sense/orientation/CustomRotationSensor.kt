@@ -2,8 +2,8 @@ package com.kylecorry.andromeda.sense.orientation
 
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.accelerometer.IAccelerometer
-import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
+import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
+import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.QuaternionMath
 import com.kylecorry.sol.math.Vector3Utils
@@ -23,9 +23,9 @@ import kotlin.time.TimeSource
 
 /** Fuses gyroscope rotation with a gravity and magnetometer attitude. */
 class CustomRotationSensor(
-    private val magnetometer: IMagnetometer,
-    private val accelerometer: IAccelerometer,
-    private val gyro: IGyroscope,
+    private val magnetometer: Magnetometer,
+    private val accelerometer: Accelerometer,
+    private val gyro: Gyroscope,
     private val scope: CoroutineScope,
     private val gyroWeight: Float = 0.998f,
     private val outOfSyncDotThreshold: Float = 0.85f,
@@ -35,7 +35,7 @@ class CustomRotationSensor(
         (0.1f * Geophysics.GRAVITY)..(2f * Geophysics.GRAVITY),
     private val onlyUseMagnetometerQuality: Boolean = false,
     private val maintainStateOnRestart: Boolean = false
-) : SharedSensor(), IOrientationSensor {
+) : SharedSensor(), OrientationSensor {
     private val lock = SynchronizedObject()
     private val geomagnetic = CustomGeomagneticRotationSensor(
         magnetometer, accelerometer, onlyUseMagnetometerQuality, maintainStateOnRestart

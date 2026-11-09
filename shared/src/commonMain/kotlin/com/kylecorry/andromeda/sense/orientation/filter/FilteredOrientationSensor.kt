@@ -1,14 +1,14 @@
 package com.kylecorry.andromeda.sense.orientation.filter
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.sol.math.Quaternion
 
 class FilteredOrientationSensor(
-    private val sensor: IOrientationSensor,
+    private val sensor: OrientationSensor,
     private val filter: OrientationSensorFilter,
     private val maintainStateOnRestart: Boolean = false
-) : SharedSensor(), IOrientationSensor {
+) : SharedSensor(), OrientationSensor {
 
     private val reading = Quaternion.zero.toFloatArray()
     private var hasReading = false

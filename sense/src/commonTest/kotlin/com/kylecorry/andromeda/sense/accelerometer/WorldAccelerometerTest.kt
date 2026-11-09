@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.sense.accelerometer
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.orientation.IOrientationSensor
+import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
 import kotlinx.coroutines.CompletableDeferred
@@ -14,7 +14,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class WorldAccelerometerTest {
-    private class Accelerometer : SharedSensor(), IAccelerometer {
+    private class TestAccelerometer : SharedSensor(), Accelerometer {
         var running = false
         override val hasValidReading = true
         override val rawAcceleration = floatArrayOf(1f, 0f, 0f)
@@ -23,7 +23,7 @@ class WorldAccelerometerTest {
         override fun stopImpl() { running = false }
     }
 
-    private class Orientation : SharedSensor(), IOrientationSensor {
+    private class Orientation : SharedSensor(), OrientationSensor {
         var running = false
         private val half = sqrt(0.5f)
         override val rawOrientation = floatArrayOf(0f, 0f, half, half)
@@ -36,7 +36,7 @@ class WorldAccelerometerTest {
 
     @Test
     fun rotatesReadingsAndStopsUnderlyingSensors() = runBlocking {
-        val accelerometer = Accelerometer()
+        val accelerometer = TestAccelerometer()
         val orientation = Orientation()
         val sensor = WorldAccelerometer(accelerometer, orientation, this)
         val reading = CompletableDeferred<Vector3>()

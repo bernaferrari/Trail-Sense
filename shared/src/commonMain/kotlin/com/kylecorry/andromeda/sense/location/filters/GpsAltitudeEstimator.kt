@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.sense.location.filters
 
-interface IGPSAltitudeFilter {
+interface GpsAltitudeEstimator {
     val altitude: Float
     val accuracy: Float?
     val hasValidReading: Boolean

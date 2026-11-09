@@ -2,8 +2,8 @@ package com.kylecorry.andromeda.sense.orientation
 
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.accelerometer.IAccelerometer
-import com.kylecorry.andromeda.sense.magnetometer.IMagnetometer
+import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
+import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
 import kotlinx.atomicfu.locks.SynchronizedObject
@@ -13,11 +13,11 @@ import kotlin.math.sqrt
 
 /** Computes an east-north-up attitude from gravity and the magnetic field. */
 class CustomGeomagneticRotationSensor(
-    private val magnetometer: IMagnetometer,
-    private val accelerometer: IAccelerometer,
+    private val magnetometer: Magnetometer,
+    private val accelerometer: Accelerometer,
     private val onlyUseMagnetometerQuality: Boolean = false,
     private val maintainStateOnRestart: Boolean = false
-) : SharedSensor(), IOrientationSensor {
+) : SharedSensor(), OrientationSensor {
     private val lock = SynchronizedObject()
     private var reading = Quaternion.zero
     private var hasMagneticReading = false

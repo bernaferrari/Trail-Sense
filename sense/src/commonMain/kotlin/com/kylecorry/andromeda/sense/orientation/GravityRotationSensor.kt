@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.sense.orientation
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.accelerometer.IAccelerometer
+import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
 import kotlinx.atomicfu.locks.SynchronizedObject
@@ -9,9 +9,9 @@ import kotlinx.atomicfu.locks.synchronized
 
 /** Estimates tilt from gravity. Gravity alone cannot determine a magnetic heading. */
 class GravityRotationSensor(
-    private val accelerometer: IAccelerometer,
+    private val accelerometer: Accelerometer,
     private val maintainStateOnRestart: Boolean = false
-) : SharedSensor(), IOrientationSensor {
+) : SharedSensor(), OrientationSensor {
     private val lock = SynchronizedObject()
     private var reading = Quaternion.zero
     private var valid = false

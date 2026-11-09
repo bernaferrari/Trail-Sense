@@ -7,7 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class OrientationUtilsTest {
-    private class Orientation(var vector: FloatArray) : SharedSensor(), IOrientationSensor {
+    private class Orientation(var vector: FloatArray) : SharedSensor(), OrientationSensor {
         override val rawOrientation get() = vector
         override val orientation get() = Quaternion(vector[0], vector[1], vector[2], vector[3])
         override val headingAccuracy: Float? get() = null

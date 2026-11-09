@@ -6,10 +6,10 @@ import com.kylecorry.sol.math.filters.LowPassFilter
 
 /** Filters each axis of the supplied sensor independently. */
 class LowPassMagnetometer(
-    private val sensor: IMagnetometer,
+    private val sensor: Magnetometer,
     private val filterSize: Float = 0.03f,
     private val maintainStateOnRestart: Boolean = false
-) : SharedSensor(), IMagnetometer {
+) : SharedSensor(), Magnetometer {
     private var filters = createFilters()
     private var gotReading = false
 

@@ -1,12 +1,12 @@
 package com.kylecorry.andromeda.sense.orientation
 
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import com.kylecorry.andromeda.sense.accelerometer.IAccelerometer
+import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
 import kotlin.math.abs
 import kotlin.math.withSign
 
 /** Classifies the device orientation from a gravity or low-pass accelerometer. */
-class DeviceOrientation(private val accelerometer: IAccelerometer) : SharedSensor() {
+class DeviceOrientation(private val accelerometer: Accelerometer) : SharedSensor() {
     override fun startImpl() {
         gotReading = false
         resetSessionMetadata()

@@ -6,10 +6,10 @@ import com.kylecorry.sol.math.filters.LowPassFilter
 
 /** Filters each axis of the supplied sensor independently. */
 class LowPassAccelerometer(
-    private val sensor: IAccelerometer,
+    private val sensor: Accelerometer,
     private val filterSize: Float = 0.05f,
     private val maintainStateOnRestart: Boolean = false
-) : SharedSensor(), IAccelerometer {
+) : SharedSensor(), Accelerometer {
     private var filters = createFilters()
     private var gotReading = false
 
