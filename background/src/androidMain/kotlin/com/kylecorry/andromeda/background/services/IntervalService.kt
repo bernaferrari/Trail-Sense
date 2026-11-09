@@ -2,9 +2,10 @@ package com.kylecorry.andromeda.background.services
 
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Bundle
+import androidx.work.workDataOf
 import com.kylecorry.andromeda.background.BroadcastWorker
-import com.kylecorry.andromeda.background.TaskSchedulerFactory
+import com.kylecorry.andromeda.background.backgroundScheduler
+import com.kylecorry.andromeda.background.periodicBackgroundScheduler
 import com.kylecorry.andromeda.core.system.BroadcastReceiverTopic
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.ITimer
@@ -35,23 +36,13 @@ abstract class IntervalService(
     }
 
     private val periodicWorker by lazy {
-        TaskSchedulerFactory(this).interval(
-            BroadcastWorker::class.java,
-            uniqueId,
-            Bundle().apply {
-                putString("action", action)
-            }
-        )
+        periodicBackgroundScheduler(this, "$packageName.$uniqueId", BroadcastWorker::class.java,
+            input = workDataOf("action" to action))
     }
 
     private val oneTimeWorker by lazy {
-        TaskSchedulerFactory(this).once(
-            BroadcastWorker::class.java,
-            uniqueId,
-            Bundle().apply {
-                putString("action", action)
-            }
-        )
+        backgroundScheduler(this, "$packageName.$uniqueId", BroadcastWorker::class.java,
+            input = workDataOf("action" to action))
     }
 
     private var isWakelockManaged = false

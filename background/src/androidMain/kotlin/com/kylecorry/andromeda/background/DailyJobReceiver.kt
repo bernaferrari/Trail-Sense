@@ -79,14 +79,13 @@ abstract class DailyJobReceiver(
     }
 
     protected open fun getScheduler(context: Context): IOneTimeTaskScheduler {
-        return AlarmTaskScheduler(context) {
+        return alarmScheduler(context,
             PendingIntent.getBroadcast(
                 context,
                 pendingIntentId,
                 getIntent(context),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        }
+            ), AlarmDelivery.Exact(allowWhileIdle = false))
     }
 
     private fun setAlarm(context: Context, time: LocalDateTime) {

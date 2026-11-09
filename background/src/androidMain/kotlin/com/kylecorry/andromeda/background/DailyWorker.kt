@@ -122,7 +122,7 @@ abstract class DailyWorker(
     }
 
     protected open fun getScheduler(context: Context): IOneTimeTaskScheduler {
-        return OneTimeTaskSchedulerFactory(context).deferrable(this::class.java, uniqueId)
+        return backgroundScheduler(context, "${context.packageName}.$uniqueId", this::class.java)
     }
 
     private fun setAlarm(context: Context, time: LocalDateTime) {
