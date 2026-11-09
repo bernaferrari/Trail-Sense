@@ -11,7 +11,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.text.style.TextIndent
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
@@ -33,7 +35,8 @@ data class MarkdownTextStyles(
     /** Relative sizes of headings 1 to 6, which are also bold. */
     val headingScales: List<Float> = listOf(2f, 1.5f, 1.17f, 1f, 0.83f, 0.67f),
     val bullet: String = "•",
-    val listIndent: String = "    "
+    /** How far each list level is indented; wrapped lines of an item line up after its marker. */
+    val listIndent: TextUnit = 1.5.em
 )
 
 /**
@@ -57,28 +60,94 @@ data class MarkdownDelimiter(val delimiter: String, val effect: Effect) {
     }
 }
 
+/** Text that becomes a link without markdown link syntax. */
+enum class MarkdownAutoLink {
+    /** Bare web addresses, such as `www.example.com` or `https://example.com`. */
+    Web,
+
+    /** Bare email addresses, linked with `mailto:`. */
+    Email,
+
+    /** Phone numbers found by [PhoneNumberLinkifier], linked with `tel:`. */
+    Phone
+}
+
+/** A piece of rendered markdown: a run of styled text or an image between them. */
+sealed interface MarkdownBlock {
+    data class Text(val text: AnnotatedString) : MarkdownBlock
+
+    /** An image to load from [source] (a URI such as `file:///android_asset/a.webp`), described by [description]. */
+    data class Image(val source: String, val description: String, val title: String? = null) : MarkdownBlock
+}
+
 /**
  * Renders GitHub-flavored [markdown] as styled text: emphasis, headings, code, strikethrough, lists, block quotes,
- * tables and links (inline, reference and bare URLs) as [LinkAnnotation.Url]s. Images and raw HTML are left out.
- * Blocks are separated by a blank line and soft line breaks become spaces.
+ * tables and links (inline, reference, and the [autoLinks] found in plain text) as [LinkAnnotation.Url]s. Images
+ * and raw HTML are left out; use [toBlocks] to keep the images. Blocks are separated by a blank line and soft line
+ * breaks become spaces. List items are hanging paragraphs ([ParagraphStyle]s with a [TextIndent]), which break
+ * lines themselves, so no newline separates them in the text.
  */
 fun Markdown.toAnnotatedString(
     markdown: String,
     styles: MarkdownTextStyles = MarkdownTextStyles(),
-    delimiters: List<MarkdownDelimiter> = emptyList()
+    delimiters: List<MarkdownDelimiter> = emptyList(),
+    autoLinks: Set<MarkdownAutoLink> = MarkdownAutoLink.entries.toSet()
 ): AnnotatedString {
-    val text = markdown.replace("\r\n", "\n").replace("\r", "\n")
-    val tree = MarkdownParser(GFMFlavourDescriptor(), cancellationToken = CancellationToken.NonCancellable)
-        .buildMarkdownTreeFromString(text)
-    return AnnotatedMarkdownRenderer(text, styles, delimiters).render(tree)
+    val text = normalizeLineBreaks(markdown)
+    return AnnotatedMarkdownRenderer(text, styles, delimiters, autoLinks, keepImages = false).render(parse(text))
 }
+
+/**
+ * Renders [markdown] like [toAnnotatedString], split around its images: text runs become [MarkdownBlock.Text] and
+ * each image a [MarkdownBlock.Image], in reading order, so images can be shown at full width between the text.
+ */
+fun Markdown.toBlocks(
+    markdown: String,
+    styles: MarkdownTextStyles = MarkdownTextStyles(),
+    delimiters: List<MarkdownDelimiter> = emptyList(),
+    autoLinks: Set<MarkdownAutoLink> = MarkdownAutoLink.entries.toSet()
+): List<MarkdownBlock> {
+    val text = normalizeLineBreaks(markdown)
+    val renderer = AnnotatedMarkdownRenderer(text, styles, delimiters, autoLinks, keepImages = true)
+    val rendered = renderer.render(parse(text))
+    val blocks = mutableListOf<MarkdownBlock>()
+    fun addText(start: Int, end: Int) {
+        val run = rendered.subSequence(start, end).trim()
+        if (run.isNotEmpty()) blocks += MarkdownBlock.Text(run)
+    }
+    var position = 0
+    rendered.getStringAnnotations(IMAGE_TAG, 0, rendered.length).forEach { placeholder ->
+        addText(position, placeholder.start)
+        blocks += renderer.images[placeholder.item.toInt()]
+        position = placeholder.end
+    }
+    addText(position, rendered.length)
+    return blocks
+}
+
+private fun normalizeLineBreaks(markdown: String) = markdown.replace("\r\n", "\n").replace("\r", "\n")
+
+private fun parse(text: String): ASTNode {
+    return MarkdownParser(GFMFlavourDescriptor(), cancellationToken = CancellationToken.NonCancellable)
+        .buildMarkdownTreeFromString(text)
+}
+
+private const val IMAGE_TAG = "com.kylecorry.andromeda.markdown.image"
+
+/** Stands in for an image in the rendered text until [toBlocks] splits the text around it. */
+private const val IMAGE_PLACEHOLDER = "\uFFFC"
 
 private class AnnotatedMarkdownRenderer(
     private val source: String,
     private val styles: MarkdownTextStyles,
-    private val delimiters: List<MarkdownDelimiter>
+    private val delimiters: List<MarkdownDelimiter>,
+    private val autoLinks: Set<MarkdownAutoLink>,
+    private val keepImages: Boolean
 ) {
     private val definitions = mutableMapOf<String, String>()
+
+    /** The images met while rendering with [keepImages], indexed by their placeholders' annotations. */
+    val images = mutableListOf<MarkdownBlock.Image>()
 
     fun render(root: ASTNode): AnnotatedString {
         collectDefinitions(root)
@@ -141,16 +210,52 @@ private class AnnotatedMarkdownRenderer(
             } else {
                 styles.bullet
             }
-            val content = blocksOf(item, depth + 1)
-            buildAnnotatedString {
-                append(styles.listIndent.repeat(depth))
-                append(marker)
-                append(' ')
-                append(joinBlocks(content, LINE_SEPARATOR))
-            }
+            listItem(item, "$marker ", depth)
         }
         return joinBlocks(items, LINE_SEPARATOR)
     }
+
+    /**
+     * A list item as hanging paragraphs: the marker indented for its level, and the item's wrapped lines and further
+     * paragraphs lined up after the marker. Nested lists indent themselves.
+     */
+    private fun listItem(item: ASTNode, marker: String, depth: Int): AnnotatedString {
+        val indent = styles.listIndent.value * depth
+        val textStart = (indent + markerWidth(marker)).em
+        val markerParagraph = TextIndent(indent.em, textStart)
+        val parts = item.children.mapNotNull { child ->
+            block(child, depth + 1)?.takeIf { it.isNotEmpty() }?.let { child.isList() to it }
+        }
+        val lines = parts.mapIndexed { index, (isList, text) ->
+            when {
+                isList -> text
+                index == 0 -> hanging(buildAnnotatedString { append(marker); append(text) }, markerParagraph)
+                else -> hanging(text, TextIndent(textStart, textStart))
+            }
+        }
+        if (parts.firstOrNull()?.first == false) return joinBlocks(lines, LINE_SEPARATOR)
+        // An empty item, or one that starts with a nested list, still shows its marker on its own line
+        return joinBlocks(listOf(hanging(AnnotatedString(marker.trimEnd()), markerParagraph)) + lines, LINE_SEPARATOR)
+    }
+
+    private fun ASTNode.isList() =
+        type == MarkdownElementTypes.UNORDERED_LIST || type == MarkdownElementTypes.ORDERED_LIST
+
+    /** [text] as one paragraph indented by [indent], unless it already sets its own paragraph style. */
+    private fun hanging(text: AnnotatedString, indent: TextIndent): AnnotatedString {
+        if (text.paragraphStyles.isNotEmpty()) return text
+        return buildAnnotatedString { withStyle(ParagraphStyle(textIndent = indent)) { append(text) } }
+    }
+
+    /** Roughly how wide a list marker and its space are, in ems of the body text. */
+    private fun markerWidth(marker: String): Float = marker.sumOf { char ->
+        when {
+            char.isDigit() -> 0.56
+            char == ' ' -> 0.28
+            char == '.' || char == ')' -> 0.28
+            else -> 0.6
+        }
+    }.toFloat()
 
     private fun codeFence(node: ASTNode): AnnotatedString {
         val lines = mutableListOf<String>()
@@ -219,6 +324,9 @@ private class AnnotatedMarkdownRenderer(
         private var afterLineBreak = false
         private var afterHardBreak = false
 
+        /** How many links the writer is inside; text in a link is not auto-linked again. */
+        private var linkDepth = 0
+
         /** Plain text waiting to be written; the lexer splits entities such as `&amp;` over several tokens. */
         private val pending = StringBuilder()
 
@@ -226,8 +334,19 @@ private class AnnotatedMarkdownRenderer(
 
         fun flush() {
             if (pending.isEmpty()) return
-            out.append(decodeText(pending))
+            val text = decodeText(pending)
             pending.clear()
+            if (linkDepth > 0) {
+                out.append(text)
+                return
+            }
+            var position = 0
+            autoLinksIn(text).forEach { (range, url) ->
+                out.append(text, position, range.first)
+                linkText(url, text.substring(range))
+                position = range.last + 1
+            }
+            out.append(text, position, text.length)
         }
 
         private fun write(node: ASTNode) {
@@ -293,13 +412,20 @@ private class AnnotatedMarkdownRenderer(
 
                 GFMTokenTypes.GFM_AUTOLINK -> {
                     val text = node.getTextInNode(source).toString()
-                    linkText(bareUrl(text), text)
+                    val url = bareUrl(text)
+                    val kind = if (url.startsWith("mailto:")) MarkdownAutoLink.Email else MarkdownAutoLink.Web
+                    if (kind in autoLinks && linkDepth == 0) {
+                        linkText(url, text)
+                    } else {
+                        pending.append(text)
+                    }
                 }
 
                 GFMTokenTypes.CHECK_BOX -> out.append(if (node.getTextInNode(source).contains('x', ignoreCase = true)) "☑ " else "☐ ")
                 // Quote markers that continue a quoted paragraph on its next lines aren't part of the text.
                 MarkdownTokenTypes.BLOCK_QUOTE -> afterLineBreak = true
-                MarkdownElementTypes.IMAGE, MarkdownTokenTypes.HTML_TAG, MarkdownElementTypes.LINK_DEFINITION -> Unit
+                MarkdownElementTypes.IMAGE -> if (keepImages) image(node)
+                MarkdownTokenTypes.HTML_TAG, MarkdownElementTypes.LINK_DEFINITION -> Unit
                 else -> write(node.children)
             }
         }
@@ -317,9 +443,32 @@ private class AnnotatedMarkdownRenderer(
                 return
             }
             val start = out.length
+            linkDepth++
             write(label)
             flush()
+            linkDepth--
             out.addLink(LinkAnnotation.Url(url, TextLinkStyles(styles.link)), start, out.length)
+        }
+
+        private fun image(node: ASTNode) {
+            val link = node.children.firstOrNull { it.type != MarkdownTokenTypes.EXCLAMATION_MARK } ?: return
+            val text = link.child(MarkdownElementTypes.LINK_TEXT)
+            val url = when (link.type) {
+                MarkdownElementTypes.INLINE_LINK -> link.child(MarkdownElementTypes.LINK_DESTINATION)?.let(::destinationOf)
+                MarkdownElementTypes.FULL_REFERENCE_LINK, MarkdownElementTypes.SHORT_REFERENCE_LINK ->
+                    link.child(MarkdownElementTypes.LINK_LABEL)?.let(::labelOf)?.let(definitions::get)
+                else -> null
+            }
+            if (url.isNullOrBlank()) return
+            val description = (text ?: link.child(MarkdownElementTypes.LINK_LABEL))
+                ?.children?.trimDelimiters(MarkdownTokenTypes.LBRACKET, MarkdownTokenTypes.RBRACKET)
+                ?.let(::plainText).orEmpty()
+            val title = link.child(MarkdownElementTypes.LINK_TITLE)?.getTextInNode(source)?.toString()
+                ?.let { decodeText(it.substring(1, it.length - 1)) }
+            val start = out.length
+            out.append(IMAGE_PLACEHOLDER)
+            out.addStringAnnotation(IMAGE_TAG, images.size.toString(), start, out.length)
+            images += MarkdownBlock.Image(url, description, title)
         }
 
         private fun linkText(url: String, text: String) {
@@ -336,6 +485,30 @@ private class AnnotatedMarkdownRenderer(
             val inner = label.children.trimDelimiters(MarkdownTokenTypes.LBRACKET, MarkdownTokenTypes.RBRACKET)
             link(url, inner)
         }
+    }
+
+    /**
+     * The bare emails and phone numbers in plain [text] that [autoLinks] asks for, in order and not overlapping.
+     * Bare web addresses are found by the GFM parser.
+     */
+    private fun autoLinksIn(text: String): List<Pair<IntRange, String>> {
+        val found = mutableListOf<Pair<IntRange, String>>()
+        if (MarkdownAutoLink.Email in autoLinks) {
+            EMAIL.findAll(text).forEach { found += it.range to "mailto:${it.value}" }
+        }
+        if (MarkdownAutoLink.Phone in autoLinks) {
+            PhoneNumberLinkifier.find(text).forEach { found += it.range to it.url }
+        }
+        var end = -1
+        return found.sortedBy { it.first.first }.filter { (range, _) ->
+            (range.first > end).also { if (it) end = range.last }
+        }
+    }
+
+    /** The text of inline content without its styles, links or images, such as an image's description. */
+    private fun plainText(nodes: List<ASTNode>): String {
+        return AnnotatedMarkdownRenderer(source, styles, emptyList(), emptySet(), keepImages = false)
+            .inline(nodes).text.trim()
     }
 
     private fun codeSpanText(node: ASTNode): String {
@@ -442,14 +615,60 @@ private class AnnotatedMarkdownRenderer(
         return null
     }
 
+    /**
+     * Joins [blocks] with [separator]. A paragraph style already breaks the line where it starts or ends, so one
+     * newline of the separator is dropped there; otherwise it would show as an extra empty line. Between two styled
+     * paragraphs a newline on its own would be a paragraph of two empty lines, so the one that is left ends the
+     * paragraph before it instead.
+     */
     private fun joinBlocks(blocks: List<AnnotatedString>, separator: AnnotatedString): AnnotatedString {
+        val parts = blocks.toMutableList()
+        val separators = MutableList(maxOf(blocks.size - 1, 0)) { separator }
+        for (index in separators.indices) {
+            val endsParagraph = parts[index].endsParagraph()
+            val startsParagraph = parts[index + 1].startsParagraph()
+            if (!endsParagraph && !startsParagraph) continue
+            val remaining = separator.subSequence(1, separator.length)
+            if (endsParagraph && startsParagraph && remaining.isNotEmpty()) {
+                parts[index] = parts[index].withNewlineInLastParagraph()
+                separators[index] = remaining.subSequence(1, remaining.length)
+            } else {
+                separators[index] = remaining
+            }
+        }
         return buildAnnotatedString {
-            blocks.forEachIndexed { index, block ->
-                if (index > 0) append(separator)
+            parts.forEachIndexed { index, block ->
+                if (index > 0) append(separators[index - 1])
                 append(block)
             }
         }
     }
+
+    /** This text and a newline, which the paragraph styles that ended the text also cover. */
+    private fun AnnotatedString.withNewlineInLastParagraph(): AnnotatedString {
+        val original = this
+        return buildAnnotatedString {
+            append(original.text)
+            append('\n')
+            original.spanStyles.forEach { addStyle(it.item, it.start, it.end) }
+            original.paragraphStyles.forEach {
+                addStyle(it.item, it.start, if (it.end == original.length) it.end + 1 else it.end)
+            }
+            original.getStringAnnotations(0, original.length).forEach {
+                addStringAnnotation(it.tag, it.item, it.start, it.end)
+            }
+            original.getLinkAnnotations(0, original.length).forEach {
+                when (val link = it.item) {
+                    is LinkAnnotation.Url -> addLink(link, it.start, it.end)
+                    is LinkAnnotation.Clickable -> addLink(link, it.start, it.end)
+                }
+            }
+        }
+    }
+
+    private fun AnnotatedString.startsParagraph() = paragraphStyles.any { it.start == 0 }
+
+    private fun AnnotatedString.endsParagraph() = paragraphStyles.any { it.end == length }
 
     private companion object {
         val BLOCK_SEPARATOR = AnnotatedString("\n\n")
@@ -457,6 +676,7 @@ private class AnnotatedMarkdownRenderer(
         const val HORIZONTAL_RULE = "———"
         const val CODE_INDENT = "    "
         val WHITESPACE = Regex("\\s+")
+        val EMAIL = Regex("""(?<![\p{L}\p{N}._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\p{L}\p{N}_-])""")
         /** Leaf tokens that are not plain text. */
         val SPECIAL_LEAVES = setOf(
             MarkdownTokenTypes.EOL,

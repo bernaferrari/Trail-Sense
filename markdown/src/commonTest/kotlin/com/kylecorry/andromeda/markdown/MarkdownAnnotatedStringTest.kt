@@ -33,8 +33,16 @@ class MarkdownAnnotatedStringTest {
 
     @Test
     fun rendersLists() {
-        val text = Markdown.toAnnotatedString("- one\n- two\n  - nested\n\n1. first\n2. second")
-        assertEquals("• one\n• two\n    • nested\n\n1. first\n2. second", text.text)
+        val text = Markdown.toAnnotatedString("Steps:\n\n- one\n- two\n  - nested\n\n1. first\n2. second\n\nDone")
+        // Each item is a hanging paragraph; the blank line between the lists ends the last item's paragraph
+        assertEquals("Steps:\n• one• two• nested\n1. first2. second\nDone", text.text)
+        val items = text.paragraphStyles.map { text.text.substring(it.start, it.end).trimEnd('\n') to it.item.textIndent }
+        assertEquals(listOf("• one", "• two", "• nested", "1. first", "2. second"), items.map { it.first })
+        val (bullet, nested, numbered) = listOf(items[0].second!!, items[2].second!!, items[3].second!!)
+        assertEquals(0f, bullet.firstLine.value)
+        assertEquals(1.5f, nested.firstLine.value)
+        assertTrue(nested.restLine.value > nested.firstLine.value)
+        assertTrue(numbered.restLine.value > bullet.restLine.value)
     }
 
     @Test
@@ -77,7 +85,8 @@ class MarkdownAnnotatedStringTest {
             MarkdownDelimiter("^", MarkdownDelimiter.Effect.Style(SpanStyle(fontWeight = FontWeight.Bold)))
         )
         val text = Markdown.toAnnotatedString("Shown %%secret%% text ^up^\n\n+Centered+\n\n1+1 = 2 and 50% + 3", delimiters = delimiters)
-        assertEquals("Shown  text up\n\nCentered\n\n1+1 = 2 and 50% + 3", text.text)
+        // The centered paragraph breaks the lines around it, so one newline of each blank line is left
+        assertEquals("Shown  text up\nCentered\n1+1 = 2 and 50% + 3", text.text)
         assertTrue(text.hasStyle("up") { it.fontWeight == FontWeight.Bold })
         val centered = text.paragraphStyles.single()
         assertEquals("Centered", text.text.substring(centered.start, centered.end))
