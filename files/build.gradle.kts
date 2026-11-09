@@ -22,7 +22,7 @@ kotlin {
             api("no.synth:kmp-zip-okio:2.1.0")
         }
         jvmTest.dependencies { implementation(kotlin("test")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.documentfile) }
+        androidMain.dependencies { implementation(libs.androidx.core.ktx); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.documentfile) }
     }
 }
 group = "com.kylecorry.andromeda"
