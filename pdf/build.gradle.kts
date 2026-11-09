@@ -29,9 +29,10 @@ kotlin {
             api(project(":bitmaps"))
             implementation(project(":wkt"))
         }
+        jvmMain.dependencies { implementation("org.apache.pdfbox:pdfbox:3.0.6") }
         iosMain.dependencies { implementation("io.github.yuroyami:kitepdf-pdf:0.13.0") }
         commonTest.dependencies { implementation(kotlin("test")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(libs.androidx.core.ktx) }
+        androidMain.dependencies { implementation("io.github.shadadman:ksensor-core:9.40.0"); implementation(project(":core")); implementation(libs.androidx.core.ktx) }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
             dependencies { implementation(libs.junit); implementation(libs.androidx.junit); implementation(libs.androidx.espresso.core) }
