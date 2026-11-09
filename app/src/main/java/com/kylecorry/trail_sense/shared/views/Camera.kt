@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.toBitmap
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.toBitmap
 import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.camera.ICamera
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
@@ -57,7 +57,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.TorchOn
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
-import java.time.Duration
+import kotlin.time.Duration
 import kotlin.coroutines.resume
 import kotlin.math.abs
 import kotlin.math.roundToInt

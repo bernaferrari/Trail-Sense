@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
+import kotlin.time.toKotlinInstant
+
 import kotlin.time.toJavaInstant
 
 import androidx.compose.material3.toShape
@@ -73,7 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.AlarmTaskScheduler
+import com.kylecorry.andromeda.background.AlarmTaskScheduler
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.R
@@ -465,7 +467,7 @@ private fun sendNextMinuteNotification(
             val scheduler = AlarmTaskScheduler(context) {
                 NextMinuteBroadcastReceiver.pendingIntent(context, formattedTime)
             }
-            scheduler.once(sendTime.toZonedDateTime().toInstant())
+            scheduler.once(sendTime.toZonedDateTime().toInstant().toKotlinInstant())
             context.startActivity(Intent(Settings.ACTION_DATE_SETTINGS))
         }
     }

@@ -55,7 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R

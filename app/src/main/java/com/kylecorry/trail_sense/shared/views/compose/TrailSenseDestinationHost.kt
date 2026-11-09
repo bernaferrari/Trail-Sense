@@ -14,7 +14,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import kotlinx.coroutines.CoroutineScope

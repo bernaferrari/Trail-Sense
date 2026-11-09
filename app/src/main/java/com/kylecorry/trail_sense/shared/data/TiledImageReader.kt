@@ -5,7 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import android.util.Size
 import androidx.core.graphics.createBitmap
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.use
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
 class TiledImageReader(
     private val tiles: List<Pair<Rect, ImageReader>>,
 ) : ImageReader {

@@ -43,13 +43,14 @@ import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Range
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.OutputStream
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -450,7 +451,7 @@ class ViewfinderCamera(
         }
 
         setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF)
-        setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime.toNanos())
+        setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime.inWholeNanoseconds)
     }
 
     override fun setSensitivity(isoSensitivity: Int?) {
@@ -466,7 +467,7 @@ class ViewfinderCamera(
     override fun getExposureTimeRange(): Range<Duration>? {
         val range =
             getCharacteristic(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE) ?: return null
-        return Range(Duration.ofNanos(range.lower), Duration.ofNanos(range.upper))
+        return Range(range.lower.nanoseconds, range.upper.nanoseconds)
     }
 
     override fun getSensitivityRange(): Range<Int>? {

@@ -4,8 +4,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.andromeda.background.OneTimeTaskScheduler
+import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands.SunsetAlarmCommand
@@ -39,7 +39,7 @@ class SunsetAlarmReceiver : BroadcastReceiver() {
 
         private const val PI_ID = 8309
 
-        fun scheduler(context: Context): IOneTimeTaskScheduler {
+        fun scheduler(context: Context): OneTimeTaskScheduler {
             return OneTimeTaskSchedulerFactory(context).exact(
                 SunsetAlarmReceiver::class.java,
                 PI_ID

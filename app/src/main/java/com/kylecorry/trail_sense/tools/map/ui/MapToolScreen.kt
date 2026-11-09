@@ -58,9 +58,9 @@ import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoad
 import java.util.concurrent.atomic.AtomicBoolean
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.ReactiveComponent
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useCallback
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useService
+import com.kylecorry.trail_sense.shared.views.legacy.ReactiveComponent
+import com.kylecorry.trail_sense.shared.views.legacy.useCallback
+import com.kylecorry.trail_sense.shared.views.legacy.useService
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.units.Coordinate

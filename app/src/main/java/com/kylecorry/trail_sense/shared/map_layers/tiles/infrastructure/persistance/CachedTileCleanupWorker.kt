@@ -3,8 +3,8 @@ package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persist
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.andromeda.background.OneTimeTaskScheduler
+import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
 class CachedTileCleanupWorker(
     private val context: Context,
     params: WorkerParameters
@@ -22,7 +22,7 @@ class CachedTileCleanupWorker(
     companion object {
         private const val UNIQUE_ID = 91420833
 
-        private fun getScheduler(context: Context): IOneTimeTaskScheduler {
+        private fun getScheduler(context: Context): OneTimeTaskScheduler {
             return OneTimeTaskSchedulerFactory(context.applicationContext).deferrable(
                 CachedTileCleanupWorker::class.java,
                 UNIQUE_ID

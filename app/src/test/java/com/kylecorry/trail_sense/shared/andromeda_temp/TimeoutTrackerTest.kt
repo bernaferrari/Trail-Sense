@@ -1,4 +1,4 @@
-package com.kylecorry.trail_sense.shared.andromeda_temp
+package com.kylecorry.andromeda
 
 import com.kylecorry.andromeda.core.time.TimeProvider
 import org.junit.jupiter.api.Assertions.assertFalse

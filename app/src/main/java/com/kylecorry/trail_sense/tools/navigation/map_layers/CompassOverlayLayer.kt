@@ -2,8 +2,8 @@ package com.kylecorry.trail_sense.tools.navigation.map_layers
 
 import android.content.Context
 import android.graphics.Color
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getCardinalDirectionColor
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView

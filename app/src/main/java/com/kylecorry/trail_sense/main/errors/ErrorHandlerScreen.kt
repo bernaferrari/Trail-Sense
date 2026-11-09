@@ -43,8 +43,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.andromeda.clipboard.Clipboard
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.CurrentApp
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.CurrentApp
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost

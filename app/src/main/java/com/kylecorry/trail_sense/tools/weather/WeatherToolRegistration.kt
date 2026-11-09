@@ -4,8 +4,8 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolAction

@@ -13,7 +13,7 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.graphics.setBlendMode
 import androidx.core.graphics.withMatrix
 import androidx.core.graphics.withSave
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.concurrency.BackgroundTask

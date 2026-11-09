@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.map.map_layers
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Path
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.FormatService

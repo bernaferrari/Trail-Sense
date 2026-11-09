@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.settings.infrastructure
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
+import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R

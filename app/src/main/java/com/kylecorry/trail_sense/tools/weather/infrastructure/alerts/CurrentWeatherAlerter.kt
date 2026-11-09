@@ -9,7 +9,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits

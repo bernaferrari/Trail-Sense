@@ -5,7 +5,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.hardware.Sensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory

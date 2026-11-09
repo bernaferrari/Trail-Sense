@@ -52,7 +52,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
+import com.kylecorry.andromeda.sound.SoundPlayer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.icons.trail.Pause
@@ -131,7 +131,7 @@ fun WhistleScreen(
 
     // Audio engine (lifecycle managed)
     val audioScope = remember { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
-    var whistlePlayer by remember { mutableStateOf<ISoundPlayer?>(null) }
+    var whistlePlayer by remember { mutableStateOf<SoundPlayer?>(null) }
     var signalPlayer by remember { mutableStateOf<SignalPlayer?>(null) }
 
     DisposableEffect(Unit) {
@@ -164,7 +164,7 @@ fun WhistleScreen(
         onDispose {
             signalPlayer?.cancel()
             whistlePlayer?.off()
-            (whistlePlayer as? com.kylecorry.andromeda.sound.SoundPlayer)?.release()
+            whistlePlayer?.release()
         }
     }
 

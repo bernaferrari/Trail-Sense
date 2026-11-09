@@ -11,7 +11,7 @@ import androidx.core.text.buildSpannedString
 import androidx.core.text.scale
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R

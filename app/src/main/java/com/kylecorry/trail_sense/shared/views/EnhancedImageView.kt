@@ -13,8 +13,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.CanvasDrawer
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.CanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.geometry.Size

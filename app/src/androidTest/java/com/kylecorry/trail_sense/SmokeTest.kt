@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense
 import android.Manifest
 import android.os.Build
 import android.util.Log
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
+import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click

@@ -9,14 +9,14 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.AndromedaService
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
+import com.kylecorry.andromeda.background.services.AndromedaService
+import com.kylecorry.andromeda.background.services.ForegroundInfo
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
+import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.sound.SoundPlayer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
@@ -28,7 +28,7 @@ import java.time.Instant
 
 class WhiteNoiseService : AndromedaService() {
 
-    private var soundPlayer: ISoundPlayer? = null
+    private var soundPlayer: SoundPlayer? = null
     private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
 
     private val offTimer = CoroutineTimer {

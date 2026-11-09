@@ -5,12 +5,12 @@ import android.content.Context
 import android.os.Bundle
 import android.provider.Settings
 import androidx.annotation.IdRes
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.signal.CellNetworkQuality
-import com.kylecorry.trail_sense.shared.andromeda_temp.signal.ICellSignalSensor
+import com.kylecorry.andromeda.signal.ICellSignalSensor
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.geometry.Rectangle

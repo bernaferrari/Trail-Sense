@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.
 
 import androidx.collection.LruCache
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
-import com.kylecorry.trail_sense.shared.andromeda_temp.getOrPutUnlockedProducer
+import com.kylecorry.trail_sense.shared.cache.getOrPutUnlockedProducer
 import com.kylecorry.trail_sense.shared.concurrency.StripedLock
 import org.mapsforge.core.model.Tag
 import org.mapsforge.core.model.Tile

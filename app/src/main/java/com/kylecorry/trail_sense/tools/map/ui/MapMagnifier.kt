@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.map.ui
 
 import android.graphics.Color
 import android.graphics.Path
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import kotlin.math.min
 

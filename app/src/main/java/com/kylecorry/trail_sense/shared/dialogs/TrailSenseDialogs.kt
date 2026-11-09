@@ -85,7 +85,7 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
-import com.kylecorry.trail_sense.shared.andromeda_temp.alerts.Alerts as AndromedaAlerts
+import com.kylecorry.trail_sense.shared.dialogs.views.Alerts as AndromedaAlerts
 /*
  * Trail Sense's dialogs, drawn in Compose so they look like the rest of the app (28 dp corners, a headline title, the
  * app's colors and type). They keep Andromeda's names and parameters, so callers open them imperatively from any

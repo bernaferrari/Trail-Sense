@@ -6,7 +6,7 @@ import android.graphics.Matrix
 import android.util.Size
 import androidx.annotation.ColorInt
 import androidx.core.graphics.createBitmap
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.math.MathUtils
+import com.kylecorry.andromeda.core.math.MathUtils
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PixelBounds
 

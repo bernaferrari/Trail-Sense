@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.tiles
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
+import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class TileManager {

@@ -70,9 +70,9 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toFile
 import androidx.core.os.BundleCompat
 import androidx.exifinterface.media.ExifInterface
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.resizeExact
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.rotate
+import com.kylecorry.andromeda.bitmaps.BitmapUtils
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.luna.concurrency.onDefault

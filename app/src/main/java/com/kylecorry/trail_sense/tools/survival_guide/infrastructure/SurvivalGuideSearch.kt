@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.survival_guide.infrastructure
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 class SurvivalGuideSearch(context: Context) {
 
     private val loader = GuideLoader(context)

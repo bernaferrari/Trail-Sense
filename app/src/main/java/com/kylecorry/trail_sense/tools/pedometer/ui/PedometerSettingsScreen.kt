@@ -28,10 +28,10 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils

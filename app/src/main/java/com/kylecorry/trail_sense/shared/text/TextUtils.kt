@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.shared.text
 import android.content.Context
 import androidx.annotation.RawRes
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.shared.text.nlp.processors.EnglishContractionSplitter
 import com.kylecorry.trail_sense.shared.text.nlp.processors.EnglishStopWordRemover
 import com.kylecorry.trail_sense.shared.text.nlp.processors.LowercaseProcessor

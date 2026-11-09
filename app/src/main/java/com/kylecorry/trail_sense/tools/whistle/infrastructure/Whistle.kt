@@ -3,11 +3,11 @@ package com.kylecorry.trail_sense.tools.whistle.infrastructure
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.SoundPlayer
+import com.kylecorry.andromeda.sound.AudioTrackSoundPlayer
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import kotlin.math.sin
 
-class Whistle : SoundPlayer(WhistleGenerator().getTone(3800, 100))
+class Whistle : AudioTrackSoundPlayer(WhistleGenerator().getTone(3800, 100))
 
 private class WhistleGenerator {
 

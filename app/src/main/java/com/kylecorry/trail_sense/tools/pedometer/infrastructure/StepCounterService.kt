@@ -10,11 +10,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.AndromedaService
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.background.services.AndromedaService
+import com.kylecorry.andromeda.background.services.ForegroundInfo
+import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.sol.units.Distance

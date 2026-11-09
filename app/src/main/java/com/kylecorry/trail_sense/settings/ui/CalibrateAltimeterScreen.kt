@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import kotlin.time.toJavaDuration
+import kotlin.time.toKotlinDuration
 import com.kylecorry.andromeda.core.sensors.read
 
 import com.kylecorry.trail_sense.shared.preferences.onChange
@@ -25,7 +27,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.sensors.Altimeter
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.sense.altitude.FusedAltimeter
 import com.kylecorry.andromeda.sense.barometer.Barometer
@@ -120,7 +122,7 @@ fun CalibrateAltimeterToolScreen() {
     val overrideSummary = formatService.formatDistance(viewModel.altitudeOverride)
     val forceCalibrationSummary = stringResource(
         R.string.fused_altimeter_force_calibration_summary,
-        formatService.formatDuration(viewModel.forcedRecalibrationInterval)
+        formatService.formatDuration(viewModel.forcedRecalibrationInterval.toJavaDuration())
     )
     val demSummary = viewModel.demVersion ?: stringResource(R.string.built_in_dem)
     var showForceCalibrationPicker by remember { mutableStateOf(false) }
@@ -305,7 +307,7 @@ fun CalibrateAltimeterToolScreen() {
     if (showForceCalibrationPicker) {
         DurationPickerDialog(
             title = forceCalibrationTitle,
-            duration = viewModel.forcedRecalibrationInterval,
+            duration = viewModel.forcedRecalibrationInterval.toJavaDuration(),
             onDurationPicked = {
                 if (it != null) {
                     viewModel.changeForcedRecalibrationInterval(it)
@@ -520,8 +522,8 @@ internal class CalibrateAltimeterViewModel(
     }
 
     fun changeForcedRecalibrationInterval(interval: Duration) {
-        prefs.altimeter.fusedAltimeterForcedRecalibrationInterval = interval
-        forcedRecalibrationInterval = interval
+        prefs.altimeter.fusedAltimeterForcedRecalibrationInterval = interval.toKotlinDuration()
+        forcedRecalibrationInterval = interval.toKotlinDuration()
     }
 
     fun resetCalibration() {

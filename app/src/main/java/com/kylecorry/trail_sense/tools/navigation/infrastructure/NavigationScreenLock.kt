@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import android.app.Activity
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Screen
+import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.main.MainActivity

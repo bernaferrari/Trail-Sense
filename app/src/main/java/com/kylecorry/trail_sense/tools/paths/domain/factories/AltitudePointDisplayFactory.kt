@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.paths.domain.factories
 
 import android.content.Context
 import android.util.Range
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.rangeOrNull
+import com.kylecorry.andromeda.core.rangeOrNull
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -42,6 +42,6 @@ class AltitudePointDisplayFactory(private val context: Context) : IPointDisplayF
     }
 
     private fun getAltitudeRange(path: List<PathPoint>): Range<Float> {
-        return path.mapNotNull { it.elevation }.rangeOrNull() ?: Range(0f, 0f)
+        return path.mapNotNull { it.elevation }.rangeOrNull()?.let { Range(it.start, it.endInclusive) } ?: Range(0f, 0f)
     }
 }

@@ -11,7 +11,7 @@ import android.util.Size
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection

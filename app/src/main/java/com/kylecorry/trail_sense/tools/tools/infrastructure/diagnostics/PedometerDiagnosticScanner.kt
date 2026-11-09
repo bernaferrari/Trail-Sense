@@ -2,8 +2,8 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
 import android.content.Context
 import android.hardware.Sensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf

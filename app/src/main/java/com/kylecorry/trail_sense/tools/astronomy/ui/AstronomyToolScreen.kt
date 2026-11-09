@@ -65,7 +65,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.capitalizeWords

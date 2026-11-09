@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService

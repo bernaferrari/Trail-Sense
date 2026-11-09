@@ -57,7 +57,7 @@ import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
 import java.util.concurrent.atomic.AtomicBoolean
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.trigonometry.Trigonometry

@@ -7,7 +7,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.andromeda.core.sensors.SensorSubscriber
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.ReactiveComponent
+import com.kylecorry.trail_sense.shared.views.legacy.ReactiveComponent
 import com.kylecorry.luna.topics.ITopic
 import com.kylecorry.luna.topics.generic.ITopic as GenericTopic
 import kotlinx.coroutines.CoroutineScope

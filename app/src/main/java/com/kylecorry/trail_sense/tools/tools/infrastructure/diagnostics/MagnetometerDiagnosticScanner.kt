@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
 import com.kylecorry.trail_sense.shared.sensors.flow
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.magnetometer.AndroidMagnetometer
+import com.kylecorry.andromeda.sense.magnetometer.AndroidMagnetometer
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 

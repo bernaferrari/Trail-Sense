@@ -4,8 +4,8 @@ import android.content.Context
 import android.os.Build
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Android
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.andromeda.core.system.Android
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 
 class MissingSensorAlert(private val context: Context) : IValueAlerter<String> {

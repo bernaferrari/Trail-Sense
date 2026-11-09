@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.c
 
 import android.graphics.Bitmap
 import androidx.core.graphics.scale
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.getPixels
+import com.kylecorry.andromeda.bitmaps.operations.getPixels
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.collections.combinations
 import com.kylecorry.luna.specifications.Specification

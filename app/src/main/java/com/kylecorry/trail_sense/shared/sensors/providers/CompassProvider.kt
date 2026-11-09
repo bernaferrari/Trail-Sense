@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.providers
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.magnetometer.AndroidMagnetometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.AndroidGyroscope
+import com.kylecorry.andromeda.sense.magnetometer.AndroidMagnetometer
+import com.kylecorry.andromeda.sense.orientation.AndroidGyroscope
 
 import android.content.Context
 import android.hardware.Sensor
@@ -10,24 +10,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.accelerometer.AndroidAccelerometer
+import com.kylecorry.andromeda.sense.accelerometer.AndroidAccelerometer
 import android.view.Surface
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.accelerometer.GravitySensor
+import com.kylecorry.andromeda.sense.Sensors
+import com.kylecorry.andromeda.sense.accelerometer.GravitySensor
 import com.kylecorry.andromeda.sense.accelerometer.LowPassAccelerometer
 import com.kylecorry.andromeda.sense.compass.Compass
 import com.kylecorry.andromeda.sense.compass.FilteredCompass
 import com.kylecorry.andromeda.sense.compass.CompassSensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.compass.LegacyCompass
+import com.kylecorry.andromeda.sense.compass.LegacyCompass
 import com.kylecorry.andromeda.sense.magnetometer.LowPassMagnetometer
 import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.andromeda.sense.orientation.CustomGeomagneticRotationSensor
 import com.kylecorry.andromeda.sense.orientation.CustomRotationSensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.GeomagneticRotationSensor
+import com.kylecorry.andromeda.sense.orientation.GeomagneticRotationSensor
 import com.kylecorry.andromeda.sense.orientation.GravityRotationSensor
 import com.kylecorry.andromeda.sense.orientation.Gyroscope
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.RotationSensor
+import com.kylecorry.andromeda.sense.orientation.RotationSensor
 import com.kylecorry.andromeda.sense.orientation.filter.FilteredOrientationSensor
 import com.kylecorry.andromeda.sense.orientation.filter.LowPassOrientationSensorFilter
 import com.kylecorry.sol.math.filters.MovingAverageFilter

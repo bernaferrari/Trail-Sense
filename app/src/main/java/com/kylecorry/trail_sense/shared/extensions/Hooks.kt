@@ -5,9 +5,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.sensors.Speedometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.ReactiveComponent
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useCallback
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.ui.useService
+import com.kylecorry.trail_sense.shared.views.legacy.ReactiveComponent
+import com.kylecorry.trail_sense.shared.views.legacy.useCallback
+import com.kylecorry.trail_sense.shared.views.legacy.useService
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.sense.compass.CompassSensor
 import com.kylecorry.andromeda.sense.location.GpsSensor

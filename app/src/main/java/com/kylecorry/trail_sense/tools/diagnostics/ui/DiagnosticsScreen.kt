@@ -3,7 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import androidx.compose.runtime.rememberCoroutineScope
 
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.widgets
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils

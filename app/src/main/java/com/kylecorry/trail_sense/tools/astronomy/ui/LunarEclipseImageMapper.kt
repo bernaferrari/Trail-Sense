@@ -6,7 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Path
 import androidx.core.graphics.createBitmap
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.CanvasDrawer
+import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.astronomy.eclipse.LunarEclipseShadow

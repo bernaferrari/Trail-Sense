@@ -5,7 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.ServiceInfo
 import android.os.Build
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
+import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.json.fromJson
 import com.kylecorry.trail_sense.R

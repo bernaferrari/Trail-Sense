@@ -7,12 +7,12 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.AndromedaService
+import com.kylecorry.andromeda.background.services.AndromedaService
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.topics.generic.replay
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem

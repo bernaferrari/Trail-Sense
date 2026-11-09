@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
+import kotlin.time.toKotlinInstant
+
 import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -9,8 +11,8 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Coordinate
@@ -147,7 +149,7 @@ class SunriseAlarmCommand(private val context: Context) : CoroutineCommand {
     private fun setAlarm(time: ZonedDateTime, reason: String) {
         val scheduler = SunriseAlarmReceiver.scheduler(context)
         scheduler.cancel()
-        val instant = time.toInstant()
+        val instant = time.toInstant().toKotlinInstant()
         scheduler.once(instant)
         getAppService<Logger>().info(
             TAG,

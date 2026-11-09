@@ -67,14 +67,14 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.battery.Battery
+import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.sensors.Sensor as AndromedaSensor
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.core.system.Resources
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.altitude.BarometricAltimeter
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.mock.MockBarometer
 import com.kylecorry.andromeda.sense.mock.MockSensor
 import com.kylecorry.trail_sense.shared.dialogs.Alerts

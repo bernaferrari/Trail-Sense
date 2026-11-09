@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure
 
 import android.content.Context
 import com.kylecorry.luna.text.toIntCompat
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
+import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem

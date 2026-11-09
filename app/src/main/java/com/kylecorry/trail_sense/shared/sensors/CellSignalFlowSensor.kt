@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.signal.CellSignal
 import com.kylecorry.andromeda.signal.CellSignalOptions
 import com.kylecorry.andromeda.signal.cellSignals
-import com.kylecorry.trail_sense.shared.andromeda_temp.signal.ICellSignalSensor
+import com.kylecorry.andromeda.signal.ICellSignalSensor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

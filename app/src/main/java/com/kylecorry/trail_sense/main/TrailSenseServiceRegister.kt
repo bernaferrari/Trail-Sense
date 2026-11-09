@@ -4,8 +4,8 @@ import android.content.Context
 import android.text.Layout
 import android.text.style.AlignmentSpan
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownExtension
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownExtension
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.AltitudeCorrection

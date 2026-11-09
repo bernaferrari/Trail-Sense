@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.core.system.uri
 
 import android.content.Context
 import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 object AppUtils {
 
     fun placeBeacon(context: Context, geo: GeoUri) {

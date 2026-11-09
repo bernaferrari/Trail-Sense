@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.augmented_reality
 
 import com.kylecorry.andromeda.camera.Camera
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk

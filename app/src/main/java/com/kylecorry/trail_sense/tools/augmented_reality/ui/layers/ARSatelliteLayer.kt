@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner

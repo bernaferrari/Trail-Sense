@@ -5,7 +5,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.toColorInt
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.io.FileSubsystem

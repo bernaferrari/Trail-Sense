@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.services
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.trail_sense.shared.sensors.asFlowable
 
 import kotlin.time.Duration.Companion.milliseconds
@@ -8,11 +9,11 @@ import com.kylecorry.trail_sense.shared.time.interop.*
 
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.IAlwaysOnTaskScheduler
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.TaskSchedulerFactory
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.IntervalService
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.background.AlwaysOnTaskScheduler
+import com.kylecorry.andromeda.background.TaskSchedulerFactory
+import com.kylecorry.andromeda.background.services.ForegroundInfo
+import com.kylecorry.andromeda.background.services.IntervalService
+import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.LocationRequestConfig
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.FlowableTimer
@@ -30,10 +31,11 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.BacktrackCo
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.toKotlinDuration
 
 class BacktrackService :
-    IntervalService(wakelockDuration = Duration.ofSeconds(60), useOneTimeWorkers = true) {
+    IntervalService(wakelockDuration = 60.seconds, useOneTimeWorkers = true) {
     private val prefs by lazy { UserPreferences(applicationContext) }
 
     override val uniqueId: Int
@@ -76,7 +78,7 @@ class BacktrackService :
 
 
     override val period: Duration
-        get() = prefs.paths.backtrackRecordFrequency
+        get() = prefs.paths.backtrackRecordFrequency.toKotlinDuration()
 
     private val recordLock = Mutex()
 
@@ -133,7 +135,7 @@ class BacktrackService :
             scheduler(context).cancel()
         }
 
-        private fun scheduler(context: Context): IAlwaysOnTaskScheduler {
+        private fun scheduler(context: Context): AlwaysOnTaskScheduler {
             return TaskSchedulerFactory(context).alwaysOn(
                 BacktrackService::class.java,
                 foreground = true

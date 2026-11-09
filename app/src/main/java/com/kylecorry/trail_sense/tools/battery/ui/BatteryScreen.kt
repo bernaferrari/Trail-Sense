@@ -96,11 +96,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.trail_sense.shared.andromeda_temp.battery.Battery
+import com.kylecorry.andromeda.battery.Battery
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.andromeda.battery.BatteryHealth
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.sol.math.filters.MedianFilter
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
