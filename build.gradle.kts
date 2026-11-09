@@ -34,7 +34,10 @@ mavenPublishing {
     }
 
     publishToMavenCentral()
-    signAllPublications()
+    // Maven Central requires signatures; local and snapshot publishing works without a key
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+        signAllPublications()
+    }
 }
 
 repositories {
@@ -54,6 +57,10 @@ dependencies {
 kotlin {
     explicitApi()
 
+    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+    abiValidation {
+        enabled.set(true)
+    }
 
     jvm {
         compilerOptions {
