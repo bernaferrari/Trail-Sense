@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.alerts.loading
 
-interface ILoadingIndicator {
+interface LoadingIndicator {
     fun show()
     fun hide()
 }

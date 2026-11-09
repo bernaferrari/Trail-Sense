@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.sound
 
-interface ISoundPlayer {
+interface SoundPlayer {
     fun on()
     fun off()
     fun isOn(): Boolean

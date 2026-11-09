@@ -27,7 +27,7 @@ class GeneratedSoundPlayer private constructor(
     private val scope: CoroutineScope,
     private val sampleRate: Int = 44100,
     private val playbackSource: SoundPlayback,
-) : ISoundPlayer {
+) : SoundPlayer {
     constructor(scope: CoroutineScope, sampleRate: Int = 44100, sample: (Long) -> Double) :
         this(scope, sampleRate, SoundPlayback { volume ->
             playGeneratedSound(sampleRate) { index -> sample(index) * volume() }

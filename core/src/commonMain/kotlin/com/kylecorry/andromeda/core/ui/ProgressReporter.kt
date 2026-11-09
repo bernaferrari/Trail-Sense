@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.core.ui
 
 import kotlinx.coroutines.flow.Flow
 
-interface IProgressReporter {
+interface ProgressReporter {
     val progress: Flow<Progress>
 }
 

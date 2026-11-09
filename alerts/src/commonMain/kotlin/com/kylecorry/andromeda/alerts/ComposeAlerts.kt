@@ -10,7 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.kylecorry.andromeda.alerts.loading.ILoadingIndicator
+import com.kylecorry.andromeda.alerts.loading.LoadingIndicator
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -63,7 +63,7 @@ fun rememberAlertState(): AlertState = remember { AlertState() }
 @Composable
 fun AlertHost(state: AlertState) = state.Render()
 
-class LoadingState : ILoadingIndicator {
+class LoadingState : LoadingIndicator {
     var visible by mutableStateOf(false)
         private set
     override fun show() { visible = true }
