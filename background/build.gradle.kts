@@ -17,7 +17,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies { api(project(":shared")) }
         commonTest.dependencies { implementation(kotlin("test")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(project(":preferences")); implementation(project(":permissions")); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.core.ktx); api(libs.androidx.work.runtime.ktx) }
+        androidMain.dependencies { implementation(project(":core")); implementation(project(":storage")); implementation(project(":permissions")); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.core.ktx); api(libs.androidx.work.runtime.ktx) }
     }
 }
 group = "com.kylecorry.andromeda"
