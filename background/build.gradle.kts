@@ -17,7 +17,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies { api(project(":shared")); api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1") }
         commonTest.dependencies { implementation(kotlin("test")) }
-        androidMain.dependencies { implementation(project(":core")); implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.core.ktx); api(libs.androidx.work.runtime.ktx) }
+        androidMain.dependencies { implementation(libs.kotlinx.coroutines.android); implementation(libs.androidx.core.ktx); api(libs.androidx.work.runtime.ktx) }
     }
 }
 group = "com.kylecorry.andromeda"
