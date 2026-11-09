@@ -35,12 +35,11 @@ fun PixelImage.cropTile(
     val tileHeightDegrees = tileBounds.heightDegrees()
     require(imageWidth.isFinite() && imageHeight.isFinite() && imageWidth > 0 && imageHeight > 0)
     require(tileWidthDegrees.isFinite() && tileHeightDegrees.isFinite() && tileWidthDegrees > 0 && tileHeightDegrees > 0)
-    val originX = normalizeAngle(tileBounds.west - imageBounds.west) / imageWidth * width
     val originY = (imageBounds.north - tileBounds.north) / imageHeight * height
-    val regionWidth = tileWidthDegrees / imageWidth * width
     val regionHeight = tileHeightDegrees / imageHeight * height
     return PixelImage(tileWidth, tileHeight, IntArray(tileWidth * tileHeight) { index ->
-        val x = originX + (index % tileWidth + 0.5) * regionWidth / tileWidth - 0.5
+        val longitude = tileBounds.west + (index % tileWidth + 0.5) * tileWidthDegrees / tileWidth
+        val x = normalizeAngle(longitude - imageBounds.west) / imageWidth * width - 0.5
         val y = originY + (index / tileWidth + 0.5) * regionHeight / tileHeight - 0.5
         if (!x.isFinite() || !y.isFinite() || x < -0.5 || y < -0.5 || x >= width - 0.5 || y >= height - 0.5) background
         else {
