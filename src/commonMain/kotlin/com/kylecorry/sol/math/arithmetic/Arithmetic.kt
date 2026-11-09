@@ -3,6 +3,7 @@ package com.kylecorry.sol.math.arithmetic
 import com.kylecorry.sol.math.RoundingMethod
 import kotlin.math.abs
 import kotlin.math.absoluteValue
+import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -184,13 +185,30 @@ object Arithmetic {
         return abs(value) < tolerance
     }
 
+    /**
+     * Rounds half up to the given number of decimal places. Values too large to have a fractional
+     * part at that precision are returned unchanged instead of overflowing.
+     */
     fun roundPlaces(value: Double, places: Int): Double {
-        return (value * 10.0.pow(places)).roundToLong() / 10.0.pow(places)
+        val factor = 10.0.pow(places)
+        val scaled = value * factor
+        if (!scaled.isFinite() || abs(scaled) >= MAX_EXACT_DOUBLE) {
+            return value
+        }
+        return floor(scaled + 0.5) / factor
     }
 
     fun roundPlaces(value: Float, places: Int): Float {
-        return (value * 10f.pow(places)).roundToLong() / 10f.pow(places)
+        val factor = 10f.pow(places)
+        val scaled = value * factor
+        if (!scaled.isFinite() || abs(scaled) >= MAX_EXACT_FLOAT) {
+            return value
+        }
+        return floor(scaled + 0.5f) / factor
     }
+
+    private const val MAX_EXACT_DOUBLE = 4503599627370496.0 // 2^52
+    private const val MAX_EXACT_FLOAT = 8388608f // 2^23
 
     fun roundNearest(value: Double, nearest: Double): Double {
         return (value / nearest).roundToLong() * nearest

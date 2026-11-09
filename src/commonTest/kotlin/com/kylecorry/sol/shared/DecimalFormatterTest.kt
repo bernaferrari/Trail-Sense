@@ -30,7 +30,14 @@ internal class DecimalFormatterTest {
                 listOf(Double.NaN, 2, true, "-"),
                 listOf(Double.NEGATIVE_INFINITY, 2, true, "-"),
                 listOf(Double.POSITIVE_INFINITY, 2, true, "-"),
-                )
+                listOf(0.155, 2, false, "0.16"),
+                listOf(0.0, 2, false, "0"),
+                listOf(-1.155, 1, true, "-1.2"),
+                listOf(-0.001, 2, true, "0.00"),
+                listOf(1.0E-7, 8, true, "0.00000010"),
+                listOf(1.5E20, 1, false, "150000000000000000000"),
+                listOf(12345.678f, 1, true, "12345.7"),
+            )
         }
     }
 
