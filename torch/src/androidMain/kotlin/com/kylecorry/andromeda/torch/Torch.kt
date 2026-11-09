@@ -15,7 +15,7 @@ import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import kotlin.math.roundToInt
 
-class Torch(private val context: Context) : ITorch {
+internal class Torch(private val context: Context) : ITorch {
     private val cameraService by lazy { getCameraManager(context) }
     internal val cameraId by lazy { getRearCameraId(context) }
 
