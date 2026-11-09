@@ -4,7 +4,7 @@ import java.io.IOException
 import java.util.Locale
 
 /** Uses the desktop operating system's installed speech synthesizer. */
-class TextToSpeech : ITextToSpeech {
+private class JvmSpeechSynthesizer : SpeechSynthesizer {
     private val lock = Any()
     private var process: Process? = null
 
@@ -77,3 +77,5 @@ private fun startSpeechProcess(locale: String?): Process {
     }
     throw IOException("No supported text-to-speech engine is available", lastError)
 }
+
+actual fun textToSpeech(): SpeechSynthesizer = JvmSpeechSynthesizer()

@@ -1,11 +1,12 @@
 package com.kylecorry.andromeda.speech
 
 import android.content.Context
+import com.ksensor.core.context.KSensorContext
 import java.util.*
 import android.speech.tts.TextToSpeech as TTS
 
 
-class TextToSpeech(private val context: Context) : ITextToSpeech {
+private class AndroidSpeechSynthesizer(private val context: Context) : SpeechSynthesizer {
 
     private val lock = Any()
     private var tts: TTS? = null
@@ -38,3 +39,7 @@ class TextToSpeech(private val context: Context) : ITextToSpeech {
     }
 
 }
+
+actual fun textToSpeech(): SpeechSynthesizer = AndroidSpeechSynthesizer(KSensorContext.get())
+
+fun textToSpeech(context: Context): SpeechSynthesizer = AndroidSpeechSynthesizer(context.applicationContext)

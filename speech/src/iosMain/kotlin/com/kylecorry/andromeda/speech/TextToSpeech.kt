@@ -5,7 +5,7 @@ import platform.AVFAudio.AVSpeechSynthesisVoice
 import platform.AVFAudio.AVSpeechSynthesizer
 import platform.AVFAudio.AVSpeechUtterance
 
-class TextToSpeech : ITextToSpeech {
+private class IosSpeechSynthesizer : SpeechSynthesizer {
     private val synthesizer = AVSpeechSynthesizer()
 
     override fun speak(text: String, locale: String?) {
@@ -19,3 +19,5 @@ class TextToSpeech : ITextToSpeech {
         synthesizer.stopSpeakingAtBoundary(AVSpeechBoundary.AVSpeechBoundaryImmediate)
     }
 }
+
+actual fun textToSpeech(): SpeechSynthesizer = IosSpeechSynthesizer()

@@ -15,8 +15,7 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets.androidMain.dependencies {
-        implementation(project(":core"))
-        implementation(libs.androidx.core.ktx)
+        implementation("io.github.shadadman:ksensor-core:9.40.0")
     }
 }
 group = "com.kylecorry.andromeda"
