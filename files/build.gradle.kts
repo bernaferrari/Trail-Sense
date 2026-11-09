@@ -6,9 +6,6 @@ plugins {
 kotlin {
     android {
         namespace = "com.kylecorry.andromeda.files"
-        withDeviceTestBuilder { sourceSetTreeName = "test" }.configure {
-            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        }
         compileSdk = 37
         minSdk = 24
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
@@ -18,14 +15,6 @@ kotlin {
     iosSimulatorArm64()
     jvmToolchain(17)
     sourceSets {
-        getByName("androidDeviceTest") {
-            kotlin.srcDir("src/androidTest/java")
-            dependencies {
-                implementation(libs.junit)
-                implementation(libs.androidx.junit)
-                implementation(libs.androidx.espresso.core)
-            }
-        }
         commonMain.dependencies {
             api(project(":storage"))
             api("io.github.vinceglb:filekit-core:0.16.0")
