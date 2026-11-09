@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.preferences
 import android.content.Context
 import com.russhwolf.settings.SharedPreferencesSettings
 
-/** Uses the app's default Android preferences file. */
-fun preferences(context: Context): Preferences = Preferences(
-    SharedPreferencesSettings(context.applicationContext.getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE))
+/** Opens the default Android preferences file, or a named file for separate app state. */
+fun preferences(context: Context, name: String = "${context.packageName}_preferences"): Preferences = Preferences(
+    SharedPreferencesSettings(context.applicationContext.getSharedPreferences(name, Context.MODE_PRIVATE))
 )

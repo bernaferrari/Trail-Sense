@@ -10,6 +10,7 @@ kotlin {
         namespace = "com.kylecorry.andromeda.widgets.shared"
         compileSdk = 37
         minSdk = 24
+        androidResources { enable = true }
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
     jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
