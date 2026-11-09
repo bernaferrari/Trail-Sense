@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
@@ -9,8 +12,6 @@ import com.kylecorry.luna.topics.Topic
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
-import java.time.Duration
-import java.time.Instant
 
 class CloudRepo private constructor(private val dao: CloudReadingDao) :
     IReadingRepo<CloudObservation> {
@@ -19,7 +20,7 @@ class CloudRepo private constructor(private val dao: CloudReadingDao) :
     val readingsChanged: ITopic = _readingsChanged
 
     override suspend fun clean() = onIO {
-        dao.deleteOlderThan(Instant.now().minus(CLOUD_HISTORY_DURATION).toEpochMilli())
+        dao.deleteOlderThan(Clock.System.now().minus(CLOUD_HISTORY_DURATION).toEpochMilliseconds())
 
         // TODO: Only do this if there was a change
         _readingsChanged.publish()
@@ -60,7 +61,7 @@ class CloudRepo private constructor(private val dao: CloudReadingDao) :
 
     companion object {
 
-        private val CLOUD_HISTORY_DURATION = Duration.ofDays(2)
+        private val CLOUD_HISTORY_DURATION = 2.days
 
         private var instance: CloudRepo? = null
 

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.plugins.infrastructure
 
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.shared.andromeda_temp.ipc.InterprocessCommunicationRequest
@@ -10,7 +13,7 @@ import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import java.io.Closeable
-import java.time.Duration
+import kotlin.time.Duration
 
 class PluginResourceServiceConnection(private val context: Context, private val packageId: String) :
     Closeable {
@@ -22,8 +25,8 @@ class PluginResourceServiceConnection(private val context: Context, private val 
         route: String,
         payload: Any? = null,
         requiredPermissions: List<String> = emptyList(),
-        connectTimeout: Duration = Duration.ofSeconds(10),
-        responseTimeout: Duration = Duration.ofMinutes(1),
+        connectTimeout: Duration = 10.seconds,
+        responseTimeout: Duration = 1.minutes,
         stayConnected: Boolean = true
     ): InterprocessCommunicationResponse? = onIO {
         if (!canInteractWithPlugin(requiredPermissions)) {

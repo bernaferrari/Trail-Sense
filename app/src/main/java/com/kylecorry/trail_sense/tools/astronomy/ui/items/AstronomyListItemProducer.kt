@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.astronomy.ui.items
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Bitmap
 import com.kylecorry.sol.units.Coordinate
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 interface AstronomyListItemProducer {
     suspend fun getListItem(

@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -19,8 +20,8 @@ import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 class FlashlightService : AndromedaService() {
 
@@ -33,7 +34,7 @@ class FlashlightService : AndromedaService() {
 
     private val offTimer = CoroutineTimer {
         val end = stopAt
-        if (end != null && end <= Instant.now() && flashlight.getMode() != FlashlightMode.Off) {
+        if (end != null && end <= Clock.System.now() && flashlight.getMode() != FlashlightMode.Off) {
             flashlight.set(FlashlightMode.Off)
         }
     }
@@ -68,7 +69,7 @@ class FlashlightService : AndromedaService() {
         flashlight.startSystemMonitor()
         DependencyRegistry.get<NotificationSubsystem>().send(NOTIFICATION_ID, getNotification())
         topic.subscribe(this::onStateChanged)
-        stopAt = cache.getJavaInstant(getString(R.string.pref_flashlight_timeout_instant))
+        stopAt = cache.getInstant(getString(R.string.pref_flashlight_timeout_instant))
         offTimer.interval(1000)
         return START_STICKY
     }
@@ -99,7 +100,7 @@ class FlashlightService : AndromedaService() {
             FlashlightMode.Strobe200 -> 200
             FlashlightMode.Sos -> 1
         }
-        return Duration.ofMillis(1000L / frequency)
+        return (1000L / frequency).milliseconds
     }
 
     private fun switchStrategy(newStrategy: IFlashlightStrategy?) {

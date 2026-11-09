@@ -16,8 +16,8 @@ class CreateBeaconFromPointCommand(private val context: Context) : IPathPointCom
             "label" to (path.name ?: context.getString(R.string.waypoint))
         )
 
-        if (point.elevation != null) {
-            params["ele"] = point.elevation.roundPlaces(2).toString()
+        point.elevation?.let {
+            params["ele"] = it.roundPlaces(2).toString()
         }
 
         AppUtils.placeBeacon(

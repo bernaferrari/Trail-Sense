@@ -1,30 +1,32 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+
 import android.os.SystemClock
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.trail_sense.shared.time.JavaTime
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.shared.sensors.IntervalSensor
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneId
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import com.kylecorry.sol.time.Time
 
 class TimezoneGPS(updateFrequency: Long = 1000L) :
-    IntervalSensor(Duration.ofMillis(updateFrequency)),
+    IntervalSensor(updateFrequency.milliseconds),
     ISatelliteGPS, InactiveGPS, MockedGPS {
 
     private val hooks = Hooks()
 
     override val location: Coordinate
         get() {
-            val zone = ZoneId.systemDefault()
+            val zone = TimeZone.currentSystemDefault()
             return hooks.memo("location", zone) {
-                JavaTime.getLocationFromTimeZone(zone)
+                Time.getLocationFromTimeZone(zone)
             }
         }
     override val speed: Speed

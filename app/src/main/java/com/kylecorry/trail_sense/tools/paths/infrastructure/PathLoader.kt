@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
+import kotlin.time.Clock
+
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
@@ -11,7 +13,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.ShouldLoadPathSpecification
 import com.kylecorry.trail_sense.tools.paths.domain.ShouldUnloadPathSpecification
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Instant
 
 class PathLoader(private val pathService: IPathService) {
 
@@ -37,7 +38,7 @@ class PathLoader(private val pathService: IPathService) {
                 currentBacktrackPathId,
                 location,
                 altitude.value,
-                Instant.now()
+                Clock.System.now()
             )
 
             points.mapValues { entry ->

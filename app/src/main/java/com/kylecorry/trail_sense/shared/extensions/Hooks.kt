@@ -18,7 +18,7 @@ import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.NavigationSensorValues
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import java.time.Duration
+import kotlin.time.Duration
 
 // Sensors
 
@@ -27,7 +27,7 @@ fun ReactiveComponent.useGPSSensor(
     tag: String? = null
 ): GpsSensor {
     val sensors = useService<SensorService>()
-    return useMemo(sensors, frequency.seconds, frequency.nano, tag) { sensors.getGPS(frequency, tag = tag) }
+    return useMemo(sensors, frequency.inWholeNanoseconds, tag) { sensors.getGPS(frequency, tag = tag) }
 }
 
 fun ReactiveComponent.useCompassSensor(delay: Int = SensorService.MOTION_SENSOR_DELAY): CompassSensor {

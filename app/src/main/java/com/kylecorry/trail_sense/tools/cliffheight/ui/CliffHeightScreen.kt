@@ -3,6 +3,9 @@
 
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -65,8 +68,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.cliffheight.domain.CliffHeightService
 import kotlinx.coroutines.delay
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
@@ -89,7 +91,7 @@ internal fun CliffHeightScreen(
     val gps = remember { SensorService(context).getGPS() }
     val units = remember { prefs.baseDistanceUnits }
     val location = remember { gps.location.takeIf { it != Coordinate.zero } }
-    val singlePressDuration = remember { Duration.ofMillis(200) }
+    val singlePressDuration = remember { 200.milliseconds }
     var startTime by remember { mutableStateOf<Instant?>(null) }
     var running by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
@@ -103,7 +105,7 @@ internal fun CliffHeightScreen(
             title = formatHeight(service, formatter, startTime, units, location)
             heightValue = formatHeightValue(service, startTime, units, location)
             elapsed = formatElapsed(startTime)
-            fall = startTime?.let { Duration.between(it, Instant.now()).toMillis() / 1000f } ?: 0f
+            fall = startTime?.let { (Clock.System.now() - it).inWholeMilliseconds / 1000f } ?: 0f
             delay(16)
         }
     }
@@ -170,12 +172,12 @@ internal fun CliffHeightScreen(
                     hasDropped = startTime != null,
                     onPress = {
                         if (!running) {
-                            startTime = Instant.now()
+                            startTime = Clock.System.now()
                             fall = 0f
                             running = true
                             val released = tryAwaitRelease()
                             if (released &&
-                                Duration.between(startTime, Instant.now()) > singlePressDuration
+                                startTime?.let { Clock.System.now() - it }?.let { it > singlePressDuration } == true
                             ) {
                                 running = false
                             }
@@ -364,7 +366,7 @@ private fun formatHeight(
     location: Coordinate?
 ): String {
     val start = startTime ?: return ""
-    val height = service.getCliffHeight(start, Instant.now(), location)
+    val height = service.getCliffHeight(start, Clock.System.now(), location)
     val converted = height.convertTo(units)
     return formatter.formatDistance(converted, 2)
 }
@@ -376,13 +378,13 @@ private fun formatHeightValue(
     location: Coordinate?
 ): String {
     val start = startTime ?: return "--"
-    val height = service.getCliffHeight(start, Instant.now(), location)
+    val height = service.getCliffHeight(start, Clock.System.now(), location)
     return DecimalFormatter.format(height.convertTo(units).value, 2)
 }
 
 private fun formatElapsed(startTime: Instant?): String {
     val start = startTime ?: return ""
-    val millis = Duration.between(start, Instant.now()).toMillis().coerceAtLeast(0)
+    val millis = (Clock.System.now() - start).inWholeMilliseconds.coerceAtLeast(0)
     return String.format("%.1fs", millis / 1000f)
 }
 

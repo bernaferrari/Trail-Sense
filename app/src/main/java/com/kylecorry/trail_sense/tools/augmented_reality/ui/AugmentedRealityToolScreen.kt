@@ -1,6 +1,8 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
+
+import kotlin.time.Clock
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -94,7 +96,6 @@ import com.kylecorry.sol.science.astronomy.moon.MoonPhase
 import com.kylecorry.sol.science.astronomy.stars.Star
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.geology.Geofence
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -140,8 +141,7 @@ import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
 import com.kylecorry.trail_sense.tools.paths.map_layers.AugmentedRealityPathLayerManager
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Instant
 import kotlin.math.hypot
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
@@ -149,7 +149,7 @@ fun openAugmentedReality(
     appNavigator: TrailSenseNavigator,
     mode: ARMode = ARMode.Normal,
     enableCamera: Boolean = true,
-    time: ZonedDateTime? = null
+    time: Instant? = null
 ) {
     appNavigator.navigate(
         Route.AugmentedReality(modeId = mode.id, cameraEnabled = enableCamera, time = time?.toString())
@@ -555,7 +555,7 @@ private class AugmentedRealityController(
     }
 
     // TODO: Extract focus formatters
-    private fun onSunFocused(time: ZonedDateTime): Boolean {
+    private fun onSunFocused(time: Instant): Boolean {
         views.arView.focusText =
             context.getString(R.string.sun) + "\n" + formatter.formatRelativeDateTime(
                 time,
@@ -564,7 +564,7 @@ private class AugmentedRealityController(
         return true
     }
 
-    private fun onMoonFocused(time: ZonedDateTime, phase: MoonPhase): Boolean {
+    private fun onMoonFocused(time: Instant, phase: MoonPhase): Boolean {
         views.arView.focusText =
             context.getString(R.string.moon) + "\n" + formatter.formatRelativeDateTime(
                 time,
@@ -634,7 +634,7 @@ private class AugmentedRealityController(
         return true
     }
 
-    private fun setMode(mode: ARMode, overrideTime: ZonedDateTime? = null) {
+    private fun setMode(mode: ARMode, overrideTime: Instant? = null) {
         val previousMode = this.mode
         this.mode = mode
         when (mode) {
@@ -651,7 +651,7 @@ private class AugmentedRealityController(
                 replaceActiveGuidanceTarget(null)
                 visibleLayersOverride = listOf(gridLayer, astronomyLayer)
                 overrideTime?.let {
-                    setTimeOverride(it.toInstant())
+                    setTimeOverride(it)
                     views.timeSheet.setTime(viewModel.timeOverride)
                     views.timeSheet.show()
                     updateTimeButtonState()
@@ -771,7 +771,7 @@ private class AugmentedRealityController(
                         ARGuidanceRefreshRequest(
                             context,
                             views.arView.location,
-                            ZonedDateTime.now()
+                            Clock.System.now()
                         )
                     )
                     onMain {
@@ -879,7 +879,7 @@ private class AugmentedRealityController(
 
     private fun setTimeOverride(time: Instant?) {
         viewModel.timeOverride = time
-        astronomyLayer.timeOverride = time?.toZonedDateTime()
+        astronomyLayer.timeOverride = time
     }
 
     private fun updateTimeButtonState() {

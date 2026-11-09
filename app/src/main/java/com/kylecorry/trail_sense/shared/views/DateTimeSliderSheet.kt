@@ -1,5 +1,13 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.time.today
+
+import com.kylecorry.trail_sense.shared.time.minusDays
+
+import com.kylecorry.trail_sense.shared.time.plusDays
+
+import kotlin.time.Duration.Companion.days
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,18 +41,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZonedDateTime
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.LocalDateTime
+import com.kylecorry.trail_sense.shared.time.nowLocal
+import com.kylecorry.trail_sense.shared.time.toInstant
+import com.kylecorry.trail_sense.shared.time.toLocalDateTime
 import java.util.UUID
 
 class DateTimeSliderSheetState(context: Context) {
@@ -58,7 +67,7 @@ class DateTimeSliderSheetState(context: Context) {
         }
     )
     private var trigger by hooks.state("")
-    private var currentTime by mutableStateOf(ZonedDateTime.now())
+    private var currentTime by mutableStateOf(nowLocal())
     private var sheetVisible by mutableStateOf(false)
 
     var onTimeChanged: ((Instant?) -> Unit)? = null
@@ -70,7 +79,7 @@ class DateTimeSliderSheetState(context: Context) {
         }
 
     fun setTime(instant: Instant?) {
-        currentTime = instant?.toZonedDateTime() ?: ZonedDateTime.now()
+        currentTime = instant?.toLocalDateTime() ?: nowLocal()
     }
 
     private fun notifyChanged() {
@@ -96,11 +105,11 @@ class DateTimeSliderSheetState(context: Context) {
             currentTime = currentTime,
             formatter = formatter,
             onDateChanged = {
-                currentTime = currentTime.with(it)
+                currentTime = LocalDateTime(it, currentTime.time)
                 notifyChanged()
             },
             onTimeChanged = {
-                currentTime = currentTime.with(it)
+                currentTime = LocalDateTime(currentTime.date, it)
                 notifyChanged()
             },
             modifier = modifier
@@ -110,7 +119,7 @@ class DateTimeSliderSheetState(context: Context) {
 
 @Composable
 private fun DateTimeSliderSheetContent(
-    currentTime: ZonedDateTime,
+    currentTime: LocalDateTime,
     formatter: FormatService,
     onDateChanged: (LocalDate) -> Unit,
     onTimeChanged: (LocalTime) -> Unit,
@@ -132,7 +141,7 @@ private fun DateTimeSliderSheetContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             DatePickerRow(
-                date = currentTime.toLocalDate(),
+                date = currentTime.date,
                 formatter = formatter,
                 onDateChanged = onDateChanged,
                 modifier = Modifier
@@ -140,7 +149,7 @@ private fun DateTimeSliderSheetContent(
                     .testTag("date_picker")
             )
             Text(
-                text = formatter.formatTime(currentTime.toLocalTime(), includeSeconds = false),
+                text = formatter.formatTime(currentTime.time, includeSeconds = false),
                 modifier = Modifier
                     .padding(top = TrailSenseSpacing.lg)
                     .heightIn(min = 48.dp)
@@ -148,7 +157,7 @@ private fun DateTimeSliderSheetContent(
                         CustomUiUtils.pickTime(
                             context,
                             prefs.use24HourTime,
-                            currentTime.toLocalTime()
+                            currentTime.time
                         ) {
                             if (it != null) {
                                 onTimeChanged(it)
@@ -162,16 +171,16 @@ private fun DateTimeSliderSheetContent(
                 color = MaterialTheme.colorScheme.onSurface
             )
             ComposeSlider(
-                value = minutes.coerceIn(0f, Duration.ofDays(1).toMinutes().toFloat()),
+                value = minutes.coerceIn(0f, 1.days.inWholeMinutes.toFloat()),
                 onValueChange = {
-                    val seconds = (it.toInt() * 60L)
-                        .coerceAtMost(LocalTime.MAX.toSecondOfDay().toLong())
-                    onTimeChanged(LocalTime.ofSecondOfDay(seconds))
+                    val seconds = (it.toInt() * 60)
+                        .coerceIn(0, LocalTime(23, 59, 59).toSecondOfDay())
+                    onTimeChanged(LocalTime.fromSecondOfDay(seconds))
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("time_slider"),
-                valueRange = 0f..Duration.ofDays(1).toMinutes().toFloat()
+                valueRange = 0f..1.days.inWholeMinutes.toFloat()
             )
         }
     }
@@ -223,7 +232,7 @@ private fun DatePickerRow(
                             }
                         }
                     },
-                    onLongClick = { onDateChanged(LocalDate.now()) }
+                    onLongClick = { onDateChanged(today()) }
                 )
                 .testTag("date_btn"),
             contentAlignment = Alignment.Center

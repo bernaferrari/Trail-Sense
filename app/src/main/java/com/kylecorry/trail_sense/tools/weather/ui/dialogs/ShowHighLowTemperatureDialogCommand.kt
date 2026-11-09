@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.weather.ui.dialogs
 
+import kotlin.time.Duration.Companion.hours
+
+import kotlin.time.Clock
+
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,7 +21,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import java.time.ZonedDateTime
 
 class ShowHighLowTemperatureDialogCommand(
     private val context: Context,
@@ -33,8 +36,8 @@ class ShowHighLowTemperatureDialogCommand(
         val forecast =
             onIO {
                 weatherSubsystem.getTemperatures(
-                    ZonedDateTime.now(),
-                    ZonedDateTime.now().plusHours(24),
+                    Clock.System.now(),
+                    Clock.System.now().plus(24.hours),
                     location,
                     elevation
                 )

@@ -7,8 +7,8 @@ import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 class AstronomyPreferences(private val context: Context) {
 
@@ -62,7 +62,7 @@ class AstronomyPreferences(private val context: Context) {
         }
 
     // TODO: Let the user set this
-    var astronomyAlertTime: LocalTime = LocalTime.of(10, 0)
+    var astronomyAlertTime: LocalTime = LocalTime(10, 0)
 
     var sendLunarEclipseAlerts by BooleanPreference(
         cache,
@@ -93,18 +93,17 @@ class AstronomyPreferences(private val context: Context) {
                 ?: "0").toLong()
         }
 
-    val sunsetAlertLastSent: LocalDate
+    val sunsetAlertLastSent: LocalDate?
         get() {
-            val raw = (cache.getString(context.getString(R.string.pref_sunset_alert_last_sent_date))
-                ?: LocalDate.MIN.toString())
-            return LocalDate.parse(raw)
+            val raw = cache.getString(context.getString(R.string.pref_sunset_alert_last_sent_date))
+                ?: return null
+            return runCatching { LocalDate.parse(raw) }.getOrNull()
         }
-    val sunriseAlertLastSent: LocalDate
+    val sunriseAlertLastSent: LocalDate?
         get() {
-            val raw =
-                (cache.getString(context.getString(R.string.pref_sunrise_alert_last_sent_date))
-                    ?: LocalDate.MIN.toString())
-            return LocalDate.parse(raw)
+            val raw = cache.getString(context.getString(R.string.pref_sunrise_alert_last_sent_date))
+                ?: return null
+            return runCatching { LocalDate.parse(raw) }.getOrNull()
         }
 
     fun setSunsetAlertLastSentDate(date: LocalDate) {

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.sol.units.Coordinate
@@ -10,7 +12,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.GPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
 import com.kylecorry.trail_sense.shared.sensors.gps.age
 import com.kylecorry.trail_sense.shared.sensors.gps.durationSince
-import java.time.Duration
+import kotlin.time.Duration
 
 /**
  * Rejects readings which are clearly erroneous.
@@ -40,7 +42,7 @@ class BadReadingFilterGPSModule(
         }
 
         // The new reading is older than the current one, so reject it
-        if (newData.durationSince(previousData).isNegative) {
+        if (newData.durationSince(previousData).isNegative()) {
             logger.debug(TAG, "Rejected: older, ${describeNewReading(previousData, newData)}")
             return false
         }
@@ -53,18 +55,18 @@ class BadReadingFilterGPSModule(
         newData: ModularGPSData
     ): String {
         return "Time Delta: ${
-            newData.durationSince(previousData).toMillis()
+            newData.durationSince(previousData).inWholeMilliseconds
         }ms, Distance: ${
             previousData.location.distanceTo(newData.location).safeRoundPlaces(1)
         }m, Accuracy: ${previousData.horizontalAccuracy?.safeRoundPlaces(1)}m -> ${
             newData.horizontalAccuracy?.safeRoundPlaces(1)
         }m, Age: ${
-            previousData.age(timeProvider).toMillis()
+            previousData.age(timeProvider).inWholeMilliseconds
         }ms"
     }
 
     companion object {
         private const val TAG = "BadReadingFilterGPSModule"
-        private val FUTURE_TOLERANCE: Duration = Duration.ofMillis(-500)
+        private val FUTURE_TOLERANCE: Duration = (-500).milliseconds
     }
 }

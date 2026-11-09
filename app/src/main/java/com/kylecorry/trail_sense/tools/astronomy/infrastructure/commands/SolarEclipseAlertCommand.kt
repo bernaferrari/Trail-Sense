@@ -1,5 +1,12 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands
 
+
+import com.kylecorry.trail_sense.shared.time.today
+
+import com.kylecorry.trail_sense.shared.time.plusDays
+
+import kotlin.time.Duration.Companion.days
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.notifications.*
@@ -17,9 +24,8 @@ import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.Eclipse
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.EclipseFormatter
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Clock
 
 class SolarEclipseAlertCommand(private val context: Context) : Command<Coordinate> {
     override fun execute(value: Coordinate) {
@@ -31,14 +37,14 @@ class SolarEclipseAlertCommand(private val context: Context) : Command<Coordinat
         }
 
         val astronomyService = AstronomyService()
-        val today = LocalDate.now()
+        val today = today()
         val todayEclipse = astronomyService.getSolarEclipse(value, today)
         val tomorrowEclipse =
             astronomyService.getSolarEclipse(value, today.plusDays(1))
 
         val eclipse = listOfNotNull(todayEclipse, tomorrowEclipse).firstOrNull {
-            val timeUntilPeak = Duration.between(LocalDateTime.now(), it.peak)
-            timeUntilPeak >= Duration.ZERO && timeUntilPeak <= Duration.ofDays(1)
+            val timeUntilPeak = it.peak - Clock.System.now()
+            timeUntilPeak >= Duration.ZERO && timeUntilPeak <= 1.days
         }
 
         if (eclipse == null) {

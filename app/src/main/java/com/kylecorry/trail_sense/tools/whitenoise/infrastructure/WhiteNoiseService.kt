@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.whitenoise.infrastructure
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.toJavaDuration
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -23,8 +23,7 @@ import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.withId
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 
 class WhiteNoiseService : AndromedaService() {
 
@@ -42,8 +41,8 @@ class WhiteNoiseService : AndromedaService() {
             isRunning = true
             Tools.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED)
             val stopAt = cache.getInstant(CACHE_KEY_OFF_TIME)
-            if (stopAt != null && Instant.now() < stopAt) {
-                offTimer.once(JavaTime.between(Instant.now(), stopAt))
+            if (stopAt != null && Clock.System.now() < stopAt) {
+                offTimer.once((stopAt - Clock.System.now()).toJavaDuration())
             }
 
             val soundId = cache.getLong(CACHE_KEY_SLEEP_SOUND_ID) ?: SleepSound.PinkNoise.id
@@ -102,7 +101,7 @@ class WhiteNoiseService : AndromedaService() {
             duration: Duration? = null
         ) {
             val cache = DependencyRegistry.get<PreferencesSubsystem>().preferences
-            if (duration != null && !duration.isZero) {
+            if (duration != null && duration != Duration.ZERO) {
                 cache.putInstant(CACHE_KEY_OFF_TIME, kotlin.time.Clock.System.now().plus(duration))
             } else {
                 clearSleepTimer(context)

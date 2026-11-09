@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReadingEntity
-import java.time.Instant
+import kotlin.time.Instant
 
 @Dao
 interface BatteryDao {

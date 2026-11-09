@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.speedometer
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
+
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -21,8 +24,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speedometer {
 
@@ -54,8 +57,8 @@ class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speed
         get() {
             val stopped = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
             val lastTime = lastPointTime ?: return _speed ?: stopped
-            val staleAfter = prefs.paths.backtrackRecordFrequency.multipliedBy(2).plus(TIMING_BUFFER)
-            return if (Duration.between(lastTime, Instant.now()) > staleAfter) {
+            val staleAfter = prefs.paths.backtrackRecordFrequency.times(2).plus(TIMING_BUFFER)
+            return if ((Clock.System.now() - lastTime) > staleAfter) {
                 stopped
             } else {
                 _speed ?: stopped
@@ -90,9 +93,14 @@ class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speed
                 return Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
             }
 
-            val time = Duration.between(secondLast.time, last.time)
+            val lastTime = last.time
+            val secondLastTime = secondLast.time
+            if (lastTime == null || secondLastTime == null) {
+                return Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
+            }
+            val time = lastTime - secondLastTime
             Speed.from(
-                distance / time.seconds.coerceAtLeast(1).toFloat(),
+                distance / time.inWholeSeconds.coerceAtLeast(1).toFloat(),
                 DistanceUnits.Meters,
                 TimeUnits.Seconds
             )
@@ -121,6 +129,6 @@ class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speed
     }
 
     private companion object {
-        val TIMING_BUFFER: Duration = Duration.ofSeconds(30)
+        val TIMING_BUFFER: Duration = 30.seconds
     }
 }

@@ -3,9 +3,9 @@
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.days
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Duration.Companion.seconds
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -102,7 +102,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlinx.coroutines.launch
-import java.time.Duration
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -126,7 +125,7 @@ fun TemperatureEstimationToolScreen() {
         formatService = formatService,
         // The last elevation the GPS or altimeter knew; none at all (never recorded) leaves the field for the user.
         initialElevation = location.elevation.convertTo(prefs.baseDistanceUnits),
-        isElevationKnown = location.elevationAge < Duration.ofDays(KNOWN_ELEVATION_DAYS),
+        isElevationKnown = location.elevationAge < KNOWN_ELEVATION_DAYS.days,
         sensorTemperature = { thermometer.temperature },
         hasThermometerReading = {
             thermometer.hasValidReading || thermometer.temperature != 0f

@@ -8,8 +8,8 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.HistoricTemperatureRepo
 import com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.ITemperatureRepo
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
+import kotlin.time.Instant
 
 class ClimateSubsystem private constructor(private val context: Context) : ITemperatureRepo {
 
@@ -24,13 +24,13 @@ class ClimateSubsystem private constructor(private val context: Context) : ITemp
 
     override suspend fun getTemperatures(
         location: Coordinate,
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): List<Reading<Temperature>> {
         return temperatureRepo.getTemperatures(location, start, end)
     }
 
-    override suspend fun getTemperature(location: Coordinate, time: ZonedDateTime): Temperature {
+    override suspend fun getTemperature(location: Coordinate, time: Instant): Temperature {
         return temperatureRepo.getTemperature(location, time)
     }
 

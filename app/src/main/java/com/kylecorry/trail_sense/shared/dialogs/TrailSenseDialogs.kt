@@ -5,6 +5,14 @@
 
 package com.kylecorry.trail_sense.shared.dialogs
 
+import com.kylecorry.trail_sense.shared.time.nowLocal
+
+import com.kylecorry.trail_sense.shared.time.today
+
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+
+import com.kylecorry.trail_sense.shared.time.atStartOfDay
+
 import android.content.Context
 import android.text.Spanned
 import android.util.Log
@@ -78,11 +86,11 @@ import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.toAnnotatedString
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import com.kylecorry.trail_sense.shared.andromeda_temp.alerts.Alerts as AndromedaAlerts
@@ -549,7 +557,7 @@ object Pickers {
     fun time(
         context: Context,
         use24Hours: Boolean,
-        default: LocalTime = LocalTime.now(),
+        default: LocalTime = nowLocal().time,
         onTimePick: (time: LocalTime?) -> Unit
     ) {
         var done = false
@@ -573,7 +581,7 @@ object Pickers {
                 cancelText = context.getString(android.R.string.cancel),
                 onOk = {
                     dismiss()
-                    pick(LocalTime.of(state.hour, state.minute))
+                    pick(LocalTime(state.hour, state.minute))
                 },
                 onCancel = {
                     dismiss()
@@ -586,7 +594,7 @@ object Pickers {
     /** The Material date picker (a calendar). */
     fun date(
         context: Context,
-        default: LocalDate = LocalDate.now(),
+        default: LocalDate = today(),
         onDatePick: (date: LocalDate?) -> Unit
     ) {
         var done = false
@@ -598,7 +606,7 @@ object Pickers {
         val host = AppHost.from(context).dialogs
         host.show(onCancel = { pick(null) }) { dialog ->
             val state = rememberDatePickerState(
-                initialSelectedDateMillis = default.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+                initialSelectedDateMillis = default.atStartOfDay(TimeZone.UTC).toEpochMilliseconds()
             )
             DatePickerDialog(
                 onDismissRequest = { dialog.cancel() },
@@ -607,7 +615,7 @@ object Pickers {
                         onClick = {
                             dialog.dismiss()
                             pick(state.selectedDateMillis?.let {
-                                Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
+                                Instant.fromEpochMilliseconds(it).toLocalDate(TimeZone.UTC)
                             } ?: default)
                         },
                         shapes = ButtonDefaults.shapes()
@@ -627,16 +635,16 @@ object Pickers {
     fun datetime(
         context: Context,
         use24Hours: Boolean,
-        default: LocalDateTime = LocalDateTime.now(),
+        default: LocalDateTime = nowLocal(),
         onDatetimePick: (value: LocalDateTime?) -> Unit
     ) {
-        date(context, default.toLocalDate()) { date ->
+        date(context, default.date) { date ->
             if (date == null) {
                 onDatetimePick(null)
                 return@date
             }
-            time(context, use24Hours, default.toLocalTime()) { time ->
-                onDatetimePick(time?.let { LocalDateTime.of(date, it) })
+            time(context, use24Hours, default.time) { time ->
+                onDatetimePick(time?.let { LocalDateTime(date, it) })
             }
         }
     }
@@ -748,12 +756,12 @@ object CoroutinePickers {
         Pickers.items(context, title, items, defaultSelectedIndices, okText, cancelText) { if (c.isActive) c.resume(it) }
     }
 
-    suspend fun time(context: Context, use24Hours: Boolean, default: LocalTime = LocalTime.now()): LocalTime? =
+    suspend fun time(context: Context, use24Hours: Boolean, default: LocalTime = nowLocal().time): LocalTime? =
         suspendCancellableCoroutine { c ->
             Pickers.time(context, use24Hours, default) { if (c.isActive) c.resume(it) }
         }
 
-    suspend fun date(context: Context, default: LocalDate = LocalDate.now()): LocalDate? =
+    suspend fun date(context: Context, default: LocalDate = today()): LocalDate? =
         suspendCancellableCoroutine { c ->
             Pickers.date(context, default) { if (c.isActive) c.resume(it) }
         }
@@ -761,7 +769,7 @@ object CoroutinePickers {
     suspend fun datetime(
         context: Context,
         use24Hours: Boolean,
-        default: LocalDateTime = LocalDateTime.now()
+        default: LocalDateTime = nowLocal()
     ): LocalDateTime? = suspendCancellableCoroutine { c ->
         Pickers.datetime(context, use24Hours, default) { if (c.isActive) c.resume(it) }
     }

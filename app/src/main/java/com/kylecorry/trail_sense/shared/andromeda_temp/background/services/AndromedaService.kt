@@ -7,7 +7,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Wakelocks
-import java.time.Duration
+import kotlin.time.Duration
 
 /**
  * To run as a foreground service, override [getForegroundInfo] and return a [ForegroundInfo] object.
@@ -57,7 +57,7 @@ abstract class AndromedaService : Service() {
                     if (duration == null) {
                         wakelock?.acquire()
                     } else {
-                        wakelock?.acquire(duration.toMillis())
+                        wakelock?.acquire(duration.inWholeMilliseconds)
                     }
                 }
             }

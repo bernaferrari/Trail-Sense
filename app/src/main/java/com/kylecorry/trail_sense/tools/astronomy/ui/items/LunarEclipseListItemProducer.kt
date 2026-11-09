@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
 import com.kylecorry.trail_sense.tools.astronomy.ui.LunarEclipseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.EclipseFormatter
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer(context) {
 

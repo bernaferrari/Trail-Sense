@@ -5,7 +5,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
-import java.time.Duration
+import kotlin.time.Duration
 
 class WhiteNoiseToolService(private val context: Context) : ToolService {
     override val id: String = WhiteNoiseToolRegistration.SERVICE_WHITE_NOISE

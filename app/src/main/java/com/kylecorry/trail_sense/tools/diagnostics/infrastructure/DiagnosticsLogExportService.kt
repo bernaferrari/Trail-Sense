@@ -1,5 +1,14 @@
 package com.kylecorry.trail_sense.tools.diagnostics.infrastructure
 
+import kotlinx.datetime.format
+import kotlinx.datetime.format.char
+
+import kotlinx.datetime.toLocalDateTime
+
+import kotlinx.datetime.LocalDateTime
+
+import kotlin.time.Clock
+
 import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
@@ -12,9 +21,8 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.logging.Logger
 import java.io.File
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
 import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -88,7 +96,7 @@ class DiagnosticsLogExportService(
     @RequiresApi(Build.VERSION_CODES.R)
     private fun formatExitReason(info: ApplicationExitInfo): String {
         return buildString {
-            appendLine("Timestamp: ${Instant.ofEpochMilli(info.timestamp)}")
+            appendLine("Timestamp: ${Instant.fromEpochMilliseconds(info.timestamp)}")
             appendLine("Reason: ${getReasonName(info.reason)} (${info.reason})")
             appendLine("Description: ${info.description.orEmpty()}")
             appendLine("Process: ${info.processName}")
@@ -135,9 +143,9 @@ class DiagnosticsLogExportService(
     }
 
     private fun addLogcat(zip: ZipOutputStream) {
-        val cutoff = Instant.now()
+        val cutoff = Clock.System.now()
             .minus(DiagnosticsLogConfig.LOGCAT_HISTORY_DURATION)
-            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime(TimeZone.currentSystemDefault())
             .format(LOGCAT_TIMESTAMP_FORMAT)
         val process = ProcessBuilder(
             "logcat",
@@ -168,17 +176,25 @@ class DiagnosticsLogExportService(
     }
 
     private fun filenameTimestamp(timestamp: Long): String {
-        return Instant.ofEpochMilli(timestamp)
-            .atZone(ZoneId.systemDefault())
+        return Instant.fromEpochMilliseconds(timestamp)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
             .format(FILENAME_TIMESTAMP_FORMAT)
     }
 
     companion object {
         private const val ERROR_HISTORY_DIRECTORY = "errors/history"
         private const val PENDING_ERROR_FILE = "errors/error.txt"
-        private val LOGCAT_TIMESTAMP_FORMAT =
-            DateTimeFormatter.ofPattern("MM-dd HH:mm:ss.SSS", Locale.US)
-        private val FILENAME_TIMESTAMP_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss-SSS", Locale.US)
+        private val LOGCAT_TIMESTAMP_FORMAT = LocalDateTime.Format {
+            monthNumber(); char('-'); day()
+            char(' ')
+            hour(); char(':'); minute(); char(':'); second()
+            char('.'); secondFraction(3)
+        }
+        private val FILENAME_TIMESTAMP_FORMAT = LocalDateTime.Format {
+            year(); char('-'); monthNumber(); char('-'); day()
+            char('_')
+            hour(); char('-'); minute(); char('-'); second()
+            char('-'); secondFraction(3)
+        }
     }
 }

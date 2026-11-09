@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.interpolation.Interpolation
 
-import java.time.Instant
+import kotlin.time.Instant
 
 interface ILayer {
 

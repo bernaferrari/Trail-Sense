@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "field_guide_sightings", indices = [Index(value = ["field_guide_page_id"])])
 data class FieldGuideSightingEntity(

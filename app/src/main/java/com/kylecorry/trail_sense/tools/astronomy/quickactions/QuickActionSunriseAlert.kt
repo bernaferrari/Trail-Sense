@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
+import kotlin.time.Duration.Companion.minutes
+
 import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -18,7 +20,6 @@ import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunriseAlarmReceiver
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
-import java.time.Duration
 
 class QuickActionSunriseAlert(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
     ToolServiceQuickAction(
@@ -52,7 +53,7 @@ class QuickActionSunriseAlert(btn: QuickActionButtonView, host: TrailSenseDestin
                     // The quick action bar's host is also the screen's ScreenEffects; QuickActionButton only hands out the host.
                     SunriseAlarmReceiver.enable(context, host, host.lifecycleOwner.lifecycleScope)
                     val alertTime =
-                        Duration.ofMinutes(prefs.astronomy.sunriseAlertMinutesBefore)
+                        prefs.astronomy.sunriseAlertMinutesBefore.minutes
                     val formattedAlertTime = formatter.formatDuration(alertTime)
                     host.showMessage(
                         context.getString(

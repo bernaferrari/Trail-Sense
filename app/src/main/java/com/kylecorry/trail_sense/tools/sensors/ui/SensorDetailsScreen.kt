@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.sensors.ui
 
+import com.kylecorry.trail_sense.shared.time.nowLocal
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.filled.CheckCircle
@@ -100,11 +102,8 @@ import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
 import com.kylecorry.trail_sense.shared.sensors.hygrometer.MockHygrometer
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalTime
-import java.time.ZonedDateTime
-import java.time.format.TextStyle
+import com.kylecorry.trail_sense.shared.time.displayName
+import kotlinx.datetime.TimeZone
 import java.util.Locale
 
 @Composable
@@ -277,10 +276,7 @@ private class SensorDetailsFormatter(private val context: Context, private val s
     private fun updateClock() {
         sensorDetailsMap["clock"] = SensorDetails(
             context.getString(R.string.tool_clock_title),
-            formatService.formatTime(LocalTime.now()) + " " + ZonedDateTime.now().zone.getDisplayName(
-                TextStyle.FULL,
-                Locale.getDefault()
-            ),
+            formatService.formatTime(nowLocal().time) + " " + TimeZone.currentSystemDefault().displayName(),
             formatService.formatQuality(Quality.Good),
             CustomUiUtils.getQualityColor(Quality.Good),
             TrailIcons.ToolClock

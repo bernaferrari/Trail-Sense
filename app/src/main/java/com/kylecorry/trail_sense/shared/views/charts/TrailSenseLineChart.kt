@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.charts
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -17,8 +17,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
-import java.time.Duration
-import java.time.Instant
 import kotlin.math.max
 
 @Composable
@@ -84,7 +82,7 @@ private fun trailSenseLineChartPoints(
     val startTime = readings.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
     val points = readings.map {
             TrailSenseLineChartPoint(
-            JavaTime.between(startTime, it.time).toMillis() / 3_600_000f,
+            (it.time - startTime).inWholeMilliseconds / 3_600_000f,
             it.value
         )
     }

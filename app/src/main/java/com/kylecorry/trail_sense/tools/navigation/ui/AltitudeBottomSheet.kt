@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.Canvas
@@ -32,8 +32,6 @@ import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import java.time.Duration
-import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
@@ -100,7 +98,7 @@ private fun AltitudeChartView(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val startTime = readings.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
             val points = readings.map {
-                JavaTime.between(startTime, it.time).toMillis() / 3_600_000f to
+                (it.time - startTime).inWholeMilliseconds / 3_600_000f to
                         Distance.meters(it.value).convertTo(units).value
             }
             val margin = Distance.meters(10f).convertTo(units).value

@@ -3,11 +3,11 @@
 
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.andromeda.core.sensors.read
-
-import com.kylecorry.trail_sense.shared.time.interop.*
-
-import com.kylecorry.trail_sense.shared.time.JavaTime
 
 import com.kylecorry.andromeda.core.sensors.Altimeter
 import androidx.compose.animation.AnimatedVisibility
@@ -82,8 +82,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
 import kotlinx.coroutines.delay
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 import kotlin.math.PI
 import kotlin.math.sin
 import com.kylecorry.luna.concurrency.onDefault
@@ -142,11 +141,11 @@ internal fun WaterPurificationScreen(
         TrailSenseChoice(TimeSelection.Auto, stringResource(R.string.auto)),
         TrailSenseChoice(
             TimeSelection.LowAltitude,
-            formatService.formatDuration(Duration.ofMinutes(1), short = true)
+            formatService.formatDuration(1.minutes, short = true)
         ),
         TrailSenseChoice(
             TimeSelection.HighAltitude,
-            formatService.formatDuration(Duration.ofMinutes(3), short = true)
+            formatService.formatDuration(3.minutes, short = true)
         )
     )
 
@@ -162,7 +161,7 @@ internal fun WaterPurificationScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 BoilPot(
-                    seconds = displayed?.seconds,
+                    seconds = displayed?.inWholeSeconds,
                     progress = animatedProgress,
                     isRunning = isRunning
                 )
@@ -211,14 +210,14 @@ internal fun WaterPurificationScreen(
                     if (isRunning) {
                         stop()
                     } else {
-                        val selectedDuration = duration ?: Duration.ofMinutes(3)
+                        val selectedDuration = duration ?: 3.minutes
                         cache.putInstant(
                             WATER_PURIFICATION_END_TIME_KEY,
                             kotlin.time.Clock.System.now().plus(selectedDuration)
                         )
                         WaterPurificationTimerService.start(
                             context,
-                            selectedDuration.seconds
+                            selectedDuration.inWholeSeconds
                         )
                     }
                 },
@@ -257,9 +256,9 @@ internal fun WaterPurificationScreen(
  * when idle so the pot reads as "ready".
  */
 private fun remainingFraction(remaining: Duration?, duration: Duration?): Float {
-    val total = duration?.seconds ?: return 1f
+    val total = duration?.inWholeSeconds ?: return 1f
     if (total <= 0L) return 1f
-    val left = remaining?.seconds ?: return 1f
+    val left = remaining?.inWholeSeconds ?: return 1f
     return (left.toFloat() / total.toFloat()).coerceIn(0f, 1f)
 }
 
@@ -466,8 +465,8 @@ private fun WaterStep(
 private fun getRemainingTime(cache: Preferences): Duration? {
     val lastEndTime =
         cache.getInstant(WATER_PURIFICATION_END_TIME_KEY) ?: return null
-    val duration = JavaTime.between(Instant.now(), lastEndTime)
-    return if (!duration.isNegative && !duration.isZero) duration else null
+    val duration = (lastEndTime - (Clock.System.now()))
+    return if (!duration.isNegative() && duration != Duration.ZERO) duration else null
 }
 
 internal enum class TimeSelection {
@@ -498,7 +497,7 @@ private class BoilTime(private val altimeter: Altimeter) {
     suspend fun getDuration(selection: TimeSelection): Duration = onDefault {
         if (selection == TimeSelection.Auto) {
             if (!altimeter.hasValidReading) {
-                withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) {
+                withTimeoutOrNull(10.seconds.inWholeMilliseconds) {
                     altimeter.read()
                 }
             }
@@ -509,9 +508,9 @@ private class BoilTime(private val altimeter: Altimeter) {
                 )
             }
         } else if (selection == TimeSelection.LowAltitude) {
-            return@onDefault Duration.ofMinutes(1)
+            return@onDefault 1.minutes
         }
 
-        Duration.ofMinutes(3)
+        3.minutes
     }
 }

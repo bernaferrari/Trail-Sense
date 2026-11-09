@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import kotlin.time.Duration.Companion.minutes
+
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
@@ -131,7 +133,7 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCom
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ViewPathCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
-import java.time.Duration
+import kotlin.time.Duration
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -805,8 +807,8 @@ private fun PathRow(
         false
     )
     val durationString = path.metadata.duration?.let {
-        val length = Duration.between(it.start, it.end)
-        if (length.isZero || length.isNegative) null else formatService.formatDuration(length, short = true)
+        val length = (it.end - it.start)
+        if (length == Duration.ZERO || length.isNegative()) null else formatService.formatDuration(length, short = true)
     }
     val subtitle = listOfNotNull(
         if (path.temporary) stringResource(R.string.temporary) else null,
@@ -1015,7 +1017,7 @@ private fun PathsScreenPreview() {
             isLoaded = true,
             resetKey = 0,
             backtrackState = FeatureState.Off,
-            backtrackFrequency = Duration.ofMinutes(15),
+            backtrackFrequency = 15.minutes,
             formatService = FormatService.getInstance(LocalContext.current),
             baseDistanceUnits = DistanceUnits.Meters,
             onBack = {},

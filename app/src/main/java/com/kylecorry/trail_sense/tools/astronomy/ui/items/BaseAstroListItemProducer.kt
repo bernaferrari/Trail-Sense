@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
@@ -18,9 +16,10 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.Duration
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import kotlinx.datetime.LocalDate
+import kotlin.time.Instant
 
 abstract class BaseAstroListItemProducer(protected val context: Context) :
     AstronomyListItemProducer {
@@ -31,7 +30,7 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
     protected val astronomyService = AstronomyService()
     protected val prefs = UserPreferences(context)
 
-    private fun formatTime(time: ZonedDateTime?): String {
+    private fun formatTime(time: Instant?): String {
         if (time == null) {
             return "--:--"
         }
@@ -139,26 +138,14 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
             context.getString(R.string.noon) to times.transit,
             context.getString(R.string.astronomy_set) to times.set
         ).sortedBy { it.second }.map {
-            datapoint(formatTime(it.second?.toZonedDateTime()), it.first)
+            datapoint(formatTime(it.second), it.first)
         }
     }
 
     protected fun times(
-        start: kotlin.time.Instant?,
-        peak: kotlin.time.Instant?,
-        end: kotlin.time.Instant?,
-        displayDate: LocalDate? = start?.toZonedDateTime()?.toLocalDate()
-    ): List<AstronomyListItemData> = times(
-        start?.toZonedDateTime(),
-        peak?.toZonedDateTime(),
-        end?.toZonedDateTime(),
-        displayDate
-    )
-
-    protected fun times(
-        start: ZonedDateTime?,
-        peak: ZonedDateTime?,
-        end: ZonedDateTime?,
+        start: Instant?,
+        peak: Instant?,
+        end: Instant?,
         displayDate: LocalDate? = start?.toLocalDate()
     ): List<AstronomyListItemData> {
         val reserveHeaderSpace = listOf(start, peak, end).any { it != null && it.toLocalDate() != displayDate }
@@ -172,7 +159,7 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
     }
 
     protected fun time(
-        time: ZonedDateTime?,
+        time: Instant?,
         displayDate: LocalDate? = time?.toLocalDate(),
         label: CharSequence? = null,
         reserveHeaderSpace: Boolean = false

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.persistence
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -9,7 +8,7 @@ import androidx.room.PrimaryKey
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(
     tableName = "pressures",
@@ -41,7 +40,7 @@ data class PressureReadingEntity(
                 humidity,
                 Coordinate(latitude, longitude)
             ),
-            Instant.ofEpochMilli(time)
+            Instant.fromEpochMilliseconds(time)
         )
     }
 
@@ -53,7 +52,7 @@ data class PressureReadingEntity(
                 reading.value.altitudeError,
                 reading.value.temperature,
                 reading.value.humidity ?: 0f,
-                reading.time.toEpochMilli(),
+                reading.time.toEpochMilliseconds(),
                 reading.value.location.latitude,
                 reading.value.location.longitude
             ).also {

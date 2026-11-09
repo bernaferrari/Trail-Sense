@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.morse
 
+import kotlin.time.toJavaDuration
+
 import com.kylecorry.luna.time.CoroutineTimer
 
 class SignalPlayer(private val device: ISignalingDevice) {
@@ -32,7 +34,7 @@ class SignalPlayer(private val device: ISignalingDevice) {
                         device.off()
                     }
                     idx++
-                    intervalometer?.once(signal.duration)
+                    intervalometer?.once(signal.duration.toJavaDuration())
                 } else {
                     intervalometer = null
                     onComplete?.invoke()

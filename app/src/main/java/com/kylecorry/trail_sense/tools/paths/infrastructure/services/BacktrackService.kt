@@ -1,10 +1,11 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.services
 
+
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.trail_sense.shared.sensors.asFlowable
 
 import kotlin.time.Duration.Companion.milliseconds
-
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import android.content.Context
 import android.content.Intent
@@ -30,10 +31,10 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.BacktrackCo
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
-import java.time.Duration
+import kotlin.time.Duration
 
 class BacktrackService :
-    IntervalService(wakelockDuration = Duration.ofSeconds(60), useOneTimeWorkers = true) {
+    IntervalService(wakelockDuration = 60.seconds, useOneTimeWorkers = true) {
     private val prefs by lazy { UserPreferences(applicationContext) }
 
     override val uniqueId: Int

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.climate.infrastructure.precipitation
 
+import com.kylecorry.trail_sense.shared.time.length
+import kotlinx.datetime.number
+
 import android.util.Size
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -11,7 +14,7 @@ import com.kylecorry.trail_sense.shared.data.AssetInputStreamable
 import com.kylecorry.trail_sense.shared.data.EncodedDataImageReader
 import com.kylecorry.trail_sense.shared.data.GeographicImageSource
 import com.kylecorry.trail_sense.shared.data.SingleImageReader
-import java.time.Month
+import kotlinx.datetime.Month
 
 internal object HistoricMonthlyPrecipitationRepo {
 
@@ -22,7 +25,7 @@ internal object HistoricMonthlyPrecipitationRepo {
     private val size = Size(360, 180)
 
     private val sources = Month.entries.associateWith { month ->
-        val file = "precipitation/precipitation-${month.value}.webp"
+        val file = "precipitation/precipitation-${month.number}.webp"
         GeographicImageSource(
             EncodedDataImageReader(
                 SingleImageReader(size, AssetInputStreamable(file)),
@@ -41,7 +44,7 @@ internal object HistoricMonthlyPrecipitationRepo {
         cache.getOrPut(pixel) {
             val values = load(location)
             Month.entries.associateWith {
-                val daysInMonth = it.length(false)
+                val daysInMonth = it.length(leapYear = false)
                 Distance.from((values[it] ?: 0f) * daysInMonth, DistanceUnits.Millimeters).meters()
             }
         }

@@ -4,7 +4,22 @@
 
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.toInstant
+
+import kotlinx.datetime.LocalDateTime
+
+import kotlin.time.Duration.Companion.milliseconds
+
+import com.kylecorry.trail_sense.shared.time.nowLocal
+
+import com.kylecorry.trail_sense.shared.time.today
+
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+
+import com.kylecorry.trail_sense.shared.time.plusDays
+
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.views.TurnBackEmptyIllustration
@@ -81,7 +96,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseReading
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
@@ -118,11 +132,9 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlinx.datetime.LocalTime
 
 object TurnBackKeys {
     const val PREF_TURN_BACK_TIME = "pref_turn_back_time"
@@ -165,7 +177,7 @@ fun TurnBackToolScreen() {
             CustomUiUtils.pickTime(
                 context,
                 userPrefs.use24HourTime,
-                currentReturnTime?.atZone(ZoneId.systemDefault())?.toLocalTime() ?: LocalTime.now()
+                currentReturnTime?.toLocalTime() ?: nowLocal().time
             ) {
                 if (it != null) {
                     viewModel.setReturnTimeAt(it)
@@ -208,24 +220,22 @@ internal class TurnBackViewModel(
     /** One event each time a return time is set. */
     val alertSet: Flow<Unit> = _alertSet.receiveAsFlow()
 
-    fun turnBackTime(): Instant? = preferences.getJavaInstant(TurnBackKeys.PREF_TURN_BACK_TIME)
+    fun turnBackTime(): Instant? = preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_TIME)
 
-    fun returnTime(): Instant? = preferences.getJavaInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
+    fun returnTime(): Instant? = preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME)
 
     /** Return at [time] today, or tomorrow if it has already passed. */
     fun setReturnTimeAt(time: LocalTime) {
-        val newReturnTime = if (time < LocalTime.now()) {
-            ZonedDateTime.now().plusDays(1).with(time)
-        } else {
-            ZonedDateTime.now().with(time)
-        }
+        val today = today()
+        val date = if (time < nowLocal().time) today.plusDays(1) else today
+        val newReturnTime = LocalDateTime(date, time).toInstant()
         setReturnTime(newReturnTime)
     }
 
     /** Tonight's sunset at the last known location, for the "Return before dark" row (no GPS fix is requested). */
     suspend fun getNextSunset(): Instant? = withContext(Dispatchers.Default) {
         val location = locationSubsystem.location
-        astronomy.getNextSunset(location, SunTimesMode.Actual)?.atZone(ZoneId.systemDefault())?.toInstant()
+        astronomy.getNextSunset(location, SunTimesMode.Actual)
     }
 
     /** Finds tonight's sunset from a fresh location and returns by it; cancel the job to give up. */
@@ -233,15 +243,15 @@ internal class TurnBackViewModel(
         return viewModelScope.launch {
             val sunsetTime = withContext(Dispatchers.IO) {
                 val location = sensorSubsystem.getLocation()
-                astronomy.getNextSunset(location, SunTimesMode.Actual)?.atZone(ZoneId.systemDefault())
+                astronomy.getNextSunset(location, SunTimesMode.Actual)
             }
             setReturnTime(sunsetTime ?: return@launch)
         }
     }
 
-    private fun setReturnTime(time: ZonedDateTime) {
-        val instant = time.toInstant()
-        val now = Instant.now()
+    private fun setReturnTime(time: Instant) {
+        val instant = time
+        val now = Clock.System.now()
         preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_TIME, turnBackTimeFor(now, instant))
         preferences.putInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME, instant)
         _alertSet.trySend(Unit)
@@ -257,8 +267,8 @@ internal class TurnBackViewModel(
 
         /** When to turn around to be back by [returnTime]: 40% of the time left, leaving the rest for the walk back. */
         fun turnBackTimeFor(now: Instant, returnTime: Instant): Instant {
-            val remainingMillisToReturn = Duration.between(now, returnTime).toMillis().coerceAtLeast(0)
-            return now.plusMillis((remainingMillisToReturn * TURN_BACK_PERCENT).toLong())
+            val remainingMillisToReturn = (returnTime - now).inWholeMilliseconds.coerceAtLeast(0)
+            return now.plus(((remainingMillisToReturn * TURN_BACK_PERCENT).toLong()).milliseconds)
         }
     }
 }
@@ -372,7 +382,7 @@ private fun TurnBackScreen(
     // When do I need to turn around? The countdown answers it.
     var turnBackTime by remember { mutableStateOf(loadTurnBackTime()) }
     var returnTime by remember { mutableStateOf(loadReturnTime()) }
-    var now by remember { mutableStateOf(Instant.now()) }
+    var now by remember { mutableStateOf(Clock.System.now()) }
     var sunset by remember { mutableStateOf<Instant?>(null) }
 
     LaunchedEffect(Unit) {
@@ -383,7 +393,7 @@ private fun TurnBackScreen(
         while (true) {
             turnBackTime = loadTurnBackTime()
             returnTime = loadReturnTime()
-            now = Instant.now()
+            now = Clock.System.now()
             delay(1000)
         }
     }
@@ -391,19 +401,19 @@ private fun TurnBackScreen(
     val formattedTurnBackTime = turnBackTime?.let { formatter.formatTime(it, includeSeconds = false) }
     val formattedReturnTime = returnTime?.let { formatter.formatTime(it, includeSeconds = false) }
     val formattedSunset = sunset?.let { formatter.formatTime(it, includeSeconds = false) }
-    var remaining = turnBackTime?.let { Duration.between(now, it) }
-    if (remaining?.isNegative == true) {
+    var remaining = turnBackTime?.let { (it - now) }
+    if (remaining?.isNegative() == true) {
         remaining = Duration.ZERO
     }
     val formattedRemainingTime = remaining?.let {
         formatter.formatDuration(
             it,
-            includeSeconds = it < Duration.ofMinutes(1)
+            includeSeconds = it < 1.minutes
         )
     }
     val isActive = returnTime != null && formattedRemainingTime != null
     // A passed turn-around is the one real danger here, so only then does the countdown take the error colour.
-    val isDue = isActive && remaining?.isZero == true
+    val isDue = isActive && remaining == Duration.ZERO
 
     TrailSensePage(
         title = stringResource(R.string.tool_turn_back),
@@ -427,7 +437,7 @@ private fun TurnBackScreen(
                         // The one shortcut kept beside the action: a quiet text link, not a second button.
                         // How long until sunset, not its clock time: a time alone read like "now" when the next
                         // sunset was tomorrow's, or minutes away.
-                        val untilSunset = sunset?.let { Duration.between(now, it) }?.takeIf { !it.isNegative }
+                        val untilSunset = sunset?.let { (it - now) }?.takeIf { !it.isNegative() }
                         TrailSenseButton(
                             text = if (untilSunset != null) {
                                 stringResource(
@@ -458,12 +468,14 @@ private fun TurnBackScreen(
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
             ) {
                 // Time left to go on, out of that plus the walk back: the sun's height above the horizon.
-                val walkBack = if (turnBackTime != null && returnTime != null) {
-                    Duration.between(turnBackTime, returnTime).toMillis().coerceAtLeast(1)
+                val currentTurnBack = turnBackTime
+                val currentReturn = returnTime
+                val walkBack = if (currentTurnBack != null && currentReturn != null) {
+                    (currentReturn - currentTurnBack).inWholeMilliseconds.coerceAtLeast(1)
                 } else {
                     1L
                 }
-                val left = remaining?.toMillis() ?: 0L
+                val left = remaining?.inWholeMilliseconds ?: 0L
                 TurnBackSun(
                     height = (left.toFloat() / (left + walkBack)).coerceIn(0f, 1f),
                     isDue = isDue,

@@ -3,7 +3,11 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.toInstant
+
+import com.kylecorry.trail_sense.shared.time.toLocalDateTime
+
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -78,7 +82,6 @@ import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -107,7 +110,7 @@ import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import kotlinx.coroutines.launch
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.math.abs
 
 @Composable
@@ -136,7 +139,7 @@ fun CloudResultsToolScreen(route: Route.CloudResults) {
         selection = viewModel.selection,
         title = stringResource(R.string.clouds),
         subtitle = formatter.formatDateTime(
-            viewModel.time.toZonedDateTime(),
+            viewModel.time,
             relative = true,
             abbreviateMonth = true
         ),
@@ -144,14 +147,14 @@ fun CloudResultsToolScreen(route: Route.CloudResults) {
         canSave = viewModel.selection.any { it.isSelected },
         onDateClick = {
             scope.launch {
-                val current = viewModel.time.toZonedDateTime().toLocalDateTime()
+                val current = viewModel.time.toLocalDateTime()
                 val newTime = CoroutinePickers.datetime(
                     context,
                     UserPreferences(appContext).use24HourTime,
                     current
                 )
                 if (newTime != null) {
-                    viewModel.time = newTime.toZonedDateTime().toInstant()
+                    viewModel.time = newTime.toInstant()
                 }
             }
         },
@@ -170,7 +173,7 @@ internal class CloudResultsViewModel(
     private val classifier: ICloudClassifier,
     private val loadImage: suspend (String) -> Bitmap?,
     private val clearTemp: suspend () -> Unit,
-    now: Instant = Instant.now()
+    now: Instant = Clock.System.now()
 ) : ViewModel() {
 
     var image by mutableStateOf<Bitmap?>(null)

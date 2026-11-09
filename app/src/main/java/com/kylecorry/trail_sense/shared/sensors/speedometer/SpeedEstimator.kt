@@ -5,7 +5,7 @@ import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.shared.ApproximateCoordinate
-import java.time.Duration
+import kotlin.time.Duration
 
 object SpeedEstimator {
 
@@ -21,11 +21,11 @@ object SpeedEstimator {
 
         val distance = lastLocation.coordinate.distanceTo(newLocation.coordinate)
         // If the time is zero, the speed is zero
-        if (time.isZero || time.isNegative) {
+        if (time == Duration.ZERO || time.isNegative()) {
             return Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)
         }
 
-        val speed = distance / (time.toMillis() / 1000f)
+        val speed = distance / (time.inWholeMilliseconds / 1000f)
 
         // Estimate the range of the speed, given that the locations are as far apart as the accuracy
         val maxDistance = distance + lastLocation.accuracy.value + newLocation.accuracy.value
@@ -33,8 +33,8 @@ object SpeedEstimator {
             (distance - lastLocation.accuracy.value - newLocation.accuracy.value).coerceAtLeast(
                 0f
             )
-        val maxSpeed = maxDistance / (time.toMillis() / 1000f)
-        val minSpeed = minDistance / (time.toMillis() / 1000f)
+        val maxSpeed = maxDistance / (time.inWholeMilliseconds / 1000f)
+        val minSpeed = minDistance / (time.inWholeMilliseconds / 1000f)
         val speedAccuracy = (maxSpeed - minSpeed) / 2f
 
         // Use the same logic as the GPS speedometer to determine if the speed is valid

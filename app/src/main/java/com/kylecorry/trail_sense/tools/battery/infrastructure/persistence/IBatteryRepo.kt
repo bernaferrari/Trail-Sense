@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.battery.infrastructure.persistence
 
 import androidx.lifecycle.LiveData
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
-import java.time.Instant
+import kotlin.time.Instant
 
 interface IBatteryRepo {
     fun get(): LiveData<List<BatteryReading>>

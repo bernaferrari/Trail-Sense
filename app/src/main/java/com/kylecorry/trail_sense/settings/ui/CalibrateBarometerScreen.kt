@@ -2,9 +2,9 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
-
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -40,8 +40,6 @@ import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import java.time.Duration
-import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -56,8 +54,8 @@ fun CalibrateBarometerToolScreen() {
             weatherSubsystem = WeatherSubsystem.getInstance(context),
             logger = WeatherLogger(
                 context,
-                Duration.ofSeconds(30),
-                Duration.ofMillis(500),
+                30.seconds,
+                500.milliseconds,
             )
         )
     }
@@ -130,20 +128,14 @@ internal class CalibrateBarometerViewModel(
 
     fun updateChart() {
         val displayReadings = history.filter {
-            JavaTime.between(
-                it.time,
-                Instant.now()
-            ) <= prefs.weather.pressureHistory
+            (Clock.System.now() - it.time) <= prefs.weather.pressureHistory
         }.map { it.pressureReading() }
 
         val useTemperature = prefs.weather.seaLevelFactorInTemp
         val useSeaLevel = prefs.weather.useSeaLevelPressure
 
         val displayRawReadings = uncalibratedHistory.filter {
-            JavaTime.between(
-                it.time,
-                Instant.now()
-            ) <= prefs.weather.pressureHistory
+            (Clock.System.now() - it.time) <= prefs.weather.pressureHistory
         }.map {
             if (useSeaLevel) {
                 Reading(it.value.seaLevel(useTemperature), it.time)

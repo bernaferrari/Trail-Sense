@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.shared.views
 
+import kotlin.time.Duration.Companion.seconds
+
+import kotlin.time.Duration.Companion.minutes
+
+import kotlin.time.Duration.Companion.hours
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,7 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
-import java.time.Duration
+import kotlin.time.Duration
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 
@@ -87,7 +93,7 @@ fun DurationInput(
         mutableStateOf(duration.toDurationText(showSeconds))
     }
     var isNegative by remember(duration, allowNegative) {
-        mutableStateOf(allowNegative && duration?.isNegative == true)
+        mutableStateOf(allowNegative && duration?.isNegative() == true)
     }
     var fieldValue by remember(durationText, isNegative, showSeconds) {
         val displayText = durationText.toDisplayDuration(context, showSeconds, isNegative)
@@ -167,10 +173,10 @@ fun DurationInput(
 }
 
 private fun Duration?.toDurationText(showSeconds: Boolean): String {
-    val clamped = (this?.abs() ?: Duration.ZERO).coerceAtMost(MAX_DURATION)
-    val hours = clamped.toHours().toInt()
-    val minutes = clamped.toMinutes().toInt() % 60
-    val seconds = if (showSeconds) clamped.seconds.toInt() % 60 else 0
+    val clamped = (this?.absoluteValue ?: Duration.ZERO).coerceAtMost(MAX_DURATION)
+    val hours = clamped.inWholeHours.toInt()
+    val minutes = clamped.inWholeMinutes.toInt() % 60
+    val seconds = if (showSeconds) clamped.inWholeSeconds.toInt() % 60 else 0
     return "%02d%02d%02d".format(hours, minutes, seconds)
 }
 
@@ -189,11 +195,11 @@ private fun String.toDuration(isNegative: Boolean): Duration {
     val hours = substring(0, 2).toInt()
     val minutes = substring(2, 4).toInt()
     val seconds = substring(4, 6).toInt()
-    val duration = Duration.ofHours(hours.toLong())
-        .plusMinutes(minutes.toLong())
-        .plusSeconds(seconds.toLong())
+    val duration = (hours.toLong()).hours
+        .plus((minutes.toLong()).minutes)
+        .plus((seconds.toLong()).seconds)
     return if (isNegative) {
-        duration.negated()
+        -duration
     } else {
         duration
     }
@@ -226,7 +232,7 @@ private fun String.toDisplayDuration(
     }
 }
 
-private val MAX_DURATION = Duration.ofHours(99).plusMinutes(99).plusSeconds(99)
+private val MAX_DURATION = 99.hours.plus(99.minutes).plus(99.seconds)
 private const val EMPTY_DURATION_TEXT = "000000"
 private const val PLACES_MINUTES = 3
 private const val PLACES_SECONDS = 5

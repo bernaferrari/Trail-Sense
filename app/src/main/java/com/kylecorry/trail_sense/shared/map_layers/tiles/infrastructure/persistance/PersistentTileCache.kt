@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance
 
+import kotlin.time.Clock
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -16,7 +18,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.FileOutputStream
-import java.time.Instant
 import java.util.UUID
 
 class PersistentTileCache(context: Context) {
@@ -133,7 +134,7 @@ class PersistentTileCache(context: Context) {
 
         val hasAlpha = bitmap.config == Bitmap.Config.ARGB_8888
         val sizeBytes = file.length()
-        val now = Instant.now()
+        val now = Clock.System.now()
 
         val cachedTile = CachedTile(
             id = 0,

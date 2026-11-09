@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.plugins.map_layers
 
+import kotlin.time.Clock
+
 import android.Manifest
 import android.content.Context
 import android.os.Bundle
@@ -16,9 +18,8 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.Geo
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.time.withTimeout
+import kotlinx.coroutines.withTimeout
 import java.io.ByteArrayInputStream
-import java.time.Instant
 
 class PluginGeoJsonSource(private val packageId: String, private val endpoint: String) : GeoJsonSource {
     private val plugins = getAppService<PluginSubsystem>()
@@ -38,7 +39,7 @@ class PluginGeoJsonSource(private val packageId: String, private val endpoint: S
             bounds.east,
             bounds.west,
             zoom,
-            params.getLong(MapLayerParams.PARAM_TIME, Instant.now().toEpochMilli())
+            params.getLong(MapLayerParams.PARAM_TIME, Clock.System.now().toEpochMilliseconds())
         )
         val geoJsonBytes = trySend(payload)
         if (geoJsonBytes == null || !PluginGuard.isValidGeoJsonPayload(geoJsonBytes)) {

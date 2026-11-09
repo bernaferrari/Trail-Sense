@@ -23,7 +23,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.GPSKalmanState
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
 import com.kylecorry.trail_sense.shared.sensors.gps.SharedGPSPipeline
 import com.kylecorry.trail_sense.shared.sensors.gps.SpeedSource
-import java.time.Instant
+import kotlin.time.Instant
 
 @Serializable
 data class GPSCacheData(
@@ -69,7 +69,7 @@ class CacheGPSModule(
             altitude = newData.altitude,
             bearing = bearing?.takeIf { it.isFinite() },
             speed = newData.speed.value,
-            updateTimeMillis = newData.eventTime.toEpochMilli(),
+            updateTimeMillis = newData.eventTime.toEpochMilliseconds(),
             horizontalAccuracy = newData.horizontalAccuracy,
             verticalAccuracy = newData.verticalAccuracy,
             kalmanState = newData.kalmanState,
@@ -101,7 +101,7 @@ class CacheGPSModule(
         data.altitude = cached?.altitude ?: 0f
         data.speed =
             Speed.from(cached?.speed ?: 0f, DistanceUnits.Meters, TimeUnits.Seconds)
-        data.eventTime = Instant.ofEpochMilli(cached?.updateTimeMillis ?: 0L)
+        data.eventTime = Instant.fromEpochMilliseconds(cached?.updateTimeMillis ?: 0L)
         data.eventTimeElapsedNanos = cached?.elapsedRealtimeNanos ?: 0L
         data.speedSource = cached?.speedSource?.let { SpeedSource.entries.withId(it) }
             ?: SpeedSource.Unknown

@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence
 
-import kotlin.time.toJavaInstant
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -11,7 +9,7 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "lightning")
 data class LightningStrikeEntity(
@@ -30,7 +28,7 @@ data class LightningStrikeEntity(
     companion object {
         fun from(reading: Reading<LightningStrike>): LightningStrikeEntity {
             return LightningStrikeEntity(
-                reading.time.toJavaInstant(),
+                reading.time,
                 reading.value.distance.meters().value
             ).also {
                 it.id = reading.value.id

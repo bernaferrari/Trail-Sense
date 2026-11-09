@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import kotlin.time.Clock
+
 import android.content.Context
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
@@ -11,7 +13,6 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapGeoreference
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
-import java.time.Instant
 
 class CreateMapFromImageCommand(
     context: Context,
@@ -41,7 +42,7 @@ class CreateMapFromImageCommand(
                 Size(imageSize.width.toFloat(), imageSize.height.toFloat()),
                 rotation = rotation.toFloat()
             ),
-            createdOn = Instant.now()
+            createdOn = Clock.System.now()
         )
 
         val id = service.add(map)

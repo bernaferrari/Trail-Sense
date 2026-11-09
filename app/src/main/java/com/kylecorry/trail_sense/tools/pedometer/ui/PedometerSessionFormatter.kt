@@ -1,7 +1,8 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import kotlin.time.Clock
+
 import android.content.Context
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
@@ -11,7 +12,6 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
-import java.time.Instant
 
 internal class PedometerSessionFormatter(
     private val context: Context,
@@ -20,10 +20,10 @@ internal class PedometerSessionFormatter(
     private val prefs: UserPreferences
 ) {
     fun title(period: StepTrackingPeriod): String {
-        val endTime = period.endTime ?: Instant.now()
+        val endTime = period.endTime ?: Clock.System.now()
         return formatter.formatTimeSpan(
-            period.startTime.toZonedDateTime(),
-            endTime.toZonedDateTime(),
+            period.startTime,
+            endTime,
             relative = true
         )
     }
@@ -43,7 +43,7 @@ internal class PedometerSessionFormatter(
                 Units.getDecimalPlaces(distance.units),
                 false
             ),
-            if (duration.seconds > 0) {
+            if (duration.inWholeSeconds > 0) {
                 formatter.formatSpeed(speed.value)
             } else {
                 context.getString(R.string.dash)

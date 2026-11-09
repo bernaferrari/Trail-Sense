@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.infrastructure
 
+import kotlin.time.Duration.Companion.days
+
 import android.content.Context
 import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
 import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
@@ -7,7 +9,7 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.infrastructure.PreferenceRepo
 import com.kylecorry.trail_sense.tools.pedometer.domain.AveragePaceTimeMode
-import java.time.Duration
+import kotlin.time.Duration
 
 class PedometerPreferences(context: Context) : PreferenceRepo(context), IPedometerPreferences {
     override var isEnabled by BooleanPreference(
@@ -60,10 +62,10 @@ class PedometerPreferences(context: Context) : PreferenceRepo(context), IPedomet
     override var stepHistory: Duration
         get() {
             val days = cache.getInt(getString(R.string.pref_pedometer_history_days)) ?: 30
-            return Duration.ofDays(days.toLong())
+            return (days.toLong()).days
         }
         set(value) {
-            val days = value.toDays().toInt()
+            val days = value.inWholeDays.toInt()
             cache.putInt(getString(R.string.pref_pedometer_history_days), if (days > 0) days else 1)
         }
 }

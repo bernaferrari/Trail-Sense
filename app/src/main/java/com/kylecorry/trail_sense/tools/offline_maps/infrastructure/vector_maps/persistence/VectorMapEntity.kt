@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "offline_map_files", indices = [Index(value = ["parent"])])
 data class VectorMapEntity(
@@ -38,7 +38,7 @@ data class VectorMapEntity(
                 ?: VectorMapFileType.Mapsforge,
             path,
             sizeBytes,
-            Instant.ofEpochMilli(createdOn),
+            Instant.fromEpochMilliseconds(createdOn),
             if (hasLatitudeBounds && hasLongitudeBounds) {
                 CoordinateBounds(north, east, south, west)
             } else {
@@ -57,7 +57,7 @@ data class VectorMapEntity(
                 file.type.id,
                 file.path,
                 file.sizeBytes,
-                file.createdOn.toEpochMilli(),
+                file.createdOn.toEpochMilliseconds(),
                 file.bounds?.north,
                 file.bounds?.east,
                 file.bounds?.south,

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.turn_back.services
 
+import kotlin.time.Duration.Companion.days
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -7,7 +9,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.turn_back.TurnBackToolRegistration
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
 import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackKeys
-import java.time.Duration
+import kotlin.time.Duration
 
 class TurnBackToolService(private val context: Context) : ToolService {
 
@@ -18,7 +20,7 @@ class TurnBackToolService(private val context: Context) : ToolService {
     override val name: String = context.getString(R.string.tool_turn_back)
 
     override fun getFrequency(): Duration {
-        return Duration.ofDays(1)
+        return 1.days
     }
 
     override fun isRunning(): Boolean {

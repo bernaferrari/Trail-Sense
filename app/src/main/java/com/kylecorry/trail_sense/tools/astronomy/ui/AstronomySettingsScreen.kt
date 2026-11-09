@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import kotlin.time.Duration.Companion.minutes
+
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -42,7 +44,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
-import java.time.Duration
 
 @Composable
 fun AstronomySettingsToolScreen() {
@@ -302,7 +303,7 @@ fun AstronomySettingsToolScreen() {
 
 private fun timeOptions(formatter: FormatService, minutes: List<Long>): List<SettingsOption> {
     return minutes.map {
-        SettingsOption(it.toString(), formatter.formatDuration(Duration.ofMinutes(it)))
+        SettingsOption(it.toString(), formatter.formatDuration(it.minutes))
     }
 }
 

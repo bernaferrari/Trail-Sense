@@ -67,7 +67,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.time.Duration
+import kotlin.time.Duration
 
 @Composable
 fun CalibrateAltimeterToolScreen() {

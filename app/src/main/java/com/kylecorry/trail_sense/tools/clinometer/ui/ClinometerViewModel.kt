@@ -1,13 +1,16 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
+import kotlin.time.Clock
+
+import kotlin.time.Duration.Companion.milliseconds
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.units.Distance
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -34,7 +37,7 @@ internal enum class ClinometerHoldResult {
  */
 internal class ClinometerViewModel(
     private val baselineDistance: () -> Distance?,
-    private val now: () -> Instant = Instant::now
+    private val now: () -> Instant = { Clock.System.now() }
 ) : ViewModel() {
 
     var useCamera by mutableStateOf(true)
@@ -112,7 +115,8 @@ internal class ClinometerViewModel(
         isHolding = false
 
         val deltaAngle = abs(incline - (lockedIncline1 ?: 0f))
-        val deltaTime = Duration.between(lockStartTime, now())
+        val end = now()
+        val deltaTime = end - (lockStartTime ?: end)
         if (deltaAngle < MINIMUM_HOLD_ANGLE || deltaTime < MINIMUM_HOLD_DURATION) {
             if (hadLock) {
                 clearLock()
@@ -161,7 +165,7 @@ internal class ClinometerViewModel(
     }
 
     companion object {
-        private val MINIMUM_HOLD_DURATION = Duration.ofMillis(200)
+        private val MINIMUM_HOLD_DURATION = 200.milliseconds
         private const val MINIMUM_HOLD_ANGLE = 0.5f
     }
 }

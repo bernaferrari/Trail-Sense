@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem
 
+import kotlin.time.Instant
+
 import com.kylecorry.luna.subscriptions.ISubscription
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateClassification
@@ -11,9 +13,8 @@ import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
-import java.time.LocalDate
-import java.time.Month
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 
 // TODO: Split into two subsystems: Weather and Weather Monitor
 interface IWeatherSubsystem {
@@ -22,15 +23,15 @@ interface IWeatherSubsystem {
     suspend fun getWeather(): CurrentWeather
     suspend fun getHistory(): List<WeatherObservation>
     suspend fun getTemperature(
-        time: ZonedDateTime,
+        time: Instant,
         location: Coordinate? = null,
         elevation: Distance? = null,
         calibrated: Boolean = true
     ): Reading<Temperature>
 
     suspend fun getTemperatures(
-        start: ZonedDateTime,
-        end: ZonedDateTime,
+        start: Instant,
+        end: Instant,
         location: Coordinate? = null,
         elevation: Distance? = null,
         calibrated: Boolean = true

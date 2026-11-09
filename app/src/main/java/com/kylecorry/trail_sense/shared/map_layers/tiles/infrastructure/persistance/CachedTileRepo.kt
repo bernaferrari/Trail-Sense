@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.trail_sense.shared.andromeda_temp.files.CacheFileSystem
@@ -8,8 +11,7 @@ import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.main.persistence.ICleanable
 import com.kylecorry.trail_sense.shared.getUpsertedId
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 
 class CachedTileRepo private constructor(context: Context) : ICleanable {
 
@@ -29,7 +31,7 @@ class CachedTileRepo private constructor(context: Context) : ICleanable {
     }
 
     suspend fun deleteCreatedBefore(instant: Instant) = onIO {
-        dao.deleteCreatedBefore(instant.toEpochMilli())
+        dao.deleteCreatedBefore(instant.toEpochMilliseconds())
     }
 
     suspend fun deleteLeastRecentlyUsed(count: Int) = onIO {
@@ -40,8 +42,8 @@ class CachedTileRepo private constructor(context: Context) : ICleanable {
         dao.getTotalSizeBytes()
     }
 
-    suspend fun updateLastUsedOn(id: Long, lastUsedOn: Instant = Instant.now()) = onIO {
-        dao.updateLastUsedOn(id, lastUsedOn.toEpochMilli())
+    suspend fun updateLastUsedOn(id: Long, lastUsedOn: Instant = Clock.System.now()) = onIO {
+        dao.updateLastUsedOn(id, lastUsedOn.toEpochMilliseconds())
     }
 
     suspend fun getFilenamesByKey(key: String): List<String> = onIO {
@@ -58,7 +60,7 @@ class CachedTileRepo private constructor(context: Context) : ICleanable {
 
     override suspend fun clean() = onIO {
         // Delete tiles older than 7 days
-        deleteCreatedBefore(Instant.now().minus(MAX_AGE))
+        deleteCreatedBefore(Clock.System.now().minus(MAX_AGE))
 
         // Get all filenames from the cache and files on disk
         val cachedFilenames = dao.getAllFilenames().toSet()
@@ -79,7 +81,7 @@ class CachedTileRepo private constructor(context: Context) : ICleanable {
 
     companion object {
         const val TILES_FOLDER = "tiles"
-        private val MAX_AGE = Duration.ofDays(7)
+        private val MAX_AGE = 7.days
 
         @SuppressLint("StaticFieldLeak")
         private var instance: CachedTileRepo? = null

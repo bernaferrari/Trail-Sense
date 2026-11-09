@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.shared.data
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.filters.LoessFilter
@@ -12,8 +12,6 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
-import java.time.Duration
-import java.time.Instant
 
 object DataUtils {
 
@@ -100,7 +98,7 @@ object DataUtils {
             null,
             { _, reading ->
                 Vector2(
-                    JavaTime.between(start, reading.time).toMillis() / 1000f,
+                    (reading.time - start).inWholeMilliseconds / 1000f,
                     select(reading.value)
                 )
             }

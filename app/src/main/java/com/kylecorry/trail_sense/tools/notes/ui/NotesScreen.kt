@@ -4,6 +4,12 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import com.kylecorry.trail_sense.shared.time.displayName
+
+import com.kylecorry.trail_sense.shared.time.DateNameWidth
+
+import com.kylecorry.trail_sense.shared.time.toLocalDateTime
+
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,10 +83,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.notes.domain.Note
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import kotlin.time.Instant
+import java.text.DateFormat
+import java.util.Date
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -198,7 +203,7 @@ private fun NoteRow(
     }
     val subtitle = preview.ifEmpty { timestamp.orEmpty() }
     val date = remember(note.createdOn) {
-        if (note.createdOn <= 0L) null else Instant.ofEpochMilli(note.createdOn).atZone(ZoneId.systemDefault())
+        if (note.createdOn <= 0L) null else Instant.fromEpochMilliseconds(note.createdOn).toLocalDateTime()
     }
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -249,7 +254,7 @@ private fun NoteRow(
                 )
                 if (date != null) {
                     Text(
-                        date.format(monthFormatter),
+                        date.month.displayName(DateNameWidth.Short),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -315,17 +320,14 @@ private fun NoteRow(
     }
 }
 
-private val monthFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM")
 
-private val timestampFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+private val timestampFormatter: DateFormat =
+    DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
 
 private fun formatTimestamp(epochMillis: Long): String? {
     if (epochMillis <= 0L) return null
     return runCatching {
-        Instant.ofEpochMilli(epochMillis)
-            .atZone(ZoneId.systemDefault())
-            .format(timestampFormatter)
+        timestampFormatter.format(Date(epochMillis))
     }.getOrNull()
 }
 

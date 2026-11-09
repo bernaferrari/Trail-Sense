@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.settings.backup
 
+import kotlin.time.Clock
+
 import android.content.Context
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.io.UriPicker
-import java.time.Instant
 
 class BackupCommand(private val context: Context, private val uriPicker: UriPicker) :
     CoroutineCommand {
@@ -26,7 +27,7 @@ class BackupCommand(private val context: Context, private val uriPicker: UriPick
 
         // Select the destination file
         val destination = uriPicker.create(
-            "trail-sense-${Instant.now().epochSecond}.zip",
+            "trail-sense-${Clock.System.now().epochSeconds}.zip",
             "application/zip"
         ) ?: return
 

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.arithmetic.Arithmetic
@@ -10,7 +9,7 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.temp.DerivativePredictor
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.temp.TimeSeriesEnsemble
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.random.Random
 
 class MonteCarloPressureForecaster {
@@ -34,9 +33,9 @@ class MonteCarloPressureForecaster {
         accelerationError: Float = 0.2f,
         accelerationSmoothing: Float = 0.15f
     ): List<Reading<Pressure>> {
-        val start = history.firstOrNull()?.time?.toEpochMilli() ?: return emptyList()
+        val start = history.firstOrNull()?.time?.toEpochMilliseconds() ?: return emptyList()
         val pressures = history.map {
-            val hours = (it.time.toEpochMilli() - start) / 3600000f
+            val hours = (it.time.toEpochMilliseconds() - start) / 3600000f
             Vector2(hours, it.value.hpa().value)
         }
         if (pressures.size <= 2) {
@@ -86,7 +85,7 @@ class MonteCarloPressureForecaster {
         }.map {
             Reading(
                 Pressure.hpa(it.value.y),
-                Instant.ofEpochMilli(start + (it.value.x * 3600000f).toLong())
+                Instant.fromEpochMilliseconds(start + (it.value.x * 3600000f).toLong())
             )
         }
     }

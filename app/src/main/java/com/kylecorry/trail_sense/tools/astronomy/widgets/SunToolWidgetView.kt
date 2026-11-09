@@ -29,14 +29,14 @@ class SunToolWidgetView : SimpleToolWidgetView() {
         return if (sun.nextRise != null && sun.nextTransition == AstronomyTransition.Rise) {
             ToolWidgetContent.Simple(
                 title = context.getString(R.string.sunrise),
-                subtitle = formatService.formatTime(sun.nextRise.toLocalTime(), includeSeconds = false),
+                subtitle = sun.nextRise?.let { formatService.formatTime(it, includeSeconds = false) } ?: "",
                 icon = TrailIcons.SunriseNotification,
                 clickAction = clickAction
             )
         } else if (sun.nextSet != null && sun.nextTransition == AstronomyTransition.Set) {
             ToolWidgetContent.Simple(
                 title = context.getString(R.string.sunset),
-                subtitle = formatService.formatTime(sun.nextSet.toLocalTime(), includeSeconds = false),
+                subtitle = sun.nextSet?.let { formatService.formatTime(it, includeSeconds = false) } ?: "",
                 icon = TrailIcons.SunsetNotification,
                 clickAction = clickAction
             )

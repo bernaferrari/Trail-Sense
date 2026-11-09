@@ -30,7 +30,7 @@ class DebugWeatherCommand(
         val data = header + smoothed.map {
             val originalReading = original.firstOrNull { r -> r.time == it.time }
             listOf(
-                it.time.toEpochMilli(),
+                it.time.toEpochMilliseconds(),
                 originalReading?.value?.pressure,
                 originalReading?.value?.altitude,
                 originalReading?.value?.seaLevel(useTemperature = factorInTemperature)?.value,

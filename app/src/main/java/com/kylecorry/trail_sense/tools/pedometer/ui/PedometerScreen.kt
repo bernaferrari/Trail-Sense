@@ -2,6 +2,16 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import com.kylecorry.trail_sense.shared.time.today
+
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+
+import com.kylecorry.trail_sense.shared.time.minusDays
+
+import com.kylecorry.trail_sense.shared.time.plusDays
+
 import com.kylecorry.trail_sense.shared.andromeda_temp.sense.pedometer.AndroidPedometer
 
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
@@ -95,7 +105,6 @@ import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.luna.topics.generic.getOrNull
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -132,9 +141,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
@@ -212,7 +220,7 @@ internal fun PedometerScreen(
 
     val steps = openPeriod?.steps ?: 0L
     val distance = getDistance(steps, paceCalculator, prefs)
-    val lastReset = openPeriod?.startTime?.toZonedDateTime()
+    val lastReset = openPeriod?.startTime
     val state = pedometer.state.getOrNull() ?: FeatureState.Off
     val title = formatService.formatDistance(
         distance,
@@ -220,7 +228,7 @@ internal fun PedometerScreen(
         false
     )
     val resetLabel = lastReset?.let { reset ->
-        val dateString = if (reset.toLocalDate() == LocalDate.now()) {
+        val dateString = if (reset.toLocalDate() == today()) {
             formatService.formatTime(reset.toLocalTime(), false)
         } else {
             formatService.formatRelativeDate(reset.toLocalDate())
@@ -392,10 +400,10 @@ private fun HourlyStepsHistory(
     val context = LocalContext.current
     val stepTracker = remember { getAppService<StepTrackerService>() }
     // Saveable so the chosen day and hour survive the history scrolling out of the lazy page and back.
-    var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
+    var selectedDate by rememberSaveable { mutableStateOf(today()) }
     var selectedStart by rememberSaveable { mutableStateOf<Instant?>(null) }
     var hourlySteps by remember { mutableStateOf<List<HourlyStepCount>>(emptyList()) }
-    val today = LocalDate.now()
+    val today = today()
     val historyTick = if (selectedDate == today) refreshKey / 4 else 0
 
     LaunchedEffect(selectedDate, historyTick) {
@@ -409,7 +417,7 @@ private fun HourlyStepsHistory(
     }
 
     fun selectDate(date: LocalDate) {
-        val clamped = if (date.isAfter(today)) today else date
+        val clamped = if ((date > today)) today else date
         if (clamped == selectedDate) {
             return
         }
@@ -461,7 +469,7 @@ private fun HourlyStepsHistory(
                                         }
                                     }
                                 },
-                                onLongClick = { selectDate(LocalDate.now()) }
+                                onLongClick = { selectDate(today()) }
                             )
                             .padding(vertical = TrailSenseSpacing.md),
                         textAlign = TextAlign.Center,
@@ -470,7 +478,7 @@ private fun HourlyStepsHistory(
                     )
                     // Hidden rather than disabled on today: there's no tomorrow to go to.
                     Box(modifier = Modifier.size(TrailSenseSize.minimumTouchTarget)) {
-                        if (selectedDate.isBefore(today)) {
+                        if ((selectedDate < today)) {
                             IconButton(
                                 onClick = { selectDate(selectedDate.plusDays(1)) },
                                 modifier = Modifier.testTag("hourly_steps_next")

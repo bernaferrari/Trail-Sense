@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.overrides
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+
 import android.content.Context
 import android.os.SystemClock
 import com.kylecorry.andromeda.sense.location.Satellite
@@ -12,11 +15,10 @@ import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.IntervalSensor
 import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 
 class OverrideGPS(context: Context, updateFrequency: Long = 1000L) :
-    IntervalSensor(Duration.ofMillis(updateFrequency)),
+    IntervalSensor(updateFrequency.milliseconds),
     ISatelliteGPS, InactiveGPS {
 
     private val userPrefs by lazy { UserPreferences(context) }

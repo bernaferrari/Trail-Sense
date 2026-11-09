@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -31,7 +30,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         val userPrefs = DependencyRegistry.get<UserPreferences>()
 
         val returnTime =
-            prefs.preferences.getJavaInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME) ?: return
+            prefs.preferences.getInstant(TurnBackKeys.PREF_TURN_BACK_RETURN_TIME) ?: return
 
         val formattedReturnTime =
             FormatService.getInstance(context).formatTime(returnTime, includeSeconds = false)
@@ -80,7 +79,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
 
         fun start(context: Context) {
             val prefs = PreferencesSubsystem.getInstance(context)
-            val turnBackTime = prefs.preferences.getJavaInstant(
+            val turnBackTime = prefs.preferences.getInstant(
                 TurnBackKeys.PREF_TURN_BACK_TIME
             ) ?: return
 

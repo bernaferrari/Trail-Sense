@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.persistence
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(
     tableName = "step_count_buckets",
@@ -30,7 +31,7 @@ data class StepCountBucketEntity(
             startTime = startTime,
             endTime = endTime,
             steps = steps,
-            activeTime = Duration.ofMillis(activeTime)
+            activeTime = activeTime.milliseconds
         )
     }
 
@@ -41,7 +42,7 @@ data class StepCountBucketEntity(
                 startTime = bucket.startTime,
                 endTime = bucket.endTime,
                 steps = bucket.steps,
-                activeTime = bucket.activeTime.toMillis()
+                activeTime = bucket.activeTime.inWholeMilliseconds
             ).also {
                 it.id = bucket.id
             }

@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.andromeda_temp.background.services
 
+import kotlin.time.Duration.Companion.minutes
+
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
@@ -8,7 +10,8 @@ import com.kylecorry.trail_sense.shared.andromeda_temp.background.TaskSchedulerF
 import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.BroadcastReceiverTopic
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.ITimer
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.toJavaDuration
 
 /**
  * A base service for running a background task on an interval.
@@ -18,7 +21,7 @@ import java.time.Duration
  * @param useOneTimeWorkers Use one time workers instead of a periodic worker when over the worker threshold. Using one time workers can lead to slightly more on time intervals and it also allows variable durations.
  */
 abstract class IntervalService(
-    private val workerThreshold: Duration = Duration.ofMinutes(15),
+    private val workerThreshold: Duration = 15.minutes,
     private val wakelockDuration: Duration? = null,
     private val useOneTimeWorkers: Boolean = false,
 ) : AndromedaService() {
@@ -86,7 +89,7 @@ abstract class IntervalService(
                 acquireWakelock(tag)
             }
             isWakelockManaged = !holdWakelockWhenBelowThreshold
-            timer.interval(period)
+            timer.interval(period.toJavaDuration())
         } else {
             isWakelockManaged = true
             receiver.subscribe(this::onReceive)
@@ -116,7 +119,7 @@ abstract class IntervalService(
         if (!isEnabled) {
             return false
         }
-        timer.once(Duration.ZERO)
+        timer.once(java.time.Duration.ZERO)
         if (useOneTimeWorkers) {
             oneTimeWorker.cancel()
             oneTimeWorker.once(period)

@@ -4,7 +4,7 @@ import com.kylecorry.luna.specifications.Specification
 import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.IsTodaySpecification
-import java.time.Instant
+import kotlin.time.Instant
 
 class DailyStepResetCommand(
     private val preferences: IPedometerPreferences,

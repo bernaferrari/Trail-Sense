@@ -19,7 +19,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorScheduler
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorService
-import java.time.Duration
+import kotlin.time.Duration
 
 class WeatherMonitorToolService(private val context: Context) : ToolService {
 
@@ -118,7 +118,7 @@ class WeatherMonitorToolService(private val context: Context) : ToolService {
             Tools.broadcast(
                 WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED,
                 Bundle().apply {
-                    putLong(WeatherToolRegistration.BROADCAST_PARAM_WEATHER_MONITOR_FREQUENCY, prefs.weather.weatherUpdateFrequency.toMillis())
+                    putLong(WeatherToolRegistration.BROADCAST_PARAM_WEATHER_MONITOR_FREQUENCY, prefs.weather.weatherUpdateFrequency.inWholeMilliseconds)
                 }
             )
         }

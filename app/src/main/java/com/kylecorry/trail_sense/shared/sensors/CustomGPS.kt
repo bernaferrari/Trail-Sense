@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
+import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
 import android.os.Handler
@@ -25,8 +25,8 @@ import com.kylecorry.trail_sense.shared.sensors.gps.GPSPipelineConsumer
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
 import com.kylecorry.trail_sense.shared.sensors.gps.SharedGPSPipeline
 import com.kylecorry.trail_sense.shared.sensors.gps.age
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 import java.util.concurrent.atomic.AtomicLong
 
 
@@ -105,7 +105,7 @@ class CustomGPS(
         val powerUsage = UserPreferences(context).gps.powerMode.powerUsage ?: GPSPowerUsage.High
         GPS(
             context.applicationContext,
-            LocationRequestConfig(frequency = gpsFrequency.toKotlin(), powerUsage = powerUsage)
+            LocationRequestConfig(frequency = gpsFrequency, powerUsage = powerUsage)
         )
     }
     private val satelliteStatusSensor by lazy {
@@ -124,7 +124,7 @@ class CustomGPS(
     private val updates = Subscription<ModularGPSData>(
         onStart = {
             baseGPS.start(this@CustomGPS::onLocationUpdate)
-            logger.debug(TAG, "Started GPS $id ($tag, ${gpsFrequency.toMillis()}ms)")
+            logger.debug(TAG, "Started GPS $id ($tag, ${gpsFrequency.inWholeMilliseconds}ms)")
             satelliteStatusSensor.start(this@CustomGPS::onGnssStatusUpdate)
             updateSatelliteStatus()
             val startupReading = readBaseGPS()
@@ -132,7 +132,7 @@ class CustomGPS(
         },
         onStop = {
             baseGPS.stop(this@CustomGPS::onLocationUpdate)
-            logger.debug(TAG, "Stopped GPS $id ($tag, ${gpsFrequency.toMillis()}ms)")
+            logger.debug(TAG, "Stopped GPS $id ($tag, ${gpsFrequency.inWholeMilliseconds}ms)")
             satelliteStatusSensor.stop(this@CustomGPS::onGnssStatusUpdate)
             consumer.stop()
         }
@@ -185,6 +185,6 @@ class CustomGPS(
     companion object {
         private const val TAG = "CustomGPS"
         private val nextId = AtomicLong(0)
-        private val RECENT_READING_THRESHOLD: Duration = Duration.ofMinutes(2)
+        private val RECENT_READING_THRESHOLD: Duration = 2.minutes
     }
 }

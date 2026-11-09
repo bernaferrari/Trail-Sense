@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.plugins.map_layers
 
+import kotlin.time.Clock
+
 import android.Manifest
 import android.content.Context
 import android.graphics.Bitmap
@@ -16,7 +18,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.ByteArrayInputStream
-import java.time.Instant
 
 class PluginTileSource(private val packageId: String, private val endpoint: String) : TileSource {
 
@@ -33,7 +34,7 @@ class PluginTileSource(private val packageId: String, private val endpoint: Stri
             tile.x,
             tile.y,
             tile.z,
-            params.getLong(MapLayerParams.PARAM_TIME, Instant.now().toEpochMilli())
+            params.getLong(MapLayerParams.PARAM_TIME, Clock.System.now().toEpochMilliseconds())
         )
         val imageBytes = trySend(payload)
         return imageBytes?.let { decodeBitmap(it) }

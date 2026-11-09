@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.andromeda_temp.background
 
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 interface IOneTimeTaskScheduler: ITaskScheduler {
     fun once(delay: Duration = Duration.ZERO)

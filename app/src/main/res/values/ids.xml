@@ -99,7 +99,6 @@
     <item name="navigate_btn" type="id" />
     <item name="edit_btn" type="id" />
     <item name="perspective" type="id" />
-    <item name="map_fragment" type="id" />
     <item name="map_recenter_btn" type="id" />
     <item name="map_menu_btn" type="id" />
     <item name="pack_list_title" type="id" />
@@ -269,7 +268,6 @@
     <item name="waypoint_coordinates" type="id" />
     <item name="waypoint_menu_btn" type="id" />
     <item name="override_reason" type="id" />
-    <item name="preferences_fragment" type="id" />
     <item name="empty_view_description" type="id" />
     <item name="overlay_mask" type="id" />
     <item name="fab_menu" type="id" />

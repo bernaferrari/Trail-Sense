@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
 import com.kylecorry.trail_sense.tools.tides.ui.DailyTideData
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import kotlin.math.max
 import kotlin.math.min
 

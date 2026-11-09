@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 import androidx.lifecycle.LiveData
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
-import java.time.Instant
+import kotlin.time.Instant
 
 interface IWaypointRepo {
     suspend fun add(value: PathPoint): Long

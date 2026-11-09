@@ -3,6 +3,9 @@
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -70,7 +73,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.graphics.shapes.Morph
 import androidx.graphics.shapes.toPath
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -108,7 +110,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import java.time.Duration
+import kotlin.time.Duration
 import kotlin.math.absoluteValue
 
 /**
@@ -135,7 +137,7 @@ fun SolarPanelScreen(
     val prefs = remember { UserPreferences(context) }
     val declination = remember { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
     var position by remember { mutableStateOf<Pair<Float, Bearing>?>(null) }
-    var nowDuration by remember { mutableStateOf(Duration.ofHours(2)) }
+    var nowDuration by remember { mutableStateOf(2.hours) }
     var alignToRestOfDay by remember { mutableStateOf(true) }
     var showDurationPicker by remember { mutableStateOf(false) }
     var gpsUpdateKey by remember { mutableIntStateOf(0) }
@@ -214,7 +216,7 @@ fun SolarPanelScreen(
 
     LaunchedEffect(alignToRestOfDay, nowDuration, gpsUpdateKey) {
         position = null
-        val duration = if (alignToRestOfDay) Duration.ofDays(1) else nowDuration
+        val duration = if (alignToRestOfDay) 1.days else nowDuration
         position = withContext(Dispatchers.IO) {
             solarPanelService.getBestPosition(
                 gps.location,
@@ -712,7 +714,7 @@ private fun getEnergyText(
         gps.location,
         orientation.y,
         compass.bearing.inverse(),
-        if (alignToRestOfDay) Duration.ofDays(1) else nowDuration,
+        if (alignToRestOfDay) 1.days else nowDuration,
         restrictToToday = alignToRestOfDay
     )
     // Rounds to 0.0 (night, or the sun is behind the panel): say so in words, not "Up to 0 kWh / m²".

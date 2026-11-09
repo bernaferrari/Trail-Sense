@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides.subsystem
 
+import com.kylecorry.trail_sense.shared.time.today
+
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.sol.units.Coordinate
@@ -15,7 +17,7 @@ import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
 import com.kylecorry.trail_sense.tools.tides.ui.DailyTideData
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 class TidesSubsystem private constructor(private val context: Context) {
 
@@ -41,11 +43,11 @@ class TidesSubsystem private constructor(private val context: Context) {
             if (isDailyStillValid(table, resolvedLocation)) {
                 lastDailyTide!!
             } else {
-                val newDaily = DailyTideCommand(tideService).execute(table, LocalDate.now())
+                val newDaily = DailyTideCommand(tideService).execute(table, today())
                 lastDailyTide = newDaily
                 lastTable = table
                 lastLocation = resolvedLocation
-                lastDate = LocalDate.now()
+                lastDate = today()
                 newDaily
             }
         }
@@ -84,7 +86,7 @@ class TidesSubsystem private constructor(private val context: Context) {
             return false
         }
 
-        return lastDate == LocalDate.now()
+        return lastDate == today()
     }
 
     companion object {

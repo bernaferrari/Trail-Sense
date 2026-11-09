@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
@@ -22,9 +26,8 @@ import com.kylecorry.trail_sense.tools.weather.domain.get3hTendency
 import com.kylecorry.trail_sense.tools.weather.domain.getLastCloud
 import com.kylecorry.trail_sense.tools.weather.domain.getTemperaturePrediction
 import com.kylecorry.trail_sense.tools.weather.infrastructure.IWeatherPreferences
-import java.time.Duration
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.Instant
 import kotlin.math.absoluteValue
 
 internal class WeatherForecaster(
@@ -45,7 +48,7 @@ internal class WeatherForecaster(
     ): CurrentWeather {
         val (arrival, forecast) = getForecast(observations, clouds, location)
         val last = observations.lastOrNull()
-        val lastCloud = clouds.getLastCloud(Duration.ofHours(4))
+        val lastCloud = clouds.getLastCloud(4.hours)
 
         val tendency = getTendency(forecast)
 
@@ -55,7 +58,7 @@ internal class WeatherForecaster(
                 forecast.last().conditions,
                 forecast.first().front,
                 arrival,
-                temperatureService.getTemperaturePrediction(ZonedDateTime.now()),
+                temperatureService.getTemperaturePrediction(Clock.System.now()),
                 emptyList()
             ),
             tendency,
@@ -89,7 +92,7 @@ internal class WeatherForecaster(
         )
 
         val arrival = arrivalCalculator.getArrivalTime(original, clouds)
-        val arrivesIn = arrival?.let { Duration.between(Instant.now(), it.time) } ?: Duration.ZERO
+        val arrivesIn = arrival?.let { (it.time - (Clock.System.now())) } ?: Duration.ZERO
 
         // The temperatures are only used when there is precipitation, so short circuit if not needed
         if (original.none { it.conditions.contains(WeatherCondition.Precipitation) }) {
@@ -97,9 +100,9 @@ internal class WeatherForecaster(
         }
 
         val temperatures = getHighLowTemperature(
-            ZonedDateTime.now(),
+            Clock.System.now(),
             arrivesIn,
-            Duration.ofHours(6)
+            6.hours
         )
 
         return arrival to getForecast(
@@ -114,7 +117,7 @@ internal class WeatherForecaster(
         val times = readings.map { it.time }
         val start = times.minOrNull() ?: return false
         val end = times.maxOrNull() ?: return false
-        return Duration.between(start, end) >= minDuration
+        return (end - start) >= minDuration
     }
 
     private fun getForecast(
@@ -143,7 +146,7 @@ internal class WeatherForecaster(
     }
 
     private suspend fun getHighLowTemperature(
-        startTime: ZonedDateTime,
+        startTime: Instant,
         start: Duration,
         duration: Duration
     ): Range<Temperature> {
@@ -154,6 +157,6 @@ internal class WeatherForecaster(
     }
 
     companion object {
-        private val minDuration = Duration.ofMinutes(10)
+        private val minDuration = 10.minutes
     }
 }

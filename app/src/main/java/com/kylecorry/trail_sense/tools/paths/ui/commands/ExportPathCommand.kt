@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
+import kotlin.time.Clock
+
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
@@ -18,7 +20,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.ui.PathNameFactory
 import kotlinx.coroutines.launch
-import java.time.Instant
 
 
 class ExportPathCommand(
@@ -69,7 +70,7 @@ class ExportPathCommand(
 
             // Export to a GPX file
             val gpx = PathGPXConverter().toGPX(pathsToExport)
-            val exportFile = "trail-sense-${Instant.now().epochSecond}.gpx"
+            val exportFile = "trail-sense-${Clock.System.now().epochSeconds}.gpx"
             val success = gpxService.export(gpx, exportFile)
 
             // Notify the user

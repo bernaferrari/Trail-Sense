@@ -6,7 +6,7 @@ import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
-import java.time.Duration
+import kotlin.time.Duration
 
 enum class MapLayerType {
     Overlay,

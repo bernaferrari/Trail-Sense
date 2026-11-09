@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.shared.sensors.altimeter
 
+import kotlin.time.Clock
+
 import android.content.Context
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import java.time.Instant
 
 class CachingAltimeterWrapper(context: Context, override val altimeter: Altimeter) :
     SharedSensor(),
