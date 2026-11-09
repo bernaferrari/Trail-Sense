@@ -22,7 +22,7 @@ object XMLConvert {
 
     fun parse(xml: String): XMLNode {
         val reader = xmlStreaming.newGenericReader(xml, expandEntities = true)
-        while (reader.hasNext() && reader.next() != EventType.START_ELEMENT) Unit
+        while (reader.hasNext() && reader.next() != EventType.START_ELEMENT) { }
         return readNode(reader)
     }
 
@@ -35,17 +35,17 @@ object XMLConvert {
             attributes[qualified(reader.getAttributePrefix(index), reader.getAttributeLocalName(index))] =
                 reader.getAttributeValue(index)
         }
-        var text: String? = null
+        val text = StringBuilder()
         val children = mutableListOf<XMLNode>()
         while (reader.hasNext()) {
             when (reader.next()) {
                 EventType.START_ELEMENT -> children.add(readNode(reader))
-                EventType.TEXT, EventType.CDSECT -> text = reader.text.takeUnless { it.isBlank() }
-                EventType.END_ELEMENT -> return XMLNode(tag, attributes, text, children)
+                EventType.TEXT, EventType.CDSECT -> text.append(reader.text)
+                EventType.END_ELEMENT -> return XMLNode(tag, attributes, text.toString().takeUnless { it.isBlank() }, children)
                 else -> Unit
             }
         }
-        return XMLNode(tag, attributes, text, children)
+        return XMLNode(tag, attributes, text.toString().takeUnless { it.isBlank() }, children)
     }
 
     private fun qualified(prefix: String, name: String): String = if (prefix.isEmpty()) name else "$prefix:$name"

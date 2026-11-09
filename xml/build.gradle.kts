@@ -20,6 +20,7 @@ kotlin {
     applyDefaultHierarchyTemplate()
     sourceSets {
         commonMain.dependencies { implementation("io.github.pdvrieze.xmlutil:core:1.0.2") }
+        commonTest.dependencies { implementation(kotlin("test")) }
         getByName("androidDeviceTest") {
             kotlin.srcDir("src/androidTest/java")
             dependencies {
