@@ -45,8 +45,6 @@ kmpZip = "2.1.0"
 korlibs = "6.0.0"
 ksensor = "9.40.0"
 ktor = "3.6.1"
-# LiteRT 2.x (2.3.2) removed the NNAPI delegate that ClassifierAcceleration.AndroidNnapi uses; 1.4.2 is the newest 1.x
-litert = "1.4.2"
 luna = "2.4.1"
 markdownRenderer = "0.46.0"
 moko-permissions = "0.20.1"
@@ -57,7 +55,6 @@ pdfbox = "3.0.8"
 pulsar = "0.1.0"
 qrcodeKotlin = "4.5.0"
 sol = "19.4.0"
-tensorflowLiteJvm = "2.21.0-1.5.14"
 xmlutil = "1.0.2.1"
 zoomimage = "1.7.0"
 zxing = "3.5.4"
@@ -125,7 +122,6 @@ ksensor-states-system = { module = "io.github.shadadman:ksensor-states-system", 
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktor" }
-litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
 luna = { module = "com.kylecorry:luna", version.ref = "luna" }
 markdownRenderer-m3 = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdownRenderer" }
 markdownRenderer-coil3 = { module = "com.mikepenz:multiplatform-markdown-renderer-coil3", version.ref = "markdownRenderer" }
@@ -148,7 +144,6 @@ pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 pulsar = { module = "com.swmansion:pulsar-kmp", version.ref = "pulsar" }
 qrcodeKotlin = { module = "io.github.g0dkar:qrcode-kotlin", version.ref = "qrcodeKotlin" }
 sol = { module = "com.kylecorry:sol", version.ref = "sol" }
-tensorflowLite-jvm = { module = "org.bytedeco:tensorflow-lite", version.ref = "tensorflowLiteJvm" }
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }
 zoomimage-compose-coil3 = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version.ref = "zoomimage" }
 zxing = { module = "com.google.zxing:core", version.ref = "zxing" }
