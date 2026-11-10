@@ -419,7 +419,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(Side.Right))
+        // The distance sheet has its own cancel button; the top bar's right action is the map's menu
+        click(desc(string(android.R.string.cancel)))
 
         longClick(R.id.map)
         click(string(R.string.beacon), exact = true)
@@ -472,7 +473,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(Side.Right))
+        // The distance sheet has its own cancel button; the top bar's right action is the map's menu
+        click(desc(string(android.R.string.cancel)))
 
         // Create path
         click(id("map_menu_btn"))
@@ -480,7 +482,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Distance")
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         hasText("Create path")
-        click(toolbarButton(Side.Right))
+        // The distance sheet has its own cancel button; the top bar's right action is the map's menu
+        click(desc(string(android.R.string.cancel)))
 
         // Layers
         click(id("map_menu_btn"))

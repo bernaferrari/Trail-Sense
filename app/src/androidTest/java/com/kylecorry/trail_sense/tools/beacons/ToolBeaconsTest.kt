@@ -54,7 +54,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     private fun createBeacon() {
         // An empty list offers its own "Save a place" button instead of the create menu
         any(
-            { click(id("save_place_btn"), waitForTime = 0) },
+            { click(id("save_place_btn"), waitForTime = 5000) },
             {
                 click(id("create_btn"))
                 click(string(R.string.beacon), exact = true)
