@@ -468,7 +468,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(id("map_menu_btn"))
         click("Change projection")
         click("Equidistant")
-        clickOk()
+        // Tapping a projection picks it; only a map being calibrated asks to confirm
+        clickOkIfShown()
 
         // Measure
         click(id("map_menu_btn"))
