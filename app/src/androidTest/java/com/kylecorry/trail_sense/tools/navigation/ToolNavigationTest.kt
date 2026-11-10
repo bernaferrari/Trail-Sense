@@ -26,6 +26,9 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.quickAction
+import com.kylecorry.trail_sense.test_utils.TestUtils.context
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Assume.assumeFalse
 import org.junit.Test
@@ -140,11 +143,14 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun hasWorkingQuickActions() {
-        click(toolbarButton(Side.Left))
+        // The top bar also holds the sensor status and the north reference, so the quick actions are found by
+        // the ones the navigation settings put on the left and right (Paths and Offline maps by default)
+        val navigationPrefs = UserPreferences(context).navigation
+        click(quickAction(navigationPrefs.leftButton))
         isVisible(R.id.paths_title)
         back()
 
-        click(toolbarButton(Side.Right))
+        click(quickAction(navigationPrefs.rightButton))
         clickOkIfShown()
         isVisible(R.id.map_list_title)
         back()
