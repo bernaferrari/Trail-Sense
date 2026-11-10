@@ -321,7 +321,7 @@ class SharedGPSPipelineTest {
         // The accepted fix was already delivered
         assertFalse(consumer.consumer.update(reading(2, 2.0).apply { altitude = 200f }))
         // Stopping the fired timer would cancel the timeout callback
-        verify(timer, times(3)).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
+        verify(timer, times(3)).once(SensorService.GPS_READ_TIMEOUT.inWholeMilliseconds)
         verify(timer, times(1)).stop()
 
         // Without a newer input, the rerun is the same fix and the reading stays timed out
@@ -485,10 +485,10 @@ class SharedGPSPipelineTest {
         val slow = Consumer(pipeline)
         fast.consumer.start()
         slow.consumer.start()
-        verify(timer).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
+        verify(timer).once(SensorService.GPS_READ_TIMEOUT.inWholeMilliseconds)
         fast.consumer.update(reading(1))
         fast.consumer.update(reading(2))
-        verify(timer, times(3)).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
+        verify(timer, times(3)).once(SensorService.GPS_READ_TIMEOUT.inWholeMilliseconds)
         assertFalse(slow.consumer.reading.isTimedOut)
 
         fireTimeout()
@@ -498,12 +498,12 @@ class SharedGPSPipelineTest {
         assertEquals(1, slow.notifications)
         slow.consumer.update(reading(2))
         assertTrue(slow.consumer.reading.isTimedOut)
-        verify(timer, times(3)).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
+        verify(timer, times(3)).once(SensorService.GPS_READ_TIMEOUT.inWholeMilliseconds)
 
         fast.consumer.update(reading(3))
         assertFalse(fast.consumer.reading.isTimedOut)
         assertFalse(slow.consumer.reading.isTimedOut)
-        verify(timer, times(4)).once(SensorService.GPS_READ_TIMEOUT.toJavaDuration())
+        verify(timer, times(4)).once(SensorService.GPS_READ_TIMEOUT.inWholeMilliseconds)
         slow.consumer.stop()
         fireTimeout()
         assertEquals(2, fast.notifications)
