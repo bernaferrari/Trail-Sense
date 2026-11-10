@@ -17,6 +17,8 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
@@ -179,9 +181,11 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
         canConvertDistance()
         canConvertTemperature()
 
-        back()
-
-        TestUtils.closeQuickActions()
+        // Tapping a quick action closes the quick actions. The converter sheet's first back can only hide the
+        // keyboard, so press back until the sheet is gone.
+        backUntil {
+            not { isVisible(desc(string(R.string.convert_swap_units)), waitForTime = 0) }
+        }
     }
 
 }
