@@ -114,7 +114,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
 
     private fun editBeacon() {
         click(id("edit_btn"))
-        hasText(string(R.string.create_beacon))
+        // Editing says so in the title
+        hasText(string(R.string.edit_beacon))
         hasText(id("beacon_name"), "Test beacon")
         hasText(id("beacon_location"), "42.000000°,  -72.000000°")
         hasText(id("beacon_elevation"), "1000")

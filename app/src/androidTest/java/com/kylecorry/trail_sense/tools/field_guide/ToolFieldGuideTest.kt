@@ -308,10 +308,11 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         back()
         click("Leave")
 
-        // Count on field guide page
+        // Count on field guide page: the sightings row says how many there are, and opens the list
         backUntil {
-            click("Sightings (1)")
+            hasText(id("field_guide_page_sightings"), "1 sighting")
         }
+        click(id("field_guide_page_sightings"))
 
         // Delete from the list
         click(id("field_guide_sighting_menu"))
