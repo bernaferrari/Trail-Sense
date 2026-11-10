@@ -25,8 +25,16 @@ import com.kylecorry.trail_sense.shared.time.atEndOfDay
 import com.kylecorry.trail_sense.shared.time.toLocalDate
 
 class SolarPanelService(
-    private val timeProvider: ZonedDateTimeProvider = SystemZonedDateTimeProvider()
+    private val timeProvider: ZonedDateTimeProvider = defaultTimeProvider
 ) {
+
+    companion object {
+        /**
+         * Where "now" comes from when no provider is given (the Solar panel screen). The system clock in the app;
+         * instrumented tests pin it to a sunny moment so the screen's estimates don't depend on the hour they run.
+         */
+        var defaultTimeProvider: ZonedDateTimeProvider = SystemZonedDateTimeProvider()
+    }
 
     /**
      * Gets the solar radiation in kWh / m^2
