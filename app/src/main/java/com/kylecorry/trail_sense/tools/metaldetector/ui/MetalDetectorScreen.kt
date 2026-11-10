@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import androidx.compose.runtime.SideEffect
+import androidx.compose.material3.SliderState
 import kotlin.time.Duration.Companion.milliseconds
 import com.kylecorry.andromeda.core.time.once
 import kotlin.time.Duration.Companion.seconds
@@ -786,10 +788,11 @@ private const val TRACE_CAPACITY = 150
 @Composable
 private fun ThresholdSlider(value: Float, label: String, onValueChange: (Float) -> Unit) {
     val scheme = MaterialTheme.colorScheme
+    val sliderState = remember { SliderState(value = value, trackRange = 0f..100f) }
+    SideEffect { sliderState.value = value }
     Slider(
-        value = value,
+        state = sliderState,
         onValueChange = onValueChange,
-        valueRange = 0f..100f,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = TrailSenseSpacing.sm)
@@ -813,8 +816,7 @@ private fun ThresholdSlider(value: Float, label: String, onValueChange: (Float) 
             }
         },
         track = { state ->
-            val fraction = ((state.value - state.valueRange.start) /
-                (state.valueRange.endInclusive - state.valueRange.start)).coerceIn(0f, 1f)
+            val fraction = state.coercedValueAsFraction
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

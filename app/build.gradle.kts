@@ -154,8 +154,8 @@ dependencies {
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.android)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kotlinx.serialization.json)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // AndroidX
@@ -188,7 +188,7 @@ dependencies {
     androidTestImplementation(composeBom)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:${libs.versions.material3Compose.get()}")
+    implementation(libs.compose.material3.adaptive.navigation.suite)
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
@@ -271,5 +271,5 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.kotlin)
     testImplementation("com.russhwolf:multiplatform-settings-test:1.3.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    testImplementation(libs.kotlinx.serialization.json)
 }

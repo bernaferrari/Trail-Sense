@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.magnifier.ui
 
+import androidx.compose.runtime.SideEffect
+import androidx.compose.material3.SliderState
 import androidx.compose.runtime.rememberCoroutineScope
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
@@ -258,8 +260,10 @@ private fun ZoomSlider(zoom: Float, onZoom: (Float) -> Unit, enabled: Boolean) {
         IconButton(onClick = { onZoom(zoom - ZOOM_STEP) }, enabled = enabled) {
             Icon(Icons.Default.ZoomOut, contentDescription = stringResource(R.string.zoom_out))
         }
+        val sliderState = remember { SliderState(value = zoom) }
+        SideEffect { sliderState.value = zoom }
         Slider(
-            value = zoom,
+            state = sliderState,
             onValueChange = onZoom,
             enabled = enabled,
             modifier = Modifier
@@ -293,7 +297,9 @@ private fun MagnifierToggle(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier.heightIn(min = height),
-        colors = ToggleButtonDefaults.tonalToggleButtonColors(
+        colors = ToggleButtonDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
             checkedContainerColor = MaterialTheme.colorScheme.primary,
             checkedContentColor = MaterialTheme.colorScheme.onPrimary
         ),

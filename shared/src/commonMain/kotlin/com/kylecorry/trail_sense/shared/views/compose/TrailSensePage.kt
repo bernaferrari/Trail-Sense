@@ -40,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonColors
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -353,12 +354,18 @@ object TrailSenseChoiceDefaults {
 
 /** The family's selection colours (WiFi Weakspot, Keepout): chosen = solid primary, the rest a quiet raised surface. */
 @Composable
-fun trailSenseChoiceColors() = ToggleButtonDefaults.toggleButtonColors(
-    checkedContainerColor = MaterialTheme.colorScheme.primary,
-    checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-)
+fun trailSenseChoiceColors(): ToggleButtonColors {
+    val scheme = MaterialTheme.colorScheme
+    // Built directly: the defaults factory is named differently across the Material 3 1.5 pre-releases
+    return ToggleButtonColors(
+        containerColor = scheme.surfaceContainerHighest,
+        contentColor = scheme.onSurfaceVariant,
+        disabledContainerColor = scheme.onSurface.copy(alpha = 0.1f),
+        disabledContentColor = scheme.onSurface.copy(alpha = 0.38f),
+        checkedContainerColor = scheme.primary,
+        checkedContentColor = scheme.onPrimary
+    )
+}
 
 /**
  * A choice button's content with a fixed label position: the label is centred in the button (shifted only when it

@@ -27,7 +27,7 @@ kotlin {
             // Compose Multiplatform artifacts
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material3)
+            implementation(libs.cmp.material3)
             implementation(compose.ui)
             implementation(compose.materialIconsExtended)
             // Google Sans Flex (OFL), the family's M3 Expressive typeface

@@ -47,7 +47,7 @@ kotlin {
             api(libs.andromeda.preferences)
             api(libs.andromeda.geojson)
             // Persisted state (e.g. GPSKalmanState) goes through Andromeda's kotlinx.serialization JsonConvert
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+            implementation(libs.kotlinx.serialization.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
