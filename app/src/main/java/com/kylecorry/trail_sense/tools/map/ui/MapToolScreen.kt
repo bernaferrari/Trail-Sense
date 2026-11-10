@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.toArgb
@@ -784,7 +785,7 @@ private fun MapHost(
         views.map.setBackgroundColor(canvasColor.toArgb())
     }
     Box(modifier = modifier) {
-        views.map.Content(Modifier.fillMaxSize())
+        views.map.Content(Modifier.fillMaxSize().testTag("map"))
         if (views.mapAttribution.isVisible) {
             Box(
                 modifier = Modifier

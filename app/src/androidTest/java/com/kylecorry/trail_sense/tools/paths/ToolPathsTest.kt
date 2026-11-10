@@ -270,7 +270,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         scrollUntil { click(R.id.path_color) }
         clickOk()
 
-        click("Dotted")
+        // The line style row can be below the fold under the color row
+        scrollUntil { click("Dotted") }
         hasOptions("Solid", "Dotted", "Arrow", "Dashed", "Square", "Diamond", "Cross")
         click("Solid")
         clickOk()
@@ -377,7 +378,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun changePointStyle(previousStyle: String, newStyle: String) {
-        click(previousStyle)
+        scrollUntil { click(previousStyle) }
         click(newStyle)
         clickOk()
         hasText(newStyle)
@@ -518,9 +519,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
         // Wait for the path to be created
         // The backtrack bar is the first clickable in the list, so look for the recorded path's row by its
-        // point count
+        // point count, which ends a subtitle such as "Temporary · 1m · 3 points"
         val recordedPath = {
-            view(By.clickable(true).hasDescendant(By.text(Pattern.compile("\\d+ points?"))))
+            view(By.clickable(true).hasDescendant(By.text(Pattern.compile(".*\\b\\d+ points?$"))))
         }
         isVisible(recordedPath, waitForTime = GPS_WAIT_FOR_TIMEOUT)
 

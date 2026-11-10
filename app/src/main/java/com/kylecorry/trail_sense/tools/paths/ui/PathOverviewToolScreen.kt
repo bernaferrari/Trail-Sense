@@ -551,7 +551,7 @@ fun PathOverviewToolScreen(
                 baseDistanceUnits = units,
                 formatter = formatService,
                 onPointClick = viewModel::selectPoint,
-                modifier = chartModifier
+                modifier = chartModifier.testTag("chart")
             )
         },
         onElevationMinClick = {
