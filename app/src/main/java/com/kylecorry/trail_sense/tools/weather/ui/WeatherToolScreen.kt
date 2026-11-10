@@ -147,6 +147,7 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWea
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
+import com.kylecorry.trail_sense.tools.weather.ui.fields.LastUpdatedWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.AlertWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.CloudWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.FrontWeatherField
@@ -309,6 +310,9 @@ fun WeatherToolScreen(
             // System
             PressureSystemWeatherField(weather.observation?.pressure),
             FrontWeatherField(weather.prediction.front),
+
+            // Last updated
+            LastUpdatedWeatherField(weather.observation?.time),
         )
         fields.mapNotNull { it.getListItem(context) }
     }

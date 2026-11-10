@@ -255,6 +255,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         relaunchTool {
             TestData.addPressureTrend(start, end, duration, interval = interval)
         }
-        optional { clickOk(waitForTime = 1000) }
+        // The historic temperature disclaimer can take a few seconds to open
+        optional { clickOk(waitForTime = 4000) }
     }
 }
