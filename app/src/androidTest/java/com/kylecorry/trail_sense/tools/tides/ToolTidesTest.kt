@@ -38,7 +38,8 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
     }
 
     private fun canEditTide() {
-        click(id("tide_table_menu", index = 1))
+        // Only editable tables have a menu, so the nearby (auto) table has none
+        click(id("tide_table_menu"))
         click(string(R.string.edit))
 
         hasText(string(R.string.tide_table))

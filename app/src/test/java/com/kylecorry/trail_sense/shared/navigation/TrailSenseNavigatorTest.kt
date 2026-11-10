@@ -34,6 +34,19 @@ internal class TrailSenseNavigatorTest {
     }
 
     @Test
+    fun openingTheFirstScreenFromAboveItKeepsAWayBack() {
+        // Settings is the first tab and the tools tab was opened on top of it
+        val navigator = TrailSenseNavigator()
+        navigator.setStartRoute(Route.Settings)
+        navigator.navigate(Route.Tools)
+        navigator.navigate(Route.Settings)
+
+        assertEquals(listOf(Route.Tools, Route.Settings), navigator.backStack.toList())
+        assertTrue(navigator.popBackStack())
+        assertEquals(Route.Tools, navigator.currentRoute)
+    }
+
+    @Test
     fun switchingTabsKeepsOnlyTheStartRoute() {
         val navigator = TrailSenseNavigator()
         navigator.setStartRoute(Route.Navigation())
