@@ -1318,8 +1318,14 @@ private fun NavigatorHost(
                     .height(64.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(Modifier.weight(1f)) {
+                // The sensor status, then which north the dial points to (upstream's north reference badge)
+                Row(
+                    Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     views.accuracyView.Content(quiet = true)
+                    views.northReferenceIndicator.Content()
                 }
                 views.navigationTitle.leftButton.Content(offContainerColor = androidx.compose.ui.graphics.Color.Transparent)
                 views.navigationTitle.rightButton.Content(offContainerColor = androidx.compose.ui.graphics.Color.Transparent)

@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
@@ -45,7 +46,7 @@ class NorthReferenceBadgeState(
     var onSettingsClick by mutableStateOf<(() -> Unit)?>(null)
 
     @Composable
-    fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
         if (!isVisible) {
             return
         }
@@ -60,13 +61,15 @@ class NorthReferenceBadgeState(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
+            modifier = modifier
+                .testTag("north_reference_indicator")
                 .animateContentSize()
                 .heightIn(min = 32.dp)
                 .clip(CircleShape)
                 .clickable(
                     enabled = showDetailsOnClick,
-                    onClick = { onSettingsClick?.invoke() ?: showDescription() }
+                    // As upstream: the tap explains the reference; its Settings button opens the compass settings
+                    onClick = { showDescription() }
                 )
         ) {
             Row(
