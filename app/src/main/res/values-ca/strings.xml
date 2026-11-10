@@ -554,4 +554,22 @@
     <string name="climate_continental">Continental</string>
     <string name="ticks">Paparres</string>
     <string name="muzzle_velocity">Velocitat inicial</string>
+    <string name="declination_from_compass">Brúixola</string>
+    <string name="places_turn_back_set">Defineix</string>
+    <string name="sky_seconds_short">%s s</string>
+    <string name="sky_strike_time">Temps</string>
+    <string name="sky_strike_last_distance">Distància</string>
+    <string name="sky_diagnostics_tools">Eines</string>
+    <string name="notes">Notes</string>
+    <string name="theme_mode_auto">Automàtic</string>
+    <string name="light_level_daylight">Llum del dia</string>
+    <string name="back">Enrere</string>
+    <string name="more_options">"Més opcions"</string>
+    <string name="note_more_options">"Més opcions"</string>
+    <string name="beacon_more_options">"Més opcions"</string>
+    <string name="packs_more_options">"Més opcions"</string>
+    <string name="tides_more_options">"Més opcions"</string>
+    <string name="survival_guide_section_open">"S\'ha desplegat"</string>
+    <string name="survival_guide_section_closed">"S\'ha replegat"</string>
+    <string name="field_guide_more_options">"Més opcions"</string>
 </resources>

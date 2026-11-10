@@ -45,4 +45,13 @@
     <string name="pressure_12_hours">१२ घण्टा</string>
     <string name="pressure_4_hours">४ घण्टा</string>
     <string name="pref_pressure_history_title">दवाव ईतिहास</string>
+    <string name="back">पछाडि</string>
+    <string name="more_options">"थप विकल्पहरू"</string>
+    <string name="note_more_options">"थप विकल्पहरू"</string>
+    <string name="beacon_more_options">"थप विकल्पहरू"</string>
+    <string name="packs_more_options">"थप विकल्पहरू"</string>
+    <string name="tides_more_options">"थप विकल्पहरू"</string>
+    <string name="survival_guide_section_open">"एक्स्पान्ड गरिएको छ"</string>
+    <string name="survival_guide_section_closed">"कोल्याप्स गरिएको छ"</string>
+    <string name="field_guide_more_options">"थप विकल्पहरू"</string>
 </resources>

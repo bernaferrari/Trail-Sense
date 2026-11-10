@@ -298,4 +298,21 @@
     <string name="my_location">ตำแหน่งของฉัน</string>
     <string name="compass_accuracy">ความแม่นยำของตำแหน่ง</string>
     <string name="gps_timeouts">การค้นหา GPS หมดเวลา</string>
+    <string name="declination_from_compass">เข็มทิศ</string>
+    <string name="places_maps_file">ไฟล์</string>
+    <string name="places_shape_sun">ดวงอาทิตย์</string>
+    <string name="sky_strike_last_distance">ระยะทาง</string>
+    <string name="sky_sensors_poor_label">น้อย</string>
+    <string name="sky_diagnostics_tools">เครื่องมือ</string>
+    <string name="theme_mode_sun">ดวงอาทิตย์</string>
+    <string name="light_meter_scale_bright">ดวงอาทิตย์</string>
+    <string name="back">กลับ</string>
+    <string name="more_options">"ตัวเลือกอื่น"</string>
+    <string name="note_more_options">"ตัวเลือกอื่น"</string>
+    <string name="beacon_more_options">"ตัวเลือกอื่น"</string>
+    <string name="packs_more_options">"ตัวเลือกอื่น"</string>
+    <string name="tides_more_options">"ตัวเลือกอื่น"</string>
+    <string name="survival_guide_section_open">"ขยายแล้ว"</string>
+    <string name="survival_guide_section_closed">"ยุบแล้ว"</string>
+    <string name="field_guide_more_options">"ตัวเลือกอื่น"</string>
 </resources>

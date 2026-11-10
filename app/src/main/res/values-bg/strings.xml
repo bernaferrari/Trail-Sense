@@ -45,4 +45,13 @@
     <string name="pressure_12_hours">12 часа</string>
     <string name="pressure_4_hours">4 часа</string>
     <string name="pref_pressure_history_title">История на налягането</string>
+    <string name="back">Назад</string>
+    <string name="more_options">"Още опции"</string>
+    <string name="note_more_options">"Още опции"</string>
+    <string name="beacon_more_options">"Още опции"</string>
+    <string name="packs_more_options">"Още опции"</string>
+    <string name="tides_more_options">"Още опции"</string>
+    <string name="survival_guide_section_open">"Разгънато"</string>
+    <string name="survival_guide_section_closed">"Свито"</string>
+    <string name="field_guide_more_options">"Още опции"</string>
 </resources>

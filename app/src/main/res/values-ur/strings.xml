@@ -20,4 +20,14 @@
     <string name="copied_to_clipboard_toast">کلپ بورڈ پر کاپی</string>
     <string name="plugin_connect_title">منسلک پلگ اِن ؟</string>
     <string name="plugin_connect_message">صرف %s سے جڑیں اگر آپ کو اس پر بھروسہ ہے۔</string>
+    <string name="sky_diagnostics_tools">اوزار</string>
+    <string name="back">واپس جائیں</string>
+    <string name="more_options">"مزید اختیارات"</string>
+    <string name="note_more_options">"مزید اختیارات"</string>
+    <string name="beacon_more_options">"مزید اختیارات"</string>
+    <string name="packs_more_options">"مزید اختیارات"</string>
+    <string name="tides_more_options">"مزید اختیارات"</string>
+    <string name="survival_guide_section_open">"پھیلایا گیا"</string>
+    <string name="survival_guide_section_closed">"سکیڑا گیا"</string>
+    <string name="field_guide_more_options">"مزید اختیارات"</string>
 </resources>

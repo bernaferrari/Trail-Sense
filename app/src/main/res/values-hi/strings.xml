@@ -45,4 +45,13 @@
     <string name="pressure_12_hours">१२ घंटे</string>
     <string name="pressure_4_hours">४ घंटे</string>
     <string name="pref_pressure_history_title">दबाव इतिहास</string>
+    <string name="back">वापस जाएं</string>
+    <string name="more_options">"ज़्यादा विकल्प"</string>
+    <string name="note_more_options">"ज़्यादा विकल्प"</string>
+    <string name="beacon_more_options">"ज़्यादा विकल्प"</string>
+    <string name="packs_more_options">"ज़्यादा विकल्प"</string>
+    <string name="tides_more_options">"ज़्यादा विकल्प"</string>
+    <string name="survival_guide_section_open">"बड़ा किया गया"</string>
+    <string name="survival_guide_section_closed">"छोटा किया गया"</string>
+    <string name="field_guide_more_options">"ज़्यादा विकल्प"</string>
 </resources>

@@ -54,4 +54,14 @@
     <string name="weather">Počasie</string>
     <string name="navigation">Navigácia</string>
     <string name="current_format">%s mA</string>
+    <string name="sky_diagnostics_tools">Nástroje</string>
+    <string name="back">Späť</string>
+    <string name="more_options">"Ďalšie možnosti"</string>
+    <string name="note_more_options">"Ďalšie možnosti"</string>
+    <string name="beacon_more_options">"Ďalšie možnosti"</string>
+    <string name="packs_more_options">"Ďalšie možnosti"</string>
+    <string name="tides_more_options">"Ďalšie možnosti"</string>
+    <string name="survival_guide_section_open">"Rozbalené"</string>
+    <string name="survival_guide_section_closed">"Zbalené"</string>
+    <string name="field_guide_more_options">"Ďalšie možnosti"</string>
 </resources>

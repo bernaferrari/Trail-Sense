@@ -46,4 +46,13 @@
     <string name="pressure_4_hours">4 ure</string>
     <string name="pref_pressure_history_title">Drukgeskiedenis</string>
     <string name="pref_monitor_weather_title">Monitor weer</string>
+    <string name="back">Terug</string>
+    <string name="more_options">"Nog opsies"</string>
+    <string name="note_more_options">"Nog opsies"</string>
+    <string name="beacon_more_options">"Nog opsies"</string>
+    <string name="packs_more_options">"Nog opsies"</string>
+    <string name="tides_more_options">"Nog opsies"</string>
+    <string name="survival_guide_section_open">"Uitgevou"</string>
+    <string name="survival_guide_section_closed">"Ingevou"</string>
+    <string name="field_guide_more_options">"Nog opsies"</string>
 </resources>

@@ -36,4 +36,14 @@
     <string name="precise_percent_format">%s%%</string>
     <string name="direction_north_west">NW</string>
     <string name="pref_privacy_policy_title">Andmekaitsepõhimõtted</string>
+    <string name="sky_diagnostics_tools">Tarvikud</string>
+    <string name="back">Tagasi</string>
+    <string name="more_options">"Rohkem valikuid"</string>
+    <string name="note_more_options">"Rohkem valikuid"</string>
+    <string name="beacon_more_options">"Rohkem valikuid"</string>
+    <string name="packs_more_options">"Rohkem valikuid"</string>
+    <string name="tides_more_options">"Rohkem valikuid"</string>
+    <string name="survival_guide_section_open">"Laiendatud"</string>
+    <string name="survival_guide_section_closed">"Ahendatud"</string>
+    <string name="field_guide_more_options">"Rohkem valikuid"</string>
 </resources>

@@ -512,4 +512,17 @@
     <string name="cloud_precipitation_forecast_hour_range" tools:ignore="PluralsCandidate">Kan tyde på nedbør dei neste %1$d til %2$d timane.</string>
     <string name="nimbostratus_forecast" tools:ignore="PluralsCandidate">Kan tyde på nedbør i %d timar.</string>
     <string name="cloud_fair_forecast_hours" tools:ignore="PluralsCandidate">Kan tyda på fint vêr i %d timar.</string>
+    <string name="declination_from_compass">Kompass</string>
+    <string name="places_turn_back_now">No</string>
+    <string name="places_shape_sun">Sola</string>
+    <string name="sky_seconds_short">%s s</string>
+    <string name="sky_strike_time">Klokka</string>
+    <string name="sky_strike_last_distance">Fråstand</string>
+    <string name="sky_diagnostics_tools">Verkty</string>
+    <string name="sky_axis_hot">Varmt</string>
+    <string name="climate_feel_cold">Kaldt</string>
+    <string name="climate_feel_hot">Varmt</string>
+    <string name="theme_mode_sun">Sola</string>
+    <string name="light_level_daylight">Dagsljos</string>
+    <string name="light_meter_scale_bright">Sola</string>
 </resources>

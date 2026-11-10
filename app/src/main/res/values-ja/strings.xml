@@ -321,4 +321,18 @@
     <string name="pref_num_visible_beacons_title">表示ビーコン数</string>
     <string name="gps_elevation_accuracy">GPS 標高精度</string>
     <string name="altimeter_mode_gps_barometer">GPS + 気圧計</string>
+    <string name="declination_from_compass">Compass</string>
+    <string name="sky_sensors_moderate_label">中</string>
+    <string name="sky_diagnostics_tools">ツール</string>
+    <string name="notes">ノート</string>
+    <string name="climate_feel_cold">冷たい</string>
+    <string name="back">戻る</string>
+    <string name="more_options">"その他のオプション"</string>
+    <string name="note_more_options">"その他のオプション"</string>
+    <string name="beacon_more_options">"その他のオプション"</string>
+    <string name="packs_more_options">"その他のオプション"</string>
+    <string name="tides_more_options">"その他のオプション"</string>
+    <string name="survival_guide_section_open">"開いています"</string>
+    <string name="survival_guide_section_closed">"閉じています"</string>
+    <string name="field_guide_more_options">"その他のオプション"</string>
 </resources>

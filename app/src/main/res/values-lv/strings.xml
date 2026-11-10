@@ -116,4 +116,15 @@
     <string name="notification_storm_alert_text">Iespējams, tuvojas vētra</string>
     <string name="notification_storm_alert_title">Brīdinājums par vētru</string>
     <string name="notification_monitoring_weather">Uzrauga laikapstākļus fonā</string>
+    <string name="declination_from_compass">Kompass</string>
+    <string name="sky_diagnostics_tools">Rīki</string>
+    <string name="back">Atpakaļ</string>
+    <string name="more_options">"Citas opcijas"</string>
+    <string name="note_more_options">"Citas opcijas"</string>
+    <string name="beacon_more_options">"Citas opcijas"</string>
+    <string name="packs_more_options">"Citas opcijas"</string>
+    <string name="tides_more_options">"Citas opcijas"</string>
+    <string name="survival_guide_section_open">"Izvērsta"</string>
+    <string name="survival_guide_section_closed">"Sakļauta"</string>
+    <string name="field_guide_more_options">"Citas opcijas"</string>
 </resources>

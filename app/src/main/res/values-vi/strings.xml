@@ -39,4 +39,14 @@
     <string name="turn_off">Tắt</string>
     <string name="sos">SOS</string>
     <string name="share_action_send">Gửi đi</string>
+    <string name="sky_diagnostics_tools">Công cụ</string>
+    <string name="back">Quay lại</string>
+    <string name="more_options">"Tùy chọn khác"</string>
+    <string name="note_more_options">"Tùy chọn khác"</string>
+    <string name="beacon_more_options">"Tùy chọn khác"</string>
+    <string name="packs_more_options">"Tùy chọn khác"</string>
+    <string name="tides_more_options">"Tùy chọn khác"</string>
+    <string name="survival_guide_section_open">"Đã mở rộng"</string>
+    <string name="survival_guide_section_closed">"Đã thu gọn"</string>
+    <string name="field_guide_more_options">"Tùy chọn khác"</string>
 </resources>

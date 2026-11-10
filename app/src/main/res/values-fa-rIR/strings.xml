@@ -797,4 +797,32 @@
 \n 2. روی صفحه ضربه بزنید و نگه دارید
 \n 3. کلینومتر را مجدداً در بالای هدف قرار دهید
 \n 4. رها کنید تا قفل شود و فاصله تا هدف را ببینید</string>
+    <string name="declination_from_compass">قطب نما</string>
+    <string name="places_turn_back_set">تنظیم</string>
+    <string name="places_shape_square">مربع</string>
+    <string name="places_shape_sun">خورشید</string>
+    <string name="sky_seconds_short">%s s</string>
+    <string name="sky_strike_time">زمان</string>
+    <string name="sky_strike_last_distance">فاصله</string>
+    <string name="sky_sensors_good_label">خوب</string>
+    <string name="sky_sensors_moderate_label">در حد متوسط</string>
+    <string name="sky_sensors_poor_label">فقیر</string>
+    <string name="sky_diagnostics_tools">ابزار ها</string>
+    <string name="sky_axis_high">بالا</string>
+    <string name="sky_axis_low">کم</string>
+    <string name="notes">یادداشت</string>
+    <string name="climate_feel_cold">سرد</string>
+    <string name="theme_mode_sun">خورشید</string>
+    <string name="theme_mode_auto">خودکار</string>
+    <string name="light_level_daylight">نور روز</string>
+    <string name="light_meter_scale_bright">خورشید</string>
+    <string name="back">برگشتن</string>
+    <string name="more_options">"گزینه‌های بیشتر"</string>
+    <string name="note_more_options">"گزینه‌های بیشتر"</string>
+    <string name="beacon_more_options">"گزینه‌های بیشتر"</string>
+    <string name="packs_more_options">"گزینه‌های بیشتر"</string>
+    <string name="tides_more_options">"گزینه‌های بیشتر"</string>
+    <string name="survival_guide_section_open">"ازهم باز شد"</string>
+    <string name="survival_guide_section_closed">"جمع شد"</string>
+    <string name="field_guide_more_options">"گزینه‌های بیشتر"</string>
 </resources>

@@ -96,4 +96,14 @@
     <string name="settings">Setări</string>
     <string name="weather">Vreme</string>
     <string name="navigation">Navigare</string>
+    <string name="sky_diagnostics_tools">Unelte</string>
+    <string name="back">Înapoi</string>
+    <string name="more_options">"Mai multe opțiuni"</string>
+    <string name="note_more_options">"Mai multe opțiuni"</string>
+    <string name="beacon_more_options">"Mai multe opțiuni"</string>
+    <string name="packs_more_options">"Mai multe opțiuni"</string>
+    <string name="tides_more_options">"Mai multe opțiuni"</string>
+    <string name="survival_guide_section_open">"Extins"</string>
+    <string name="survival_guide_section_closed">"Restrâns"</string>
+    <string name="field_guide_more_options">"Mai multe opțiuni"</string>
 </resources>

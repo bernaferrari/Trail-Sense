@@ -60,4 +60,13 @@
     <string name="duration_hour_format">%dঘ</string>
     <string name="pressure_format">%1$s %2$s</string>
     <string name="pressure_tendency_format_2">%s / ৩ঘ</string>
+    <string name="back">ফিরে যান</string>
+    <string name="more_options">"আরও বিকল্প"</string>
+    <string name="note_more_options">"আরও বিকল্প"</string>
+    <string name="beacon_more_options">"আরও বিকল্প"</string>
+    <string name="packs_more_options">"আরও বিকল্প"</string>
+    <string name="tides_more_options">"আরও বিকল্প"</string>
+    <string name="survival_guide_section_open">"বড় করা হয়েছে"</string>
+    <string name="survival_guide_section_closed">"আড়াল করা হয়েছে"</string>
+    <string name="field_guide_more_options">"আরও বিকল্প"</string>
 </resources>

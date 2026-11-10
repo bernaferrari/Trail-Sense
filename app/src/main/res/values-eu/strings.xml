@@ -456,4 +456,25 @@
     <string name="pref_low_power_mode_summary">Ezaugarri batzuk desgaitzen ditu energia aurrezteko</string>
     <string name="open_beacon_in_maps">Ikusi mapan</string>
     <string name="compass_calibrate_toast">Iparrorratzaren zehaztasuna %s, kalibratzea gomendatzen da</string>
+    <string name="declination_from_compass">Iparrorratza</string>
+    <string name="places_turn_back_set">Ezarri</string>
+    <string name="sky_strike_last_distance">Distantzia</string>
+    <string name="sky_sensors_good_label">Ona</string>
+    <string name="sky_sensors_moderate_label">Tartekoa</string>
+    <string name="sky_sensors_poor_label">Eskasa</string>
+    <string name="sky_diagnostics_tools">Tresnak</string>
+    <string name="sky_axis_high">Altua</string>
+    <string name="sky_axis_low">Baxua</string>
+    <string name="notes">Oharrak</string>
+    <string name="climate_feel_cold">Hotza</string>
+    <string name="light_level_daylight">Eguneko argia</string>
+    <string name="back">Atzera</string>
+    <string name="more_options">"Aukera gehiago"</string>
+    <string name="note_more_options">"Aukera gehiago"</string>
+    <string name="beacon_more_options">"Aukera gehiago"</string>
+    <string name="packs_more_options">"Aukera gehiago"</string>
+    <string name="tides_more_options">"Aukera gehiago"</string>
+    <string name="survival_guide_section_open">"Zabalduta"</string>
+    <string name="survival_guide_section_closed">"Tolestuta"</string>
+    <string name="field_guide_more_options">"Aukera gehiago"</string>
 </resources>
