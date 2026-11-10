@@ -744,13 +744,8 @@ private class PhotoMapCalibrationPanelState(
 
     @Composable
     private fun coordinateCard() {
+        // The field's own label names it, so the card has no separate title
         TrailSenseCard(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = context.getString(R.string.location),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(TrailSenseSpacing.sm))
             coordinateInput()
         }
     }
