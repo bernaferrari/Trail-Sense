@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import androidx.compose.ui.platform.testTag
 import com.kylecorry.andromeda.torch.screenBrightness
 
 import com.kylecorry.trail_sense.shared.sensors.asLiveData
@@ -788,8 +789,8 @@ private fun ViewPhotoMapHost(
                     modifier = Modifier.padding(TrailSenseSpacing.xs),
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
                 ) {
-                    views.zoomInBtn.Content()
-                    views.zoomOutBtn.Content()
+                    views.zoomInBtn.Content(Modifier.testTag("zoom_in_btn"))
+                    views.zoomOutBtn.Content(Modifier.testTag("zoom_out_btn"))
                 }
             }
         }
@@ -798,6 +799,7 @@ private fun ViewPhotoMapHost(
             Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = TrailSenseSpacing.screen, bottom = 120.dp)
+                .testTag("lock_btn")
         )
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             views.navigationSheet.Content(Modifier.fillMaxWidth())
