@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
@@ -139,42 +140,50 @@ class SensorStatusBadgeView(
     }
 
     /**
-     * Sensor trouble, collapsed: one small icon (the sensor in the worst state) with a status dot. Tapping it opens a
-     * popover that names each sensor needing attention, its state, and the way to fix it.
+     * Sensor status, collapsed: one small icon (the sensor in the worst state) with a dot when a sensor needs
+     * attention. Tapping it opens a popover that names each sensor and its state; choosing one shows the accuracy tips.
      */
     @Composable
     private fun QuietContent(modifier: Modifier) {
         val items = listOfNotNull(
-            gpsBadge?.takeIf { showGpsBadge && !it.isGood() }?.let { Triple(it, context.getString(R.string.gps), TrailSenseIcons.Filled.LocationOn) },
-            compassBadge?.takeIf { showCompassBadge && !it.isGood() }?.let { Triple(it, context.getString(R.string.pref_compass_sensor_title), TrailSenseIcons.Filled.Explore) }
+            gpsBadge?.takeIf { showGpsBadge }?.let { Triple(it, context.getString(R.string.gps), TrailSenseIcons.Filled.LocationOn) },
+            compassBadge?.takeIf { showCompassBadge }?.let { Triple(it, context.getString(R.string.pref_compass_sensor_title), TrailSenseIcons.Filled.Explore) }
         )
         if (items.isEmpty()) return
         fun StatusBadge.caution() = color == AppColor.Yellow.color || color == AppColor.Orange.color
-        val worst = items.firstOrNull { !it.first.caution() } ?: items.first()
+        val trouble = items.filter { !it.first.isGood() }
+        val worst = trouble.firstOrNull { !it.first.caution() } ?: trouble.firstOrNull() ?: items.first()
         val scheme = MaterialTheme.colorScheme
-        val dot = if (worst.first.caution()) scheme.tertiary else scheme.error
+        val dot = when {
+            trouble.isEmpty() -> null
+            worst.first.caution() -> scheme.tertiary
+            else -> scheme.error
+        }
         var open by remember { mutableStateOf(false) }
         Box(modifier) {
             Surface(
                 onClick = { open = true },
                 shape = CircleShape,
                 color = androidx.compose.ui.graphics.Color.Transparent,
-                contentColor = scheme.onSurface,
+                contentColor = if (dot == null) scheme.onSurfaceVariant else scheme.onSurface,
                 modifier = Modifier
                     .size(52.dp)
+                    .testTag("sensor_status")
                     .semantics { contentDescription = items.joinToString { "${it.second} ${it.first.name}" } }
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(worst.third, contentDescription = null, modifier = Modifier.size(22.dp))
-                    Box(
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 12.dp, end = 12.dp)
-                            .size(11.dp)
-                            .background(scheme.background, CircleShape)
-                            .padding(1.5.dp)
-                            .background(dot, CircleShape)
-                    )
+                    if (dot != null) {
+                        Box(
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 12.dp, end = 12.dp)
+                                .size(11.dp)
+                                .background(scheme.background, CircleShape)
+                                .padding(1.5.dp)
+                                .background(dot, CircleShape)
+                        )
+                    }
                 }
             }
             DropdownMenu(
@@ -182,7 +191,11 @@ class SensorStatusBadgeView(
                 onDismissRequest = { open = false }
             ) {
                 items.forEach { (badge, label, icon) ->
-                    val color = if (badge.caution()) scheme.tertiary else scheme.error
+                    val color = when {
+                        badge.isGood() -> scheme.primary
+                        badge.caution() -> scheme.tertiary
+                        else -> scheme.error
+                    }
                     DropdownMenuItem(
                         text = {
                             Column {

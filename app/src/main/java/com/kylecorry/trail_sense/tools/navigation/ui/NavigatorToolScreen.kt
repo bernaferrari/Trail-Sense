@@ -59,6 +59,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.kylecorry.andromeda.core.sensors.Quality
+import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
@@ -231,7 +232,10 @@ fun NavigatorToolScreen(
             // Straight to the editor, as the map and the field guide do: Save and Back return here.
             appNavigator.navigate(Route.PlaceBeacon(initialLocation = viewModel.currentLocationForNewPlace()))
         }
-        views.accuracyView.setOnClickListener { appNavigator.navigate(Route.CalibrateCompass) }
+        // As upstream: a sensor's status opens the tips for improving accuracy
+        views.accuracyView.setOnClickListener {
+            ImproveAccuracyAlerter(context).alert(views.accuracyView.getSensors())
+        }
         views.radarCompassMap.setOnSingleTapListener { viewModel.toggleDestinationBearing() }
         views.radarCompassMap.setOnLongPressListener {
             display.layerSheet.dismiss()

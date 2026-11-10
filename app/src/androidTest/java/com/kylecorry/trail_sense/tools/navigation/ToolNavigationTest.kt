@@ -124,6 +124,8 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun canDisplaySensorStatus() {
+        // The status is one icon at the top; it lists each sensor's state, and a state opens the accuracy tips
+        click(id("sensor_status"))
         click(Regex("(Poor|Moderate|Good|Stale|Unavailable)"))
         hasText(string(R.string.accuracy_info_title))
         clickOk()
