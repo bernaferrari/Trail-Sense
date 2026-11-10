@@ -16,6 +16,8 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -137,7 +139,21 @@ fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
                 viewModel.locationAutofillRequest++
             }
         },
-        onBack = { dispatcher?.onBackPressed() }
+        onBack = { dispatcher?.onBackPressed() },
+        onDelete = if (viewModel.isEditing) {
+            {
+                Alerts.dialog(context, context.getString(R.string.delete)) { cancelled ->
+                    if (!cancelled) {
+                        scope.launch {
+                            viewModel.delete()
+                            navigator.navigateUp()
+                        }
+                    }
+                }
+            }
+        } else {
+            null
+        }
     )
 }
 
@@ -191,6 +207,15 @@ internal class CreateFieldGuideSightingViewModel(
             harvested = sighting.harvested == true
             showOnMap = sighting.showOnMap
         }
+    }
+
+    val isEditing: Boolean
+        get() = sightingId != 0L
+
+    /** Deletes the sighting being edited; afterwards the form no longer counts as changed. */
+    suspend fun delete() {
+        repo.getSighting(sightingId)?.let { repo.deleteSighting(it) }
+        isSaved = true
     }
 
     /** Stores the sighting; afterwards the form no longer counts as changed. */
@@ -258,7 +283,8 @@ private fun CreateFieldGuideSightingScreen(
     elevationAutofillRequest: Int,
     onAutoElevationClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onDelete: (() -> Unit)? = null
 ) {
     val saveLabel = stringResource(R.string.save)
     val locationTitle = stringResource(R.string.location)
@@ -273,6 +299,29 @@ private fun CreateFieldGuideSightingScreen(
             backLabel = stringResource(R.string.back),
             modifier = Modifier.testTag("field_guide_sighting_title"),
             actions = {
+                if (onDelete != null) {
+                    var isMenuOpen by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(
+                            onClick = { isMenuOpen = true },
+                            modifier = Modifier.testTag("field_guide_sighting_menu_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = stringResource(R.string.field_guide_more_options)
+                            )
+                        }
+                        DropdownMenu(expanded = isMenuOpen, onDismissRequest = { isMenuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.delete)) },
+                                onClick = {
+                                    isMenuOpen = false
+                                    onDelete()
+                                }
+                            )
+                        }
+                    }
+                }
                 IconButton(
                     onClick = onSave,
                     modifier = Modifier.testTag("field_guide_sighting_save_btn")
