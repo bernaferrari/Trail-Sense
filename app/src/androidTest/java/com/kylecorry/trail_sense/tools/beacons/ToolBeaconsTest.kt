@@ -51,8 +51,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun createBeacon() {
-        // The list is empty, so its button saves a place directly.
         click(id("create_btn"))
+        click(string(R.string.beacon), exact = true)
 
         hasText(string(R.string.create_beacon))
 
@@ -179,8 +179,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun createBeaconInGroup() {
-        // The new group is empty, so its button saves a place directly.
         click(id("create_btn"))
+        click(string(R.string.beacon), exact = true)
 
         input(id("beacon_name"), "Test beacon 2")
         input(id("beacon_location"), "42, -72")

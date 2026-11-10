@@ -786,7 +786,7 @@ private fun BeaconListScreen(
                         actionLabel = if (isSearching) null else stringResource(R.string.save_a_place),
                         actionIcon = TrailIcons.Add,
                         onAction = { onCreateAction(BeaconCreateAction.CreateBeacon) },
-                        actionModifier = Modifier.testTag("create_btn"),
+                        actionModifier = Modifier.testTag("save_place_btn"),
                         secondaryActionLabel = if (isSearching) null else stringResource(R.string.import_gpx),
                         onSecondaryAction = { onCreateAction(BeaconCreateAction.ImportGpx) },
                         tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
