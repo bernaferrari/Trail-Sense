@@ -260,7 +260,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(id("add_btn"))
         click("Camera")
         click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
-        input(string(R.string.name), "Test Map", index = 1)
+        // The name dialog opens once the photo is saved, which can take a while on an emulator
+        input(string(R.string.name), "Test Map", index = 1, waitForTime = PHOTO_SAVE_WAIT_MS)
         // With the keyboard opening, the first tap on OK can be lost, so tap until the name dialog closes
         waitFor {
             clickOkIfShown()
@@ -591,5 +592,6 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
 
     companion object {
         private const val FILE_PICKER_WAIT_MS = 15000L
+        private const val PHOTO_SAVE_WAIT_MS = 15000L
     }
 }
