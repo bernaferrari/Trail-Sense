@@ -79,8 +79,8 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
 
         hasListItems("Airplane mode", "Other tips")
 
-        // Open battery settings
-        click(id("battery_settings_btn"))
+        // Open battery settings: the last row of the system group, below the tips
+        scrollUntil { click(id("battery_settings_btn")) }
         hasText("Battery")
     }
 
