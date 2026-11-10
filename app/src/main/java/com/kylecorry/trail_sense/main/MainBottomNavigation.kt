@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.onLongClick
@@ -145,7 +146,10 @@ fun MainAdaptiveNavigation(
                     enter = expandVertically(expandFrom = Alignment.Top),
                     exit = shrinkVertically(shrinkTowards = Alignment.Top)
                 ) {
-                ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                ShortNavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.testTag("bottom_navigation")
+                ) {
                     visibleItems.forEach { item ->
                         val selected = item.route == state.selectedRoute
                         ShortNavigationBarItem(
