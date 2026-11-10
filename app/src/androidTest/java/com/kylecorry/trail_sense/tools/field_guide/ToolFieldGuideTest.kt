@@ -292,8 +292,12 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         // Sightings list is updated
         hasText("Test 3")
 
-        // Navigate
-        click(id("field_guide_sighting_menu"))
+        // Navigate. The menu can open while the list is still settling after the save and close again, so open it
+        // until its Navigate item shows
+        waitFor(15000) {
+            click(id("field_guide_sighting_menu"))
+            hasText("Navigate", waitForTime = 3000)
+        }
         click("Navigate")
         hasText(Regex("\\s*\\d+°\\s+[NSEW]+"))
         hasText("Ant")
