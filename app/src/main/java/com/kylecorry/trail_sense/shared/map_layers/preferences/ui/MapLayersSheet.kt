@@ -1,13 +1,12 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.ui
 
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.content.Context
-import android.text.Spanned
-import android.text.style.URLSpan
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,17 +43,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMarkdown
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.R
@@ -780,9 +775,6 @@ private fun MapLayerAttributionRow(
     markdown: MarkdownService,
     modifier: Modifier = Modifier
 ) {
-    val text = remember(attribution) {
-        markdown.toMarkdown(attribution.longAttribution ?: attribution.attribution)
-    }
 
     Column(
         modifier = modifier
@@ -795,54 +787,12 @@ private fun MapLayerAttributionRow(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
-        MapLayerMarkdownText(text)
+        TrailSenseMarkdown(
+            markdown = attribution.longAttribution ?: attribution.attribution,
+            service = markdown
+        )
     }
     TrailSenseDivider()
-}
-
-@Composable
-private fun MapLayerMarkdownText(
-    text: CharSequence,
-    modifier: Modifier = Modifier
-) {
-    val uriHandler = LocalUriHandler.current
-    val linkColor = MaterialTheme.colorScheme.primary
-    val annotated = remember(text, linkColor) {
-        buildAnnotatedString {
-            append(text.toString())
-            if (text is Spanned) {
-                text.getSpans(0, text.length, URLSpan::class.java).forEach { span ->
-                    val start = text.getSpanStart(span)
-                    val end = text.getSpanEnd(span)
-                    if (start >= 0 && end > start) {
-                        addStringAnnotation(UrlAnnotationTag, span.url, start, end)
-                        addStyle(
-                            SpanStyle(
-                                color = linkColor,
-                                textDecoration = TextDecoration.Underline
-                            ),
-                            start,
-                            end
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    ClickableText(
-        text = annotated,
-        style = MaterialTheme.typography.bodyMedium.copy(
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        modifier = modifier,
-        onClick = { offset ->
-            annotated
-                .getStringAnnotations(UrlAnnotationTag, offset, offset)
-                .firstOrNull()
-                ?.let { uriHandler.openUri(it.item) }
-        }
-    )
 }
 
 private fun isMapLayerPreferenceEnabled(
@@ -863,7 +813,6 @@ private fun getBooleanPreference(
     return PreferencesSubsystem.getInstance(context).preferences.getBoolean(key) ?: defaultValue
 }
 
-private const val UrlAnnotationTag = "url"
 
 @Preview(showBackground = true)
 @Composable
@@ -907,7 +856,7 @@ private fun MapLayersContentPreview() {
             onCopySettings = {},
             onRemoveLayer = {},
             onAddLayers = {},
-            markdown = MarkdownService(context)
+            markdown = MarkdownService()
         )
     }
 }

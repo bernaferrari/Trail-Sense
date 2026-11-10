@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
+
 import kotlin.time.toJavaInstant
 
 import com.kylecorry.trail_sense.shared.time.interop.*
@@ -186,7 +189,7 @@ fun WeatherToolScreen(
             prefs = prefs,
             monitorService = Tools.getService(appContext, WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
             createLogger = { indicator ->
-                WeatherLogger(appContext, Duration.ofSeconds(30), Duration.ofMillis(500), indicator)
+                WeatherLogger(appContext, 30.seconds, 500.milliseconds, indicator)
             }
         )
     }

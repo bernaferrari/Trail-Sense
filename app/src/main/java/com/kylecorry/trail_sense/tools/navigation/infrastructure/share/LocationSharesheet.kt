@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.navigation.infrastructure.share
 
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService

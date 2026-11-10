@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.pedometer.AndroidPedometer
+import com.kylecorry.andromeda.sense.pedometer.AndroidPedometer
 
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission

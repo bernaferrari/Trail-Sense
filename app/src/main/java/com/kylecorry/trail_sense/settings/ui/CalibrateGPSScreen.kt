@@ -61,9 +61,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.time.Throttle
 import com.kylecorry.sol.units.Coordinate

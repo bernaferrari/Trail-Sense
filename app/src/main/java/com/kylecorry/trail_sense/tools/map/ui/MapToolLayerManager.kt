@@ -25,6 +25,9 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceLay
 import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathElevationPrefetcher
 import java.time.Instant
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 
 class MapToolLayerManager {
     private val selectedPointLayer = ConfigurableGeoJsonLayer()
@@ -34,7 +37,9 @@ class MapToolLayerManager {
     private val elevationPrefetcher = PathElevationPrefetcher()
     private val repo = DependencyRegistry.get<MapLayerPreferenceRepo>()
 
-    var key: Int = 0
+    /** Changes each time the layers are rebuilt; observable from Compose. */
+    var key by mutableIntStateOf(0)
+        private set
 
     private var isRunning = false
     private val runningLock = Any()

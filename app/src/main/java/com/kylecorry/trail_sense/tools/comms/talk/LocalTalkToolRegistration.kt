@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
+import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory

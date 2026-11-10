@@ -6,10 +6,10 @@ import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.ImagePixelReader
+import com.kylecorry.andromeda.bitmaps.ImagePixelReader
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.trail_sense.shared.andromeda_temp.files.AssetFileSystem
+import com.kylecorry.andromeda.files.AssetFileSystem
 import com.kylecorry.luna.cache.MemoryLRUCache
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.math.arithmetic.Arithmetic.wrap
@@ -17,7 +17,7 @@ import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
 import com.kylecorry.sol.science.oceanography.TideConstituent
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.shared.andromeda_temp.GeographicImageUtils
+import com.kylecorry.trail_sense.shared.data.GeographicImageUtils
 import com.kylecorry.trail_sense.shared.data.AssetInputStreamable
 import com.kylecorry.trail_sense.shared.data.EncodedDataImageReader
 import com.kylecorry.trail_sense.shared.data.GeographicImageSource

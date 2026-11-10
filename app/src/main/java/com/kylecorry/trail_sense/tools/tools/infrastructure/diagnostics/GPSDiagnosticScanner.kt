@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R

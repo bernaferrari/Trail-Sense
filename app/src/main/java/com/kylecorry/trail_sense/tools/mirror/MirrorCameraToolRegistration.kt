@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.volume.SystemVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -24,7 +24,7 @@ object MirrorCameraToolRegistration : ToolRegistration {
             Route.MirrorCamera,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_mirror_camera,
-            isAvailable = { Camera.hasFrontCamera(it) },
+            isAvailable = { AndroidCamera.hasFrontCamera(it) },
             volumeActions = listOf(
                 ToolVolumeAction(
                     ToolVolumeActionPriority.Normal,

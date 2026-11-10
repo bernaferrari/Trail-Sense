@@ -1,11 +1,13 @@
 package com.kylecorry.trail_sense.plugins.infrastructure
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.ServiceInfo
 import android.os.Build
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
+import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.json.fromJson
 import com.kylecorry.trail_sense.R
@@ -20,7 +22,6 @@ import com.kylecorry.trail_sense.shared.ProguardIgnore
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
-import java.time.Duration
 
 class PluginLoader(private val context: Context) {
 
@@ -120,7 +121,7 @@ class PluginLoader(private val context: Context) {
             return null
         }
         val refreshInterval = layer.refreshInterval?.let { millis ->
-            Duration.ofMillis(millis)
+            millis.milliseconds
                 .coerceIn(PluginGuard.MIN_REFRESH_INTERVAL, PluginGuard.MAX_REFRESH_INTERVAL)
         }
         val attribution = layer.attribution?.let {

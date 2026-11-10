@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.content.Context
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter

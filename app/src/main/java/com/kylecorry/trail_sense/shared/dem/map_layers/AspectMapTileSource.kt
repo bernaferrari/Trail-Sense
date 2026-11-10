@@ -5,8 +5,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.Dither
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.applyOperations
+import com.kylecorry.andromeda.bitmaps.operations.Dither
+import com.kylecorry.andromeda.bitmaps.operations.applyOperations
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.colormaps.RgbInterpolationColorMap
 import com.kylecorry.sol.math.MathExtensions.toDegrees

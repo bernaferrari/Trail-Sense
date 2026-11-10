@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+
 import com.kylecorry.trail_sense.shared.time.interop.*
 
 import com.kylecorry.trail_sense.shared.notifications.*
@@ -7,19 +10,18 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.AndromedaService
+import com.kylecorry.andromeda.background.services.AndromedaService
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.topics.generic.replay
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
-import java.time.Duration
 import java.time.Instant
 
 class FlashlightService : AndromedaService() {
@@ -99,7 +101,7 @@ class FlashlightService : AndromedaService() {
             FlashlightMode.Strobe200 -> 200
             FlashlightMode.Sos -> 1
         }
-        return Duration.ofMillis(1000L / frequency)
+        return (1000L / frequency).milliseconds
     }
 
     private fun switchStrategy(newStrategy: IFlashlightStrategy?) {

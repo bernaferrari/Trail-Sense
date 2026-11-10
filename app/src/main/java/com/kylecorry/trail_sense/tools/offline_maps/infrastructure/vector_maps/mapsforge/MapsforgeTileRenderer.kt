@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences

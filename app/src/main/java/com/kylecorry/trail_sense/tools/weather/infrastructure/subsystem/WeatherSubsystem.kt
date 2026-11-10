@@ -17,7 +17,7 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.subscriptions.ISubscription
 import com.kylecorry.luna.subscriptions.Subscription
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateClassification
 import com.kylecorry.sol.science.meteorology.Meteorology

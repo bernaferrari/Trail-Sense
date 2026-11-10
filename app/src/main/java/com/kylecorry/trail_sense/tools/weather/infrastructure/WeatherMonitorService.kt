@@ -1,14 +1,15 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
+import kotlin.time.Duration.Companion.seconds
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.IAlwaysOnTaskScheduler
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.TaskSchedulerFactory
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.ForegroundInfo
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.services.IntervalService
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.background.AlwaysOnTaskScheduler
+import com.kylecorry.andromeda.background.TaskSchedulerFactory
+import com.kylecorry.andromeda.background.services.ForegroundInfo
+import com.kylecorry.andromeda.background.services.IntervalService
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
@@ -16,10 +17,11 @@ import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundService
 import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.CurrentWeatherAlerter
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.toKotlinDuration
 
 class WeatherMonitorService :
-    IntervalService(wakelockDuration = Duration.ofSeconds(60), useOneTimeWorkers = true) {
+    IntervalService(wakelockDuration = 60.seconds, useOneTimeWorkers = true) {
 
     private val prefs by lazy { UserPreferences(applicationContext) }
 
@@ -44,7 +46,7 @@ class WeatherMonitorService :
         get() = 2387092
 
     override val period: Duration
-        get() = prefs.weather.weatherUpdateFrequency
+        get() = prefs.weather.weatherUpdateFrequency.toKotlinDuration()
 
     override suspend fun doWork() {
         WeatherSubsystem.getInstance(applicationContext).updateWeather()
@@ -81,7 +83,7 @@ class WeatherMonitorService :
             scheduler(context).cancel()
         }
 
-        private fun scheduler(context: Context): IAlwaysOnTaskScheduler {
+        private fun scheduler(context: Context): AlwaysOnTaskScheduler {
             return TaskSchedulerFactory(context).alwaysOn(
                 WeatherMonitorService::class.java,
                 foreground = true

@@ -4,8 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.util.Size
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.use
+import com.kylecorry.andromeda.bitmaps.BitmapUtils
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
 import com.kylecorry.luna.concurrency.onIO
 
 class SingleImageReader(

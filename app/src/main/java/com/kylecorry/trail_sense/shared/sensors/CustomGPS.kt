@@ -8,8 +8,8 @@ import android.os.Looper
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GNSSSatelliteStatusSensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.sense.location.GNSSSatelliteStatusSensor
+import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.GPSPowerUsage
 import com.kylecorry.andromeda.sense.location.LocationRequestConfig
 import com.kylecorry.andromeda.sense.location.Satellite

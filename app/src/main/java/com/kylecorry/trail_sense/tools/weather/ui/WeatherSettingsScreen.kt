@@ -8,7 +8,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import kotlinx.coroutines.launch
 
@@ -36,8 +36,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
+import com.kylecorry.andromeda.core.system.Intents
+import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.units.Pressure

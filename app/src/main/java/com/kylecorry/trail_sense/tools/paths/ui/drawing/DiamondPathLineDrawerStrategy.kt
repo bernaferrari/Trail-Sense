@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 class DiamondPathLineDrawerStrategy : IPathLineDrawerStrategy {
     override fun draw(
         canvasDrawer: ICanvasDrawer,

@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.time.interop.*
 
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Screen
+import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.json.JsonConvert
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.getIntArray

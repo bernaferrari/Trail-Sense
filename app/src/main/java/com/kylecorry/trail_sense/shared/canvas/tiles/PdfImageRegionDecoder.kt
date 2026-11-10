@@ -7,8 +7,8 @@ import android.graphics.Rect
 import android.net.Uri
 import android.util.Size
 import androidx.core.graphics.toRectF
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.math.MathUtils
-import com.kylecorry.trail_sense.shared.andromeda_temp.pdf.PDFRenderer2
+import com.kylecorry.andromeda.core.math.MathUtils
+import com.kylecorry.andromeda.pdf.PDFRenderer2
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 

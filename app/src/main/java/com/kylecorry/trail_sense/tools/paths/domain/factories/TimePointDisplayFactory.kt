@@ -5,7 +5,7 @@ import com.kylecorry.trail_sense.shared.time.interop.*
 import android.content.Context
 import android.graphics.Color
 import android.util.Range
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.rangeOrNull
+import com.kylecorry.andromeda.core.rangeOrNull
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.scales.ContinuousColorScale
@@ -17,7 +17,7 @@ import java.time.Instant
 
 class TimePointDisplayFactory(private val context: Context) : IPointDisplayFactory {
     override fun createColoringStrategy(path: List<PathPoint>): IPointColoringStrategy {
-        val timeRange = path.mapNotNull { it.time }.rangeOrNull() ?: Range(
+        val timeRange = path.mapNotNull { it.time }.rangeOrNull()?.let { Range(it.start, it.endInclusive) } ?: Range(
             Instant.now(),
             Instant.now()
         )

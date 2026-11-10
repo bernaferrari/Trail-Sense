@@ -7,12 +7,12 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.andromeda.background.OneTimeTaskScheduler
+import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.notify.Notify
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
@@ -71,7 +71,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
         const val NOTIFICATION_CHANNEL_ID = "Turn back"
         private const val NOTIFIATION_GROUP = "trail_sense_turn_back"
 
-        fun scheduler(context: Context): IOneTimeTaskScheduler {
+        fun scheduler(context: Context): OneTimeTaskScheduler {
             return OneTimeTaskSchedulerFactory(context).exact(
                 TurnBackAlarmReceiver::class.java,
                 PI_ID
@@ -80,7 +80,7 @@ class TurnBackAlarmReceiver : BroadcastReceiver() {
 
         fun start(context: Context) {
             val prefs = PreferencesSubsystem.getInstance(context)
-            val turnBackTime = prefs.preferences.getJavaInstant(
+            val turnBackTime = prefs.preferences.getInstant(
                 TurnBackKeys.PREF_TURN_BACK_TIME
             ) ?: return
 

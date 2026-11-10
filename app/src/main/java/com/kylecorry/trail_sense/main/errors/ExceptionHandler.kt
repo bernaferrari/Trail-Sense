@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.main.errors
 
 import com.kylecorry.trail_sense.shared.copy
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService

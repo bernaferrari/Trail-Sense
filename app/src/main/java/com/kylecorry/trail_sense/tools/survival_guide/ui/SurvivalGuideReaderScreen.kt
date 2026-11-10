@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import com.kylecorry.trail_sense.shared.text.toSpanned
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
 import android.content.Context
@@ -68,7 +69,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
@@ -406,7 +407,7 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
             val parsed = markdown.toMarkdown(content)
             val uri = file.toUri()
             files.output(uri)?.use {
-                writePdf(parsed, it)
+                writePdf(parsed.toSpanned(PDF_TEXT_SIZE), it)
             }
             withContext(Dispatchers.Main) {
                 printer.print(uri)
@@ -421,12 +422,14 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
 }
 
 /** Lays [text] out in small black type on A4 pages, the way the printed chapter looked. */
+private const val PDF_TEXT_SIZE = 8f
+
 private fun writePdf(text: CharSequence, output: java.io.OutputStream) {
     val pageWidth = 595
     val pageHeight = 842
     val margin = 36
     val paint = android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-        textSize = 8f
+        textSize = PDF_TEXT_SIZE
         color = android.graphics.Color.BLACK
     }
     val layout = android.text.StaticLayout.Builder

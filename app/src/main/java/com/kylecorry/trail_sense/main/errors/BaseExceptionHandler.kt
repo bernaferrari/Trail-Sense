@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.main.errors
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.CurrentApp
+import com.kylecorry.andromeda.core.system.CurrentApp
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.IBugReportGenerator
-import com.kylecorry.trail_sense.shared.andromeda_temp.files.IFileSystem
-import com.kylecorry.trail_sense.shared.andromeda_temp.files.LocalFileSystem
+import com.kylecorry.andromeda.exceptions.BugReportGenerator
+import com.kylecorry.andromeda.files.IFileSystem
+import com.kylecorry.andromeda.files.LocalFileSystem
 abstract class BaseExceptionHandler(
     protected val context: Context,
-    private val generator: IBugReportGenerator,
+    private val generator: BugReportGenerator,
     private val filename: String = "errors/error.txt",
     private val fileSystem: IFileSystem = LocalFileSystem(context),
     private val shouldRestartApp: Boolean = true
@@ -41,7 +41,7 @@ abstract class BaseExceptionHandler(
 
     private fun setupHandler() {
         val handler = { throwable: Throwable ->
-            val details = generator.generate(context, throwable)
+            val details = generator.generate(throwable)
             if (!handleException(throwable, details)) {
                 recordException(details)
                 if (shouldRestartApp) {

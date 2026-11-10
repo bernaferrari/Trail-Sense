@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.main
 
+import kotlin.time.Duration.Companion.hours
 import android.content.Context
 import android.os.Build
 import com.kylecorry.trail_sense.main.automations.Automations
@@ -10,7 +11,6 @@ import com.kylecorry.trail_sense.shared.debugging.getBuildType
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetBroadcastManager
-import java.time.Duration
 
 object TrailSenseApplicationInitializer {
 
@@ -30,7 +30,7 @@ object TrailSenseApplicationInitializer {
         NotificationChannels.createChannels(context)
         PreferenceMigrator.getInstance().migrate(context)
         RepoCleanupWorker.scheduler(context).cancel()
-        RepoCleanupWorker.scheduler(context).interval(Duration.ofHours(6))
+        RepoCleanupWorker.scheduler(context).interval(6.hours)
     }
 
     private const val TAG = "TrailSenseApplication"

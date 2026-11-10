@@ -13,7 +13,7 @@ import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import androidx.activity.compose.LocalActivity
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -80,7 +80,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.exifinterface.media.ExifInterface
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.rotate
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.getOrNull

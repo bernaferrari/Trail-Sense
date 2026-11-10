@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.field_guide.infrastructure
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
+import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.andromeda.preferences.getLongArray
 import com.kylecorry.andromeda.preferences.putLongArray
 import com.kylecorry.trail_sense.R

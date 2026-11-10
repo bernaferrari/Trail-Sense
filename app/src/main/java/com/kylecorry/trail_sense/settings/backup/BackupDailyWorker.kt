@@ -1,26 +1,27 @@
 package com.kylecorry.trail_sense.settings.backup
 
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.WorkerParameters
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.DailyWorker
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.IOneTimeTaskScheduler
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.OneTimeTaskSchedulerFactory
-import com.kylecorry.trail_sense.shared.andromeda_temp.files.ContentFileSystem
+import com.kylecorry.andromeda.background.DailyWorker
+import com.kylecorry.andromeda.background.OneTimeTaskScheduler
+import com.kylecorry.andromeda.background.OneTimeTaskSchedulerFactory
+import com.kylecorry.andromeda.files.ContentFileSystem
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import kotlinx.coroutines.CancellationException
-import java.time.Duration
 import java.time.Instant
-import java.time.LocalTime
+import kotlinx.datetime.LocalTime
 
 class BackupDailyWorker(context: Context, params: WorkerParameters) : DailyWorker(
     context,
     params,
-    wakelockDuration = Duration.ofMinutes(1),
-    tolerance = Duration.ofHours(6),
+    wakelockDuration = 1.minutes,
+    tolerance = 6.hours,
     getPreferences = { PreferencesSubsystem.getInstance(context).preferences },
 ) {
 
@@ -30,7 +31,7 @@ class BackupDailyWorker(context: Context, params: WorkerParameters) : DailyWorke
     }
 
     override fun getScheduledTime(context: Context): LocalTime {
-        return LocalTime.of(22, 0)
+        return LocalTime(22, 0)
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -96,7 +97,7 @@ class BackupDailyWorker(context: Context, params: WorkerParameters) : DailyWorke
         const val UNIQUE_ID = 21739812
         private const val TAG = "BackupDailyWorker"
 
-        private fun getScheduler(context: Context): IOneTimeTaskScheduler {
+        private fun getScheduler(context: Context): OneTimeTaskScheduler {
             return OneTimeTaskSchedulerFactory(context).deferrable(
                 BackupDailyWorker::class.java,
                 UNIQUE_ID

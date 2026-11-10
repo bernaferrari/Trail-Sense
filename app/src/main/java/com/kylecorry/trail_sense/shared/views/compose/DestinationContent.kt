@@ -183,18 +183,7 @@ fun DestinationContent(
             Route.PathsSettings -> PathsSettingsToolScreen()
             Route.AstronomySettings -> AstronomySettingsToolScreen()
 
-            // --- Map (special: controller callback + reactive) ---
-            Route.Map -> MapToolScreen(
-                component = reactiveComponent,
-                resumeCount = { hookResetOnResume },
-                onCleanupReactiveEffects = ::cleanupReactiveEffects,
-                onController = {
-                    mapController = it
-                    if (it != null) {
-                        onReactiveUpdate()
-                    }
-                }
-            )
+            Route.Map -> MapToolScreen()
 
             // --- Tools with a disclaimer, camera permission or plugin details ---
             Route.CliffHeight -> CliffHeightToolScreen()

@@ -2,8 +2,8 @@ package com.kylecorry.trail_sense.tools.clouds
 
 import android.graphics.BitmapFactory
 import androidx.test.platform.app.InstrumentationRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.resizeExact
-import com.kylecorry.trail_sense.shared.andromeda_temp.files.AssetFileSystem
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.resizeExact
+import com.kylecorry.andromeda.files.AssetFileSystem
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import kotlinx.coroutines.runBlocking

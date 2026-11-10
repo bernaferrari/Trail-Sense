@@ -5,6 +5,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import java.time.Duration
+import kotlin.time.toJavaDuration
 
 class WidgetUpdateToolService(private val context: Context) : ToolService {
 
@@ -13,7 +14,7 @@ class WidgetUpdateToolService(private val context: Context) : ToolService {
     override val name: String = context.getString(R.string.widget_updater)
 
     override fun getFrequency(): Duration {
-        return WidgetUpdateWorker.FREQUENCY
+        return WidgetUpdateWorker.FREQUENCY.toJavaDuration()
     }
 
     override fun isRunning(): Boolean {

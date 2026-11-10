@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.qr
 
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isTrue
@@ -19,7 +19,7 @@ class ToolQRCodeScannerTest : ToolTestBase(Tools.QR_CODE_SCANNER) {
     fun verifyBasicFunctionality() {
         isVisible(id("camera"))
 
-        if (Camera.hasBackCamera(context)) {
+        if (AndroidCamera.hasBackCamera(context)) {
             isTrue(10000) {
                 isCameraInUse(isBackFacing = true)
             }

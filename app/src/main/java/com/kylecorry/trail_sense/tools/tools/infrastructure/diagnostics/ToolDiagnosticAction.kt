@@ -5,7 +5,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import android.content.Context
 import android.content.Intent
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Intents
+import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
 

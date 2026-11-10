@@ -14,6 +14,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialogHost
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialogHostState
 import com.kylecorry.trail_sense.shared.dialogs.onMain
@@ -73,12 +75,25 @@ class AppHost {
 
         /** The host of the activity behind [context], or the running activity's when [context] isn't one. */
         fun from(context: Context): AppHost {
+            return attachedTo(context) ?: detached
+        }
+
+        /**
+         * The host that is on screen right now (the activity behind [context], or the running one), or null while the
+         * app is in the background and nothing would draw it.
+         */
+        fun visible(context: Context): AppHost? {
+            val isForeground = ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+            return if (isForeground) attachedTo(context) else null
+        }
+
+        private fun attachedTo(context: Context): AppHost? {
             var c: Context? = context
             while (c != null) {
                 if (c is AppHostOwner) return c.appHost
                 c = (c as? ContextWrapper)?.baseContext
             }
-            return current ?: detached
+            return current
         }
 
         /** Called by the owning activity while it's alive. */

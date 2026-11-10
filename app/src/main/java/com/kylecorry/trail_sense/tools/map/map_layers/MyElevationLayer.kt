@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.ImageMode
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.cache.DependencyRegistry

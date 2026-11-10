@@ -6,8 +6,8 @@ import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.pdf.GeospatialPDFParser
-import com.kylecorry.trail_sense.shared.andromeda_temp.pdf.PDFRenderer
-import com.kylecorry.trail_sense.shared.andromeda_temp.pdf.PDFRenderer2
+import com.kylecorry.andromeda.pdf.PDFRenderer
+import com.kylecorry.andromeda.pdf.PDFRenderer2
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService

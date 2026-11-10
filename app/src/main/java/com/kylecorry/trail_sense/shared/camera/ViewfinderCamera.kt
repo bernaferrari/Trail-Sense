@@ -17,7 +17,7 @@ import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.camera2.interop.CaptureRequestOptions
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.AspectRatio
-import androidx.camera.core.Camera
+import androidx.camera.core.Camera as CameraXCamera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
@@ -35,7 +35,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.common.util.concurrent.ListenableFuture
-import com.kylecorry.andromeda.camera.ICamera
+import com.kylecorry.andromeda.camera.Camera
 import com.kylecorry.andromeda.camera.ImageCaptureSettings
 import com.kylecorry.andromeda.camera.ZoomInfo
 import com.kylecorry.andromeda.core.sensors.SharedSensor
@@ -43,13 +43,14 @@ import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Range
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.OutputStream
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -85,7 +86,7 @@ class ViewfinderCamera(
     private val shouldStabilizePreview: Boolean = true,
     @param:AspectRatio.Ratio
     private val targetAspectRatio: Int = AspectRatio.RATIO_DEFAULT,
-) : SharedSensor(), ICamera {
+) : SharedSensor(), Camera {
 
     override val image: ImageProxy?
         get() = _image
@@ -119,7 +120,7 @@ class ViewfinderCamera(
 
     private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
     private var cameraProvider: ProcessCameraProvider? = null
-    private var camera: Camera? = null
+    private var camera: CameraXCamera? = null
     private var imageCapture: ImageCapture? = null
     private var cameraSelector: CameraSelector? = null
 
@@ -450,7 +451,7 @@ class ViewfinderCamera(
         }
 
         setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF)
-        setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime.toNanos())
+        setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime.inWholeNanoseconds)
     }
 
     override fun setSensitivity(isoSensitivity: Int?) {
@@ -466,7 +467,7 @@ class ViewfinderCamera(
     override fun getExposureTimeRange(): Range<Duration>? {
         val range =
             getCharacteristic(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE) ?: return null
-        return Range(Duration.ofNanos(range.lower), Duration.ofNanos(range.upper))
+        return Range(range.lower.nanoseconds, range.upper.nanoseconds)
     }
 
     override fun getSensitivityRange(): Range<Int>? {

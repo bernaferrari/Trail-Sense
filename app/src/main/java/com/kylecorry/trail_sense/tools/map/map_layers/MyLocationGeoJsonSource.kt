@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -7,9 +10,9 @@ import android.graphics.Color
 import android.graphics.Path
 import android.os.Bundle
 import androidx.core.graphics.createBitmap
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.CanvasDrawer
+import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Resources
+import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
@@ -24,7 +27,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import java.time.Duration
 
 class MyLocationGeoJsonSource : GeoJsonSource {
 
@@ -148,7 +150,7 @@ class MyLocationGeoJsonSource : GeoJsonSource {
         const val DEFAULT_LARGE_INDICATOR = false
         private const val DEFAULT_SIZE_DP = 20f
         private const val LARGE_SIZE_DP = 28f
-        val STALE_CHECK_INTERVAL: Duration = Duration.ofMinutes(1)
+        val STALE_CHECK_INTERVAL: Duration = 1.minutes
     }
 
 }

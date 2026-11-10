@@ -59,7 +59,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Screen
+import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.units.Distance

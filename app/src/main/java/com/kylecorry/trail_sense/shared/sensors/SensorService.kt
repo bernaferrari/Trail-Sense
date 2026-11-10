@@ -6,25 +6,25 @@ import kotlin.time.Duration.Companion.seconds
 
 import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.accelerometer.AndroidAccelerometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.barometer.AndroidBarometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.magnetometer.AndroidMagnetometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.AndroidGyroscope
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.light.AndroidLightSensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.pedometer.AndroidPedometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.hygrometer.AndroidHygrometer
+import com.kylecorry.andromeda.sense.accelerometer.AndroidAccelerometer
+import com.kylecorry.andromeda.sense.barometer.AndroidBarometer
+import com.kylecorry.andromeda.sense.magnetometer.AndroidMagnetometer
+import com.kylecorry.andromeda.sense.orientation.AndroidGyroscope
+import com.kylecorry.andromeda.sense.light.AndroidLightSensor
+import com.kylecorry.andromeda.sense.pedometer.AndroidPedometer
+import com.kylecorry.andromeda.sense.hygrometer.AndroidHygrometer
 
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
-import com.kylecorry.trail_sense.shared.andromeda_temp.battery.Battery
+import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.core.sensors.Altimeter
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.andromeda.core.sensors.Thermometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.accelerometer.GravitySensor
+import com.kylecorry.andromeda.sense.accelerometer.GravitySensor
 import com.kylecorry.andromeda.sense.accelerometer.LowPassAccelerometer
 import com.kylecorry.andromeda.sense.altitude.BarometricAltimeter
 import com.kylecorry.andromeda.sense.altitude.FusedAltimeter
@@ -33,7 +33,7 @@ import com.kylecorry.andromeda.sense.barometer.Barometer
 import com.kylecorry.andromeda.sense.compass.CompassSensor
 import com.kylecorry.andromeda.sense.hygrometer.Hygrometer
 import com.kylecorry.andromeda.sense.light.LightSensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.andromeda.sense.location.filters.GPSGaussianAltitudeFilter
 import com.kylecorry.andromeda.sense.location.filters.GPSPassThroughAltitudeFilter
@@ -43,15 +43,15 @@ import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.andromeda.sense.mock.MockBarometer
 import com.kylecorry.andromeda.sense.mock.MockGyroscope
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.orientation.GameRotationSensor
+import com.kylecorry.andromeda.sense.orientation.GameRotationSensor
 import com.kylecorry.andromeda.sense.orientation.Gyroscope
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.temperature.AmbientThermometer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.temperature.LegacyThermometer
+import com.kylecorry.andromeda.sense.temperature.AmbientThermometer
+import com.kylecorry.andromeda.sense.temperature.LegacyThermometer
 import com.kylecorry.andromeda.signal.CellSignalOptions
-import com.kylecorry.trail_sense.shared.andromeda_temp.signal.ICellSignalSensor
+import com.kylecorry.andromeda.signal.CellSignalSensor
 import com.kylecorry.sol.math.filters.LowPassFilter
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
@@ -234,7 +234,7 @@ class SensorService(ctx: Context) {
                             userPrefs.altimeterSamples
                         ),
                         useContinuousCalibration = userPrefs.altimeter.useFusedAltimeterContinuousCalibration,
-                        recalibrationInterval = userPrefs.altimeter.fusedAltimeterForcedRecalibrationInterval.toKotlin(),
+                        recalibrationInterval = userPrefs.altimeter.fusedAltimeterForcedRecalibrationInterval,
                         useMSLAltitude = false
 
                     )
@@ -323,7 +323,7 @@ class SensorService(ctx: Context) {
             return LegacyThermometer(context, ENVIRONMENT_SENSOR_DELAY)
         }
 
-        return Battery(context)
+        return AndroidBattery(context)
     }
 
     fun getHygrometer(): Hygrometer {
@@ -334,7 +334,7 @@ class SensorService(ctx: Context) {
         return MockHygrometer()
     }
 
-    fun getCellSignal(removeUnregisteredSignals: Boolean = true): ICellSignalSensor {
+    fun getCellSignal(removeUnregisteredSignals: Boolean = true): CellSignalSensor {
         if (!hasLocationPermission()) {
             return MockCellSignalSensor()
         }

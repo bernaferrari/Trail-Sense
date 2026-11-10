@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.weather.infrastructure
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.Sensors
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticAction

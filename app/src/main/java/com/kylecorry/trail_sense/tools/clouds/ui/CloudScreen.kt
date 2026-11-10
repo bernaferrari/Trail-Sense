@@ -21,7 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import androidx.activity.compose.LocalActivity
 import com.kylecorry.trail_sense.shared.navigation.Route
 

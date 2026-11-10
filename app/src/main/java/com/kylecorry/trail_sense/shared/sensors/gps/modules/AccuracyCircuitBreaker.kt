@@ -1,7 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
 import com.kylecorry.andromeda.core.time.TimeProvider
-import com.kylecorry.trail_sense.shared.andromeda_temp.TimeoutTracker
+import com.kylecorry.andromeda.core.time.TimeoutTracker
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Controls whether the accuracy filter is allowed to filter readings.
@@ -26,7 +27,7 @@ internal class AccuracyCircuitBreaker(timeProvider: TimeProvider) {
         if (isOpen) {
             return true
         }
-        if (!filteringTime.isTimedOut((timeoutMillis - withheldMillis).coerceAtLeast(0L))) {
+        if (!filteringTime.isTimedOut((timeoutMillis - withheldMillis).coerceAtLeast(0L).milliseconds)) {
             return false
         }
         previousIdWhenTripped = previousId
@@ -50,7 +51,7 @@ internal class AccuracyCircuitBreaker(timeProvider: TimeProvider) {
 
     // Keep active filtering time across sessions, but do not count time spent stopped.
     fun pause() {
-        withheldMillis += filteringTime.elapsedMillis()
+        withheldMillis += filteringTime.elapsed().inWholeMilliseconds
         filteringTime.reset()
     }
 }

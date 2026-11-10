@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import com.kylecorry.andromeda.core.time.once
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.andromeda.torch.isTorchAvailable
 
 import com.kylecorry.trail_sense.shared.time.interop.*
@@ -15,7 +18,8 @@ import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.torch.Torch
 import com.kylecorry.andromeda.torch.deviceTorch
-import com.kylecorry.trail_sense.shared.andromeda_temp.torch.TorchStateChangedTopic
+import com.kylecorry.andromeda.torch.TorchState
+import com.kylecorry.andromeda.torch.torchStates
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -25,19 +29,18 @@ import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.time.Duration
 import java.time.Instant
 import java.util.Optional
 
 class FlashlightSubsystem private constructor(private val context: Context) : IFlashlightSubsystem {
 
-    private val torchChanged by lazy { TorchStateChangedTopic(context) }
     private val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
     private val prefs by lazy { UserPreferences(context) }
     private var torch: Torch? = null
 
-    private val transitionDuration = Duration.ofSeconds(1)
+    private val transitionDuration = 1.seconds
 
     private val _mode = Topic(defaultValue = Optional.of(getMode()))
     override val mode: ITopic<FlashlightMode>
@@ -64,6 +67,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     private val scope = CoroutineScope(Dispatchers.Default)
 
     private var systemMonitorCount = 0
+    private var systemMonitorJob: Job? = null
 
     init {
         _mode.subscribe {
@@ -81,7 +85,15 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
         synchronized(systemMonitorLock) {
             systemMonitorCount++
             if (systemMonitorCount == 1) {
-                torchChanged.subscribe(this@FlashlightSubsystem::onTorchStateChanged)
+                systemMonitorJob = scope.launch {
+                    torchStates().collect { state ->
+                        when (state) {
+                            TorchState.On -> onTorchStateChanged(true)
+                            TorchState.Off -> onTorchStateChanged(false)
+                            TorchState.Unavailable -> Unit
+                        }
+                    }
+                }
             }
         }
     }
@@ -90,7 +102,8 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
         synchronized(systemMonitorLock) {
             systemMonitorCount--
             if (systemMonitorCount == 0) {
-                torchChanged.unsubscribe(this@FlashlightSubsystem::onTorchStateChanged)
+                systemMonitorJob?.cancel()
+                systemMonitorJob = null
             }
         }
     }
@@ -165,7 +178,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
         torch?.off()
     }
 
-    private fun onTorchStateChanged(enabled: Boolean): Boolean {
+    private fun onTorchStateChanged(enabled: Boolean) {
         tryOrLog {
             synchronized(modeLock) {
                 if (isTransitioning) {
@@ -182,7 +195,6 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
                 on(FlashlightMode.Torch, true)
             }
         }
-        return true
     }
 
     override fun setBrightness(brightness: Float) {

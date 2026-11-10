@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.settings.infrastructure
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
+import com.kylecorry.andromeda.preferences.BooleanPreference
+import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.trail_sense.R
 
 class CameraPreferences(context: Context) : PreferenceRepo(context), ICameraPreferences {

@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
@@ -21,7 +21,7 @@ object MagnifierToolRegistration : ToolRegistration {
             Route.Magnifier,
             ToolCategory.Other,
             guideId = R.raw.guide_tool_magnifier,
-            isAvailable = { Camera.hasBackCamera(it) },
+            isAvailable = { AndroidCamera.hasBackCamera(it) },
             diagnostics = listOf(
                 ToolDiagnosticFactory.camera(context)
             )

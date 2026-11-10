@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
+
 import com.kylecorry.trail_sense.shared.time.JavaTime
 
 import com.kylecorry.trail_sense.shared.time.interop.*
@@ -40,7 +43,6 @@ import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import java.time.Duration
 import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
@@ -56,8 +58,8 @@ fun CalibrateBarometerToolScreen() {
             weatherSubsystem = WeatherSubsystem.getInstance(context),
             logger = WeatherLogger(
                 context,
-                Duration.ofSeconds(30),
-                Duration.ofMillis(500),
+                30.seconds,
+                500.milliseconds,
             )
         )
     }

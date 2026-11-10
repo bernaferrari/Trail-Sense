@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import com.kylecorry.andromeda.core.time.once
+import kotlin.time.Duration.Companion.seconds
+
 import androidx.compose.foundation.clickable
 
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -99,9 +102,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Sensor
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.SoundPlayer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ToneGenerator
+import com.kylecorry.andromeda.sound.SoundPlayer
+import com.kylecorry.andromeda.sound.AudioTrackSoundPlayer
+import com.kylecorry.andromeda.sound.ToneGenerator
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
@@ -219,7 +222,7 @@ internal class MetalDetectorViewModel(
 
     private val isMetalDetected = Debouncer(Duration.ofMillis(100))
 
-    private var audio: ISoundPlayer? = null
+    private var audio: SoundPlayer? = null
     private val audioLock = Any()
 
     /** The field strength shown, or null before the first reading. */
@@ -269,7 +272,7 @@ internal class MetalDetectorViewModel(
             orientation.start(this::onMagnetometerUpdate)
             gravity.start(this::onMagnetometerUpdate)
         }
-        calibrateTimer.once(Duration.ofSeconds(2))
+        calibrateTimer.once(2.seconds)
 
         if (prefs.metalDetector.isMetalAudioEnabled) {
             initializeAudio()
@@ -449,7 +452,7 @@ internal class MetalDetectorViewModel(
                 try {
                     synchronized(audioLock) {
                         if (audio == null) {
-                            audio = SoundPlayer(ToneGenerator().getTone(AUDIO_FREQUENCY))
+                            audio = AudioTrackSoundPlayer(ToneGenerator().getTone(AUDIO_FREQUENCY))
                         }
                     }
                     true

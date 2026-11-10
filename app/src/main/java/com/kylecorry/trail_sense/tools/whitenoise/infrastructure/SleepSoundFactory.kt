@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.whitenoise.infrastructure
 
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.stream.StreamSoundPlayer
+import com.kylecorry.andromeda.sound.SoundPlayer
+import com.kylecorry.andromeda.sound.stream.StreamSoundPlayer
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.streams.BrownNoiseAudioStream
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.streams.CricketsAudioStream
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.streams.FanNoiseAudioStream
@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.streams.PinkNoi
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.streams.WhiteNoiseAudioStream
 
 class SleepSoundFactory {
-    fun getSleepSound(sleepSound: SleepSound): ISoundPlayer {
+    fun getSleepSound(sleepSound: SleepSound): SoundPlayer {
         val stream = when (sleepSound) {
             SleepSound.WhiteNoise -> WhiteNoiseAudioStream()
             SleepSound.PinkNoise -> PinkNoiseAudioStream()

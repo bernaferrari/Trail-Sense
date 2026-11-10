@@ -7,9 +7,9 @@ import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.use
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
 import com.kylecorry.andromeda.bitmaps.FloatBitmap
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.operations.getPixels
+import com.kylecorry.andromeda.bitmaps.operations.getPixels
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 
 class EncodedDataImageReader(

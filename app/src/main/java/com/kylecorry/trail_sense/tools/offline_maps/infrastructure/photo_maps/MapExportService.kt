@@ -5,8 +5,8 @@ import com.kylecorry.andromeda.bitmaps.toPixelImage
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Size
-import com.kylecorry.trail_sense.shared.andromeda_temp.bitmaps.BitmapUtils.rotate
-import com.kylecorry.trail_sense.shared.andromeda_temp.files.FileSaver
+import com.kylecorry.andromeda.bitmaps.BitmapUtils.rotate
+import com.kylecorry.andromeda.files.FileSaver
 import com.kylecorry.andromeda.pdf.Datum
 import com.kylecorry.andromeda.pdf.GeographicCoordinateSystem
 import com.kylecorry.andromeda.pdf.GeospatialPDFParser

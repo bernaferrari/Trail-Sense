@@ -7,7 +7,7 @@ import android.annotation.SuppressLint
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.shared.andromeda_temp.sound.ISoundPlayer
+import com.kylecorry.andromeda.sound.SoundPlayer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 class QuickActionWhistle(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
     QuickActionButton(btn, host) {
 
-    private var whistle: ISoundPlayer? = null
+    private var whistle: SoundPlayer? = null
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate() {

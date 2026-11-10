@@ -11,7 +11,7 @@ import android.text.format.Formatter
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.ResourceCache
+import com.kylecorry.andromeda.core.system.ResourceCache
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
 import com.kylecorry.sol.science.geography.formatting.CoordinateFormat

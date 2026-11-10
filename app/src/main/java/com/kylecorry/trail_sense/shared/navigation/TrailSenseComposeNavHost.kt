@@ -125,7 +125,6 @@ private fun TrailSenseRouteContent(route: Route) {
         host.onStart()
         onDispose {
             host.onStop()
-            host.cleanupReactiveEffects()
         }
     }
 
@@ -133,7 +132,6 @@ private fun TrailSenseRouteContent(route: Route) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> host.onResume()
-                Lifecycle.Event.ON_PAUSE -> host.onPause()
                 else -> Unit
             }
         }

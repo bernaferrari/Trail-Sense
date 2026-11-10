@@ -4,7 +4,7 @@ import com.kylecorry.trail_sense.shared.time.interop.*
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
-import com.kylecorry.trail_sense.shared.andromeda_temp.canvas.ICanvasDrawer
+import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate

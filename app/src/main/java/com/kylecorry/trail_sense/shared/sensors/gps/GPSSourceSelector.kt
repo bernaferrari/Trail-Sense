@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
-import com.kylecorry.trail_sense.shared.andromeda_temp.sense.location.GPS
+import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.trail_sense.shared.UserPreferences
 
 enum class GPSSource {

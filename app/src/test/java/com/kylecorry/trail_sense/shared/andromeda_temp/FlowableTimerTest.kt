@@ -1,4 +1,4 @@
-package com.kylecorry.trail_sense.shared.andromeda_temp
+package com.kylecorry.andromeda
 
 import com.kylecorry.luna.concurrency.IFlowable
 import com.kylecorry.luna.time.FlowableTimer

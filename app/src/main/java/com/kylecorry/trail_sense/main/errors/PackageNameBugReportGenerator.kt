@@ -1,10 +1,11 @@
 package com.kylecorry.trail_sense.main.errors
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Package
-import com.kylecorry.trail_sense.shared.andromeda_temp.exceptions.IBugReportGenerator
-class PackageNameBugReportGenerator : IBugReportGenerator {
-    override fun generate(context: Context, throwable: Throwable): String {
+import com.kylecorry.andromeda.core.system.Package
+import com.kylecorry.andromeda.exceptions.BugReportGenerator
+
+class PackageNameBugReportGenerator(private val context: Context) : BugReportGenerator {
+    override fun generate(error: Throwable): String {
         return "Package: ${Package.getPackageName(context)}"
     }
 }

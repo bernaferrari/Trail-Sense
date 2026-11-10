@@ -15,13 +15,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.camera.Camera
+import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.IntentResultRetriever
-import com.kylecorry.trail_sense.shared.andromeda_temp.markdown.MarkdownService
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
+import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.permissions.SpecialPermission
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
@@ -33,7 +33,6 @@ import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForgroundService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.ActionSheetContent
-import com.kylecorry.trail_sense.tools.map.ui.MapControllerHost
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
@@ -44,7 +43,7 @@ class TrailSenseComposeDestinationHost(
     override val route: Route,
     override val lifecycleOwner: LifecycleOwner,
     private val requestRuntimePermissions: (Array<String>, () -> Unit) -> Unit
-) : TrailSenseReactiveDestinationHost, ScreenEffects {
+) : TrailSenseDestinationHost, ScreenEffects {
 
     override val navigator: TrailSenseNavigator
         get() = findNavigator()
@@ -52,19 +51,7 @@ class TrailSenseComposeDestinationHost(
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
     private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
     override var screenController: Any? = null
-    internal var mapController: MapControllerHost? = null
-    private var resumeCount = 0
-    private var mapUpdatesEnabled = true
-    private var reactiveUpdateScheduled = false
     private var specialPermissionAction: (() -> Unit)? = null
-    internal val reactiveComponent = TrailSenseReactiveComponent(
-        contextProvider = ::requireContext,
-        activityProvider = ::requireActivity,
-        rootViewProvider = ::requireView,
-        lifecycleOwnerProvider = { lifecycleOwner },
-        viewLifecycleOwnerProvider = { lifecycleOwner },
-        onStateChanged = ::onReactiveUpdate
-    )
 
     fun requireActivity(): MainActivity {
         return activity
@@ -104,13 +91,6 @@ class TrailSenseComposeDestinationHost(
         context.startActivity(intent)
     }
 
-    override val hookResetOnResume: Int
-        get() = resumeCount
-
-    override fun cleanupReactiveEffects() {
-        reactiveComponent.cleanupEffects()
-    }
-
     fun showActionSheet(
         title: String,
         subtitle: String?,
@@ -141,7 +121,7 @@ class TrailSenseComposeDestinationHost(
 
     fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
         requestPermissions(listOf(Manifest.permission.CAMERA)) {
-            action(Camera.isAvailable(requireContext()))
+            action(AndroidCamera.isAvailable(requireContext()))
         }
     }
 
@@ -327,40 +307,8 @@ class TrailSenseComposeDestinationHost(
     }
 
     fun onResume() {
-        resumeCount++
-        mapUpdatesEnabled = true
         specialPermissionAction?.invoke()
         specialPermissionAction = null
-        if (route == Route.Map) {
-            onReactiveUpdate()
-        }
-    }
-
-    fun onPause() {
-        mapUpdatesEnabled = false
-        if (route == Route.Map) {
-            mapController?.onPause()
-        }
-    }
-
-    internal fun onReactiveUpdate() {
-        if (
-            !mapUpdatesEnabled ||
-            reactiveUpdateScheduled ||
-            route != Route.Map
-        ) {
-            return
-        }
-
-        reactiveUpdateScheduled = true
-        rootView.post {
-            reactiveUpdateScheduled = false
-            if (!mapUpdatesEnabled) {
-                return@post
-            }
-            reactiveComponent.resetHookCursor()
-            mapController?.onUpdate()
-        }
     }
 
     @OptIn(ExperimentalMaterial3Api::class)

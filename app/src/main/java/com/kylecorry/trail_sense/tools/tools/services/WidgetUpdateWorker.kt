@@ -1,15 +1,17 @@
 package com.kylecorry.trail_sense.tools.tools.services
 
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.IPeriodicTaskScheduler
-import com.kylecorry.trail_sense.shared.andromeda_temp.background.PeriodicTaskSchedulerFactory
-import com.kylecorry.trail_sense.shared.andromeda_temp.core.system.Wakelocks
+import com.kylecorry.andromeda.background.PeriodicTaskScheduler
+import com.kylecorry.andromeda.background.PeriodicTaskSchedulerFactory
+import com.kylecorry.andromeda.core.system.Wakelocks
 import com.kylecorry.andromeda.core.tryOrLog
-import com.kylecorry.trail_sense.shared.andromeda_temp.permissions.Permissions
-import com.kylecorry.trail_sense.shared.andromeda_temp.widgets.Widgets
+import com.kylecorry.andromeda.permissions.Permissions
+import com.kylecorry.andromeda.widgets.Widgets
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canGetLocationCustom
@@ -17,14 +19,14 @@ import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem.SensorRefreshPolicy
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
+import kotlin.time.Duration
 
 class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         val wakelock = Wakelocks.get(applicationContext, TAG)
-        wakelock?.acquire(Duration.ofSeconds(60).toMillis())
+        wakelock?.acquire(60.seconds.inWholeMilliseconds)
         val start = SystemClock.elapsedRealtime()
         try {
             // Update stale location/elevation data if needed
@@ -75,7 +77,7 @@ class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
         private const val TAG = "WidgetUpdateWorker"
         private const val UNIQUE_ID = 267389
 
-        val FREQUENCY: Duration = Duration.ofMinutes(30)
+        val FREQUENCY: Duration = 30.minutes
 
         fun start(context: Context) {
             scheduler(context).interval(FREQUENCY)
@@ -85,7 +87,7 @@ class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
             scheduler(context).cancel()
         }
 
-        private fun scheduler(context: Context): IPeriodicTaskScheduler {
+        private fun scheduler(context: Context): PeriodicTaskScheduler {
             return PeriodicTaskSchedulerFactory(context).deferrable(
                 WidgetUpdateWorker::class.java,
                 UNIQUE_ID

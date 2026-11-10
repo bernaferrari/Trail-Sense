@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
+import kotlin.time.Duration
+import com.kylecorry.andromeda.core.time.interval
+
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -7,7 +10,6 @@ import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import java.time.Duration
 
 class WeatherLogger(
     context: Context,

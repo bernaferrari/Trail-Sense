@@ -3,9 +3,9 @@ package com.kylecorry.trail_sense.tools.paths.infrastructure
 import com.kylecorry.trail_sense.shared.time.interop.*
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.BooleanPreference
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.IntEnumPreference
-import com.kylecorry.trail_sense.shared.andromeda_temp.preferences.StringEnumPreference
+import com.kylecorry.andromeda.preferences.BooleanPreference
+import com.kylecorry.andromeda.preferences.IntEnumPreference
+import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.andromeda.sense.location.GPSPowerUsage
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R

@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.shared.map_layers.preferences.repo
 
+import kotlin.time.Duration
+
 import android.content.Context
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
-import java.time.Duration
 
 enum class MapLayerType {
     Overlay,
