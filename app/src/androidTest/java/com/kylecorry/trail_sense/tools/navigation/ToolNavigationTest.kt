@@ -106,7 +106,8 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         clickOkIfShown()
 
         hasText("Test Beacon")
-        hasText(Regex("1.000000°,\\s+-1.000000°"))
+        // The navigation card shows the destination's name, bearing, and distance rather than its coordinates
+        hasText(Regex("\\d+° [NSEW]+"), exact = true)
         hasText("100 ft")
         isVisible(navigationArrow)
         hasRemaining(Regex("\\d+(\\.\\d+)? (ft|mi)"))

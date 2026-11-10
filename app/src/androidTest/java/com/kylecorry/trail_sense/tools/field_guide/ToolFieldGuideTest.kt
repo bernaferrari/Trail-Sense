@@ -340,7 +340,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         hasText("No sightings")
         back()
-        hasText("Sightings (0)")
+        // The page shows the count on its sightings row, as checked above
+        hasText(id("field_guide_page_sightings"), "0 sightings")
     }
 }
 
