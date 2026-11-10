@@ -45,22 +45,19 @@ class TrailSenseNavigator {
     }
 
     /**
-     * Opens [route] on top of the current screen. A route already on the stack is returned to (everything above it
-     * is dropped) instead of being stacked twice, so back never loops and each entry keeps a unique key.
-     *
-     * The first screen is the exception: unwinding to it would leave nothing to go back to, so opening it from a
-     * screen above it (Settings from Tools, when Settings is the first tab) moves it to the top instead, and back
-     * returns to the screen it was opened from.
+     * Opens [route] on top of the current screen, as upstream's Fragment navigation did: back always returns to the
+     * screen it was opened from. A route already on the stack is moved to the top rather than stacked a second time,
+     * because each Navigation 3 entry needs a unique key (its saved state is keyed by the route).
      */
     fun navigate(route: Route) {
         val existing = backStack.indexOf(route)
         when {
             existing < 0 -> backStack.add(route)
-            existing == 0 && backStack.size > 1 -> {
-                backStack.removeAt(0)
+            existing == backStack.lastIndex -> Unit
+            else -> {
+                backStack.removeAt(existing)
                 backStack.add(route)
             }
-            else -> while (backStack.size > existing + 1) backStack.removeAt(backStack.lastIndex)
         }
         lastChangeWasTabSwitch = false
         notifyChanged()

@@ -23,14 +23,30 @@ internal class TrailSenseNavigatorTest {
     }
 
     @Test
-    fun returnsToARouteAlreadyOnTheStack() {
+    fun aRouteAlreadyOnTheStackIsOpenedOnTopAndBackReturnsToTheScreenItWasOpenedFrom() {
         val navigator = TrailSenseNavigator()
-        navigator.setStartRoute(Route.Navigation())
+        navigator.setStartRoute(Route.Tools)
         navigator.navigate(Route.BeaconList())
         navigator.navigate(Route.BeaconDetails(3))
+        navigator.navigate(Route.Navigation())
+        navigator.navigate(Route.BeaconDetails(3))
+
+        assertEquals(
+            listOf(Route.Tools, Route.BeaconList(), Route.Navigation(), Route.BeaconDetails(3)),
+            navigator.backStack.toList()
+        )
+        assertTrue(navigator.popBackStack())
+        assertEquals(Route.Navigation(), navigator.currentRoute)
+    }
+
+    @Test
+    fun openingTheScreenAlreadyOnTopChangesNothing() {
+        val navigator = TrailSenseNavigator()
+        navigator.setStartRoute(Route.Tools)
+        navigator.navigate(Route.BeaconList())
         navigator.navigate(Route.BeaconList())
 
-        assertEquals(listOf(Route.Navigation(), Route.BeaconList()), navigator.backStack.toList())
+        assertEquals(listOf(Route.Tools, Route.BeaconList()), navigator.backStack.toList())
     }
 
     @Test
