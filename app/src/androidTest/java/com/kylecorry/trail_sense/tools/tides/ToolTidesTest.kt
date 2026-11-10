@@ -58,7 +58,8 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         // TODO: Manual lunitidal interval
 
         // Save
-        click(id("create_tide_save_btn"))
+        // Save is the last item of the form list, so it only exists once scrolled into view
+        scrollUntil { click(id("create_tide_save_btn"), waitForTime = 0) }
 
         hasText(id("tide_list_title"), string(R.string.tides))
         hasText(id("tide_table_title", index = 1), "Tide 1")
@@ -116,7 +117,8 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
             hasText(id("tide_type", index = 1), string(R.string.high_tide_letter))
         }
 
-        click(id("create_tide_save_btn"))
+        // Save is the last item of the form list, so it only exists once scrolled into view
+        scrollUntil { click(id("create_tide_save_btn"), waitForTime = 0) }
 
         hasText(id("tide_list_title"), string(R.string.tides))
         hasText(id("tide_table_title", index = 1), "Tide 1")

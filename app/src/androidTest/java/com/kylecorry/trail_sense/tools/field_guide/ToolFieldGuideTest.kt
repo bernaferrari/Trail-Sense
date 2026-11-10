@@ -327,7 +327,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         // Create another sighting to delete from the edit page
         click(R.id.create_btn)
-        input("Notes", "Delete from edit page")
+        input(id("notes"), "Delete from edit page")
         click(toolbarButton(Side.Right))
         hasText("Delete from edit page")
 
