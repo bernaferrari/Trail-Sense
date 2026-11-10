@@ -76,9 +76,9 @@ class ExportPathCommand(
             // Notify the user
             onMain {
                 if (success) {
-                    Alerts.toast(context, context.getString(R.string.path_exported))
+                    Alerts.snackbar(context, context.getString(R.string.path_exported))
                 } else {
-                    Alerts.toast(context, context.getString(R.string.export_path_error))
+                    Alerts.snackbar(context, context.getString(R.string.export_path_error))
                 }
             }
         }

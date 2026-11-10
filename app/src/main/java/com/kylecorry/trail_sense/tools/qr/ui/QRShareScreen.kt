@@ -41,7 +41,7 @@ fun QRShareScreen(
     val context = LocalContext.current
     LaunchedEffect(text) {
         if (text.length > QR_SHARE_MAX_LENGTH) {
-            Alerts.toast(context, context.getString(R.string.qr_text_too_long))
+            Alerts.snackbar(context, context.getString(R.string.qr_text_too_long))
         }
     }
 

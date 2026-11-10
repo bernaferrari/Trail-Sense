@@ -402,7 +402,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         handleIntentAction(intent)
 
         if (SafeMode.isEnabled()) {
-            Alerts.toast(
+            Alerts.snackbar(
                 this,
                 getString(R.string.safe_mode_toast),
                 false

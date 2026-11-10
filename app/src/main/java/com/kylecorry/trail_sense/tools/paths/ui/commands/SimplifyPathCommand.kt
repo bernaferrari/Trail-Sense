@@ -84,7 +84,7 @@ class SimplifyPathCommand(
                 pathService.simplifyPath(path.id, quality)
             }
             loading.dismiss()
-            Alerts.toast(
+            Alerts.snackbar(
                 context,
                 context.resources.getQuantityString(
                     R.plurals.waypoints_deleted,

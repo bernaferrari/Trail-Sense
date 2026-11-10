@@ -37,7 +37,7 @@ class MoveBeaconCommand(
             }
 
             onMain {
-                Alerts.toast(
+                Alerts.snackbar(
                     context,
                     context.getString(R.string.moved_to, groupName)
                 )

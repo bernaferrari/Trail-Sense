@@ -178,7 +178,7 @@ fun AstronomyToolScreen(
 
     LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
-        CustomUiUtils.oneTimeToast(
+        CustomUiUtils.oneTimeSnackbar(
             context,
             context.getString(R.string.tap_sun_moon_hint),
             "cache_tap_sun_moon_shown"

@@ -25,7 +25,7 @@ class RemoveBatteryRestrictionsAlerter(private val host: TrailSenseDestinationHo
             host.lifecycleOwner.lifecycleScope.launch {
                 // Let the user know they did it right since this process is confusing
                 if (host.requestPermission(AppPermission.IgnoreBatteryOptimizations)) {
-                    Alerts.toast(context, context.getString(R.string.battery_usage_allowed))
+                    Alerts.snackbar(context, context.getString(R.string.battery_usage_allowed))
                 }
             }
         }

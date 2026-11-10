@@ -157,7 +157,7 @@ private fun ClockScreen(
         isGpsTime = true
 
         if (gps is CustomGPS && gps.isTimedOut) {
-            Alerts.toast(context, context.getString(R.string.no_gps_signal))
+            Alerts.snackbar(context, context.getString(R.string.no_gps_signal))
             gpsTime = Clock.System.now()
             isGpsTime = false
         }
@@ -469,7 +469,7 @@ private fun sendNextMinuteNotification(
         context.getString(R.string.clock_sync_instructions, formattedTime)
     ) { cancelled ->
         if (!cancelled) {
-            Alerts.toast(
+            Alerts.snackbar(
                 context,
                 context.getString(R.string.pip_notification_scheduled, formattedTime)
             )

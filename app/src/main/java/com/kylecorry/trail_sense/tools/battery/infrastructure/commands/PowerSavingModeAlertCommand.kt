@@ -12,7 +12,7 @@ class PowerSavingModeAlertCommand(private val context: Context) : Command {
 
     override fun execute() {
         if (preference.isLowPowerModeOn) {
-            Alerts.toast(context, context.getString(R.string.low_power_mode_on_message))
+            Alerts.snackbar(context, context.getString(R.string.low_power_mode_on_message))
         }
     }
 }

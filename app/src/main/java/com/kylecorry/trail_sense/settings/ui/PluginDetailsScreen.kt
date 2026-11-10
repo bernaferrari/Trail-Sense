@@ -195,7 +195,7 @@ internal fun PluginDetailsScreen(
                             scope.launch {
                                 pluginSubsystem.reloadRegistration(packageId)
                                 reloadKey += 1
-                                Alerts.toast(context, context.getString(R.string.done))
+                                Alerts.snackbar(context, context.getString(R.string.done))
                             }
                         },
                         position = position

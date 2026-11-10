@@ -156,7 +156,7 @@ class TrailSenseComposeDestinationHost(
                 SpecialPermission.SCHEDULE_EXACT_ALARMS
             )
             if (!isGranted) {
-                Alerts.toast(
+                Alerts.snackbar(
                     requireContext(),
                     getString(R.string.exact_alarm_permission_denied),
                     short = false
@@ -180,7 +180,7 @@ class TrailSenseComposeDestinationHost(
         ) {
             val hasPermission = Permissions.canStartLocationForgroundService(requireContext())
             if (!hasPermission) {
-                Alerts.toast(requireContext(), getString(R.string.backtrack_no_permission))
+                Alerts.snackbar(requireContext(), getString(R.string.backtrack_no_permission))
             }
             action(hasPermission)
         }
@@ -214,7 +214,7 @@ class TrailSenseComposeDestinationHost(
                 SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS
             )
             if (!isGranted) {
-                toast(getString(R.string.battery_usage_restricted), short = false)
+                message(getString(R.string.battery_usage_restricted), short = false)
             }
             action(isGranted)
         }
@@ -225,8 +225,8 @@ class TrailSenseComposeDestinationHost(
             ?: error("Root TrailSenseNavigator is not available")
     }
 
-    fun toast(message: CharSequence, short: Boolean) {
-        Alerts.toast(requireContext(), message, short)
+    fun message(message: CharSequence, short: Boolean) {
+        Alerts.snackbar(requireContext(), message, short)
     }
 
     fun inBackground(
@@ -238,7 +238,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     fun alertNoActivityRecognitionPermission() {
-        Alerts.toast(
+        Alerts.snackbar(
             requireContext(),
             getString(R.string.activity_recognition_permission_denied),
             short = false
@@ -246,7 +246,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     fun alertNoCameraPermission() {
-        Alerts.toast(
+        Alerts.snackbar(
             requireContext(),
             getString(R.string.camera_permission_denied),
             short = false
@@ -367,7 +367,7 @@ class TrailSenseComposeDestinationHost(
     }
 
     override fun showMessage(message: String, long: Boolean) {
-        toast(message, short = !long)
+        message(message, short = !long)
     }
 
     override suspend fun showSnackbar(message: String, actionLabel: String?, long: Boolean): Boolean =

@@ -36,7 +36,7 @@ class RestoreCommand(private val context: Context, private val uriPicker: UriPic
                 backupService.restore(source, setProgress)
             }
 
-            Alerts.toast(
+            Alerts.snackbar(
                 context,
                 context.getString(R.string.restore_complete_message),
                 short = false
@@ -44,9 +44,9 @@ class RestoreCommand(private val context: Context, private val uriPicker: UriPic
             // Restart the app
             CurrentApp.restart(context)
         } catch (e: BackupService.InvalidBackupException) {
-            Alerts.toast(context, context.getString(R.string.invalid_backup_file))
+            Alerts.snackbar(context, context.getString(R.string.invalid_backup_file))
         } catch (e: BackupService.NewerBackupException) {
-            Alerts.toast(
+            Alerts.snackbar(
                 context,
                 context.getString(
                     R.string.restore_failure_newer_version,

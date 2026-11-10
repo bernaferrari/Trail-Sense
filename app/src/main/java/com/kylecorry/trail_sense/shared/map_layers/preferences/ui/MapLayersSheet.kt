@@ -245,7 +245,7 @@ class MapLayersSheetState(
 
             val destinationIds = indices.map { otherMaps[it] }
             repo.copyLayerPreferences(layer.id, mapId, destinationIds)
-            Alerts.toast(context, context.getString(R.string.settings_copied))
+            Alerts.snackbar(context, context.getString(R.string.settings_copied))
         }
     }
 

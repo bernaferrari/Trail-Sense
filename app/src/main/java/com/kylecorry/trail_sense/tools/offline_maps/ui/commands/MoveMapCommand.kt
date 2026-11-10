@@ -43,7 +43,7 @@ class MoveMapCommand(private val context: Context, private val service: MapServi
         val groupName = results.second?.name ?: context.getString(R.string.no_group)
 
         onMain {
-            Alerts.toast(
+            Alerts.snackbar(
                 context,
                 context.getString(R.string.moved_to, groupName)
             )

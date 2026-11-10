@@ -167,14 +167,14 @@ class CameraState(val context: Context) {
         }
 
         if (!AndroidCamera.isAvailable(context)) {
-            Alerts.toast(context, context.getString(R.string.camera_unavailable))
+            Alerts.snackbar(context, context.getString(R.string.camera_unavailable))
             return
         }
 
         val useBackCamera = preferBackCamera && AndroidCamera.hasBackCamera(context)
 
         if (!useBackCamera && !AndroidCamera.hasFrontCamera(context)) {
-            Alerts.toast(context, context.getString(R.string.camera_unavailable))
+            Alerts.snackbar(context, context.getString(R.string.camera_unavailable))
             return
         }
 

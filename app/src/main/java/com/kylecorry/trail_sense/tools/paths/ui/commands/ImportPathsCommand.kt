@@ -59,7 +59,7 @@ class ImportPathsCommand(
                 importPaths(selectedPaths, parentId)
 
                 // Let the user know the import was successful
-                Alerts.toast(
+                Alerts.snackbar(
                     context, context.resources.getQuantityString(
                         R.plurals.paths_imported,
                         selectedPathIndices.size,

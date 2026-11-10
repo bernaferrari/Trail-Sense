@@ -392,7 +392,7 @@ fun WeatherSettingsToolScreen() {
                                 exporter.export(csv, "weather-${Clock.System.now().toEpochMilliseconds()}.csv")
                             }
                             if (exported) {
-                                Alerts.toast(context, context.getString(R.string.weather_exported))
+                                Alerts.snackbar(context, context.getString(R.string.weather_exported))
                             }
                         }
                     },

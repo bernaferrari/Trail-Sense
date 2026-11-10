@@ -306,7 +306,7 @@ fun BeaconListToolScreen(
                         val count = viewModel.import(
                             GPXData(waypoints.filterIndices(it), emptyList(), emptyList())
                         )
-                        Alerts.toast(
+                        Alerts.snackbar(
                             context,
                             context.resources.getQuantityString(R.plurals.beacons_imported, count, count)
                         )

@@ -120,7 +120,7 @@ fun ToolsScreen(
     var filter by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        CustomUiUtils.oneTimeToast(
+        CustomUiUtils.oneTimeSnackbar(
             context,
             context.getString(R.string.tool_long_press_hint_toast),
             "tools_long_press_notice_shown",

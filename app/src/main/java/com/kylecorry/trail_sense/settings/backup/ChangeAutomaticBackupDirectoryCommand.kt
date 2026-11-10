@@ -26,7 +26,7 @@ class ChangeAutomaticBackupDirectoryCommand(
             )
         ) {
             if (it == null) {
-                Alerts.toast(context, context.getString(R.string.no_directory_selected))
+                Alerts.snackbar(context, context.getString(R.string.no_directory_selected))
                 onChange(false)
                 return@pickDirectory
             }

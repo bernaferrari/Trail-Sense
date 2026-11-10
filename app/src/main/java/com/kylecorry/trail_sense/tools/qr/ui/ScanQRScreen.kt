@@ -189,7 +189,7 @@ fun ScanQRToolScreen() {
                     }
                 }
 
-                ScanQREvent.NoQrCodeDetected -> Alerts.toast(
+                ScanQREvent.NoQrCodeDetected -> Alerts.snackbar(
                     context,
                     context.getString(R.string.no_qr_code_detected)
                 )

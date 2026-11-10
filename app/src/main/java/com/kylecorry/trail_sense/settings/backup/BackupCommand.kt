@@ -38,6 +38,6 @@ class BackupCommand(private val context: Context, private val uriPicker: UriPick
             backupService.backup(destination)
         }
 
-        Alerts.toast(context, context.getString(R.string.done))
+        Alerts.snackbar(context, context.getString(R.string.done))
     }
 }

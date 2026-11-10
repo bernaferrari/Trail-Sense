@@ -92,7 +92,7 @@ class QuickActionSheetState(private val context: Context) {
         val host = activity.getActiveDestinationHost()
 
         if (host == null) {
-            Alerts.toast(context, context.getString(R.string.quick_actions_are_unavailable))
+            Alerts.snackbar(context, context.getString(R.string.quick_actions_are_unavailable))
             return
         }
 

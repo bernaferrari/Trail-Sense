@@ -436,7 +436,7 @@ object CustomUiUtils {
         Pickers.time(context, use24Hours, default, onTimePick)
     }
 
-    fun oneTimeToast(
+    fun oneTimeSnackbar(
         context: Context,
         message: String,
         shownKey: String,
@@ -444,7 +444,7 @@ object CustomUiUtils {
     ) {
         val prefs = PreferencesSubsystem.getInstance(context).preferences
         if (prefs.getBoolean(shownKey) != true) {
-            Alerts.toast(context, message, short)
+            Alerts.snackbar(context, message, short)
             prefs.putBoolean(shownKey, true)
         }
     }
@@ -531,7 +531,7 @@ object CustomUiUtils {
         qr: String
     ) {
         if (qr.length > QR_SHARE_MAX_LENGTH) {
-            Alerts.toast(context, context.getString(R.string.qr_text_too_long))
+            Alerts.snackbar(context, context.getString(R.string.qr_text_too_long))
         }
         appNavigator.navigate(Route.ViewQr(title = title, text = qr.take(QR_SHARE_MAX_LENGTH)))
     }

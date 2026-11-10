@@ -304,7 +304,7 @@ fun TriangulateToolScreen(
         onUpdateGpsOverride = {
             viewModel.result?.let { coord ->
                 prefs.gps.locationOverride = coord
-                Alerts.toast(context, context.getString(R.string.location_override_updated))
+                Alerts.snackbar(context, context.getString(R.string.location_override_updated))
             }
         },
         onLocation1Change = { viewModel.updateLocation(1, it) },

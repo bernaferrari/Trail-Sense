@@ -15,7 +15,6 @@ import com.kylecorry.trail_sense.shared.time.atStartOfDay
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -271,16 +270,11 @@ object Alerts {
     }
 
     /**
-     * A short message that needs no answer: a Compose snackbar on the screen that is showing. Work running while the
-     * app is in the background has no screen to draw on, so it falls back to the system's toast.
+     * A short message that needs no answer, as a snackbar in the app-wide [AppHost] (a Compose SnackbarHostState).
+     * Asked for while the app is in the background, it waits and shows once the app is on screen again.
      */
-    fun toast(context: Context, text: CharSequence, short: Boolean = true) {
-        val host = AppHost.visible(context)
-        if (host != null) {
-            host.snackbar(text.toString(), long = !short)
-        } else {
-            Toast.makeText(context.applicationContext, text, if (short) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
-        }
+    fun snackbar(context: Context, text: CharSequence, short: Boolean = true) {
+        AppHost.from(context).snackbar(text.toString(), long = !short)
     }
 
     /** A dialog with [title] and a spinner that can't be dismissed by the person; dismiss it when the work is done. */
