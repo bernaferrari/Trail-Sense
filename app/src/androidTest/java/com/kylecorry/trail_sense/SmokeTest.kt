@@ -78,7 +78,7 @@ class SmokeTest {
         clearAppData(packageName)
         grantBasicPermissions(packageName)
         TestUtils.launchApp(packageName)
-        completeOnboarding()
+        TestUtils.completeOnboarding()
 
         // Click on the tools bottom navigation tab
         click({ viewWithResourceId("$packageName:id/action_experimental_tools") })
@@ -98,15 +98,6 @@ class SmokeTest {
         closeApp(packageName)
     }
 
-    private fun completeOnboarding() {
-        click("Next")
-        click("Next")
-        click("Next")
-        optional {
-            click("Next", waitForTime = 200)
-        }
-        click("I Agree")
-    }
 
     private fun openTool(id: Long, name: String) {
         Log.i(TAG, "Running smoke test for tool: $name ($id)")

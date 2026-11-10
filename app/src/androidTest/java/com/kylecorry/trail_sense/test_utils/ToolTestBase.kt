@@ -16,7 +16,6 @@ import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.delay
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.TestUtils.clearAppData
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
@@ -128,22 +127,13 @@ open class ToolTestBase(
             clearAppData(packageName)
             grantBasicPermissions(packageName)
             TestUtils.launchApp(packageName)
-            completeOnboarding()
+            TestUtils.completeOnboarding()
             // The Tools tab is identified by its label in the Compose navigation bar
             click(TestUtils.getString(R.string.tools), exact = true)
             openTool(toolId)
         }
     }
 
-    private fun completeOnboarding() {
-        click("Next")
-        click("Next")
-        click("Next")
-        optional {
-            click("Next", waitForTime = 200)
-        }
-        click("I Agree")
-    }
 
     private fun openTool(id: Long) {
         val tool = Tools.getTool(context, id) ?: return

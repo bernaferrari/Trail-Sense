@@ -210,6 +210,17 @@ object TestUtils {
         }
     }
 
+    /** Steps through a freshly installed app's first run (the onboarding pages, then the disclaimer). */
+    fun completeOnboarding() {
+        click("Next")
+        click("Next")
+        click("Next")
+        AutomationLibrary.optional {
+            click("Next", waitForTime = 200)
+        }
+        click("I Agree")
+    }
+
     fun launchApp(packageName: String) {
         val packageManager = context.packageManager
         var intent = packageManager.getLaunchIntentForPackage(packageName)
