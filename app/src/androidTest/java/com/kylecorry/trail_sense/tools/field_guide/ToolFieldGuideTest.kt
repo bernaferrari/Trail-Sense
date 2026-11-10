@@ -175,13 +175,13 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         hasText("Created", waitForTime = GPS_WAIT_FOR_TIMEOUT)
         click("View")
-        input("Notes", "Quick action sighting")
-        click(toolbarButton(Side.Right))
+        input(id("notes"), "Quick action sighting")
+        click(id("field_guide_sighting_save_btn"))
 
         // The quick action deep link returns to the sightings list after saving.
         hasText("Quick action sighting")
         back()
-        hasText("Sightings (1)")
+        hasText(id("field_guide_page_sightings"), "1 sighting")
         back()
     }
 
