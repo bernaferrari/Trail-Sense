@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance
 
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
-import java.time.Instant
+import kotlin.time.Instant
 
 class CachedTile(
     val id: Long,

@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.settings.infrastructure
 
+import kotlin.time.Duration.Companion.seconds
+
 import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.preferences.FloatPreference
 import com.kylecorry.trail_sense.R
-import java.time.Duration
+import kotlin.time.Duration
 
 class FlashlightPreferenceRepo(context: Context) : PreferenceRepo(context) {
 
@@ -36,10 +38,10 @@ class FlashlightPreferenceRepo(context: Context) : PreferenceRepo(context) {
         get() {
             val seconds =
                 cache.getLong(getString(R.string.pref_flashlight_timeout)) ?: (5L * 60)
-            return Duration.ofSeconds(seconds)
+            return seconds.seconds
         }
         set(value) {
-            cache.putLong(getString(R.string.pref_flashlight_timeout), value.seconds)
+            cache.putLong(getString(R.string.pref_flashlight_timeout), value.inWholeSeconds)
         }
 
 }

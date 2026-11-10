@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
+import kotlin.time.Clock
+
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.content.Context
@@ -34,7 +36,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.Instant
 
 class Navigator private constructor(context: Context) {
 
@@ -241,7 +242,7 @@ class Navigator private constructor(context: Context) {
             bearing,
             startingLocation,
             isActive = true,
-            startTime = Instant.now()
+            startTime = Clock.System.now()
         )
         bearings.setBearing(navigationBearing)
         Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)

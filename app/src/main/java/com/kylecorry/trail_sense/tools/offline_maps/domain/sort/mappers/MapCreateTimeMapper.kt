@@ -14,7 +14,7 @@ class MapCreateTimeMapper(override val loader: IGroupLoader<IMap>) : GroupMapper
             is VectorMap -> item.createdOn
             else -> null
         }
-        return time?.toEpochMilli() ?: item.id
+        return time?.toEpochMilliseconds() ?: item.id
     }
 
     override suspend fun aggregate(values: List<Long>): Long {

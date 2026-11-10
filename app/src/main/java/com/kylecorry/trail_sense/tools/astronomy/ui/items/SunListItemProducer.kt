@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.today
+
+import kotlin.time.Duration.Companion.days
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
@@ -9,8 +11,7 @@ import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
-import java.time.Duration
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 class SunListItemProducer(context: Context) : BaseAstroListItemProducer(context) {
 
@@ -31,14 +32,14 @@ class SunListItemProducer(context: Context) : BaseAstroListItemProducer(context)
         val peak = times.transit?.let {
             astronomyService.getSunAltitude(location, it)
         }
-        val night = Duration.ofDays(1) - daylight
+        val night = 1.days - daylight
         val season = astronomyService.getSeason(location, date)
-        val azimuth = if (date == LocalDate.now()) DeclinationUtils.fromTrueNorthBearing(
+        val azimuth = if (date == today()) DeclinationUtils.fromTrueNorthBearing(
             astronomyService.getSunAzimuth(location),
             declination
         ) else null
         val altitude =
-            if (date == LocalDate.now()) astronomyService.getSunAltitude(location) else null
+            if (date == today()) astronomyService.getSunAltitude(location) else null
 
         list(
             1,

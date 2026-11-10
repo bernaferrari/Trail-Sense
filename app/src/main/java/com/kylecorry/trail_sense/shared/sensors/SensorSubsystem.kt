@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -18,7 +17,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.GPSSource
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSSourceSelector
 import com.kylecorry.trail_sense.shared.sensors.gps.TimezoneGPS
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
-import java.time.Duration
+import kotlin.time.Duration
 
 class SensorSubsystem private constructor(private val context: Context) {
     private val sensorService by lazy { SensorService(context) }

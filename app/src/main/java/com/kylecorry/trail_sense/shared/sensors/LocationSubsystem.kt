@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import com.kylecorry.trail_sense.shared.time.interop.*
-
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
@@ -18,8 +17,8 @@ import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 class LocationSubsystem private constructor(private val context: Context) {
 
@@ -40,10 +39,10 @@ class LocationSubsystem private constructor(private val context: Context) {
                 return Duration.ZERO
             }
 
-            val lastUpdate = Instant.ofEpochMilli(
+            val lastUpdate = Instant.fromEpochMilliseconds(
                 CacheGPSModule.getCachedData(prefs)?.updateTimeMillis ?: 0
             )
-            return Duration.between(lastUpdate, Instant.now())
+            return (Clock.System.now() - lastUpdate)
         }
 
     val isLocationStale: Boolean
@@ -59,8 +58,8 @@ class LocationSubsystem private constructor(private val context: Context) {
             }
 
             val lastUpdate =
-                prefs.getJavaInstant(CachingAltimeterWrapper.LAST_UPDATE_KEY) ?: Instant.EPOCH
-            return JavaTime.between(lastUpdate, Instant.now())
+                prefs.getInstant(CachingAltimeterWrapper.LAST_UPDATE_KEY) ?: Instant.fromEpochMilliseconds(0)
+            return (Clock.System.now() - lastUpdate)
         }
 
     init {
@@ -107,7 +106,7 @@ class LocationSubsystem private constructor(private val context: Context) {
     }
 
     companion object {
-        private val STALE_LOCATION_AGE: Duration = Duration.ofMinutes(2)
+        private val STALE_LOCATION_AGE: Duration = 2.minutes
 
         @SuppressLint("StaticFieldLeak")
         private var instance: LocationSubsystem? = null

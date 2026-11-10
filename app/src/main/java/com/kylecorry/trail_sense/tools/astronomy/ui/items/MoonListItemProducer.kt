@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.today
 
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
@@ -8,8 +8,10 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.TimeZone
 
 class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context) {
 
@@ -20,17 +22,17 @@ class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context
     ): AstronomyListItem = onDefault {
         // At a glance
         val times = astronomyService.getMoonTimes(location, date)
-        val phase = if (date == LocalDate.now()) {
+        val phase = if (date == today()) {
             astronomyService.getCurrentMoonPhase()
         } else {
             astronomyService.getMoonPhase(date)
         }
-        val tilt = if (date == LocalDate.now()) {
+        val tilt = if (date == today()) {
             astronomyService.getMoonTilt(location)
         } else {
             astronomyService.getMoonTilt(
                 location,
-                date.atTime(12, 0).atZone(ZoneId.systemDefault()),
+                date.atTime(12, 0).toInstant(TimeZone.currentSystemDefault()),
                 useNearestTransit = true
             )
         }
@@ -39,12 +41,12 @@ class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context
         val isSuperMoon = astronomyService.isSuperMoon(date)
         val peak = times.transit?.let { astronomyService.getMoonAltitude(location, it) }
         val azimuth =
-            if (date == LocalDate.now()) DeclinationUtils.fromTrueNorthBearing(
+            if (date == today()) DeclinationUtils.fromTrueNorthBearing(
                 astronomyService.getMoonAzimuth(location),
                 declination
             ) else null
         val altitude =
-            if (date == LocalDate.now()) astronomyService.getMoonAltitude(location) else null
+            if (date == today()) astronomyService.getMoonAltitude(location) else null
 
         list(
             2,

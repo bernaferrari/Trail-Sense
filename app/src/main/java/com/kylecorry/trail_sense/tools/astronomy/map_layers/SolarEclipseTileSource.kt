@@ -11,7 +11,6 @@ import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.Lut
 import com.kylecorry.andromeda.bitmaps.operations.applyOperationsOrNull
 import com.kylecorry.andromeda.core.ui.colormaps.AlphaColorMap
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.map_layers.tiles.InterpolatedGridValueProvider
 import com.kylecorry.trail_sense.shared.map_layers.tiles.ParallelCoordinateGridValueProvider
@@ -21,8 +20,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Instant
 
 class SolarEclipseTileSource : TileSource {
 
@@ -35,8 +33,7 @@ class SolarEclipseTileSource : TileSource {
         val smooth = preferences.getBoolean(SMOOTH, DEFAULT_SMOOTH)
         val showPath = preferences.getBoolean(SHOW_PATH, DEFAULT_SHOW_PATH)
 
-        val time = Instant.ofEpochMilli(params.getLong(MapLayerParams.PARAM_TIME))
-            .toZonedDateTime()
+        val time = Instant.fromEpochMilliseconds(params.getLong(MapLayerParams.PARAM_TIME))
         val bounds = tile.getBounds()
         val isEclipseVisible = arrayOf(
             bounds.northWest,
@@ -82,7 +79,7 @@ class SolarEclipseTileSource : TileSource {
 
     private fun getEclipseObscuration(
         location: Coordinate,
-        time: ZonedDateTime,
+        time: Instant,
         showPath: Boolean
     ): Float? {
         return if (showPath) {

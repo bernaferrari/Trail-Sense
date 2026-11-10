@@ -1,10 +1,11 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import com.kylecorry.trail_sense.shared.morse.ISignalingDevice
 import com.kylecorry.trail_sense.shared.morse.Signal
 import com.kylecorry.trail_sense.shared.morse.SignalPlayer
 import com.kylecorry.trail_sense.shared.morse.Signals
-import java.time.Duration
 
 class SosFlashlightStrategy(private val flashlight: FlashlightSubsystem) : IFlashlightStrategy {
 
@@ -18,8 +19,8 @@ class SosFlashlightStrategy(private val flashlight: FlashlightSubsystem) : IFlas
     }
 
     override fun start() {
-        val sos = Signals.sos(Duration.ofMillis(200)) + listOf(
-            Signal.off(Duration.ofMillis(200L * 7))
+        val sos = Signals.sos(200.milliseconds) + listOf(
+            Signal.off((200L * 7).milliseconds)
         )
         player.play(sos, true)
     }

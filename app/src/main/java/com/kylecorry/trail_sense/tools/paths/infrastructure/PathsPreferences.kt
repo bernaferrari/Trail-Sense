@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
@@ -19,7 +20,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathStyle
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IPathPreferences
 import com.kylecorry.trail_sense.tools.paths.ui.PathSortMethod
-import java.time.Duration
+import kotlin.time.Duration
 
 class PathsPreferences(private val context: Context) : IPathPreferences {
 
@@ -68,8 +69,8 @@ class PathsPreferences(private val context: Context) : IPathPreferences {
         get() = backtrackGPSPowerMode.powerUsage ?: gps.powerMode.powerUsage ?: GPSPowerUsage.High
 
     var backtrackRecordFrequency: Duration
-        get() = cache.getJavaDuration(context.getString(R.string.pref_backtrack_frequency))
-            ?: Duration.ofMinutes(1)
+        get() = cache.getDuration(context.getString(R.string.pref_backtrack_frequency))
+            ?: 1.minutes
         set(value) {
             cache.putDuration(context.getString(R.string.pref_backtrack_frequency), value)
         }
@@ -120,10 +121,10 @@ class PathsPreferences(private val context: Context) : IPathPreferences {
     override var backtrackHistory: Duration
         get() {
             val days = cache.getInt(context.getString(R.string.pref_backtrack_history_days)) ?: 7
-            return Duration.ofDays(days.toLong())
+            return (days.toLong()).days
         }
         set(value) {
-            val d = value.toDays().toInt()
+            val d = value.inWholeDays.toInt()
             cache.putInt(
                 context.getString(R.string.pref_backtrack_history_days),
                 if (d > 0) d else 1

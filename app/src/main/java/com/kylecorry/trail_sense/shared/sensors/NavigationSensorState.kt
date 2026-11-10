@@ -16,7 +16,7 @@ import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
-import java.time.Duration
+import kotlin.time.Duration
 
 /**
  * [read] applied to this sensor, refreshed on each of its readings while the screen is at least [minActiveState].

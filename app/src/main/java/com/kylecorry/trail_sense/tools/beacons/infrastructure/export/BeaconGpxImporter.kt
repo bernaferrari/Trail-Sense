@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.beacons.infrastructure.export
 
 import android.content.Context
 import com.kylecorry.andromeda.gpx.GPXData
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
@@ -26,7 +25,7 @@ class BeaconGpxImporter(private val context: Context) {
 
         val beacons = waypoints.map {
             val name = it.name
-                ?: (if (it.time != null) formatService.formatDateTime(it.time!!.toZonedDateTime()) else null)
+                ?: (if (it.time != null) formatService.formatDateTime(it.time!!) else null)
                 ?: formatService.formatLocation(it.coordinate)
             Beacon(
                 0,

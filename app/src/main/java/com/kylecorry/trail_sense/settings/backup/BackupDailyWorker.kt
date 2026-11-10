@@ -1,7 +1,8 @@
 package com.kylecorry.trail_sense.settings.backup
 
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.WorkerParameters
@@ -14,7 +15,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import kotlinx.coroutines.CancellationException
-import java.time.Instant
 import kotlinx.datetime.LocalTime
 
 class BackupDailyWorker(context: Context, params: WorkerParameters) : DailyWorker(
@@ -52,7 +52,7 @@ class BackupDailyWorker(context: Context, params: WorkerParameters) : DailyWorke
         }
 
         val destination = contentFileSystem.createFile(
-            "trail-sense-${Instant.now().epochSecond}.zip",
+            "trail-sense-${Clock.System.now().epochSeconds}.zip",
             "application/zip"
         )
         if (destination == null) {

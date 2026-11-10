@@ -5,7 +5,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class LegacyStepTrackerRepository : IStepTrackerRepository {
 
@@ -18,7 +18,7 @@ internal class LegacyStepTrackerRepository : IStepTrackerRepository {
             id = 1,
             periodId = 1,
             startTime = start,
-            endTime = Instant.MAX,
+            endTime = Instant.DISTANT_FUTURE,
             steps = steps
         )
         return listOf(

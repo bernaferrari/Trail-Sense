@@ -57,10 +57,10 @@ class EnglishFuzzySearchStrategy(
             additionalStemWords = additionalStemWords
         )
 
-        val parentMatch = item.parent?.let {
+        val parentMatch = item.parent?.let { parent ->
             TextUtils.getQueryMatchPercent(
                 query,
-                item.parent.title,
+                parent.title,
                 preservedWords = preservedWords + additionalPreservedWords,
                 additionalStopWords = additionalStopWords,
                 synonyms = synonyms + additionalSynonyms,

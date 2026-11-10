@@ -30,6 +30,7 @@ dependencyResolutionManagement {
 
 include(":app")
 include(":shared")
+include(":core")
 rootProject.name = "Trail Sense"
 
 // Opt in while the app is being migrated to the adjacent multiplatform libraries.

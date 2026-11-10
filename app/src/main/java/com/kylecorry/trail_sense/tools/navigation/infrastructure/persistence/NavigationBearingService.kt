@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
@@ -9,8 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Duration
-import java.time.Instant
 
 class NavigationBearingService(private val dao: NavigationBearingDao) : ICleanable {
 
@@ -31,12 +32,12 @@ class NavigationBearingService(private val dao: NavigationBearingDao) : ICleanab
     }
 
     override suspend fun clean() {
-        dao.deleteOlderThan(Instant.now().minus(BEARING_HISTORY_DURATION).toEpochMilli())
+        dao.deleteOlderThan(Clock.System.now().minus(BEARING_HISTORY_DURATION).toEpochMilliseconds())
     }
 
     companion object {
         private var instance: NavigationBearingService? = null
-        private var BEARING_HISTORY_DURATION = Duration.ofHours(12)
+        private var BEARING_HISTORY_DURATION = 12.hours
 
         @Synchronized
         fun getInstance(context: Context): NavigationBearingService {

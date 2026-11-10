@@ -8,7 +8,7 @@ import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.andromeda.signal.CellNetworkQuality
 import com.kylecorry.sol.units.Coordinate
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "waypoints", indices = [Index(value = ["pathId"])])
 data class WaypointEntity(
@@ -48,7 +48,7 @@ data class WaypointEntity(
             id,
             pathId,
             coordinate,
-            time = if (hasTime) Instant.ofEpochMilli(createdOn) else null,
+            time = if (hasTime) Instant.fromEpochMilliseconds(createdOn) else null,
             cellSignal = network,
             elevation = altitude
         )
@@ -60,7 +60,7 @@ data class WaypointEntity(
                 point.coordinate.latitude,
                 point.coordinate.longitude,
                 point.elevation,
-                point.time?.toEpochMilli() ?: 0L,
+                point.time?.toEpochMilliseconds() ?: 0L,
                 point.cellSignal?.network?.id,
                 point.cellSignal?.quality?.ordinal,
                 point.pathId

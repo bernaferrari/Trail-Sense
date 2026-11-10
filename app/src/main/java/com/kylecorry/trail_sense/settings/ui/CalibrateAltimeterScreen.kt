@@ -69,7 +69,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.time.Duration
+import kotlin.time.Duration
 
 @Composable
 fun CalibrateAltimeterToolScreen() {
@@ -122,7 +122,7 @@ fun CalibrateAltimeterToolScreen() {
     val overrideSummary = formatService.formatDistance(viewModel.altitudeOverride)
     val forceCalibrationSummary = stringResource(
         R.string.fused_altimeter_force_calibration_summary,
-        formatService.formatDuration(viewModel.forcedRecalibrationInterval.toJavaDuration())
+        formatService.formatDuration(viewModel.forcedRecalibrationInterval)
     )
     val demSummary = viewModel.demVersion ?: stringResource(R.string.built_in_dem)
     var showForceCalibrationPicker by remember { mutableStateOf(false) }
@@ -307,7 +307,7 @@ fun CalibrateAltimeterToolScreen() {
     if (showForceCalibrationPicker) {
         DurationPickerDialog(
             title = forceCalibrationTitle,
-            duration = viewModel.forcedRecalibrationInterval.toJavaDuration(),
+            duration = viewModel.forcedRecalibrationInterval,
             onDurationPicked = {
                 if (it != null) {
                     viewModel.changeForcedRecalibrationInterval(it)
@@ -522,8 +522,8 @@ internal class CalibrateAltimeterViewModel(
     }
 
     fun changeForcedRecalibrationInterval(interval: Duration) {
-        prefs.altimeter.fusedAltimeterForcedRecalibrationInterval = interval.toKotlinDuration()
-        forcedRecalibrationInterval = interval.toKotlinDuration()
+        prefs.altimeter.fusedAltimeterForcedRecalibrationInterval = interval
+        forcedRecalibrationInterval = interval
     }
 
     fun resetCalibration() {

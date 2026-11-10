@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 
@@ -16,7 +15,7 @@ class PathNameFactory(private val context: Context) {
         return if (path.name != null) {
             path.name
         } else if (start != null && end != null) {
-            formatService.formatTimeSpan(start.toZonedDateTime(), end.toZonedDateTime(), true)
+            formatService.formatTimeSpan(start, end, true)
         } else {
             context.getString(android.R.string.untitled)
         }

@@ -1,6 +1,11 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.decodeStoredLocalDate
+
+import com.kylecorry.trail_sense.shared.time.nowLocal
+
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
 import com.kylecorry.luna.text.toIntCompat
@@ -11,9 +16,9 @@ import com.kylecorry.sol.math.Range
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Duration
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlin.time.Duration
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 class WeatherPreferences(private val context: Context) : IWeatherPreferences {
 
@@ -45,8 +50,8 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
 
     override var weatherUpdateFrequency: Duration
         get() {
-            return cache.getJavaDuration(context.getString(R.string.pref_weather_update_frequency))
-                ?: Duration.ofMinutes(30)
+            return cache.getDuration(context.getString(R.string.pref_weather_update_frequency))
+                ?: 30.minutes
         }
         set(value) {
             cache.putDuration(context.getString(R.string.pref_weather_update_frequency), value)
@@ -81,7 +86,7 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
     override val pressureHistory: Duration
         get() {
             val raw = cache.getString(context.getString(R.string.pref_pressure_history)) ?: "48"
-            return Duration.ofHours(raw.toLong())
+            return (raw.toLong()).hours
         }
 
     override val sendStormAlerts: Boolean
@@ -105,22 +110,25 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
             }
         }
 
-    override var dailyWeatherLastSent: LocalDate
+    override var dailyWeatherLastSent: LocalDate?
         get() {
-            val raw = (cache.getString("daily_weather_last_sent_date") ?: LocalDate.MIN.toString())
-            return LocalDate.parse(raw)
+            return decodeStoredLocalDate(cache.getString("daily_weather_last_sent_date"))
         }
         set(value) {
-            cache.putString("daily_weather_last_sent_date", value.toString())
+            if (value == null) {
+                cache.remove("daily_weather_last_sent_date")
+            } else {
+                cache.putString("daily_weather_last_sent_date", value.toString())
+            }
         }
 
     override val dailyWeatherIsForTomorrow: Boolean
-        get() = dailyForecastTime >= LocalTime.of(16, 0)
+        get() = dailyForecastTime >= LocalTime(16, 0)
 
     override var dailyForecastTime: LocalTime
         get() {
             val raw = (cache.getString(context.getString(R.string.pref_daily_weather_time))
-                ?: LocalTime.of(7, 0).toString())
+                ?: LocalTime(7, 0).toString())
             return LocalTime.parse(raw)
         }
         set(value) {
@@ -148,7 +156,7 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
     override val useAlarmForStormAlert: Boolean
         get() {
             val hours = stormAlertAlarmHours ?: return false
-            val now = LocalTime.now()
+            val now = nowLocal().time
             return hours.contains(now)
         }
 
@@ -177,9 +185,9 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
             }
 
             return if (muteStormAlarmAtNight) {
-                Range(LocalTime.of(8, 0), LocalTime.of(20, 0))
+                Range(LocalTime(8, 0), LocalTime(20, 0))
             } else {
-                Range(LocalTime.MIN, LocalTime.MAX)
+                Range(LocalTime(0, 0), LocalTime(23, 59, 59, 999_999_999))
             }
         }
 

@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationBearing
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(tableName = "navigation_bearings")
 data class NavigationBearingEntity(
@@ -34,7 +34,7 @@ data class NavigationBearingEntity(
             id,
             bearing,
             startLocation,
-            startTime?.let { Instant.ofEpochMilli(it) },
+            startTime?.let { Instant.fromEpochMilliseconds(it) },
             isActive
         )
     }
@@ -45,7 +45,7 @@ data class NavigationBearingEntity(
                 bearing.bearing,
                 bearing.startLocation?.latitude,
                 bearing.startLocation?.longitude,
-                bearing.startTime?.toEpochMilli(),
+                bearing.startTime?.toEpochMilliseconds(),
                 bearing.isActive
             ).apply {
                 id = bearing.id

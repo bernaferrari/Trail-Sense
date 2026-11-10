@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.shared
 
+import com.kylecorry.trail_sense.shared.time.nowLocal
+
+import com.kylecorry.trail_sense.shared.time.today
+
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 
 import androidx.lifecycle.lifecycleScope
@@ -67,9 +71,9 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlin.math.floor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -415,7 +419,7 @@ object CustomUiUtils {
 
     fun pickDate(
         context: Context,
-        date: LocalDate = LocalDate.now(),
+        date: LocalDate = today(),
         onDatePick: (date: LocalDate?) -> Unit
     ) {
         Pickers.date(context, date, onDatePick)
@@ -424,7 +428,7 @@ object CustomUiUtils {
     fun pickTime(
         context: Context,
         use24Hours: Boolean,
-        default: LocalTime = LocalTime.now(),
+        default: LocalTime = nowLocal().time,
         onTimePick: (time: LocalTime?) -> Unit
     ) {
         Pickers.time(context, use24Hours, default, onTimePick)
@@ -543,14 +547,14 @@ object CustomUiUtils {
     fun pickDatetime(
         context: Context,
         use24Hours: Boolean,
-        default: LocalDateTime = LocalDateTime.now(),
+        default: LocalDateTime = nowLocal(),
         onDatetimePick: (value: LocalDateTime?) -> Unit
     ) {
-        pickDate(context, default.toLocalDate()) { date ->
+        pickDate(context, default.date) { date ->
             if (date != null) {
-                Pickers.time(context, use24Hours, default.toLocalTime()) { time ->
+                Pickers.time(context, use24Hours, default.time) { time ->
                     if (time != null) {
-                        onDatetimePick(LocalDateTime.of(date, time))
+                        onDatetimePick(LocalDateTime(date, time))
                     } else {
                         onDatetimePick(null)
                     }

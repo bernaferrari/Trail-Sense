@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
-import java.time.Instant
+import kotlin.time.Instant
 
 data class VectorMap(
     override val id: Long,

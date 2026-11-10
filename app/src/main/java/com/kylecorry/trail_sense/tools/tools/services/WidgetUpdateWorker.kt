@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.services
 
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.CoroutineWorker
@@ -53,14 +53,14 @@ class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
             return
         }
 
-        val isLocationStale = locationSubsystem.locationAge.toMinutes() > 30
-        val isElevationStale = locationSubsystem.elevationAge.toMinutes() > 30
+        val isLocationStale = locationSubsystem.locationAge.inWholeMinutes > 30
+        val isElevationStale = locationSubsystem.elevationAge.inWholeMinutes > 30
 
         if (isLocationStale || isElevationStale) {
             getAppService<Logger>().info(
                 TAG,
-                "Refreshing stale widget sensor data (location age: ${locationSubsystem.locationAge.toMinutes()}min, " +
-                    "elevation age: ${locationSubsystem.elevationAge.toMinutes()}min)"
+                "Refreshing stale widget sensor data (location age: ${locationSubsystem.locationAge.inWholeMinutes}min, " +
+                    "elevation age: ${locationSubsystem.elevationAge.inWholeMinutes}min)"
             )
         }
 

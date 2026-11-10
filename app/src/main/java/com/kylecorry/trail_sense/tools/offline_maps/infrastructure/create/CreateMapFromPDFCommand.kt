@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import kotlin.time.Clock
+
 import android.content.Context
 import android.net.Uri
 import com.kylecorry.luna.concurrency.onIO
@@ -19,7 +21,6 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoo
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import java.io.IOException
-import java.time.Instant
 import java.util.UUID
 
 class CreateMapFromPDFCommand(
@@ -101,7 +102,7 @@ class CreateMapFromPDFCommand(
                 isWarpingCompleted = calibrationPoints.isNotEmpty(),
                 calibrationPoints = calibrationPoints
             ),
-            createdOn = Instant.now()
+            createdOn = Clock.System.now()
         )
 
         val id = service.add(map)

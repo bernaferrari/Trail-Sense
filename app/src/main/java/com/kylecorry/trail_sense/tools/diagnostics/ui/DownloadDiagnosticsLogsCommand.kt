@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
+import kotlin.time.Clock
+
 import android.content.Context
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.R
@@ -8,7 +10,6 @@ import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.tools.diagnostics.infrastructure.DiagnosticsLogExportService
 import kotlinx.coroutines.CancellationException
-import java.time.Instant
 
 /** Asks where to save the diagnostics logs, then writes them there as a zip. */
 class DownloadDiagnosticsLogsCommand(
@@ -19,7 +20,7 @@ class DownloadDiagnosticsLogsCommand(
 
     suspend fun execute() {
         val destination = IntentUriPicker(resultRetriever, context).create(
-            "trail-sense-logs-${Instant.now().epochSecond}.zip",
+            "trail-sense-logs-${Clock.System.now().epochSeconds}.zip",
             "application/zip"
         ) ?: return
 

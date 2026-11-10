@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
-import java.time.Instant
+import kotlin.time.Instant
 
 @Entity(
     tableName = "cached_tiles",

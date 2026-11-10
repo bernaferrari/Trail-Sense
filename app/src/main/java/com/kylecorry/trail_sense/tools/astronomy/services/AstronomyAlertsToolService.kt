@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.tools.astronomy.services
 
+import kotlin.time.Duration.Companion.days
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.AstronomyDailyWorker
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import java.time.Duration
+import kotlin.time.Duration
 
 class AstronomyAlertsToolService(private val context: Context) : ToolService {
 
@@ -17,7 +19,7 @@ class AstronomyAlertsToolService(private val context: Context) : ToolService {
     override val name: String = context.getString(R.string.astronomy_alerts)
 
     override fun getFrequency(): Duration {
-        return Duration.ofDays(1)
+        return 1.days
     }
 
     override fun isRunning(): Boolean {

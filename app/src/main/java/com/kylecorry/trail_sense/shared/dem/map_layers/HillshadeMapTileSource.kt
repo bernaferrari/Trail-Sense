@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.dem.map_layers
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import android.content.Context
 
@@ -12,7 +11,6 @@ import com.kylecorry.andromeda.bitmaps.operations.applyOperations
 import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.astronomy.Astronomy
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.dem.getCellSizeX
@@ -25,8 +23,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Instant
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -51,8 +48,8 @@ class HillshadeMapTileSource : TileSource {
                 DEFAULT_MULTI_DIRECTION_SHADING
             )
 
-        val time = Instant.ofEpochMilli(params.getLong(MapLayerParams.PARAM_TIME))
-        val zonedDateTime = time.toZonedDateTime()
+        val time = Instant.fromEpochMilliseconds(params.getLong(MapLayerParams.PARAM_TIME))
+        val zonedDateTime = time
         val zoomLevel = tile.z.coerceIn(DEM.IMAGE_MIN_ZOOM_LEVEL, DEM.IMAGE_MAX_ZOOM_LEVEL)
         val bounds = tile.getBounds()
         val zFactor = 3f
@@ -119,7 +116,7 @@ class HillshadeMapTileSource : TileSource {
 
     private fun getShadowConfig(
         location: Coordinate,
-        time: ZonedDateTime,
+        time: Instant,
         drawAccurateShadows: Boolean
     ): Pair<Float, Float> {
         if (!drawAccurateShadows) {

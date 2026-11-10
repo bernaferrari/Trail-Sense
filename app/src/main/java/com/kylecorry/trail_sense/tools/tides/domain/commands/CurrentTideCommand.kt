@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.tides.domain.commands
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
 
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
@@ -15,11 +14,11 @@ class CurrentTideCommand(
 ) {
 
     suspend fun execute(table: TideTable): CurrentTideData = onDefault {
-        val now = timeProvider.getTime().toJava()
-        val level = tideService.getWaterLevel(table, now)
-        val isRising = tideService.isRising(table, now)
-        val type = tideService.getCurrentTide(table, now)
-        val withinTable = tideService.isWithinTideTable(table, now)
+        val now = timeProvider.getTime()
+        val level = tideService.getWaterLevel(table, now.instant, now.timeZone)
+        val isRising = tideService.isRising(table, now.instant, now.timeZone)
+        val type = tideService.getCurrentTide(table, now.instant, now.timeZone)
+        val withinTable = tideService.isWithinTideTable(table, now.instant)
         CurrentTideData(if (withinTable) level else null, type, isRising)
     }
 

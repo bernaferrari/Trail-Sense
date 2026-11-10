@@ -1,11 +1,15 @@
 package com.kylecorry.trail_sense.tools.astronomy.map_layers
 
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import com.kylecorry.trail_sense.shared.time.plusDays
+
+import kotlin.time.Duration.Companion.hours
+
 import android.content.Context
 
 import android.graphics.Bitmap
 import android.os.Bundle
 import com.kylecorry.andromeda.core.ui.colormaps.AlphaColorMap
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.map_layers.tiles.ParallelCoordinateGridValueProvider
@@ -15,9 +19,8 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.Duration
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 class LunarEclipseTileSource : TileSource {
 
@@ -28,8 +31,7 @@ class LunarEclipseTileSource : TileSource {
         val preferences = params.getPreferences()
         val showPath = preferences.getBoolean(SHOW_PATH, DEFAULT_SHOW_PATH)
 
-        val time = Instant.ofEpochMilli(params.getLong(MapLayerParams.PARAM_TIME))
-            .toZonedDateTime()
+        val time = Instant.fromEpochMilliseconds(params.getLong(MapLayerParams.PARAM_TIME))
         val bounds = tile.getBounds()
 
         val isEclipseVisible = arrayOf(
@@ -65,7 +67,7 @@ class LunarEclipseTileSource : TileSource {
 
     private fun getEclipseObscuration(
         location: Coordinate,
-        time: ZonedDateTime,
+        time: Instant,
         showPath: Boolean
     ): Float? {
         val eclipse =
@@ -74,9 +76,9 @@ class LunarEclipseTileSource : TileSource {
                 time.toLocalDate().plusDays(1)
             ) ?: return null
 
-        val buffer = if (showPath) Duration.ofHours(8) else Duration.ZERO
+        val buffer = if (showPath) 8.hours else Duration.ZERO
 
-        if (time < eclipse.start.minus(buffer) || time > eclipse.end.plus(buffer)) {
+        if (time < eclipse.start - buffer || time > eclipse.end + buffer) {
             return null
         }
         return eclipse.obscuration

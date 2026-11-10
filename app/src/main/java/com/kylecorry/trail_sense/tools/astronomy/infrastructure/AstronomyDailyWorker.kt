@@ -27,7 +27,7 @@ class AstronomyDailyWorker(context: Context, params: WorkerParameters) : DailyWo
 
     override fun getScheduledTime(context: Context): LocalTime {
         val prefs = UserPreferences(context)
-        return prefs.astronomy.astronomyAlertTime.toKotlinLocalTime()
+        return prefs.astronomy.astronomyAlertTime
     }
 
     override suspend fun execute(context: Context) {

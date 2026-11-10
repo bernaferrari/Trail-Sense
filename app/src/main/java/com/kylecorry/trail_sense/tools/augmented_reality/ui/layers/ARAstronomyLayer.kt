@@ -1,6 +1,12 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Instant
+
+import kotlin.time.Clock
+
+import com.kylecorry.sol.time.Time
+
+import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color
@@ -18,7 +24,6 @@ import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
 import com.kylecorry.sol.science.astronomy.stars.CONSTELLATIONS
 import com.kylecorry.sol.science.astronomy.stars.Star
-import com.kylecorry.trail_sense.shared.time.JavaTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
@@ -40,8 +45,6 @@ import com.kylecorry.trail_sense.tools.navigation.ui.DrawerBitmapLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.ZonedDateTime
 
 class ARAstronomyLayer(
     override val guidanceName: String,
@@ -49,8 +52,8 @@ class ARAstronomyLayer(
     private val drawStars: Boolean,
     private val drawConstellations: Boolean,
     private val drawLowBrightnessObjects: Boolean,
-    private val onSunFocus: (time: ZonedDateTime) -> Boolean,
-    private val onMoonFocus: (time: ZonedDateTime, phase: MoonPhase) -> Boolean,
+    private val onSunFocus: (time: Instant) -> Boolean,
+    private val onMoonFocus: (time: Instant, phase: MoonPhase) -> Boolean,
     private val onStarFocus: (star: Star) -> Boolean,
     private val onPlanetFocus: (planet: Planet) -> Boolean,
     private val onMeteorShowerFocus: (shower: MeteorShower) -> Boolean
@@ -85,10 +88,10 @@ class ARAstronomyLayer(
     private val triggers = HookTriggers()
     @Volatile private var generation = 0
 
-    private val updateFrequency = Duration.ofMinutes(1)
+    private val updateFrequency = 1.minutes
     private val updateDistance = Distance.meters(1000f)
 
-    var timeOverride: ZonedDateTime? = null
+    var timeOverride: Instant? = null
 
     override suspend fun update(drawer: ICanvasDrawer, view: AugmentedRealityView) {
         val location = view.location
@@ -103,7 +106,7 @@ class ARAstronomyLayer(
             triggers.frequency("positions", updateFrequency),
             triggers.distance("positions", location, updateDistance, highAccuracy = false)
         ) {
-            updatePositions(drawer, location, timeOverride ?: ZonedDateTime.now())
+            updatePositions(drawer, location, timeOverride ?: Clock.System.now())
         }
 
         lineLayer.update(drawer, view)
@@ -172,7 +175,7 @@ class ARAstronomyLayer(
     private fun updatePositions(
         drawer: ICanvasDrawer,
         location: Coordinate,
-        time: ZonedDateTime
+        time: Instant
     ) {
         val updateGeneration = generation
         scope.launch {
@@ -182,7 +185,7 @@ class ARAstronomyLayer(
                     bitmapLoader = DrawerBitmapLoader(drawer)
                 }
 
-                val granularity = Duration.ofMinutes(10)
+                val granularity = 10.minutes
 
                 val moonBeforePathObject = CanvasCircle(
                     Color.WHITE.withAlpha(60)
@@ -204,12 +207,12 @@ class ARAstronomyLayer(
                 val sunPathTimes = astro.getSunAboveHorizonTimes(location, time)
 
                 val moonPositions = if (moonPathTimes != null) {
-                    JavaTime.getReadings(
+                    Time.getReadings(
                         moonPathTimes.start.minus(granularity),
                         moonPathTimes.end.plus(granularity),
                         granularity
                     ) {
-                        val obj = if (it.isBefore(time)) {
+                        val obj = if ((it < time)) {
                             moonBeforePathObject
                         } else {
                             moonAfterPathObject
@@ -235,13 +238,13 @@ class ARAstronomyLayer(
                 }
 
                 val sunPositions = if (sunPathTimes != null) {
-                    JavaTime.getReadings(
+                    Time.getReadings(
                         sunPathTimes.start.minus(granularity),
                         sunPathTimes.end.plus(granularity),
                         granularity
                     ) {
 
-                        val obj = if (it.isBefore(time)) {
+                        val obj = if ((it < time)) {
                             sunBeforePathObject
                         } else {
                             sunAfterPathObject
@@ -359,7 +362,7 @@ class ARAstronomyLayer(
         bitmapLoader = null
     }
 
-    private suspend fun updateStarLayer(location: Coordinate, time: ZonedDateTime) = onDefault {
+    private suspend fun updateStarLayer(location: Coordinate, time: Instant) = onDefault {
         val stars = astro.getVisibleStars(
             location,
             time,
@@ -437,7 +440,7 @@ class ARAstronomyLayer(
 
     private suspend fun updatePlanetLayer(
         location: Coordinate,
-        time: ZonedDateTime,
+        time: Instant,
         drawer: ICanvasDrawer
     ) = onDefault {
         val markers = if (drawStars) {
@@ -484,7 +487,7 @@ class ARAstronomyLayer(
 
     private suspend fun updateMeteorShowerLayer(
         location: Coordinate,
-        time: ZonedDateTime,
+        time: Instant,
         drawer: ICanvasDrawer
     ) = onDefault {
         val horizon = -10f
@@ -539,7 +542,7 @@ class ARAstronomyLayer(
             drawStars,
             drawLowBrightnessObjects
         ) {
-            timeOverride ?: ZonedDateTime.now()
+            timeOverride ?: Clock.System.now()
         }
         return guidancePicker.pick(view)
     }

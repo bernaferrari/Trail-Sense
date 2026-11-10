@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.notifications.*
@@ -46,7 +49,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import java.time.Duration
 
 class StepCounterService : AndromedaService() {
 
@@ -84,7 +86,7 @@ class StepCounterService : AndromedaService() {
             val timeDelta = currentTime - lastTime
             val activeTime = activeTimeCalculator.calculate(
                 newSteps.toLong(),
-                Duration.ofMillis(timeDelta)
+                timeDelta.milliseconds
             )
             stepTrackerService.addSteps(newSteps.toLong(), activeTime = activeTime)
             lastSteps = currentSteps
@@ -102,7 +104,7 @@ class StepCounterService : AndromedaService() {
             .drop(1)
             .onEach {
                 notificationSubsystem.send(NOTIFICATION_ID, getNotification(it))
-                delay(NOTIFICATION_MIN_INTERVAL.toMillis())
+                delay(NOTIFICATION_MIN_INTERVAL.inWholeMilliseconds)
             }
             .launchIn(scope)
     }
@@ -185,7 +187,7 @@ class StepCounterService : AndromedaService() {
         const val NOTIFICATION_ID = 1279812
         private const val TAG = "StepCounterService"
         private const val NOTIFICATION_GROUP_PEDOMETER = "trail_sense_pedometer"
-        private val NOTIFICATION_MIN_INTERVAL = Duration.ofSeconds(5)
+        private val NOTIFICATION_MIN_INTERVAL = 5.seconds
 
 
         var isRunning = false

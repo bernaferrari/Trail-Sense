@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.sol.units.Coordinate
@@ -11,7 +14,7 @@ import com.kylecorry.trail_sense.shared.safeRoundPlaces
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
 import com.kylecorry.trail_sense.shared.sensors.gps.durationSince
-import java.time.Duration
+import kotlin.time.Duration
 
 /**
  * Rejects readings which do not meet the user's accuracy filter for a bounded time.
@@ -96,11 +99,11 @@ class AccuracyFilterGPSModule(
 
         val maxAccuracyWait = filter.maxAccuracyWait
         if (maxAccuracyWait != null && breaker.tripIfTimedOut(
-                maxAccuracyWait.toMillis(),
+                maxAccuracyWait.inWholeMilliseconds,
                 previousId = previousData.id
             )
         ) {
-            val ageMillis = newData.durationSince(candidate).toMillis()
+            val ageMillis = newData.durationSince(candidate).inWholeMilliseconds
             candidate.copyInto(newData)
             logAccepted("breaker tripped, best reading ${ageMillis}ms old", newData)
             return true
@@ -131,7 +134,7 @@ class AccuracyFilterGPSModule(
     }
 
     private fun describeRejections(): String {
-        val seconds = Duration.ofNanos(lastRejectedTimeNanos - firstRejectedTimeNanos).seconds
+        val seconds = (lastRejectedTimeNanos - firstRejectedTimeNanos).nanoseconds.inWholeSeconds
         return "$rejectedCount rejected readings over ${seconds}s"
     }
 
@@ -142,6 +145,6 @@ class AccuracyFilterGPSModule(
 
     companion object {
         private const val TAG = "AccuracyFilterGPSModule"
-        private val MAX_RETAINED_FIX_AGE: Duration = Duration.ofSeconds(5)
+        private val MAX_RETAINED_FIX_AGE: Duration = 5.seconds
     }
 }

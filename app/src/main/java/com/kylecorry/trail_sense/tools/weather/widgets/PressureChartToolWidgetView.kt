@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.widgets
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
 
@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.material3.ColorScheme
 
 import android.content.Context
-import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,15 +31,12 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseComposeRootView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
-import java.time.Duration
-import java.time.Instant
 import kotlin.math.max
 
 class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
@@ -55,10 +51,7 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
 
         val history = weather.getHistory()
         val displayReadings = history.filter {
-            Duration.between(
-                it.time,
-                Instant.now()
-            ) <= userPrefs.weather.pressureHistory
+            (Clock.System.now() - it.time) <= userPrefs.weather.pressureHistory
         }
             .map { it.pressureReading() }
             .map { it.copy(value = it.value.convertTo(units)) }
@@ -95,7 +88,7 @@ private fun pressureChartPoints(data: List<Reading<Pressure>>): PressureChartPoi
     val startTime = data.firstOrNull()?.time ?: kotlin.time.Clock.System.now()
     val points = data.map {
         PressureChartPoint(
-            JavaTime.between(startTime, it.time).toMillis() / 3_600_000f,
+            (it.time - startTime).inWholeMilliseconds / 3_600_000f,
             it.value.value
         )
     }

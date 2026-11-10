@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Clock
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Duration.Companion.seconds
 
 import android.content.Context
 import android.os.SystemClock
@@ -21,8 +21,7 @@ import com.kylecorry.trail_sense.shared.sensors.altimeter.AltimeterWrapper
 import com.kylecorry.trail_sense.shared.sensors.thermometer.HistoricThermometer
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 
 internal class WeatherObserver(
     private val context: Context,

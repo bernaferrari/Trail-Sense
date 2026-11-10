@@ -49,8 +49,6 @@ import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -82,10 +80,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.os.BundleCompat
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
@@ -94,7 +90,6 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.print.Printer
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -835,7 +830,7 @@ private fun PhotoMapRow(
     val formatter = getAppService<FormatService>()
     val subtitle = formatter.join(
         stringResource(R.string.map_type_photo),
-        map.createdOn?.let { formatter.formatDate(it.toZonedDateTime(), includeWeekDay = false) },
+        map.createdOn?.let { formatter.formatDate(it, includeWeekDay = false) },
         separator = FormatService.Separator.Dot
     )
 
@@ -947,7 +942,7 @@ private fun VectorMapRow(
     val missingLabel = if (!map.isAvailable) stringResource(R.string.map_file_missing) else null
     val subtitle = formatter.join(
         stringResource(R.string.map_type_trail),
-        formatter.formatDate(map.createdOn.toZonedDateTime(), includeWeekDay = false),
+        formatter.formatDate(map.createdOn, includeWeekDay = false),
         externalLabel,
         missingLabel,
         separator = FormatService.Separator.Dot

@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.plugins.infrastructure
 
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.ipc.InterprocessCommunicationRequest

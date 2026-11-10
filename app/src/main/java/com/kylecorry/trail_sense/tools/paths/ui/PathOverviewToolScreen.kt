@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import kotlin.time.Duration.Companion.minutes
+
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -151,7 +153,7 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.RenamePathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
 import kotlinx.coroutines.Dispatchers
-import java.time.Duration
+import kotlin.time.Duration
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -470,8 +472,8 @@ fun PathOverviewToolScreen(
         val distance = current.metadata.distance.convertTo(units).toRelativeDistance()
         val start = current.metadata.duration?.start
         val end = current.metadata.duration?.end
-        val duration = if (start != null && end != null && Duration.between(start, end) > Duration.ofMinutes(1)) {
-            Duration.between(start, end)
+        val duration = if (start != null && end != null && (end - start) > 1.minutes) {
+            (end - start)
         } else {
             viewModel.calculatedDuration
         }
@@ -810,9 +812,9 @@ internal class PathOverviewViewModel(
 
         val text = withContext(Dispatchers.Default) {
             val readings = points
-                .filter { it.time != null }
-                .sortedBy { it.time }
-                .zipWithNext { a, b -> Duration.between(a.time, b.time).seconds / 60f }
+                .mapNotNull { it.time }
+                .sorted()
+                .zipWithNext { a, b -> (b - a).inWholeSeconds / 60f }
 
             if (readings.isEmpty()) {
                 return@withContext null

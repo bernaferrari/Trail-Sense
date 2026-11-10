@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting.temperatures
 
+import kotlin.time.Instant
+
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.Meteorology
@@ -9,8 +11,7 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.shared.extensions.range
 import com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.ITemperatureRepo
-import java.time.LocalDate
-import java.time.ZonedDateTime
+import kotlinx.datetime.LocalDate
 
 internal class HistoricTemperatureService(
     private val repo: ITemperatureRepo,
@@ -18,7 +19,7 @@ internal class HistoricTemperatureService(
     private val elevation: Distance = Distance.meters(0f)
 ) : ITemperatureService {
 
-    override suspend fun getTemperature(time: ZonedDateTime): Temperature = onDefault {
+    override suspend fun getTemperature(time: Instant): Temperature = onDefault {
         val temperature = repo.getTemperature(location, time)
         Meteorology.getTemperatureAtElevation(
             temperature,
@@ -28,8 +29,8 @@ internal class HistoricTemperatureService(
     }
 
     override suspend fun getTemperatures(
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): List<Reading<Temperature>> = onDefault {
         val temperatures = repo.getTemperatures(location, start, end)
         temperatures.map {
@@ -60,8 +61,8 @@ internal class HistoricTemperatureService(
     }
 
     override suspend fun getTemperatureRange(
-        start: ZonedDateTime,
-        end: ZonedDateTime
+        start: Instant,
+        end: Instant
     ): Range<Temperature> = onDefault {
         val forecast = getTemperatures(start, end)
         forecast.map { it.value }.range()!!

@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import kotlin.time.toJavaDuration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import com.kylecorry.andromeda.core.time.once
 import kotlin.time.Duration.Companion.seconds
 
 import com.kylecorry.trail_sense.shared.copy
-
-import com.kylecorry.trail_sense.shared.time.interop.*
-
-import com.kylecorry.trail_sense.shared.time.JavaTime
-
-import kotlin.time.toJavaInstant
 
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
@@ -145,8 +145,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -392,7 +391,7 @@ private fun getLocationSheetState(
         "± $accuracyStr"
     }
 
-    val timeAgo = Duration.between(gps.timestamp.toJavaInstant(), Instant.now())
+    val timeAgo = (Clock.System.now() - gps.timestamp)
     return LocationSheetState(
         location = formatService.formatLocation(gps.location, format),
         coordinateFormat = formatService.formatCoordinateType(format),
@@ -407,7 +406,7 @@ private fun getLocationSheetState(
 internal class NavigatorSensors(sensorService: SensorService, userPrefs: UserPreferences) {
     val orientation = sensorService.getOrientation()
     val compass = sensorService.getCompass(orientation)
-    val gps = sensorService.getGPS(frequency = Duration.ofMillis(200))
+    val gps = sensorService.getGPS(frequency = 200.milliseconds)
     val clinometer = Clinometer(orientation, isAugmentedReality = true)
     val altimeter = sensorService.getAltimeter(gps = gps)
     val speedometer = sensorService.getSpeedometer(gps = gps)
@@ -537,7 +536,7 @@ internal class NavigatorViewModel(
         }
 
         viewModelScope.launch {
-            pathService.getRecentAltitudesLive(Instant.now().minus(MAX_ALTITUDE_FILTER_HISTORY_DURATION))
+            pathService.getRecentAltitudesLive(Clock.System.now().minus(MAX_ALTITUDE_FILTER_HISTORY_DURATION))
                 .asFlow()
                 .collect {
                     backtrackAltitudeReadings = it
@@ -672,7 +671,7 @@ internal class NavigatorViewModel(
 
     /** Whether the radar should be redrawn this frame (once a second). */
     fun shouldInvalidateCompass(): Boolean {
-        return triggers.frequency("compass_invalidation", Duration.ofSeconds(1))
+        return triggers.frequency("compass_invalidation", 1.seconds)
     }
 
     /** The speed while moving; null standing still (a standing 0.0 km/h is noise). */
@@ -743,10 +742,7 @@ internal class NavigatorViewModel(
                 val readings =
                     (backtrackAltitudeReadings + weatherAltitudeReadings + currentAltitude).sortedBy { it.time }
                         .filter {
-                            JavaTime.between(
-                                it.time,
-                                Instant.now()
-                            ) < MAX_ALTITUDE_FILTER_HISTORY_DURATION
+                            (Clock.System.now() - it.time) < MAX_ALTITUDE_FILTER_HISTORY_DURATION
                         }
 
                 val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
@@ -756,7 +752,7 @@ internal class NavigatorViewModel(
                 }
 
                 smoothed.filter {
-                    JavaTime.between(it.time, Instant.now()).abs() <= altitudeHistoryDuration
+                    (Clock.System.now() - it.time).absoluteValue <= altitudeHistoryDuration
                 }
             }
         }
@@ -764,9 +760,9 @@ internal class NavigatorViewModel(
 
     companion object {
         private val ASTRONOMY_UPDATE_DISTANCE = Distance.kilometers(1f).meters()
-        private val ASTRONOMY_UPDATE_FREQUENCY = Duration.ofMinutes(1)
-        private val MAX_ALTITUDE_HISTORY_DURATION = Duration.ofDays(1)
-        private val MAX_ALTITUDE_FILTER_HISTORY_DURATION = MAX_ALTITUDE_HISTORY_DURATION.plusHours(6)
+        private val ASTRONOMY_UPDATE_FREQUENCY = 1.minutes
+        private val MAX_ALTITUDE_HISTORY_DURATION = 1.days
+        private val MAX_ALTITUDE_FILTER_HISTORY_DURATION = MAX_ALTITUDE_HISTORY_DURATION.plus(6.hours)
     }
 }
 

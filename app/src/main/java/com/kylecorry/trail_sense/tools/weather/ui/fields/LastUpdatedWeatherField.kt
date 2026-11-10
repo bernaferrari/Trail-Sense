@@ -3,11 +3,10 @@ package com.kylecorry.trail_sense.tools.weather.ui.fields
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import java.time.Instant
+import kotlin.time.Instant
 
 class LastUpdatedWeatherField(private val time: Instant?) : WeatherField {
 
@@ -24,7 +23,7 @@ class LastUpdatedWeatherField(private val time: Instant?) : WeatherField {
             icon = TrailIcons.Update,
             iconTint = color,
             trailingText = formatter.formatDateTime(
-                time.toZonedDateTime(),
+                time,
                 relative = true,
                 abbreviateMonth = true
             )

@@ -1,11 +1,8 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
-import kotlin.time.toJavaInstant
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.border
@@ -70,8 +67,6 @@ import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.trail_sense.shared.time.JavaTime.atEndOfDay
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
@@ -127,12 +122,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlin.time.Clock
+import com.kylecorry.trail_sense.shared.time.atEndOfDay
+import com.kylecorry.trail_sense.shared.time.atStartOfDay
+import com.kylecorry.trail_sense.shared.time.minusDays
+import com.kylecorry.trail_sense.shared.time.plusDays
+import com.kylecorry.trail_sense.shared.time.systemTimeZone
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+import com.kylecorry.trail_sense.shared.time.today
 
 @Composable
 fun AstronomyToolScreen(
@@ -251,7 +254,7 @@ fun AstronomyToolScreen(
         val sunName = stringResource(R.string.sun)
         val moonName = stringResource(R.string.moon)
         AstronomySeeker(
-            time = formatService.formatTime(viewModel.seekTime.toLocalTime(), includeSeconds = false),
+            time = formatService.formatTime(viewModel.seekTime, includeSeconds = false),
             sunPosition = positions?.let {
                 positionText(context, markdownService, formatService, sunName, it.sunAltitude, it.sunAzimuth)
             } ?: "",
@@ -295,7 +298,7 @@ fun AstronomyToolScreen(
                     }
                 }
             },
-            onToday = { viewModel.changeDate(LocalDate.now()) },
+            onToday = { viewModel.changeDate(today()) },
             onSearch = {
                 val optionNames = listOf(
                     R.string.full_moon,
@@ -428,7 +431,7 @@ internal class AstronomyViewModel(
     private val eventChannel = Channel<AstronomyScreenEvent>(Channel.BUFFERED)
     val events: Flow<AstronomyScreenEvent> = eventChannel.receiveAsFlow()
 
-    var displayDate by mutableStateOf(LocalDate.now())
+    var displayDate by mutableStateOf(today())
         private set
     var location by mutableStateOf(Coordinate.zero)
         private set
@@ -442,7 +445,7 @@ internal class AstronomyViewModel(
         private set
     var isSeeking by mutableStateOf(false)
         private set
-    var seekTime by mutableStateOf(ZonedDateTime.now())
+    var seekTime by mutableStateOf(Clock.System.now())
         private set
     var seekProgress by mutableFloatStateOf(0f)
         private set
@@ -454,8 +457,8 @@ internal class AstronomyViewModel(
         private set
 
     private var data = AstroChartData(emptyList(), emptyList())
-    private var minChartTime = ZonedDateTime.now()
-    private var maxChartTime = ZonedDateTime.now()
+    private var minChartTime = Clock.System.now()
+    private var maxChartTime = Clock.System.now()
     private var gpsErrorShown = false
     private var refreshJob: Job? = null
     private var tickerJob: Job? = null
@@ -470,7 +473,7 @@ internal class AstronomyViewModel(
         sunTimesMode = prefs.astronomy.sunTimesMode
         chartDataProvider = createChartDataProvider()
         chart = chart.copy(showBands = prefs.astronomy.showAstronomyBands)
-        changeDate(LocalDate.now())
+        changeDate(today())
         requestLocationUpdate()
         detectAndShowGPSError()
         tickerJob?.cancel()
@@ -511,38 +514,38 @@ internal class AstronomyViewModel(
     }
 
     /** The time the 3D view opens at: the inspected time, now, or now's time of day on the charted day. */
-    fun arTime(): ZonedDateTime {
+    fun arTime(): Instant {
         return if (isSeeking) {
             seekTime
-        } else if (displayDate == LocalDate.now()) {
-            ZonedDateTime.now()
+        } else if (displayDate == today()) {
+            Clock.System.now()
         } else {
-            displayDate.atTime(ZonedDateTime.now().toLocalTime()).toZonedDateTime()
+            displayDate.atTime(Clock.System.now().toLocalTime()).toInstant(systemTimeZone)
         }
     }
 
     /** Opens the time seeker at [time] (a tap on the chart), or now when the sun or moon was tapped. */
-    fun startSeeking(time: ZonedDateTime?) {
+    fun startSeeking(time: Instant?) {
         if (isSeeking && time == null) {
             return
         }
         isSeeking = true
-        seekTime = time ?: ZonedDateTime.now()
+        seekTime = time ?: Clock.System.now()
         seekProgress = getSeekProgress().toFloat()
     }
 
     fun seekTo(value: Float) {
         seekProgress = value
         val progress = value.toInt()
-        val seconds = (Duration.between(minChartTime, maxChartTime).seconds * progress /
+        val seconds = ((maxChartTime - minChartTime).inWholeSeconds * progress /
             MAX_SEEK_PROGRESS.toFloat()).toLong()
-        seekTime = minChartTime.plusSeconds(seconds)
+        seekTime = minChartTime + seconds.seconds
         refreshSeekDetails()
     }
 
     fun stopSeeking() {
         isSeeking = false
-        chart = if (displayDate == LocalDate.now()) {
+        chart = if (displayDate == today()) {
             chart.copy(sunPosition = closest(data.sun), moonPosition = closest(data.moon))
         } else {
             chart.copy(sunPosition = null, moonPosition = null)
@@ -550,13 +553,13 @@ internal class AstronomyViewModel(
     }
 
     private fun getSeekProgress(): Int {
-        val totalDuration = Duration.between(minChartTime, maxChartTime).seconds
-        val currentDuration = Duration.between(minChartTime, seekTime).seconds
+        val totalDuration = (maxChartTime - minChartTime).inWholeSeconds
+        val currentDuration = (seekTime - minChartTime).inWholeSeconds
         val progress = MAX_SEEK_PROGRESS * currentDuration / totalDuration.toFloat()
         return progress.toInt()
     }
 
-    private fun getSunMoonPositions(time: ZonedDateTime): AstroPositions {
+    private fun getSunMoonPositions(time: Instant): AstroPositions {
         val moonAltitude = astronomyService.getMoonAltitude(location, time)
         val sunAltitude = astronomyService.getSunAltitude(location, time)
 
@@ -603,10 +606,10 @@ internal class AstronomyViewModel(
         val date = displayDate
         val time = if (isSeeking) {
             seekTime
-        } else if (date == LocalDate.now()) {
-            ZonedDateTime.now()
+        } else if (date == today()) {
+            Clock.System.now()
         } else {
-            date.atTime(12, 0).atZone(ZoneId.systemDefault())
+            date.atTime(12, 0).toInstant(systemTimeZone)
         }
 
         val phase = onDefault { astronomyService.getMoonPhase(time) }
@@ -619,16 +622,16 @@ internal class AstronomyViewModel(
         val place = location
         val provider = chartDataProvider
         data = onDefault {
-            val time = if (date == LocalDate.now()) ZonedDateTime.now() else date.atStartOfDay().toZonedDateTime()
+            val time = if (date == today()) Clock.System.now() else date.atStartOfDay()
             provider.get(place, time)
         }
 
-        minChartTime = data.sun.first().time.toZonedDateTime()
+        minChartTime = data.sun.first().time
         maxChartTime = minChartTime.atEndOfDay()
 
-        val today = date == LocalDate.now()
+        val today = date == today()
         chart = chart.copy(
-            startTime = (data.sun.firstOrNull()?.time ?: kotlin.time.Clock.System.now()).toJavaInstant(),
+            startTime = data.sun.firstOrNull()?.time ?: Clock.System.now(),
             sun = data.sun,
             moon = data.moon,
             sunPosition = if (today) closest(data.sun) else null,
@@ -636,9 +639,8 @@ internal class AstronomyViewModel(
         )
     }
 
-    private fun closest(altitudes: List<Reading<Float>>, time: ZonedDateTime = ZonedDateTime.now()): Reading<Float>? {
-        val instant = time.toInstant()
-        return altitudes.minByOrNull { JavaTime.between(instant, it.time).abs() }
+    private fun closest(altitudes: List<Reading<Float>>, time: Instant = Clock.System.now()): Reading<Float>? {
+        return altitudes.minByOrNull { (it.time - time).absoluteValue }
     }
 
     private suspend fun updateDetails() {
@@ -651,16 +653,16 @@ internal class AstronomyViewModel(
     }
 
     private suspend fun updateCountdown() {
-        val currentTime = LocalDateTime.now()
+        val currentTime = Clock.System.now()
         val place = location
         val mode = sunTimesMode
         val nextSunrise = onDefault { astronomyService.getNextSunrise(place, mode) }
         val nextSunset = onDefault { astronomyService.getNextSunset(place, mode) }
 
-        countdown = if (nextSunrise != null && (nextSunset == null || nextSunrise.isBefore(nextSunset))) {
-            SunCountdown(SunCountdownKind.UntilSunrise, Duration.between(currentTime, nextSunrise))
+        countdown = if (nextSunrise != null && (nextSunset == null || nextSunrise < nextSunset)) {
+            SunCountdown(SunCountdownKind.UntilSunrise, (nextSunrise - currentTime))
         } else if (nextSunset != null) {
-            SunCountdown(SunCountdownKind.UntilSunset, Duration.between(currentTime, nextSunset))
+            SunCountdown(SunCountdownKind.UntilSunset, (nextSunset - currentTime))
         } else if (astronomyService.isSunUp(place)) {
             SunCountdown(SunCountdownKind.UpNoSet)
         } else {
@@ -921,7 +923,7 @@ private fun AstronomyScreen(
     dateActions: AstronomyDateActions,
     chart: AstroChartState,
     moonImage: ImageBitmap?,
-    onChartClicked: (ZonedDateTime?) -> Unit,
+    onChartClicked: (Instant?) -> Unit,
     seeker: AstronomySeeker?,
     onSeek: (Float) -> Unit,
     onCloseSeeker: () -> Unit,

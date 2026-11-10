@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles
 
+import kotlin.time.toJavaDuration
+import kotlin.time.Clock
 import kotlin.time.Duration
 import com.kylecorry.andromeda.core.time.interval
 
@@ -41,7 +43,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Instant
+import kotlin.time.Instant
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.min
@@ -60,7 +62,7 @@ open class TileMapLayer<T : TileSource>(
 ) : IAsyncLayer {
     private val runtimeId = UUID.randomUUID().toString()
     private var _timeOverride: Instant? = null
-    private var _renderTime: Instant = Instant.now()
+    private var _renderTime: Instant = Clock.System.now()
     override var isLoaded: Boolean = false
 
     override fun setTime(time: Instant?) {
@@ -557,7 +559,7 @@ open class TileMapLayer<T : TileSource>(
     }
 
     private fun refreshTime() {
-        _renderTime = _timeOverride ?: Instant.now()
+        _renderTime = _timeOverride ?: Clock.System.now()
     }
 
     override fun setPreferences(preferences: Bundle) {

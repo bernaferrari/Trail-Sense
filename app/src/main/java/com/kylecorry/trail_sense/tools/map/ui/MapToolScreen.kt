@@ -93,7 +93,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceShe
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathCommand
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import java.time.Instant
+import kotlin.time.Instant
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect

@@ -1,8 +1,11 @@
 package com.kylecorry.trail_sense.shared.sensors
 
+import com.kylecorry.andromeda.core.time.interval
+import kotlin.time.toJavaDuration
+
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.luna.time.CoroutineTimer
-import java.time.Duration
+import kotlin.time.Duration
 
 abstract class IntervalSensor(private val frequency: Duration) : SharedSensor() {
 

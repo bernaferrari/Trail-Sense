@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.logging
 
+import kotlin.time.Clock
+
 import android.content.Context
 import android.util.Log
 import com.kylecorry.andromeda.files.CacheFileSystem
@@ -9,7 +11,6 @@ import com.kylecorry.luna.subscriptions.generic.Subscription
 import kotlinx.coroutines.CancellationException
 import java.io.File
 import kotlinx.coroutines.delay
-import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -131,7 +132,7 @@ class Logger(context: Context) {
     }
 
     private fun formatLog(type: String, tag: String?, message: String, throwable: Throwable?): String {
-        return "${Instant.now()} $tag\t\t[$type] $message\n${throwable?.stackTraceToString() ?: ""}".trim()
+        return "${Clock.System.now()} $tag\t\t[$type] $message\n${throwable?.stackTraceToString() ?: ""}".trim()
     }
 
     companion object {

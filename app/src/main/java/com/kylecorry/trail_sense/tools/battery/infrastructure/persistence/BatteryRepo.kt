@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReadingEntity
-import java.time.Instant
+import kotlin.time.Instant
 
 class BatteryRepo private constructor(context: Context) : IBatteryRepo {
 

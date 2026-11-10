@@ -3,11 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.isAfter
-
-import com.kylecorry.trail_sense.shared.time.interop.*
-
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -93,8 +89,6 @@ import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.time.Duration
-import java.time.Instant
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -124,7 +118,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.graphics.shapes.toPath
 import com.kylecorry.trail_sense.shared.icons.trail.TorchOff
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 @Composable
@@ -158,8 +151,8 @@ fun FlashlightScreen(
         }
 
         val instant = cache.getInstant(context.getString(R.string.pref_flashlight_timeout_instant))
-        val duration = if (instant != null && instant.isAfter(Instant.now())) {
-            JavaTime.between(Instant.now(), instant)
+        val duration = if (instant != null && instant > Clock.System.now()) {
+            (instant - (Clock.System.now()))
         } else {
             prefs.flashlight.timeout
         }

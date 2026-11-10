@@ -1,41 +1,17 @@
 package com.kylecorry.trail_sense.shared.sensors.altimeter
 
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.andromeda.core.sensors.SharedSensor
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.andromeda.sense.location.GpsSensor
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.luna.concurrency.BackgroundTask
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.luna.concurrency.onMain
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.sol.units.Bearing
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.sol.units.Coordinate
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.sol.units.Speed
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.trail_sense.main.getAppService
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.trail_sense.shared.dem.DEM
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
 import com.kylecorry.trail_sense.shared.logging.Logger
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
-import java.time.Instant
+import kotlin.time.Instant
 
 class DigitalElevationModel(private val gps: GpsSensor) : SharedSensor(),
     GpsSensor {
@@ -46,7 +22,7 @@ class DigitalElevationModel(private val gps: GpsSensor) : SharedSensor(),
                 val location = gps.location
                 val gpsIsValid = gps.hasValidReading
                 val fixTimeElapsedNanos = gps.eventTimeElapsedNanos
-                val fixTime = gps.timestamp.toJavaInstant()
+                val fixTime = gps.timestamp
                 demAltitude = DEM.getElevation(location).elevation
                 if (isLookupFailing) {
                     isLookupFailing = false
@@ -116,7 +92,7 @@ class DigitalElevationModel(private val gps: GpsSensor) : SharedSensor(),
         get() = demEventTimeElapsedNanos ?: gps.eventTimeElapsedNanos
         set(_) {}
     override var timestamp: kotlin.time.Instant
-        get() = demEventTime?.toKotlinInstant() ?: gps.timestamp
+        get() = demEventTime ?: gps.timestamp
         set(_) {}
     override val speed: Speed
         get() = gps.speed

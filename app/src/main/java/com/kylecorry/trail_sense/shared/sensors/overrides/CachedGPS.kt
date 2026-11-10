@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.overrides
 
+import kotlin.time.Clock
+
 import android.content.Context
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.location.Satellite
@@ -15,7 +17,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.InactiveGPS
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
-import java.time.Instant
+import kotlin.time.Instant
 
 class CachedGPS(context: Context, private val updateFrequency: Long = 1000L) : SharedSensor(),
     ISatelliteGPS, InactiveGPS, MockedGPS {

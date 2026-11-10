@@ -39,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import com.kylecorry.andromeda.core.system.GeoUri
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
@@ -57,8 +56,9 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
+import com.kylecorry.trail_sense.shared.time.displayName
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import kotlinx.datetime.yearMonth
 import java.util.Locale
 
 @Composable
@@ -79,7 +79,7 @@ fun SightingListToolScreen(route: Route.SightingList) {
     fun sightingTitle(sighting: Sighting): String {
         return sighting.time?.let { time ->
             formatter.formatRelativeDateTime(
-                time.toZonedDateTime(),
+                time,
                 includeSeconds = false
             )
         } ?: sightingLabel
@@ -241,13 +241,15 @@ private fun groupSightingsByMonth(
     items: List<SightingListItem>,
     unknownLabel: String
 ): List<SightingSection> {
-    val formatter = DateTimeFormatter.ofPattern("LLLL yyyy", Locale.getDefault())
+    val locale = Locale.getDefault()
     return items
-        .groupBy { item -> item.sighting.time?.let { YearMonth.from(it.toZonedDateTime()) } }
+        .groupBy { item -> item.sighting.time?.toLocalDate()?.yearMonth }
         .map { (month, sightings) ->
             SightingSection(
                 key = month?.toString() ?: "unknown",
-                title = month?.format(formatter)?.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+                title = month?.let {
+                    "${it.month.displayName(standalone = true, locale = locale)} ${it.year}"
+                }?.replaceFirstChar { it.titlecase(locale) }
                     ?: unknownLabel,
                 items = sightings
             )

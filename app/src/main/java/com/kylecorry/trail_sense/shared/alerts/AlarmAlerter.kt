@@ -1,8 +1,9 @@
 package com.kylecorry.trail_sense.shared.alerts
 
-import com.kylecorry.andromeda.core.time.once
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import com.kylecorry.andromeda.core.time.once
 
 import android.content.Context
 import android.media.MediaPlayer
@@ -42,7 +43,7 @@ class AlarmAlerter(
         val end = if (duration == -1) {
             5.seconds
         } else {
-            duration.milliseconds.coerceAtMost(5.seconds)
+            (duration.toLong()).milliseconds.coerceAtMost(5.seconds)
         }
 
         timer.once(end)

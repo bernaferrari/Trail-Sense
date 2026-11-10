@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import kotlin.time.Duration.Companion.days
+
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -50,7 +52,6 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.AveragePaceTimeMode
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
-import java.time.Duration
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -289,7 +290,7 @@ internal class PedometerSettingsViewModel(
         private set
     var averagePaceTimeMode by mutableStateOf(prefs.pedometer.averagePaceTimeMode)
         private set
-    var stepHistoryDays by mutableStateOf(prefs.pedometer.stepHistory.toDays().toInt())
+    var stepHistoryDays by mutableStateOf(prefs.pedometer.stepHistory.inWholeDays.toInt())
         private set
     var permissionVisible by mutableStateOf(isPermissionRequestVisible(enabled))
         private set
@@ -364,7 +365,7 @@ internal class PedometerSettingsViewModel(
 
     fun changeStepHistory(days: Int) {
         val dayCount = if (days > 0) days else 1
-        prefs.pedometer.stepHistory = Duration.ofDays(dayCount.toLong())
+        prefs.pedometer.stepHistory = (dayCount.toLong()).days
         stepHistoryDays = dayCount
     }
 

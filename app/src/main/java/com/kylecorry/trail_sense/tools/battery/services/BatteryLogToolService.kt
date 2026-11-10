@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.tools.battery.services
 
+import kotlin.time.Duration.Companion.hours
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryLogWorker
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import java.time.Duration
+import kotlin.time.Duration
 
 class BatteryLogToolService(private val context: Context) : ToolService {
     private val prefs = UserPreferences(context)
@@ -16,7 +18,7 @@ class BatteryLogToolService(private val context: Context) : ToolService {
     override val name: String = context.getString(R.string.pref_tiles_battery_log)
 
     override fun getFrequency(): Duration {
-        return Duration.ofHours(1)
+        return 1.hours
     }
 
     override fun isRunning(): Boolean {

@@ -7,7 +7,7 @@ import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.WaypointEntity
-import java.time.Instant
+import kotlin.time.Instant
 
 class WaypointRepo private constructor(context: Context) : IWaypointRepo {
 
@@ -48,7 +48,7 @@ class WaypointRepo private constructor(context: Context) : IWaypointRepo {
     }
 
     override suspend fun deleteOlderInPath(pathId: Long, time: Instant) {
-        waypointDao.deleteOlderThan(time.toEpochMilli(), pathId)
+        waypointDao.deleteOlderThan(time.toEpochMilliseconds(), pathId)
     }
 
     override suspend fun getAll(): List<PathPoint> {
@@ -60,7 +60,7 @@ class WaypointRepo private constructor(context: Context) : IWaypointRepo {
             waypointDao.getAll()
         } else {
             waypointDao.getAllSince(
-                since.toEpochMilli()
+                since.toEpochMilliseconds()
             )
         }.map {
             it.map { waypoint -> waypoint.toPathPoint() }

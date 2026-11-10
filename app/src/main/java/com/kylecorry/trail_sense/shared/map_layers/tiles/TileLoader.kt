@@ -22,7 +22,7 @@ import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
-import java.time.Instant
+import kotlin.time.Instant
 
 class TileLoader(
     private val source: TileSource,
@@ -105,7 +105,7 @@ class TileLoader(
         }
 
         val params = Bundle().apply {
-            putLong(MapLayerParams.PARAM_TIME, time.toEpochMilli())
+            putLong(MapLayerParams.PARAM_TIME, time.toEpochMilliseconds())
             putBoolean(MapLayerParams.PARAM_IS_WIDGET, isWidget)
             putBoolean(MapLayerParams.PARAM_HIGH_DETAIL_MODE, isHighDetailMode)
             putBundle(MapLayerParams.PARAM_PREFERENCES, Bundle(preferences))

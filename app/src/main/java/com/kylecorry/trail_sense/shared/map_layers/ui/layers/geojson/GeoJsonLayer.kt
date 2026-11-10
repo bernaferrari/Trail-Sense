@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
+import kotlin.time.toJavaDuration
+import kotlin.time.Clock
 import kotlin.time.Duration
 import com.kylecorry.andromeda.core.time.interval
 
@@ -25,7 +27,7 @@ import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.paths.ui.PathBackgroundColor
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 
@@ -57,7 +59,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     private val refreshTimer = refreshInterval?.let { CoroutineTimer { refresh() } }
 
     private var _timeOverride: Instant? = null
-    private var _renderTime: Instant = Instant.now()
+    private var _renderTime: Instant = Clock.System.now()
     override var isLoaded: Boolean = false
 
     override fun setTime(time: Instant?) {
@@ -66,7 +68,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     protected fun refresh() {
-        _renderTime = _timeOverride ?: Instant.now()
+        _renderTime = _timeOverride ?: Clock.System.now()
         isLoaded = false
         invalidate()
         notifyListeners()
@@ -100,7 +102,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
                 }
 
                 val params = Bundle().apply {
-                    putLong(MapLayerParams.PARAM_TIME, _renderTime.toEpochMilli())
+                    putLong(MapLayerParams.PARAM_TIME, _renderTime.toEpochMilliseconds())
                     putBoolean(MapLayerParams.PARAM_IS_WIDGET, isWidget)
                 }
                 params.putBundle(MapLayerParams.PARAM_PREFERENCES, layerPreferences)

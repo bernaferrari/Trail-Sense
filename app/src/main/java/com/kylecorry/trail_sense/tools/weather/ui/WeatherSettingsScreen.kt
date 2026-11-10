@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -67,9 +67,8 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWea
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalTime
+import kotlin.time.Duration
+import kotlinx.datetime.LocalTime
 
 @Composable
 fun WeatherSettingsToolScreen() {
@@ -141,8 +140,8 @@ fun WeatherSettingsToolScreen() {
     val muteStormAlarmSummary = remember(context) {
         context.getString(
             R.string.alarm_time_range,
-            formatService.formatTime(LocalTime.of(8, 0), includeSeconds = false, includeMinutes = false),
-            formatService.formatTime(LocalTime.of(20, 0), includeSeconds = false, includeMinutes = false)
+            formatService.formatTime(LocalTime(8, 0), includeSeconds = false, includeMinutes = false),
+            formatService.formatTime(LocalTime(20, 0), includeSeconds = false, includeMinutes = false)
         )
     }
 
@@ -390,7 +389,7 @@ fun WeatherSettingsToolScreen() {
                         scope.launch {
                             val csv = viewModel.exportCsv()
                             val exported = withContext(Dispatchers.IO) {
-                                exporter.export(csv, "weather-${Instant.now().toEpochMilli()}.csv")
+                                exporter.export(csv, "weather-${Clock.System.now().toEpochMilliseconds()}.csv")
                             }
                             if (exported) {
                                 Alerts.toast(context, context.getString(R.string.weather_exported))
@@ -606,7 +605,7 @@ internal class WeatherSettingsViewModel(
     suspend fun loadDebugTimingSummary() {
         debugTimingSummary = withContext(Dispatchers.Default) {
             val readings = repo.getAll()
-                .zipWithNext { a, b -> JavaTime.between(a.time, b.time).seconds / 60f }
+                .zipWithNext { a, b -> (b.time - a.time).inWholeSeconds / 60f }
 
             if (readings.isEmpty()) {
                 return@withContext null

@@ -6,9 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.trail_sense.shared.data.Identifiable
-import java.time.Instant
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinInstant
+import kotlin.time.Instant
 
 @Entity(tableName = "tide_table_rows", indices = [Index(value = ["table_id"])])
 data class TideTableRowEntity(
@@ -21,7 +19,7 @@ data class TideTableRowEntity(
 
     fun toTide(): Tide {
         return Tide(
-            time.toKotlinInstant(),
+            time,
             isHigh,
             heightMeters
         )
@@ -32,7 +30,7 @@ data class TideTableRowEntity(
             return TideTableRowEntity(
                 id,
                 tableId,
-                tide.time.toJavaInstant(),
+                tide.time,
                 tide.isHigh,
                 tide.height
             )

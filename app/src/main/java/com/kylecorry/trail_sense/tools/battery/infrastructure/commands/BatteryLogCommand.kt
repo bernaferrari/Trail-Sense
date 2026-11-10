@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.battery.infrastructure.commands
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.andromeda.core.sensors.read
 
 import android.content.Context
@@ -12,8 +17,6 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.Batter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.time.Duration
-import java.time.Instant
 
 class BatteryLogCommand(private val context: Context) : CoroutineCommand {
     override suspend fun execute() {
@@ -21,7 +24,7 @@ class BatteryLogCommand(private val context: Context) : CoroutineCommand {
         val batteryRepo = BatteryRepo.getInstance(context)
         withContext(Dispatchers.IO) {
             try {
-                withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) {
+                withTimeoutOrNull(10.seconds.inWholeMilliseconds) {
                     battery.read()
                 }
             } finally {
@@ -30,19 +33,19 @@ class BatteryLogCommand(private val context: Context) : CoroutineCommand {
         }
         val pct = battery.percent
         val charging = battery.chargingStatus == BatteryChargingStatus.Charging
-        val time = Instant.now()
+        val time = Clock.System.now()
         val capacity = battery.capacity
         val reading = BatteryReading(
             time,
             pct,
             capacity,
             charging,
-            Duration.ofMillis(SystemClock.uptimeMillis()),
-            Duration.ofMillis(SystemClock.elapsedRealtime())
+            (SystemClock.uptimeMillis()).milliseconds,
+            (SystemClock.elapsedRealtime()).milliseconds
         )
         if (battery.hasValidReading) {
             batteryRepo.add(reading)
         }
-        batteryRepo.deleteBefore(Instant.now().minus(Duration.ofDays(1)))
+        batteryRepo.deleteBefore(Clock.System.now().minus(1.days))
     }
 }

@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+
+import kotlin.time.Clock
+
 import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -82,7 +86,6 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
 import kotlin.math.absoluteValue
 
 class NavigationSheetView(private val context: Context) {
@@ -523,7 +526,7 @@ class NavigationSheetView(private val context: Context) {
     private fun etaDetail(guidance: Guidance, values: NavigationSensorValues): SheetDetail? {
         val duration = navigationService.eta(guidance, values.speed) ?: return null
         val arrival = formatter.formatTime(
-            ZonedDateTime.now().plus(duration).toLocalTime(),
+            Clock.System.now().plus(duration).toLocalTime(),
             includeSeconds = false
         )
         // The arrival time only: the duration is the same fact said a second way.

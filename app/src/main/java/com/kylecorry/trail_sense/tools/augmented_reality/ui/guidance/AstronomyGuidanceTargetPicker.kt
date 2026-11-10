@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Instant
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -46,7 +46,6 @@ import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.time.ZonedDateTime
 import kotlin.coroutines.resume
 
 class AstronomyGuidanceTargetPicker(
@@ -54,7 +53,7 @@ class AstronomyGuidanceTargetPicker(
     private val drawBelowHorizon: Boolean,
     private val drawStars: Boolean,
     private val drawLowBrightnessObjects: Boolean,
-    private val getDisplayedTime: () -> ZonedDateTime
+    private val getDisplayedTime: () -> Instant
 ) {
 
     suspend fun pick(view: AugmentedRealityView): ARGuidanceTarget? {

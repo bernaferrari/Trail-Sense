@@ -5,8 +5,6 @@ import com.kylecorry.trail_sense.shared.sensors.asFlowable
 
 import kotlin.time.Duration.Companion.milliseconds
 
-import com.kylecorry.trail_sense.shared.time.interop.*
-
 import android.content.Context
 import android.content.Intent
 import com.kylecorry.andromeda.background.AlwaysOnTaskScheduler
@@ -78,7 +76,7 @@ class BacktrackService :
 
 
     override val period: Duration
-        get() = prefs.paths.backtrackRecordFrequency.toKotlinDuration()
+        get() = prefs.paths.backtrackRecordFrequency
 
     private val recordLock = Mutex()
 

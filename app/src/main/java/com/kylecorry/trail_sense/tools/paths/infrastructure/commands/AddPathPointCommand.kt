@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.commands
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
 
 import android.content.Context
 import com.kylecorry.andromeda.sense.readAll
@@ -10,7 +10,6 @@ import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import java.time.Instant
 
 class AddPathPointCommand(
     context: Context,
@@ -31,7 +30,7 @@ class AddPathPointCommand(
         )
 
         if (gps.hasValidReading) {
-            val point = PathPoint(0, pathId, gps.location, altimeter.altitude, Instant.now())
+            val point = PathPoint(0, pathId, gps.location, altimeter.altitude, Clock.System.now())
             onIO { pathService.addWaypoint(point) }
         }
     }

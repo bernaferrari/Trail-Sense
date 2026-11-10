@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.debugging
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
 import android.content.Context
 import com.kylecorry.andromeda.csv.CSVConvert
@@ -16,7 +15,7 @@ class DebugElevationsCommand(
         val header = listOf(listOf("time", "raw", "smoothed"))
         val data = header + readings.zip(smoothed).map {
             listOf(
-                it.first.time.toEpochMilli(),
+                it.first.time.toEpochMilliseconds(),
                 it.first.value,
                 it.second.value
             )

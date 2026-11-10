@@ -52,7 +52,7 @@ class SpeedGPSModule : GPSModule {
         }
 
         // Add to location history every second
-        if (locations.isEmpty() || newData.durationSince(locations.last().second).seconds >= 1) {
+        if (locations.isEmpty() || newData.durationSince(locations.last().second).inWholeSeconds >= 1) {
             locationHistory.add(currentLocation to newData.eventTimeElapsedNanos)
         }
 

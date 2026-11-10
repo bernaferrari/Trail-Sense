@@ -3,7 +3,10 @@
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.tools.level.ui.CalmKeyValue
 import androidx.compose.material3.LinearWavyProgressIndicator
@@ -109,7 +112,6 @@ import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -128,8 +130,7 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.Batter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
 import kotlin.math.absoluteValue
 import android.content.Context
 import androidx.compose.ui.res.dimensionResource
@@ -173,12 +174,12 @@ fun BatteryToolScreen(
         readings = rawReadings + listOfNotNull(
             if (battery.hasValidReading) {
                 BatteryReading(
-                    Instant.now(),
+                    Clock.System.now(),
                     percent,
                     capacity,
                     chargingStatus == BatteryChargingStatus.Charging,
-                    Duration.ofMillis(SystemClock.uptimeMillis()),
-                    Duration.ofMillis(SystemClock.elapsedRealtime())
+                    (SystemClock.uptimeMillis()).milliseconds,
+                    (SystemClock.elapsedRealtime()).milliseconds
                 )
             } else {
                 null
@@ -408,7 +409,7 @@ private fun BatteryScreen(
         batteryService.getTimeUntilEmpty(battery, readings)
     }
     val currentText = formatCurrentText(current, isCharging, chargeMethod, formatter)
-    val deepSleep = batteryService.getDeepSleep(readings, Duration.ofHours(6))
+    val deepSleep = batteryService.getDeepSleep(readings, 6.hours)
     val deepSleepLabel = stringResource(R.string.battery_deep_sleep_label)
     val deepSleepWindow = deepSleep?.let {
         stringResource(R.string.battery_last_window, formatter.formatDuration(it.duration, true))
@@ -877,17 +878,16 @@ private fun formatBatteryUsage(usage: BatteryUsage): String {
 
 private fun getBatteryUsage(service: RunningService): BatteryUsage {
     return when {
-        service.frequency < Duration.ofMinutes(15) -> BatteryUsage.High
-        service.frequency <= Duration.ofMinutes(25) -> BatteryUsage.Moderate
+        service.frequency < 15.minutes -> BatteryUsage.High
+        service.frequency <= 25.minutes -> BatteryUsage.Moderate
         else -> BatteryUsage.Low
     }
 }
 
 private fun showBatteryHistory(context: Context, readings: List<BatteryReading>, formatter: FormatService) {
-    val readingDuration = Duration.between(
-        readings.firstOrNull()?.time,
-        readings.lastOrNull()?.time
-    )
+    val first = readings.firstOrNull()?.time
+    val last = readings.lastOrNull()?.time
+    val readingDuration = if (first != null && last != null) last - first else Duration.ZERO
     CustomUiUtils.showComposeContentDialog(
         context = context,
         title = context.getString(R.string.battery_history, formatter.formatDuration(readingDuration, false))

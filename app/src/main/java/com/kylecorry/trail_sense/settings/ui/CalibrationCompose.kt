@@ -3,9 +3,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
-import com.kylecorry.trail_sense.shared.time.JavaTime
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -54,8 +52,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Instant
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -280,7 +277,7 @@ fun CalibrationHistoryChart(
 
                 else -> Canvas(modifier = Modifier.fillMaxSize()) {
                     val start = data.first().time
-                    fun hours(time: kotlin.time.Instant) = JavaTime.between(start, time).toMillis() / 3_600_000f
+                    fun hours(time: kotlin.time.Instant) = (time - start).inWholeMilliseconds / 3_600_000f
                     val points = data.map { hours(it.time) to it.value }
                     val rawPoints = raw.map { hours(it.time) to it.value }
                     val all = points + rawPoints

@@ -4,9 +4,9 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toLocalTime
+import com.kylecorry.trail_sense.shared.time.today
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.toLocalTime
 
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.ViewModel
@@ -23,7 +23,6 @@ import com.kylecorry.trail_sense.tools.tides.domain.TideDetails
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
-
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -78,7 +77,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -117,7 +115,6 @@ import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperature
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
 
 @Composable
 fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
@@ -292,12 +289,12 @@ internal class BeaconDetailsViewModel(
         isLoaded = true
 
         temperatureRange = weather.getTemperatureRange(
-            LocalDate.now(),
+            today(),
             loaded.coordinate,
             Distance.meters(loaded.elevation ?: 0f)
         )
         sunTimes = withContext(Dispatchers.Default) {
-            astronomy.getSunTimes(loaded.coordinate, sunTimesMode, LocalDate.now())
+            astronomy.getSunTimes(loaded.coordinate, sunTimesMode, today())
         }
         nearestTide = tides.getNearestTide(loaded.coordinate)
         isTideLoaded = true

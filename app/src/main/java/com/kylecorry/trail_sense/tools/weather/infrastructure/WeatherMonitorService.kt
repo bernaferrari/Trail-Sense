@@ -46,7 +46,7 @@ class WeatherMonitorService :
         get() = 2387092
 
     override val period: Duration
-        get() = prefs.weather.weatherUpdateFrequency.toKotlinDuration()
+        get() = prefs.weather.weatherUpdateFrequency
 
     override suspend fun doWork() {
         WeatherSubsystem.getInstance(applicationContext).updateWeather()

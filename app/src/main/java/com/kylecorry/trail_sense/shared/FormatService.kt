@@ -1,7 +1,8 @@
 package com.kylecorry.trail_sense.shared
 
-import kotlin.time.toJavaInstant
-
+import com.kylecorry.trail_sense.shared.time.toJavaSeconds
+import com.kylecorry.trail_sense.shared.time.toJavaMinutes
+import com.kylecorry.trail_sense.shared.time.toJavaHours
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
@@ -25,8 +26,6 @@ import com.kylecorry.sol.science.geography.formatting.UTMCoordinateFormat
 import com.kylecorry.sol.science.meteorology.Precipitation
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.sol.science.shared.Season
-import com.kylecorry.trail_sense.shared.time.JavaTime.toEpochMillis
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.CompassDirection
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -48,15 +47,31 @@ import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingDifficulty
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.weather.domain.RelativeArrivalTime
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.arrival.WeatherArrivalTime
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.Month
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.format
+import kotlinx.datetime.format.Padding
+import kotlinx.datetime.format.char
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
+import java.text.DateFormatSymbols
+import com.kylecorry.trail_sense.shared.time.DateNameWidth
+import com.kylecorry.trail_sense.shared.time.displayName
 import java.util.Locale
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import kotlin.math.roundToLong
 
 class FormatService private constructor(private val context: Context) {
@@ -94,7 +109,7 @@ class FormatService private constructor(private val context: Context) {
 
     fun formatWeatherArrival(arrival: WeatherArrivalTime?): String {
         if (arrival?.isExact != true) {
-            return when (arrival?.toRelative(Instant.now())) {
+            return when (arrival?.toRelative(Clock.System.now())) {
                 RelativeArrivalTime.Now -> strings.getString(R.string.now)
                 RelativeArrivalTime.VerySoon -> strings.getString(R.string.very_soon)
                 RelativeArrivalTime.Soon -> strings.getString(R.string.soon)
@@ -104,21 +119,19 @@ class FormatService private constructor(private val context: Context) {
         }
 
         val time = arrival.time
-        val duration = Duration.between(Instant.now(), time)
+        val duration = time - Clock.System.now()
 
-        if (duration < Duration.ofMinutes(1)) {
+        if (duration < 1.minutes) {
             return strings.getString(R.string.now).lowercase()
         }
 
-        if (duration > Duration.ofHours(20)) {
+        if (duration > 20.hours) {
             return strings.getString(R.string.later).lowercase()
         }
 
-        val datetime = time.toZonedDateTime()
-
         return strings.getString(
             R.string.at_time,
-            formatTime(datetime.toLocalTime(), includeSeconds = false)
+            formatTime(time, includeSeconds = false)
         )
     }
 
@@ -133,37 +146,39 @@ class FormatService private constructor(private val context: Context) {
     }
 
     fun formatRelativeDateTime(
-        time: ZonedDateTime,
+        time: Instant,
         abbreviateMonth: Boolean = false,
         includeSeconds: Boolean = true,
-        includeMinutes: Boolean = true
+        includeMinutes: Boolean = true,
+        zone: TimeZone = TimeZone.currentSystemDefault()
     ): String {
+        val local = time.toLocalDateTime(zone)
         return formatRelativeDate(
-            time.toLocalDate(),
+            local.date,
             abbreviateMonth
-        ) + " " + formatTime(time.toLocalTime(), includeSeconds, includeMinutes)
+        ) + " " + formatTime(local.time, includeSeconds, includeMinutes)
     }
 
     fun formatRelativeDate(date: LocalDate, abbreviateMonth: Boolean = false): String {
-        val now = LocalDate.now()
+        val now = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
         return when (date) {
             now -> {
                 strings.getString(R.string.today)
             }
 
-            now.plusDays(1) -> {
+            now.plus(1, DateTimeUnit.DAY) -> {
                 strings.getString(R.string.tomorrow)
             }
 
-            now.minusDays(1) -> {
+            now.minus(1, DateTimeUnit.DAY) -> {
                 strings.getString(R.string.yesterday)
             }
 
             else -> {
                 DateUtils.formatDateTime(
                     context,
-                    date.atStartOfDay().toEpochMillis(),
+                    date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
                     DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_RELATIVE or (if (abbreviateMonth) DateUtils.FORMAT_ABBREV_MONTH else 0)
                 )
             }
@@ -171,26 +186,21 @@ class FormatService private constructor(private val context: Context) {
     }
 
     fun formatTime(
-        time: ZonedDateTime,
-        includeSeconds: Boolean = true,
-        includeMinutes: Boolean = true
-    ): String {
-        return formatTime(time.toLocalTime(), includeSeconds, includeMinutes)
-    }
-
-    fun formatTime(
         time: Instant,
         includeSeconds: Boolean = true,
-        includeMinutes: Boolean = true
+        includeMinutes: Boolean = true,
+        zone: TimeZone = TimeZone.currentSystemDefault()
     ): String {
-        return formatTime(time.toZonedDateTime(), includeSeconds, includeMinutes)
+        return formatTime(time.toLocalDateTime(zone).time, includeSeconds, includeMinutes)
     }
 
     fun formatTime(
-        time: kotlin.time.Instant,
+        time: LocalDateTime,
         includeSeconds: Boolean = true,
         includeMinutes: Boolean = true
-    ): String = formatTime(time.toJavaInstant(), includeSeconds, includeMinutes)
+    ): String {
+        return formatTime(time.time, includeSeconds, includeMinutes)
+    }
 
     fun formatTime(
         time: LocalTime,
@@ -198,88 +208,106 @@ class FormatService private constructor(private val context: Context) {
         includeMinutes: Boolean = true
     ): String {
         val amPm = !prefs.use24HourTime
-        val lZero = prefs.addLeadingZeroToTime
-        return if (amPm) {
-            time.format(DateTimeFormatter.ofPattern("${if (lZero) "h" else ""}h${if (includeMinutes) ":mm" else ""}${if (includeSeconds) ":ss" else ""} a"))
-        } else {
-            time.format(DateTimeFormatter.ofPattern("${if (lZero) "H" else ""}H${if (includeMinutes) ":mm" else ""}${if (includeSeconds) ":ss" else ""}"))
+        val padding = if (prefs.addLeadingZeroToTime) Padding.ZERO else Padding.NONE
+        val format = LocalTime.Format {
+            if (amPm) amPmHour(padding) else hour(padding)
+            if (includeMinutes) {
+                char(':')
+                minute()
+            }
+            if (includeSeconds) {
+                char(':')
+                second()
+            }
+            if (amPm) {
+                char(' ')
+                val markers = DateFormatSymbols.getInstance(Locale.getDefault()).amPmStrings
+                amPmMarker(markers[0], markers[1])
+            }
         }
+        return time.format(format)
     }
 
     fun formatMonth(
         month: Month,
         short: Boolean = false
     ): String {
-        return month.getDisplayName(
-            if (short) TextStyle.SHORT else TextStyle.FULL,
-            Locale.getDefault()
-        )
+        return month.displayName(if (short) DateNameWidth.Short else DateNameWidth.Full)
+    }
+
+    fun formatDayOfWeek(
+        dayOfWeek: DayOfWeek,
+        short: Boolean = false
+    ): String {
+        return dayOfWeek.displayName(if (short) DateNameWidth.Short else DateNameWidth.Full)
     }
 
     fun formatDate(
-        date: ZonedDateTime,
+        date: Instant,
         includeWeekDay: Boolean = true,
         abbreviateMonth: Boolean = false
     ): String {
         return DateUtils.formatDateTime(
             context,
-            date.toEpochSecond() * 1000,
+            date.toEpochMilliseconds(),
             DateUtils.FORMAT_SHOW_DATE or (if (includeWeekDay) DateUtils.FORMAT_SHOW_WEEKDAY else 0) or DateUtils.FORMAT_SHOW_YEAR or (if (abbreviateMonth) DateUtils.FORMAT_ABBREV_MONTH else 0)
         )
     }
 
-    fun formatDateTime(
-        dateTime: ZonedDateTime,
-        relative: Boolean = false,
+    fun formatDate(
+        date: LocalDate,
+        includeWeekDay: Boolean = true,
         abbreviateMonth: Boolean = false
     ): String {
+        return formatDate(
+            date.atStartOfDayIn(TimeZone.currentSystemDefault()),
+            includeWeekDay,
+            abbreviateMonth
+        )
+    }
+
+    fun formatDateTime(
+        dateTime: Instant,
+        relative: Boolean = false,
+        abbreviateMonth: Boolean = false,
+        zone: TimeZone = TimeZone.currentSystemDefault()
+    ): String {
+        val local = dateTime.toLocalDateTime(zone)
         val date = if (relative) formatRelativeDate(
-            dateTime.toLocalDate(),
+            local.date,
             abbreviateMonth = abbreviateMonth
         ) else formatDate(
             dateTime,
             false,
             abbreviateMonth
         )
-        val time = formatTime(dateTime.toLocalTime(), false)
+        val time = formatTime(local.time, false)
         return "$date $time"
     }
 
     fun formatTimeSpan(
-        start: ZonedDateTime,
-        end: ZonedDateTime,
-        relative: Boolean = false
+        start: Instant,
+        end: Instant,
+        relative: Boolean = false,
+        zone: TimeZone = TimeZone.currentSystemDefault()
     ): String {
-        val startTime = start.toLocalTime()
-        val endTime = end.toLocalTime()
+        val startLocal = start.toLocalDateTime(zone)
+        val endLocal = end.toLocalDateTime(zone)
 
         val dateFormatFn =
-            if (relative) { date: ZonedDateTime ->
-                formatRelativeDate(date.toLocalDate())
-            } else { date: ZonedDateTime ->
+            if (relative) { date: Instant ->
+                formatRelativeDate(date.toLocalDateTime(zone).date)
+            } else { date: Instant ->
                 formatDate(date)
             }
 
-        return if (start.toLocalDate() == end.toLocalDate()) {
-            strings.getString(
-                R.string.dash_separated_pair, "${dateFormatFn(start)} ${
-                    formatTime(
-                        startTime,
-                        false
-                    )
-                }", formatTime(endTime, false)
-            )
+        val startText = "${dateFormatFn(start)} ${formatTime(startLocal.time, false)}"
+        val endText = if (startLocal.date == endLocal.date) {
+            formatTime(endLocal.time, false)
         } else {
-            strings.getString(
-                R.string.dash_separated_pair, "${dateFormatFn(start)} ${
-                    formatTime(
-                        startTime,
-                        false
-                    )
-                }", "${dateFormatFn(end)} ${formatTime(endTime, false)}"
-            )
+            "${dateFormatFn(end)} ${formatTime(endLocal.time, false)}"
         }
-
+        return strings.getString(R.string.dash_separated_pair, startText, endText)
     }
 
     fun formatElevation(distance: Distance): String {
@@ -462,9 +490,9 @@ class FormatService private constructor(private val context: Context) {
         short: Boolean = false,
         includeSeconds: Boolean = false
     ): String {
-        val hours = duration.toHours()
-        val minutes = duration.toMinutes() % 60
-        val seconds = duration.seconds % 60
+        val hours = duration.toJavaHours()
+        val minutes = duration.toJavaMinutes() % 60
+        val seconds = duration.toJavaSeconds() % 60
 
         val h = strings.getString(R.string.duration_hour_format, hours)
         val m = strings.getString(R.string.duration_minute_format, minutes)
@@ -543,9 +571,9 @@ class FormatService private constructor(private val context: Context) {
         val metersPerUnit = Distance.from(1f, distanceUnit)
             .convertTo(DistanceUnits.Meters)
             .value
-        val duration = Duration.ofSeconds((metersPerUnit / metersPerSecond).roundToLong())
-        val minutes = duration.toMinutes()
-        val seconds = duration.seconds % 60
+        val duration = (metersPerUnit / metersPerSecond).roundToLong().seconds
+        val minutes = duration.inWholeMinutes
+        val seconds = duration.inWholeSeconds % 60
         val formattedPace = "$minutes:${seconds.toString().padStart(2, '0')}"
         return strings.getString(
             R.string.slash_separated_pair,

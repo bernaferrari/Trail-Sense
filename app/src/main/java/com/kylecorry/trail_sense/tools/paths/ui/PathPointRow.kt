@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material3.DropdownMenu
@@ -16,10 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.signal.CellNetwork
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
@@ -45,7 +47,7 @@ fun PathPointRow(
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    val title = point.time?.toZonedDateTime()?.let { date ->
+    val title = point.time?.let { date ->
         stringResource(
             R.string.waypoint_time_format,
             formatService.formatRelativeDate(date.toLocalDate()),

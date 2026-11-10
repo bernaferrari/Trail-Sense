@@ -6,9 +6,11 @@
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
+import com.kylecorry.trail_sense.shared.time.DateNameWidth
+import com.kylecorry.trail_sense.shared.time.displayName
+import kotlinx.datetime.number
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import com.kylecorry.trail_sense.shared.time.today
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
@@ -134,8 +136,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
-import java.time.Month
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 import java.util.Locale
 
 @Composable
@@ -175,7 +177,7 @@ fun ClimateToolScreen() {
         place = getPlaceText(context, formatter, viewModel.location, viewModel.elevation),
         months = viewModel.months,
         selectedMonth = viewModel.selectedMonth,
-        currentMonth = LocalDate.now().month,
+        currentMonth = today().month,
         verdict = selected?.let { getVerdict(context, it, ::formatPrecipitation) },
         formatTemperature = { formatter.formatDegrees(Temperature.celsius(it).convertTo(units).value) },
         formatPrecipitation = ::formatPrecipitation,
@@ -241,7 +243,7 @@ private class ClimateViewModel(
     private val distanceUnits: () -> DistanceUnits
 ) : ViewModel() {
 
-    var selectedMonth by mutableStateOf(LocalDate.now().month)
+    var selectedMonth by mutableStateOf(today().month)
     var location by mutableStateOf<Coordinate?>(null)
         private set
     var elevation by mutableStateOf<Distance?>(null)
@@ -293,7 +295,7 @@ private class ClimateViewModel(
     }
 
     private fun loadClimateData() {
-        val year = LocalDate.now().year
+        val year = today().year
         val currentLocation = location
         val currentElevation = elevation
 
@@ -338,7 +340,7 @@ private class ClimateViewModel(
         precipitation: Map<Month, Distance>
     ): ClimateKind? {
         val monthlyAverageTemperatures = temperatures
-            .filter { it.first.dayOfMonth == 15 }
+            .filter { it.first.day == 15 }
             .associate {
                 it.first.month to Temperature.celsius(
                     (it.second.start.celsius().value + it.second.end.celsius().value) / 2
@@ -347,8 +349,8 @@ private class ClimateViewModel(
         if (monthlyAverageTemperatures.isEmpty()) return null
 
         val climate = Meteorology.getKoppenGeigerClimateClassification(
-            monthlyAverageTemperatures.mapKeys { it.key.toKotlin() },
-            precipitation.mapKeys { it.key.toKotlin() }
+            monthlyAverageTemperatures,
+            precipitation
         )
 
         return when {
@@ -487,7 +489,7 @@ private fun ClimateScreen(
 
         item(key = "hero") {
             ClimateHero(
-                monthName = selectedMonth.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, Locale.getDefault()),
+                monthName = selectedMonth.displayName(standalone = true),
                 high = selected?.let { formatTemperature(it.highCelsius) },
                 low = selected?.let { formatTemperature(it.lowCelsius) },
                 verdict = verdict
@@ -767,13 +769,14 @@ private fun ClimateMonthColumn(
     onClick: () -> Unit
 ) {
     val locale = Locale.getDefault()
-    val label = month.month.getDisplayName(
-        if (width >= 40.dp) java.time.format.TextStyle.SHORT_STANDALONE else java.time.format.TextStyle.NARROW_STANDALONE,
-        locale
+    val label = month.month.displayName(
+        if (width >= 40.dp) DateNameWidth.Short else DateNameWidth.Narrow,
+        standalone = true,
+        locale = locale
     )
     val description = stringResource(
         R.string.climate_month_row_description,
-        month.month.getDisplayName(java.time.format.TextStyle.FULL_STANDALONE, locale),
+        month.month.displayName(standalone = true, locale = locale),
         low,
         high,
         precipitation.orEmpty()
@@ -809,7 +812,7 @@ private fun ClimateMonthColumn(
             .semantics { contentDescription = description }
             .selectable(selected = isSelected, role = Role.Tab, onClick = onClick)
             .padding(vertical = TrailSenseSpacing.sm)
-            .testTag("climate_month_${month.month.value}"),
+            .testTag("climate_month_${month.month.number}"),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(

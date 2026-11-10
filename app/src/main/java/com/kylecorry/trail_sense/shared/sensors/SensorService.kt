@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.shared.sensors
 
+import kotlin.time.Duration.Companion.milliseconds
+
 import kotlin.time.Duration.Companion.minutes
 
 import kotlin.time.Duration.Companion.seconds
-
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
 
 import com.kylecorry.andromeda.sense.accelerometer.AndroidAccelerometer
 import com.kylecorry.andromeda.sense.barometer.AndroidBarometer
@@ -83,7 +83,7 @@ import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
-import java.time.Duration
+import kotlin.time.Duration
 
 // Maybe use the concept of a use case
 // Ex. SensorPurpose.Background, SensorPurpose.Calibration, SensorPurpose.Diagnostics
@@ -101,10 +101,10 @@ class SensorService(ctx: Context) {
         tag: String? = null
     ): ISatelliteGPS {
         return when (gpsSourceSelector.getSource(useCache)) {
-            GPSSource.Override -> OverrideGPS(context, frequency.toMillis())
-            GPSSource.Timezone -> TimezoneGPS(frequency.toMillis())
+            GPSSource.Override -> OverrideGPS(context, frequency.inWholeMilliseconds)
+            GPSSource.Timezone -> TimezoneGPS(frequency.inWholeMilliseconds)
             GPSSource.Device -> CustomGPS(context, frequency, tag)
-            GPSSource.Cache -> CachedGPS(context, frequency.toMillis())
+            GPSSource.Cache -> CachedGPS(context, frequency.inWholeMilliseconds)
         }
     }
 
@@ -387,9 +387,9 @@ class SensorService(ctx: Context) {
     companion object {
         const val MOTION_SENSOR_DELAY = SensorManager.SENSOR_DELAY_UI
         private const val ENVIRONMENT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
-        val DEFAULT_GPS_FREQUENCY: Duration = Duration.ofSeconds(1)
-        val NAVIGATION_GPS_FREQUENCY: Duration = Duration.ofMillis(200)
-        val SINGLE_FIX_GPS_FREQUENCY: Duration = Duration.ofMillis(20)
+        val DEFAULT_GPS_FREQUENCY: Duration = 1.seconds
+        val NAVIGATION_GPS_FREQUENCY: Duration = 200.milliseconds
+        val SINGLE_FIX_GPS_FREQUENCY: Duration = 20.milliseconds
         // Long enough for the GPS to get a fix which satisfies the user's accuracy filter
         val GPS_READ_TIMEOUT: kotlin.time.Duration = 30.seconds
         // Used where the user is waiting on a reading they can cancel

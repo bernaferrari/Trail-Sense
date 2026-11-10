@@ -68,7 +68,7 @@ import com.kylecorry.trail_sense.tools.ballistics.domain.G1DragModel
 import com.kylecorry.trail_sense.tools.ballistics.domain.TrajectoryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.time.Duration
+import kotlin.time.Duration
 
 /** Trajectory: the rifle as one group of inputs, then the table it produces as one card. */
 @Composable

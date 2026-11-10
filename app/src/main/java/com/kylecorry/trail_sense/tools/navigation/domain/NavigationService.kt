@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.domain
 
+import kotlin.time.Duration.Companion.seconds
+
 import com.kylecorry.sol.math.arithmetic.Arithmetic.clamp
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.science.geography.Geography
@@ -14,7 +16,7 @@ import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.NearbyBeaconFilter
 import com.kylecorry.trail_sense.tools.navigation.domain.guidance.Guidance
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
-import java.time.Duration
+import kotlin.time.Duration
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -49,7 +51,7 @@ class NavigationService {
     ): Duration {
         val time = scarfsDistance(location, to.coordinate, elevation, to.elevation) / getHikingSpeed(speed)
 
-        return Duration.ofSeconds(time.toLong())
+        return (time.toLong()).seconds
     }
 
     fun eta(guidance: Guidance, speed: Speed): Duration? {

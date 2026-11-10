@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
-import com.kylecorry.trail_sense.shared.time.interop.*
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toJava
 
 import android.content.Context
 import androidx.lifecycle.LiveData
@@ -34,7 +32,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathSimplifier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Instant
+import kotlin.time.Instant
 
 class PathService(
     private val pathRepo: PathRepo,
@@ -295,7 +293,7 @@ class PathService(
         val isEmpty = waypointLock.withLock {
             waypointRepo.deleteOlderInPath(
                 pathId,
-                time.getTime().toJava().toInstant().minus(pathPreferences.backtrackHistory)
+                time.getTime().instant.minus(pathPreferences.backtrackHistory)
             )
             updatePathMetadata(pathId)
             waypointRepo.getCountInPath(pathId) == 0
@@ -339,8 +337,10 @@ class PathService(
 
         val distance = metadata.distance.meters().value +
                 previous.coordinate.distanceTo(point.coordinate)
-        val duration = if (metadata.duration != null && point.time != null) {
-            Range(metadata.duration.start, point.time)
+        val currentDuration = metadata.duration
+        val pointTime = point.time
+        val duration = if (currentDuration != null && pointTime != null) {
+            Range(currentDuration.start, pointTime)
         } else {
             null
         }

@@ -5,7 +5,7 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.ICleanable
 import com.kylecorry.trail_sense.shared.grouping.persistence.IGroupLoader
 import kotlinx.coroutines.flow.Flow
-import java.time.Instant
+import kotlin.time.Instant
 
 interface IPathService : ICleanable {
 

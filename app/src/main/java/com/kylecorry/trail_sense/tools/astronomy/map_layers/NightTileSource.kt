@@ -11,7 +11,6 @@ import com.kylecorry.andromeda.bitmaps.operations.Lut
 import com.kylecorry.andromeda.bitmaps.operations.applyOperationsOrNull
 import com.kylecorry.andromeda.core.ui.colormaps.AlphaColorMap
 import com.kylecorry.sol.math.interpolation.Interpolation
-import com.kylecorry.trail_sense.shared.time.JavaTime.toZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.map_layers.tiles.InterpolatedGridValueProvider
 import com.kylecorry.trail_sense.shared.map_layers.tiles.ParallelCoordinateGridValueProvider
@@ -21,7 +20,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import java.time.Instant
+import kotlin.time.Instant
 
 class NightTileSource : TileSource {
 
@@ -34,8 +33,7 @@ class NightTileSource : TileSource {
         val preferences = params.getPreferences()
         val smooth = preferences.getBoolean(SMOOTH, DEFAULT_SMOOTH)
 
-        val time = Instant.ofEpochMilli(params.getLong(MapLayerParams.PARAM_TIME))
-            .toZonedDateTime()
+        val time = Instant.fromEpochMilliseconds(params.getLong(MapLayerParams.PARAM_TIME))
         val bounds = tile.getBounds()
         val isNight = arrayOf(
             bounds.northWest,

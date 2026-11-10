@@ -1,12 +1,8 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem
 
-import kotlin.time.toJavaInstant
+import com.kylecorry.trail_sense.shared.time.today
 
-import com.kylecorry.trail_sense.shared.time.JavaTime.toKotlin
-
-import com.kylecorry.trail_sense.shared.time.interop.*
-
-import com.kylecorry.trail_sense.shared.time.JavaTime
+import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
@@ -57,11 +53,9 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.Weathe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.Month
-import java.time.ZonedDateTime
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 
 
 class WeatherSubsystem private constructor(private val context: Context) : IWeatherSubsystem {
@@ -137,7 +131,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
             val reading = precalibrated.firstOrNull { r -> r.time == it.time }
             WeatherObservation(
                 reading?.value?.id ?: 0L,
-                it.time.toJavaInstant(),
+                it.time,
                 Pressure.from(it.value.value + offset, it.value.units),
                 Temperature.celsius(reading?.value?.temperature ?: 0f),
                 reading?.value?.humidity
@@ -157,18 +151,18 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
     }
 
     override suspend fun getTemperature(
-        time: ZonedDateTime,
+        time: Instant,
         location: Coordinate?,
         elevation: Distance?,
         calibrated: Boolean
     ): Reading<Temperature> = onDefault {
         val service = getTemperatureService(location, elevation, calibrated)
-        Reading(service.getTemperature(time), time.toInstant())
+        Reading(service.getTemperature(time), time)
     }
 
     override suspend fun getTemperatures(
-        start: ZonedDateTime,
-        end: ZonedDateTime,
+        start: Instant,
+        end: Instant,
         location: Coordinate?,
         elevation: Distance?,
         calibrated: Boolean
@@ -256,25 +250,25 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
         calibrated: Boolean
     ): KoppenGeigerClimateClassification {
         val temperatures =
-            getTemperatureRanges(LocalDate.now().year, location, elevation, calibrated)
+            getTemperatureRanges(today().year, location, elevation, calibrated)
         val precipitation = getMonthlyPrecipitation(location)
 
         val monthlyAverageTemperatures = temperatures
-            .filter { it.first.dayOfMonth == 15 }
+            .filter { it.first.day == 15 }
             .associate { it.first.month to Temperature.celsius((it.second.start.celsius().value + it.second.end.celsius().value) / 2) }
 
         return Meteorology.getKoppenGeigerClimateClassification(
-            monthlyAverageTemperatures.mapKeys { it.key.toKotlin() },
-            precipitation.mapKeys { it.key.toKotlin() }
+            monthlyAverageTemperatures,
+            precipitation
         )
     }
 
     override suspend fun updateWeather() = onDefault {
         updateWeatherMutex.withLock {
             val last = weatherRepo.getLast()?.time
-            val maxPeriod = prefs.weather.weatherUpdateFrequency.dividedBy(3)
+            val maxPeriod = prefs.weather.weatherUpdateFrequency.div(3)
 
-            if (last != null && JavaTime.between(last, Instant.now()).abs() < maxPeriod) {
+            if (last != null && (Clock.System.now() - last).absoluteValue < maxPeriod) {
                 getAppService<Logger>().info(
                     TAG,
                     "Skipping weather reading, last reading was at $last (minimum spacing: $maxPeriod)"

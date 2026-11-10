@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.DurationUnit
+
 import com.kylecorry.sol.math.algebra.Matrix
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -17,7 +19,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.KalmanFilter
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
 import com.kylecorry.trail_sense.shared.sensors.gps.SpeedSource
 import com.kylecorry.trail_sense.shared.sensors.gps.durationSince
-import java.time.Duration
+import kotlin.time.Duration
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.max
@@ -85,7 +87,7 @@ class KalmanGPSModule(
                 restore(newData)
             } else if (lastTime != null) {
                 val dt = newData.durationSince(lastTime)
-                    .let { it.seconds + it.nano / 1_000_000_000.0 }.toFloat()
+                    .toDouble(DurationUnit.SECONDS).toFloat()
                 if (dt >= MAX_PREDICTION_SECONDS) {
                     // Motion before a long outage says little about motion now. Start
                     // with the new fix rather than extrapolating stale velocity.
@@ -106,7 +108,7 @@ class KalmanGPSModule(
         }
         val adjustment = rawLocation.distanceTo(newData.location)
         if (adjustment >= LARGE_ADJUSTMENT_METERS) {
-            val elapsedSeconds = lastTime?.let { newData.durationSince(it).toMillis() / 1000f }
+            val elapsedSeconds = lastTime?.let { newData.durationSince(it).inWholeMilliseconds / 1000f }
             logger.debug(
                 TAG,
                 "Large adjustment: ${adjustment.safeRoundPlaces(1)}m from raw " +
@@ -286,9 +288,9 @@ class KalmanGPSModule(
 
     private fun needsReset(previous: ModularGPSData, next: ModularGPSData): Boolean {
         val sincePrevious = next.durationSince(previous)
-        if (sincePrevious.isNegative) return true
+        if (sincePrevious.isNegative()) return true
         val lastTime = timeElapsedNanos ?: return false
-        return sincePrevious > Duration.ZERO && next.durationSince(lastTime).isNegative
+        return sincePrevious > Duration.ZERO && next.durationSince(lastTime).isNegative()
     }
 
     private fun shouldRestore(
@@ -298,7 +300,7 @@ class KalmanGPSModule(
     ): Boolean {
         val needsState = filter == null || hasNewerPrevious
         val hasPreviousFix = previous.location != Coordinate.zero
-        return needsState && hasPreviousFix && !next.durationSince(previous).isNegative
+        return needsState && hasPreviousFix && !next.durationSince(previous).isNegative()
     }
 
     private fun reset() {

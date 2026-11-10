@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.commands
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
 
 import android.content.Context
 import android.os.SystemClock
@@ -21,7 +21,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.ShouldRecordBacktrackPoint
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import java.time.Instant
 
 class BacktrackCommand(private val context: Context) : CoroutineCommand {
 
@@ -71,7 +70,7 @@ class BacktrackCommand(private val context: Context) : CoroutineCommand {
             getAppService<Logger>().warn(
                 TAG,
                 "GPS did not receive a fix ($reason), $outcome backtrack point from a reading " +
-                    "${gps.age(SystemTimeProvider()).seconds}s old with ${gps.horizontalAccuracy?.safeRoundPlaces(1)}m accuracy"
+                    "${gps.age(SystemTimeProvider()).inWholeSeconds}s old with ${gps.horizontalAccuracy?.safeRoundPlaces(1)}m accuracy"
             )
         }
     }
@@ -88,7 +87,7 @@ class BacktrackCommand(private val context: Context) : CoroutineCommand {
                 0,
                 gps.location,
                 altimeter.altitude,
-                Instant.now(),
+                Clock.System.now(),
                 cellSignalSensor?.networkQuality()
             )
 

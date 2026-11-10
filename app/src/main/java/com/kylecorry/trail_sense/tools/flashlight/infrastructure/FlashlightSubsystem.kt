@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import kotlin.time.toJavaDuration
 import com.kylecorry.andromeda.core.time.once
 import kotlin.time.Duration.Companion.seconds
-
 import com.kylecorry.andromeda.torch.isTorchAvailable
 
-import com.kylecorry.trail_sense.shared.time.interop.*
+import kotlin.time.Clock
+
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -31,7 +32,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.util.Optional
 
 class FlashlightSubsystem private constructor(private val context: Context) : IFlashlightSubsystem {
