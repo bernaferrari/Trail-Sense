@@ -193,7 +193,8 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
         hasText(Regex(".*-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°.*"))
         back()
         click("Leave")
-        longPressCenter()
+        // The press can land while the place form is still animating away, so press again until the sheet opens
+        longPressCenterUntil("Navigate")
 
         click("Navigate")
         hasText(Regex(".*-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°.*"))
@@ -419,6 +420,13 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
         return location
     }
 
+    private fun longPressCenterUntil(text: String) {
+        waitFor(LONG_PRESS_RETRY_TIMEOUT_MS) {
+            longPressCenter()
+            hasText(text, waitForTime = LONG_PRESS_SHEET_WAIT_MS)
+        }
+    }
+
     private fun longPressCenter() {
         val device = TestUtils.device
         device.swipe(device.displayWidth / 2, device.displayHeight / 2, device.displayWidth / 2, device.displayHeight / 2, 200)
@@ -503,6 +511,8 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
     companion object {
         private const val DOUBLE_TAP_PAUSE_MS = 500L
+        private const val LONG_PRESS_RETRY_TIMEOUT_MS = 15000L
+        private const val LONG_PRESS_SHEET_WAIT_MS = 4000L
         private const val MAP_NAME = "Test Map"
         private val COORDINATE = Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°")
         private val location = Coordinate(42.03, -71.97)

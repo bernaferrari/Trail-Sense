@@ -17,5 +17,17 @@ private fun checkableNode(obj: UiObject2): UiObject2 {
     if (obj.isCheckable) {
         return obj
     }
-    return obj.findObject(By.checkable(true)) ?: obj
+    // A Compose toggleable row is the checkable node and its label is a child, so look up as well as down
+    return obj.findObject(By.checkable(true)) ?: checkableAncestor(obj) ?: obj
+}
+
+private fun checkableAncestor(obj: UiObject2): UiObject2? {
+    var current = obj.parent
+    while (current != null) {
+        if (current.isCheckable) {
+            return current
+        }
+        current = current.parent
+    }
+    return null
 }
