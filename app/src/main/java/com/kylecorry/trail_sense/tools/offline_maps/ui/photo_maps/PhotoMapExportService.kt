@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.commands.ExportVectorMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.VectorMapExportService
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
@@ -14,6 +17,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.MapExportService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.ExportMapCommand
 
+/** Exports offline maps (photo maps as PDFs, vector maps as their .map files) to a file the user picks. */
 class PhotoMapExportService(
     private val context: Context,
     intentResultRetriever: IntentResultRetriever,
@@ -35,10 +39,19 @@ class PhotoMapExportService(
     )
 
     private val command = ExportMapCommand(exporter, loading)
+    private val vectorCommand = ExportVectorMapCommand(VectorMapExportService(context, uriPicker), loading)
 
     fun export(map: PhotoMap) {
+        export { command.execute(map) }
+    }
+
+    fun export(map: VectorMap) {
+        export { vectorCommand.execute(map) }
+    }
+
+    private fun export(action: suspend () -> Boolean) {
         lifecycleOwner.inBackground(BackgroundMinimumState.Created) {
-            val success = command.execute(map)
+            val success = action()
             if (success) {
                 effects.showMessage(context.getString(R.string.map_exported))
             } else {

@@ -347,6 +347,7 @@ fun OfflineMapListToolScreen(
                     EditOfflineMapAttributionCommand(context).execute(map)
                 }
 
+                VectorMapAction.Export -> exportService.export(map)
                 VectorMapAction.Delete -> delete(map)
                 VectorMapAction.Move -> move(map)
                 VectorMapAction.ToggleVisibility -> viewModel.toggleVisibility(map)
@@ -892,7 +893,7 @@ private fun PhotoMapMenu(
         ) {
             Icon(
                 imageVector = TrailIcons.MenuDots,
-                contentDescription = stringResource(R.string.details),
+                contentDescription = stringResource(R.string.more_options),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -997,7 +998,7 @@ private fun VectorMapMenu(
         ) {
             Icon(
                 imageVector = TrailIcons.MenuDots,
-                contentDescription = stringResource(R.string.details),
+                contentDescription = stringResource(R.string.more_options),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -1008,6 +1009,10 @@ private fun VectorMapMenu(
             VectorMapMenuItem(R.string.rename, onMenuOpenChange, onAction, VectorMapAction.Rename)
             VectorMapMenuItem(R.string.attribution, onMenuOpenChange, onAction, VectorMapAction.EditAttribution)
             VectorMapMenuItem(R.string.move_to, onMenuOpenChange, onAction, VectorMapAction.Move)
+            // Only a file in Trail Sense's storage is exported; an external one is already the user's file
+            if (!map.isExternal && map.isAvailable) {
+                VectorMapMenuItem(R.string.export, onMenuOpenChange, onAction, VectorMapAction.Export)
+            }
             if (map.isExternal && map.isAvailable) {
                 VectorMapMenuItem(
                     R.string.copy_to_trail_sense,
@@ -1090,7 +1095,7 @@ private fun MapGroupRow(
                 ) {
                     Icon(
                         imageVector = TrailIcons.MenuDots,
-                        contentDescription = stringResource(R.string.details),
+                        contentDescription = stringResource(R.string.more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

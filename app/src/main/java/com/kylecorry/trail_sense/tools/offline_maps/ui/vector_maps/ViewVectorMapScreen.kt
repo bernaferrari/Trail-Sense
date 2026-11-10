@@ -2,6 +2,11 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps
 
+import com.kylecorry.trail_sense.main.MainActivity
+import androidx.activity.compose.LocalActivity
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExportService
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -73,6 +78,13 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
     val viewModel = viewModel { ViewVectorMapViewModel(getAppService(), route.offlineMapFileId) }
+    val effects = LocalScreenEffects.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // Picking the destination file needs the activity's result launcher (an Activity-only API)
+    val activity = requireNotNull(LocalActivity.current as? MainActivity)
+    val exportService = remember(context, activity, effects, lifecycleOwner) {
+        PhotoMapExportService(context, activity, effects, lifecycleOwner)
+    }
     val mapView = remember {
         MapView(context).apply {
             keepScreenOn = true
@@ -120,6 +132,7 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
                 }
             }
         },
+        onExport = { viewModel.map?.let(exportService::export) },
         onDelete = {
             viewModel.map?.let {
                 scope.launch {
@@ -199,6 +212,7 @@ private fun VectorMapScreen(
     onZoomOut: () -> Unit,
     onRename: () -> Unit,
     onEditAttribution: () -> Unit,
+    onExport: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -238,6 +252,15 @@ private fun VectorMapScreen(
                                     onEditAttribution()
                                 }
                             )
+                            if (map?.isExternal == false && map.isAvailable) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.export)) },
+                                    onClick = {
+                                        isMenuOpen = false
+                                        onExport()
+                                    }
+                                )
+                            }
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.delete)) },
                                 onClick = {

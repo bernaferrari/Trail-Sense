@@ -2210,6 +2210,7 @@
     <string name="settings_error_banners_footer">Choose which problems can show a banner at the top of a tool.</string>
     <string name="settings_tools_summary">Quick actions, widgets and bottom navigation</string>
     <!-- Family redesign: beacons, notes -->
+    <string name="more_options">More options</string>
     <string name="note_more_options">More options</string>
     <string name="notes_empty_description">Write down anything you want to keep with you on the trail.</string>
     <string name="beacon_more_options">More options</string>

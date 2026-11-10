@@ -4,6 +4,7 @@ enum class VectorMapAction {
     View,
     Rename,
     EditAttribution,
+    Export,
     Delete,
     Move,
     ToggleVisibility,
