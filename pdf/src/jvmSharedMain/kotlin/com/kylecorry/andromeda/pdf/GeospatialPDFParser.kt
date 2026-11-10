@@ -9,11 +9,11 @@ import com.kylecorry.sol.units.Coordinate
 import java.io.InputStream
 import kotlin.math.absoluteValue
 
-class GeospatialPDFParser {
+public class GeospatialPDFParser {
 
     private val pdfParser = PDFParser()
 
-    fun parse(pdf: InputStream): GeospatialPDFMetadata? {
+    public fun parse(pdf: InputStream): GeospatialPDFMetadata? {
         val objects = pdfParser.parse(pdf, ignoreStreams = true)
 
         // TODO: Support multiple pages - pages are linked to viewports through the VP array

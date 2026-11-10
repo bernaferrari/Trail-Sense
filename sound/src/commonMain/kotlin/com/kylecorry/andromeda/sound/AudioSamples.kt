@@ -6,7 +6,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /** Converts little-endian signed 16-bit PCM to normalized floating-point samples. */
-fun pcm16ToFloat(bytes: ByteArray): FloatArray {
+public fun pcm16ToFloat(bytes: ByteArray): FloatArray {
     require(bytes.size % 2 == 0)
     return FloatArray(bytes.size / 2) { index ->
         val value = (bytes[index * 2].toInt() and 0xff) or (bytes[index * 2 + 1].toInt() shl 8)
@@ -15,7 +15,7 @@ fun pcm16ToFloat(bytes: ByteArray): FloatArray {
 }
 
 /** Generates little-endian signed 16-bit PCM from normalized sample values. */
-fun generatePcm16(sampleRate: Int, durationSeconds: Float, sample: (Int) -> Double): ByteArray {
+public fun generatePcm16(sampleRate: Int, durationSeconds: Float, sample: (Int) -> Double): ByteArray {
     require(sampleRate > 0 && durationSeconds >= 0 && durationSeconds.isFinite())
     val sampleCount = sampleRate.toDouble() * durationSeconds
     require(sampleCount <= Int.MAX_VALUE / 2)
@@ -29,14 +29,14 @@ fun generatePcm16(sampleRate: Int, durationSeconds: Float, sample: (Int) -> Doub
     }
 }
 
-fun generateTone(frequency: Float, sampleRate: Int = 64000, durationSeconds: Float = 1f): ByteArray {
+public fun generateTone(frequency: Float, sampleRate: Int = 64000, durationSeconds: Float = 1f): ByteArray {
     require(frequency >= 0 && frequency.isFinite())
     return generatePcm16(sampleRate, durationSeconds) { index ->
         sin(frequency * 2 * PI * index / sampleRate)
     }
 }
 
-fun amplitudeToDecibels(
+public fun amplitudeToDecibels(
     amplitude: Float,
     decibelRange: ClosedFloatingPointRange<Float>,
     sensitivity: Float = 0f,
@@ -51,7 +51,7 @@ fun amplitudeToDecibels(
 }
 
 /** Wraps little-endian PCM16 samples in a WAV container. */
-fun pcm16Wav(pcm: ByteArray, sampleRate: Int, channels: Int = 1): ByteArray {
+public fun pcm16Wav(pcm: ByteArray, sampleRate: Int, channels: Int = 1): ByteArray {
     require(sampleRate > 0 && channels in 1..32767 && pcm.size % (channels * 2) == 0)
     require(pcm.size <= Int.MAX_VALUE - 44 && sampleRate.toLong() * channels * 2 <= Int.MAX_VALUE)
     val result = ByteArray(44 + pcm.size)

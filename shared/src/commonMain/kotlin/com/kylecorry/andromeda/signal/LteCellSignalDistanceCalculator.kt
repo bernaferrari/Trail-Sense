@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.signal
 
-class LteCellSignalDistanceCalculator : CellSignalDistanceCalculator {
+public class LteCellSignalDistanceCalculator : CellSignalDistanceCalculator {
     private val binDistance = 78.125f
     override fun getTimingAdvanceDistance(timingAdvance: Int): Float {
         // https://5g-tools.com/4g-lte-timing-advance-distance-calculator/

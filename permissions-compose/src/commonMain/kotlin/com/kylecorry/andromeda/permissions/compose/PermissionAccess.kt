@@ -5,4 +5,4 @@ import com.kylecorry.andromeda.permissions.PermissionAccess
 
 /** Remembers a permission controller bound to the current screen's lifecycle. */
 @Composable
-expect fun rememberPermissionAccess(): PermissionAccess
+public expect fun rememberPermissionAccess(): PermissionAccess

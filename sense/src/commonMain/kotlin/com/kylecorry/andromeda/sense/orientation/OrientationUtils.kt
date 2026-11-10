@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.sense.orientation
 import kotlin.math.*
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 
-object OrientationUtils {
+public object OrientationUtils {
 
     /**
      * Computes the orientation of the device in compass space.
@@ -13,7 +13,7 @@ object OrientationUtils {
      * @param surfaceRotation The surface rotation of the device (default 0)
      * @param declination The declination to use (default null)
      */
-    fun getCompassOrientation(
+    public fun getCompassOrientation(
         orientationSensor: OrientationSensor,
         rotationMatrix: FloatArray,
         orientation: FloatArray,
@@ -54,7 +54,7 @@ object OrientationUtils {
      * @param surfaceRotation The surface rotation of the device (default 0)
      * @param declination The declination to use (default null)
      */
-    fun getAROrientation(
+    public fun getAROrientation(
         orientationSensor: OrientationSensor,
         rotationMatrix: FloatArray,
         orientation: FloatArray,
@@ -99,7 +99,7 @@ object OrientationUtils {
      * @param orientation The array to store the orientation in (azimuth, pitch, roll in degrees)
      * @param declination The declination to use (default null)
      */
-    fun getOrientation(
+    public fun getOrientation(
         orientationSensor: OrientationSensor,
         xAxis: Int,
         yAxis: Int,

@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.signal
 
-interface CellSignalDistanceCalculator {
-    fun getTimingAdvanceDistance(timingAdvance: Int): Float
-    fun getTimingAdvanceDistanceError(timingAdvance: Int): Float
+public interface CellSignalDistanceCalculator {
+    public fun getTimingAdvanceDistance(timingAdvance: Int): Float
+    public fun getTimingAdvanceDistanceError(timingAdvance: Int): Float
 }

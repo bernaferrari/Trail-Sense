@@ -12,7 +12,7 @@ import platform.CoreFoundation.CFRelease
 import platform.CoreGraphics.*
 import platform.Foundation.NSLock
 
-actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
+public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
     private val lock = NSLock()
     private val document: CGPDFDocumentRef
     private var closed = false
@@ -35,14 +35,14 @@ actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
     private fun pageAt(index: Int): CGPDFPageRef =
         requireNotNull(CGPDFDocumentGetPage(document, (index + 1).toULong())) { "Invalid PDF page" }
 
-    actual val pageCount: Int get() = locked { CGPDFDocumentGetNumberOfPages(document).toInt() }
-    actual fun pageSize(page: Int): PdfPageSize = locked {
+    public actual val pageCount: Int get() = locked { CGPDFDocumentGetNumberOfPages(document).toInt() }
+    public actual fun pageSize(page: Int): PdfPageSize = locked {
         val source = pageAt(page)
         val box = CGPDFPageGetBoxRect(source, kCGPDFCropBox)
         val (width, height) = box.useContents { size.width.toFloat() to size.height.toFloat() }
         if (CGPDFPageGetRotationAngle(source) % 180 == 0) PdfPageSize(width, height) else PdfPageSize(height, width)
     }
-    actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = locked {
+    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = locked {
         requireRenderSize(width, height)
         val source = pageAt(page)
         val rgba = ByteArray(width * height * 4)

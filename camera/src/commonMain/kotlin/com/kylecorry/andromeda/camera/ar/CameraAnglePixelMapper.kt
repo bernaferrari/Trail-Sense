@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.geometry.Size
 
-interface CameraAnglePixelMapper {
+public interface CameraAnglePixelMapper {
     /**
      * Get the real world angles of the pixel.
      * @param x The x pixel coordinate
@@ -13,7 +13,7 @@ interface CameraAnglePixelMapper {
      * @param fieldOfView The field of view of the camera
      * @return The angle (negative is left or below center)
      */
-    fun getAngle(
+    public fun getAngle(
         x: Float,
         y: Float,
         imageRect: ImageBounds,
@@ -29,7 +29,7 @@ interface CameraAnglePixelMapper {
      * @param distance The distance to the object in meters (optional)
      * @return The pixel coordinate
      */
-    fun getPixel(
+    public fun getPixel(
         angleX: Float,
         angleY: Float,
         imageRect: ImageBounds,

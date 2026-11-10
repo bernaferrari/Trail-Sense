@@ -4,10 +4,10 @@ import com.kylecorry.andromeda.bitmaps.ImageInterpolation
 import com.kylecorry.andromeda.bitmaps.PixelImage
 import com.kylecorry.andromeda.bitmaps.resizeToFit
 
-enum class ImageResizeMode { Stretch, Fit, CenterCrop }
+public enum class ImageResizeMode { Stretch, Fit, CenterCrop }
 
 /** Resizes to model input dimensions, optionally preserving aspect ratio. */
-fun PixelImage.resizeForModel(
+public fun PixelImage.resizeForModel(
     width: Int,
     height: Int,
     mode: ImageResizeMode = ImageResizeMode.Stretch,

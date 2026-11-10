@@ -1,0 +1,227 @@
+public final class com/kylecorry/andromeda/sound/AudioDevice {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/kylecorry/andromeda/sound/AudioDeviceKind;ZZ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/kylecorry/andromeda/sound/AudioDeviceKind;ZZ)Lcom/kylecorry/andromeda/sound/AudioDevice;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sound/AudioDevice;Ljava/lang/String;Ljava/lang/String;Lcom/kylecorry/andromeda/sound/AudioDeviceKind;ZZILjava/lang/Object;)Lcom/kylecorry/andromeda/sound/AudioDevice;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getInput ()Z
+	public final fun getKind ()Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOutput ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sound/AudioDeviceKind : java/lang/Enum {
+	public static final field Bluetooth Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public static final field BuiltIn Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public static final field Other Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public static final field Usb Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public static final field Wired Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+	public static fun values ()[Lcom/kylecorry/andromeda/sound/AudioDeviceKind;
+}
+
+public final class com/kylecorry/andromeda/sound/AudioDevicesAndroidKt {
+	public static final fun audioDevices ()Ljava/util/List;
+}
+
+public final class com/kylecorry/andromeda/sound/AudioSamplesKt {
+	public static final fun amplitudeToDecibels (FLkotlin/ranges/ClosedFloatingPointRange;FF)F
+	public static synthetic fun amplitudeToDecibels$default (FLkotlin/ranges/ClosedFloatingPointRange;FFILjava/lang/Object;)F
+	public static final fun generatePcm16 (IFLkotlin/jvm/functions/Function1;)[B
+	public static final fun generateTone (FIF)[B
+	public static synthetic fun generateTone$default (FIFILjava/lang/Object;)[B
+	public static final fun pcm16ToFloat ([B)[F
+	public static final fun pcm16Wav ([BII)[B
+	public static synthetic fun pcm16Wav$default ([BIIILjava/lang/Object;)[B
+}
+
+public class com/kylecorry/andromeda/sound/AudioTrackSoundPlayer : com/kylecorry/andromeda/sound/SoundPlayer {
+	public fun <init> (Landroid/media/AudioTrack;)V
+	public fun fadeOff (Z)V
+	public fun fadeOn ()V
+	public fun isOn ()Z
+	public fun off ()V
+	public fun on ()V
+	public fun release ()V
+	public fun setVolume (F)V
+}
+
+public final class com/kylecorry/andromeda/sound/AudioUtils {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/sound/AudioUtils;
+	public final fun amplitudeToDecibels (FLandroid/util/Range;FF)F
+	public static synthetic fun amplitudeToDecibels$default (Lcom/kylecorry/andromeda/sound/AudioUtils;FLandroid/util/Range;FFILjava/lang/Object;)F
+	public final fun createStream (IIII)Landroid/media/AudioTrack;
+	public static synthetic fun createStream$default (Lcom/kylecorry/andromeda/sound/AudioUtils;IIIIILjava/lang/Object;)Landroid/media/AudioTrack;
+	public final fun pcm16ToFloat ([B[F)[F
+	public static synthetic fun pcm16ToFloat$default (Lcom/kylecorry/andromeda/sound/AudioUtils;[B[FILjava/lang/Object;)[F
+}
+
+public final class com/kylecorry/andromeda/sound/DefaultSystemSound : java/lang/Enum {
+	public static final field Alarm Lcom/kylecorry/andromeda/sound/DefaultSystemSound;
+	public static final field Notification Lcom/kylecorry/andromeda/sound/DefaultSystemSound;
+	public static final field Ringtone Lcom/kylecorry/andromeda/sound/DefaultSystemSound;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sound/DefaultSystemSound;
+	public static fun values ()[Lcom/kylecorry/andromeda/sound/DefaultSystemSound;
+}
+
+public final class com/kylecorry/andromeda/sound/GeneratedSoundKt {
+	public static final fun playGeneratedSound-dWUq8MI (IJLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun playGeneratedSound-dWUq8MI$default (IJLkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun playTone-1Y68eR8 (DIJFLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun playTone-1Y68eR8$default (DIJFLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/sound/GeneratedSoundPlayer : com/kylecorry/andromeda/sound/SoundPlayer {
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fadeOff (Z)V
+	public fun fadeOn ()V
+	public fun isOn ()Z
+	public fun off ()V
+	public fun on ()V
+	public fun release ()V
+	public fun setVolume (F)V
+}
+
+public final class com/kylecorry/andromeda/sound/GeneratedSoundPlayerKt {
+	public static final fun streamPlayer (Lkotlinx/coroutines/CoroutineScope;Lcom/kylecorry/andromeda/sound/stream/AudioStream;I)Lcom/kylecorry/andromeda/sound/GeneratedSoundPlayer;
+	public static synthetic fun streamPlayer$default (Lkotlinx/coroutines/CoroutineScope;Lcom/kylecorry/andromeda/sound/stream/AudioStream;IILjava/lang/Object;)Lcom/kylecorry/andromeda/sound/GeneratedSoundPlayer;
+	public static final fun tonePlayer (Lkotlinx/coroutines/CoroutineScope;DI)Lcom/kylecorry/andromeda/sound/GeneratedSoundPlayer;
+	public static synthetic fun tonePlayer$default (Lkotlinx/coroutines/CoroutineScope;DIILjava/lang/Object;)Lcom/kylecorry/andromeda/sound/GeneratedSoundPlayer;
+}
+
+public final class com/kylecorry/andromeda/sound/MicrophoneCalibration {
+	public fun <init> (Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;)V
+	public final fun component1 ()Ljava/lang/Float;
+	public final fun component2 ()Ljava/lang/Float;
+	public final fun component3 ()Ljava/lang/Float;
+	public final fun copy (Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;)Lcom/kylecorry/andromeda/sound/MicrophoneCalibration;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sound/MicrophoneCalibration;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sound/MicrophoneCalibration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaximumSpl ()Ljava/lang/Float;
+	public final fun getMinimumSpl ()Ljava/lang/Float;
+	public final fun getSensitivity ()Ljava/lang/Float;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sound/MicrophoneCaptureKt {
+	public static final fun microphoneSamples (ILcom/kylecorry/andromeda/sound/MicrophoneProcessing;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun microphoneSamples$default (ILcom/kylecorry/andromeda/sound/MicrophoneProcessing;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/sound/MicrophoneFrame {
+	public fun <init> ([FLcom/kylecorry/andromeda/sound/MicrophoneCalibration;)V
+	public final fun component1 ()[F
+	public final fun component2 ()Lcom/kylecorry/andromeda/sound/MicrophoneCalibration;
+	public final fun copy ([FLcom/kylecorry/andromeda/sound/MicrophoneCalibration;)Lcom/kylecorry/andromeda/sound/MicrophoneFrame;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sound/MicrophoneFrame;[FLcom/kylecorry/andromeda/sound/MicrophoneCalibration;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sound/MicrophoneFrame;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCalibration ()Lcom/kylecorry/andromeda/sound/MicrophoneCalibration;
+	public final fun getSamples ()[F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sound/MicrophoneProcessing {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Boolean;
+	public final fun component2 ()Ljava/lang/Boolean;
+	public final fun component3 ()Ljava/lang/Boolean;
+	public final fun copy (Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;)Lcom/kylecorry/andromeda/sound/MicrophoneProcessing;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/sound/MicrophoneProcessing;Ljava/lang/Boolean;Ljava/lang/Boolean;Ljava/lang/Boolean;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sound/MicrophoneProcessing;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAutomaticGainControl ()Ljava/lang/Boolean;
+	public final fun getEchoCancellation ()Ljava/lang/Boolean;
+	public final fun getNoiseSuppression ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/sound/MicrophoneSamplesKt {
+	public static final fun microphoneFrames (ILcom/kylecorry/andromeda/sound/MicrophoneProcessing;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun microphoneFrames$default (ILcom/kylecorry/andromeda/sound/MicrophoneProcessing;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/sound/PcmSpeaker : java/lang/AutoCloseable {
+	public fun <init> (I)V
+	public fun close ()V
+	public final fun drain (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun write ([SLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/sound/SoundChannel : java/lang/Enum {
+	public static final field Alarm Lcom/kylecorry/andromeda/sound/SoundChannel;
+	public static final field Event Lcom/kylecorry/andromeda/sound/SoundChannel;
+	public static final field Media Lcom/kylecorry/andromeda/sound/SoundChannel;
+	public static final field Notification Lcom/kylecorry/andromeda/sound/SoundChannel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sound/SoundChannel;
+	public static fun values ()[Lcom/kylecorry/andromeda/sound/SoundChannel;
+}
+
+public final class com/kylecorry/andromeda/sound/SoundGenerator {
+	public fun <init> ()V
+	public final fun getSound (IFLkotlin/jvm/functions/Function1;)Landroid/media/AudioTrack;
+	public static synthetic fun getSound$default (Lcom/kylecorry/andromeda/sound/SoundGenerator;IFLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Landroid/media/AudioTrack;
+}
+
+public abstract interface class com/kylecorry/andromeda/sound/SystemSound {
+	public abstract fun isPlaying ()Z
+	public abstract fun play ()V
+	public abstract fun stop ()V
+}
+
+public final class com/kylecorry/andromeda/sound/SystemSoundPlayer {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun getAlarmUri ()Landroid/net/Uri;
+	public final fun getNotificationUri ()Landroid/net/Uri;
+	public final fun getRingtoneUri ()Landroid/net/Uri;
+	public final fun player (Landroid/net/Uri;Lcom/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel;)Landroid/media/MediaPlayer;
+}
+
+public final class com/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel : java/lang/Enum {
+	public static final field Alarm Lcom/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel;
+	public static final field Event Lcom/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel;
+	public static final field Media Lcom/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel;
+	public static final field Notification Lcom/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel;
+	public static fun values ()[Lcom/kylecorry/andromeda/sound/SystemSoundPlayer$AudioChannel;
+}
+
+public final class com/kylecorry/andromeda/sound/SystemSoundsAndroidKt {
+	public static final fun defaultSystemSoundUri (Lcom/kylecorry/andromeda/sound/DefaultSystemSound;)Ljava/lang/String;
+	public static final fun openSystemSound (Ljava/lang/String;Lcom/kylecorry/andromeda/sound/SoundChannel;)Lcom/kylecorry/andromeda/sound/SystemSound;
+	public static synthetic fun openSystemSound$default (Ljava/lang/String;Lcom/kylecorry/andromeda/sound/SoundChannel;ILjava/lang/Object;)Lcom/kylecorry/andromeda/sound/SystemSound;
+}
+
+public final class com/kylecorry/andromeda/sound/ToneGenerator {
+	public fun <init> ()V
+	public final fun getTone (IIF)Landroid/media/AudioTrack;
+	public static synthetic fun getTone$default (Lcom/kylecorry/andromeda/sound/ToneGenerator;IIFILjava/lang/Object;)Landroid/media/AudioTrack;
+}
+
+public class com/kylecorry/andromeda/sound/stream/StreamSoundPlayer : com/kylecorry/andromeda/sound/SoundPlayer {
+	public fun <init> (Lcom/kylecorry/andromeda/sound/stream/AudioStream;III)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/sound/stream/AudioStream;IIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fadeOff (Z)V
+	public fun fadeOn ()V
+	public fun isOn ()Z
+	public fun off ()V
+	public fun on ()V
+	public fun release ()V
+	public fun setVolume (F)V
+}
+

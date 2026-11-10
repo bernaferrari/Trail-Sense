@@ -1,0 +1,212 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:markdown>
+final enum class com.kylecorry.andromeda.markdown/MarkdownAutoLink : kotlin/Enum<com.kylecorry.andromeda.markdown/MarkdownAutoLink> { // com.kylecorry.andromeda.markdown/MarkdownAutoLink|null[0]
+    enum entry Email // com.kylecorry.andromeda.markdown/MarkdownAutoLink.Email|null[0]
+    enum entry Phone // com.kylecorry.andromeda.markdown/MarkdownAutoLink.Phone|null[0]
+    enum entry Web // com.kylecorry.andromeda.markdown/MarkdownAutoLink.Web|null[0]
+
+    final val entries // com.kylecorry.andromeda.markdown/MarkdownAutoLink.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.markdown/MarkdownAutoLink> // com.kylecorry.andromeda.markdown/MarkdownAutoLink.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.markdown/MarkdownAutoLink // com.kylecorry.andromeda.markdown/MarkdownAutoLink.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.markdown/MarkdownAutoLink> // com.kylecorry.andromeda.markdown/MarkdownAutoLink.values|values#static(){}[0]
+}
+
+sealed interface com.kylecorry.andromeda.markdown/MarkdownBlock { // com.kylecorry.andromeda.markdown/MarkdownBlock|null[0]
+    final class Image : com.kylecorry.andromeda.markdown/MarkdownBlock { // com.kylecorry.andromeda.markdown/MarkdownBlock.Image|null[0]
+        constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ...) // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?){}[0]
+
+        final val description // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.description|{}description[0]
+            final fun <get-description>(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.description.<get-description>|<get-description>(){}[0]
+        final val source // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.source|{}source[0]
+            final fun <get-source>(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.source.<get-source>|<get-source>(){}[0]
+        final val title // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.title|{}title[0]
+            final fun <get-title>(): kotlin/String? // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.title.<get-title>|<get-title>(){}[0]
+
+        final fun component1(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.component2|component2(){}[0]
+        final fun component3(): kotlin/String? // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ...): com.kylecorry.andromeda.markdown/MarkdownBlock.Image // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.copy|copy(kotlin.String;kotlin.String;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownBlock.Image.toString|toString(){}[0]
+    }
+
+    final class Text : com.kylecorry.andromeda.markdown/MarkdownBlock { // com.kylecorry.andromeda.markdown/MarkdownBlock.Text|null[0]
+        constructor <init>(androidx.compose.ui.text/AnnotatedString) // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.<init>|<init>(androidx.compose.ui.text.AnnotatedString){}[0]
+
+        final val text // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.text|{}text[0]
+            final fun <get-text>(): androidx.compose.ui.text/AnnotatedString // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.text.<get-text>|<get-text>(){}[0]
+
+        final fun component1(): androidx.compose.ui.text/AnnotatedString // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.component1|component1(){}[0]
+        final fun copy(androidx.compose.ui.text/AnnotatedString = ...): com.kylecorry.andromeda.markdown/MarkdownBlock.Text // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.copy|copy(androidx.compose.ui.text.AnnotatedString){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownBlock.Text.toString|toString(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.markdown/MarkdownDelimiter { // com.kylecorry.andromeda.markdown/MarkdownDelimiter|null[0]
+    constructor <init>(kotlin/String, com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect) // com.kylecorry.andromeda.markdown/MarkdownDelimiter.<init>|<init>(kotlin.String;com.kylecorry.andromeda.markdown.MarkdownDelimiter.Effect){}[0]
+
+    final val delimiter // com.kylecorry.andromeda.markdown/MarkdownDelimiter.delimiter|{}delimiter[0]
+        final fun <get-delimiter>(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownDelimiter.delimiter.<get-delimiter>|<get-delimiter>(){}[0]
+    final val effect // com.kylecorry.andromeda.markdown/MarkdownDelimiter.effect|{}effect[0]
+        final fun <get-effect>(): com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect // com.kylecorry.andromeda.markdown/MarkdownDelimiter.effect.<get-effect>|<get-effect>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownDelimiter.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect // com.kylecorry.andromeda.markdown/MarkdownDelimiter.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect = ...): com.kylecorry.andromeda.markdown/MarkdownDelimiter // com.kylecorry.andromeda.markdown/MarkdownDelimiter.copy|copy(kotlin.String;com.kylecorry.andromeda.markdown.MarkdownDelimiter.Effect){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/MarkdownDelimiter.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/MarkdownDelimiter.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownDelimiter.toString|toString(){}[0]
+
+    sealed interface Effect { // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect|null[0]
+        final class Paragraph : com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect { // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph|null[0]
+            constructor <init>(androidx.compose.ui.text/ParagraphStyle) // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.<init>|<init>(androidx.compose.ui.text.ParagraphStyle){}[0]
+
+            final val style // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.style|{}style[0]
+                final fun <get-style>(): androidx.compose.ui.text/ParagraphStyle // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.style.<get-style>|<get-style>(){}[0]
+
+            final fun component1(): androidx.compose.ui.text/ParagraphStyle // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.component1|component1(){}[0]
+            final fun copy(androidx.compose.ui.text/ParagraphStyle = ...): com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.copy|copy(androidx.compose.ui.text.ParagraphStyle){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Paragraph.toString|toString(){}[0]
+        }
+
+        final class Style : com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect { // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style|null[0]
+            constructor <init>(androidx.compose.ui.text/SpanStyle) // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.<init>|<init>(androidx.compose.ui.text.SpanStyle){}[0]
+
+            final val style // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.style|{}style[0]
+                final fun <get-style>(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.style.<get-style>|<get-style>(){}[0]
+
+            final fun component1(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.component1|component1(){}[0]
+            final fun copy(androidx.compose.ui.text/SpanStyle = ...): com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.copy|copy(androidx.compose.ui.text.SpanStyle){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Style.toString|toString(){}[0]
+        }
+
+        final object Hide : com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect { // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Hide|null[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Hide.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Hide.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownDelimiter.Effect.Hide.toString|toString(){}[0]
+        }
+    }
+}
+
+final class com.kylecorry.andromeda.markdown/MarkdownTextStyles { // com.kylecorry.andromeda.markdown/MarkdownTextStyles|null[0]
+    constructor <init>(androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., kotlin.collections/List<kotlin/Float> = ..., kotlin/String = ..., kotlin/Float = ...) // com.kylecorry.andromeda.markdown/MarkdownTextStyles.<init>|<init>(androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;kotlin.collections.List<kotlin.Float>;kotlin.String;kotlin.Float){}[0]
+
+    final val bullet // com.kylecorry.andromeda.markdown/MarkdownTextStyles.bullet|{}bullet[0]
+        final fun <get-bullet>(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownTextStyles.bullet.<get-bullet>|<get-bullet>(){}[0]
+    final val code // com.kylecorry.andromeda.markdown/MarkdownTextStyles.code|{}code[0]
+        final fun <get-code>(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.code.<get-code>|<get-code>(){}[0]
+    final val emphasis // com.kylecorry.andromeda.markdown/MarkdownTextStyles.emphasis|{}emphasis[0]
+        final fun <get-emphasis>(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.emphasis.<get-emphasis>|<get-emphasis>(){}[0]
+    final val headingScales // com.kylecorry.andromeda.markdown/MarkdownTextStyles.headingScales|{}headingScales[0]
+        final fun <get-headingScales>(): kotlin.collections/List<kotlin/Float> // com.kylecorry.andromeda.markdown/MarkdownTextStyles.headingScales.<get-headingScales>|<get-headingScales>(){}[0]
+    final val link // com.kylecorry.andromeda.markdown/MarkdownTextStyles.link|{}link[0]
+        final fun <get-link>(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.link.<get-link>|<get-link>(){}[0]
+    final val listIndent // com.kylecorry.andromeda.markdown/MarkdownTextStyles.listIndent|{}listIndent[0]
+        final fun <get-listIndent>(): kotlin/Float // com.kylecorry.andromeda.markdown/MarkdownTextStyles.listIndent.<get-listIndent>|<get-listIndent>(){}[0]
+    final val strikethrough // com.kylecorry.andromeda.markdown/MarkdownTextStyles.strikethrough|{}strikethrough[0]
+        final fun <get-strikethrough>(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.strikethrough.<get-strikethrough>|<get-strikethrough>(){}[0]
+    final val strong // com.kylecorry.andromeda.markdown/MarkdownTextStyles.strong|{}strong[0]
+        final fun <get-strong>(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.strong.<get-strong>|<get-strong>(){}[0]
+
+    final fun component1(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component1|component1(){}[0]
+    final fun component2(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component2|component2(){}[0]
+    final fun component3(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component3|component3(){}[0]
+    final fun component4(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component4|component4(){}[0]
+    final fun component5(): androidx.compose.ui.text/SpanStyle // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component5|component5(){}[0]
+    final fun component6(): kotlin.collections/List<kotlin/Float> // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component6|component6(){}[0]
+    final fun component7(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component7|component7(){}[0]
+    final fun component8(): kotlin/Float // com.kylecorry.andromeda.markdown/MarkdownTextStyles.component8|component8(){}[0]
+    final fun copy(androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., androidx.compose.ui.text/SpanStyle = ..., kotlin.collections/List<kotlin/Float> = ..., kotlin/String = ..., kotlin/Float = ...): com.kylecorry.andromeda.markdown/MarkdownTextStyles // com.kylecorry.andromeda.markdown/MarkdownTextStyles.copy|copy(androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;androidx.compose.ui.text.SpanStyle;kotlin.collections.List<kotlin.Float>;kotlin.String;kotlin.Float){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/MarkdownTextStyles.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/MarkdownTextStyles.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/MarkdownTextStyles.toString|toString(){}[0]
+}
+
+final object com.kylecorry.andromeda.markdown/Markdown { // com.kylecorry.andromeda.markdown/Markdown|null[0]
+    final fun toHtml(kotlin/String): kotlin/String // com.kylecorry.andromeda.markdown/Markdown.toHtml|toHtml(kotlin.String){}[0]
+}
+
+final object com.kylecorry.andromeda.markdown/PhoneNumberLinkifier { // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier|null[0]
+    final fun find(kotlin/CharSequence): kotlin.collections/List<com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match> // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.find|find(kotlin.CharSequence){}[0]
+
+    final class Match { // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/String) // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.<init>|<init>(kotlin.ranges.IntRange;kotlin.String){}[0]
+
+        final val range // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.range.<get-range>|<get-range>(){}[0]
+        final val url // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.url|{}url[0]
+            final fun <get-url>(): kotlin/String // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.url.<get-url>|<get-url>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/String = ...): com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.copy|copy(kotlin.ranges.IntRange;kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/PhoneNumberLinkifier.Match.toString|toString(){}[0]
+    }
+}
+
+final object com.kylecorry.andromeda.markdown/WebDomainLinkifier { // com.kylecorry.andromeda.markdown/WebDomainLinkifier|null[0]
+    final fun find(kotlin/CharSequence): kotlin.collections/List<com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match> // com.kylecorry.andromeda.markdown/WebDomainLinkifier.find|find(kotlin.CharSequence){}[0]
+
+    final class Match { // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/String) // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.<init>|<init>(kotlin.ranges.IntRange;kotlin.String){}[0]
+
+        final val range // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.range.<get-range>|<get-range>(){}[0]
+        final val url // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.url|{}url[0]
+            final fun <get-url>(): kotlin/String // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.url.<get-url>|<get-url>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/String = ...): com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.copy|copy(kotlin.ranges.IntRange;kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.markdown/WebDomainLinkifier.Match.toString|toString(){}[0]
+    }
+}
+
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_Markdown$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_Markdown$stableprop|#static{}com_kylecorry_andromeda_markdown_Markdown$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Image$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Image$stableprop|#static{}com_kylecorry_andromeda_markdown_MarkdownBlock_Image$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Text$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Text$stableprop|#static{}com_kylecorry_andromeda_markdown_MarkdownBlock_Text$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter$stableprop|#static{}com_kylecorry_andromeda_markdown_MarkdownDelimiter$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Hide$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Hide$stableprop|#static{}com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Hide$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Paragraph$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Paragraph$stableprop|#static{}com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Paragraph$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Style$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Style$stableprop|#static{}com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Style$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownTextStyles$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownTextStyles$stableprop|#static{}com_kylecorry_andromeda_markdown_MarkdownTextStyles$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier$stableprop|#static{}com_kylecorry_andromeda_markdown_PhoneNumberLinkifier$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier_Match$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier_Match$stableprop|#static{}com_kylecorry_andromeda_markdown_PhoneNumberLinkifier_Match$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier$stableprop|#static{}com_kylecorry_andromeda_markdown_WebDomainLinkifier$stableprop[0]
+final val com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier_Match$stableprop // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier_Match$stableprop|#static{}com_kylecorry_andromeda_markdown_WebDomainLinkifier_Match$stableprop[0]
+
+final fun (com.kylecorry.andromeda.markdown/Markdown).com.kylecorry.andromeda.markdown/toAnnotatedString(kotlin/String, com.kylecorry.andromeda.markdown/MarkdownTextStyles = ..., kotlin.collections/List<com.kylecorry.andromeda.markdown/MarkdownDelimiter> = ..., kotlin.collections/Set<com.kylecorry.andromeda.markdown/MarkdownAutoLink> = ...): androidx.compose.ui.text/AnnotatedString // com.kylecorry.andromeda.markdown/toAnnotatedString|toAnnotatedString@com.kylecorry.andromeda.markdown.Markdown(kotlin.String;com.kylecorry.andromeda.markdown.MarkdownTextStyles;kotlin.collections.List<com.kylecorry.andromeda.markdown.MarkdownDelimiter>;kotlin.collections.Set<com.kylecorry.andromeda.markdown.MarkdownAutoLink>){}[0]
+final fun (com.kylecorry.andromeda.markdown/Markdown).com.kylecorry.andromeda.markdown/toBlocks(kotlin/String, com.kylecorry.andromeda.markdown/MarkdownTextStyles = ..., kotlin.collections/List<com.kylecorry.andromeda.markdown/MarkdownDelimiter> = ..., kotlin.collections/Set<com.kylecorry.andromeda.markdown/MarkdownAutoLink> = ...): kotlin.collections/List<com.kylecorry.andromeda.markdown/MarkdownBlock> // com.kylecorry.andromeda.markdown/toBlocks|toBlocks@com.kylecorry.andromeda.markdown.Markdown(kotlin.String;com.kylecorry.andromeda.markdown.MarkdownTextStyles;kotlin.collections.List<com.kylecorry.andromeda.markdown.MarkdownDelimiter>;kotlin.collections.Set<com.kylecorry.andromeda.markdown.MarkdownAutoLink>){}[0]
+final fun com.kylecorry.andromeda.markdown/MarkdownContent(kotlin.collections/List<com.kylecorry.andromeda.markdown/MarkdownBlock>, androidx.compose.ui/Modifier?, androidx.compose.ui.unit/Dp, kotlin/Function3<com.kylecorry.andromeda.markdown/MarkdownBlock.Image, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.ui.text/AnnotatedString, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.markdown/MarkdownContent|MarkdownContent(kotlin.collections.List<com.kylecorry.andromeda.markdown.MarkdownBlock>;androidx.compose.ui.Modifier?;androidx.compose.ui.unit.Dp;kotlin.Function3<com.kylecorry.andromeda.markdown.MarkdownBlock.Image,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.ui.text.AnnotatedString,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.markdown/MarkdownImage(com.kylecorry.andromeda.markdown/MarkdownBlock.Image, androidx.compose.ui/Modifier?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.markdown/MarkdownImage|MarkdownImage(com.kylecorry.andromeda.markdown.MarkdownBlock.Image;androidx.compose.ui.Modifier?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.markdown/MarkdownText(kotlin/String, androidx.compose.ui/Modifier?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.markdown/MarkdownText|MarkdownText(kotlin.String;androidx.compose.ui.Modifier?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_Markdown$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_Markdown$stableprop_getter|com_kylecorry_andromeda_markdown_Markdown$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Image$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Image$stableprop_getter|com_kylecorry_andromeda_markdown_MarkdownBlock_Image$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Text$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownBlock_Text$stableprop_getter|com_kylecorry_andromeda_markdown_MarkdownBlock_Text$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter$stableprop_getter|com_kylecorry_andromeda_markdown_MarkdownDelimiter$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Hide$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Hide$stableprop_getter|com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Hide$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Paragraph$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Paragraph$stableprop_getter|com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Paragraph$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Style$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Style$stableprop_getter|com_kylecorry_andromeda_markdown_MarkdownDelimiter_Effect_Style$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownTextStyles$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_MarkdownTextStyles$stableprop_getter|com_kylecorry_andromeda_markdown_MarkdownTextStyles$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier$stableprop_getter|com_kylecorry_andromeda_markdown_PhoneNumberLinkifier$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier_Match$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_PhoneNumberLinkifier_Match$stableprop_getter|com_kylecorry_andromeda_markdown_PhoneNumberLinkifier_Match$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier$stableprop_getter|com_kylecorry_andromeda_markdown_WebDomainLinkifier$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier_Match$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.markdown/com_kylecorry_andromeda_markdown_WebDomainLinkifier_Match$stableprop_getter|com_kylecorry_andromeda_markdown_WebDomainLinkifier_Match$stableprop_getter(){}[0]

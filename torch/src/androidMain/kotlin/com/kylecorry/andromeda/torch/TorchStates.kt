@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-actual fun torchStates(): Flow<TorchState> = callbackFlow {
+public actual fun torchStates(): Flow<TorchState> = callbackFlow {
     val context = KSensorContext.get()
     val cameraId = AndroidTorch(context).cameraId
     if (cameraId == null) {

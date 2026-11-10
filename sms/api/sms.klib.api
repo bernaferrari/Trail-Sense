@@ -1,0 +1,18 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:sms>
+abstract fun interface com.kylecorry.andromeda.sms/SmsComposer { // com.kylecorry.andromeda.sms/SmsComposer|null[0]
+    abstract fun compose(kotlin/String, kotlin/String) // com.kylecorry.andromeda.sms/SmsComposer.compose|compose(kotlin.String;kotlin.String){}[0]
+}
+
+final val com.kylecorry.andromeda.sms/directSmsSupported // com.kylecorry.andromeda.sms/directSmsSupported|{}directSmsSupported[0]
+    final fun <get-directSmsSupported>(): kotlin/Boolean // com.kylecorry.andromeda.sms/directSmsSupported.<get-directSmsSupported>|<get-directSmsSupported>(){}[0]
+
+final fun com.kylecorry.andromeda.sms/incomingSms(): kotlinx.coroutines.flow/Flow<com.kylecorry.andromeda.sms/IncomingSmsMessage> // com.kylecorry.andromeda.sms/incomingSms|incomingSms(){}[0]
+final fun com.kylecorry.andromeda.sms/sendSms(kotlin/String, kotlin/String) // com.kylecorry.andromeda.sms/sendSms|sendSms(kotlin.String;kotlin.String){}[0]
+final fun com.kylecorry.andromeda.sms/smsComposer(): com.kylecorry.andromeda.sms/SmsComposer // com.kylecorry.andromeda.sms/smsComposer|smsComposer(){}[0]

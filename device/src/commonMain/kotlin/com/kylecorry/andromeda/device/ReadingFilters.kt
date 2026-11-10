@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /** Applies independent low-pass filters to the three vector components. */
-fun Flow<Reading<Vector3>>.lowPass(alpha: Float): Flow<Reading<Vector3>> = flow {
+public fun Flow<Reading<Vector3>>.lowPass(alpha: Float): Flow<Reading<Vector3>> = flow {
     require(alpha in 0f..1f)
     val x = LowPassFilter(alpha)
     val y = LowPassFilter(alpha)

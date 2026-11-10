@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
+public actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
     private val mutex = Mutex()
     private val closed = AtomicBoolean(false)
     private var framesWritten = 0L
@@ -30,7 +30,7 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
         track.play()
     }
 
-    actual suspend fun write(samples: ShortArray) = mutex.withLock {
+    public actual suspend fun write(samples: ShortArray): Unit = mutex.withLock {
         check(!closed.get()) { "PCM output is closed" }
         withContext(Dispatchers.IO) {
             var offset = 0
@@ -43,7 +43,7 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
         }
     }
 
-    actual suspend fun drain() = mutex.withLock {
+    public actual suspend fun drain(): Unit = mutex.withLock {
         check(!closed.get()) { "PCM output is closed" }
         while (true) {
             check(!closed.get()) { "PCM output is closed" }

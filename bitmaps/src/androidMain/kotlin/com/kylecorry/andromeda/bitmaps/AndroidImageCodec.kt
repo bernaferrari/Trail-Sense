@@ -4,13 +4,13 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
 
-actual fun decodeImage(bytes: ByteArray): PixelImage {
+public actual fun decodeImage(bytes: ByteArray): PixelImage {
     val bitmap = requireNotNull(BitmapFactory.decodeByteArray(bytes, 0, bytes.size)) { "Unable to decode image" }
     return try { bitmap.toPixelImage() } finally { bitmap.recycle() }
 }
 
-actual fun PixelImage.encodePng(): ByteArray = encode(Bitmap.CompressFormat.PNG, 100)
-actual fun PixelImage.encodeJpeg(quality: Int): ByteArray {
+public actual fun PixelImage.encodePng(): ByteArray = encode(Bitmap.CompressFormat.PNG, 100)
+public actual fun PixelImage.encodeJpeg(quality: Int): ByteArray {
     require(quality in 0..100)
     return encode(Bitmap.CompressFormat.JPEG, quality)
 }

@@ -1,53 +1,40 @@
 plugins {
-    kotlin("multiplatform")
-    id("com.android.kotlin.multiplatform.library")
-    id("com.vanniktech.maven.publish")
+    id("andromeda.library")
 }
+
 kotlin {
-    android {
-        namespace = "com.kylecorry.andromeda.pdf"
-        compileSdk = 37
-        minSdk = 24
-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-        withDeviceTestBuilder { sourceSetTreeName = "test" }.configure { instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
-        withHostTestBuilder {}.configure {}
-    }
-    jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
-    iosArm64()
-    iosSimulatorArm64()
-    jvmToolchain(17)
-    applyDefaultHierarchyTemplate()
+    sharedSourceSets(SharedSourceSet.JvmShared)
     sourceSets {
-        val jvmSharedMain by creating {
-            dependsOn(commonMain.get())
-            dependencies { api(libs.luna); implementation(project(":compression")) }
-        }
-        jvmMain { dependsOn(jvmSharedMain) }
-        androidMain { dependsOn(jvmSharedMain) }
         commonMain.dependencies {
-            api("com.kylecorry:sol:19.4.0")
+            api(libs.sol)
             api(project(":shared"))
             api(project(":bitmaps"))
             implementation(project(":wkt"))
         }
-        jvmMain.dependencies { implementation("org.apache.pdfbox:pdfbox:3.0.6") }
-        iosMain.dependencies { implementation("io.github.yuroyami:kitepdf-pdf:0.13.0") }
-        commonTest.dependencies { implementation(kotlin("test")) }
-        androidMain.dependencies { implementation("io.github.shadadman:ksensor-core:9.40.0"); implementation(project(":core")); implementation(libs.androidx.core.ktx) }
-        getByName("androidDeviceTest") {
-            kotlin.srcDir("src/androidTest/java")
-            dependencies { implementation(libs.junit); implementation(libs.androidx.junit); implementation(libs.androidx.espresso.core) }
-        }
-        getByName("androidHostTest") {
-            kotlin.srcDir("src/test/java")
+        named("jvmSharedMain") {
             dependencies {
-                implementation(libs.junit); implementation(libs.junit.jupiter.api); implementation(libs.junit.jupiter.params)
-                runtimeOnly(libs.junit.jupiter.engine); runtimeOnly(libs.junit.platform.launcher)
+            api(libs.luna)
+            implementation(project(":compression"))
             }
+        }
+        androidMain.dependencies {
+            implementation(libs.ksensor.core)
+            implementation(project(":core"))
+            implementation(libs.androidx.core.ktx)
+        }
+        jvmMain.dependencies { implementation(libs.pdfbox) }
+        iosMain.dependencies { implementation(libs.kitepdf) }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.junit4)
+            implementation(libs.junit.jupiter.api)
+            implementation(libs.junit.jupiter.params)
+            runtimeOnly(libs.junit.jupiter.engine)
+            runtimeOnly(libs.junit.platform.launcher)
+        }
+        getByName("androidDeviceTest").dependencies {
+            implementation(libs.junit4)
+            implementation(libs.androidx.test.junit)
+            implementation(libs.androidx.test.espresso)
         }
     }
 }
-tasks.withType<Test>().configureEach { useJUnitPlatform() }
-group = "com.kylecorry.andromeda"
-version = "25.1.1"
-mavenPublishing { coordinates("com.kylecorry.andromeda", "pdf", "25.1.1") }

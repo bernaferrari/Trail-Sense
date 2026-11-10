@@ -17,7 +17,7 @@ import platform.AVFAudio.AVAudioPlayerNodeCompletionDataConsumed
 import platform.AVFAudio.AVAudioPlayerNodeCompletionDataPlayedBack
 import kotlin.coroutines.resume
 
-actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
+public actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
     private val mutex = Mutex()
     private val engine = AVAudioEngine()
     private val player = AVAudioPlayerNode()
@@ -33,7 +33,7 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
         player.play()
     }
 
-    actual suspend fun write(samples: ShortArray) = mutex.withLock {
+    public actual suspend fun write(samples: ShortArray): Unit = mutex.withLock {
         check(!closed.value) { "PCM output is closed" }
         if (samples.isEmpty()) return@withLock
         val buffer = requireNotNull(AVAudioPCMBuffer(pCMFormat = format, frameCapacity = samples.size.toUInt()))
@@ -50,7 +50,7 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
         }
     }
 
-    actual suspend fun drain() = mutex.withLock {
+    public actual suspend fun drain(): Unit = mutex.withLock {
         check(!closed.value) { "PCM output is closed" }
         // A silent frame acts as a playback fence after all previously scheduled buffers.
         val fence = requireNotNull(AVAudioPCMBuffer(pCMFormat = format, frameCapacity = 1u))

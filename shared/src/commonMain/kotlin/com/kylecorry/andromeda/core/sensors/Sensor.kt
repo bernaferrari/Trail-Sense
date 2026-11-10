@@ -3,22 +3,22 @@ package com.kylecorry.andromeda.core.sensors
 import kotlinx.atomicfu.atomic
 import kotlin.time.Instant
 
-typealias SensorSubscriber = () -> Boolean
+public typealias SensorSubscriber = () -> Boolean
 
-interface Sensor {
-    val quality: Quality
-    val hasValidReading: Boolean
-    val eventTimeElapsedNanos: Long
-    val timestamp: Instant
+public interface Sensor {
+    public val quality: Quality
+    public val hasValidReading: Boolean
+    public val eventTimeElapsedNanos: Long
+    public val timestamp: Instant
 
-    fun subscribe(subscriber: SensorSubscriber)
-    fun unsubscribe(subscriber: SensorSubscriber)
-    fun unsubscribeAll()
-    fun start(subscriber: SensorSubscriber)
-    fun stop(subscriber: SensorSubscriber? = null)
+    public fun subscribe(subscriber: SensorSubscriber)
+    public fun unsubscribe(subscriber: SensorSubscriber)
+    public fun unsubscribeAll()
+    public fun start(subscriber: SensorSubscriber)
+    public fun stop(subscriber: SensorSubscriber? = null)
 }
 
-suspend fun Sensor.read(until: () -> Boolean = { true }) {
+public suspend fun Sensor.read(until: () -> Boolean = { true }) {
     kotlinx.coroutines.suspendCancellableCoroutine<Unit> { continuation ->
         val completed = atomic(false)
         val listener: SensorSubscriber = {

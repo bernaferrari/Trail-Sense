@@ -1,0 +1,4 @@
+public final class com/kylecorry/andromeda/speech/compose/RememberTextToSpeechKt {
+	public static final fun rememberTextToSpeech (Landroidx/compose/runtime/Composer;I)Lcom/kylecorry/andromeda/speech/SpeechSynthesizer;
+}
+

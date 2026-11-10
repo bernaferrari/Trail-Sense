@@ -38,7 +38,7 @@ private const val LOOPBACK = "127.0.0.1"
 private const val DEFAULT_MAX_FRAME = 1_048_576
 
 /** A client for a token-protected server listening on the local loopback interface. */
-class LocalIpcClient(
+public class LocalIpcClient(
     private val port: Int,
     private val token: String,
     private val timeout: Duration = 30.seconds,
@@ -70,18 +70,18 @@ class LocalIpcClient(
 }
 
 /** A loopback server owned by the caller; close it to stop accepting and cancel active requests. */
-class LocalIpcServer internal constructor(
-    val port: Int,
+public class LocalIpcServer internal constructor(
+    public val port: Int,
     private val stop: () -> Unit,
 ) : AutoCloseable {
-    override fun close() = stop()
+    override fun close(): Unit = stop()
 }
 
 /**
  * Starts a token-protected loopback server. The app must share [token] with trusted clients using
  * a platform-appropriate mechanism. Loopback TCP does not provide OS identity or encryption.
  */
-suspend fun localIpcServer(
+public suspend fun localIpcServer(
     router: IpcClient,
     token: String,
     scope: CoroutineScope,

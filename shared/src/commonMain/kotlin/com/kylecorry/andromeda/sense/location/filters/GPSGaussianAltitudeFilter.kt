@@ -6,7 +6,7 @@ import com.kylecorry.sol.math.RingBuffer
 import com.kylecorry.sol.math.statistics.GaussianDistribution
 import com.kylecorry.sol.math.statistics.Statistics
 
-class GPSGaussianAltitudeFilter(samples: Int = 4) : GpsAltitudeEstimator {
+public class GPSGaussianAltitudeFilter(samples: Int = 4) : GpsAltitudeEstimator {
 
     private val buffer = RingBuffer<GaussianDistribution>(samples)
 

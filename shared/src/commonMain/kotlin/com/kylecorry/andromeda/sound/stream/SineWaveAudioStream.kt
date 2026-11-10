@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.arithmetic.Arithmetic.power
 import kotlin.math.PI
 import kotlin.math.sin
 
-class SineWaveAudioStream(
+public class SineWaveAudioStream(
     private val frequency: Double,
     private val phase: Double = 0.0,
     private val numHarmonics: Int = 0

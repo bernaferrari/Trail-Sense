@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.core.ui.colormaps
 
 import kotlin.math.min
 
-open class RgbInterpolationColorMap(private val colors: Array<Int>) : ColorMap {
+public open class RgbInterpolationColorMap(private val colors: Array<Int>) : ColorMap {
     override fun getColor(percent: Float): Int {
         if (colors.isEmpty()) {
             return 0

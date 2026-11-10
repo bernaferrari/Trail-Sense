@@ -6,28 +6,29 @@ import android.graphics.pdf.PdfDocument
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
+import android.util.TypedValue
 import java.io.InputStream
 import java.io.OutputStream
 
 
-object PdfConvert {
+public object PdfConvert {
 
     private val generator = PDFGenerator()
     private val parser = PDFParser()
 
-    fun toPDF(objects: List<PDFValue.PDFObject>): String {
+    public fun toPDF(objects: List<PDFValue.PDFObject>): String {
         return generator.toPDF(objects)
     }
 
-    fun toPDF(objects: List<PDFValue.PDFObject>, out: OutputStream) {
+    public fun toPDF(objects: List<PDFValue.PDFObject>, out: OutputStream) {
         generator.toPDF(objects, out)
     }
 
-    fun fromPDF(input: InputStream, ignoreStreams: Boolean = false): List<PDFValue.PDFObject> {
+    public fun fromPDF(input: InputStream, ignoreStreams: Boolean = false): List<PDFValue.PDFObject> {
         return parser.parse(input, ignoreStreams)
     }
 
-    fun toPdf(
+    public fun toPdf(
         context: Context,
         text: CharSequence,
         out: OutputStream,
@@ -39,7 +40,7 @@ object PdfConvert {
         val document = PdfDocument()
         val paint = TextPaint().apply {
             color = Color.BLACK
-            this.textSize = textSize * context.resources.displayMetrics.scaledDensity
+            this.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, textSize, context.resources.displayMetrics)
         }
         val width = 595 - margins * 2
         val height = 842 - margins * 2

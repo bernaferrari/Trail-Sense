@@ -1,0 +1,4 @@
+public final class com/kylecorry/andromeda/permissions/compose/PermissionAccessKt {
+	public static final fun rememberPermissionAccess (Landroidx/compose/runtime/Composer;I)Lcom/kylecorry/andromeda/permissions/PermissionAccess;
+}
+

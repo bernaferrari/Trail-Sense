@@ -8,7 +8,7 @@ import com.russhwolf.settings.SharedPreferencesSettings
  * Opens the default Android preferences file, or a named file for separate app state.
  * @param commitChanges true to write changes synchronously (commit) instead of in the background (apply)
  */
-fun preferences(
+public fun preferences(
     context: Context,
     name: String = "${context.packageName}_preferences",
     commitChanges: Boolean = false

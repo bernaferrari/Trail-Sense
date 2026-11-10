@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
-class DialHapticFeedback(
+public class DialHapticFeedback(
     private val hapticMotor: HapticMotor,
     private val vibrateFrequency: Int = 1,
     private val atAngleThreshold: Float = 0.25f
@@ -12,7 +12,7 @@ class DialHapticFeedback(
 
     private var lastVibrate = 0f
 
-    var angle: Float = 0f
+    public var angle: Float = 0f
         set(value) {
             if (shouldVibrate(value, lastVibrate)) {
                 hapticMotor.feedback(HapticFeedbackType.Tick)
@@ -32,7 +32,7 @@ class DialHapticFeedback(
     }
 
 
-    fun stop() {
+    public fun stop() {
         hapticMotor.off()
     }
 

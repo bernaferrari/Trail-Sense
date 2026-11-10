@@ -23,7 +23,7 @@ import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerDialog(
+public fun DatePickerDialog(
     initial: LocalDate, onResult: (LocalDate?) -> Unit,
     confirmLabel: String = "OK", cancelLabel: String = "Cancel",
     selectableDates: SelectableDates = DatePickerDefaults.AllDates
@@ -42,7 +42,7 @@ fun DatePickerDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimePickerDialog(
+public fun TimePickerDialog(
     initial: LocalTime, onResult: (LocalTime?) -> Unit, use24Hours: Boolean = true,
     confirmLabel: String = "OK", cancelLabel: String = "Cancel"
 ) {
@@ -54,7 +54,7 @@ fun TimePickerDialog(
 }
 
 @Composable
-fun DateTimePickerDialog(
+public fun DateTimePickerDialog(
     initial: LocalDateTime, onResult: (LocalDateTime?) -> Unit, use24Hours: Boolean = true,
     confirmLabel: String = "OK", cancelLabel: String = "Cancel"
 ) {
@@ -67,7 +67,7 @@ fun DateTimePickerDialog(
 }
 
 @Composable
-fun <T> ItemPickerDialog(
+public fun <T> ItemPickerDialog(
     title: String, items: List<T>, selected: T?, label: (T) -> String, onResult: (T?) -> Unit,
     cancelLabel: String = "Cancel"
 ) {
@@ -81,7 +81,7 @@ fun <T> ItemPickerDialog(
 }
 
 @Composable
-fun <T> MultiItemPickerDialog(
+public fun <T> MultiItemPickerDialog(
     title: String, items: List<T>, selected: Set<T>, label: (T) -> String, onResult: (Set<T>?) -> Unit,
     confirmLabel: String = "OK", cancelLabel: String = "Cancel"
 ) {
@@ -100,7 +100,7 @@ fun <T> MultiItemPickerDialog(
 }
 
 @Composable
-fun TextPickerDialog(
+public fun TextPickerDialog(
     title: String, initial: String, label: String, onResult: (String?) -> Unit,
     confirmLabel: String = "OK", cancelLabel: String = "Cancel"
 ) {
@@ -111,7 +111,7 @@ fun TextPickerDialog(
 }
 
 @Composable
-fun NumberPickerDialog(
+public fun NumberPickerDialog(
     title: String, initial: String, label: String, onResult: (Double?) -> Unit,
     allowDecimals: Boolean = true, allowNegative: Boolean = false, confirmLabel: String = "OK", cancelLabel: String = "Cancel"
 ) {
@@ -123,7 +123,7 @@ fun NumberPickerDialog(
 }
 
 @Composable
-fun PickerMenu(items: List<MenuItem>, modifier: Modifier = Modifier, trigger: @Composable (onClick: () -> Unit) -> Unit) {
+public fun PickerMenu(items: List<MenuItem>, modifier: Modifier = Modifier, trigger: @Composable (onClick: () -> Unit) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier) {
         trigger { expanded = true }
@@ -137,7 +137,7 @@ fun PickerMenu(items: List<MenuItem>, modifier: Modifier = Modifier, trigger: @C
 
 /** Calendar with a composable day slot. Weekday labels are ordered Monday through Sunday. */
 @Composable
-fun DecoratedDatePickerDialog(
+public fun DecoratedDatePickerDialog(
     initial: LocalDate,
     onResult: (LocalDate?) -> Unit,
     monthLabel: (LocalDate) -> String,
@@ -198,7 +198,7 @@ fun DecoratedDatePickerDialog(
 }
 
 @Composable
-fun MultiIndexPickerDialog(
+public fun MultiIndexPickerDialog(
     title: String, items: List<String>, selected: Set<Int>, onResult: (Set<Int>?) -> Unit,
     confirmLabel: String = "OK", cancelLabel: String = "Cancel"
 ) {
@@ -218,7 +218,7 @@ fun MultiIndexPickerDialog(
 }
 
 @Composable
-fun IndexPickerDialog(
+public fun IndexPickerDialog(
     title: String, items: List<String>, selected: Int?, onResult: (Int?) -> Unit,
     cancelLabel: String = "Cancel"
 ) {

@@ -7,8 +7,8 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import androidx.core.graphics.createBitmap
 
-object QR {
-    fun encode(
+public object QR {
+    public fun encode(
         text: String,
         width: Int,
         height: Int,
@@ -30,7 +30,7 @@ object QR {
         return bitmap
     }
 
-    fun decode(image: Bitmap, highAccuracy: Boolean = false): String? {
+    public fun decode(image: Bitmap, highAccuracy: Boolean = false): String? {
         val pixels = IntArray(image.width * image.height)
         image.getPixels(pixels, 0, image.width, 0, 0, image.width, image.height)
         return CodeDecoder.qr(pixels, image.width, image.height, highAccuracy)

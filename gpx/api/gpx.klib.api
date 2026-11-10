@@ -1,0 +1,159 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:gpx>
+final class com.kylecorry.andromeda.gpx/GPXData { // com.kylecorry.andromeda.gpx/GPXData|null[0]
+    constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint>, kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrack>, kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXRoute>) // com.kylecorry.andromeda.gpx/GPXData.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXWaypoint>;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXTrack>;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXRoute>){}[0]
+
+    final val routes // com.kylecorry.andromeda.gpx/GPXData.routes|{}routes[0]
+        final fun <get-routes>(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXRoute> // com.kylecorry.andromeda.gpx/GPXData.routes.<get-routes>|<get-routes>(){}[0]
+    final val tracks // com.kylecorry.andromeda.gpx/GPXData.tracks|{}tracks[0]
+        final fun <get-tracks>(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrack> // com.kylecorry.andromeda.gpx/GPXData.tracks.<get-tracks>|<get-tracks>(){}[0]
+    final val waypoints // com.kylecorry.andromeda.gpx/GPXData.waypoints|{}waypoints[0]
+        final fun <get-waypoints>(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> // com.kylecorry.andromeda.gpx/GPXData.waypoints.<get-waypoints>|<get-waypoints>(){}[0]
+
+    final fun component1(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> // com.kylecorry.andromeda.gpx/GPXData.component1|component1(){}[0]
+    final fun component2(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrack> // com.kylecorry.andromeda.gpx/GPXData.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXRoute> // com.kylecorry.andromeda.gpx/GPXData.component3|component3(){}[0]
+    final fun copy(kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> = ..., kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrack> = ..., kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXRoute> = ...): com.kylecorry.andromeda.gpx/GPXData // com.kylecorry.andromeda.gpx/GPXData.copy|copy(kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXWaypoint>;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXTrack>;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXRoute>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.gpx/GPXData.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.gpx/GPXData.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.gpx/GPXData.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.gpx/GPXRoute { // com.kylecorry.andromeda.gpx/GPXRoute|null[0]
+    constructor <init>(kotlin/String?, kotlin/String?, kotlin/String?, kotlin/String?, kotlin/Long?, kotlin/String?, kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint>) // com.kylecorry.andromeda.gpx/GPXRoute.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.String?;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXWaypoint>){}[0]
+
+    final val comment // com.kylecorry.andromeda.gpx/GPXRoute.comment|{}comment[0]
+        final fun <get-comment>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.comment.<get-comment>|<get-comment>(){}[0]
+    final val description // com.kylecorry.andromeda.gpx/GPXRoute.description|{}description[0]
+        final fun <get-description>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.description.<get-description>|<get-description>(){}[0]
+    final val name // com.kylecorry.andromeda.gpx/GPXRoute.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.name.<get-name>|<get-name>(){}[0]
+    final val number // com.kylecorry.andromeda.gpx/GPXRoute.number|{}number[0]
+        final fun <get-number>(): kotlin/Long? // com.kylecorry.andromeda.gpx/GPXRoute.number.<get-number>|<get-number>(){}[0]
+    final val points // com.kylecorry.andromeda.gpx/GPXRoute.points|{}points[0]
+        final fun <get-points>(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> // com.kylecorry.andromeda.gpx/GPXRoute.points.<get-points>|<get-points>(){}[0]
+    final val source // com.kylecorry.andromeda.gpx/GPXRoute.source|{}source[0]
+        final fun <get-source>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.source.<get-source>|<get-source>(){}[0]
+    final val type // com.kylecorry.andromeda.gpx/GPXRoute.type|{}type[0]
+        final fun <get-type>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.component4|component4(){}[0]
+    final fun component5(): kotlin/Long? // com.kylecorry.andromeda.gpx/GPXRoute.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXRoute.component6|component6(){}[0]
+    final fun component7(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> // com.kylecorry.andromeda.gpx/GPXRoute.component7|component7(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin/String? = ..., kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> = ...): com.kylecorry.andromeda.gpx/GPXRoute // com.kylecorry.andromeda.gpx/GPXRoute.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.String?;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXWaypoint>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.gpx/GPXRoute.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.gpx/GPXRoute.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.gpx/GPXRoute.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.gpx/GPXTrack { // com.kylecorry.andromeda.gpx/GPXTrack|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrackSegment> = ...) // com.kylecorry.andromeda.gpx/GPXTrack.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.String?;kotlin.String?;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXTrackSegment>){}[0]
+
+    final val color // com.kylecorry.andromeda.gpx/GPXTrack.color|{}color[0]
+        final fun <get-color>(): kotlin/Int? // com.kylecorry.andromeda.gpx/GPXTrack.color.<get-color>|<get-color>(){}[0]
+    final val comment // com.kylecorry.andromeda.gpx/GPXTrack.comment|{}comment[0]
+        final fun <get-comment>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.comment.<get-comment>|<get-comment>(){}[0]
+    final val description // com.kylecorry.andromeda.gpx/GPXTrack.description|{}description[0]
+        final fun <get-description>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.description.<get-description>|<get-description>(){}[0]
+    final val group // com.kylecorry.andromeda.gpx/GPXTrack.group|{}group[0]
+        final fun <get-group>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.group.<get-group>|<get-group>(){}[0]
+    final val id // com.kylecorry.andromeda.gpx/GPXTrack.id|{}id[0]
+        final fun <get-id>(): kotlin/Long? // com.kylecorry.andromeda.gpx/GPXTrack.id.<get-id>|<get-id>(){}[0]
+    final val lineStyle // com.kylecorry.andromeda.gpx/GPXTrack.lineStyle|{}lineStyle[0]
+        final fun <get-lineStyle>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.lineStyle.<get-lineStyle>|<get-lineStyle>(){}[0]
+    final val name // com.kylecorry.andromeda.gpx/GPXTrack.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.name.<get-name>|<get-name>(){}[0]
+    final val segments // com.kylecorry.andromeda.gpx/GPXTrack.segments|{}segments[0]
+        final fun <get-segments>(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrackSegment> // com.kylecorry.andromeda.gpx/GPXTrack.segments.<get-segments>|<get-segments>(){}[0]
+    final val type // com.kylecorry.andromeda.gpx/GPXTrack.type|{}type[0]
+        final fun <get-type>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.component2|component2(){}[0]
+    final fun component3(): kotlin/Long? // com.kylecorry.andromeda.gpx/GPXTrack.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.component5|component5(){}[0]
+    final fun component6(): kotlin/Int? // com.kylecorry.andromeda.gpx/GPXTrack.component6|component6(){}[0]
+    final fun component7(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.component7|component7(){}[0]
+    final fun component8(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXTrack.component8|component8(){}[0]
+    final fun component9(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrackSegment> // com.kylecorry.andromeda.gpx/GPXTrack.component9|component9(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/Long? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXTrackSegment> = ...): com.kylecorry.andromeda.gpx/GPXTrack // com.kylecorry.andromeda.gpx/GPXTrack.copy|copy(kotlin.String?;kotlin.String?;kotlin.Long?;kotlin.String?;kotlin.String?;kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXTrackSegment>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.gpx/GPXTrack.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.gpx/GPXTrack.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.gpx/GPXTrack.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.gpx/GPXTrackSegment { // com.kylecorry.andromeda.gpx/GPXTrackSegment|null[0]
+    constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint>) // com.kylecorry.andromeda.gpx/GPXTrackSegment.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXWaypoint>){}[0]
+
+    final val points // com.kylecorry.andromeda.gpx/GPXTrackSegment.points|{}points[0]
+        final fun <get-points>(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> // com.kylecorry.andromeda.gpx/GPXTrackSegment.points.<get-points>|<get-points>(){}[0]
+
+    final fun component1(): kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> // com.kylecorry.andromeda.gpx/GPXTrackSegment.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<com.kylecorry.andromeda.gpx/GPXWaypoint> = ...): com.kylecorry.andromeda.gpx/GPXTrackSegment // com.kylecorry.andromeda.gpx/GPXTrackSegment.copy|copy(kotlin.collections.List<com.kylecorry.andromeda.gpx.GPXWaypoint>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.gpx/GPXTrackSegment.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.gpx/GPXTrackSegment.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.gpx/GPXTrackSegment.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.gpx/GPXWaypoint { // com.kylecorry.andromeda.gpx/GPXWaypoint|null[0]
+    constructor <init>(com.kylecorry.sol.units/Coordinate, kotlin/String? = ..., kotlin/Float? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Instant? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...) // com.kylecorry.andromeda.gpx/GPXWaypoint.<init>|<init>(com.kylecorry.sol.units.Coordinate;kotlin.String?;kotlin.Float?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.time.Instant?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+
+    final val color // com.kylecorry.andromeda.gpx/GPXWaypoint.color|{}color[0]
+        final fun <get-color>(): kotlin/Int? // com.kylecorry.andromeda.gpx/GPXWaypoint.color.<get-color>|<get-color>(){}[0]
+    final val comment // com.kylecorry.andromeda.gpx/GPXWaypoint.comment|{}comment[0]
+        final fun <get-comment>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.comment.<get-comment>|<get-comment>(){}[0]
+    final val coordinate // com.kylecorry.andromeda.gpx/GPXWaypoint.coordinate|{}coordinate[0]
+        final fun <get-coordinate>(): com.kylecorry.sol.units/Coordinate // com.kylecorry.andromeda.gpx/GPXWaypoint.coordinate.<get-coordinate>|<get-coordinate>(){}[0]
+    final val description // com.kylecorry.andromeda.gpx/GPXWaypoint.description|{}description[0]
+        final fun <get-description>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.description.<get-description>|<get-description>(){}[0]
+    final val elevation // com.kylecorry.andromeda.gpx/GPXWaypoint.elevation|{}elevation[0]
+        final fun <get-elevation>(): kotlin/Float? // com.kylecorry.andromeda.gpx/GPXWaypoint.elevation.<get-elevation>|<get-elevation>(){}[0]
+    final val group // com.kylecorry.andromeda.gpx/GPXWaypoint.group|{}group[0]
+        final fun <get-group>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.group.<get-group>|<get-group>(){}[0]
+    final val name // com.kylecorry.andromeda.gpx/GPXWaypoint.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.name.<get-name>|<get-name>(){}[0]
+    final val symbol // com.kylecorry.andromeda.gpx/GPXWaypoint.symbol|{}symbol[0]
+        final fun <get-symbol>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.symbol.<get-symbol>|<get-symbol>(){}[0]
+    final val time // com.kylecorry.andromeda.gpx/GPXWaypoint.time|{}time[0]
+        final fun <get-time>(): kotlin.time/Instant? // com.kylecorry.andromeda.gpx/GPXWaypoint.time.<get-time>|<get-time>(){}[0]
+    final val type // com.kylecorry.andromeda.gpx/GPXWaypoint.type|{}type[0]
+        final fun <get-type>(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): com.kylecorry.sol.units/Coordinate // com.kylecorry.andromeda.gpx/GPXWaypoint.component1|component1(){}[0]
+    final fun component10(): kotlin/Int? // com.kylecorry.andromeda.gpx/GPXWaypoint.component10|component10(){}[0]
+    final fun component2(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.component2|component2(){}[0]
+    final fun component3(): kotlin/Float? // com.kylecorry.andromeda.gpx/GPXWaypoint.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.component4|component4(){}[0]
+    final fun component5(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.component5|component5(){}[0]
+    final fun component6(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.component6|component6(){}[0]
+    final fun component7(): kotlin.time/Instant? // com.kylecorry.andromeda.gpx/GPXWaypoint.component7|component7(){}[0]
+    final fun component8(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.component8|component8(){}[0]
+    final fun component9(): kotlin/String? // com.kylecorry.andromeda.gpx/GPXWaypoint.component9|component9(){}[0]
+    final fun copy(com.kylecorry.sol.units/Coordinate = ..., kotlin/String? = ..., kotlin/Float? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Instant? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...): com.kylecorry.andromeda.gpx/GPXWaypoint // com.kylecorry.andromeda.gpx/GPXWaypoint.copy|copy(com.kylecorry.sol.units.Coordinate;kotlin.String?;kotlin.Float?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.time.Instant?;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.gpx/GPXWaypoint.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.gpx/GPXWaypoint.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.gpx/GPXWaypoint.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.gpx/GpxSerializer { // com.kylecorry.andromeda.gpx/GpxSerializer|null[0]
+    constructor <init>(kotlin/String) // com.kylecorry.andromeda.gpx/GpxSerializer.<init>|<init>(kotlin.String){}[0]
+
+    final fun deserialize(kotlin/ByteArray): com.kylecorry.andromeda.gpx/GPXData // com.kylecorry.andromeda.gpx/GpxSerializer.deserialize|deserialize(kotlin.ByteArray){}[0]
+    final fun serialize(com.kylecorry.andromeda.gpx/GPXData): kotlin/ByteArray // com.kylecorry.andromeda.gpx/GpxSerializer.serialize|serialize(com.kylecorry.andromeda.gpx.GPXData){}[0]
+}
+
+final object com.kylecorry.andromeda.gpx/GPXParser { // com.kylecorry.andromeda.gpx/GPXParser|null[0]
+    final fun parse(kotlin/String): com.kylecorry.andromeda.gpx/GPXData // com.kylecorry.andromeda.gpx/GPXParser.parse|parse(kotlin.String){}[0]
+    final fun toGPX(com.kylecorry.andromeda.gpx/GPXData, kotlin/String): kotlin/String // com.kylecorry.andromeda.gpx/GPXParser.toGPX|toGPX(com.kylecorry.andromeda.gpx.GPXData;kotlin.String){}[0]
+}

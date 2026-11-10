@@ -6,7 +6,7 @@ import io.github.yuroyami.kitepdf.core.parser.*
 import io.github.yuroyami.kitepdf.parser.XrefEntry
 
 @OptIn(KiteRawApi::class)
-actual fun parsePDF(bytes: ByteArray, ignoreStreams: Boolean): List<PDFValue.PDFObject> {
+public actual fun parsePDF(bytes: ByteArray, ignoreStreams: Boolean): List<PDFValue.PDFObject> {
     val document = PdfDocument.open(bytes)
     fun convert(value: PdfObject): PDFValue = when (value) {
         is PdfBoolean -> PDFValue.PDFBoolean(value.value)

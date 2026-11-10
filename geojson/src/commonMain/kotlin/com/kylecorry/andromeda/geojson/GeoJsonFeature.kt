@@ -1,15 +1,15 @@
 package com.kylecorry.andromeda.geojson
 
 
-data class GeoJsonFeature(
+public data class GeoJsonFeature(
     val id: Any?,
     val geometry: GeoJsonGeometry?,
     val properties: Map<String, Any?>? = null,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonObject {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    companion object {
+    public companion object {
         internal const val TYPE = "Feature"
         internal const val FIELD_ID = "id"
         internal const val FIELD_GEOMETRY = "geometry"

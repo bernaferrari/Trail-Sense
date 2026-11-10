@@ -18,7 +18,7 @@ import platform.Foundation.NSLock
  * The model file must remain unchanged until the classifier is closed.
  * [prepareInput] and [decodeOutput] must match the model's tensor types and quantization.
  */
-actual fun imageClassifier(
+public actual fun imageClassifier(
     modelPath: String,
     prepareInput: (PixelImage) -> ByteArray,
     decodeOutput: (ByteArray) -> List<Float>,

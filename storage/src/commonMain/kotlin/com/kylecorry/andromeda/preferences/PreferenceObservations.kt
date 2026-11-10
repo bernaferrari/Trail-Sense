@@ -18,17 +18,17 @@ private fun <T> Preferences.observe(
     awaitClose { listener.deactivate() }
 }
 
-fun Preferences.observeInt(key: String): Flow<Int?> =
+public fun Preferences.observeInt(key: String): Flow<Int?> =
     observe(key, Preferences::getInt) { name, callback -> addIntOrNullListener(name, callback) }
-fun Preferences.observeLong(key: String): Flow<Long?> =
+public fun Preferences.observeLong(key: String): Flow<Long?> =
     observe(key, Preferences::getLong) { name, callback -> addLongOrNullListener(name, callback) }
-fun Preferences.observeFloat(key: String): Flow<Float?> =
+public fun Preferences.observeFloat(key: String): Flow<Float?> =
     observe(key, Preferences::getFloat) { name, callback -> addFloatOrNullListener(name, callback) }
-fun Preferences.observeBoolean(key: String): Flow<Boolean?> =
+public fun Preferences.observeBoolean(key: String): Flow<Boolean?> =
     observe(key, Preferences::getBoolean) { name, callback -> addBooleanOrNullListener(name, callback) }
-fun Preferences.observeString(key: String): Flow<String?> =
+public fun Preferences.observeString(key: String): Flow<String?> =
     observe(key, Preferences::getString) { name, callback -> addStringOrNullListener(name, callback) }
-fun Preferences.observeDouble(key: String): Flow<Double?> =
+public fun Preferences.observeDouble(key: String): Flow<Double?> =
     observe(key, Preferences::getDouble) { name, callback ->
         addStringOrNullListener(name) { callback(it?.replace(',', '.')?.toDoubleOrNull()) }
     }

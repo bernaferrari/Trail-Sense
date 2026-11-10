@@ -10,7 +10,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
-abstract class MockSensor(private val interval: Long = 0) : SharedSensor() {
+public abstract class MockSensor(private val interval: Long = 0) : SharedSensor() {
     init { require(interval >= 0) }
     override val hasValidReading: Boolean = true
     private var job: Job? = null

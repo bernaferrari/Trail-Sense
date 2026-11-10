@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
 
-class AlphaColorMap(private val baseColor: Int = PackedColor.BLACK, private val maxAlpha: Int = 255) :
+public class AlphaColorMap(private val baseColor: Int = PackedColor.BLACK, private val maxAlpha: Int = 255) :
     ColorMap {
     override fun getColor(percent: Float): Int {
         val value = percent.coerceIn(0f, 1f) * 255

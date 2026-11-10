@@ -7,7 +7,7 @@ import java.awt.print.Printable
 import java.awt.print.PageFormat
 import java.awt.print.PrinterJob
 
-fun imagePrinter(): ImagePrinter = ImagePrinter { image, jobName, options ->
+public fun imagePrinter(): ImagePrinter = ImagePrinter { image, jobName, options ->
     val source = BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB)
     source.setRGB(0, 0, image.width, image.height, image.pixels, 0, image.width)
     val bitmap = BufferedImage(image.width, image.height, if (options.color == PrintColorMode.Monochrome) BufferedImage.TYPE_BYTE_GRAY else BufferedImage.TYPE_INT_RGB)

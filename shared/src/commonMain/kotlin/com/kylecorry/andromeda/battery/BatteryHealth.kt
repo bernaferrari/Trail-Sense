@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.battery
 
-enum class BatteryHealth {
+public enum class BatteryHealth {
     Cold,
     Dead,
     Good,

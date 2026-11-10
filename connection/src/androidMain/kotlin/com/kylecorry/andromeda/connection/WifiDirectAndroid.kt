@@ -14,11 +14,11 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-actual val wifiDirectAvailable: Boolean
+public actual val wifiDirectAvailable: Boolean
     get() = KSensorContext.get().getSystemService(Context.WIFI_P2P_SERVICE) is WifiP2pManager
 
 @SuppressLint("MissingPermission")
-actual fun scanWifiDirect(): Flow<List<WifiDirectPeer>> = callbackFlow {
+public actual fun scanWifiDirect(): Flow<List<WifiDirectPeer>> = callbackFlow {
     val context = KSensorContext.get().applicationContext
     val manager = context.getSystemService(Context.WIFI_P2P_SERVICE) as? WifiP2pManager
         ?: throw UnsupportedOperationException("Wi-Fi Direct is unavailable")

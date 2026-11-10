@@ -4,7 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import com.ksensor.core.context.KSensorContext
 
-actual fun deviceMemory(): DeviceMemory {
+public actual fun deviceMemory(): DeviceMemory {
     val manager = KSensorContext.get().getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
         ?: return DeviceMemory(null, null, null)
     val memory = ActivityManager.MemoryInfo()

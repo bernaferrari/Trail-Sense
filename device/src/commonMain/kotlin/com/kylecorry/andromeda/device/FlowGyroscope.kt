@@ -19,7 +19,7 @@ import kotlin.math.sin
 import kotlin.time.Instant
 
 /** Integrates angular velocity in degrees per second into relative orientation. */
-class FlowGyroscope(
+public class FlowGyroscope(
     private val readings: Flow<Reading<Vector3>>,
     private val scope: CoroutineScope,
     private val maintainStateOnRestart: Boolean = false,

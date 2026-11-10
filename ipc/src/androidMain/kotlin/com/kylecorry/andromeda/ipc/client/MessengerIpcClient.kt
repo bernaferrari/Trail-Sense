@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.coroutines.resume
 
-class MessengerIpcClient(
+public class MessengerIpcClient(
     private val context: Context,
     private val intent: Intent,
     private val looper: Looper = Looper.getMainLooper()
@@ -62,7 +62,7 @@ class MessengerIpcClient(
         }
     }
 
-    fun connect(): Boolean {
+    public fun connect(): Boolean {
         synchronized(lock) {
             if (isConnecting || isBound) {
                 return true
@@ -80,13 +80,13 @@ class MessengerIpcClient(
         }
     }
 
-    fun isConnected(): Boolean {
+    public fun isConnected(): Boolean {
         synchronized(lock) {
             return isBound
         }
     }
 
-    suspend fun waitUntilConnected(timeoutMillis: Long = 1000): Unit = withContext(Dispatchers.Default) {
+    public suspend fun waitUntilConnected(timeoutMillis: Long = 1000): Unit = withContext(Dispatchers.Default) {
         var isNowConnected = false
         synchronized(lock) {
             if (!isConnecting && !isBound) {
@@ -140,7 +140,7 @@ class MessengerIpcClient(
             )
         }
 
-    suspend fun connectAndSend(
+    public suspend fun connectAndSend(
         route: String,
         request: IpcRequest = IpcRequest(),
         connectTimeout: Duration = 10.seconds,

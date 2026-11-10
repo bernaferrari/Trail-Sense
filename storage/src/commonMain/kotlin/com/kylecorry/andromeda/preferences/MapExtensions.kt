@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.preferences
 
-fun <K, V> Map<K, V>.changes(other: Map<K, V>): Collection<K> {
+public fun <K, V> Map<K, V>.changes(other: Map<K, V>): Collection<K> {
     val changes = mutableSetOf<K>()
 
     // Key added or value changed

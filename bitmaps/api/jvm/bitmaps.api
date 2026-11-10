@@ -1,0 +1,173 @@
+public final class com/kylecorry/andromeda/bitmaps/BlendKt {
+	public static final fun blend (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/BlendingMode;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun blend$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/BlendingMode;ILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/BlurKt {
+	public static final fun blur (Lcom/kylecorry/andromeda/bitmaps/PixelImage;I)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ChannelStatistics {
+	public fun <init> (DDDD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun copy (DDDD)Lcom/kylecorry/andromeda/bitmaps/ChannelStatistics;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/bitmaps/ChannelStatistics;DDDDILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/ChannelStatistics;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaximum ()D
+	public final fun getMean ()D
+	public final fun getMinimum ()D
+	public final fun getStandardDeviation ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/CoOccurrenceKt {
+	public static final fun glcm (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Ljava/util/List;Lcom/kylecorry/andromeda/bitmaps/ColorChannel;ZZZI)[F
+	public static synthetic fun glcm$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Ljava/util/List;Lcom/kylecorry/andromeda/bitmaps/ColorChannel;ZZZIILjava/lang/Object;)[F
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ColorTransformKt {
+	public static final fun colorMatrix (Lcom/kylecorry/andromeda/bitmaps/PixelImage;[F)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun lookup (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/LookupTable;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun lookup (Lcom/kylecorry/andromeda/bitmaps/PixelImage;[B[B[B[B)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun lookup$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;[B[B[B[BILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun lookup3d (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/Rgba3dArray;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ImageBounds {
+	public fun <init> (IIII)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun copy (IIII)Lcom/kylecorry/andromeda/bitmaps/ImageBounds;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/bitmaps/ImageBounds;IIIIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/ImageBounds;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBottom ()I
+	public final fun getLeft ()I
+	public final fun getRight ()I
+	public final fun getTop ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ImageInterpolation : java/lang/Enum {
+	public static final field Bicubic Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;
+	public static final field Bilinear Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;
+	public static final field Nearest Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;
+	public static fun values ()[Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ImagePoint {
+	public fun <init> (DD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun copy (DD)Lcom/kylecorry/andromeda/bitmaps/ImagePoint;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/bitmaps/ImagePoint;DDILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/ImagePoint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getX ()D
+	public final fun getY ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ImageRegionDecoder : java/lang/AutoCloseable {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> ([B)V
+	public fun close ()V
+	public final fun decode (IIII)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public final fun getHeight ()I
+	public final fun getWidth ()I
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ImageRegionDecoderKt {
+	public static final fun decodeWrappedRegion (Lcom/kylecorry/andromeda/bitmaps/ImageRegionDecoder;IIIIZI)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun decodeWrappedRegion$default (Lcom/kylecorry/andromeda/bitmaps/ImageRegionDecoder;IIIIZIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun samplePixel (Lcom/kylecorry/andromeda/bitmaps/ImageRegionDecoder;FFZ)Ljava/lang/Integer;
+	public static synthetic fun samplePixel$default (Lcom/kylecorry/andromeda/bitmaps/ImageRegionDecoder;FFZILjava/lang/Object;)Ljava/lang/Integer;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ImageStatisticsKt {
+	public static final fun findBlobs (Lcom/kylecorry/andromeda/bitmaps/PixelImage;DLcom/kylecorry/andromeda/bitmaps/ColorChannel;I)Ljava/util/List;
+	public static synthetic fun findBlobs$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;DLcom/kylecorry/andromeda/bitmaps/ColorChannel;IILjava/lang/Object;)Ljava/util/List;
+	public static final fun moment (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/ColorChannel;)Lcom/kylecorry/andromeda/bitmaps/ImagePoint;
+	public static synthetic fun moment$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/ColorChannel;ILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/ImagePoint;
+	public static final fun statistics (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/ColorChannel;)Lcom/kylecorry/andromeda/bitmaps/ChannelStatistics;
+	public static synthetic fun statistics$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/ColorChannel;ILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/ChannelStatistics;
+	public static final fun weightedAdd (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/PixelImage;FFZ)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun weightedAdd$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/PixelImage;FFZILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/JvmImageCodecKt {
+	public static final fun decodeImage ([B)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun encodeJpeg (Lcom/kylecorry/andromeda/bitmaps/PixelImage;I)[B
+	public static synthetic fun encodeJpeg$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IILjava/lang/Object;)[B
+	public static final fun encodePng (Lcom/kylecorry/andromeda/bitmaps/PixelImage;)[B
+}
+
+public final class com/kylecorry/andromeda/bitmaps/PerspectiveKt {
+	public static final fun correctPerspective (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/core/units/PixelBounds;III)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun correctPerspective$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/core/units/PixelBounds;IIIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/PixelArtKt {
+	public static final fun upscalePixelArt2x (Lcom/kylecorry/andromeda/bitmaps/PixelImage;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/PixelImage {
+	public fun <init> (II[I)V
+	public final fun crop (IIII)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public final fun flip (ZZ)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun flip$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;ZZILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public final fun get (II)I
+	public final fun getHeight ()I
+	public final fun getPixels ()[I
+	public final fun getWidth ()I
+	public final fun map (Lkotlin/jvm/functions/Function1;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public final fun pad (IIIII)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun pad$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IIIIIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public final fun replaceColor (IIFZ)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun replaceColor$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IIFZILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public final fun resize (IILcom/kylecorry/andromeda/bitmaps/ImageInterpolation;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun resize$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IILcom/kylecorry/andromeda/bitmaps/ImageInterpolation;ILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/PixelImageKt {
+	public static final fun convolve (Lcom/kylecorry/andromeda/bitmaps/PixelImage;[F)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun grayscale (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Z)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun grayscale$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun interpolate (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FF)Ljava/lang/Integer;
+	public static final fun luminanceHistogram (Lcom/kylecorry/andromeda/bitmaps/PixelImage;)[I
+	public static final fun quantize (Lcom/kylecorry/andromeda/bitmaps/PixelImage;I)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun threshold (Lcom/kylecorry/andromeda/bitmaps/PixelImage;F)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun threshold (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FZLcom/kylecorry/andromeda/bitmaps/ColorChannel;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun threshold$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FZLcom/kylecorry/andromeda/bitmaps/ColorChannel;ILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/QuantizationKt {
+	public static final fun histogram (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/andromeda/bitmaps/ColorChannel;)[I
+	public static final fun quantize (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IIIIZ)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun quantize$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IIIIZILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/RotateKt {
+	public static final fun rotate (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FI)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun rotate$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/ScaleAndTilesKt {
+	public static final fun cropTile (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/sol/science/geology/CoordinateBounds;Lcom/kylecorry/sol/science/geology/CoordinateBounds;IILcom/kylecorry/andromeda/bitmaps/ImageInterpolation;I)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun cropTile$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lcom/kylecorry/sol/science/geology/CoordinateBounds;Lcom/kylecorry/sol/science/geology/CoordinateBounds;IILcom/kylecorry/andromeda/bitmaps/ImageInterpolation;IILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static final fun resizeToFit (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IILcom/kylecorry/andromeda/bitmaps/ImageInterpolation;Z)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun resizeToFit$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IILcom/kylecorry/andromeda/bitmaps/ImageInterpolation;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/bitmaps/YuvKt {
+	public static final fun yuvToPixelImage ([BIILcom/kylecorry/andromeda/bitmaps/YuvFormat;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+

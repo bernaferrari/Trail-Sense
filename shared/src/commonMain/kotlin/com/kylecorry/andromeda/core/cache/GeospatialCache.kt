@@ -15,7 +15,7 @@ import kotlin.time.Instant
  * @param cacheDuration The maximum duration to store values in the cache, defaults to forever
  * @param removalStrategy The strategy to use when removing values from the cache, defaults to furthest
  */
-class GeospatialCache<T>(
+public class GeospatialCache<T>(
     cacheRadius: Distance,
     private val size: Int? = null,
     private val cacheDuration: Duration? = null,
@@ -34,7 +34,7 @@ class GeospatialCache<T>(
      * @param location The location to get the value at
      * @return The value or null
      */
-    suspend fun get(location: Coordinate): T? {
+    public suspend fun get(location: Coordinate): T? {
         return mutex.withLock {
             getKeyLocation(location)?.let {
                 lastAccessed[it] = timeProvider()
@@ -43,7 +43,7 @@ class GeospatialCache<T>(
         }
     }
 
-    suspend fun getAll(locations: List<Coordinate>): Map<Coordinate, T> {
+    public suspend fun getAll(locations: List<Coordinate>): Map<Coordinate, T> {
         return mutex.withLock {
             val results = mutableMapOf<Coordinate, T>()
             for (location in locations) {
@@ -63,7 +63,7 @@ class GeospatialCache<T>(
      * @param location The location to put the value at
      * @param value The value to put
      */
-    suspend fun put(location: Coordinate, value: T) {
+    public suspend fun put(location: Coordinate, value: T) {
         mutex.withLock {
             val key = getKeyLocation(location) ?: location
             values[key] = value
@@ -73,7 +73,7 @@ class GeospatialCache<T>(
         }
     }
 
-    suspend fun putAll(locations: Map<Coordinate, T>) {
+    public suspend fun putAll(locations: Map<Coordinate, T>) {
         mutex.withLock {
             for ((location, value) in locations) {
                 val key = getKeyLocation(location) ?: location
@@ -92,7 +92,7 @@ class GeospatialCache<T>(
      * @param lookup The lookup function
      * @return The value
      */
-    suspend fun getOrPut(location: Coordinate, lookup: suspend () -> T): T {
+    public suspend fun getOrPut(location: Coordinate, lookup: suspend () -> T): T {
         return mutex.withLock {
             val key = getKeyLocation(location) ?: location
             if (values.containsKey(key)) {
@@ -112,7 +112,7 @@ class GeospatialCache<T>(
      * Invalidates the value at the given location
      * @param location The location to invalidate
      */
-    suspend fun invalidate(location: Coordinate) {
+    public suspend fun invalidate(location: Coordinate) {
         mutex.withLock {
             getKeyLocation(location)?.let {
                 values.remove(it)
@@ -125,7 +125,7 @@ class GeospatialCache<T>(
     /**
      * Invalidates all values in the cache
      */
-    suspend fun invalidateAll() {
+    public suspend fun invalidateAll() {
         mutex.withLock {
             values.clear()
             lastAccessed.clear()
@@ -186,7 +186,7 @@ class GeospatialCache<T>(
         return timeProvider() - cachedAtTime > cacheDuration
     }
 
-    enum class RemovalStrategy {
+    public enum class RemovalStrategy {
         LeastRecentlyUsed,
         Furthest
     }

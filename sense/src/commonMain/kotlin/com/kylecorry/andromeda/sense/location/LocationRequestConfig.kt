@@ -4,7 +4,7 @@ import com.kylecorry.sol.units.Distance
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-data class LocationRequestConfig(
+public data class LocationRequestConfig(
     val frequency: Duration = 20.seconds,
     val minimumDistance: Distance = Distance.meters(0f),
     val minimumFrequency: Duration? = null,

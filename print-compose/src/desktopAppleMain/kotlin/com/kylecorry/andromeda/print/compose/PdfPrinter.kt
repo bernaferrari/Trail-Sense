@@ -8,7 +8,7 @@ import com.kylecorry.andromeda.print.imagePrinter
 import com.kylecorry.andromeda.print.pdfPrinter
 
 @Composable
-actual fun rememberPdfPrinter(): PdfPrinter = remember { pdfPrinter() }
+public actual fun rememberPdfPrinter(): PdfPrinter = remember { pdfPrinter() }
 
 @Composable
-actual fun rememberImagePrinter(): ImagePrinter = remember { imagePrinter() }
+public actual fun rememberImagePrinter(): ImagePrinter = remember { imagePrinter() }

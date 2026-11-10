@@ -1,0 +1,35 @@
+public final class com/kylecorry/andromeda/permissions/AppPermission : java/lang/Enum {
+	public static final field BackgroundLocation Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Bluetooth Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Camera Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field CoarseLocation Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Gallery Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Location Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Microphone Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Motion Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Notifications Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field ReadContacts Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field ReadStorage Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field WriteStorage Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static fun values ()[Lcom/kylecorry/andromeda/permissions/AppPermission;
+}
+
+public abstract interface class com/kylecorry/andromeda/permissions/PermissionAccess {
+	public abstract fun openSettings ()V
+	public abstract fun request (Lcom/kylecorry/andromeda/permissions/AppPermission;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun status (Lcom/kylecorry/andromeda/permissions/AppPermission;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/permissions/PermissionStatus : java/lang/Enum {
+	public static final field Denied Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field DeniedAlways Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field Granted Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field NotDetermined Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field NotGranted Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static fun values ()[Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+}
+

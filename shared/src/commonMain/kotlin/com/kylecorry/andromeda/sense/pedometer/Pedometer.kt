@@ -2,6 +2,6 @@ package com.kylecorry.andromeda.sense.pedometer
 
 import com.kylecorry.andromeda.core.sensors.Sensor
 
-interface Pedometer: Sensor {
-    val steps: Int
+public interface Pedometer: Sensor {
+    public val steps: Int
 }

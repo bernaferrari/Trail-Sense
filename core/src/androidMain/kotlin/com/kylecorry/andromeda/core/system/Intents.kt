@@ -1,0 +1,214 @@
+package com.kylecorry.andromeda.core.system
+
+import com.kylecorry.andromeda.core.system.GeoUri
+import com.kylecorry.andromeda.core.system.UriAccess
+import com.kylecorry.andromeda.core.system.uri
+
+import android.annotation.SuppressLint
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import com.kylecorry.sol.units.Coordinate
+
+public object Intents {
+
+    public inline fun <reified T> getParcelableExtra(intent: Intent, name: String): T? {
+        return if (Build.VERSION.SDK_INT >= 33) {
+            intent.getParcelableExtra(name, T::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(name)
+        }
+    }
+
+    public fun localIntent(context: Context, action: String): Intent {
+        return Intent(action).apply {
+            `package` = context.packageName
+        }
+    }
+
+    public fun startService(
+        context: Context,
+        intent: Intent,
+        foreground: Boolean = false,
+        useApplicationContext: Boolean = true
+    ) {
+        val ctx = if (useApplicationContext) context.applicationContext else context
+
+        if (foreground) {
+            ContextCompat.startForegroundService(ctx, intent)
+        } else {
+            ctx.startService(intent)
+        }
+    }
+
+    public fun pendingIntentExists(context: Context, requestCode: Int, intent: Intent): Boolean {
+        return PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        ) != null
+    }
+
+    public fun email(to: String, subject: String, body: String = ""): Intent {
+        return Intent(Intent.ACTION_SENDTO).apply {
+            data = "mailto:".toUri()
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(to))
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, body)
+        }
+    }
+
+    public fun url(url: String): Intent {
+        return Intent(Intent.ACTION_VIEW).apply {
+            data = url.toUri()
+        }
+    }
+
+    public fun geo(location: Coordinate): Intent {
+        return url(GeoUri(location).toString())
+    }
+
+    public fun appSettings(context: Context): Intent {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        val uri = Uri.fromParts("package", Package.getPackageName(context), null)
+        intent.data = uri
+        return intent
+    }
+
+    public fun notificationSettings(context: Context, channel: String? = null): Intent {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return appSettings(context)
+        }
+
+        return if (channel == null) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            }
+        } else {
+            Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                putExtra(Settings.EXTRA_CHANNEL_ID, channel)
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    public fun alarmAndReminderSettings(context: Context): Intent {
+        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+        val uri = Uri.fromParts("package", Package.getPackageName(context), null)
+        intent.data = uri
+        return intent
+    }
+
+    public fun batteryOptimizationSettings(): Intent {
+        return Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+    }
+
+    public fun createFile(filename: String, type: String, message: String = filename): Intent {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = type
+        intent.putExtra(Intent.EXTRA_TITLE, filename)
+        return Intent.createChooser(intent, message)
+    }
+
+    public fun createFile(filename: String, types: List<String>, message: String = filename): Intent {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "*/*"
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, types.toTypedArray())
+        intent.putExtra(Intent.EXTRA_TITLE, filename)
+        return Intent.createChooser(intent, message)
+    }
+
+    public fun pickFile(
+        type: String,
+        message: String,
+        useSAF: Boolean = true,
+        access: UriAccess = UriAccess()
+    ): Intent {
+        val requestFileIntent =
+            Intent(if (useSAF) Intent.ACTION_OPEN_DOCUMENT else Intent.ACTION_GET_CONTENT)
+        requestFileIntent.addCategory(Intent.CATEGORY_OPENABLE)
+        requestFileIntent.type = type
+        requestFileIntent.addUriAccessFlags(access, allowPersistentAccess = useSAF)
+        return Intent.createChooser(requestFileIntent, message)
+    }
+
+    public fun pickFile(
+        types: List<String>,
+        message: String,
+        useSAF: Boolean = true,
+        access: UriAccess = UriAccess()
+    ): Intent {
+        val requestFileIntent =
+            Intent(if (useSAF) Intent.ACTION_OPEN_DOCUMENT else Intent.ACTION_GET_CONTENT)
+        requestFileIntent.addCategory(Intent.CATEGORY_OPENABLE)
+        requestFileIntent.type = "*/*"
+        requestFileIntent.putExtra(Intent.EXTRA_MIME_TYPES, types.toTypedArray())
+        requestFileIntent.addUriAccessFlags(access, allowPersistentAccess = useSAF)
+        return Intent.createChooser(requestFileIntent, message)
+    }
+
+    public fun pickDirectory(
+        message: String,
+        access: UriAccess = UriAccess()
+    ): Intent {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        intent.addUriAccessFlags(access)
+        return Intent.createChooser(intent, message)
+    }
+
+    public fun acceptPersistentUri(
+        context: Context,
+        uri: Uri,
+        takeRead: Boolean = true,
+        takeWrite: Boolean = true
+    ) {
+        context.contentResolver.takePersistableUriPermission(
+            uri,
+            (if (takeRead) Intent.FLAG_GRANT_READ_URI_PERMISSION else 0) or (if (takeWrite) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)
+        )
+    }
+
+    public fun openChooser(context: Context, intent: Intent, title: String) {
+        context.startActivity(Intent.createChooser(intent, title))
+    }
+
+    public fun restart(context: Context, packageName: String = Package.getPackageName(context)): Intent {
+        val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+        val componentName = intent!!.component
+        return Intent.makeRestartActivityTask(componentName)
+    }
+
+    @SuppressLint("QueryPermissionsNeeded")
+    public fun hasReceiver(context: Context, intent: Intent): Boolean {
+        return intent.resolveActivity(context.packageManager) != null
+    }
+
+    private fun Intent.addUriAccessFlags(
+        access: UriAccess,
+        allowPersistentAccess: Boolean = true
+    ) {
+        if (access.requirePersistentAccess && allowPersistentAccess) {
+            addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+
+        if (access.requireReadAccess) {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        if (access.requireWriteAccess) {
+            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        }
+    }
+
+}

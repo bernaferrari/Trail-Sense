@@ -6,6 +6,6 @@ import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.coil3.Coil3ImageTransformerImpl
 
 @Composable
-fun MarkdownText(content: String, modifier: Modifier = Modifier) {
+public fun MarkdownText(content: String, modifier: Modifier = Modifier) {
     Markdown(content, modifier = modifier, imageTransformer = Coil3ImageTransformerImpl)
 }

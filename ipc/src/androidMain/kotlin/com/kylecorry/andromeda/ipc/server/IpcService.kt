@@ -4,8 +4,8 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 
-abstract class IpcService : Service() {
-    abstract val router: MessengerIpcRouter
+public abstract class IpcService : Service() {
+    public abstract val router: MessengerIpcRouter
 
     override fun onBind(intent: Intent?): IBinder? {
         return router.bind()

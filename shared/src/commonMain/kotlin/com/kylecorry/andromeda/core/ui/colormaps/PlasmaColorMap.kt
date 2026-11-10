@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
 
-class PlasmaColorMap : RgbInterpolationColorMap(
+public class PlasmaColorMap : RgbInterpolationColorMap(
     arrayOf(
         PackedColor.rgb(13, 8, 135),
         PackedColor.rgb(84, 2, 163),

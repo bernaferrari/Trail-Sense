@@ -1,0 +1,156 @@
+public final class com/kylecorry/andromeda/tensorflow/ClassifierAcceleration : java/lang/Enum {
+	public static final field AndroidNnapi Lcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;
+	public static final field Cpu Lcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;
+	public static fun values ()[Lcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/ClassifierOptions {
+	public fun <init> ()V
+	public fun <init> (IZLcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;)V
+	public synthetic fun <init> (IZLcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Z
+	public final fun component3 ()Lcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;
+	public final fun copy (IZLcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;)Lcom/kylecorry/andromeda/tensorflow/ClassifierOptions;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/tensorflow/ClassifierOptions;IZLcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;ILjava/lang/Object;)Lcom/kylecorry/andromeda/tensorflow/ClassifierOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAcceleration ()Lcom/kylecorry/andromeda/tensorflow/ClassifierAcceleration;
+	public final fun getApplySoftmax ()Z
+	public final fun getNumThreads ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding {
+}
+
+public final class com/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding$Float32 : com/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding$Float32;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding$Quantized : com/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding {
+	public fun <init> (FIZ)V
+	public final fun component1 ()F
+	public final fun component2 ()I
+	public final fun component3 ()Z
+	public final fun copy (FIZ)Lcom/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding$Quantized;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding$Quantized;FIZILjava/lang/Object;)Lcom/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding$Quantized;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getScale ()F
+	public final fun getSigned ()Z
+	public final fun getZeroPoint ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/tensorflow/ImageClassifier : java/lang/AutoCloseable {
+	public abstract fun classify (Lcom/kylecorry/andromeda/bitmaps/PixelImage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/ImagePreprocessingKt {
+	public static final fun resizeForModel (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IILcom/kylecorry/andromeda/tensorflow/ImageResizeMode;Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;I)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun resizeForModel$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;IILcom/kylecorry/andromeda/tensorflow/ImageResizeMode;Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;IILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/ImageResizeMode : java/lang/Enum {
+	public static final field CenterCrop Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;
+	public static final field Fit Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;
+	public static final field Stretch Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;
+	public static fun values ()[Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/ImageTensorsKt {
+	public static final fun decodeFloat32Tensor ([B)Ljava/util/List;
+	public static final fun decodeQuantizedTensor ([BFIZ)Ljava/util/List;
+	public static final fun rgbFloat32 (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FF)[B
+	public static synthetic fun rgbFloat32$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FFILjava/lang/Object;)[B
+	public static final fun rgbQuantized (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FIZFF)[B
+	public static synthetic fun rgbQuantized$default (Lcom/kylecorry/andromeda/bitmaps/PixelImage;FIZFFILjava/lang/Object;)[B
+	public static final fun rgbUint8 (Lcom/kylecorry/andromeda/bitmaps/PixelImage;)[B
+	public static final fun softmax (Ljava/util/List;)Ljava/util/List;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/JvmImageClassifierKt {
+	public static final fun imageClassifier (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lcom/kylecorry/andromeda/tensorflow/ClassifierOptions;)Lcom/kylecorry/andromeda/tensorflow/ImageClassifier;
+	public static synthetic fun imageClassifier$default (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lcom/kylecorry/andromeda/tensorflow/ClassifierOptions;ILjava/lang/Object;)Lcom/kylecorry/andromeda/tensorflow/ImageClassifier;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/RgbImageClassifierKt {
+	public static final fun rgbImageClassifier (Ljava/lang/String;Lcom/kylecorry/andromeda/tensorflow/RgbModelInput;Lcom/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding;Lcom/kylecorry/andromeda/tensorflow/ClassifierOptions;)Lcom/kylecorry/andromeda/tensorflow/ImageClassifier;
+	public static synthetic fun rgbImageClassifier$default (Ljava/lang/String;Lcom/kylecorry/andromeda/tensorflow/RgbModelInput;Lcom/kylecorry/andromeda/tensorflow/ClassifierOutputEncoding;Lcom/kylecorry/andromeda/tensorflow/ClassifierOptions;ILjava/lang/Object;)Lcom/kylecorry/andromeda/tensorflow/ImageClassifier;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/RgbModelInput {
+	public fun <init> (IILcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding;Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;I)V
+	public synthetic fun <init> (IILcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding;Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding;
+	public final fun component4 ()Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;
+	public final fun component5 ()Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;
+	public final fun component6 ()I
+	public final fun copy (IILcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding;Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;I)Lcom/kylecorry/andromeda/tensorflow/RgbModelInput;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/tensorflow/RgbModelInput;IILcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding;Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;IILjava/lang/Object;)Lcom/kylecorry/andromeda/tensorflow/RgbModelInput;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackground ()I
+	public final fun getEncoding ()Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding;
+	public final fun getHeight ()I
+	public final fun getInterpolation ()Lcom/kylecorry/andromeda/bitmaps/ImageInterpolation;
+	public final fun getResizeMode ()Lcom/kylecorry/andromeda/tensorflow/ImageResizeMode;
+	public final fun getWidth ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/tensorflow/RgbTensorEncoding {
+}
+
+public final class com/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Float32 : com/kylecorry/andromeda/tensorflow/RgbTensorEncoding {
+	public fun <init> ()V
+	public fun <init> (FF)V
+	public synthetic fun <init> (FFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun copy (FF)Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Float32;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Float32;FFILjava/lang/Object;)Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Float32;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMean ()F
+	public final fun getStandardDeviation ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Quantized : com/kylecorry/andromeda/tensorflow/RgbTensorEncoding {
+	public fun <init> (FIZFF)V
+	public synthetic fun <init> (FIZFFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun component2 ()I
+	public final fun component3 ()Z
+	public final fun component4 ()F
+	public final fun component5 ()F
+	public final fun copy (FIZFF)Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Quantized;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Quantized;FIZFFILjava/lang/Object;)Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Quantized;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMean ()F
+	public final fun getScale ()F
+	public final fun getSigned ()Z
+	public final fun getStandardDeviation ()F
+	public final fun getZeroPoint ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Uint8 : com/kylecorry/andromeda/tensorflow/RgbTensorEncoding {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/tensorflow/RgbTensorEncoding$Uint8;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

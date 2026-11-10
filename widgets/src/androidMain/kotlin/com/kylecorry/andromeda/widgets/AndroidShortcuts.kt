@@ -8,7 +8,7 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 
 /** Connects shared shortcut requests to Android intents and icon resources. */
-fun shortcutPinning(
+public fun shortcutPinning(
     context: Context,
     icon: (Shortcut) -> Int,
     intent: (Shortcut) -> Intent,

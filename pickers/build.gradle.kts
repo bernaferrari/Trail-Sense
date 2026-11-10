@@ -1,33 +1,20 @@
 plugins {
-    kotlin("multiplatform")
-    id("org.jetbrains.compose")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.android.kotlin.multiplatform.library")
-    id("com.vanniktech.maven.publish")
+    id("andromeda.compose")
 }
+
 kotlin {
     android {
         namespace = "com.kylecorry.andromeda.pickers.shared"
-        compileSdk = 37
-        minSdk = 24
-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
-    jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
-    iosArm64()
-    iosSimulatorArm64()
-    jvmToolchain(17)
     sourceSets {
         commonMain.dependencies {
-            api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+            api(libs.kotlinx.datetime)
             api(project(":shared"))
             api(project(":forms"))
-            api("io.github.vinceglb:filekit-dialogs-compose:0.16.0")
-            api(compose.runtime)
-            api(compose.foundation)
-            api(compose.material3)
+            api(libs.filekit.dialogs.compose)
+            api(libs.compose.runtime)
+            api(libs.compose.foundation)
+            api(libs.compose.material3)
         }
     }
 }
-group = "com.kylecorry.andromeda"
-version = "25.1.1"
-mavenPublishing { coordinates("com.kylecorry.andromeda", "pickers", "25.1.1") }

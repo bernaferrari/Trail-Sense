@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.signal
 
-enum class CellNetwork(val id: Int, val minDbm: Int, val maxDbm: Int) {
+public enum class CellNetwork(public val id: Int, public val minDbm: Int, public val maxDbm: Int) {
     Nr(1, -140, -44),
     Lte(2, -140, -44),
     Cdma(3, -100, -75),

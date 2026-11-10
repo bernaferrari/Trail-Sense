@@ -4,9 +4,9 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 /** Platform-managed recurring work, subject to operating-system scheduling and power policies. */
-interface PeriodicBackgroundScheduler : PeriodicTaskScheduler {
+public interface PeriodicBackgroundScheduler : PeriodicTaskScheduler {
     /** Call when the platform invokes the task; some platforms use this to schedule the next run. */
-    fun onTaskStarted()
+    public fun onTaskStarted()
 }
 
 internal fun requirePeriodicSchedule(period: Duration, initialDelay: Duration) {

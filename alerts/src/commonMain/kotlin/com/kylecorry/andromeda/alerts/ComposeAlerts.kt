@@ -27,7 +27,7 @@ private class AlertRequest(
 )
 
 /** Owns the currently displayed dialog. Place [AlertHost] in the Compose hierarchy. */
-class AlertState : AlertPresenter {
+public class AlertState : AlertPresenter {
     private val mutex = Mutex()
     private var request by mutableStateOf<AlertRequest?>(null)
 
@@ -58,22 +58,22 @@ class AlertState : AlertPresenter {
 }
 
 @Composable
-fun rememberAlertState(): AlertState = remember { AlertState() }
+public fun rememberAlertState(): AlertState = remember { AlertState() }
 
 @Composable
-fun AlertHost(state: AlertState) = state.Render()
+public fun AlertHost(state: AlertState): Unit = state.Render()
 
-class LoadingState : LoadingIndicator {
-    var visible by mutableStateOf(false)
+public class LoadingState : LoadingIndicator {
+    public var visible: Boolean by mutableStateOf(false)
         private set
     override fun show() { visible = true }
     override fun hide() { visible = false }
 }
 
 @Composable
-fun rememberLoadingState(): LoadingState = remember { LoadingState() }
+public fun rememberLoadingState(): LoadingState = remember { LoadingState() }
 
 @Composable
-fun LoadingIndicator(state: LoadingState, modifier: Modifier = Modifier) {
+public fun LoadingIndicator(state: LoadingState, modifier: Modifier = Modifier) {
     if (state.visible) CircularProgressIndicator(modifier)
 }

@@ -1,10 +1,10 @@
 package com.kylecorry.andromeda.pdf
 
 /** Parses a PDF into its indirect objects. */
-expect fun parsePDF(bytes: ByteArray, ignoreStreams: Boolean = false): List<PDFValue.PDFObject>
+public expect fun parsePDF(bytes: ByteArray, ignoreStreams: Boolean = false): List<PDFValue.PDFObject>
 
 /** Writes indirect objects as a complete PDF, including a cross-reference table. */
-fun createPDF(objects: List<PDFValue.PDFObject>): ByteArray {
+public fun createPDF(objects: List<PDFValue.PDFObject>): ByteArray {
     val ordered = objects.sortedBy { it.id }
     require(ordered.all { it.id > 0 } && ordered.map { it.id }.distinct().size == ordered.size)
     val root = ordered.getByProperty("/Type", PDFValue.PDFName("/Catalog")).first().reference

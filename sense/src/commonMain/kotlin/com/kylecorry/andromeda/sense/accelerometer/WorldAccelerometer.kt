@@ -24,14 +24,14 @@ import kotlin.math.min
  * @param surfaceRotation The display rotation: 0, 1, 2 or 3 quarter turns
  * @param useAROrientation True to use AR orientation, false to use compass orientation
  */
-class WorldAccelerometer(
+public class WorldAccelerometer(
     private val accelerometer: Accelerometer,
     private val orientation: OrientationSensor,
     private val scope: CoroutineScope,
     private val interval: Duration = 20.milliseconds,
-    var useTrueNorth: Boolean = false,
-    var surfaceRotation: Int = 0,
-    var useAROrientation: Boolean = false
+    public var useTrueNorth: Boolean = false,
+    public var surfaceRotation: Int = 0,
+    public var useAROrientation: Boolean = false
 ) : Accelerometer, SharedSensor() {
 
     private val rotationMatrix = FloatArray(16)
@@ -40,7 +40,7 @@ class WorldAccelerometer(
     /**
      * The geomagnetic declination
      */
-    var declination = 0f
+    public var declination: Float = 0f
 
     override val acceleration: Vector3
         get() = Vector3(rawAcceleration[0], rawAcceleration[1], rawAcceleration[2])

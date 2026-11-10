@@ -1,0 +1,192 @@
+public final class com/kylecorry/andromeda/camera/CameraExposure {
+	public static final field $stable I
+	public fun <init> (FFFLjava/lang/Float;)V
+	public synthetic fun <init> (FFFLjava/lang/Float;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun component3 ()F
+	public final fun component4 ()Ljava/lang/Float;
+	public final fun copy (FFFLjava/lang/Float;)Lcom/kylecorry/andromeda/camera/CameraExposure;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/camera/CameraExposure;FFFLjava/lang/Float;ILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/CameraExposure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaximum ()F
+	public final fun getMinimum ()F
+	public final fun getStep ()Ljava/lang/Float;
+	public final fun getValue ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/camera/CameraFlash : java/lang/Enum {
+	public static final field Auto Lcom/kylecorry/andromeda/camera/CameraFlash;
+	public static final field Off Lcom/kylecorry/andromeda/camera/CameraFlash;
+	public static final field On Lcom/kylecorry/andromeda/camera/CameraFlash;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/camera/CameraFlash;
+	public static fun values ()[Lcom/kylecorry/andromeda/camera/CameraFlash;
+}
+
+public final class com/kylecorry/andromeda/camera/CameraFrame {
+	public static final field $stable I
+	public fun <init> (II[ILkotlin/time/Instant;Ljava/lang/Integer;)V
+	public synthetic fun <init> (II[ILkotlin/time/Instant;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getArgb ()[I
+	public final fun getHeight ()I
+	public final fun getRotationDegrees ()Ljava/lang/Integer;
+	public final fun getTimestamp ()Lkotlin/time/Instant;
+	public final fun getWidth ()I
+}
+
+public final class com/kylecorry/andromeda/camera/CameraStabilizationSupport {
+	public static final field $stable I
+	public fun <init> (ZZ)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun copy (ZZ)Lcom/kylecorry/andromeda/camera/CameraStabilizationSupport;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/camera/CameraStabilizationSupport;ZZILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/CameraStabilizationSupport;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOptical ()Z
+	public final fun getPreview ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/camera/CameraSurfaceKt {
+	public static final fun CameraSurface (Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ZLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/kylecorry/andromeda/camera/CameraZoom {
+	public static final field $stable I
+	public fun <init> (FFF)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun component3 ()F
+	public final fun copy (FFF)Lcom/kylecorry/andromeda/camera/CameraZoom;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/camera/CameraZoom;FFFILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/CameraZoom;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaximum ()F
+	public final fun getMinimum ()F
+	public final fun getRatio ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/camera/ManualExposureRange {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/ClosedRange;Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Lkotlin/ranges/ClosedRange;
+	public final fun component2 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Lkotlin/ranges/ClosedRange;Lkotlin/ranges/IntRange;)Lcom/kylecorry/andromeda/camera/ManualExposureRange;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/camera/ManualExposureRange;Lkotlin/ranges/ClosedRange;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/ManualExposureRange;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDuration ()Lkotlin/ranges/ClosedRange;
+	public final fun getIso ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/camera/PhotoCamera {
+	public abstract fun capture (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun flip ()V
+	public abstract fun focusAt (FF)V
+	public abstract fun getCalibration ()Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;
+	public abstract fun getExposure ()Lcom/kylecorry/andromeda/camera/CameraExposure;
+	public abstract fun getFrames ()Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getManualExposure ()Lcom/kylecorry/andromeda/camera/ManualExposureRange;
+	public abstract fun getManualFocusSupported ()Z
+	public abstract fun getMeteringSupported ()Z
+	public abstract fun getStabilizationSupport ()Lcom/kylecorry/andromeda/camera/CameraStabilizationSupport;
+	public abstract fun getZoom ()Lcom/kylecorry/andromeda/camera/CameraZoom;
+	public abstract fun resetFocusAndMetering ()V
+	public abstract fun setExposure (F)V
+	public abstract fun setFlash (Lcom/kylecorry/andromeda/camera/CameraFlash;)V
+	public abstract fun setFocus (Ljava/lang/Float;)V
+	public abstract fun setManualExposure-dnQKTGw (Lkotlin/time/Duration;Ljava/lang/Integer;)V
+	public abstract fun setStabilization (ZZ)V
+	public abstract fun setTorch (Z)V
+	public abstract fun setZoom (F)V
+}
+
+public final class com/kylecorry/andromeda/camera/ar/CalibratedCameraAnglePixelMapper : com/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper {
+	public static final field $stable I
+	public fun <init> (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;Lcom/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper;ZZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;Lcom/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAngle-sF0N4Mw (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;)J
+	public fun getPixel-fMfHy9g (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;Ljava/lang/Float;)J
+	public final fun invalidateCalibration ()V
+}
+
+public abstract interface class com/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper {
+	public abstract fun getAngle-sF0N4Mw (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;)J
+	public abstract fun getPixel-fMfHy9g (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;Ljava/lang/Float;)J
+	public static synthetic fun getPixel-fMfHy9g$default (Lcom/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper;FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;Ljava/lang/Float;ILjava/lang/Object;)J
+}
+
+public final class com/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper$DefaultImpls {
+	public static synthetic fun getPixel-fMfHy9g$default (Lcom/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper;FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;Ljava/lang/Float;ILjava/lang/Object;)J
+}
+
+public abstract interface class com/kylecorry/andromeda/camera/ar/CameraCalibrationSource {
+	public abstract fun activeArray (Z)Lcom/kylecorry/andromeda/camera/ar/ImageBounds;
+	public static synthetic fun activeArray$default (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/ar/ImageBounds;
+	public abstract fun distortionCorrection ()[F
+	public fun getCalibrationId ()Ljava/lang/String;
+	public abstract fun getSensorRotationDegrees ()I
+	public abstract fun getZoomRatio ()Ljava/lang/Float;
+	public abstract fun intrinsicCalibration (Z)[F
+	public static synthetic fun intrinsicCalibration$default (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;ZILjava/lang/Object;)[F
+}
+
+public final class com/kylecorry/andromeda/camera/ar/CameraCalibrationSource$DefaultImpls {
+	public static synthetic fun activeArray$default (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/ar/ImageBounds;
+	public static fun getCalibrationId (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;)Ljava/lang/String;
+	public static synthetic fun intrinsicCalibration$default (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;ZILjava/lang/Object;)[F
+}
+
+public final class com/kylecorry/andromeda/camera/ar/CameraCalibrationSourceKt {
+	public static final fun fieldOfView (Lcom/kylecorry/andromeda/camera/ar/CameraCalibrationSource;)Lcom/kylecorry/sol/math/geometry/Size;
+}
+
+public final class com/kylecorry/andromeda/camera/ar/ImageBounds {
+	public static final field $stable I
+	public fun <init> (FFFF)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun component3 ()F
+	public final fun component4 ()F
+	public final fun copy (FFFF)Lcom/kylecorry/andromeda/camera/ar/ImageBounds;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/camera/ar/ImageBounds;FFFFILjava/lang/Object;)Lcom/kylecorry/andromeda/camera/ar/ImageBounds;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBottom ()F
+	public final fun getCenterX ()F
+	public final fun getCenterY ()F
+	public final fun getHeight ()F
+	public final fun getLeft ()F
+	public final fun getRight ()F
+	public final fun getTop ()F
+	public final fun getWidth ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/camera/ar/LinearCameraAnglePixelMapper : com/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun getAngle-sF0N4Mw (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;)J
+	public fun getPixel-fMfHy9g (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;Ljava/lang/Float;)J
+}
+
+public final class com/kylecorry/andromeda/camera/ar/PerspectiveCameraAnglePixelMapper : com/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper {
+	public static final field $stable I
+	public fun <init> (FF)V
+	public fun getAngle-sF0N4Mw (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;)J
+	public fun getPixel-fMfHy9g (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;Ljava/lang/Float;)J
+}
+
+public final class com/kylecorry/andromeda/camera/ar/SimplePerspectiveCameraAnglePixelMapper : com/kylecorry/andromeda/camera/ar/CameraAnglePixelMapper {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun getAngle-sF0N4Mw (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;)J
+	public fun getPixel-fMfHy9g (FFLcom/kylecorry/andromeda/camera/ar/ImageBounds;Lcom/kylecorry/sol/math/geometry/Size;Ljava/lang/Float;)J
+}
+

@@ -7,14 +7,14 @@ package com.kylecorry.andromeda.preferences
  * store values with their type (Android shared preferences, in-memory maps) report the exact type; backends
  * that store everything as text report [PreferenceType.String].
  */
-fun Preferences.getAll(): Collection<Preference> {
+public fun Preferences.getAll(): Collection<Preference> {
     return keys.mapNotNull { key -> readTyped(key) }
 }
 
 /**
  * Writes the [preferences], optionally removing every preference that is not in the collection.
  */
-fun Preferences.putAll(preferences: Collection<Preference>, clearOthers: Boolean = false) {
+public fun Preferences.putAll(preferences: Collection<Preference>, clearOthers: Boolean = false) {
     if (clearOthers) {
         val keep = preferences.map { it.key }.toSet()
         keys.filterNot { it in keep }.forEach { remove(it) }

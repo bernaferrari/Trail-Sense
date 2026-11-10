@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.sense.location.filters
 
 import com.kylecorry.sol.math.filters.IFilter
 
-class GPSAltitudeFilter(
+public class GPSAltitudeFilter(
     private val filterProvider: (initialValue: Float) -> IFilter,
     private val minimumSamples: Int
 ) : GpsAltitudeEstimator {

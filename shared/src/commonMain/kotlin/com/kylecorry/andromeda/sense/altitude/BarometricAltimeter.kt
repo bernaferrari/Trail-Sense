@@ -6,9 +6,9 @@ import com.kylecorry.andromeda.sense.barometer.Barometer
 import kotlin.math.pow
 import com.kylecorry.sol.units.Pressure
 
-class BarometricAltimeter(
+public class BarometricAltimeter(
     private val barometer: Barometer,
-    var seaLevelPressure: Pressure = Pressure.hpa(1013.25f)
+    public var seaLevelPressure: Pressure = Pressure.hpa(1013.25f)
 ) : SharedSensor(), Altimeter {
 
     override fun startImpl() {

@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
 
-open class SampledColorMap(
+public open class SampledColorMap(
     samples: Map<Float, Int>,
     interpolationResolution: Float = 0.05f
 ) : ColorMap {

@@ -1,0 +1,44 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:exceptions>
+abstract fun interface com.kylecorry.andromeda.exceptions/BugReportGenerator { // com.kylecorry.andromeda.exceptions/BugReportGenerator|null[0]
+    abstract fun generate(kotlin/Throwable): kotlin/String // com.kylecorry.andromeda.exceptions/BugReportGenerator.generate|generate(kotlin.Throwable){}[0]
+}
+
+final class com.kylecorry.andromeda.exceptions/AppDetailsReport : com.kylecorry.andromeda.exceptions/BugReportGenerator { // com.kylecorry.andromeda.exceptions/AppDetailsReport|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Boolean = ...) // com.kylecorry.andromeda.exceptions/AppDetailsReport.<init>|<init>(kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+
+    final fun generate(kotlin/Throwable): kotlin/String // com.kylecorry.andromeda.exceptions/AppDetailsReport.generate|generate(kotlin.Throwable){}[0]
+}
+
+final class com.kylecorry.andromeda.exceptions/CombinedBugReport : com.kylecorry.andromeda.exceptions/BugReportGenerator { // com.kylecorry.andromeda.exceptions/CombinedBugReport|null[0]
+    constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.exceptions/BugReportGenerator>) // com.kylecorry.andromeda.exceptions/CombinedBugReport.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.exceptions.BugReportGenerator>){}[0]
+
+    final fun generate(kotlin/Throwable): kotlin/String // com.kylecorry.andromeda.exceptions/CombinedBugReport.generate|generate(kotlin.Throwable){}[0]
+}
+
+final class com.kylecorry.andromeda.exceptions/CrashReportStore { // com.kylecorry.andromeda.exceptions/CrashReportStore|null[0]
+    constructor <init>(okio/Path, com.kylecorry.andromeda.exceptions/BugReportGenerator = ..., okio/FileSystem = ...) // com.kylecorry.andromeda.exceptions/CrashReportStore.<init>|<init>(okio.Path;com.kylecorry.andromeda.exceptions.BugReportGenerator;okio.FileSystem){}[0]
+
+    final fun clearPending(kotlin/String): kotlin/Boolean // com.kylecorry.andromeda.exceptions/CrashReportStore.clearPending|clearPending(kotlin.String){}[0]
+    final fun install(): kotlin/AutoCloseable // com.kylecorry.andromeda.exceptions/CrashReportStore.install|install(){}[0]
+    final fun readPending(): kotlin/String? // com.kylecorry.andromeda.exceptions/CrashReportStore.readPending|readPending(){}[0]
+    final fun record(kotlin/Throwable) // com.kylecorry.andromeda.exceptions/CrashReportStore.record|record(kotlin.Throwable){}[0]
+}
+
+final class com.kylecorry.andromeda.exceptions/DeviceDetailsReport : com.kylecorry.andromeda.exceptions/BugReportGenerator { // com.kylecorry.andromeda.exceptions/DeviceDetailsReport|null[0]
+    constructor <init>(com.kylecorry.andromeda.core.system/DeviceInfo = ...) // com.kylecorry.andromeda.exceptions/DeviceDetailsReport.<init>|<init>(com.kylecorry.andromeda.core.system.DeviceInfo){}[0]
+
+    final fun generate(kotlin/Throwable): kotlin/String // com.kylecorry.andromeda.exceptions/DeviceDetailsReport.generate|generate(kotlin.Throwable){}[0]
+}
+
+final object com.kylecorry.andromeda.exceptions/StackTraceReport : com.kylecorry.andromeda.exceptions/BugReportGenerator { // com.kylecorry.andromeda.exceptions/StackTraceReport|null[0]
+    final fun generate(kotlin/Throwable): kotlin/String // com.kylecorry.andromeda.exceptions/StackTraceReport.generate|generate(kotlin.Throwable){}[0]
+}
+
+final fun com.kylecorry.andromeda.exceptions/installExceptionHook(kotlin/Function1<kotlin/Throwable, kotlin/Unit>): kotlin/AutoCloseable // com.kylecorry.andromeda.exceptions/installExceptionHook|installExceptionHook(kotlin.Function1<kotlin.Throwable,kotlin.Unit>){}[0]

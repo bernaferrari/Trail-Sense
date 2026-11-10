@@ -3,13 +3,13 @@ package com.kylecorry.andromeda.bitmaps
 import kotlin.math.roundToInt
 
 /** Decodes rectangular regions of an encoded image. Close the decoder when finished. */
-expect class ImageRegionDecoder : AutoCloseable {
-    constructor(bytes: ByteArray)
-    constructor(path: String)
-    val width: Int
-    val height: Int
+public expect class ImageRegionDecoder : AutoCloseable {
+    public constructor(bytes: ByteArray)
+    public constructor(path: String)
+    public val width: Int
+    public val height: Int
     /** Region coordinates use the source image's top-left origin and must be fully inside it. */
-    fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage
+    public fun decode(left: Int, top: Int, width: Int, height: Int): PixelImage
     override fun close()
 }
 
@@ -22,7 +22,7 @@ internal fun requireImageRegion(left: Int, top: Int, width: Int, height: Int, im
  * Decodes a region that may extend beyond the image, filling uncovered pixels with [background].
  * When [wrapHorizontally] is true the source repeats horizontally, including across multiple wraps.
  */
-fun ImageRegionDecoder.decodeWrappedRegion(
+public fun ImageRegionDecoder.decodeWrappedRegion(
     left: Int,
     top: Int,
     width: Int,
@@ -63,7 +63,7 @@ fun ImageRegionDecoder.decodeWrappedRegion(
 }
 
 /** Samples a pixel without decoding the whole image; returns null for coordinates outside it. */
-fun ImageRegionDecoder.samplePixel(x: Float, y: Float, interpolate: Boolean = true): Int? {
+public fun ImageRegionDecoder.samplePixel(x: Float, y: Float, interpolate: Boolean = true): Int? {
     if (!x.isFinite() || !y.isFinite() || x < 0f || y < 0f || x > width - 1 || y > height - 1) return null
     if (!interpolate) {
         val pixelX = x.roundToInt().coerceIn(0, width - 1)

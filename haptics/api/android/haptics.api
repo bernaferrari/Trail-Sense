@@ -1,0 +1,43 @@
+public final class com/kylecorry/andromeda/haptics/DeviceHapticsKt {
+	public static final fun deviceHaptics ()Lcom/kylecorry/andromeda/haptics/HapticMotor;
+}
+
+public final class com/kylecorry/andromeda/haptics/DialHapticFeedback {
+	public fun <init> (Lcom/kylecorry/andromeda/haptics/HapticMotor;IF)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/haptics/HapticMotor;IFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAngle ()F
+	public final fun setAngle (F)V
+	public final fun stop ()V
+}
+
+public final class com/kylecorry/andromeda/haptics/HapticFeedbackType : java/lang/Enum {
+	public static final field Click Lcom/kylecorry/andromeda/haptics/HapticFeedbackType;
+	public static final field DoubleClick Lcom/kylecorry/andromeda/haptics/HapticFeedbackType;
+	public static final field HeavyClick Lcom/kylecorry/andromeda/haptics/HapticFeedbackType;
+	public static final field Tick Lcom/kylecorry/andromeda/haptics/HapticFeedbackType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/haptics/HapticFeedbackType;
+	public static fun values ()[Lcom/kylecorry/andromeda/haptics/HapticFeedbackType;
+}
+
+public abstract interface class com/kylecorry/andromeda/haptics/HapticMotor {
+	public abstract fun feedback (Lcom/kylecorry/andromeda/haptics/HapticFeedbackType;)V
+	public abstract fun interval-NqJ4yvY (JJI)V
+	public static synthetic fun interval-NqJ4yvY$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;JJIILjava/lang/Object;)V
+	public abstract fun isAvailable ()Z
+	public abstract fun off ()V
+	public abstract fun on (I)V
+	public static synthetic fun on$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;IILjava/lang/Object;)V
+	public abstract fun once-VtjQ1oo (JI)V
+	public static synthetic fun once-VtjQ1oo$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;JIILjava/lang/Object;)V
+	public abstract fun pattern (Ljava/util/List;Ljava/util/List;Z)V
+	public static synthetic fun pattern$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;Ljava/util/List;Ljava/util/List;ZILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/haptics/HapticMotor$DefaultImpls {
+	public static synthetic fun interval-NqJ4yvY$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;JJIILjava/lang/Object;)V
+	public static synthetic fun on$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;IILjava/lang/Object;)V
+	public static synthetic fun once-VtjQ1oo$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;JIILjava/lang/Object;)V
+	public static synthetic fun pattern$default (Lcom/kylecorry/andromeda/haptics/HapticMotor;Ljava/util/List;Ljava/util/List;ZILjava/lang/Object;)V
+}
+

@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Badge(
+public fun Badge(
     text: String?,
     modifier: Modifier = Modifier,
     icon: @Composable (() -> Unit)? = null,

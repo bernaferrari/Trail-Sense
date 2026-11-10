@@ -1,5 +1,5 @@
 package com.kylecorry.andromeda.clipboard
 
-fun interface ClipboardWriter {
-    fun copy(text: String)
+public fun interface ClipboardWriter {
+    public fun copy(text: String)
 }

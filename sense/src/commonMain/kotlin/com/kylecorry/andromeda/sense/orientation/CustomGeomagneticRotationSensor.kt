@@ -12,7 +12,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /** Computes an east-north-up attitude from gravity and the magnetic field. */
-class CustomGeomagneticRotationSensor(
+public class CustomGeomagneticRotationSensor(
     private val magnetometer: Magnetometer,
     private val accelerometer: Accelerometer,
     private val onlyUseMagnetometerQuality: Boolean = false,

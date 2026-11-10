@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
+public actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
     private val mutex = Mutex()
     private val line: SourceDataLine
     init {
@@ -19,7 +19,7 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
         line.start()
     }
 
-    actual suspend fun write(samples: ShortArray) = mutex.withLock {
+    public actual suspend fun write(samples: ShortArray): Unit = mutex.withLock {
         check(line.isOpen) { "PCM output is closed" }
         require(samples.size <= Int.MAX_VALUE / 2)
         val bytes = ByteArray(samples.size * 2)
@@ -37,7 +37,7 @@ actual class PcmSpeaker actual constructor(sampleRate: Int) : AutoCloseable {
         }
     }
 
-    actual suspend fun drain() = mutex.withLock {
+    public actual suspend fun drain(): Unit = mutex.withLock {
         check(line.isOpen) { "PCM output is closed" }
         withContext(Dispatchers.IO) { line.drain() }
     }

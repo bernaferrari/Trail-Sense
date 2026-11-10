@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.signal
 import com.kylecorry.andromeda.core.sensors.Quality
 import kotlin.time.Instant
 
-data class CellSignal(
+public data class CellSignal(
     val id: String,
     val strength: Float,
     val dbm: Int,
@@ -15,7 +15,7 @@ data class CellSignal(
     val timingDistanceErrorMeters: Float? = null
 )
 
-data class CellNetworkQuality(
+public data class CellNetworkQuality(
     val network: CellNetwork,
     val quality: Quality
 )

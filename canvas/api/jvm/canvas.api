@@ -1,0 +1,4 @@
+public final class com/kylecorry/andromeda/canvas/CanvasKt {
+	public static final fun Drawing (Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V
+}
+

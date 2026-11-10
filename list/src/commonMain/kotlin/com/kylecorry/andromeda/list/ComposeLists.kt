@@ -16,7 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun <T> ItemList(
+public fun <T> ItemList(
     items: List<T>, modifier: Modifier = Modifier, state: LazyListState = rememberLazyListState(),
     horizontal: Boolean = false, reverseLayout: Boolean = false, scrollEnabled: Boolean = true,
     key: ((T) -> Any)? = null, separator: (@Composable () -> Unit)? = null,
@@ -33,7 +33,7 @@ fun <T> ItemList(
 }
 
 @Composable
-fun <T> ItemGrid(
+public fun <T> ItemGrid(
     items: List<T>, columns: Int, modifier: Modifier = Modifier, state: LazyGridState = rememberLazyGridState(),
     horizontal: Boolean = false, reverseLayout: Boolean = false, scrollEnabled: Boolean = true,
     key: ((T) -> Any)? = null, span: (T) -> Int = { 1 }, itemContent: @Composable (T) -> Unit

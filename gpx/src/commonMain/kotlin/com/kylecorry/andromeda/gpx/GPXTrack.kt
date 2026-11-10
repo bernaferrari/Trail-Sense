@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.gpx
 
 
-data class GPXTrack(
+public data class GPXTrack(
     val name: String? = null,
     val type: String? = null,
     val id: Long? = null,

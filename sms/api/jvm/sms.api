@@ -1,0 +1,10 @@
+public final class com/kylecorry/andromeda/sms/DirectSmsJvmKt {
+	public static final fun getDirectSmsSupported ()Z
+	public static final fun incomingSms ()Lkotlinx/coroutines/flow/Flow;
+	public static final fun sendSms (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/sms/SmsComposer {
+	public abstract fun compose (Ljava/lang/String;Ljava/lang/String;)V
+}
+

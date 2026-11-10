@@ -3,104 +3,104 @@ package com.kylecorry.andromeda.geojson
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 
-data class GeoJsonPosition(val x: Double, val y: Double, val z: Double? = null) {
-    val coordinate
+public data class GeoJsonPosition(val x: Double, val y: Double, val z: Double? = null) {
+    public val coordinate: Coordinate
         get() = Coordinate(y, x)
 
-    val altitude
+    public val altitude: Distance?
         get() = z?.let { Distance.meters(it.toFloat()) }
 }
 
-interface GeoJsonGeometry : GeoJsonObject {
-    companion object {
+public interface GeoJsonGeometry : GeoJsonObject {
+    public companion object {
         internal const val FIELD_COORDINATES = "coordinates"
         internal const val FIELD_BBOX = "bbox"
     }
 }
 
-data class GeoJsonPoint(
+public data class GeoJsonPoint(
     val point: GeoJsonPosition?,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) :
     GeoJsonGeometry {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    companion object {
-        const val TYPE = "Point"
+    public companion object {
+        public const val TYPE: String = "Point"
     }
 }
 
-data class GeoJsonLineString(
+public data class GeoJsonLineString(
     val line: List<GeoJsonPosition>?,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonGeometry {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    companion object {
-        const val TYPE = "LineString"
+    public companion object {
+        public const val TYPE: String = "LineString"
     }
 }
 
-data class GeoJsonPolygon(
+public data class GeoJsonPolygon(
     val polygon: List<List<GeoJsonPosition>>?,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonGeometry {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    fun isHole(index: Int): Boolean {
+    public fun isHole(index: Int): Boolean {
         return isHole(polygon, index)
     }
 
-    companion object {
-        const val TYPE = "Polygon"
+    public companion object {
+        public const val TYPE: String = "Polygon"
     }
 }
 
-data class GeoJsonMultiPoint(
+public data class GeoJsonMultiPoint(
     val points: List<GeoJsonPosition>?,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonGeometry {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    companion object {
-        const val TYPE = "MultiPoint"
+    public companion object {
+        public const val TYPE: String = "MultiPoint"
     }
 }
 
-data class GeoJsonMultiLineString(
+public data class GeoJsonMultiLineString(
     val lines: List<List<GeoJsonPosition>>?,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonGeometry {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    companion object {
-        const val TYPE = "MultiLineString"
+    public companion object {
+        public const val TYPE: String = "MultiLineString"
     }
 }
 
-data class GeoJsonMultiPolygon(
+public data class GeoJsonMultiPolygon(
     val polygons: List<List<List<GeoJsonPosition>>>?,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonGeometry {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    fun isHole(polygonIndex: Int, linearRingIndex: Int): Boolean {
+    public fun isHole(polygonIndex: Int, linearRingIndex: Int): Boolean {
         return isHole(polygons?.getOrNull(polygonIndex), linearRingIndex)
     }
 
-    companion object {
-        const val TYPE = "MultiPolygon"
+    public companion object {
+        public const val TYPE: String = "MultiPolygon"
     }
 }
 
-data class GeoJsonGeometryCollection(
+public data class GeoJsonGeometryCollection(
     val geometries: List<GeoJsonGeometry>,
     override val boundingBox: GeoJsonBoundingBox? = null
 ) : GeoJsonGeometry {
-    override val type = TYPE
+    override val type: String = TYPE
 
-    companion object {
-        const val TYPE = "GeometryCollection"
+    public companion object {
+        public const val TYPE: String = "GeometryCollection"
         internal const val FIELD_GEOMETRIES = "geometries"
     }
 

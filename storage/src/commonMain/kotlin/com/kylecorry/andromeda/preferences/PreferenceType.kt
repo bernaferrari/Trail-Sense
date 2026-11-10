@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.preferences
 
-enum class PreferenceType {
+public enum class PreferenceType {
     Int,
     Boolean,
     String,
@@ -8,7 +8,7 @@ enum class PreferenceType {
     Long
 }
 
-fun getPreferenceType(value: Any?): PreferenceType? {
+public fun getPreferenceType(value: Any?): PreferenceType? {
     return when (value) {
         is String -> PreferenceType.String
         is Int -> PreferenceType.Int

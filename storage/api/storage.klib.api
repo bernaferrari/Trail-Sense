@@ -1,0 +1,200 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:storage>
+final enum class com.kylecorry.andromeda.preferences/PreferenceType : kotlin/Enum<com.kylecorry.andromeda.preferences/PreferenceType> { // com.kylecorry.andromeda.preferences/PreferenceType|null[0]
+    enum entry Boolean // com.kylecorry.andromeda.preferences/PreferenceType.Boolean|null[0]
+    enum entry Float // com.kylecorry.andromeda.preferences/PreferenceType.Float|null[0]
+    enum entry Int // com.kylecorry.andromeda.preferences/PreferenceType.Int|null[0]
+    enum entry Long // com.kylecorry.andromeda.preferences/PreferenceType.Long|null[0]
+    enum entry String // com.kylecorry.andromeda.preferences/PreferenceType.String|null[0]
+
+    final val entries // com.kylecorry.andromeda.preferences/PreferenceType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.preferences/PreferenceType> // com.kylecorry.andromeda.preferences/PreferenceType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.preferences/PreferenceType // com.kylecorry.andromeda.preferences/PreferenceType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.preferences/PreferenceType> // com.kylecorry.andromeda.preferences/PreferenceType.values|values#static(){}[0]
+}
+
+final class <#A: kotlin/Any?> com.kylecorry.andromeda.preferences/IntEnumPreference { // com.kylecorry.andromeda.preferences/IntEnumPreference|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String, kotlin.collections/Map<kotlin/Int, #A>, #A, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/IntEnumPreference.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String;kotlin.collections.Map<kotlin.Int,1:0>;1:0;kotlin.Boolean){}[0]
+
+    final fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): #A // com.kylecorry.andromeda.preferences/IntEnumPreference.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+    final fun setValue(kotlin/Any?, kotlin.reflect/KProperty<*>, #A) // com.kylecorry.andromeda.preferences/IntEnumPreference.setValue|setValue(kotlin.Any?;kotlin.reflect.KProperty<*>;1:0){}[0]
+}
+
+final class <#A: kotlin/Any?> com.kylecorry.andromeda.preferences/StringEnumPreference { // com.kylecorry.andromeda.preferences/StringEnumPreference|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String, kotlin.collections/Map<kotlin/String, #A>, #A, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/StringEnumPreference.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String;kotlin.collections.Map<kotlin.String,1:0>;1:0;kotlin.Boolean){}[0]
+
+    final fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): #A // com.kylecorry.andromeda.preferences/StringEnumPreference.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+    final fun setValue(kotlin/Any?, kotlin.reflect/KProperty<*>, #A) // com.kylecorry.andromeda.preferences/StringEnumPreference.setValue|setValue(kotlin.Any?;kotlin.reflect.KProperty<*>;1:0){}[0]
+}
+
+final class com.kylecorry.andromeda.files/FileStorage { // com.kylecorry.andromeda.files/FileStorage|null[0]
+    constructor <init>(okio/Path, okio/FileSystem = ...) // com.kylecorry.andromeda.files/FileStorage.<init>|<init>(okio.Path;okio.FileSystem){}[0]
+
+    final val fileSystem // com.kylecorry.andromeda.files/FileStorage.fileSystem|{}fileSystem[0]
+        final fun <get-fileSystem>(): okio/FileSystem // com.kylecorry.andromeda.files/FileStorage.fileSystem.<get-fileSystem>|<get-fileSystem>(){}[0]
+    final val root // com.kylecorry.andromeda.files/FileStorage.root|{}root[0]
+        final fun <get-root>(): okio/Path // com.kylecorry.andromeda.files/FileStorage.root.<get-root>|<get-root>(){}[0]
+
+    final fun copy(kotlin/String, kotlin/String) // com.kylecorry.andromeda.files/FileStorage.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun createDirectory(kotlin/String) // com.kylecorry.andromeda.files/FileStorage.createDirectory|createDirectory(kotlin.String){}[0]
+    final fun createFile(kotlin/String) // com.kylecorry.andromeda.files/FileStorage.createFile|createFile(kotlin.String){}[0]
+    final fun delete(kotlin/String, kotlin/Boolean = ...) // com.kylecorry.andromeda.files/FileStorage.delete|delete(kotlin.String;kotlin.Boolean){}[0]
+    final fun exists(kotlin/String): kotlin/Boolean // com.kylecorry.andromeda.files/FileStorage.exists|exists(kotlin.String){}[0]
+    final fun list(kotlin/String = ...): kotlin.collections/List<okio/Path> // com.kylecorry.andromeda.files/FileStorage.list|list(kotlin.String){}[0]
+    final fun metadata(kotlin/String): okio/FileMetadata? // com.kylecorry.andromeda.files/FileStorage.metadata|metadata(kotlin.String){}[0]
+    final fun move(kotlin/String, kotlin/String) // com.kylecorry.andromeda.files/FileStorage.move|move(kotlin.String;kotlin.String){}[0]
+    final fun read(kotlin/String): kotlin/ByteArray // com.kylecorry.andromeda.files/FileStorage.read|read(kotlin.String){}[0]
+    final fun readText(kotlin/String): kotlin/String // com.kylecorry.andromeda.files/FileStorage.readText|readText(kotlin.String){}[0]
+    final fun sink(kotlin/String, kotlin/Boolean = ...): okio/Sink // com.kylecorry.andromeda.files/FileStorage.sink|sink(kotlin.String;kotlin.Boolean){}[0]
+    final fun source(kotlin/String): okio/Source // com.kylecorry.andromeda.files/FileStorage.source|source(kotlin.String){}[0]
+    final fun write(kotlin/String, kotlin/ByteArray, kotlin/Boolean = ...) // com.kylecorry.andromeda.files/FileStorage.write|write(kotlin.String;kotlin.ByteArray;kotlin.Boolean){}[0]
+    final fun writeText(kotlin/String, kotlin/String, kotlin/Boolean = ...) // com.kylecorry.andromeda.files/FileStorage.writeText|writeText(kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/BooleanPreference { // com.kylecorry.andromeda.preferences/BooleanPreference|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String, kotlin/Boolean, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/BooleanPreference.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): kotlin/Boolean // com.kylecorry.andromeda.preferences/BooleanPreference.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+    final fun setValue(kotlin/Any?, kotlin.reflect/KProperty<*>, kotlin/Boolean) // com.kylecorry.andromeda.preferences/BooleanPreference.setValue|setValue(kotlin.Any?;kotlin.reflect.KProperty<*>;kotlin.Boolean){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/DurationPreference { // com.kylecorry.andromeda.preferences/DurationPreference|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String, kotlin.time/Duration, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/DurationPreference.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String;kotlin.time.Duration;kotlin.Boolean){}[0]
+
+    final fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): kotlin.time/Duration // com.kylecorry.andromeda.preferences/DurationPreference.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+    final fun setValue(kotlin/Any?, kotlin.reflect/KProperty<*>, kotlin.time/Duration) // com.kylecorry.andromeda.preferences/DurationPreference.setValue|setValue(kotlin.Any?;kotlin.reflect.KProperty<*>;kotlin.time.Duration){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/FloatPreference { // com.kylecorry.andromeda.preferences/FloatPreference|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String, kotlin/Float, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/FloatPreference.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String;kotlin.Float;kotlin.Boolean){}[0]
+
+    final fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): kotlin/Float // com.kylecorry.andromeda.preferences/FloatPreference.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+    final fun setValue(kotlin/Any?, kotlin.reflect/KProperty<*>, kotlin/Float) // com.kylecorry.andromeda.preferences/FloatPreference.setValue|setValue(kotlin.Any?;kotlin.reflect.KProperty<*>;kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/IntPreference { // com.kylecorry.andromeda.preferences/IntPreference|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String, kotlin/Int, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/IntPreference.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String;kotlin.Int;kotlin.Boolean){}[0]
+
+    final fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): kotlin/Int // com.kylecorry.andromeda.preferences/IntPreference.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+    final fun setValue(kotlin/Any?, kotlin.reflect/KProperty<*>, kotlin/Int) // com.kylecorry.andromeda.preferences/IntPreference.setValue|setValue(kotlin.Any?;kotlin.reflect.KProperty<*>;kotlin.Int){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/Preference { // com.kylecorry.andromeda.preferences/Preference|null[0]
+    constructor <init>(kotlin/String, com.kylecorry.andromeda.preferences/PreferenceType, kotlin/Any?) // com.kylecorry.andromeda.preferences/Preference.<init>|<init>(kotlin.String;com.kylecorry.andromeda.preferences.PreferenceType;kotlin.Any?){}[0]
+
+    final val key // com.kylecorry.andromeda.preferences/Preference.key|{}key[0]
+        final fun <get-key>(): kotlin/String // com.kylecorry.andromeda.preferences/Preference.key.<get-key>|<get-key>(){}[0]
+    final val type // com.kylecorry.andromeda.preferences/Preference.type|{}type[0]
+        final fun <get-type>(): com.kylecorry.andromeda.preferences/PreferenceType // com.kylecorry.andromeda.preferences/Preference.type.<get-type>|<get-type>(){}[0]
+    final val value // com.kylecorry.andromeda.preferences/Preference.value|{}value[0]
+        final fun <get-value>(): kotlin/Any? // com.kylecorry.andromeda.preferences/Preference.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.preferences/Preference.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.preferences/PreferenceType // com.kylecorry.andromeda.preferences/Preference.component2|component2(){}[0]
+    final fun component3(): kotlin/Any? // com.kylecorry.andromeda.preferences/Preference.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., com.kylecorry.andromeda.preferences/PreferenceType = ..., kotlin/Any? = ...): com.kylecorry.andromeda.preferences/Preference // com.kylecorry.andromeda.preferences/Preference.copy|copy(kotlin.String;com.kylecorry.andromeda.preferences.PreferenceType;kotlin.Any?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.preferences/Preference.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.preferences/Preference.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.preferences/Preference.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/Preferences { // com.kylecorry.andromeda.preferences/Preferences|null[0]
+    constructor <init>(com.russhwolf.settings/Settings = ..., kotlin/Function1<kotlin/Function1<kotlin/String, kotlin/Unit>, kotlin/Function0<kotlin/Unit>>? = ...) // com.kylecorry.andromeda.preferences/Preferences.<init>|<init>(com.russhwolf.settings.Settings;kotlin.Function1<kotlin.Function1<kotlin.String,kotlin.Unit>,kotlin.Function0<kotlin.Unit>>?){}[0]
+
+    final val keys // com.kylecorry.andromeda.preferences/Preferences.keys|{}keys[0]
+        final fun <get-keys>(): kotlin.collections/Set<kotlin/String> // com.kylecorry.andromeda.preferences/Preferences.keys.<get-keys>|<get-keys>(){}[0]
+    final val settings // com.kylecorry.andromeda.preferences/Preferences.settings|{}settings[0]
+        final fun <get-settings>(): com.russhwolf.settings/Settings // com.kylecorry.andromeda.preferences/Preferences.settings.<get-settings>|<get-settings>(){}[0]
+
+    final fun clear() // com.kylecorry.andromeda.preferences/Preferences.clear|clear(){}[0]
+    final fun contains(kotlin/String): kotlin/Boolean // com.kylecorry.andromeda.preferences/Preferences.contains|contains(kotlin.String){}[0]
+    final fun getBoolean(kotlin/String): kotlin/Boolean? // com.kylecorry.andromeda.preferences/Preferences.getBoolean|getBoolean(kotlin.String){}[0]
+    final fun getCoordinate(kotlin/String): com.kylecorry.sol.units/Coordinate? // com.kylecorry.andromeda.preferences/Preferences.getCoordinate|getCoordinate(kotlin.String){}[0]
+    final fun getDouble(kotlin/String): kotlin/Double? // com.kylecorry.andromeda.preferences/Preferences.getDouble|getDouble(kotlin.String){}[0]
+    final fun getDuration(kotlin/String): kotlin.time/Duration? // com.kylecorry.andromeda.preferences/Preferences.getDuration|getDuration(kotlin.String){}[0]
+    final fun getFloat(kotlin/String): kotlin/Float? // com.kylecorry.andromeda.preferences/Preferences.getFloat|getFloat(kotlin.String){}[0]
+    final fun getInstant(kotlin/String): kotlin.time/Instant? // com.kylecorry.andromeda.preferences/Preferences.getInstant|getInstant(kotlin.String){}[0]
+    final fun getInt(kotlin/String): kotlin/Int? // com.kylecorry.andromeda.preferences/Preferences.getInt|getInt(kotlin.String){}[0]
+    final fun getLocalDate(kotlin/String): kotlinx.datetime/LocalDate? // com.kylecorry.andromeda.preferences/Preferences.getLocalDate|getLocalDate(kotlin.String){}[0]
+    final fun getLong(kotlin/String): kotlin/Long? // com.kylecorry.andromeda.preferences/Preferences.getLong|getLong(kotlin.String){}[0]
+    final fun getString(kotlin/String): kotlin/String? // com.kylecorry.andromeda.preferences/Preferences.getString|getString(kotlin.String){}[0]
+    final fun observeChanges(): kotlinx.coroutines.flow/Flow<kotlin/String> // com.kylecorry.andromeda.preferences/Preferences.observeChanges|observeChanges(){}[0]
+    final fun putBoolean(kotlin/String, kotlin/Boolean) // com.kylecorry.andromeda.preferences/Preferences.putBoolean|putBoolean(kotlin.String;kotlin.Boolean){}[0]
+    final fun putCoordinate(kotlin/String, com.kylecorry.sol.units/Coordinate) // com.kylecorry.andromeda.preferences/Preferences.putCoordinate|putCoordinate(kotlin.String;com.kylecorry.sol.units.Coordinate){}[0]
+    final fun putDouble(kotlin/String, kotlin/Double) // com.kylecorry.andromeda.preferences/Preferences.putDouble|putDouble(kotlin.String;kotlin.Double){}[0]
+    final fun putDuration(kotlin/String, kotlin.time/Duration) // com.kylecorry.andromeda.preferences/Preferences.putDuration|putDuration(kotlin.String;kotlin.time.Duration){}[0]
+    final fun putFloat(kotlin/String, kotlin/Float) // com.kylecorry.andromeda.preferences/Preferences.putFloat|putFloat(kotlin.String;kotlin.Float){}[0]
+    final fun putInstant(kotlin/String, kotlin.time/Instant) // com.kylecorry.andromeda.preferences/Preferences.putInstant|putInstant(kotlin.String;kotlin.time.Instant){}[0]
+    final fun putInt(kotlin/String, kotlin/Int) // com.kylecorry.andromeda.preferences/Preferences.putInt|putInt(kotlin.String;kotlin.Int){}[0]
+    final fun putLocalDate(kotlin/String, kotlinx.datetime/LocalDate) // com.kylecorry.andromeda.preferences/Preferences.putLocalDate|putLocalDate(kotlin.String;kotlinx.datetime.LocalDate){}[0]
+    final fun putLong(kotlin/String, kotlin/Long) // com.kylecorry.andromeda.preferences/Preferences.putLong|putLong(kotlin.String;kotlin.Long){}[0]
+    final fun putString(kotlin/String, kotlin/String) // com.kylecorry.andromeda.preferences/Preferences.putString|putString(kotlin.String;kotlin.String){}[0]
+    final fun remove(kotlin/String) // com.kylecorry.andromeda.preferences/Preferences.remove|remove(kotlin.String){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/SettingsMigration { // com.kylecorry.andromeda.preferences/SettingsMigration|null[0]
+    constructor <init>(kotlin/Int, kotlin.coroutines/SuspendFunction1<com.kylecorry.andromeda.preferences/Preferences, kotlin/Unit>) // com.kylecorry.andromeda.preferences/SettingsMigration.<init>|<init>(kotlin.Int;kotlin.coroutines.SuspendFunction1<com.kylecorry.andromeda.preferences.Preferences,kotlin.Unit>){}[0]
+
+    final val action // com.kylecorry.andromeda.preferences/SettingsMigration.action|{}action[0]
+        final fun <get-action>(): kotlin.coroutines/SuspendFunction1<com.kylecorry.andromeda.preferences/Preferences, kotlin/Unit> // com.kylecorry.andromeda.preferences/SettingsMigration.action.<get-action>|<get-action>(){}[0]
+    final val fromVersion // com.kylecorry.andromeda.preferences/SettingsMigration.fromVersion|{}fromVersion[0]
+        final fun <get-fromVersion>(): kotlin/Int // com.kylecorry.andromeda.preferences/SettingsMigration.fromVersion.<get-fromVersion>|<get-fromVersion>(){}[0]
+
+    final fun component1(): kotlin/Int // com.kylecorry.andromeda.preferences/SettingsMigration.component1|component1(){}[0]
+    final fun component2(): kotlin.coroutines/SuspendFunction1<com.kylecorry.andromeda.preferences/Preferences, kotlin/Unit> // com.kylecorry.andromeda.preferences/SettingsMigration.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin.coroutines/SuspendFunction1<com.kylecorry.andromeda.preferences/Preferences, kotlin/Unit> = ...): com.kylecorry.andromeda.preferences/SettingsMigration // com.kylecorry.andromeda.preferences/SettingsMigration.copy|copy(kotlin.Int;kotlin.coroutines.SuspendFunction1<com.kylecorry.andromeda.preferences.Preferences,kotlin.Unit>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.preferences/SettingsMigration.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.preferences/SettingsMigration.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.preferences/SettingsMigration.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/SettingsMigrator { // com.kylecorry.andromeda.preferences/SettingsMigrator|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String) // com.kylecorry.andromeda.preferences/SettingsMigrator.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String){}[0]
+
+    final suspend fun migrate(kotlin/Int, kotlin.collections/List<com.kylecorry.andromeda.preferences/SettingsMigration>) // com.kylecorry.andromeda.preferences/SettingsMigrator.migrate|migrate(kotlin.Int;kotlin.collections.List<com.kylecorry.andromeda.preferences.SettingsMigration>){}[0]
+}
+
+final class com.kylecorry.andromeda.preferences/StringPreference { // com.kylecorry.andromeda.preferences/StringPreference|null[0]
+    constructor <init>(com.kylecorry.andromeda.preferences/Preferences, kotlin/String, kotlin/String, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/StringPreference.<init>|<init>(com.kylecorry.andromeda.preferences.Preferences;kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+
+    final fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): kotlin/String // com.kylecorry.andromeda.preferences/StringPreference.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+    final fun setValue(kotlin/Any?, kotlin.reflect/KProperty<*>, kotlin/String) // com.kylecorry.andromeda.preferences/StringPreference.setValue|setValue(kotlin.Any?;kotlin.reflect.KProperty<*>;kotlin.String){}[0]
+}
+
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/boolean(kotlin/String, kotlin/Boolean = ..., kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin/Boolean> // com.kylecorry.andromeda.preferences/boolean|boolean@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.Boolean;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/coordinate(kotlin/String, com.kylecorry.sol.units/Coordinate, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, com.kylecorry.sol.units/Coordinate> // com.kylecorry.andromeda.preferences/coordinate|coordinate@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;com.kylecorry.sol.units.Coordinate;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/double(kotlin/String, kotlin/Double = ..., kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin/Double> // com.kylecorry.andromeda.preferences/double|double@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.Double;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/duration(kotlin/String, kotlin.time/Duration, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin.time/Duration> // com.kylecorry.andromeda.preferences/duration|duration@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.time.Duration;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/float(kotlin/String, kotlin/Float = ..., kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin/Float> // com.kylecorry.andromeda.preferences/float|float@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.Float;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/getAll(): kotlin.collections/Collection<com.kylecorry.andromeda.preferences/Preference> // com.kylecorry.andromeda.preferences/getAll|getAll@com.kylecorry.andromeda.preferences.Preferences(){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/getIntArray(kotlin/String): kotlin.collections/List<kotlin/Int>? // com.kylecorry.andromeda.preferences/getIntArray|getIntArray@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/getLongArray(kotlin/String): kotlin.collections/List<kotlin/Long>? // com.kylecorry.andromeda.preferences/getLongArray|getLongArray@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/instant(kotlin/String, kotlin.time/Instant, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin.time/Instant> // com.kylecorry.andromeda.preferences/instant|instant@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.time.Instant;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/int(kotlin/String, kotlin/Int = ..., kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin/Int> // com.kylecorry.andromeda.preferences/int|int@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.Int;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/localDate(kotlin/String, kotlinx.datetime/LocalDate, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlinx.datetime/LocalDate> // com.kylecorry.andromeda.preferences/localDate|localDate@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlinx.datetime.LocalDate;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/long(kotlin/String, kotlin/Long = ..., kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin/Long> // com.kylecorry.andromeda.preferences/long|long@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.Long;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/observeBoolean(kotlin/String): kotlinx.coroutines.flow/Flow<kotlin/Boolean?> // com.kylecorry.andromeda.preferences/observeBoolean|observeBoolean@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/observeDouble(kotlin/String): kotlinx.coroutines.flow/Flow<kotlin/Double?> // com.kylecorry.andromeda.preferences/observeDouble|observeDouble@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/observeFloat(kotlin/String): kotlinx.coroutines.flow/Flow<kotlin/Float?> // com.kylecorry.andromeda.preferences/observeFloat|observeFloat@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/observeInt(kotlin/String): kotlinx.coroutines.flow/Flow<kotlin/Int?> // com.kylecorry.andromeda.preferences/observeInt|observeInt@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/observeLong(kotlin/String): kotlinx.coroutines.flow/Flow<kotlin/Long?> // com.kylecorry.andromeda.preferences/observeLong|observeLong@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/observeString(kotlin/String): kotlinx.coroutines.flow/Flow<kotlin/String?> // com.kylecorry.andromeda.preferences/observeString|observeString@com.kylecorry.andromeda.preferences.Preferences(kotlin.String){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/putAll(kotlin.collections/Collection<com.kylecorry.andromeda.preferences/Preference>, kotlin/Boolean = ...) // com.kylecorry.andromeda.preferences/putAll|putAll@com.kylecorry.andromeda.preferences.Preferences(kotlin.collections.Collection<com.kylecorry.andromeda.preferences.Preference>;kotlin.Boolean){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/putIntArray(kotlin/String, kotlin.collections/List<kotlin/Int>) // com.kylecorry.andromeda.preferences/putIntArray|putIntArray@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.collections.List<kotlin.Int>){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/putLongArray(kotlin/String, kotlin.collections/List<kotlin/Long>) // com.kylecorry.andromeda.preferences/putLongArray|putLongArray@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.collections.List<kotlin.Long>){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/putOrRemoveCoordinate(kotlin/String, com.kylecorry.sol.units/Coordinate?) // com.kylecorry.andromeda.preferences/putOrRemoveCoordinate|putOrRemoveCoordinate@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;com.kylecorry.sol.units.Coordinate?){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/putOrRemoveFloat(kotlin/String, kotlin/Float?) // com.kylecorry.andromeda.preferences/putOrRemoveFloat|putOrRemoveFloat@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.Float?){}[0]
+final fun (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/string(kotlin/String, kotlin/String = ..., kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, kotlin/String> // com.kylecorry.andromeda.preferences/string|string@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+final fun <#A: kotlin/Any> (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/intMapping(kotlin/String, #A, kotlin.collections/Map<kotlin/Int, #A>, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, #A> // com.kylecorry.andromeda.preferences/intMapping|intMapping@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;0:0;kotlin.collections.Map<kotlin.Int,0:0>;kotlin.Boolean){0§<kotlin.Any>}[0]
+final fun <#A: kotlin/Any> (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/stringMapping(kotlin/String, #A, kotlin.collections/Map<kotlin/String, #A>, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, #A> // com.kylecorry.andromeda.preferences/stringMapping|stringMapping@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;0:0;kotlin.collections.Map<kotlin.String,0:0>;kotlin.Boolean){0§<kotlin.Any>}[0]
+final fun <#A: kotlin/Any?, #B: kotlin/Any?> (kotlin.collections/Map<#A, #B>).com.kylecorry.andromeda.preferences/changes(kotlin.collections/Map<#A, #B>): kotlin.collections/Collection<#A> // com.kylecorry.andromeda.preferences/changes|changes@kotlin.collections.Map<0:0,0:1>(kotlin.collections.Map<0:0,0:1>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/value(kotlin/String, #A, kotlin/Function2<com.kylecorry.andromeda.preferences/Preferences, kotlin/String, #A?>, kotlin/Function3<com.kylecorry.andromeda.preferences/Preferences, kotlin/String, #A, kotlin/Unit>, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, #A> // com.kylecorry.andromeda.preferences/value|value@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;0:0;kotlin.Function2<com.kylecorry.andromeda.preferences.Preferences,kotlin.String,0:0?>;kotlin.Function3<com.kylecorry.andromeda.preferences.Preferences,kotlin.String,0:0,kotlin.Unit>;kotlin.Boolean){0§<kotlin.Any?>}[0]
+final fun com.kylecorry.andromeda.preferences/getPreferenceType(kotlin/Any?): com.kylecorry.andromeda.preferences/PreferenceType? // com.kylecorry.andromeda.preferences/getPreferenceType|getPreferenceType(kotlin.Any?){}[0]
+final inline fun <#A: reified kotlin/Enum<#A>> (com.kylecorry.andromeda.preferences/Preferences).com.kylecorry.andromeda.preferences/enum(kotlin/String, #A, kotlin/Boolean = ...): kotlin.properties/ReadWriteProperty<kotlin/Any?, #A> // com.kylecorry.andromeda.preferences/enum|enum@com.kylecorry.andromeda.preferences.Preferences(kotlin.String;0:0;kotlin.Boolean){0§<kotlin.Enum<0:0>>}[0]

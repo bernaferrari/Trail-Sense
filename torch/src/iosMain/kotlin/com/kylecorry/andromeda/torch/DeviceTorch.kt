@@ -1,3 +1,3 @@
 package com.kylecorry.andromeda.torch
 
-actual fun deviceTorch(): Torch = IosTorch()
+public actual fun deviceTorch(): Torch = IosTorch()

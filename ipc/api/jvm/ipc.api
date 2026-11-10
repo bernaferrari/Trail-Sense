@@ -1,0 +1,129 @@
+public abstract interface class com/kylecorry/andromeda/ipc/IpcClient {
+	public abstract fun send (Ljava/lang/String;Lcom/kylecorry/andromeda/ipc/IpcRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcRequest {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;[B)V
+	public synthetic fun <init> (Ljava/util/Map;[BILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getPayload ()[B
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcResponse {
+	public fun <init> (ILjava/util/Map;[B)V
+	public synthetic fun <init> (ILjava/util/Map;[BILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCode ()I
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getPayload ()[B
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcRouter : com/kylecorry/andromeda/ipc/IpcClient {
+	public fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/util/Map;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun send (Ljava/lang/String;Lcom/kylecorry/andromeda/ipc/IpcRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcRouterKt {
+	public static final fun send (Lcom/kylecorry/andromeda/ipc/IpcClient;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/kylecorry/andromeda/ipc/IpcValue {
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Bool : com/kylecorry/andromeda/ipc/IpcValue {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/kylecorry/andromeda/ipc/IpcValue$Bool;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/ipc/IpcValue$Bool;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/ipc/IpcValue$Bool;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Bytes : com/kylecorry/andromeda/ipc/IpcValue {
+	public fun <init> ([B)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()[B
+	public fun hashCode ()I
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Float32 : com/kylecorry/andromeda/ipc/IpcValue {
+	public fun <init> (F)V
+	public final fun component1 ()F
+	public final fun copy (F)Lcom/kylecorry/andromeda/ipc/IpcValue$Float32;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/ipc/IpcValue$Float32;FILjava/lang/Object;)Lcom/kylecorry/andromeda/ipc/IpcValue$Float32;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Float64 : com/kylecorry/andromeda/ipc/IpcValue {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public final fun copy (D)Lcom/kylecorry/andromeda/ipc/IpcValue$Float64;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/ipc/IpcValue$Float64;DILjava/lang/Object;)Lcom/kylecorry/andromeda/ipc/IpcValue$Float64;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Int32 : com/kylecorry/andromeda/ipc/IpcValue {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/kylecorry/andromeda/ipc/IpcValue$Int32;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/ipc/IpcValue$Int32;IILjava/lang/Object;)Lcom/kylecorry/andromeda/ipc/IpcValue$Int32;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Int64 : com/kylecorry/andromeda/ipc/IpcValue {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/kylecorry/andromeda/ipc/IpcValue$Int64;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/ipc/IpcValue$Int64;JILjava/lang/Object;)Lcom/kylecorry/andromeda/ipc/IpcValue$Int64;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Null : com/kylecorry/andromeda/ipc/IpcValue {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/ipc/IpcValue$Null;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/ipc/IpcValue$Text : com/kylecorry/andromeda/ipc/IpcValue {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/kylecorry/andromeda/ipc/IpcValue$Text;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/ipc/IpcValue$Text;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/ipc/IpcValue$Text;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/ipc/LocalIpcClient : com/kylecorry/andromeda/ipc/IpcClient {
+	public synthetic fun <init> (ILjava/lang/String;JIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ILjava/lang/String;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun send (Ljava/lang/String;Lcom/kylecorry/andromeda/ipc/IpcRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/ipc/LocalIpcKt {
+	public static final fun localIpcServer-Zb7fWow (Lcom/kylecorry/andromeda/ipc/IpcClient;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;IJIILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun localIpcServer-Zb7fWow$default (Lcom/kylecorry/andromeda/ipc/IpcClient;Ljava/lang/String;Lkotlinx/coroutines/CoroutineScope;IJIILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/ipc/LocalIpcServer : java/lang/AutoCloseable {
+	public fun close ()V
+	public final fun getPort ()I
+}
+

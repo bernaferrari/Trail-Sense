@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.bitmaps
 import kotlin.math.abs
 
 /** Doubles a pixel-art image using the xBR edge rules without introducing colors. */
-fun PixelImage.upscalePixelArt2x(): PixelImage {
+public fun PixelImage.upscalePixelArt2x(): PixelImage {
     require(width.toLong() * height <= Int.MAX_VALUE / 4 && width <= Int.MAX_VALUE / 2 && height <= Int.MAX_VALUE / 2)
     val outputWidth = width * 2
     val output = IntArray(outputWidth * height * 2)

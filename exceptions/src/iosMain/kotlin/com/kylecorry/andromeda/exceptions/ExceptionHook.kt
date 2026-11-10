@@ -6,7 +6,7 @@ import kotlin.native.setUnhandledExceptionHook
 import kotlin.native.terminateWithUnhandledException
 
 @OptIn(ExperimentalNativeApi::class)
-actual fun installExceptionHook(report: (Throwable) -> Unit): AutoCloseable {
+public actual fun installExceptionHook(report: (Throwable) -> Unit): AutoCloseable {
     val previous = getUnhandledExceptionHook()
     val handler: (Throwable) -> Unit = { error ->
         try { report(error) } finally {

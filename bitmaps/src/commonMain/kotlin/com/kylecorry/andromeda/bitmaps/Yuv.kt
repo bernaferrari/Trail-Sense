@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.bitmaps
 
 /** Converts an NV21 or Android-aligned YV12 frame to opaque ARGB using limited-range BT.601. */
-fun ByteArray.yuvToPixelImage(width: Int, height: Int, format: YuvFormat): PixelImage {
+public fun ByteArray.yuvToPixelImage(width: Int, height: Int, format: YuvFormat): PixelImage {
     require(width > 0 && height > 0 && width % 2 == 0 && height % 2 == 0)
     val yStride = if (format == YuvFormat.YV12) (width.toLong() + 15) / 16 * 16 else width.toLong()
     val chromaStride = if (format == YuvFormat.YV12) (yStride / 2 + 15) / 16 * 16 else width.toLong()

@@ -1,0 +1,16 @@
+public abstract interface class com/kylecorry/andromeda/speech/SpeechSynthesizer : java/lang/AutoCloseable {
+	public abstract fun cancel ()V
+	public fun close ()V
+	public abstract fun speak (Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun speak$default (Lcom/kylecorry/andromeda/speech/SpeechSynthesizer;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/speech/SpeechSynthesizer$DefaultImpls {
+	public static fun close (Lcom/kylecorry/andromeda/speech/SpeechSynthesizer;)V
+	public static synthetic fun speak$default (Lcom/kylecorry/andromeda/speech/SpeechSynthesizer;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/speech/TextToSpeechKt {
+	public static final fun textToSpeech ()Lcom/kylecorry/andromeda/speech/SpeechSynthesizer;
+}
+

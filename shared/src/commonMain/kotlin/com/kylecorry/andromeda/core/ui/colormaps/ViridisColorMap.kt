@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.core.ui.colormaps
 
 
-class ViridisColorMap : RgbInterpolationColorMap(
+public class ViridisColorMap : RgbInterpolationColorMap(
     arrayOf(
         PackedColor.rgb(68, 1, 84),
         PackedColor.rgb(70, 50, 127),

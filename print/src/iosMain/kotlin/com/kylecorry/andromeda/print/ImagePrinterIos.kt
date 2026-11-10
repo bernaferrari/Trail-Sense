@@ -17,7 +17,7 @@ import platform.Foundation.NSThread
 import platform.Foundation.create
 import platform.UIKit.*
 
-fun imagePrinter(): ImagePrinter = ImagePrinter { image, jobName, options ->
+public fun imagePrinter(): ImagePrinter = ImagePrinter { image, jobName, options ->
     check(NSThread.isMainThread) { "The print dialog must be presented on the main thread" }
     val bytes = image.encodePng()
     val data = bytes.usePinned { NSData.create(bytes = it.addressOf(0), length = bytes.size.toULong()) }

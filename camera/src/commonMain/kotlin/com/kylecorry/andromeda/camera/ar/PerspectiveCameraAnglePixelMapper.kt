@@ -14,7 +14,7 @@ import kotlin.math.sin
  * @param nearDistance The distance to the near clipping plane
  * @param farDistance The distance to the far clipping plane
  */
-class PerspectiveCameraAnglePixelMapper(
+public class PerspectiveCameraAnglePixelMapper(
     private val nearDistance: Float,
     private val farDistance: Float
 ) : CameraAnglePixelMapper {

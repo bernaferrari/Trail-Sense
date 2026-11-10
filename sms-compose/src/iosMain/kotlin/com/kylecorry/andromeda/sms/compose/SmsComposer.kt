@@ -6,4 +6,4 @@ import com.kylecorry.andromeda.sms.SmsComposer
 import com.kylecorry.andromeda.sms.smsComposer
 
 @Composable
-actual fun rememberSmsComposer(): SmsComposer = remember { smsComposer() }
+public actual fun rememberSmsComposer(): SmsComposer = remember { smsComposer() }

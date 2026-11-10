@@ -32,9 +32,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 @SuppressLint("MissingPermission")
-actual suspend fun connectWifiDirect(peer: WifiDirectPeer): WifiDirectGroup = formWifiDirectGroup(peer)
+public actual suspend fun connectWifiDirect(peer: WifiDirectPeer): WifiDirectGroup = formWifiDirectGroup(peer)
 
-actual suspend fun awaitWifiDirectGroup(): WifiDirectGroup = formWifiDirectGroup(null)
+public actual suspend fun awaitWifiDirectGroup(): WifiDirectGroup = formWifiDirectGroup(null)
 
 @SuppressLint("MissingPermission")
 private suspend fun formWifiDirectGroup(peer: WifiDirectPeer?): WifiDirectGroup {

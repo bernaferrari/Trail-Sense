@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 
 /** Builds an ongoing notification suitable for an Android foreground service. */
-fun foregroundNotification(
+public fun foregroundNotification(
     context: Context,
     channelId: String,
     icon: Int,

@@ -4,8 +4,8 @@ import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-interface OneTimeTaskScheduler : TaskScheduler {
-    fun once(delay: Duration = Duration.ZERO)
-    fun once(time: Instant) = once((time - Clock.System.now()).coerceAtLeast(Duration.ZERO))
-    fun start() = once()
+public interface OneTimeTaskScheduler : TaskScheduler {
+    public fun once(delay: Duration = Duration.ZERO)
+    public fun once(time: Instant): Unit = once((time - Clock.System.now()).coerceAtLeast(Duration.ZERO))
+    public fun start(): Unit = once()
 }

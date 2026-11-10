@@ -8,7 +8,7 @@ import com.ksensor.core.context.KSensorContext
 import com.kylecorry.andromeda.bitmaps.PixelImage
 import java.io.File
 
-actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
+public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
     private val lock = Any()
     private val file = File.createTempFile("andromeda-pdf-", ".pdf", KSensorContext.get().cacheDir)
     private val renderer: PdfRenderer
@@ -27,12 +27,12 @@ actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
         }
     }
 
-    actual val pageCount: Int get() = synchronized(lock) { check(!closed); renderer.pageCount }
-    actual fun pageSize(page: Int): PdfPageSize = synchronized(lock) {
+    public actual val pageCount: Int get() = synchronized(lock) { check(!closed); renderer.pageCount }
+    public actual fun pageSize(page: Int): PdfPageSize = synchronized(lock) {
         check(!closed)
         renderer.openPage(page).use { PdfPageSize(it.width.toFloat(), it.height.toFloat()) }
     }
-    actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = synchronized(lock) {
+    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = synchronized(lock) {
         check(!closed)
         requireRenderSize(width, height)
         renderer.openPage(page).use { source ->
@@ -47,7 +47,7 @@ actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseable {
             } finally { bitmap.recycle() }
         }
     }
-    actual override fun close() = synchronized(lock) {
+    actual override fun close(): Unit = synchronized(lock) {
         if (!closed) {
             closed = true
             try { renderer.close() } finally { file.delete() }

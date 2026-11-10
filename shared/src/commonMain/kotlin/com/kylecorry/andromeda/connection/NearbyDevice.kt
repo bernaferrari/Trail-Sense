@@ -2,13 +2,13 @@ package com.kylecorry.andromeda.connection
 
 import com.kylecorry.andromeda.core.sensors.Sensor
 
-interface NearbyDevice : Sensor {
-    val name: String
-    val address: String
-    val isConnected: Boolean
-    val isConnecting: Boolean
-    val messages: List<NearbyDeviceMessage>
-    var messageHistorySize: Int
+public interface NearbyDevice : Sensor {
+    public val name: String
+    public val address: String
+    public val isConnected: Boolean
+    public val isConnecting: Boolean
+    public val messages: List<NearbyDeviceMessage>
+    public var messageHistorySize: Int
 
-    suspend fun send(message: ByteArray)
+    public suspend fun send(message: ByteArray)
 }

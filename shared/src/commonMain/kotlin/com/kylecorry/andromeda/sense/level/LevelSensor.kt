@@ -2,14 +2,14 @@ package com.kylecorry.andromeda.sense.level
 
 import com.kylecorry.andromeda.core.sensors.Sensor
 
-interface LevelSensor : Sensor {
+public interface LevelSensor : Sensor {
     /**
      * The X level in degrees
      */
-    val x: Float
+    public val x: Float
 
     /**
      * The Y level in degrees
      */
-    val y: Float
+    public val y: Float
 }

@@ -6,7 +6,7 @@ import com.kylecorry.luna.serialization.SerializationException
 import java.io.InputStream
 import java.io.OutputStream
 
-class PDFSerializer(private val ignoreStreams: Boolean = false) : ISerializer<List<PDFValue.PDFObject>> {
+public class PDFSerializer(private val ignoreStreams: Boolean = false) : ISerializer<List<PDFValue.PDFObject>> {
     override fun serialize(obj: List<PDFValue.PDFObject>, stream: OutputStream) {
         try {
             PDFGenerator().toPDF(obj, stream)

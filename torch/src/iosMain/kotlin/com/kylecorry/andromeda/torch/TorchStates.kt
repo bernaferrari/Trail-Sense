@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import platform.AVFoundation.*
 
-actual fun torchStates(): Flow<TorchState> = flow {
+public actual fun torchStates(): Flow<TorchState> = flow {
     while (currentCoroutineContext().isActive) {
         val device = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
         emit(when {

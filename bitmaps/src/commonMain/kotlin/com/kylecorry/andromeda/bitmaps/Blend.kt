@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.bitmaps
 import kotlin.math.roundToInt
 
 /** Blends [source] over this destination, using straight-alpha ARGB pixels. */
-fun PixelImage.blend(source: PixelImage, mode: BlendingMode = BlendingMode.SRC_OVER): PixelImage {
+public fun PixelImage.blend(source: PixelImage, mode: BlendingMode = BlendingMode.SRC_OVER): PixelImage {
     require(width == source.width && height == source.height)
     return PixelImage(width, height, IntArray(pixels.size) { index -> blendPixel(source.pixels[index], pixels[index], mode) })
 }

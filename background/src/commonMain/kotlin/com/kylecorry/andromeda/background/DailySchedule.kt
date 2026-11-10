@@ -13,13 +13,13 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 /** Decision for a daily task: execute at most once per local date, then schedule the next occurrence. */
-data class DailyScheduleDecision(val shouldRun: Boolean, val localDate: LocalDate, val nextRun: Instant)
+public data class DailyScheduleDecision(val shouldRun: Boolean, val localDate: LocalDate, val nextRun: Instant)
 
 /**
  * Plans one delivery using the host's persisted [lastRun] date. Record [DailyScheduleDecision.localDate]
  * before running when duplicate execution after a crash would be undesirable.
  */
-fun planDailyTask(
+public fun planDailyTask(
     now: Instant,
     time: LocalTime,
     timeZone: TimeZone,

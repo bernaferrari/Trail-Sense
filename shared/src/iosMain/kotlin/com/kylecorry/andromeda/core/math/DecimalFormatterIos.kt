@@ -5,8 +5,8 @@ import platform.Foundation.NSNumber
 import platform.Foundation.NSNumberFormatter
 import platform.Foundation.NSNumberFormatterDecimalStyle
 
-actual object DecimalFormatter {
-    actual fun format(number: Number, decimalPlaces: Int, strict: Boolean): String {
+public actual object DecimalFormatter {
+    public actual fun format(number: Number, decimalPlaces: Int, strict: Boolean): String {
         val value = number.toDouble()
         if (!value.isFinite()) return "-"
         val places = decimalPlaces.coerceAtLeast(0)

@@ -3,8 +3,8 @@ package com.kylecorry.andromeda.sense.orientation
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.andromeda.core.sensors.Sensor
 
-interface OrientationSensor: Sensor {
-    val orientation: Quaternion
-    val rawOrientation: FloatArray
-    val headingAccuracy: Float?
+public interface OrientationSensor: Sensor {
+    public val orientation: Quaternion
+    public val rawOrientation: FloatArray
+    public val headingAccuracy: Float?
 }

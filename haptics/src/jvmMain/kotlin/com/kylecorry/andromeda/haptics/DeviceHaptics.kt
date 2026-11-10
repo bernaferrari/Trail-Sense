@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.haptics
 
 import kotlin.time.Duration
 
-actual fun deviceHaptics(): HapticMotor = UnavailableHaptics
+public actual fun deviceHaptics(): HapticMotor = UnavailableHaptics
 
 private object UnavailableHaptics : HapticMotor {
     override fun on(amplitude: Int) = Unit

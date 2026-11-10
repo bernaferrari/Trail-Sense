@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.alerts.loading
 
-class ResettableLoadingIndicator(private val loadingIndicator: LoadingIndicator) :
+public class ResettableLoadingIndicator(private val loadingIndicator: LoadingIndicator) :
     LoadingIndicator {
 
     private var hasRun = false
@@ -16,7 +16,7 @@ class ResettableLoadingIndicator(private val loadingIndicator: LoadingIndicator)
         loadingIndicator.hide()
     }
 
-    fun reset() {
+    public fun reset() {
         hasRun = false
     }
 }

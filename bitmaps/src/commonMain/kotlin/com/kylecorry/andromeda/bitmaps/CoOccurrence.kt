@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.algebra.Matrix
 import kotlin.math.roundToInt
 
 /** Computes the gray-level co-occurrence matrix for the given neighbor offsets. */
-fun PixelImage.glcm(
+public fun PixelImage.glcm(
     steps: List<Pair<Int, Int>>,
     channel: ColorChannel? = null,
     excludeTransparent: Boolean = false,

@@ -11,7 +11,7 @@ import android.print.PrintDocumentInfo
 import android.print.PrintManager
 import java.io.FileOutputStream
 
-fun pdfPrinter(context: Context): PdfPrinter = PdfPrinter { pdf, jobName ->
+public fun pdfPrinter(context: Context): PdfPrinter = PdfPrinter { pdf, jobName ->
     require(context is android.app.Activity) { "Printing requires an Activity context" }
     val manager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
     manager.print(jobName, object : PrintDocumentAdapter() {

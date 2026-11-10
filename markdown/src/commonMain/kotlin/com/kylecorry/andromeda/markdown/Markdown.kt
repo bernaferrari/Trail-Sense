@@ -5,8 +5,8 @@ import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.CancellationToken
 import org.intellij.markdown.parser.MarkdownParser
 
-object Markdown {
-    fun toHtml(markdown: String): String {
+public object Markdown {
+    public fun toHtml(markdown: String): String {
         val text = markdown.replace("\r\n", "\n").replace("\r", "\n")
         val flavour = GFMFlavourDescriptor()
         val tree = MarkdownParser(flavour, cancellationToken = CancellationToken.NonCancellable).buildMarkdownTreeFromString(text as CharSequence)

@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.sol.math.Quaternion
 
-class FilteredOrientationSensor(
+public class FilteredOrientationSensor(
     private val sensor: OrientationSensor,
     private val filter: OrientationSensorFilter,
     private val maintainStateOnRestart: Boolean = false

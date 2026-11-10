@@ -1,0 +1,200 @@
+public final class com/kylecorry/andromeda/canvas/ArrowPathEffect : android/graphics/PathDashPathEffect {
+	public static final field $stable I
+	public static final field Companion Lcom/kylecorry/andromeda/canvas/ArrowPathEffect$Companion;
+	public fun <init> ()V
+	public fun <init> (FFF)V
+	public synthetic fun <init> (FFFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/kylecorry/andromeda/canvas/ArrowPathEffect$Companion {
+}
+
+public final class com/kylecorry/andromeda/canvas/CanvasDrawer : com/kylecorry/andromeda/canvas/ICanvasDrawer {
+	public static final field $stable I
+	public fun <init> (Landroid/content/Context;Landroid/graphics/Canvas;)V
+	public fun arc (FFFFFFLcom/kylecorry/andromeda/canvas/ArcMode;)V
+	public fun background (I)V
+	public fun circle (FFF)V
+	public fun clear ()V
+	public fun clip (Landroid/graphics/Path;)V
+	public fun clipInverse (Landroid/graphics/Path;)V
+	public fun color (IIILjava/lang/Integer;)I
+	public fun dp (F)F
+	public fun ellipse (FFFF)V
+	public fun erase ()V
+	public fun fill (I)V
+	public fun getCanvas ()Landroid/graphics/Canvas;
+	public fun grid (FFF)V
+	public fun image (Landroid/graphics/Bitmap;FFFF)V
+	public fun image (Landroid/graphics/Bitmap;FFFFFFFF)V
+	public fun imageMode (Lcom/kylecorry/andromeda/canvas/ImageMode;)V
+	public fun line (FFFF)V
+	public fun lines ([F)V
+	public fun loadImage (ILjava/lang/Integer;Ljava/lang/Integer;)Landroid/graphics/Bitmap;
+	public fun mask (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;Lkotlin/jvm/functions/Function0;)Landroid/graphics/Bitmap;
+	public fun noErase ()V
+	public fun noFill ()V
+	public fun noPathEffect ()V
+	public fun noSmooth ()V
+	public fun noStroke ()V
+	public fun noTint ()V
+	public fun opacity (I)V
+	public fun path (Landroid/graphics/Path;)V
+	public fun pathDimensions (Landroid/graphics/Path;)Lkotlin/Pair;
+	public fun pathEffect (Landroid/graphics/PathEffect;)V
+	public fun pathHeight (Landroid/graphics/Path;)F
+	public fun pathWidth (Landroid/graphics/Path;)F
+	public fun point (FF)V
+	public fun pop ()V
+	public fun push ()V
+	public fun rect (FFFFF)V
+	public fun rotate (FFF)V
+	public fun scale (FF)V
+	public fun scale (FFFF)V
+	public fun setCanvas (Landroid/graphics/Canvas;)V
+	public fun shader (Landroid/graphics/Shader;)V
+	public fun smooth ()V
+	public fun sp (F)F
+	public fun square (FFFF)V
+	public fun stroke (I)V
+	public fun strokeCap (Lcom/kylecorry/andromeda/canvas/StrokeCap;)V
+	public fun strokeJoin (Lcom/kylecorry/andromeda/canvas/StrokeJoin;)V
+	public fun strokeWeight (F)V
+	public fun text (Ljava/lang/String;FF)V
+	public fun textAlign (Lcom/kylecorry/andromeda/canvas/TextAlign;)V
+	public fun textAscent ()F
+	public fun textDescent ()F
+	public fun textDimensions (Ljava/lang/String;)Lkotlin/Pair;
+	public fun textHeight (Ljava/lang/String;)F
+	public fun textMode (Lcom/kylecorry/andromeda/canvas/TextMode;)V
+	public fun textSize (F)V
+	public fun textStyle (Lcom/kylecorry/andromeda/canvas/TextStyle;)V
+	public fun textWidth (Ljava/lang/String;)F
+	public fun tint (I)V
+	public fun translate (FF)V
+	public fun triangle (FFFFFF)V
+}
+
+public final class com/kylecorry/andromeda/canvas/CanvasExtensionsKt {
+	public static final fun getMaskedBitmap (Landroid/graphics/Canvas;Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;Lkotlin/jvm/functions/Function1;)Landroid/graphics/Bitmap;
+	public static synthetic fun getMaskedBitmap$default (Landroid/graphics/Canvas;Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Landroid/graphics/Bitmap;
+	public static final fun layerOpacity (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;I)V
+	public static final fun withLayerOpacity (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;IZLkotlin/jvm/functions/Function0;)V
+	public static synthetic fun withLayerOpacity$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;IZLkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/canvas/CanvasKt {
+	public static final fun Drawing (Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class com/kylecorry/andromeda/canvas/DottedPathEffect : android/graphics/PathDashPathEffect {
+	public static final field $stable I
+	public static final field Companion Lcom/kylecorry/andromeda/canvas/DottedPathEffect$Companion;
+	public fun <init> ()V
+	public fun <init> (FFF)V
+	public synthetic fun <init> (FFFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/kylecorry/andromeda/canvas/DottedPathEffect$Companion {
+}
+
+public abstract interface class com/kylecorry/andromeda/canvas/ICanvasDrawer {
+	public abstract fun arc (FFFFFFLcom/kylecorry/andromeda/canvas/ArcMode;)V
+	public static synthetic fun arc$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFFFLcom/kylecorry/andromeda/canvas/ArcMode;ILjava/lang/Object;)V
+	public abstract fun background (I)V
+	public abstract fun circle (FFF)V
+	public abstract fun clear ()V
+	public abstract fun clip (Landroid/graphics/Path;)V
+	public abstract fun clipInverse (Landroid/graphics/Path;)V
+	public abstract fun color (IIILjava/lang/Integer;)I
+	public static synthetic fun color$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;IIILjava/lang/Integer;ILjava/lang/Object;)I
+	public abstract fun dp (F)F
+	public abstract fun ellipse (FFFF)V
+	public static synthetic fun ellipse$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFILjava/lang/Object;)V
+	public abstract fun erase ()V
+	public abstract fun fill (I)V
+	public abstract fun getCanvas ()Landroid/graphics/Canvas;
+	public abstract fun grid (FFF)V
+	public static synthetic fun grid$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFILjava/lang/Object;)V
+	public abstract fun image (Landroid/graphics/Bitmap;FFFF)V
+	public abstract fun image (Landroid/graphics/Bitmap;FFFFFFFF)V
+	public static synthetic fun image$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;Landroid/graphics/Bitmap;FFFFFFFFILjava/lang/Object;)V
+	public static synthetic fun image$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;Landroid/graphics/Bitmap;FFFFILjava/lang/Object;)V
+	public abstract fun imageMode (Lcom/kylecorry/andromeda/canvas/ImageMode;)V
+	public abstract fun line (FFFF)V
+	public abstract fun lines ([F)V
+	public abstract fun loadImage (ILjava/lang/Integer;Ljava/lang/Integer;)Landroid/graphics/Bitmap;
+	public static synthetic fun loadImage$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;ILjava/lang/Integer;Ljava/lang/Integer;ILjava/lang/Object;)Landroid/graphics/Bitmap;
+	public abstract fun mask (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;Lkotlin/jvm/functions/Function0;)Landroid/graphics/Bitmap;
+	public static synthetic fun mask$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Landroid/graphics/Bitmap;
+	public abstract fun noErase ()V
+	public abstract fun noFill ()V
+	public abstract fun noPathEffect ()V
+	public abstract fun noSmooth ()V
+	public abstract fun noStroke ()V
+	public abstract fun noTint ()V
+	public abstract fun opacity (I)V
+	public abstract fun path (Landroid/graphics/Path;)V
+	public abstract fun pathDimensions (Landroid/graphics/Path;)Lkotlin/Pair;
+	public abstract fun pathEffect (Landroid/graphics/PathEffect;)V
+	public abstract fun pathHeight (Landroid/graphics/Path;)F
+	public abstract fun pathWidth (Landroid/graphics/Path;)F
+	public abstract fun point (FF)V
+	public abstract fun pop ()V
+	public abstract fun push ()V
+	public abstract fun rect (FFFFF)V
+	public static synthetic fun rect$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFFILjava/lang/Object;)V
+	public abstract fun rotate (FFF)V
+	public static synthetic fun rotate$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFILjava/lang/Object;)V
+	public abstract fun scale (FF)V
+	public abstract fun scale (FFFF)V
+	public static synthetic fun scale$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFILjava/lang/Object;)V
+	public static synthetic fun scale$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFILjava/lang/Object;)V
+	public abstract fun setCanvas (Landroid/graphics/Canvas;)V
+	public abstract fun shader (Landroid/graphics/Shader;)V
+	public abstract fun smooth ()V
+	public abstract fun sp (F)F
+	public abstract fun square (FFFF)V
+	public static synthetic fun square$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFILjava/lang/Object;)V
+	public abstract fun stroke (I)V
+	public abstract fun strokeCap (Lcom/kylecorry/andromeda/canvas/StrokeCap;)V
+	public abstract fun strokeJoin (Lcom/kylecorry/andromeda/canvas/StrokeJoin;)V
+	public abstract fun strokeWeight (F)V
+	public abstract fun text (Ljava/lang/String;FF)V
+	public abstract fun textAlign (Lcom/kylecorry/andromeda/canvas/TextAlign;)V
+	public abstract fun textAscent ()F
+	public abstract fun textDescent ()F
+	public abstract fun textDimensions (Ljava/lang/String;)Lkotlin/Pair;
+	public abstract fun textHeight (Ljava/lang/String;)F
+	public abstract fun textMode (Lcom/kylecorry/andromeda/canvas/TextMode;)V
+	public abstract fun textSize (F)V
+	public abstract fun textStyle (Lcom/kylecorry/andromeda/canvas/TextStyle;)V
+	public abstract fun textWidth (Ljava/lang/String;)F
+	public abstract fun tint (I)V
+	public abstract fun translate (FF)V
+	public abstract fun triangle (FFFFFF)V
+}
+
+public final class com/kylecorry/andromeda/canvas/ICanvasDrawer$DefaultImpls {
+	public static synthetic fun arc$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFFFLcom/kylecorry/andromeda/canvas/ArcMode;ILjava/lang/Object;)V
+	public static synthetic fun color$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;IIILjava/lang/Integer;ILjava/lang/Object;)I
+	public static synthetic fun ellipse$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFILjava/lang/Object;)V
+	public static synthetic fun grid$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFILjava/lang/Object;)V
+	public static synthetic fun image$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;Landroid/graphics/Bitmap;FFFFFFFFILjava/lang/Object;)V
+	public static synthetic fun image$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;Landroid/graphics/Bitmap;FFFFILjava/lang/Object;)V
+	public static synthetic fun loadImage$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;ILjava/lang/Integer;Ljava/lang/Integer;ILjava/lang/Object;)Landroid/graphics/Bitmap;
+	public static synthetic fun mask$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Landroid/graphics/Bitmap;
+	public static synthetic fun rect$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFFILjava/lang/Object;)V
+	public static synthetic fun rotate$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFILjava/lang/Object;)V
+	public static synthetic fun scale$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFILjava/lang/Object;)V
+	public static synthetic fun scale$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFILjava/lang/Object;)V
+	public static synthetic fun square$default (Lcom/kylecorry/andromeda/canvas/ICanvasDrawer;FFFFILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/canvas/Paths {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/kylecorry/andromeda/canvas/Paths;
+	public final fun dialTicks (FFFFIIILandroid/graphics/Path;)Landroid/graphics/Path;
+	public static synthetic fun dialTicks$default (Lcom/kylecorry/andromeda/canvas/Paths;FFFFIIILandroid/graphics/Path;ILjava/lang/Object;)Landroid/graphics/Path;
+}
+

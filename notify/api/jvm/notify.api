@@ -1,0 +1,14 @@
+public abstract interface class com/kylecorry/andromeda/notify/NotificationSender {
+	public abstract fun cancel (I)V
+	public abstract fun send (ILjava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/notify/NotificationSenderKt {
+	public static final fun notificationSender (Ljava/awt/Image;)Lcom/kylecorry/andromeda/notify/NotificationSender;
+	public static synthetic fun notificationSender$default (Ljava/awt/Image;ILjava/lang/Object;)Lcom/kylecorry/andromeda/notify/NotificationSender;
+}
+
+public final class com/kylecorry/andromeda/notify/NotifierAdapterKt {
+	public static final fun asNotificationSender (Lcom/mmk/kmpnotifier/notification/Notifier;)Lcom/kylecorry/andromeda/notify/NotificationSender;
+}
+

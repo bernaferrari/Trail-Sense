@@ -1,0 +1,139 @@
+public final class com/kylecorry/andromeda/permissions/AndroidPermissions {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/permissions/AndroidPermissions;
+	public final fun canCreateForegroundServices (Landroid/content/Context;ZLjava/util/List;)Z
+	public static synthetic fun canCreateForegroundServices$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZLjava/util/List;ILjava/lang/Object;)Z
+	public final fun canGetCoarseLocation (Landroid/content/Context;Z)Z
+	public static synthetic fun canGetCoarseLocation$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canGetFineLocation (Landroid/content/Context;Z)Z
+	public static synthetic fun canGetFineLocation$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canGetLocation (Landroid/content/Context;Z)Z
+	public static synthetic fun canGetLocation$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canRecognizeActivity (Landroid/content/Context;Z)Z
+	public static synthetic fun canRecognizeActivity$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canRecordAudio (Landroid/content/Context;Z)Z
+	public static synthetic fun canRecordAudio$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canScheduleExactAlarms (Landroid/content/Context;)Z
+	public final fun canUseBluetooth (Landroid/content/Context;Z)Z
+	public static synthetic fun canUseBluetooth$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canUseFlashlight (Landroid/content/Context;Z)Z
+	public static synthetic fun canUseFlashlight$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canVibrate (Landroid/content/Context;Z)Z
+	public static synthetic fun canVibrate$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun enforceCallingPermission (Landroid/content/Context;Ljava/lang/String;Z)V
+	public static synthetic fun enforceCallingPermission$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun enforceCallingSignature (Landroid/content/Context;Ljava/util/List;)V
+	public final fun getGrantedPermissions (Landroid/content/Context;)Ljava/util/List;
+	public final fun getPermissionName (Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
+	public final fun getRequestedPermissions (Landroid/content/Context;)Ljava/util/List;
+	public final fun hasPermission (Landroid/content/Context;Lcom/kylecorry/andromeda/permissions/SpecialPermission;)Z
+	public final fun hasPermission (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun hasPermission (Landroid/content/Context;Ljava/lang/String;Z)Z
+	public static synthetic fun hasPermission$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;Ljava/lang/String;ZILjava/lang/Object;)Z
+	public final fun isBackgroundLocationEnabled (Landroid/content/Context;Z)Z
+	public static synthetic fun isBackgroundLocationEnabled$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun isCameraEnabled (Landroid/content/Context;Z)Z
+	public static synthetic fun isCameraEnabled$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun isIgnoringBatteryOptimizations (Landroid/content/Context;)Z
+	public final fun requestIgnoreBatteryOptimization (Landroid/content/Context;)V
+	public final fun requestPermission (Landroid/content/Context;Lcom/kylecorry/andromeda/permissions/SpecialPermission;)V
+	public final fun requestScheduleExactAlarms (Landroid/content/Context;)V
+	public final fun requireBluetoothConnect (Landroid/content/Context;Z)V
+	public static synthetic fun requireBluetoothConnect$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)V
+	public final fun requireBluetoothScan (Landroid/content/Context;Z)V
+	public static synthetic fun requireBluetoothScan$default (Lcom/kylecorry/andromeda/permissions/AndroidPermissions;Landroid/content/Context;ZILjava/lang/Object;)V
+	public final fun requireLegacyBluetooth (Landroid/content/Context;)V
+	public final fun requireLegacyBluetoothAdmin (Landroid/content/Context;)V
+	public final fun requirePermission (Landroid/content/Context;Ljava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/permissions/AppPermission : java/lang/Enum {
+	public static final field BackgroundLocation Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Bluetooth Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Camera Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field CoarseLocation Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Gallery Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Location Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Microphone Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Motion Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field Notifications Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field ReadContacts Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field ReadStorage Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static final field WriteStorage Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/permissions/AppPermission;
+	public static fun values ()[Lcom/kylecorry/andromeda/permissions/AppPermission;
+}
+
+public final class com/kylecorry/andromeda/permissions/MobilePermissionAccessKt {
+	public static final fun permissionAccess (Ldev/icerock/moko/permissions/PermissionsController;)Lcom/kylecorry/andromeda/permissions/PermissionAccess;
+}
+
+public abstract interface class com/kylecorry/andromeda/permissions/PermissionAccess {
+	public abstract fun openSettings ()V
+	public abstract fun request (Lcom/kylecorry/andromeda/permissions/AppPermission;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun status (Lcom/kylecorry/andromeda/permissions/AppPermission;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/permissions/PermissionAccessKt {
+	public static final fun permissionAccess (Landroidx/activity/ComponentActivity;)Lcom/kylecorry/andromeda/permissions/PermissionAccess;
+}
+
+public final class com/kylecorry/andromeda/permissions/PermissionStatus : java/lang/Enum {
+	public static final field Denied Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field DeniedAlways Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field Granted Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field NotDetermined Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static final field NotGranted Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+	public static fun values ()[Lcom/kylecorry/andromeda/permissions/PermissionStatus;
+}
+
+public final class com/kylecorry/andromeda/permissions/Permissions {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/permissions/Permissions;
+	public final fun canCreateForegroundServices (Landroid/content/Context;ZLjava/util/List;)Z
+	public static synthetic fun canCreateForegroundServices$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZLjava/util/List;ILjava/lang/Object;)Z
+	public final fun canGetCoarseLocation (Landroid/content/Context;Z)Z
+	public static synthetic fun canGetCoarseLocation$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canGetFineLocation (Landroid/content/Context;Z)Z
+	public static synthetic fun canGetFineLocation$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canGetLocation (Landroid/content/Context;Z)Z
+	public static synthetic fun canGetLocation$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canRecognizeActivity (Landroid/content/Context;Z)Z
+	public static synthetic fun canRecognizeActivity$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canRecordAudio (Landroid/content/Context;Z)Z
+	public static synthetic fun canRecordAudio$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canScheduleExactAlarms (Landroid/content/Context;)Z
+	public final fun canUseBluetooth (Landroid/content/Context;Z)Z
+	public static synthetic fun canUseBluetooth$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canUseFlashlight (Landroid/content/Context;Z)Z
+	public static synthetic fun canUseFlashlight$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun canVibrate (Landroid/content/Context;Z)Z
+	public static synthetic fun canVibrate$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun enforceCallingPermission (Landroid/content/Context;Ljava/lang/String;Z)V
+	public static synthetic fun enforceCallingPermission$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun enforceCallingSignature (Landroid/content/Context;Ljava/util/List;)V
+	public final fun getGrantedPermissions (Landroid/content/Context;)Ljava/util/List;
+	public final fun getPermissionName (Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;
+	public final fun getRequestedPermissions (Landroid/content/Context;)Ljava/util/List;
+	public final fun hasPermission (Landroid/content/Context;Lcom/kylecorry/andromeda/permissions/SpecialPermission;)Z
+	public final fun hasPermission (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)Z
+	public final fun hasPermission (Landroid/content/Context;Ljava/lang/String;Z)Z
+	public static synthetic fun hasPermission$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;Ljava/lang/String;ZILjava/lang/Object;)Z
+	public final fun isBackgroundLocationEnabled (Landroid/content/Context;Z)Z
+	public static synthetic fun isBackgroundLocationEnabled$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun isCameraEnabled (Landroid/content/Context;Z)Z
+	public static synthetic fun isCameraEnabled$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)Z
+	public final fun isIgnoringBatteryOptimizations (Landroid/content/Context;)Z
+	public final fun requestIgnoreBatteryOptimization (Landroid/content/Context;)V
+	public final fun requestPermission (Landroid/content/Context;Lcom/kylecorry/andromeda/permissions/SpecialPermission;)V
+	public final fun requestScheduleExactAlarms (Landroid/content/Context;)V
+	public final fun requireBluetoothConnect (Landroid/content/Context;Z)V
+	public static synthetic fun requireBluetoothConnect$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)V
+	public final fun requireBluetoothScan (Landroid/content/Context;Z)V
+	public static synthetic fun requireBluetoothScan$default (Lcom/kylecorry/andromeda/permissions/Permissions;Landroid/content/Context;ZILjava/lang/Object;)V
+	public final fun requireLegacyBluetooth (Landroid/content/Context;)V
+	public final fun requireLegacyBluetoothAdmin (Landroid/content/Context;)V
+	public final fun requirePermission (Landroid/content/Context;Ljava/lang/String;)V
+}
+

@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.navigation
 
-enum class ColorTheme {
+public enum class ColorTheme {
     Light,
     Dark,
     System

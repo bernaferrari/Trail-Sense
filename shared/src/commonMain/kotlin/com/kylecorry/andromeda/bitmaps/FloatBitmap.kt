@@ -4,28 +4,28 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 
-class FloatBitmap(val width: Int, val height: Int, val channels: Int) {
+public class FloatBitmap(public val width: Int, public val height: Int, public val channels: Int) {
     init {
         require(width > 0 && height > 0 && channels > 0)
         require(width.toLong() * height <= Int.MAX_VALUE / channels)
     }
 
-    val data = FloatArray(width * height * channels)
+    public val data: FloatArray = FloatArray(width * height * channels)
 
-    fun get(x: Int, y: Int, channel: Int): Float {
+    public fun get(x: Int, y: Int, channel: Int): Float {
         require(x in 0 until width && y in 0 until height && channel in 0 until channels)
         return data[(y * width + x) * channels + channel]
     }
-    fun set(x: Int, y: Int, channel: Int, value: Float) {
+    public fun set(x: Int, y: Int, channel: Int, value: Float) {
         require(x in 0 until width && y in 0 until height && channel in 0 until channels)
         data[(y * width + x) * channels + channel] = value
     }
-    fun getOrNull(x: Int, y: Int, channel: Int): Float? =
+    public fun getOrNull(x: Int, y: Int, channel: Int): Float? =
         if (x in 0 until width && y in 0 until height && channel in 0 until channels) data[(y * width + x) * channels + channel] else null
-    fun getX(index: Int): Int = index % width
-    fun getY(index: Int): Int = index / width
+    public fun getX(index: Int): Int = index % width
+    public fun getY(index: Int): Int = index / width
 
-    fun upscale(
+    public fun upscale(
         newWidth: Int, newHeight: Int, startX: Float = 0f, endX: Float = (width - 1).toFloat(),
         startY: Float = 0f, endY: Float = (height - 1).toFloat(), maxSearchRadius: Int = 10
     ): FloatBitmap {

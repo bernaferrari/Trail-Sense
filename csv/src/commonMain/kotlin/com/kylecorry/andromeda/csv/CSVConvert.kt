@@ -1,7 +1,7 @@
 package com.kylecorry.andromeda.csv
 
-object CSVConvert {
-    fun toCSV(data: List<List<Any?>>): String = buildString {
+public object CSVConvert {
+    public fun toCSV(data: List<List<Any?>>): String = buildString {
         for (row in data) {
             row.forEachIndexed { index, value ->
                 val cell = value?.toString().orEmpty()
@@ -15,7 +15,7 @@ object CSVConvert {
         }
     }
 
-    fun parse(csv: String): List<List<String>> {
+    public fun parse(csv: String): List<List<String>> {
         val rows = mutableListOf<List<String>>()
         var currentRow = mutableListOf<String>()
         val currentCell = StringBuilder()

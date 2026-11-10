@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.sound
 
 import platform.AVFAudio.*
 
-actual fun audioDevices(): List<AudioDevice> {
+public actual fun audioDevices(): List<AudioDevice> {
     val route = AVAudioSession.sharedInstance().currentRoute
     fun devices(ports: List<*>, input: Boolean) = ports.filterIsInstance<AVAudioSessionPortDescription>().map { port ->
         val kind = when (port.portType) {

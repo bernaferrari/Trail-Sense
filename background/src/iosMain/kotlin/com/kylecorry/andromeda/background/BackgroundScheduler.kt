@@ -10,7 +10,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /** The app must register this identifier with BGTaskScheduler and list it in Info.plist. */
 @OptIn(ExperimentalForeignApi::class)
-fun backgroundScheduler(identifier: String): BackgroundScheduler = object : BackgroundScheduler {
+public fun backgroundScheduler(identifier: String): BackgroundScheduler = object : BackgroundScheduler {
     override fun schedule(earliest: Instant) {
         BGTaskScheduler.sharedScheduler.cancelTaskRequestWithIdentifier(identifier)
         val request = BGAppRefreshTaskRequest(identifier = identifier)
@@ -24,7 +24,7 @@ private val periodicScheduleLock = platform.Foundation.NSLock()
 
 /** The app must register this identifier at launch and call onTaskStarted when it is delivered. */
 @OptIn(ExperimentalForeignApi::class)
-fun periodicBackgroundScheduler(identifier: String): PeriodicBackgroundScheduler = object : PeriodicBackgroundScheduler {
+public fun periodicBackgroundScheduler(identifier: String): PeriodicBackgroundScheduler = object : PeriodicBackgroundScheduler {
     private val key = "com.kylecorry.andromeda.background.period.$identifier"
     private val defaults = platform.Foundation.NSUserDefaults.standardUserDefaults
     private val oneShot = backgroundScheduler(identifier)

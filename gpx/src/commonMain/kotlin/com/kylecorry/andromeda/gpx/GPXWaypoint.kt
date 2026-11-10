@@ -3,7 +3,7 @@ package com.kylecorry.andromeda.gpx
 import com.kylecorry.sol.units.Coordinate
 import kotlin.time.Instant
 
-data class GPXWaypoint(
+public data class GPXWaypoint(
     val coordinate: Coordinate,
     val name: String? = null,
     val elevation: Float? = null,

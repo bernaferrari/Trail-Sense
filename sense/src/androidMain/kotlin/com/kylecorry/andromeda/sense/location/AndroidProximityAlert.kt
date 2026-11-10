@@ -14,7 +14,7 @@ import kotlin.time.Duration
  * Close the returned handle to unregister the alert.
  */
 @SuppressLint("MissingPermission")
-fun registerProximityAlert(
+public fun registerProximityAlert(
     context: Context,
     center: Coordinate,
     radius: Distance,

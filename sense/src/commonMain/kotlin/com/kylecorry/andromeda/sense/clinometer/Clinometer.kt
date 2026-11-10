@@ -11,9 +11,9 @@ import com.kylecorry.sol.science.geology.Geology
  * @param orientationSensor The orientation sensor to use
  * @param isAugmentedReality True if the clinometer should be in AR mode (device held vertically), otherwise the spine of the device is used
  */
-class Clinometer(
+public class Clinometer(
     private val orientationSensor: OrientationSensor,
-    var isAugmentedReality: Boolean = false
+    public var isAugmentedReality: Boolean = false
 ) : SharedSensor(), ClinometerSensor {
 
     private var _angle = 0f

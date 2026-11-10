@@ -1,0 +1,50 @@
+public final class com/kylecorry/andromeda/files/AppFilesKt {
+	public static final fun appCache ()Lcom/kylecorry/andromeda/files/FileStorage;
+	public static final fun appFiles ()Lcom/kylecorry/andromeda/files/FileStorage;
+}
+
+public final class com/kylecorry/andromeda/files/ArchiveEntry {
+	public fun <init> (Ljava/lang/String;ZJJ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;ZJJ)Lcom/kylecorry/andromeda/files/ArchiveEntry;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/files/ArchiveEntry;Ljava/lang/String;ZJJILjava/lang/Object;)Lcom/kylecorry/andromeda/files/ArchiveEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCompressedSize ()J
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSize ()J
+	public fun hashCode ()I
+	public final fun isDirectory ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/files/ArchivesKt {
+	public static final fun listArchive (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;I)Ljava/util/List;
+	public static synthetic fun listArchive$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;IILjava/lang/Object;)Ljava/util/List;
+	public static final fun readArchiveEntry (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[B
+	public static synthetic fun readArchiveEntry$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)[B
+	public static final fun unzip (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun unzip$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun zip (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun zip$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/files/BundledAssetsJvmKt {
+	public static final fun listAssets (Ljava/lang/String;)Ljava/util/List;
+	public static synthetic fun listAssets$default (Ljava/lang/String;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun openAsset (Ljava/lang/String;)Lokio/Source;
+}
+
+public final class com/kylecorry/andromeda/files/BundledAssetsKt {
+	public static final fun readAsset (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun readAssetText (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/files/MimeType {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/files/MimeType;
+	public final fun toExtension (Ljava/lang/String;)Ljava/lang/String;
+	public final fun toMimeType (Ljava/lang/String;)Ljava/lang/String;
+}
+

@@ -7,7 +7,7 @@ import com.kylecorry.sol.math.geometry.Size
 /**
  * A camera angle pixel mapper that uses a linear projection to map angles to pixels.
  */
-class LinearCameraAnglePixelMapper : CameraAnglePixelMapper {
+public class LinearCameraAnglePixelMapper : CameraAnglePixelMapper {
     override fun getAngle(
         x: Float,
         y: Float,

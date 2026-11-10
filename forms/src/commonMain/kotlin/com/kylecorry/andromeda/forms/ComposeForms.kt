@@ -14,13 +14,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun FormColumn(modifier: Modifier = Modifier, scrollable: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+public fun FormColumn(modifier: Modifier = Modifier, scrollable: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     val scroll = if (scrollable) modifier.verticalScroll(rememberScrollState()) else modifier
     Column(scroll, verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
 }
 
 @Composable
-fun FormTextField(
+public fun FormTextField(
     value: String, onValueChange: (String) -> Unit, label: String,
     modifier: Modifier = Modifier, placeholder: String? = null,
     enabled: Boolean = true, singleLine: Boolean = true, error: String? = null
@@ -34,7 +34,7 @@ fun FormTextField(
 }
 
 @Composable
-fun FormNumberField(
+public fun FormNumberField(
     value: String, onValueChange: (String) -> Unit, label: String,
     modifier: Modifier = Modifier, allowDecimals: Boolean = true, allowNegative: Boolean = false,
     enabled: Boolean = true, placeholder: String? = null, error: String? = null
@@ -48,7 +48,7 @@ fun FormNumberField(
 }
 
 @Composable
-fun FormSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+public fun FormSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Row(modifier.fillMaxWidth().toggleable(checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, modifier = Modifier.weight(1f))
@@ -57,7 +57,7 @@ fun FormSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: Stri
 }
 
 @Composable
-fun FormCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+public fun FormCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Row(modifier.fillMaxWidth().toggleable(checked, enabled = enabled, role = Role.Checkbox, onValueChange = onCheckedChange),
         verticalAlignment = Alignment.CenterVertically) {
         Checkbox(checked = checked, onCheckedChange = null, enabled = enabled)
@@ -66,7 +66,7 @@ fun FormCheckbox(checked: Boolean, onCheckedChange: (Boolean) -> Unit, label: St
 }
 
 @Composable
-fun <T> FormDropdown(
+public fun <T> FormDropdown(
     selected: T?, options: List<T>, label: String, optionLabel: (T) -> String,
     onSelected: (T) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
     selectedLabel: (T) -> String = optionLabel
@@ -88,18 +88,18 @@ fun <T> FormDropdown(
 }
 
 @Composable
-fun FormButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, colors: ButtonColors = ButtonDefaults.buttonColors()) {
+public fun FormButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, colors: ButtonColors = ButtonDefaults.buttonColors()) {
     Button(onClick = onClick, modifier = modifier, enabled = enabled, colors = colors) { Text(label) }
 }
 
 @Composable
-fun FormLabel(text: String, modifier: Modifier = Modifier) { Text(text, modifier) }
+public fun FormLabel(text: String, modifier: Modifier = Modifier) { Text(text, modifier) }
 
 @Composable
-fun FormLoading(modifier: Modifier = Modifier) { CircularProgressIndicator(modifier) }
+public fun FormLoading(modifier: Modifier = Modifier) { CircularProgressIndicator(modifier) }
 
 @Composable
-fun <T> FormUnitField(
+public fun <T> FormUnitField(
     value: String, onValueChange: (String) -> Unit, unit: T?, units: List<T>,
     label: String, unitLabel: (T) -> String, onUnitChange: (T) -> Unit, modifier: Modifier = Modifier,
     unitShortLabel: (T) -> String = unitLabel, enabled: Boolean = true, placeholder: String? = null

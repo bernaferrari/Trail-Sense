@@ -1,12 +1,12 @@
 package com.kylecorry.andromeda.core.units
 
-data class PercentBounds(
+public data class PercentBounds(
     val topLeft: PercentCoordinate,
     val topRight: PercentCoordinate,
     val bottomLeft: PercentCoordinate,
     val bottomRight: PercentCoordinate,
 ) {
-    fun toPixelBounds(width: Float, height: Float): PixelBounds {
+    public fun toPixelBounds(width: Float, height: Float): PixelBounds {
         return PixelBounds(
             topLeft.toPixels(width, height),
             topRight.toPixels(width, height),

@@ -14,7 +14,7 @@ import kotlin.time.Duration
 
 /** Runs while the host is resumed, cancelling immediately when it pauses. */
 @Composable
-fun ResumeInterval(interval: Duration, initialDelay: Duration = Duration.ZERO, action: suspend () -> Unit) {
+public fun ResumeInterval(interval: Duration, initialDelay: Duration = Duration.ZERO, action: suspend () -> Unit) {
     require(interval > Duration.ZERO && interval.isFinite() && initialDelay >= Duration.ZERO)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val latest by rememberUpdatedState(action)
@@ -30,7 +30,7 @@ fun ResumeInterval(interval: Duration, initialDelay: Duration = Duration.ZERO, a
 }
 
 @Composable
-fun OnResumeAfter(delay: Duration = Duration.ZERO, action: suspend () -> Unit) {
+public fun OnResumeAfter(delay: Duration = Duration.ZERO, action: suspend () -> Unit) {
     require(delay >= Duration.ZERO)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val latest by rememberUpdatedState(action)

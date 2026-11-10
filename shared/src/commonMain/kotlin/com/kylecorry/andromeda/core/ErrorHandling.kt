@@ -1,13 +1,13 @@
 package com.kylecorry.andromeda.core
 
-inline fun tryOrNothing(block: () -> Unit) {
+public inline fun tryOrNothing(block: () -> Unit) {
     try {
         block()
     } catch (_: Exception) {
     }
 }
 
-inline fun tryOrLog(block: () -> Unit) {
+public inline fun tryOrLog(block: () -> Unit) {
     try {
         block()
     } catch (e: Exception) {
@@ -15,7 +15,7 @@ inline fun tryOrLog(block: () -> Unit) {
     }
 }
 
-inline fun <T> tryOrDefault(default: T, block: () -> T): T {
+public inline fun <T> tryOrDefault(default: T, block: () -> T): T {
     return try {
         block()
     } catch (e: Exception) {

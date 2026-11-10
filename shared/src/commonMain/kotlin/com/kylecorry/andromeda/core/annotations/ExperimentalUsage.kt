@@ -14,4 +14,4 @@ package com.kylecorry.andromeda.core.annotations
 )
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class ExperimentalUsage(val message: String)
+public annotation class ExperimentalUsage(val message: String)

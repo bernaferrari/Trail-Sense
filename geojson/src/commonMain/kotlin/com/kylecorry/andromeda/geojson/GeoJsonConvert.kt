@@ -2,9 +2,9 @@ package com.kylecorry.andromeda.geojson
 
 import kotlinx.serialization.json.*
 
-object GeoJsonConvert {
-    fun fromJson(json: String): GeoJsonObject? = runCatching { decode(Json.parseToJsonElement(json).jsonObject) }.getOrNull()
-    fun toJson(obj: GeoJsonObject): String = encode(obj).toString()
+public object GeoJsonConvert {
+    public fun fromJson(json: String): GeoJsonObject? = runCatching { decode(Json.parseToJsonElement(json).jsonObject) }.getOrNull()
+    public fun toJson(obj: GeoJsonObject): String = encode(obj).toString()
 
     private fun decode(obj: JsonObject): GeoJsonObject {
         val box = obj["bbox"]?.takeUnless { it is JsonNull }?.jsonArray?.let(::box)

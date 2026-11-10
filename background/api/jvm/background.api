@@ -1,0 +1,82 @@
+public final class com/kylecorry/andromeda/background/AdaptivePeriodicScheduler : com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;Lkotlin/jvm/functions/Function1;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;Lkotlin/jvm/functions/Function1;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cancel ()V
+	public fun interval-QTBD994 (JJ)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/BackgroundScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler {
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public abstract fun schedule (Lkotlin/time/Instant;)V
+}
+
+public final class com/kylecorry/andromeda/background/BackgroundScheduler$DefaultImpls {
+	public static fun once (Lcom/kylecorry/andromeda/background/BackgroundScheduler;Lkotlin/time/Instant;)V
+	public static fun once-LRDsOJo (Lcom/kylecorry/andromeda/background/BackgroundScheduler;J)V
+	public static fun start (Lcom/kylecorry/andromeda/background/BackgroundScheduler;)V
+}
+
+public final class com/kylecorry/andromeda/background/CoroutineTaskScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler, com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lkotlin/jvm/functions/Function1;)V
+	public fun cancel ()V
+	public fun interval-QTBD994 (JJ)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/DailyScheduleDecision {
+	public fun <init> (ZLkotlinx/datetime/LocalDate;Lkotlin/time/Instant;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lkotlinx/datetime/LocalDate;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (ZLkotlinx/datetime/LocalDate;Lkotlin/time/Instant;)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/background/DailyScheduleDecision;ZLkotlinx/datetime/LocalDate;Lkotlin/time/Instant;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocalDate ()Lkotlinx/datetime/LocalDate;
+	public final fun getNextRun ()Lkotlin/time/Instant;
+	public final fun getShouldRun ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/background/DailyScheduleKt {
+	public static final fun planDailyTask-17CK4j0 (Lkotlin/time/Instant;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/TimeZone;Lkotlinx/datetime/LocalDate;ZJ)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+	public static synthetic fun planDailyTask-17CK4j0$default (Lkotlin/time/Instant;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/TimeZone;Lkotlinx/datetime/LocalDate;ZJILjava/lang/Object;)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+}
+
+public abstract interface class com/kylecorry/andromeda/background/OneTimeTaskScheduler : com/kylecorry/andromeda/background/TaskScheduler {
+	public fun once (Lkotlin/time/Instant;)V
+	public abstract fun once-LRDsOJo (J)V
+	public static synthetic fun once-LRDsOJo$default (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;JILjava/lang/Object;)V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/OneTimeTaskScheduler$DefaultImpls {
+	public static fun once (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;Lkotlin/time/Instant;)V
+	public static synthetic fun once-LRDsOJo$default (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;JILjava/lang/Object;)V
+	public static fun start (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/PeriodicBackgroundScheduler : com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public abstract fun onTaskStarted ()V
+}
+
+public final class com/kylecorry/andromeda/background/PeriodicBackgroundScheduler$DefaultImpls {
+	public static fun interval-VtjQ1oo (Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;JLkotlin/time/Instant;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/PeriodicTaskScheduler : com/kylecorry/andromeda/background/TaskScheduler {
+	public abstract fun interval-QTBD994 (JJ)V
+	public static synthetic fun interval-QTBD994$default (Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;JJILjava/lang/Object;)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+}
+
+public final class com/kylecorry/andromeda/background/PeriodicTaskScheduler$DefaultImpls {
+	public static synthetic fun interval-QTBD994$default (Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;JJILjava/lang/Object;)V
+	public static fun interval-VtjQ1oo (Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;JLkotlin/time/Instant;)V
+}
+

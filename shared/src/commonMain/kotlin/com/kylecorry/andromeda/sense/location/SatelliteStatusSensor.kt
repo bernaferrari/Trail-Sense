@@ -1,13 +1,13 @@
 package com.kylecorry.andromeda.sense.location
 
-interface SatelliteStatusSensor {
+public interface SatelliteStatusSensor {
     /**
      * The number of satellites used to calculate the location
      */
-    val satellites: Int?
+    public val satellites: Int?
 
     /**
      * The details of the satellites detected by the GNSS receiver
      */
-    val satelliteDetails: List<Satellite>?
+    public val satelliteDetails: List<Satellite>?
 }

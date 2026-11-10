@@ -18,7 +18,7 @@ import kotlin.time.Clock
 import com.kylecorry.andromeda.camera.ar.calibrationSource
 
 @Composable
-actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit, frameAnalysis: Boolean) {
+public actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, onError: (Throwable) -> Unit, frameAnalysis: Boolean) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val preview = rememberCameraPreviewState()
@@ -28,7 +28,7 @@ actual fun CameraSurface(modifier: Modifier, onReady: (PhotoCamera?) -> Unit, on
         MutableSharedFlow<CameraFrame>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     }
     val camera = remember(context, owner, preview, frameAnalysis) {
-        Camera(
+        AndroidCamera(
             context, owner, previewState = preview, analyze = frameAnalysis,
             captureSettings = ImageCaptureSettings(),
             onAnalysisFrame = if (!frameAnalysis) null else { image ->

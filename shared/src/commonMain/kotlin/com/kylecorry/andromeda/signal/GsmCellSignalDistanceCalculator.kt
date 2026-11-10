@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.signal
 
-class GsmCellSignalDistanceCalculator : CellSignalDistanceCalculator {
+public class GsmCellSignalDistanceCalculator : CellSignalDistanceCalculator {
     private val binDistance = 550f
     override fun getTimingAdvanceDistance(timingAdvance: Int): Float {
         // https://blog.wirelessmoves.com/2017/09/using-the-gsm-timing-advance-to-find-an-lte-base-station.html

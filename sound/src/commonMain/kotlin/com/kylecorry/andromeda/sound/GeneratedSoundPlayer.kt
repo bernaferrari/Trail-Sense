@@ -23,12 +23,12 @@ private fun interface SoundPlayback {
  * Plays a generated waveform until stopped. Control methods are safe to call concurrently;
  * playback errors are delivered to [scope]'s coroutine exception handler.
  */
-class GeneratedSoundPlayer private constructor(
+public class GeneratedSoundPlayer private constructor(
     private val scope: CoroutineScope,
     private val sampleRate: Int = 44100,
     private val playbackSource: SoundPlayback,
 ) : SoundPlayer {
-    constructor(scope: CoroutineScope, sampleRate: Int = 44100, sample: (Long) -> Double) :
+    public constructor(scope: CoroutineScope, sampleRate: Int = 44100, sample: (Long) -> Double) :
         this(scope, sampleRate, SoundPlayback { volume ->
             playGeneratedSound(sampleRate) { index -> sample(index) * volume() }
         })
@@ -59,8 +59,8 @@ class GeneratedSoundPlayer private constructor(
 
     init { require(sampleRate > 0) }
 
-    override fun on() = start(fadeIn = false)
-    override fun fadeOn() = start(fadeIn = true)
+    override fun on(): Unit = start(fadeIn = false)
+    override fun fadeOn(): Unit = start(fadeIn = true)
 
     private fun start(fadeIn: Boolean) {
         val jobs = synchronized(lock) {
@@ -161,12 +161,12 @@ class GeneratedSoundPlayer private constructor(
 }
 
 /** Creates a continuous sine-tone player. */
-fun tonePlayer(scope: CoroutineScope, frequencyHz: Double, sampleRate: Int = 44100): GeneratedSoundPlayer {
+public fun tonePlayer(scope: CoroutineScope, frequencyHz: Double, sampleRate: Int = 44100): GeneratedSoundPlayer {
     require(sampleRate > 0 && frequencyHz.isFinite() && frequencyHz >= 0)
     val cyclesPerSample = (frequencyHz % sampleRate) / sampleRate
     return GeneratedSoundPlayer(scope, sampleRate) { index -> sin(2.0 * PI * ((index * cyclesPerSample) % 1.0)) }
 }
 
 /** Plays an audio stream while the player is on; starting playback resets the stream. */
-fun streamPlayer(scope: CoroutineScope, stream: AudioStream, sampleRate: Int = 44100): GeneratedSoundPlayer =
+public fun streamPlayer(scope: CoroutineScope, stream: AudioStream, sampleRate: Int = 44100): GeneratedSoundPlayer =
     GeneratedSoundPlayer(scope, sampleRate, stream)

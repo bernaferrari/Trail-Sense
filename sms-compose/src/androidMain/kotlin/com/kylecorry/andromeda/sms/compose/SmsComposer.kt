@@ -7,7 +7,7 @@ import com.kylecorry.andromeda.sms.SmsComposer
 import com.kylecorry.andromeda.sms.smsComposer
 
 @Composable
-actual fun rememberSmsComposer(): SmsComposer {
+public actual fun rememberSmsComposer(): SmsComposer {
     val context = LocalContext.current
     return remember(context) { smsComposer(context) }
 }

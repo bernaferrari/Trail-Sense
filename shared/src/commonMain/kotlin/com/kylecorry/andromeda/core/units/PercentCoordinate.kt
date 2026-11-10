@@ -1,15 +1,15 @@
 package com.kylecorry.andromeda.core.units
 
-data class PercentCoordinate(val x: Float, val y: Float) {
-    fun toPixels(width: Float, height: Float): PixelCoordinate {
+public data class PercentCoordinate(val x: Float, val y: Float) {
+    public fun toPixels(width: Float, height: Float): PixelCoordinate {
         return PixelCoordinate(x * width, y * height)
     }
 
-    fun toPixels(width: Int, height: Int): PixelCoordinate {
+    public fun toPixels(width: Int, height: Int): PixelCoordinate {
         return toPixels(width.toFloat(), height.toFloat())
     }
 
-    fun rotate(rotation: Int): PercentCoordinate {
+    public fun rotate(rotation: Int): PercentCoordinate {
         val realRotation = if (rotation < 0) {
             (rotation % 360) + 360
         } else {

@@ -18,14 +18,14 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
 /** Discovers BLE peripherals and exposes each as a nearby device. */
-class BleNearbyDeviceScanner(
+public class BleNearbyDeviceScanner(
     private val scope: CoroutineScope,
     private val receiveCharacteristic: Characteristic,
     private val sendCharacteristic: Characteristic,
     private val writeType: WriteType = WriteType.WithResponse,
     private val matches: (Advertisement) -> Boolean = { true },
     private val advertisements: () -> Flow<Advertisement> = ::scanBluetooth,
-    private val identity: (Advertisement) -> String = { it.identifier.toString() },
+    private val identity: (Advertisement) -> String = { "${it.identifier}" },
 ) : SharedSensor(), NearbyDeviceScanner {
     private val lock = SynchronizedObject()
     private val found = linkedMapOf<String, BleNearbyDevice>()
@@ -36,8 +36,8 @@ class BleNearbyDeviceScanner(
     private var job: Job? = null
 
     /** The most recent scan failure, cleared when scanning restarts. */
-    val failure: StateFlow<Throwable?> = mutableFailure.asStateFlow()
-    val isScanning: Boolean get() = synchronized(lock) { scanning }
+    public val failure: StateFlow<Throwable?> = mutableFailure.asStateFlow()
+    public val isScanning: Boolean get() = synchronized(lock) { scanning }
     /** True after the first matching advertisement is received in this scan. */
     override val hasValidReading: Boolean get() = synchronized(lock) { valid }
     override val devices: List<NearbyDevice> get() = synchronized(lock) { found.values.toList() }

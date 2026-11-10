@@ -1,0 +1,15 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:notify>
+abstract interface com.kylecorry.andromeda.notify/NotificationSender { // com.kylecorry.andromeda.notify/NotificationSender|null[0]
+    abstract fun cancel(kotlin/Int) // com.kylecorry.andromeda.notify/NotificationSender.cancel|cancel(kotlin.Int){}[0]
+    abstract fun send(kotlin/Int, kotlin/String, kotlin/String) // com.kylecorry.andromeda.notify/NotificationSender.send|send(kotlin.Int;kotlin.String;kotlin.String){}[0]
+}
+
+final fun (com.mmk.kmpnotifier.notification/Notifier).com.kylecorry.andromeda.notify/asNotificationSender(): com.kylecorry.andromeda.notify/NotificationSender // com.kylecorry.andromeda.notify/asNotificationSender|asNotificationSender@com.mmk.kmpnotifier.notification.Notifier(){}[0]
+final fun com.kylecorry.andromeda.notify/notificationSender(): com.kylecorry.andromeda.notify/NotificationSender // com.kylecorry.andromeda.notify/notificationSender|notificationSender(){}[0]

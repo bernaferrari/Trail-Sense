@@ -4,7 +4,7 @@ import com.kylecorry.andromeda.sense.orientation.Gyroscope
 import com.kylecorry.sol.math.Euler
 import com.kylecorry.sol.math.Quaternion
 
-class MockGyroscope(interval: Long = 0) : MockSensor(interval), Gyroscope {
+public class MockGyroscope(interval: Long = 0) : MockSensor(interval), Gyroscope {
     override val angularRate: Euler = Euler(0f, 0f, 0f)
     override val rawAngularRate: FloatArray = FloatArray(3)
     override val orientation: Quaternion = Quaternion.zero

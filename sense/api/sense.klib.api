@@ -1,0 +1,306 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:sense>
+final enum class com.kylecorry.andromeda.sense.location/GPSPowerUsage : kotlin/Enum<com.kylecorry.andromeda.sense.location/GPSPowerUsage> { // com.kylecorry.andromeda.sense.location/GPSPowerUsage|null[0]
+    enum entry Balanced // com.kylecorry.andromeda.sense.location/GPSPowerUsage.Balanced|null[0]
+    enum entry High // com.kylecorry.andromeda.sense.location/GPSPowerUsage.High|null[0]
+    enum entry Low // com.kylecorry.andromeda.sense.location/GPSPowerUsage.Low|null[0]
+
+    final val entries // com.kylecorry.andromeda.sense.location/GPSPowerUsage.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.sense.location/GPSPowerUsage> // com.kylecorry.andromeda.sense.location/GPSPowerUsage.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.sense.location/GPSPowerUsage // com.kylecorry.andromeda.sense.location/GPSPowerUsage.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.sense.location/GPSPowerUsage> // com.kylecorry.andromeda.sense.location/GPSPowerUsage.values|values#static(){}[0]
+}
+
+abstract class com.kylecorry.andromeda.sense.mock/MockSensor : com.kylecorry.andromeda.core.sensors/SharedSensor { // com.kylecorry.andromeda.sense.mock/MockSensor|null[0]
+    constructor <init>(kotlin/Long = ...) // com.kylecorry.andromeda.sense.mock/MockSensor.<init>|<init>(kotlin.Long){}[0]
+
+    open val hasValidReading // com.kylecorry.andromeda.sense.mock/MockSensor.hasValidReading|{}hasValidReading[0]
+        open fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.mock/MockSensor.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    open fun startImpl() // com.kylecorry.andromeda.sense.mock/MockSensor.startImpl|startImpl(){}[0]
+    open fun stopImpl() // com.kylecorry.andromeda.sense.mock/MockSensor.stopImpl|stopImpl(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.accelerometer/Accelerometer { // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.accelerometer/Accelerometer, kotlin/Float = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.<init>|<init>(com.kylecorry.andromeda.sense.accelerometer.Accelerometer;kotlin.Float;kotlin.Boolean){}[0]
+
+    final val acceleration // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.acceleration|{}acceleration[0]
+        final fun <get-acceleration>(): com.kylecorry.sol.math/Vector3 // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.acceleration.<get-acceleration>|<get-acceleration>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawAcceleration // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.rawAcceleration|{}rawAcceleration[0]
+        final fun <get-rawAcceleration>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.accelerometer/LowPassAccelerometer.rawAcceleration.<get-rawAcceleration>|<get-rawAcceleration>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.accelerometer/Accelerometer { // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.accelerometer/Accelerometer, com.kylecorry.andromeda.sense.orientation/OrientationSensor, kotlinx.coroutines/CoroutineScope, kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.<init>|<init>(com.kylecorry.andromeda.sense.accelerometer.Accelerometer;com.kylecorry.andromeda.sense.orientation.OrientationSensor;kotlinx.coroutines.CoroutineScope;kotlin.time.Duration;kotlin.Boolean;kotlin.Int;kotlin.Boolean){}[0]
+
+    final val acceleration // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.acceleration|{}acceleration[0]
+        final fun <get-acceleration>(): com.kylecorry.sol.math/Vector3 // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.acceleration.<get-acceleration>|<get-acceleration>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawAcceleration // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.rawAcceleration|{}rawAcceleration[0]
+        final fun <get-rawAcceleration>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.rawAcceleration.<get-rawAcceleration>|<get-rawAcceleration>(){}[0]
+
+    final var declination // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.declination|{}declination[0]
+        final fun <get-declination>(): kotlin/Float // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.declination.<get-declination>|<get-declination>(){}[0]
+        final fun <set-declination>(kotlin/Float) // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.declination.<set-declination>|<set-declination>(kotlin.Float){}[0]
+    final var surfaceRotation // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.surfaceRotation|{}surfaceRotation[0]
+        final fun <get-surfaceRotation>(): kotlin/Int // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.surfaceRotation.<get-surfaceRotation>|<get-surfaceRotation>(){}[0]
+        final fun <set-surfaceRotation>(kotlin/Int) // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.surfaceRotation.<set-surfaceRotation>|<set-surfaceRotation>(kotlin.Int){}[0]
+    final var useAROrientation // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.useAROrientation|{}useAROrientation[0]
+        final fun <get-useAROrientation>(): kotlin/Boolean // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.useAROrientation.<get-useAROrientation>|<get-useAROrientation>(){}[0]
+        final fun <set-useAROrientation>(kotlin/Boolean) // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.useAROrientation.<set-useAROrientation>|<set-useAROrientation>(kotlin.Boolean){}[0]
+    final var useTrueNorth // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.useTrueNorth|{}useTrueNorth[0]
+        final fun <get-useTrueNorth>(): kotlin/Boolean // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.useTrueNorth.<get-useTrueNorth>|<get-useTrueNorth>(){}[0]
+        final fun <set-useTrueNorth>(kotlin/Boolean) // com.kylecorry.andromeda.sense.accelerometer/WorldAccelerometer.useTrueNorth.<set-useTrueNorth>|<set-useTrueNorth>(kotlin.Boolean){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.altitude/FusedAltimeter : com.kylecorry.andromeda.core.sensors/Altimeter, com.kylecorry.andromeda.core.sensors/SharedSensor { // com.kylecorry.andromeda.sense.altitude/FusedAltimeter|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.location/GpsSensor, com.kylecorry.andromeda.sense.barometer/Barometer, com.kylecorry.andromeda.preferences/Preferences, kotlin/Boolean = ..., com.kylecorry.andromeda.sense.location.filters/GpsAltitudeEstimator = ..., kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Function1<kotlin/String, kotlin/Unit>? = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlinx.coroutines/CoroutineScope = ...) // com.kylecorry.andromeda.sense.altitude/FusedAltimeter.<init>|<init>(com.kylecorry.andromeda.sense.location.GpsSensor;com.kylecorry.andromeda.sense.barometer.Barometer;com.kylecorry.andromeda.preferences.Preferences;kotlin.Boolean;com.kylecorry.andromeda.sense.location.filters.GpsAltitudeEstimator;kotlin.time.Duration;kotlin.Boolean;kotlin.Function1<kotlin.String,kotlin.Unit>?;kotlin.time.Duration;kotlin.time.Duration;kotlinx.coroutines.CoroutineScope){}[0]
+
+    final val altitude // com.kylecorry.andromeda.sense.altitude/FusedAltimeter.altitude|{}altitude[0]
+        final fun <get-altitude>(): kotlin/Float // com.kylecorry.andromeda.sense.altitude/FusedAltimeter.altitude.<get-altitude>|<get-altitude>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.sense.altitude/FusedAltimeter.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.altitude/FusedAltimeter.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.sense.altitude/FusedAltimeter.Companion|null[0]
+        final fun clearCachedCalibration(com.kylecorry.andromeda.preferences/Preferences) // com.kylecorry.andromeda.sense.altitude/FusedAltimeter.Companion.clearCachedCalibration|clearCachedCalibration(com.kylecorry.andromeda.preferences.Preferences){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.sense.clinometer/Clinometer : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.clinometer/ClinometerSensor { // com.kylecorry.andromeda.sense.clinometer/Clinometer|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.orientation/OrientationSensor, kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.clinometer/Clinometer.<init>|<init>(com.kylecorry.andromeda.sense.orientation.OrientationSensor;kotlin.Boolean){}[0]
+
+    final val angle // com.kylecorry.andromeda.sense.clinometer/Clinometer.angle|{}angle[0]
+        final fun <get-angle>(): kotlin/Float // com.kylecorry.andromeda.sense.clinometer/Clinometer.angle.<get-angle>|<get-angle>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.sense.clinometer/Clinometer.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.clinometer/Clinometer.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val incline // com.kylecorry.andromeda.sense.clinometer/Clinometer.incline|{}incline[0]
+        final fun <get-incline>(): kotlin/Float // com.kylecorry.andromeda.sense.clinometer/Clinometer.incline.<get-incline>|<get-incline>(){}[0]
+
+    final var isAugmentedReality // com.kylecorry.andromeda.sense.clinometer/Clinometer.isAugmentedReality|{}isAugmentedReality[0]
+        final fun <get-isAugmentedReality>(): kotlin/Boolean // com.kylecorry.andromeda.sense.clinometer/Clinometer.isAugmentedReality.<get-isAugmentedReality>|<get-isAugmentedReality>(){}[0]
+        final fun <set-isAugmentedReality>(kotlin/Boolean) // com.kylecorry.andromeda.sense.clinometer/Clinometer.isAugmentedReality.<set-isAugmentedReality>|<set-isAugmentedReality>(kotlin.Boolean){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.compass/Compass : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.compass/CompassSensor { // com.kylecorry.andromeda.sense.compass/Compass|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.orientation/OrientationSensor, kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Float = ...) // com.kylecorry.andromeda.sense.compass/Compass.<init>|<init>(com.kylecorry.andromeda.sense.orientation.OrientationSensor;kotlin.Boolean;kotlin.Boolean;kotlin.Int;kotlin.Float){}[0]
+
+    final val bearing // com.kylecorry.andromeda.sense.compass/Compass.bearing|{}bearing[0]
+        final fun <get-bearing>(): com.kylecorry.sol.units/Bearing // com.kylecorry.andromeda.sense.compass/Compass.bearing.<get-bearing>|<get-bearing>(){}[0]
+    final val hasValidReading // com.kylecorry.andromeda.sense.compass/Compass.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.compass/Compass.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.compass/Compass.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.compass/Compass.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawBearing // com.kylecorry.andromeda.sense.compass/Compass.rawBearing|{}rawBearing[0]
+        final fun <get-rawBearing>(): kotlin/Float // com.kylecorry.andromeda.sense.compass/Compass.rawBearing.<get-rawBearing>|<get-rawBearing>(){}[0]
+
+    final var declination // com.kylecorry.andromeda.sense.compass/Compass.declination|{}declination[0]
+        final fun <get-declination>(): kotlin/Float // com.kylecorry.andromeda.sense.compass/Compass.declination.<get-declination>|<get-declination>(){}[0]
+        final fun <set-declination>(kotlin/Float) // com.kylecorry.andromeda.sense.compass/Compass.declination.<set-declination>|<set-declination>(kotlin.Float){}[0]
+    final var isAugmentedReality // com.kylecorry.andromeda.sense.compass/Compass.isAugmentedReality|{}isAugmentedReality[0]
+        final fun <get-isAugmentedReality>(): kotlin/Boolean // com.kylecorry.andromeda.sense.compass/Compass.isAugmentedReality.<get-isAugmentedReality>|<get-isAugmentedReality>(){}[0]
+        final fun <set-isAugmentedReality>(kotlin/Boolean) // com.kylecorry.andromeda.sense.compass/Compass.isAugmentedReality.<set-isAugmentedReality>|<set-isAugmentedReality>(kotlin.Boolean){}[0]
+    final var offset // com.kylecorry.andromeda.sense.compass/Compass.offset|{}offset[0]
+        final fun <get-offset>(): kotlin/Float // com.kylecorry.andromeda.sense.compass/Compass.offset.<get-offset>|<get-offset>(){}[0]
+        final fun <set-offset>(kotlin/Float) // com.kylecorry.andromeda.sense.compass/Compass.offset.<set-offset>|<set-offset>(kotlin.Float){}[0]
+    final var surfaceRotation // com.kylecorry.andromeda.sense.compass/Compass.surfaceRotation|{}surfaceRotation[0]
+        final fun <get-surfaceRotation>(): kotlin/Int // com.kylecorry.andromeda.sense.compass/Compass.surfaceRotation.<get-surfaceRotation>|<get-surfaceRotation>(){}[0]
+        final fun <set-surfaceRotation>(kotlin/Int) // com.kylecorry.andromeda.sense.compass/Compass.surfaceRotation.<set-surfaceRotation>|<set-surfaceRotation>(kotlin.Int){}[0]
+    final var useTrueNorth // com.kylecorry.andromeda.sense.compass/Compass.useTrueNorth|{}useTrueNorth[0]
+        final fun <get-useTrueNorth>(): kotlin/Boolean // com.kylecorry.andromeda.sense.compass/Compass.useTrueNorth.<get-useTrueNorth>|<get-useTrueNorth>(){}[0]
+        final fun <set-useTrueNorth>(kotlin/Boolean) // com.kylecorry.andromeda.sense.compass/Compass.useTrueNorth.<set-useTrueNorth>|<set-useTrueNorth>(kotlin.Boolean){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.level/Level : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.level/LevelSensor { // com.kylecorry.andromeda.sense.level/Level|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.orientation/OrientationSensor, kotlin/Int = ...) // com.kylecorry.andromeda.sense.level/Level.<init>|<init>(com.kylecorry.andromeda.sense.orientation.OrientationSensor;kotlin.Int){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.level/Level.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.level/Level.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    final var surfaceRotation // com.kylecorry.andromeda.sense.level/Level.surfaceRotation|{}surfaceRotation[0]
+        final fun <get-surfaceRotation>(): kotlin/Int // com.kylecorry.andromeda.sense.level/Level.surfaceRotation.<get-surfaceRotation>|<get-surfaceRotation>(){}[0]
+        final fun <set-surfaceRotation>(kotlin/Int) // com.kylecorry.andromeda.sense.level/Level.surfaceRotation.<set-surfaceRotation>|<set-surfaceRotation>(kotlin.Int){}[0]
+    final var x // com.kylecorry.andromeda.sense.level/Level.x|{}x[0]
+        final fun <get-x>(): kotlin/Float // com.kylecorry.andromeda.sense.level/Level.x.<get-x>|<get-x>(){}[0]
+    final var y // com.kylecorry.andromeda.sense.level/Level.y|{}y[0]
+        final fun <get-y>(): kotlin/Float // com.kylecorry.andromeda.sense.level/Level.y.<get-y>|<get-y>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.location/LocationRequestConfig { // com.kylecorry.andromeda.sense.location/LocationRequestConfig|null[0]
+    constructor <init>(kotlin.time/Duration = ..., com.kylecorry.sol.units/Distance = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin/Int? = ..., kotlin.time/Duration? = ..., com.kylecorry.andromeda.sense.location/GPSPowerUsage = ...) // com.kylecorry.andromeda.sense.location/LocationRequestConfig.<init>|<init>(kotlin.time.Duration;com.kylecorry.sol.units.Distance;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.Int?;kotlin.time.Duration?;com.kylecorry.andromeda.sense.location.GPSPowerUsage){}[0]
+
+    final val frequency // com.kylecorry.andromeda.sense.location/LocationRequestConfig.frequency|{}frequency[0]
+        final fun <get-frequency>(): kotlin.time/Duration // com.kylecorry.andromeda.sense.location/LocationRequestConfig.frequency.<get-frequency>|<get-frequency>(){}[0]
+    final val maximumDuration // com.kylecorry.andromeda.sense.location/LocationRequestConfig.maximumDuration|{}maximumDuration[0]
+        final fun <get-maximumDuration>(): kotlin.time/Duration? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.maximumDuration.<get-maximumDuration>|<get-maximumDuration>(){}[0]
+    final val maximumUpdateDelay // com.kylecorry.andromeda.sense.location/LocationRequestConfig.maximumUpdateDelay|{}maximumUpdateDelay[0]
+        final fun <get-maximumUpdateDelay>(): kotlin.time/Duration? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.maximumUpdateDelay.<get-maximumUpdateDelay>|<get-maximumUpdateDelay>(){}[0]
+    final val maximumUpdates // com.kylecorry.andromeda.sense.location/LocationRequestConfig.maximumUpdates|{}maximumUpdates[0]
+        final fun <get-maximumUpdates>(): kotlin/Int? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.maximumUpdates.<get-maximumUpdates>|<get-maximumUpdates>(){}[0]
+    final val minimumDistance // com.kylecorry.andromeda.sense.location/LocationRequestConfig.minimumDistance|{}minimumDistance[0]
+        final fun <get-minimumDistance>(): com.kylecorry.sol.units/Distance // com.kylecorry.andromeda.sense.location/LocationRequestConfig.minimumDistance.<get-minimumDistance>|<get-minimumDistance>(){}[0]
+    final val minimumFrequency // com.kylecorry.andromeda.sense.location/LocationRequestConfig.minimumFrequency|{}minimumFrequency[0]
+        final fun <get-minimumFrequency>(): kotlin.time/Duration? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.minimumFrequency.<get-minimumFrequency>|<get-minimumFrequency>(){}[0]
+    final val powerUsage // com.kylecorry.andromeda.sense.location/LocationRequestConfig.powerUsage|{}powerUsage[0]
+        final fun <get-powerUsage>(): com.kylecorry.andromeda.sense.location/GPSPowerUsage // com.kylecorry.andromeda.sense.location/LocationRequestConfig.powerUsage.<get-powerUsage>|<get-powerUsage>(){}[0]
+
+    final fun component1(): kotlin.time/Duration // com.kylecorry.andromeda.sense.location/LocationRequestConfig.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.sol.units/Distance // com.kylecorry.andromeda.sense.location/LocationRequestConfig.component2|component2(){}[0]
+    final fun component3(): kotlin.time/Duration? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.component3|component3(){}[0]
+    final fun component4(): kotlin.time/Duration? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.component4|component4(){}[0]
+    final fun component5(): kotlin/Int? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.component5|component5(){}[0]
+    final fun component6(): kotlin.time/Duration? // com.kylecorry.andromeda.sense.location/LocationRequestConfig.component6|component6(){}[0]
+    final fun component7(): com.kylecorry.andromeda.sense.location/GPSPowerUsage // com.kylecorry.andromeda.sense.location/LocationRequestConfig.component7|component7(){}[0]
+    final fun copy(kotlin.time/Duration = ..., com.kylecorry.sol.units/Distance = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin/Int? = ..., kotlin.time/Duration? = ..., com.kylecorry.andromeda.sense.location/GPSPowerUsage = ...): com.kylecorry.andromeda.sense.location/LocationRequestConfig // com.kylecorry.andromeda.sense.location/LocationRequestConfig.copy|copy(kotlin.time.Duration;com.kylecorry.sol.units.Distance;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.Int?;kotlin.time.Duration?;com.kylecorry.andromeda.sense.location.GPSPowerUsage){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sense.location/LocationRequestConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sense.location/LocationRequestConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sense.location/LocationRequestConfig.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.magnetometer/Magnetometer { // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.magnetometer/Magnetometer, kotlin/Float = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.<init>|<init>(com.kylecorry.andromeda.sense.magnetometer.Magnetometer;kotlin.Float;kotlin.Boolean){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val magneticField // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.magneticField|{}magneticField[0]
+        final fun <get-magneticField>(): com.kylecorry.sol.math/Vector3 // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.magneticField.<get-magneticField>|<get-magneticField>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawMagneticField // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.rawMagneticField|{}rawMagneticField[0]
+        final fun <get-rawMagneticField>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.magnetometer/LowPassMagnetometer.rawMagneticField.<get-rawMagneticField>|<get-rawMagneticField>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.mock/MockAccelerometer : com.kylecorry.andromeda.sense.accelerometer/Accelerometer, com.kylecorry.andromeda.sense.mock/MockSensor { // com.kylecorry.andromeda.sense.mock/MockAccelerometer|null[0]
+    constructor <init>(kotlin/FloatArray = ..., kotlin/Long = ...) // com.kylecorry.andromeda.sense.mock/MockAccelerometer.<init>|<init>(kotlin.FloatArray;kotlin.Long){}[0]
+
+    final val acceleration // com.kylecorry.andromeda.sense.mock/MockAccelerometer.acceleration|{}acceleration[0]
+        final fun <get-acceleration>(): com.kylecorry.sol.math/Vector3 // com.kylecorry.andromeda.sense.mock/MockAccelerometer.acceleration.<get-acceleration>|<get-acceleration>(){}[0]
+    final val rawAcceleration // com.kylecorry.andromeda.sense.mock/MockAccelerometer.rawAcceleration|{}rawAcceleration[0]
+        final fun <get-rawAcceleration>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.mock/MockAccelerometer.rawAcceleration.<get-rawAcceleration>|<get-rawAcceleration>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.mock/MockBarometer : com.kylecorry.andromeda.sense.barometer/Barometer, com.kylecorry.andromeda.sense.mock/MockSensor { // com.kylecorry.andromeda.sense.mock/MockBarometer|null[0]
+    constructor <init>(kotlin/Float = ..., kotlin/Long = ...) // com.kylecorry.andromeda.sense.mock/MockBarometer.<init>|<init>(kotlin.Float;kotlin.Long){}[0]
+
+    final val pressure // com.kylecorry.andromeda.sense.mock/MockBarometer.pressure|{}pressure[0]
+        final fun <get-pressure>(): kotlin/Float // com.kylecorry.andromeda.sense.mock/MockBarometer.pressure.<get-pressure>|<get-pressure>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.mock/MockGyroscope : com.kylecorry.andromeda.sense.mock/MockSensor, com.kylecorry.andromeda.sense.orientation/Gyroscope { // com.kylecorry.andromeda.sense.mock/MockGyroscope|null[0]
+    constructor <init>(kotlin/Long = ...) // com.kylecorry.andromeda.sense.mock/MockGyroscope.<init>|<init>(kotlin.Long){}[0]
+
+    final val angularRate // com.kylecorry.andromeda.sense.mock/MockGyroscope.angularRate|{}angularRate[0]
+        final fun <get-angularRate>(): com.kylecorry.sol.math/Euler // com.kylecorry.andromeda.sense.mock/MockGyroscope.angularRate.<get-angularRate>|<get-angularRate>(){}[0]
+    final val headingAccuracy // com.kylecorry.andromeda.sense.mock/MockGyroscope.headingAccuracy|{}headingAccuracy[0]
+        final fun <get-headingAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.mock/MockGyroscope.headingAccuracy.<get-headingAccuracy>|<get-headingAccuracy>(){}[0]
+    final val orientation // com.kylecorry.andromeda.sense.mock/MockGyroscope.orientation|{}orientation[0]
+        final fun <get-orientation>(): com.kylecorry.sol.math/Quaternion // com.kylecorry.andromeda.sense.mock/MockGyroscope.orientation.<get-orientation>|<get-orientation>(){}[0]
+    final val rawAngularRate // com.kylecorry.andromeda.sense.mock/MockGyroscope.rawAngularRate|{}rawAngularRate[0]
+        final fun <get-rawAngularRate>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.mock/MockGyroscope.rawAngularRate.<get-rawAngularRate>|<get-rawAngularRate>(){}[0]
+    final val rawOrientation // com.kylecorry.andromeda.sense.mock/MockGyroscope.rawOrientation|{}rawOrientation[0]
+        final fun <get-rawOrientation>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.mock/MockGyroscope.rawOrientation.<get-rawOrientation>|<get-rawOrientation>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.mock/MockMagnetometer : com.kylecorry.andromeda.sense.magnetometer/Magnetometer, com.kylecorry.andromeda.sense.mock/MockSensor { // com.kylecorry.andromeda.sense.mock/MockMagnetometer|null[0]
+    constructor <init>(kotlin/FloatArray = ..., kotlin/Long = ...) // com.kylecorry.andromeda.sense.mock/MockMagnetometer.<init>|<init>(kotlin.FloatArray;kotlin.Long){}[0]
+
+    final val magneticField // com.kylecorry.andromeda.sense.mock/MockMagnetometer.magneticField|{}magneticField[0]
+        final fun <get-magneticField>(): com.kylecorry.sol.math/Vector3 // com.kylecorry.andromeda.sense.mock/MockMagnetometer.magneticField.<get-magneticField>|<get-magneticField>(){}[0]
+    final val rawMagneticField // com.kylecorry.andromeda.sense.mock/MockMagnetometer.rawMagneticField|{}rawMagneticField[0]
+        final fun <get-rawMagneticField>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.mock/MockMagnetometer.rawMagneticField.<get-rawMagneticField>|<get-rawMagneticField>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.orientation/OrientationSensor { // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.magnetometer/Magnetometer, com.kylecorry.andromeda.sense.accelerometer/Accelerometer, kotlin/Boolean = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.<init>|<init>(com.kylecorry.andromeda.sense.magnetometer.Magnetometer;com.kylecorry.andromeda.sense.accelerometer.Accelerometer;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val headingAccuracy // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.headingAccuracy|{}headingAccuracy[0]
+        final fun <get-headingAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.headingAccuracy.<get-headingAccuracy>|<get-headingAccuracy>(){}[0]
+    final val orientation // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.orientation|{}orientation[0]
+        final fun <get-orientation>(): com.kylecorry.sol.math/Quaternion // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.orientation.<get-orientation>|<get-orientation>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawOrientation // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.rawOrientation|{}rawOrientation[0]
+        final fun <get-rawOrientation>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor.rawOrientation.<get-rawOrientation>|<get-rawOrientation>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.orientation/CustomRotationSensor : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.orientation/OrientationSensor { // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.magnetometer/Magnetometer, com.kylecorry.andromeda.sense.accelerometer/Accelerometer, com.kylecorry.andromeda.sense.orientation/Gyroscope, kotlinx.coroutines/CoroutineScope, kotlin/Float = ..., kotlin/Float = ..., kotlin.time/Duration = ..., kotlin.ranges/ClosedFloatingPointRange<kotlin/Float> = ..., kotlin.ranges/ClosedFloatingPointRange<kotlin/Float> = ..., kotlin/Boolean = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.<init>|<init>(com.kylecorry.andromeda.sense.magnetometer.Magnetometer;com.kylecorry.andromeda.sense.accelerometer.Accelerometer;com.kylecorry.andromeda.sense.orientation.Gyroscope;kotlinx.coroutines.CoroutineScope;kotlin.Float;kotlin.Float;kotlin.time.Duration;kotlin.ranges.ClosedFloatingPointRange<kotlin.Float>;kotlin.ranges.ClosedFloatingPointRange<kotlin.Float>;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val headingAccuracy // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.headingAccuracy|{}headingAccuracy[0]
+        final fun <get-headingAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.headingAccuracy.<get-headingAccuracy>|<get-headingAccuracy>(){}[0]
+    final val orientation // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.orientation|{}orientation[0]
+        final fun <get-orientation>(): com.kylecorry.sol.math/Quaternion // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.orientation.<get-orientation>|<get-orientation>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawOrientation // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.rawOrientation|{}rawOrientation[0]
+        final fun <get-rawOrientation>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.orientation/CustomRotationSensor.rawOrientation.<get-rawOrientation>|<get-rawOrientation>(){}[0]
+}
+
+final class com.kylecorry.andromeda.sense.orientation/DeviceOrientation : com.kylecorry.andromeda.core.sensors/SharedSensor { // com.kylecorry.andromeda.sense.orientation/DeviceOrientation|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.accelerometer/Accelerometer) // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.<init>|<init>(com.kylecorry.andromeda.sense.accelerometer.Accelerometer){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+
+    final var orientation // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.orientation|{}orientation[0]
+        final fun <get-orientation>(): com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.orientation.<get-orientation>|<get-orientation>(){}[0]
+
+    final enum class Orientation : kotlin/Enum<com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation> { // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation|null[0]
+        enum entry Flat // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.Flat|null[0]
+        enum entry FlatInverse // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.FlatInverse|null[0]
+        enum entry Landscape // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.Landscape|null[0]
+        enum entry LandscapeInverse // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.LandscapeInverse|null[0]
+        enum entry Portrait // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.Portrait|null[0]
+        enum entry PortraitInverse // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.PortraitInverse|null[0]
+
+        final val entries // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation> // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation> // com.kylecorry.andromeda.sense.orientation/DeviceOrientation.Orientation.values|values#static(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.sense.orientation/GravityRotationSensor : com.kylecorry.andromeda.core.sensors/SharedSensor, com.kylecorry.andromeda.sense.orientation/OrientationSensor { // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor|null[0]
+    constructor <init>(com.kylecorry.andromeda.sense.accelerometer/Accelerometer, kotlin/Boolean = ...) // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.<init>|<init>(com.kylecorry.andromeda.sense.accelerometer.Accelerometer;kotlin.Boolean){}[0]
+
+    final val hasValidReading // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.hasValidReading|{}hasValidReading[0]
+        final fun <get-hasValidReading>(): kotlin/Boolean // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.hasValidReading.<get-hasValidReading>|<get-hasValidReading>(){}[0]
+    final val headingAccuracy // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.headingAccuracy|{}headingAccuracy[0]
+        final fun <get-headingAccuracy>(): kotlin/Float? // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.headingAccuracy.<get-headingAccuracy>|<get-headingAccuracy>(){}[0]
+    final val orientation // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.orientation|{}orientation[0]
+        final fun <get-orientation>(): com.kylecorry.sol.math/Quaternion // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.orientation.<get-orientation>|<get-orientation>(){}[0]
+    final val quality // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.quality|{}quality[0]
+        final fun <get-quality>(): com.kylecorry.andromeda.core.sensors/Quality // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.quality.<get-quality>|<get-quality>(){}[0]
+    final val rawOrientation // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.rawOrientation|{}rawOrientation[0]
+        final fun <get-rawOrientation>(): kotlin/FloatArray // com.kylecorry.andromeda.sense.orientation/GravityRotationSensor.rawOrientation.<get-rawOrientation>|<get-rawOrientation>(){}[0]
+}
+
+final object com.kylecorry.andromeda.sense.orientation/OrientationUtils { // com.kylecorry.andromeda.sense.orientation/OrientationUtils|null[0]
+    final fun getAROrientation(com.kylecorry.andromeda.sense.orientation/OrientationSensor, kotlin/FloatArray, kotlin/FloatArray, kotlin/Int = ..., kotlin/Float? = ...) // com.kylecorry.andromeda.sense.orientation/OrientationUtils.getAROrientation|getAROrientation(com.kylecorry.andromeda.sense.orientation.OrientationSensor;kotlin.FloatArray;kotlin.FloatArray;kotlin.Int;kotlin.Float?){}[0]
+    final fun getCompassOrientation(com.kylecorry.andromeda.sense.orientation/OrientationSensor, kotlin/FloatArray, kotlin/FloatArray, kotlin/Int = ..., kotlin/Float? = ...) // com.kylecorry.andromeda.sense.orientation/OrientationUtils.getCompassOrientation|getCompassOrientation(com.kylecorry.andromeda.sense.orientation.OrientationSensor;kotlin.FloatArray;kotlin.FloatArray;kotlin.Int;kotlin.Float?){}[0]
+    final fun getOrientation(com.kylecorry.andromeda.sense.orientation/OrientationSensor, kotlin/Int, kotlin/Int, kotlin/FloatArray, kotlin/FloatArray, kotlin/Float? = ...) // com.kylecorry.andromeda.sense.orientation/OrientationUtils.getOrientation|getOrientation(com.kylecorry.andromeda.sense.orientation.OrientationSensor;kotlin.Int;kotlin.Int;kotlin.FloatArray;kotlin.FloatArray;kotlin.Float?){}[0]
+}
+
+final fun (com.kylecorry.andromeda.device/DeviceSensors).com.kylecorry.andromeda.sense.orientation/fusedOrientationSensor(kotlinx.coroutines/CoroutineScope, kotlin.time/Duration = ..., com.kylecorry.andromeda.device/SensorAccuracy = ...): com.kylecorry.andromeda.sense.orientation/CustomRotationSensor // com.kylecorry.andromeda.sense.orientation/fusedOrientationSensor|fusedOrientationSensor@com.kylecorry.andromeda.device.DeviceSensors(kotlinx.coroutines.CoroutineScope;kotlin.time.Duration;com.kylecorry.andromeda.device.SensorAccuracy){}[0]
+final fun (com.kylecorry.andromeda.device/DeviceSensors).com.kylecorry.andromeda.sense.orientation/geomagneticOrientationSensor(kotlinx.coroutines/CoroutineScope, kotlin.time/Duration = ..., com.kylecorry.andromeda.device/SensorAccuracy = ...): com.kylecorry.andromeda.sense.orientation/CustomGeomagneticRotationSensor // com.kylecorry.andromeda.sense.orientation/geomagneticOrientationSensor|geomagneticOrientationSensor@com.kylecorry.andromeda.device.DeviceSensors(kotlinx.coroutines.CoroutineScope;kotlin.time.Duration;com.kylecorry.andromeda.device.SensorAccuracy){}[0]
+final fun (com.kylecorry.andromeda.device/DeviceSensors).com.kylecorry.andromeda.sense.orientation/tiltSensor(kotlinx.coroutines/CoroutineScope, kotlin.time/Duration = ..., com.kylecorry.andromeda.device/SensorAccuracy = ...): com.kylecorry.andromeda.sense.orientation/GravityRotationSensor // com.kylecorry.andromeda.sense.orientation/tiltSensor|tiltSensor@com.kylecorry.andromeda.device.DeviceSensors(kotlinx.coroutines.CoroutineScope;kotlin.time.Duration;com.kylecorry.andromeda.device.SensorAccuracy){}[0]
+final fun com.kylecorry.andromeda.sense.location/nmeaMessages(): kotlinx.coroutines.flow/Flow<com.kylecorry.sol.units/Reading<com.kylecorry.andromeda.sense.location/Nmea>> // com.kylecorry.andromeda.sense.location/nmeaMessages|nmeaMessages(){}[0]
+final fun com.kylecorry.andromeda.sense.location/nmeaMslAltitudes(): kotlinx.coroutines.flow/Flow<com.kylecorry.sol.units/Reading<kotlin/Float>> // com.kylecorry.andromeda.sense.location/nmeaMslAltitudes|nmeaMslAltitudes(){}[0]

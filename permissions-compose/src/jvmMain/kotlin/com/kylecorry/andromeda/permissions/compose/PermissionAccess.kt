@@ -6,7 +6,7 @@ import com.kylecorry.andromeda.permissions.PermissionAccess
 import com.kylecorry.andromeda.permissions.PermissionStatus
 
 @Composable
-actual fun rememberPermissionAccess(): PermissionAccess = DesktopPermissionAccess
+public actual fun rememberPermissionAccess(): PermissionAccess = DesktopPermissionAccess
 
 private object DesktopPermissionAccess : PermissionAccess {
     override suspend fun status(permission: AppPermission) = PermissionStatus.NotDetermined

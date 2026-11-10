@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.haptics
 
-enum class HapticFeedbackType {
+public enum class HapticFeedbackType {
     Tick,
     Click,
     HeavyClick,

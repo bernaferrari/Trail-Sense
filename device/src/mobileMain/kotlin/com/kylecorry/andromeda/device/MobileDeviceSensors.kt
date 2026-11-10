@@ -2,17 +2,21 @@ package com.kylecorry.andromeda.device
 
 import com.ksensor.core.SensorConfig
 import com.ksensor.core.model.StateData
+import com.ksensor.plugins.sensors.environment.EnvironmentPlugin
+import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
+import com.ksensor.plugins.sensors.motion.MotionPlugin
+import com.ksensor.plugins.sensors.motion.createMotionPlugin
+import com.ksensor.plugins.sensors.positioning.PositioningPlugin
+import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
+import com.ksensor.plugins.states.system.SystemPlugin
+import com.ksensor.plugins.states.system.createSystemPlugin
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.andromeda.battery.BatteryHealth
-import com.ksensor.plugins.sensors.environment.createEnvironmentPlugin
-import com.ksensor.plugins.sensors.motion.createMotionPlugin
-import com.ksensor.plugins.sensors.positioning.createPositioningPlugin
-import com.ksensor.plugins.states.system.createSystemPlugin
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.units.Reading
-import kotlinx.coroutines.flow.map
 import kotlin.time.Duration
 import kotlin.time.Instant
+import kotlinx.coroutines.flow.map
 
 internal class MobileDeviceBackend : DeviceBackend {
     val motion by lazy { createMotionPlugin() }
@@ -93,10 +97,10 @@ internal expect fun platformAngularVelocity(interval: Duration, accuracy: Sensor
 internal expect fun platformMagneticField(interval: Duration, accuracy: SensorAccuracy): kotlinx.coroutines.flow.Flow<Reading<Vector3>>
 
 /** Access to platform sensor plugins on Android and iOS. */
-val DeviceSensors.motion get() = (backend as MobileDeviceBackend).motion
-val DeviceSensors.environment get() = (backend as MobileDeviceBackend).environment
-val DeviceSensors.positioning get() = (backend as MobileDeviceBackend).positioning
-val DeviceSensors.system get() = (backend as MobileDeviceBackend).system
+public val DeviceSensors.motion: MotionPlugin get() = (backend as MobileDeviceBackend).motion
+public val DeviceSensors.environment: EnvironmentPlugin get() = (backend as MobileDeviceBackend).environment
+public val DeviceSensors.positioning: PositioningPlugin get() = (backend as MobileDeviceBackend).positioning
+public val DeviceSensors.system: SystemPlugin get() = (backend as MobileDeviceBackend).system
 
 internal expect fun platformAmbientTemperature(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>
 internal expect fun platformRelativeHumidity(interval: Duration): kotlinx.coroutines.flow.Flow<Reading<Float>>

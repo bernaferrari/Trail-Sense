@@ -5,9 +5,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.core.content.getSystemService
 
-object Clipboard {
+public object Clipboard {
 
-    fun copy(context: Context, text: String) {
+    public fun copy(context: Context, text: String) {
         val clipboardManager = context.getSystemService<ClipboardManager>()
         clipboardManager?.setPrimaryClip(ClipData.newPlainText(text, text))
     }

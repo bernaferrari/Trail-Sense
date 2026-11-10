@@ -1,6 +1,6 @@
 package com.kylecorry.andromeda.gpx
 
-data class GPXRoute(
+public data class GPXRoute(
     val name: String?,
     val description: String?,
     val comment: String?,

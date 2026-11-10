@@ -1,8 +1,8 @@
 package com.kylecorry.andromeda.forms
 
-interface FormValue<T> {
-    val id: String
-    var value: T
+public interface FormValue<T> {
+    public val id: String
+    public var value: T
 }
 
-class MutableFormValue<T>(override val id: String, override var value: T) : FormValue<T>
+public class MutableFormValue<T>(override val id: String, override var value: T) : FormValue<T>

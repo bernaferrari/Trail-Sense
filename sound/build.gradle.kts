@@ -1,29 +1,21 @@
 plugins {
-    kotlin("multiplatform")
-    id("com.android.kotlin.multiplatform.library")
-    id("com.vanniktech.maven.publish")
+    id("andromeda.library")
 }
+
 kotlin {
-    android {
-        namespace = "com.kylecorry.andromeda.sound"
-        compileSdk = 37
-        minSdk = 24
-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
-    }
-    jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11) }
-    iosArm64()
-    iosSimulatorArm64()
-    jvmToolchain(17)
     sourceSets {
         commonMain.dependencies {
             api(project(":shared"))
-            implementation("org.jetbrains.kotlinx:atomicfu:0.31.0")
-            api("eu.iamkonstantin.kotlin:gadulka:1.14.0")
+            implementation(libs.kotlinx.atomicfu)
+            api(libs.gadulka)
         }
-        iosMain.dependencies { implementation("io.github.piotrprus:audio-capture:0.1.0") }
-        androidMain.dependencies { implementation("io.github.shadadman:ksensor-core:9.40.0"); implementation(libs.kotlinx.coroutines.android) }
+        iosMain.dependencies { implementation(libs.audioCapture) }
+        androidMain.dependencies {
+            implementation(libs.ksensor.core)
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(project(":core"))
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.luna)
+        }
     }
 }
-group = "com.kylecorry.andromeda"
-version = "25.1.1"
-mavenPublishing { coordinates("com.kylecorry.andromeda", "sound", "25.1.1") }

@@ -1,0 +1,19 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:csv>
+final class com.kylecorry.andromeda.csv/CsvSerializer { // com.kylecorry.andromeda.csv/CsvSerializer|null[0]
+    constructor <init>() // com.kylecorry.andromeda.csv/CsvSerializer.<init>|<init>(){}[0]
+
+    final fun deserialize(kotlin/ByteArray): kotlin.collections/List<kotlin.collections/List<kotlin/String>> // com.kylecorry.andromeda.csv/CsvSerializer.deserialize|deserialize(kotlin.ByteArray){}[0]
+    final fun serialize(kotlin.collections/List<kotlin.collections/List<kotlin/String>>): kotlin/ByteArray // com.kylecorry.andromeda.csv/CsvSerializer.serialize|serialize(kotlin.collections.List<kotlin.collections.List<kotlin.String>>){}[0]
+}
+
+final object com.kylecorry.andromeda.csv/CSVConvert { // com.kylecorry.andromeda.csv/CSVConvert|null[0]
+    final fun parse(kotlin/String): kotlin.collections/List<kotlin.collections/List<kotlin/String>> // com.kylecorry.andromeda.csv/CSVConvert.parse|parse(kotlin.String){}[0]
+    final fun toCSV(kotlin.collections/List<kotlin.collections/List<kotlin/Any?>>): kotlin/String // com.kylecorry.andromeda.csv/CSVConvert.toCSV|toCSV(kotlin.collections.List<kotlin.collections.List<kotlin.Any?>>){}[0]
+}

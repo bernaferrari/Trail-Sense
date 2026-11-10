@@ -2,7 +2,7 @@ package com.kylecorry.andromeda.ipc
 
 import android.os.Bundle
 
-fun Map<String, IpcValue>.toBundle(): Bundle = Bundle().also { bundle ->
+public fun Map<String, IpcValue>.toBundle(): Bundle = Bundle().also { bundle ->
     for ((key, value) in this) when (value) {
         IpcValue.Null -> bundle.putString(key, null)
         is IpcValue.Text -> bundle.putString(key, value.value)
@@ -16,7 +16,7 @@ fun Map<String, IpcValue>.toBundle(): Bundle = Bundle().also { bundle ->
 }
 
 @Suppress("DEPRECATION")
-fun Bundle.toIpcHeaders(): Map<String, IpcValue> = keySet().associateWith { key ->
+public fun Bundle.toIpcHeaders(): Map<String, IpcValue> = keySet().associateWith { key ->
     when (val value = get(key)) {
         null -> IpcValue.Null
         is String -> IpcValue.Text(value)

@@ -11,7 +11,7 @@ import com.kylecorry.sol.units.Bearing
  * @param compass the compass
  * @param filter the filter to use to smooth the bearing
  */
-class FilteredCompass(private val compass: CompassSensor, private val filter: IFilter) :
+public class FilteredCompass(private val compass: CompassSensor, private val filter: IFilter) :
     SharedSensor(),
     CompassSensor {
 

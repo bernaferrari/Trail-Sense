@@ -1,15 +1,15 @@
 package com.kylecorry.andromeda.net
 
-class HttpResponse(
-    val code: Int,
-    val headers: Map<String, List<String>>,
-    val content: ByteArray?
+public class HttpResponse(
+    public val code: Int,
+    public val headers: Map<String, List<String>>,
+    public val content: ByteArray?
 ) {
-    fun contentAsString(): String? {
+    public fun contentAsString(): String? {
         return content?.decodeToString()
     }
 
-    fun isSuccessful(): Boolean {
+    public fun isSuccessful(): Boolean {
         return code in 200..299
     }
 }
