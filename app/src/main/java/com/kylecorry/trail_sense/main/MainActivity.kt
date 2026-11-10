@@ -4,6 +4,8 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import android.Manifest
 import android.app.Activity
@@ -58,14 +60,14 @@ import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.errors.TrailSenseExceptionHandler
 import com.kylecorry.trail_sense.main.theme.AppThemeMode
 import com.kylecorry.trail_sense.main.theme.ThemeProvider
-import com.kylecorry.trail_sense.onboarding.OnboardingActivity
+import com.kylecorry.trail_sense.onboarding.Onboarding
+import com.kylecorry.trail_sense.onboarding.OnboardingFlow
 import com.kylecorry.trail_sense.receivers.RestartServicesCommand
 import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavDisplay
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
 import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
@@ -103,7 +105,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
     private val bottomNavigation = MainBottomNavigationState()
 
     private val userPrefs = getAppService<UserPreferences>()
-    private val cache by lazy { PreferencesSubsystem.getInstance(this).preferences }
 
     private val themeProvider = ThemeProvider()
     private var rootNavigator: TrailSenseNavigator? = null
@@ -115,7 +116,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
     )
 
     private var appInitialized = false
-    private var isOnboarding = false
+    /** First run shows the onboarding pages in place of the app; the app starts once they are finished. */
+    private var isOnboarding by mutableStateOf(false)
     private var navGraphInitialized = false
     private var permissionResultAction: (() -> Unit)? = null
     private var intentResultAction: ((Boolean, Intent?) -> Unit)? = null
@@ -161,12 +163,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        if (cache.getBoolean(getString(R.string.pref_onboarding_completed)) != true) {
-            startActivity(Intent(this, OnboardingActivity::class.java))
-            // Calling finish() here can crash some devices, so we need to set the flag and finish in onStart()
-            isOnboarding = true
-            return
-        }
+        isOnboarding = !Onboarding.isCompleted(this)
 
         Screen.setAllowScreenshots(window, !userPrefs.privacy.isScreenshotProtectionOn)
 
@@ -184,6 +181,13 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
                 darkTheme = darkTheme,
                 isAmoled = isBlackTheme
             ) {
+                if (isOnboarding) {
+                    OnboardingFlow(
+                        onFinished = ::finishOnboarding,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    return@TrailSenseAppTheme
+                }
                 MainActivityContent(
                     appHost = appHost,
                     errorBanner = errorBanner,
@@ -298,10 +302,17 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
     override fun onStart() {
         super.onStart()
-        if (isOnboarding) {
-            finish()
-            return
+        if (!isOnboarding) {
+            initializeApp()
         }
+    }
+
+    private fun finishOnboarding() {
+        isOnboarding = false
+        initializeApp()
+    }
+
+    private fun initializeApp() {
         if (!appInitialized) {
             appInitialized = true
             updateBottomNavigation()
@@ -426,6 +437,8 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        // During first run the app has not started yet; it handles the latest intent once onboarding is done
+        if (isOnboarding) return
         handleIntentAction(intent)
     }
 
