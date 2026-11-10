@@ -127,7 +127,7 @@ fun DestinationContent(
             // --- Simple / no-arg screens (tools and misc) ---
             Route.Level -> LevelScreen()
             Route.Whistle -> WhistleScreen(
-                onAudioUnavailable = { findNavigator().navigateUp() }
+                onAudioUnavailable = { host.navigator.navigateUp() }
             )
             Route.LightMeter -> LightMeterScreen()
             Route.Convert -> ConvertScreen()
@@ -192,10 +192,10 @@ fun DestinationContent(
             Route.WaterPurification -> WaterPurificationToolScreen()
             is Route.PluginDetails -> PluginDetailsScreen(
                 packageId = route.packageId,
-                pluginSubsystem = PluginSubsystem.getInstance(requireContext()),
+                pluginSubsystem = PluginSubsystem.getInstance(host.context),
                 onNavigateUp = {
                     tryOrNothing {
-                        findNavigator().navigateUp()
+                        host.navigator.navigateUp()
                     }
                 }
             )
@@ -263,7 +263,7 @@ fun DestinationContent(
             Route.Weather -> WeatherToolScreen(
                 bindQuickActions = { left, right ->
                     com.kylecorry.trail_sense.tools.weather.quickactions.WeatherQuickActionBinder(
-                        this, left, right, com.kylecorry.trail_sense.shared.UserPreferences(requireContext()).weather
+                        this, left, right, com.kylecorry.trail_sense.shared.UserPreferences(host.context).weather
                     ).bind()
                 }
             )

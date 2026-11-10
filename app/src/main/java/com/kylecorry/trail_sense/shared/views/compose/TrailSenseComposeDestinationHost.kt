@@ -2,9 +2,7 @@ package com.kylecorry.trail_sense.shared.views.compose
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.os.Build
-import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,7 +16,6 @@ import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.andromeda.permissions.PermissionRationale
 import com.kylecorry.andromeda.permissions.Permissions
@@ -39,59 +36,25 @@ import kotlinx.coroutines.Job
 class TrailSenseComposeDestinationHost(
     override val context: Context,
     private val activity: MainActivity,
-    private val rootView: View,
     override val route: Route,
     override val lifecycleOwner: LifecycleOwner,
     private val requestRuntimePermissions: (Array<String>, () -> Unit) -> Unit
 ) : TrailSenseDestinationHost, ScreenEffects {
 
     override val navigator: TrailSenseNavigator
-        get() = findNavigator()
+        get() = activity.navigator ?: error("The app navigator is not available")
 
     private var actionSheet by mutableStateOf<ActionSheetState?>(null)
     private var photoImportDialog by mutableStateOf<PhotoImportDialog?>(null)
     override var screenController: Any? = null
     private var specialPermissionAction: (() -> Unit)? = null
 
-    fun requireActivity(): MainActivity {
-        return activity
-    }
-
-    fun requireView(): View {
-        return rootView
-    }
-
-    val lifecycleScope: CoroutineScope
+    private val lifecycleScope: CoroutineScope
         get() = lifecycleOwner.lifecycleScope
 
-    val mainActivity: MainActivity
-        get() = activity
+    private fun getString(resId: Int, vararg formatArgs: Any?): String = context.getString(resId, *formatArgs)
 
-    val intentResultRetriever: IntentResultRetriever
-        get() = activity
-
-
-    fun requireContext(): Context {
-        return context
-    }
-
-    fun getResources(): android.content.res.Resources {
-        return context.resources
-    }
-
-    fun getString(resId: Int): String {
-        return context.getString(resId)
-    }
-
-    fun getString(resId: Int, vararg formatArgs: Any?): String {
-        return context.getString(resId, *formatArgs)
-    }
-
-    fun startActivity(intent: Intent) {
-        context.startActivity(intent)
-    }
-
-    fun showActionSheet(
+    private fun showActionSheet(
         title: String,
         subtitle: String?,
         actions: List<ActionItem>,
@@ -101,13 +64,13 @@ class TrailSenseComposeDestinationHost(
         actionSheet = ActionSheetState(title, subtitle, actions, stats, onAction)
     }
 
-    fun showPhotoImport(
+    private fun showPhotoImport(
         resolution: android.util.Size?,
         useZeroShutterLag: Boolean,
         onCapture: (android.net.Uri?) -> Unit
     ) {
         photoImportDialog = PhotoImportDialog(
-            requireContext(),
+            context,
             lifecycleOwner,
             lifecycleScope,
             resolution,
@@ -120,23 +83,23 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
+    private fun requestCamera(action: (hasPermission: Boolean) -> Unit) {
         requestPermissions(listOf(Manifest.permission.CAMERA)) {
-            action(AndroidCamera.isAvailable(requireContext()))
+            action(AndroidCamera.isAvailable(context))
         }
     }
 
-    fun requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
+    private fun requestActivityRecognition(action: (hasPermission: Boolean) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             requestPermissions(listOf(Manifest.permission.ACTIVITY_RECOGNITION)) {
-                action(Permissions.canRecognizeActivity(requireContext()))
+                action(Permissions.canRecognizeActivity(context))
             }
         } else {
             action(true)
         }
     }
 
-    fun requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
+    private fun requestScheduleExactAlarms(action: (hasPermission: Boolean) -> Unit) {
         requestPermission(
             SpecialPermission.SCHEDULE_EXACT_ALARMS,
             PermissionRationale(
@@ -152,12 +115,12 @@ class TrailSenseComposeDestinationHost(
             )
         ) {
             val isGranted = Permissions.hasPermission(
-                requireContext(),
+                context,
                 SpecialPermission.SCHEDULE_EXACT_ALARMS
             )
             if (!isGranted) {
                 Alerts.snackbar(
-                    requireContext(),
+                    context,
                     getString(R.string.exact_alarm_permission_denied),
                     short = false
                 )
@@ -166,8 +129,8 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    fun requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
-        if (Permissions.canStartLocationForgroundService(requireContext())) {
+    private fun requestBacktrackPermission(action: (hasPermission: Boolean) -> Unit) {
+        if (Permissions.canStartLocationForgroundService(context)) {
             action(true)
             return
         }
@@ -178,21 +141,21 @@ class TrailSenseComposeDestinationHost(
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
         ) {
-            val hasPermission = Permissions.canStartLocationForgroundService(requireContext())
+            val hasPermission = Permissions.canStartLocationForgroundService(context)
             if (!hasPermission) {
-                Alerts.snackbar(requireContext(), getString(R.string.backtrack_no_permission))
+                Alerts.snackbar(context, getString(R.string.backtrack_no_permission))
             }
             action(hasPermission)
         }
     }
 
-    fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit) {
+    private fun requestBackgroundLocation(action: (hasPermission: Boolean) -> Unit) {
         requestPermissions(listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-            action(Permissions.isBackgroundLocationEnabled(requireContext()))
+            action(Permissions.isBackgroundLocationEnabled(context))
         }
     }
 
-    fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit) {
+    private fun requestIgnoreBatteryOptimizations(action: (hasPermission: Boolean) -> Unit) {
         requestPermission(
             SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS,
             PermissionRationale(
@@ -210,7 +173,7 @@ class TrailSenseComposeDestinationHost(
             )
         ) {
             val isGranted = Permissions.hasPermission(
-                requireContext(),
+                context,
                 SpecialPermission.IGNORE_BATTERY_OPTIMIZATIONS
             )
             if (!isGranted) {
@@ -220,16 +183,11 @@ class TrailSenseComposeDestinationHost(
         }
     }
 
-    fun findNavigator(): TrailSenseNavigator {
-        return activity.navigator
-            ?: error("Root TrailSenseNavigator is not available")
+    private fun message(message: CharSequence, short: Boolean) {
+        Alerts.snackbar(context, message, short)
     }
 
-    fun message(message: CharSequence, short: Boolean) {
-        Alerts.snackbar(requireContext(), message, short)
-    }
-
-    fun inBackground(
+    private fun inBackground(
         state: BackgroundMinimumState,
         cancelWhenRerun: Boolean,
         block: suspend CoroutineScope.() -> Unit
@@ -237,17 +195,17 @@ class TrailSenseComposeDestinationHost(
         return lifecycleOwner.inBackground(state, cancelWhenRerun = cancelWhenRerun, block = block)
     }
 
-    fun alertNoActivityRecognitionPermission() {
+    private fun alertNoActivityRecognitionPermission() {
         Alerts.snackbar(
-            requireContext(),
+            context,
             getString(R.string.activity_recognition_permission_denied),
             short = false
         )
     }
 
-    fun alertNoCameraPermission() {
+    private fun alertNoCameraPermission() {
         Alerts.snackbar(
-            requireContext(),
+            context,
             getString(R.string.camera_permission_denied),
             short = false
         )
@@ -263,7 +221,7 @@ class TrailSenseComposeDestinationHost(
 
     private fun requestPermissions(permissions: List<String>, action: () -> Unit) {
         val missingPermissions = permissions.filter {
-            !Permissions.hasPermission(requireContext(), it)
+            !Permissions.hasPermission(context, it)
         }
         if (missingPermissions.isEmpty()) {
             action()
@@ -278,13 +236,13 @@ class TrailSenseComposeDestinationHost(
         rationale: PermissionRationale,
         action: () -> Unit
     ) {
-        if (Permissions.hasPermission(requireContext(), permission)) {
+        if (Permissions.hasPermission(context, permission)) {
             action()
             return
         }
 
         Alerts.dialog(
-            requireContext(),
+            context,
             rationale.title,
             rationale.message,
             okText = rationale.ok ?: getString(android.R.string.ok),
@@ -292,22 +250,24 @@ class TrailSenseComposeDestinationHost(
         ) { cancelled ->
             if (!cancelled) {
                 specialPermissionAction = action
-                Permissions.requestPermission(requireContext(), permission)
+                Permissions.requestPermission(context, permission)
             } else {
                 action()
             }
         }
     }
 
-    fun onStart() {
+    /** While the screen is in the composition, quick actions and the activity reach it through this host. */
+    fun attach() {
         activity.registerDestinationHost(this)
     }
 
-    fun onStop() {
+    fun detach() {
         activity.unregisterDestinationHost(this)
     }
 
-    fun onResume() {
+    /** Back from a system settings page (special permissions): run what was waiting on it. */
+    fun onScreenResumed() {
         specialPermissionAction?.invoke()
         specialPermissionAction = null
     }

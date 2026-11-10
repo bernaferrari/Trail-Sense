@@ -20,7 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -92,7 +91,6 @@ private fun slide(direction: Int): ContentTransform =
 private fun TrailSenseRouteContent(route: Route) {
     val context = LocalContext.current
     val activity = context.findMainActivity() ?: return
-    val rootView = LocalView.current
     // Each screen lives on its own lifecycle: it follows the activity's, and ends when the screen leaves, so
     // observers a screen registers (LiveData, sensors) stop with it instead of firing into a dead screen.
     val parentLifecycleOwner = LocalLifecycleOwner.current
@@ -108,11 +106,10 @@ private fun TrailSenseRouteContent(route: Route) {
         permissionAction.value = null
         action?.invoke()
     }
-    val host = remember(activity, rootView, lifecycleOwner) {
+    val host = remember(activity, lifecycleOwner) {
         TrailSenseComposeDestinationHost(
             context = context,
             activity = activity,
-            rootView = rootView,
             route = route,
             lifecycleOwner = lifecycleOwner
         ) { permissions, action ->
@@ -122,16 +119,16 @@ private fun TrailSenseRouteContent(route: Route) {
     }
 
     DisposableEffect(host) {
-        host.onStart()
+        host.attach()
         onDispose {
-            host.onStop()
+            host.detach()
         }
     }
 
     DisposableEffect(host, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> host.onResume()
+                Lifecycle.Event.ON_RESUME -> host.onScreenResumed()
                 else -> Unit
             }
         }

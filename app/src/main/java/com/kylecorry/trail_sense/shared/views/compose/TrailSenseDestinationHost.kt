@@ -3,22 +3,10 @@ package com.kylecorry.trail_sense.shared.views.compose
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.content.Context
-import android.content.Intent
-import android.content.res.Resources
-import android.net.Uri
-import android.os.Bundle
-import android.util.Size
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.sharing.ActionItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 
 /**
  * The shown screen's link to the app: its context, the navigator, its lifecycle and route, and the platform
