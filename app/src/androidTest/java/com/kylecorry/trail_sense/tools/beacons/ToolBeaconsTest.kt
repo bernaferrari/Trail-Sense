@@ -164,6 +164,8 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun toggleVisibility() {
+        // The previous step leaves the group without waiting; wait for the top-level list before opening it again
+        isVisible(id("beacon_group_menu"))
         click("Test group")
         click(id("beacon_visibility_toggle"))
         click(id("beacon_visibility_toggle"))

@@ -14,6 +14,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotVisible
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.longClick
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
@@ -437,16 +438,16 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(id("map_menu_btn"))
         click("Calibrate")
         hasText("Point 1 of 2")
-        waitFor {
-            // The click can land before the page settles, so repeat it until the next step shows
-            try {
-                hasText("Finish calibration", waitForTime = 1)
-            } catch (e: Throwable) {
-                click("Next", waitForTime = 1)
-                throw e
+        // The button turns from Next into Finish calibration in place, so a repeated Next tap could finish the
+        // calibration. Tap Next again only if the first tap landed before the page settled.
+        click("Next")
+        any(
+            { click("Finish calibration", waitForTime = CALIBRATION_STEP_WAIT_MS) },
+            {
+                click("Next", waitForTime = 0)
+                click("Finish calibration")
             }
-        }
-        click("Finish calibration")
+        )
         isVisible(R.id.map)
 
         // User guide
@@ -602,5 +603,6 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         private const val FILE_PICKER_WAIT_MS = 15000L
         private const val PHOTO_SAVE_WAIT_MS = 15000L
         private const val SNACKBAR_WAIT_MS = 15000L
+        private const val CALIBRATION_STEP_WAIT_MS = 3000L
     }
 }
