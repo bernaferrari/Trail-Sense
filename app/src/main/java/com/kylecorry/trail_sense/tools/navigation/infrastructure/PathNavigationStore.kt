@@ -14,9 +14,10 @@ class PathNavigationStore {
         prefs.putString(SESSION_KEY, JsonConvert.toJson(session))
     }
 
+    /** The saved session, or null when there is none or it can't be read (an unreadable one can't be restored). */
     fun load(): PathNavigationSession? {
         val saved = prefs.getString(SESSION_KEY) ?: return null
-        return requireNotNull(JsonConvert.fromJson<PathNavigationSession>(saved))
+        return JsonConvert.fromJson<PathNavigationSession>(saved)
     }
 
     fun clear() {

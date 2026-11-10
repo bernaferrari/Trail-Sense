@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
 import android.content.Context
+import android.util.Log
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
@@ -85,14 +86,19 @@ class PathNavigator(context: Context) {
         restoringState.value = true
         return CoroutineScope(Dispatchers.Default).launch {
             try {
-                val built = buildOrNull()
+                val built = tryBuild()
                 synchronized(lock) {
                     if (!isActive) return@synchronized
-                    if (built == null) {
-                        store.clear()
-                    } else {
-                        session = built.first
-                        destinationState.value = built.second
+                    when (built) {
+                        is BuildResult.Built -> {
+                            session = built.session
+                            destinationState.value = built.destination
+                        }
+                        // The path is gone or can no longer be followed: forget it
+                        BuildResult.Unfollowable -> store.clear()
+                        // Something went wrong while loading (database, storage): keep the saved navigation so
+                        // the next start can restore it instead of silently dropping the user's route
+                        is BuildResult.Failed -> Unit
                     }
                 }
             } finally {
@@ -106,13 +112,20 @@ class PathNavigator(context: Context) {
         }
     }
 
-    private suspend fun buildOrNull(): Pair<PathNavigationSession, Destination.Path>? {
+    private sealed interface BuildResult {
+        data class Built(val session: PathNavigationSession, val destination: Destination.Path) : BuildResult
+        data object Unfollowable : BuildResult
+        data class Failed(val error: Exception) : BuildResult
+    }
+
+    private suspend fun tryBuild(): BuildResult {
         return try {
-            build()
+            build()?.let { BuildResult.Built(it.first, it.second) } ?: BuildResult.Unfollowable
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
-            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Unable to restore path navigation", e)
+            BuildResult.Failed(e)
         }
     }
 
@@ -199,6 +212,7 @@ class PathNavigator(context: Context) {
     }
 
     private companion object {
+        const val TAG = "PathNavigator"
         const val SAVE_PROGRESS_MIN_DISTANCE_METERS = 25f
     }
 }
