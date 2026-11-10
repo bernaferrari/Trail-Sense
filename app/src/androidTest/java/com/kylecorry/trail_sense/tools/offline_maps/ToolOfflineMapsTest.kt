@@ -567,7 +567,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(id("photo_map_menu_Blank Map"))
         click(string(R.string.change_resolution))
         click("Moderate")
-        clickOk()
+        // Tapping a choice picks it; there may still be a confirmation
+        clickOkIfShown()
         waitFor { hasText("Blank Map") }
     }
 
