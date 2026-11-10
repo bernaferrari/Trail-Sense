@@ -168,7 +168,7 @@ fun SurvivalGuideListScreen(
 }
 
 @Composable
-private fun SurvivalGuideSummary(
+internal fun SurvivalGuideSummary(
     summary: String,
     result: SurvivalGuideSearchResult,
     markdown: MarkdownService,
