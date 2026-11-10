@@ -220,7 +220,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("Take photo")
         click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
 
-        isVisible(id("image"))
+        // The photo shows once it is saved, which can take a while on a busy emulator (as in the photo maps test)
+        isVisible(id("image"), waitForTime = PHOTO_SAVE_WAIT_MS)
 
         click(id("create_field_guide_page_save_btn"))
 
@@ -350,3 +351,4 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
  * step fails until the quick action is restored in FieldGuideToolRegistration and Tools.
  */
 private const val QUICK_ACTION_RECORD_SIGHTING = 30
+private const val PHOTO_SAVE_WAIT_MS = 15000L

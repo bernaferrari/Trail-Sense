@@ -45,7 +45,7 @@ fun TestView.longClick(): TestView {
 
 fun TestView.input(text: String, checkDescendants: Boolean = false): TestView {
     if (!checkDescendants) {
-        uiObject.text = text
+        setTextAndCheck(uiObject, text)
     } else {
         // A Compose text field draws its label inside the field, so the field may be a parent of the matched text
         val field = if (uiObject.className == EDIT_TEXT) {
@@ -55,10 +55,35 @@ fun TestView.input(text: String, checkDescendants: Boolean = false): TestView {
                 it.className == EDIT_TEXT
             }
         } ?: throw AssertionError("No text field found for $uiObject")
-        field.text = text
+        setTextAndCheck(field, text)
     }
     return this
 }
+
+/**
+ * UiAutomator's setText sends the accessibility set-text action and returns without knowing whether the field took
+ * it. A Compose text field that has only just appeared (a dialog opening on a busy emulator) can drop it, which left
+ * the field empty and the test failing several steps later. Send it again until the field has some text, and fail
+ * here (so the caller's waitFor retries) if it never does. Fields may reformat what they are given, so only "still
+ * empty" counts as not taken.
+ */
+private fun setTextAndCheck(field: UiObject2, text: String) {
+    field.text = text
+    if (text.isEmpty()) {
+        return
+    }
+    repeat(SET_TEXT_ATTEMPTS) {
+        Thread.sleep(SET_TEXT_SETTLE_MS)
+        if (!field.text.isNullOrEmpty()) {
+            return
+        }
+        field.text = text
+    }
+    throw AssertionError("The text field did not take \"$text\"")
+}
+
+private const val SET_TEXT_ATTEMPTS = 5
+private const val SET_TEXT_SETTLE_MS = 200L
 
 private const val EDIT_TEXT = "android.widget.EditText"
 
