@@ -89,6 +89,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     @After
     fun cancelNavigators() {
         navigators.forEach { it.cancel() }
+        // The app's navigator lives as long as the test process, so a path followed through the UI would keep saving
+        // its progress into the next test
+        runBlocking { Navigator.getInstance(TestUtils.context).cancelAllNavigation() }
     }
     @Test
     fun verifyBasicFunctionality() {
@@ -156,8 +159,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click(R.id.map, xPercent = 0.7f, yPercent = 0.3f)
         hasText(Regex("[1-9]\\d*(\\.\\d+)? (mi|ft)"))
 
-        // Cancelling a path with points asks before discarding it
-        click(toolbarButton(Side.Right))
+        // Cancelling a path with points asks before discarding it. The distance sheet has its own cancel button; the
+        // top bar's right action is the map's menu.
+        click(desc(string(android.R.string.cancel)))
         click(string(R.string.dialog_leave))
         backUntil { isVisible(R.id.paths_title) }
     }
