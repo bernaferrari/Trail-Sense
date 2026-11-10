@@ -166,6 +166,11 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
     }
 
     private fun verifySensorStatusBadges() {
+        // A badge is only shown while the GPS or compass needs attention, which depends on the device's sensors
+        val isShown = runCatching { isVisible(sensorStatusBadges, waitForTime = SENSOR_BADGE_WAIT_MS) }.isSuccess
+        if (!isShown) {
+            return
+        }
         click(sensorStatusBadges)
         hasText(string(R.string.accuracy_info_title))
         clickOk()
@@ -522,6 +527,7 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
     companion object {
         private const val DOUBLE_TAP_PAUSE_MS = 500L
         private const val LONG_PRESS_RETRY_TIMEOUT_MS = 15000L
+        private const val SENSOR_BADGE_WAIT_MS = 3000L
         private const val LONG_PRESS_SHEET_WAIT_MS = 4000L
         private const val MAP_NAME = "Test Map"
         private val COORDINATE = Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°")
