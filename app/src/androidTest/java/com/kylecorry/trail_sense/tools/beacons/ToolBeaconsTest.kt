@@ -171,7 +171,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         clickOk()
 
         hasText("Test group")
-        hasText("0 beacons")
+        hasText("0 places")
         click("Test group")
         hasText(string(R.string.no_places))
 
