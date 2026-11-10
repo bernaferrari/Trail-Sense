@@ -3,6 +3,18 @@
 
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
+import kotlin.time.Duration
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -10,8 +22,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.PressGestureScope
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +52,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -61,8 +70,6 @@ import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -170,21 +177,13 @@ internal fun CliffHeightScreen(
                 DropTimerButton(
                     running = running,
                     hasDropped = startTime != null,
-                    onPress = {
-                        if (!running) {
-                            startTime = Clock.System.now()
-                            fall = 0f
-                            running = true
-                            val released = tryAwaitRelease()
-                            if (released &&
-                                startTime?.let { Clock.System.now() - it }?.let { it > singlePressDuration } == true
-                            ) {
-                                running = false
-                            }
-                        } else {
-                            running = false
-                        }
-                    }
+                    holdDuration = singlePressDuration,
+                    onStart = {
+                        startTime = Clock.System.now()
+                        fall = 0f
+                        running = true
+                    },
+                    onStop = { running = false }
                 )
 
                 Text(
@@ -201,31 +200,68 @@ internal fun CliffHeightScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DropTimerButton(
     running: Boolean,
     hasDropped: Boolean,
-    onPress: suspend PressGestureScope.(Offset) -> Unit
+    holdDuration: Duration,
+    onStart: () -> Unit,
+    onStop: () -> Unit
 ) {
-    // Timed from the press itself (not the release), so the drop starts the instant the stone is let go.
-    TrailSenseButton(
-        text = stringResource(
-            when {
-                running -> R.string.stop
-                hasDropped -> R.string.cliff_again
-                else -> R.string.start
+    // Tap to start and tap again to stop, or hold while the stone falls and let go when it lands. The drop is timed
+    // from the press itself (not the release), so it starts the instant the stone is let go. Clicks (taps, TalkBack,
+    // UI automation) go through onClick; the press only starts the timer early. One Button is kept for both states so
+    // the press in progress is not cancelled when the button restyles.
+    val interactionSource = remember { MutableInteractionSource() }
+    val currentRunning by rememberUpdatedState(running)
+    val currentOnStart by rememberUpdatedState(onStart)
+    var pressStartedAt by remember { mutableStateOf<Instant?>(null) }
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> if (!currentRunning) {
+                    pressStartedAt = Clock.System.now()
+                    currentOnStart()
+                }
+                is PressInteraction.Cancel -> pressStartedAt = null
             }
-        ),
-        onClick = {},
-        icon = if (running) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
-        style = if (running) TrailSenseButtonStyle.Tonal else TrailSenseButtonStyle.Filled,
+        }
+    }
+    val label = stringResource(
+        when {
+            running -> R.string.stop
+            hasDropped -> R.string.cliff_again
+            else -> R.string.start
+        }
+    )
+    Button(
+        onClick = {
+            val pressedAt = pressStartedAt
+            pressStartedAt = null
+            when {
+                // This press started the drop: a hold ends it on release, a tap leaves it running
+                pressedAt != null -> if (Clock.System.now() - pressedAt > holdDuration) onStop()
+                running -> onStop()
+                else -> onStart()
+            }
+        },
+        interactionSource = interactionSource,
+        colors = if (running) ButtonDefaults.filledTonalButtonColors() else ButtonDefaults.buttonColors(),
+        shapes = ButtonDefaults.shapes(),
         modifier = Modifier
             .fillMaxWidth()
-            .pointerInput(running) {
-                detectTapGestures(onPress = onPress)
-            }
+            .heightIn(min = 56.dp)
             .testTag("start_btn")
-    )
+    ) {
+        Icon(
+            rememberVectorPainter(if (running) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(label, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+    }
 }
 
 /**
