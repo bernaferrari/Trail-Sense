@@ -162,7 +162,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         hasText(string(R.string.weather_no_change))
         hasText(Regex(".*0\\.0 hPa / 3h.*"))
         hasText("1020.0", exact = true)
-        not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
+        not { hasText(string(R.string.weather_storm), exact = true, waitForTime = 0) }
     }
 
     @Test
@@ -175,7 +175,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         hasText(Regex(".*-?3\\.0 hPa / 3h.*"))
         hasText("1012.0", exact = true)
         // A moderate drop is not a storm
-        not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
+        not { hasText(string(R.string.weather_storm), exact = true, waitForTime = 0) }
     }
 
     @Test
@@ -188,9 +188,9 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         hasText(Regex(".*-?10\\.0 hPa / 3h.*"))
         hasText("1010.0", exact = true)
 
-        hasText(string(R.string.alerts), exact = true)
+        // The alert is a row named after the alert, under the forecast
         hasText(string(R.string.weather_storm), exact = true)
-        click(string(R.string.alerts), exact = true)
+        click(string(R.string.weather_storm), exact = true)
         hasText(string(R.string.weather_alert_storm_description))
         clickOk()
     }
@@ -203,7 +203,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         hasText(Regex(".*" + string(R.string.then_weather, "clear")))
         hasText(Regex(".*4\\.0 hPa / 3h.*"))
         hasText("1016.0", exact = true)
-        not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
+        not { hasText(string(R.string.weather_storm), exact = true, waitForTime = 0) }
     }
 
     @Test
@@ -217,7 +217,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         )
 
         hasText(string(R.string.weather_no_change))
-        not { hasText(string(R.string.alerts), exact = true, waitForTime = 0) }
+        not { hasText(string(R.string.weather_storm), exact = true, waitForTime = 0) }
     }
 
     @Test

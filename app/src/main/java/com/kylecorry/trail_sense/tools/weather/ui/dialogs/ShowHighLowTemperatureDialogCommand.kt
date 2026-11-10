@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.ui.dialogs
 
+import androidx.compose.ui.platform.testTag
 import kotlin.time.Duration.Companion.hours
 
 import kotlin.time.Clock
@@ -69,6 +70,7 @@ class ShowHighLowTemperatureDialogCommand(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(dimensionResource(R.dimen.chart_height))
+                    .testTag("chart")
             )
         }
     }

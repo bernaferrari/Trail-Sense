@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared
 
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.semantics
 import com.kylecorry.trail_sense.shared.time.nowLocal
 
 import com.kylecorry.trail_sense.shared.time.today
@@ -637,6 +639,8 @@ object CustomUiUtils {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    // A dialog is its own window, so its test tags are only ids if it says so too
+                    .semantics { testTagsAsResourceId = true }
                     .padding(24.dp)
             ) {
                 if (content != null) {
