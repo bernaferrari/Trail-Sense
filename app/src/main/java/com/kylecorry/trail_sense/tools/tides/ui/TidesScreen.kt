@@ -361,12 +361,6 @@ internal class TidesViewModel(
 
         viewModelScope.launch {
             val updatedTable = loadTable()
-            if (updatedTable?.isAutomaticNearbyTide == true &&
-                locationSubsystem.locationAge > 30.minutes
-            ) {
-                locationSubsystem.updateLocation()
-            }
-
             table = updatedTable
             isLoading = false
 
@@ -378,6 +372,19 @@ internal class TidesViewModel(
             updateDailyTide()
             updateCurrentTide()
             startCurrentRefresh()
+
+            // The nearby tide follows the user. A stale location is refreshed after the tide is shown from the last
+            // known one, since a GPS fix can take up to its 30 second timeout and the page would wait on it.
+            if (updatedTable.isAutomaticNearbyTide && locationSubsystem.locationAge > 30.minutes) {
+                locationSubsystem.updateLocation()
+                // The table can depend on where the user is, so it is loaded again for the new location
+                val refreshed = loadTable()
+                if (table === updatedTable && refreshed != null) {
+                    table = refreshed
+                    updateDailyTide()
+                    updateCurrentTide()
+                }
+            }
         }
     }
 
