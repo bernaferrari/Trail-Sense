@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.whistle
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isFalse
@@ -16,29 +18,29 @@ class ToolWhistleTest : ToolTestBase(Tools.WHISTLE) {
     @Test
     fun verifyBasicFunctionality() {
         // Whistle button (needs to press and hold)
-        click(R.id.whistle_btn, holdDuration = 200)
+        click(desc(string(R.string.whistle_hold)), holdDuration = 200)
 
         // SOS button
-        click(R.id.whistle_sos_btn)
+        click(string(R.string.sos), exact = true)
 
         isTrue {
             TestUtils.isPlayingMusic()
         }
 
-        click(R.id.whistle_sos_btn)
+        click(string(R.string.sos), exact = true)
 
         isFalse {
             TestUtils.isPlayingMusic()
         }
 
-        // Emergency button
-        click(R.id.whistle_emergency_btn)
+        // Help (the emergency call)
+        click(string(R.string.help), exact = true)
 
         isTrue {
             TestUtils.isPlayingMusic()
         }
 
-        click(R.id.whistle_emergency_btn)
+        click(string(R.string.help), exact = true)
 
         isFalse {
             TestUtils.isPlayingMusic()

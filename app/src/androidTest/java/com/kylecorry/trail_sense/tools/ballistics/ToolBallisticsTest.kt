@@ -1,8 +1,14 @@
 package com.kylecorry.trail_sense.tools.ballistics
 
+import androidx.test.uiautomator.By
+import com.kylecorry.trail_sense.test_utils.byResName
+import com.kylecorry.trail_sense.test_utils.views.view
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
+import com.kylecorry.trail_sense.test_utils.views.option
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotChecked
@@ -30,29 +36,33 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
     private fun scope(){
         click("Scope")
 
-        click(R.id.click_amount)
-        click("1/4 MOA")
-        clickOk()
+        click(id("click_amount"))
+        // Choosing an option closes the dialog
+        click(option("1/4 MOA"))
 
-        input(R.id.distance_to_target, "100")
+        input(id("distance_to_target"), "100")
 
-        input(R.id.miss_distance_x, "1")
-        click(R.id.miss_right)
+        input(id("miss_distance_x"), "1")
+        // The adjustment readout also says "Right", so pick the option inside the windage selector
+        click({ view(By.text(string(R.string.right)).hasAncestor(byResName("miss_direction_x"))) })
 
-        scrollToEnd(R.id.scroll_view)
-        input(R.id.miss_distance_y, "2")
-        click(R.id.miss_up)
+        scrollUntil { isVisible(id("miss_direction_y")) }
+        input(id("miss_distance_y"), "2")
+        click({ view(By.text(string(R.string.above)).hasAncestor(byResName("miss_direction_y"))) })
 
-        hasText(R.id.adjustment_amount, "Left 12 clicks\nDown 24 clicks")
+        // The distance is in yards now (it was feet): 1 in at 100 yd is about 1 MOA, so 4 clicks of 1/4 MOA
+        hasText(id("distance_to_target"), "yd")
+        // The adjustment is read out as one description over the drawn numbers
+        isVisible(desc("Left 4 clicks\nDown 8 clicks"))
     }
 
     private fun energy(){
         click("Energy")
 
-        input(R.id.bullet_speed, "750")
-        input(R.id.bullet_weight, "7.5")
+        input(id("bullet_speed"), "750")
+        input(id("bullet_weight"), "7.5")
 
-        hasText(R.id.energy_amount, "9.4 FPE")
+        hasText(id("energy_amount"), "9.4 FPE")
     }
 
 }

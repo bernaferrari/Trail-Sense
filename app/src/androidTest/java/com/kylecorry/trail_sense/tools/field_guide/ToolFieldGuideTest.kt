@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.field_guide
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
@@ -47,10 +49,10 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canSearch() {
         back(false)
-        input(id("search")(), "Rabbit")
+        input(id("search"), "Rabbit")
         hasText("Rabbit")
 
-        input(id("search")(), "Insect")
+        input(id("search"), "Insect")
         hasText("Ant")
 
         back(false)
@@ -107,11 +109,11 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText(R.id.photo_position, "Image 2/2")
 
         // Setting an image as the default moves it to the first slot
-        click(R.id.photo_upload_menu_button)
+        click(id("photo_upload_menu_button"))
         click("Set as default")
         hasText(R.id.photo_position, "Image 1/2")
 
-        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // The page displays all the images
         click("A Test")
@@ -123,19 +125,19 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         // An image can be deleted
         clickListItemMenu("Edit")
         scrollUntil(R.id.scroll_view) { hasText(R.id.photo_position, "Image 1/2") }
-        click(R.id.photo_upload_menu_button)
+        click(id("photo_upload_menu_button"))
         click("Delete")
         clickOk()
         hasText(R.id.photo_position, "Image 1/1")
 
-        click(toolbarButton(R.id.create_field_guide_page_title, Side.Right))
+        click(toolbarButton(Side.Right))
     }
 
     private fun canEditPage() {
         click(id("field_guide_page_menu"))
         click("Edit")
         hasText(id("name"), "A Test")
-        input(id("name")(), "A Test 2")
+        input(id("name"), "A Test 2")
         click(id("create_field_guide_page_save_btn"))
 
         // Verify the changes
@@ -145,7 +147,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         click("A Test 2")
         click(id("field_guide_page_edit_btn"))
         hasText(id("name"), "A Test 2")
-        input(id("name")(), "A Test 3")
+        input(id("name"), "A Test 3")
         click(id("create_field_guide_page_save_btn"))
 
         // Verify the changes
@@ -167,14 +169,14 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canRecordSightingWithQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_RECORD_SIGHTING))
+        click(quickAction(QUICK_ACTION_RECORD_SIGHTING))
         input(R.id.search, "A Test")
         click("A Test", exact = true, index = 1)
 
         hasText("Created", waitForTime = GPS_WAIT_FOR_TIMEOUT)
         click("View")
         input("Notes", "Quick action sighting")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // The quick action deep link returns to the sightings list after saving.
         hasText("Quick action sighting")
@@ -185,12 +187,12 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
     private fun canCreatePage() {
         click(id("add_btn"))
-        input(id("name")(), "A Test")
+        input(id("name"), "A Test")
         click(id("tag_classifications"))
         click("Bird")
         clickOk()
         hasText(id("tag_classifications"), "Animal, Bird")
-        scrollUntil { input(id("notes")(), "Notes") }
+        scrollUntil { input(id("notes"), "Notes") }
         scrollToEnd(id("scroll_view"))
 
         click(id("tag_locations"))
@@ -216,7 +218,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         scrollToStart(id("scroll_view"))
         click("Take photo")
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
 
         isVisible(id("image"))
 
@@ -240,18 +242,21 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
     }
 
     private fun canLogSightings() {
-        click("Sightings (0)")
-        hasText("No sightings")
+        // The page shows a sightings row with its count, which opens the list
+        hasText(id("field_guide_page_sightings"), "0 sightings")
+        click(id("field_guide_page_sightings"))
+        hasText(string(R.string.no_sightings))
         click(id("create_btn"))
         click(id("time"))
         pickDate(2025, 1, 1)
         pickTime(6, 0, true)
         hasText("January 1, 2025 6:00 AM")
-        input(id("location")(), "42, 72")
-        input(id("elevation")(), "100")
-        click("Harvested")
-        click("Show on map")
-        input("Notes", "Test")
+        input(id("location"), "42, 72")
+        input(id("elevation"), "100")
+        click(id("harvested"))
+        click(id("show_on_map"))
+        // The notes field's label sits above it, outside the field
+        input(id("notes"), "Test")
         click(id("field_guide_sighting_save_btn"))
 
         // Sightings list
@@ -264,9 +269,9 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("January 1, 2025 6:00 AM")
         hasText("42.000000°,  72.000000°")
         hasText("100")
-        isChecked("Harvested")
-        isNotChecked("Show on map")
-        click("Show on map")
+        isChecked(id("harvested"))
+        isNotChecked(id("show_on_map"))
+        click(id("show_on_map"))
         input("Test", "Test 2")
         click(id("field_guide_sighting_save_btn"))
 
@@ -279,8 +284,8 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("January 1, 2025 6:00 AM")
         hasText("42.000000°,  72.000000°")
         hasText("100")
-        isChecked("Harvested")
-        isChecked("Show on map")
+        isChecked(id("harvested"))
+        isChecked(id("show_on_map"))
         input("Test 2", "Test 3")
         click(id("field_guide_sighting_save_btn"))
 
@@ -296,7 +301,7 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
 
         // Create beacon
         click(id("field_guide_sighting_menu"))
-        click("Create beacon")
+        click(string(R.string.create_beacon))
         hasText("Ant")
         hasText("42.000000°,  72.000000°")
         hasText("100")
@@ -318,12 +323,12 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         // Create another sighting to delete from the edit page
         click(R.id.create_btn)
         input("Notes", "Delete from edit page")
-        click(toolbarButton(R.id.title, Side.Right))
+        click(toolbarButton(Side.Right))
         hasText("Delete from edit page")
 
         // Delete from the edit page
         click("Delete from edit page")
-        click(toolbarButton(R.id.title, Side.Left))
+        click(toolbarButton(Side.Left))
         click("Delete")
         clickOk()
 
@@ -332,3 +337,9 @@ class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
         hasText("Sightings (0)")
     }
 }
+
+/**
+ * Upstream's "Record Sighting" quick action (#3860). The Compose app no longer registers it, so this
+ * step fails until the quick action is restored in FieldGuideToolRegistration and Tools.
+ */
+private const val QUICK_ACTION_RECORD_SIGHTING = 30

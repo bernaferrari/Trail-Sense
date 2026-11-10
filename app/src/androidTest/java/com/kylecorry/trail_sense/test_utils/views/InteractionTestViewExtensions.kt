@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.test_utils.views
 
+import androidx.test.uiautomator.UiObject2
 import android.graphics.Point
 import androidx.test.uiautomator.Direction
 import com.kylecorry.trail_sense.test_utils.TestUtils.getMatchingChild
@@ -46,17 +47,30 @@ fun TestView.input(text: String, checkDescendants: Boolean = false): TestView {
     if (!checkDescendants) {
         uiObject.text = text
     } else {
-        val child = getMatchingChild(uiObject) {
-            it.className == "android.widget.EditText"
-            // TODO: See if this can be exposed
-//                    it.getAccessibilityNodeInfo().isEditable
-        }
-
-        if (child != null) {
-            child.text = text
-        }
+        // A Compose text field draws its label inside the field, so the field may be a parent of the matched text
+        val field = if (uiObject.className == EDIT_TEXT) {
+            uiObject
+        } else {
+            getMatchingChild(uiObject) { it.className == EDIT_TEXT } ?: getMatchingAncestor(uiObject) {
+                it.className == EDIT_TEXT
+            }
+        } ?: throw AssertionError("No text field found for $uiObject")
+        field.text = text
     }
     return this
+}
+
+private const val EDIT_TEXT = "android.widget.EditText"
+
+private fun getMatchingAncestor(obj: UiObject2, predicate: (UiObject2) -> Boolean): UiObject2? {
+    var current = obj.parent
+    while (current != null) {
+        if (predicate(current)) {
+            return current
+        }
+        current = current.parent
+    }
+    return null
 }
 
 fun TestView.scroll(direction: Direction = Direction.DOWN, percent: Float = 0.5f): Boolean {

@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides
 
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -74,9 +75,9 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
 
         // Enter the tide details
         hasText(string(R.string.tide_table))
-        input(id("tide_name")(), "Tide 1")
+        input(id("tide_name"), "Tide 1")
         hasText(id("tide_frequency_semidiurnal"), string(R.string.tide_semidiurnal))
-        input(id("utm")(), "42, -72")
+        input(id("utm"), "42, -72")
 
         click(id("estimate_algorithm_spinner"))
         hasText(string(R.string.tide_clock))
@@ -91,18 +92,19 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
         click(id("tide_type"))
         hasText(id("tide_type"), string(R.string.high_tide_letter))
 
-        click(id("tide_time", index = 1))
+        // The table starts with one tide entry (the old layout had a header row first)
+        click(id("tide_time"))
         clickOk()
         clickOk()
 
         // TODO: Verify the time is set
-        hasText(id("tide_time", index = 1)) { it.isNotBlank() }
+        hasText(id("tide_time")) { it.isNotBlank() }
 
-        click(id("tide_height", index = 1))
+        click(id("tide_height"))
         input(string(R.string.distance), "1.0")
         clickOk()
 
-        hasText(id("tide_height", index = 1), "1.00 ft")
+        hasText(id("tide_height"), "1.00 ft")
 
         click(id("add_tide_entry"))
 
@@ -135,15 +137,18 @@ class ToolTidesTest : ToolTestBase(Tools.TIDES) {
             it == string(R.string.high_tide) || it == string(R.string.low_tide)
         }
 
-        hasText(
-            id("tide_event_title", index = 1), string(
-                if (isHighFirst) {
-                    R.string.low_tide
-                } else {
-                    R.string.high_tide
-                }
+        // The list sits under the chart, so the second tide can be below the fold
+        scrollUntil {
+            hasText(
+                id("tide_event_title", index = 1), string(
+                    if (isHighFirst) {
+                        R.string.low_tide
+                    } else {
+                        R.string.high_tide
+                    }
+                )
             )
-        )
+        }
 
         // TODO: Verify the times are correct
         // TODO: Verify the chart

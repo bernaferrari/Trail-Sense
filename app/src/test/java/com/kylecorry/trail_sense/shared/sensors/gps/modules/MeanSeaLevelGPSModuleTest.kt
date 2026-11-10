@@ -1,9 +1,10 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.GeoidService
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
@@ -23,12 +24,12 @@ class MeanSeaLevelGPSModuleTest {
             }
         }
     )
-    private val previous = ModularGPSData(altitude = 50f, eventTime = Instant.EPOCH)
+    private val previous = ModularGPSData(altitude = 50f, eventTime = Instant.fromEpochMilliseconds(0))
 
     private fun reading() = ModularGPSData(
         location = Coordinate(42.0, -72.0),
         altitude = 100f,
-        eventTime = Instant.EPOCH.plusSeconds(1),
+        eventTime = (Instant.fromEpochMilliseconds(0) + 1.seconds),
         eventTimeElapsedNanos = 1_000_000_000
     )
 

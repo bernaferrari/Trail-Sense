@@ -1,5 +1,12 @@
 package com.kylecorry.trail_sense.tools.battery
 
+import androidx.test.uiautomator.Direction
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Clock
 import android.os.SystemClock
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
@@ -20,22 +27,20 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.Batter
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
 
 class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
 
     // The device was awake for 15 of the last 60 minutes
     override fun seedData() = runBlocking {
-        val elapsed = Duration.ofHours(1)
+        val elapsed = 1.hours
         BatteryRepo.getInstance(context).add(
             BatteryReading(
-                Instant.now().minus(elapsed),
+                Clock.System.now() - elapsed,
                 100f,
                 0f,
                 false,
-                Duration.ofMillis(SystemClock.uptimeMillis()).minusMinutes(15),
-                Duration.ofMillis(SystemClock.elapsedRealtime()).minus(elapsed)
+                SystemClock.uptimeMillis().milliseconds - 15.minutes,
+                SystemClock.elapsedRealtime().milliseconds - elapsed
             )
         )
     }
@@ -45,15 +50,23 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
         hasText(Regex("\\d+%"))
         hasText(Regex("(Charging|Discharging).*"))
         hasText("Battery log")
-        hasText("Updates every 1h - Low battery usage")
+        hasText(
+            string(
+                R.string.dot_separated_pair,
+                string(R.string.service_update_frequency, "1h"),
+                string(R.string.battery_use_short, string(R.string.low))
+            )
+        )
         verifyDeepSleep()
 
+        scrollUntil { isVisible(id("low_power_mode_switch")) }
         isNotChecked(id("low_power_mode_switch"))
         click(id("low_power_mode_switch"))
-        isChecked(id("low_power_mode_switch"))
+        // Turning on low power mode rebuilds the page at the top
+        scrollUntil { isChecked(id("low_power_mode_switch")) }
 
         // Stop the battery log
-        click(id("battery_service_stop_btn"))
+        scrollUntil(direction = Direction.UP) { click(id("battery_service_stop_btn")) }
         not { hasText("Battery log") }
 
         scrollUntil {
@@ -76,7 +89,9 @@ class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
             return
         }
         // The device stays awake while the test runs, so the percent drops slightly below 75%
-        hasText(R.id.battery_deep_sleep, Regex("Deep sleep: 7[45]% \\(last 1h\\)"))
+        // The row shows the label, the window and the percent separately
+        hasDataPoint(Regex("7[45]%"), string(R.string.battery_deep_sleep_label))
+        hasText(string(R.string.last_duration, "1h"))
     }
 
     private fun hasListItems(vararg items: String) {

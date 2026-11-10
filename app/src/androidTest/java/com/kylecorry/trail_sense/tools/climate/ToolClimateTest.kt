@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.climate
 
+import com.kylecorry.trail_sense.test_utils.views.field
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
@@ -16,9 +17,10 @@ class ToolClimateTest : ToolTestBase(Tools.CLIMATE) {
     fun verifyBasicFunctionality() {
         // The location lives behind one tappable line
         click(id("climate_location"))
-        input(id("utm")(), "42, -72")
-        input(id("elevation_input")(), "1000")
-        click(id("climate_location_done"))
+        // The inputs are in a sheet, so they are found by their labels
+        input(field(string(R.string.location)), "42, -72")
+        input(field(string(R.string.elevation)), "1000")
+        click(string(R.string.done), exact = true)
 
         // Pick a month next to this one (the year card opens centred on it); the hero answers for it
         val current = java.time.LocalDate.now().month

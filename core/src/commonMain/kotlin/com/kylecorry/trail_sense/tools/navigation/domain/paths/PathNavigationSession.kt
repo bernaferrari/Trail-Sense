@@ -1,9 +1,12 @@
 package com.kylecorry.trail_sense.tools.navigation.domain.paths
 
+import kotlinx.serialization.Serializable
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.ProguardIgnore
 import com.kylecorry.trail_sense.tools.paths.domain.PathDirection
+
+@Serializable
 
 data class PathNavigationSession(
     val pathId: Long,
@@ -32,6 +35,8 @@ data class PathNavigationSession(
         }
     }
 }
+
+@Serializable
 
 data class PathNavigationSessionProgress(
     val distance: Float,

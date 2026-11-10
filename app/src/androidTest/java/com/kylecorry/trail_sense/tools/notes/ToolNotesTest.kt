@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.notes
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -17,8 +18,8 @@ import org.junit.Test
 class ToolNotesTest : ToolTestBase(Tools.NOTES) {
     @Test
     fun verifyBasicFunctionality() {
-        hasText(R.id.notes_title, string(R.string.tool_notes_title))
-        hasText(R.id.notes_empty_text, string(R.string.notes_empty_text))
+        hasText(string(R.string.tool_notes_title))
+        hasText(id("notes_empty_text"), string(R.string.notes_empty_text))
 
         canCreateNote()
         canCreateQRCode()
@@ -28,54 +29,54 @@ class ToolNotesTest : ToolTestBase(Tools.NOTES) {
     }
 
     private fun canEditNote() {
-        click(com.kylecorry.andromeda.views.R.id.title)
-        hasText(R.id.title_edit, "Test note")
-        hasText(R.id.content_edit, "This is a test note")
+        click("Test note", exact = true)
+        hasText(id("title_edit"), "Test note")
+        hasText(id("content_edit"), "This is a test note")
 
-        input(R.id.title_edit, "Test note 2")
-        input(R.id.content_edit, "This is a test note 2")
+        input(id("title_edit"), "Test note 2")
+        input(id("content_edit"), "This is a test note 2")
 
-        click(R.id.note_create_btn)
+        click(id("note_create_btn"))
 
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Test note 2")
-        hasText(com.kylecorry.andromeda.views.R.id.description, "This is a test note 2")
+        hasText("Test note 2", exact = true)
+        hasText("This is a test note 2", exact = true)
     }
 
     private fun canDeleteNote() {
         clickListItemMenu(string(R.string.delete))
         clickOk()
 
-        hasText(R.id.notes_empty_text, string(R.string.notes_empty_text))
+        hasText(id("notes_empty_text"), string(R.string.notes_empty_text))
     }
 
     private fun canCreateQRCode() {
         clickListItemMenu(string(R.string.qr_code))
-        hasText(R.id.qr_title, "Test note")
+        hasText("Test note", exact = true)
         back(false)
     }
 
     private fun canCreateNote() {
         click(R.id.add_btn)
 
-        input(R.id.title_edit, "Test note")
-        input(R.id.content_edit, "This is a test note")
+        input(id("title_edit"), "Test note")
+        input(id("content_edit"), "This is a test note")
 
-        click(R.id.note_create_btn)
+        click(id("note_create_btn"))
 
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Test note")
-        hasText(com.kylecorry.andromeda.views.R.id.description, "This is a test note")
+        hasText("Test note", exact = true)
+        hasText("This is a test note", exact = true)
     }
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
         click(quickAction(Tools.QUICK_ACTION_CREATE_NOTE))
 
-        input(R.id.title_edit, "Quick action note")
-        input(R.id.content_edit, "This is a quick action note")
+        input(id("title_edit"), "Quick action note")
+        input(id("content_edit"), "This is a quick action note")
 
-        click(R.id.note_create_btn)
+        click(id("note_create_btn"))
 
-        hasText(com.kylecorry.andromeda.views.R.id.title, "Quick action note")
-        hasText(com.kylecorry.andromeda.views.R.id.description, "This is a quick action note")
+        hasText("Quick action note", exact = true)
+        hasText("This is a quick action note", exact = true)
     }
 }

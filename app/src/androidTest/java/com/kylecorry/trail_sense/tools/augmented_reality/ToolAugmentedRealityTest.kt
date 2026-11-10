@@ -6,15 +6,14 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotVisible
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isTrue
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.isCameraInUse
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.Side
-import com.kylecorry.trail_sense.test_utils.views.toolbarButton
-import com.kylecorry.trail_sense.test_utils.views.view
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
@@ -45,7 +44,7 @@ class ToolAugmentedRealityTest : ToolTestBase(Tools.AUGMENTED_REALITY) {
     }
 
     private fun canTurnOffCamera() {
-        click(R.id.camera_toggle)
+        click(desc(string(R.string.camera)))
 
         if (AndroidCamera.hasBackCamera(context)) {
             isTrue {
@@ -55,22 +54,23 @@ class ToolAugmentedRealityTest : ToolTestBase(Tools.AUGMENTED_REALITY) {
     }
 
     private fun canCalibrate() {
-        click(R.id.calibrate_btn)
+        click(desc(string(R.string.calibrate)))
         clickOk()
-        click(R.id.confirm_calibration_button)
+        click(string(R.string.calibrate), exact = true)
     }
 
     private fun canToggleLayers() {
-        click(R.id.layers_btn)
-        // Verify the layers panel is visible
+        click(desc(string(R.string.map_layers)))
+        // Verify the layers sheet is visible
+        hasText(string(R.string.layers))
         hasText(string(R.string.beacons))
-        hasText(string(R.string.ar_path_appearance))
+        hasText(string(R.string.paths))
 
         // Turn off the beacons layer
-        click(string(R.string.visible), index = 0)
+        click(string(R.string.beacons), exact = true)
 
-        // Close the layers panel
-        click(toolbarButton(R.id.title, Side.Right))
-        isNotVisible(R.id.title)
+        // Close the layers sheet
+        back()
+        not { hasText(string(R.string.grid), exact = true) }
     }
 }

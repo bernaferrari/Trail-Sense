@@ -42,7 +42,7 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         }
 
         // Search
-        input(id("search")(), "Eating fish")
+        input(id("search"), "Eating fish")
         hasText("fishing gear")
         click("Fish")
 
@@ -58,8 +58,9 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         TestUtils.openQuickActions()
         click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
 
-        input(id("search")(), "Eating fish")
-        back(false)
+        input(id("search"), "Eating fish")
+        // Back would also clear the search, so only hide the keyboard
+        TestUtils.closeKeyboard()
         hasText("fishing gear")
         click("Fish")
 
@@ -70,7 +71,7 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         TestUtils.openQuickActions()
         click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
 
-        input(id("search")(), "Eating fish")
+        input(id("search"), "Eating fish")
         TestUtils.closeKeyboard()
 
         // Continue search on survival guide list

@@ -173,6 +173,10 @@ private class DestinationLifecycleOwner(private val parent: LifecycleOwner) : Li
         if (destroyed) return
         destroyed = true
         parent.lifecycle.removeObserver(follower)
-        registry.currentState = Lifecycle.State.DESTROYED
+        // A screen added while the activity is already destroyed never reaches CREATED, and a lifecycle can't move
+        // from INITIALIZED straight to DESTROYED
+        if (registry.currentState.isAtLeast(Lifecycle.State.CREATED)) {
+            registry.currentState = Lifecycle.State.DESTROYED
+        }
     }
 }

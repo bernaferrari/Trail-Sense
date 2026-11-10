@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlinx.serialization.Serializable
 import android.content.Context
 import android.provider.Settings
 import com.kylecorry.andromeda.core.sensors.Quality
@@ -24,6 +25,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.SharedGPSPipeline
 import com.kylecorry.trail_sense.shared.sensors.gps.SpeedSource
 import kotlin.time.Instant
 
+@Serializable
 data class GPSCacheData(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,

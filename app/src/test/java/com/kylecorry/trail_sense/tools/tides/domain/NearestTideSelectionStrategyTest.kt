@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.tides.domain
 
+import kotlinx.datetime.TimeZone
 import com.kylecorry.sol.science.oceanography.Tide
-import com.kylecorry.trail_sense.shared.time.JavaTime.utc
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.tides.domain.selection.NearestTideSelectionStrategy
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class NearestTideSelectionStrategyTest {
 
@@ -45,6 +45,6 @@ internal class NearestTideSelectionStrategyTest {
     }
 
     private fun table(id: Long, millis: Long, location: Coordinate?): TideTable {
-        return TideTable(id, listOf(Tide.high(Instant.ofEpochMilli(millis).utc())), null, location)
+        return TideTable(id, listOf(Tide.high(Instant.fromEpochMilliseconds(millis), timeZone = TimeZone.UTC)), null, location)
     }
 }

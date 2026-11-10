@@ -34,7 +34,7 @@ class ToolSolarPanelAlignerTest : ToolTestBase(Tools.SOLAR_PANEL_ALIGNER) {
         // TODO: Verify that today is selected
 
         // It should show the solar panel details for a custom time
-        click(id("solar_now_btn"))
+        click(string(R.string.duration_of_charge), exact = true)
 
         clickOk()
 

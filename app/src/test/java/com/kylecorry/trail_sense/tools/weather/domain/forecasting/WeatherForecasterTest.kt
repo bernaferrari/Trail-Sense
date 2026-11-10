@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.weather.domain.forecasting
 
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.hours
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.WeatherCondition
@@ -25,8 +29,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 internal class WeatherForecasterTest {
 
@@ -46,7 +50,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun returnsTheMostRecentObservation() = runBlocking {
-        val observations = fallingPressure(Duration.ofHours(3), 1015f, 1013f)
+        val observations = fallingPressure(3.hours, 1015f, 1013f)
 
         val weather = forecaster().forecast(observations, emptyList(), location)
 
@@ -62,7 +66,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun returnsTheMostRecentCloudObservationWithinFourHours() = runBlocking {
-        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(Duration.ofHours(3)))
+        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(3.hours))
 
         val weather = forecaster().forecast(emptyList(), listOf(cloud), location)
 
@@ -71,7 +75,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun ignoresCloudObservationsOlderThanFourHours() = runBlocking {
-        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(Duration.ofHours(5)))
+        val cloud = Reading<CloudGenus?>(CloudGenus.Cumulus, now.minus(5.hours))
 
         val weather = forecaster().forecast(emptyList(), listOf(cloud), location)
 
@@ -80,7 +84,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun reportsTheThreeHourPressureTendency() = runBlocking {
-        val observations = fallingPressure(Duration.ofHours(3), 1015f, 1012f)
+        val observations = fallingPressure(3.hours, 1015f, 1012f)
 
         val weather = forecaster().forecast(observations, emptyList(), location)
 
@@ -92,7 +96,7 @@ internal class WeatherForecasterTest {
     @Test
     fun ignoresPressureReadingsThatSpanLessThanTenMinutes() = runBlocking {
         // The same drop over 5 minutes is not enough history to be trusted
-        val observations = fallingPressure(Duration.ofMinutes(5), 1015f, 1009f)
+        val observations = fallingPressure(5.minutes, 1015f, 1009f)
 
         val weather = forecaster().forecast(observations, emptyList(), location)
 
@@ -102,7 +106,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun usesPressureReadingsThatSpanAtLeastTenMinutes() = runBlocking {
-        val observations = fallingPressure(Duration.ofMinutes(15), 1015f, 1014.8f)
+        val observations = fallingPressure(15.minutes, 1015f, 1014.8f)
 
         val weather = forecaster().forecast(observations, emptyList(), location)
 
@@ -154,7 +158,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun alertsWhenAStormIsPredicted() = runBlocking {
-        val observations = fallingPressure(Duration.ofHours(3), 1015f, 985f)
+        val observations = fallingPressure(3.hours, 1015f, 985f)
 
         val weather = forecaster().forecast(observations, emptyList(), location)
 
@@ -167,7 +171,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun aStormArrivesAtAKnownTime() = runBlocking {
-        val observations = fallingPressure(Duration.ofHours(3), 1015f, 985f)
+        val observations = fallingPressure(3.hours, 1015f, 985f)
 
         val weather = forecaster().forecast(observations, emptyList(), location)
 
@@ -183,7 +187,7 @@ internal class WeatherForecasterTest {
 
     @Test
     fun looksUpTheTemperatureRangeWhenPrecipitationIsPredicted() = runBlocking {
-        val observations = fallingPressure(Duration.ofHours(3), 1015f, 985f)
+        val observations = fallingPressure(3.hours, 1015f, 985f)
 
         forecaster().forecast(observations, emptyList(), location)
 
@@ -211,7 +215,7 @@ internal class WeatherForecasterTest {
             val percent = it / steps.toFloat()
             WeatherObservation(
                 it.toLong(),
-                now.minus(span).plus(Duration.ofMillis((span.toMillis() * percent).toLong())),
+                now.minus(span).plus(((span.inWholeMilliseconds * percent).toLong()).milliseconds),
                 Pressure.hpa(from + (to - from) * percent),
                 Temperature.celsius(15f),
                 50f
@@ -221,6 +225,6 @@ internal class WeatherForecasterTest {
 
     companion object {
         private val location = Coordinate(40.0, -80.0)
-        private val now: Instant get() = Instant.now()
+        private val now: Instant get() = Clock.System.now()
     }
 }

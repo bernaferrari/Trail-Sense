@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.plugins.infrastructure
 
+import kotlinx.serialization.Serializable
 import kotlin.time.Duration.Companion.milliseconds
 
 import android.content.Context
@@ -194,14 +195,20 @@ class PluginLoader(private val context: Context) {
         }
     }
 
+    @Serializable
+
     private data class RegistrationFeaturesResponse(
         val weather: List<String> = emptyList(),
         val mapLayers: List<RegistrationMapLayerResponse> = emptyList()
     ) : ProguardIgnore
 
+    @Serializable
+
     private data class RegistrationResponse(
         val features: RegistrationFeaturesResponse
     ) : ProguardIgnore
+
+    @Serializable
 
     private data class RegistrationMapLayerResponse(
         val endpoint: String,
@@ -214,6 +221,8 @@ class PluginLoader(private val context: Context) {
         val refreshInterval: Long? = null,
         val shouldMultiply: Boolean = false
     ) : ProguardIgnore
+
+    @Serializable
 
     private data class RegistrationMapLayerAttributionResponse(
         val attribution: String,

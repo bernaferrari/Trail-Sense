@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.signal_finder
 
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.views.viewWithText
+import java.util.regex.Pattern
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -33,14 +37,15 @@ class ToolSignalFinderTest : ToolTestBase(Tools.SIGNAL_FINDER, Coordinate(42.03,
         // Create a beacon at one of the cell towers
 //        TestUtils.clickListItemMenu(string(R.string.create_beacon))
 //        hasText(R.id.create_beacon_title, string(R.string.create_beacon))
-//        hasText(R.id.beacon_location, "42.030000°,  -71.970000°")
+//        hasText(id("beacon_location"), "42.030000°,  -71.970000°")
 //
 //        back()
 //        click("Leave")
 
         // Navigate to the tower
-        TestUtils.clickListItemMenu(string(R.string.navigate))
-        isVisible(R.id.navigation_sheet)
+        // Tapping a tower navigates to it
+        click({ viewWithText(Pattern.compile("\\d+(\\.\\d+)? (mi|ft)")) })
+        isVisible(desc(string(R.string.stop)))
     }
 
 }

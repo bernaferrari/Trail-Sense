@@ -1,9 +1,10 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.sensors.gps.ModularGPSData
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -19,7 +20,7 @@ class BadReadingFilterGPSModuleTest {
     private val time = Instant.parse("2020-01-01T00:00:00Z")
 
     private fun reading(seconds: Long = 0, longitude: Double = 1.0) = ModularGPSData(
-        location = Coordinate(1.0, longitude), eventTime = time.plusSeconds(seconds),
+        location = Coordinate(1.0, longitude), eventTime = (time + seconds.seconds),
         eventTimeElapsedNanos = (100 + seconds) * 1_000_000_000,
         hasValidReading = true
     )
@@ -51,9 +52,9 @@ class BadReadingFilterGPSModuleTest {
     @Test
     fun ordersReadingsByElapsedTime() = runBlocking<Unit> {
         val previous = reading()
-        val clockMovedBack = reading(1).apply { eventTime = time.minusSeconds(60) }
+        val clockMovedBack = reading(1).apply { eventTime = (time - 60.seconds) }
         assertTrue(module.update(previous, clockMovedBack))
-        val clockMovedForward = reading(-1).apply { eventTime = time.plusSeconds(60) }
+        val clockMovedForward = reading(-1).apply { eventTime = (time + 60.seconds) }
         assertFalse(module.update(previous, clockMovedForward))
     }
 
@@ -65,6 +66,6 @@ class BadReadingFilterGPSModuleTest {
         assertEquals(Coordinate(1.0, 1.0), previous.location)
         assertEquals(time, previous.eventTime)
         assertEquals(Coordinate(1.0, 2.0), candidate.location)
-        assertEquals(time.minusSeconds(1), candidate.eventTime)
+        assertEquals((time - 1.seconds), candidate.eventTime)
     }
 }

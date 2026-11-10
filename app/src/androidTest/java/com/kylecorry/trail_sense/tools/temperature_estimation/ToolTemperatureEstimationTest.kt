@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.temperature_estimation
 
+import androidx.test.uiautomator.Direction
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
@@ -33,16 +36,18 @@ class ToolTemperatureEstimationTest : ToolTestBase(Tools.TEMPERATURE_ESTIMATION)
         // Wind adjustment
         input(id("temp_est_humidity"), "")
         input(id("temp_est_base_temperature"), "40")
-        input(id("temp_est_wind_speed"), "10")
+        // Wind sits below the fold once the extra conditions are open
+        scrollUntil { input(id("temp_est_wind_speed"), "10") }
         hasText("34 °F")
 
         // Clear all views
         input(id("temp_est_base_elevation"), "")
         input(id("temp_est_base_temperature"), "")
         input(id("temp_est_humidity"), "")
-        input(id("temp_est_wind_speed"), "")
+        scrollUntil { input(id("temp_est_wind_speed"), "") }
 
         // Autofill
+        scrollUntil(direction = Direction.UP) { isVisible(id("temp_est_autofill")) }
         click(id("temp_est_autofill"))
         // Note: For full fidelity with Compose testTag, predicate assertions use view(id("..")) + hasText or UiAutomator By.res in advanced tests.
         // Simplified here to text presence after autofill (values are dynamic from GPS/sensor).

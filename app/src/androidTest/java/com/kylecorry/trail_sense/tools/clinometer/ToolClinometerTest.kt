@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.clinometer
 
+import com.kylecorry.trail_sense.test_utils.TestUtils
+import com.kylecorry.trail_sense.test_utils.views.view
+import androidx.test.uiautomator.By
 import com.kylecorry.andromeda.camera.AndroidCamera
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -41,16 +44,16 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
 
     private fun canLock() {
         // Lock
-        click(R.id.incline_container)
+        tapScreenCenter()
 
         // TODO: Verify it is locked
 
         // Unlock
-        click(R.id.incline_container)
+        tapScreenCenter()
     }
 
     private fun canSwitchToDialMode() {
-        click(R.id.clinometer_mode_btn)
+        click(string(R.string.clinometer_mode_phone), exact = true)
 
         if (AndroidCamera.hasBackCamera(context)) {
             isTrue {
@@ -62,61 +65,69 @@ class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
     private fun switchToCurrentMode(){
         optional {
             hasText("Hold your phone vertically", waitForTime = 1000)
-            click(R.id.clinometer_mode_btn)
+            click(string(R.string.camera), exact = true)
         }
     }
 
     private fun canEstimateAvalancheRisk() {
-        hasText(R.id.avalanche_risk, string(R.string.avalanche_risk))
-        hasText(R.id.avalanche_risk, Regex("Low|Moderate|High"))
+        hasText(string(R.string.avalanche_risk), exact = true)
+        hasText(Regex("Low|Moderate|High"), exact = true)
     }
 
     private fun canMeasureAngleAndSlope() {
-        hasText(R.id.clinometer_title, Regex("-?\\d+°"))
-        hasText(R.id.clinometer_title, Regex("-?\\d+% slope"))
+        hasText(Regex("-?\\d+°"), exact = true)
+        hasText(Regex("-?\\d+% slope"))
     }
 
     private fun doesNotEstimateHeightOrDistanceByDefault() {
-        hasText(R.id.estimated_height, string(R.string.distance_unset))
-        hasText(R.id.estimated_height, string(R.string.height))
+        // Until something is measured the row offers to measure
+        hasText(string(R.string.height), exact = true)
+        hasText(string(R.string.measure), exact = true)
     }
 
     private fun canEstimateDistance() {
-        click(R.id.clinometer_measure_btn)
+        click(string(R.string.measure), exact = true)
 
         click(string(R.string.distance))
+        // Picking from the list opens the distance dialog, there is no confirmation
 
-        clickOk()
-
-        input(R.id.amount, "5")
-        input(R.id.secondary_amount, "5")
+        input(distanceField(0), "5")
+        input(distanceField(1), "5")
 
         clickOk()
 
         // Instructions dialog
-        isNotVisible(R.id.amount)
+        not { distanceField(0)() }
         clickOk()
 
-        hasText(R.id.estimated_height, Regex("(-|\\d+(\\.\\d+)?) (mi|ft)"))
-        hasText(R.id.estimated_height, "Distance")
+        hasText(Regex("(-|\\d+(\\.\\d+)?) (mi|ft)"), exact = true)
+        hasText(string(R.string.distance), exact = true)
     }
 
     private fun canEstimateHeight() {
-        click(R.id.clinometer_measure_btn)
+        // The row is named for what it last measured
+        click(string(R.string.distance), exact = true)
 
         click(string(R.string.height))
+        // Picking from the list opens the distance dialog, there is no confirmation
 
-        clickOk()
-
-        input(R.id.amount, "5")
+        input(distanceField(0), "5")
 
         clickOk()
 
         // Instructions dialog
-        isNotVisible(R.id.amount)
+        not { distanceField(0)() }
         clickOk()
 
-        hasText(R.id.estimated_height, Regex("(-|\\d+(\\.\\d+)?) (mi|ft)"))
-        hasText(R.id.estimated_height, "Height")
+        hasText(Regex("(-|\\d+(\\.\\d+)?) (mi|ft)"), exact = true)
+        hasText(string(R.string.height), exact = true)
+    }
+
+    /** The distance dialog's text fields, top to bottom (feet then inches when both are shown). */
+    private fun distanceField(index: Int) = { view(By.clazz("android.widget.EditText"), index) }
+
+    /** The reading locks while the screen below the bar is held, and a tap is a short hold. */
+    private fun tapScreenCenter() {
+        TestUtils.device.click(TestUtils.device.displayWidth / 2, TestUtils.device.displayHeight / 2)
     }
 }

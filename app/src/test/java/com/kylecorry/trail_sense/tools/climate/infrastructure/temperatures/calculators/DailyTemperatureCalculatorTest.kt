@@ -7,9 +7,15 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class DailyTemperatureCalculatorTest {
@@ -81,7 +87,7 @@ internal class DailyTemperatureCalculatorTest {
 
         val beforeMidnight = calculator.calculate(zoned(date.atTime(23, 55))).celsius().value
         val afterMidnight =
-            calculator.calculate(zoned(date.plusDays(1).atTime(0, 5))).celsius().value
+            calculator.calculate(zoned(date.plus(1, DateTimeUnit.DAY).atTime(0, 5))).celsius().value
 
         assertEquals(beforeMidnight, afterMidnight, 0.5f)
     }
@@ -92,7 +98,7 @@ internal class DailyTemperatureCalculatorTest {
 
         var previous = calculator.calculate(zoned(date.atTime(0, 0))).celsius().value
         for (minutes in 15..(24 * 60) step 15) {
-            val time = zoned(date.atStartOfDay().plusMinutes(minutes.toLong()))
+            val time = zoned(date.atTime(0, 0)) + minutes.minutes
             val temperature = calculator.calculate(time).celsius().value
             assertTrue(
                 kotlin.math.abs(temperature - previous) < 2f,
@@ -104,16 +110,16 @@ internal class DailyTemperatureCalculatorTest {
 
     @Test
     fun usesTheRangeOfTheDayBeingCalculated() = runBlocking {
-        val calculator = DailyTemperatureCalculator(location) { _, day ->
+        val calculator = DailyTemperatureCalculator(location, zone = zone, dailyTemperatureRangeProvider = { _, day ->
             if (day == date) {
                 Range(Temperature.celsius(10f), Temperature.celsius(20f))
             } else {
                 Range(Temperature.celsius(30f), Temperature.celsius(40f))
             }
-        }
+        })
 
         val today = calculator.calculate(zoned(date.atTime(15, 30))).celsius().value
-        val muchLater = calculator.calculate(zoned(date.plusDays(10).atTime(15, 30))).celsius().value
+        val muchLater = calculator.calculate(zoned(date.plus(10, DateTimeUnit.DAY).atTime(15, 30))).celsius().value
 
         assertEquals(20f, today, 1f)
         assertEquals(40f, muchLater, 1f)
@@ -122,14 +128,14 @@ internal class DailyTemperatureCalculatorTest {
     @Test
     fun worksInTheSouthernHemisphere() = runBlocking {
         val southern = Coordinate(-33.9, 151.2)
-        val zone = ZoneId.of("Australia/Sydney")
-        val calculator = DailyTemperatureCalculator(southern) { _, _ ->
+        val zone = TimeZone.of("Australia/Sydney")
+        val calculator = DailyTemperatureCalculator(southern, zone = zone, dailyTemperatureRangeProvider = { _, _ ->
             Range(Temperature.celsius(10f), Temperature.celsius(20f))
-        }
+        })
 
         for (hour in 0..23) {
             val temperature = calculator.calculate(
-                ZonedDateTime.of(date.atTime(hour, 0), zone)
+                date.atTime(hour, 0).toInstant(zone)
             ).celsius().value
             assertTrue(
                 temperature in 9f..21f,
@@ -141,14 +147,14 @@ internal class DailyTemperatureCalculatorTest {
     @Test
     fun worksAtHighLatitudesWhereTheSunMayNotRise() = runBlocking {
         val arctic = Coordinate(78.2, 15.6)
-        val polarNight = LocalDate.of(2024, 12, 21)
-        val calculator = DailyTemperatureCalculator(arctic) { _, _ ->
+        val polarNight = LocalDate(2024, 12, 21)
+        val calculator = DailyTemperatureCalculator(arctic, zone = TimeZone.UTC, dailyTemperatureRangeProvider = { _, _ ->
             Range(Temperature.celsius(-20f), Temperature.celsius(-10f))
-        }
+        })
 
         for (hour in 0..23) {
             val temperature = calculator.calculate(
-                ZonedDateTime.of(polarNight.atTime(hour, 0), ZoneId.of("UTC"))
+                polarNight.atTime(hour, 0).toInstant(TimeZone.UTC)
             ).celsius().value
             assertTrue(
                 temperature in -21f..-9f,
@@ -157,24 +163,24 @@ internal class DailyTemperatureCalculatorTest {
         }
     }
 
-    private suspend fun temperature(time: java.time.LocalDateTime): Float {
+    private suspend fun temperature(time: LocalDateTime): Float {
         return calculator().calculate(zoned(time)).celsius().value
     }
 
-    private fun zoned(time: java.time.LocalDateTime): ZonedDateTime {
-        return ZonedDateTime.of(time, zone)
+    private fun zoned(time: LocalDateTime): Instant {
+        return time.toInstant(zone)
     }
 
     private fun calculator(calls: AtomicInteger? = null): DailyTemperatureCalculator {
-        return DailyTemperatureCalculator(location) { _, _ ->
+        return DailyTemperatureCalculator(location, zone = zone, dailyTemperatureRangeProvider = { _, _ ->
             calls?.incrementAndGet()
             Range(Temperature.celsius(10f), Temperature.celsius(20f))
-        }
+        })
     }
 
     companion object {
         private val location = Coordinate(40.0, -80.0)
-        private val zone = ZoneId.of("America/New_York")
-        private val date = LocalDate.of(2024, 6, 21)
+        private val zone = TimeZone.of("America/New_York")
+        private val date = LocalDate(2024, 6, 21)
     }
 }

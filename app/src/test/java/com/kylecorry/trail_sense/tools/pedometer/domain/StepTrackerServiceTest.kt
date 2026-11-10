@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer.domain
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
 import com.kylecorry.trail_sense.shared.events.IEventEmitter
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
@@ -13,7 +14,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.only
 import org.mockito.kotlin.verify
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class StepTrackerServiceTest {
 
@@ -175,7 +176,7 @@ internal class StepTrackerServiceTest {
         id: Long,
         periodId: Long,
         startTime: Instant = Instant.parse("2026-01-01T10:00:00Z"),
-        endTime: Instant = startTime.plusSeconds(3600),
+        endTime: Instant = (startTime + 3600.seconds),
         steps: Long = 1
     ): StepCountBucket {
         return StepCountBucket(id, periodId, startTime, endTime, steps)
@@ -221,7 +222,7 @@ internal class StepTrackerServiceTest {
             startTime: Instant,
             endTime: Instant
         ): List<StepCountBucket> {
-            return buckets.filter { it.startTime.isBefore(endTime) && it.endTime.isAfter(startTime) }
+            return buckets.filter { it.startTime < endTime && it.endTime > startTime }
         }
 
         override suspend fun upsertStepCountBucket(bucket: StepCountBucket): Long {
@@ -244,7 +245,7 @@ internal class StepTrackerServiceTest {
 
         override suspend fun deleteBucketsOlderThan(endTime: Instant): Boolean {
             val before = buckets.size
-            buckets.removeAll { it.endTime.isBefore(endTime) }
+            buckets.removeAll { it.endTime < endTime }
             return buckets.size != before
         }
 

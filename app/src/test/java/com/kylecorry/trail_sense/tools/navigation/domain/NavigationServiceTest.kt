@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.domain
 
+import kotlin.time.Duration.Companion.seconds
 import android.graphics.Color
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
@@ -70,8 +71,8 @@ internal class NavigationServiceTest {
         val linearEtaDownhill =
             service.eta(location, destinationAltitude, speed, beacon.copy(elevation = altitude))
 
-        assertEquals(127L, linearEta.toMinutes())
-        assertEquals(47L, linearEtaDownhill.toMinutes())
+        assertEquals(127L, linearEta.inWholeMinutes)
+        assertEquals(47L, linearEtaDownhill.inWholeMinutes)
     }
 
     @Test
@@ -83,7 +84,7 @@ internal class NavigationServiceTest {
         val flatEta = service.eta(flat, speed)!!
         val uphillEta = service.eta(uphill, speed)!!
 
-        assertEquals(1000L, flatEta.seconds)
+        assertEquals(1000L, flatEta.inWholeSeconds)
         assertTrue(uphillEta > flatEta)
     }
 
@@ -93,7 +94,7 @@ internal class NavigationServiceTest {
 
         val eta = service.eta(guidance, Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds))!!
 
-        assertEquals(1000L, eta.seconds)
+        assertEquals(1000L, eta.inWholeSeconds)
     }
 
     @Test

@@ -25,7 +25,7 @@ internal class WeatherSubsystemTest {
     @Before
     fun setup() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        DependencyRegistry.register(FileSubsystem.getInstance(context))
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
     }
 
     @Test
@@ -254,7 +254,7 @@ internal class WeatherSubsystemTest {
         for (place in places) {
             for (day in place.days) {
                 var actual = subsystem.getTemperatureRange(
-                    LocalDate.of(2022, day.month, day.day),
+                    kotlinx.datetime.LocalDate(2022, day.month, day.day),
                     Coordinate(place.latitude, place.longitude),
                     Distance.feet(place.elevation.toFloat()),
                     false
@@ -403,7 +403,7 @@ internal class WeatherSubsystemTest {
         for (place in places) {
             val all = subsystem.getMonthlyPrecipitation(Coordinate(place.latitude, place.longitude))
             for (month in place.months) {
-                val actual = all[month.key]!!.convertTo(DistanceUnits.Inches).value
+                val actual = all[kotlinx.datetime.Month(month.key.value)]!!.convertTo(DistanceUnits.Inches).value
                 val expected = month.value
 
                 errors.add(actual - expected)

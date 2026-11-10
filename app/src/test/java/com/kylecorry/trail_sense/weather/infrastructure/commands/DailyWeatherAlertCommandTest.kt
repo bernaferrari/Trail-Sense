@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
+import kotlin.time.Clock
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.LocalDateTime
+import com.kylecorry.andromeda.core.time.ZonedDateTime
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
@@ -16,11 +21,9 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 internal class DailyWeatherAlertCommandTest {
 
@@ -37,7 +40,7 @@ internal class DailyWeatherAlertCommandTest {
                 emptyList(),
                 emptyList(),
                 null,
-                WeatherArrivalTime(Instant.now(), false),
+                WeatherArrivalTime(Clock.System.now(), false),
                 null,
                 emptyList()
             ),
@@ -51,23 +54,17 @@ internal class DailyWeatherAlertCommandTest {
         timeProvider = mock()
 
         whenever(timeProvider.getTime()).thenReturn(
-            ZonedDateTime.of(
-                2022,
-                1,
-                1,
-                7,
-                0,
-                0,
-                0,
-                ZoneId.of("UTC")
+            ZonedDateTime(
+                LocalDateTime(2022, 1, 1, 7, 0).toInstant(TimeZone.UTC),
+                TimeZone.UTC
             )
         )
 
-        whenever(prefs.dailyForecastTime).thenReturn(LocalTime.of(6, 0))
+        whenever(prefs.dailyForecastTime).thenReturn(LocalTime(6, 0))
         whenever(prefs.shouldMonitorWeather).thenReturn(true)
         whenever(prefs.shouldShowDailyWeatherNotification).thenReturn(true)
         whenever(prefs.dailyWeatherIsForTomorrow).thenReturn(false)
-        whenever(prefs.dailyWeatherLastSent).thenReturn(LocalDate.MIN)
+        whenever(prefs.dailyWeatherLastSent).thenReturn(null)
 
         command = DailyWeatherAlertCommand(prefs, alerter, timeProvider)
     }
@@ -92,7 +89,7 @@ internal class DailyWeatherAlertCommandTest {
 
     @Test
     fun shouldNotSendIfAlreadySent() {
-        whenever(prefs.dailyWeatherLastSent).thenReturn(LocalDate.of(2022, 1, 1))
+        whenever(prefs.dailyWeatherLastSent).thenReturn(LocalDate(2022, 1, 1))
 
         command.execute(weather)
 
@@ -101,7 +98,7 @@ internal class DailyWeatherAlertCommandTest {
 
     @Test
     fun shouldNotSendIfTooEarly() {
-        whenever(prefs.dailyForecastTime).thenReturn(LocalTime.of(12, 0))
+        whenever(prefs.dailyForecastTime).thenReturn(LocalTime(12, 0))
 
         command.execute(weather)
 
@@ -110,7 +107,7 @@ internal class DailyWeatherAlertCommandTest {
 
     @Test
     fun shouldNotSendIfTooLate() {
-        whenever(prefs.dailyForecastTime).thenReturn(LocalTime.of(2, 0))
+        whenever(prefs.dailyForecastTime).thenReturn(LocalTime(2, 0))
 
         command.execute(weather)
 
@@ -121,7 +118,7 @@ internal class DailyWeatherAlertCommandTest {
     fun shouldSendAlert() {
         command.execute(weather)
 
-        verify(prefs).dailyWeatherLastSent = LocalDate.of(2022, 1, 1)
+        verify(prefs).dailyWeatherLastSent = LocalDate(2022, 1, 1)
         verify(alerter, times(1)).alert(weather.prediction)
     }
 

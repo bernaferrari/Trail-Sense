@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.dem
 
+import kotlinx.serialization.Serializable
 import android.net.Uri
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.files.ZipUtils
@@ -16,6 +17,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.withLock
 
+@Serializable
+
 class DigitalElevationModelFile(
     val filename: String,
     val width: Int,
@@ -28,6 +31,8 @@ class DigitalElevationModelFile(
     val latitude_end: Double,
 ) : ProguardIgnore
 
+@Serializable
+
 class DigitalElevationModelIndex(
     val resolution_arc_seconds: Int,
     val compression_method: String,
@@ -36,13 +41,16 @@ class DigitalElevationModelIndex(
     val has_water_mask: Boolean? = null
 ) : ProguardIgnore
 
+@Serializable
+
 class CompressedDigitalElevationModelIndex(
     val r: Int,
     val c: String,
     val v: String?,
     val w: Int,
     val h: Int,
-    val f: List<List<Number>>,
+    // Numbers in the file, decoded as doubles since kotlinx.serialization has no serializer for Number
+    val f: List<List<Double>>,
     val wm: Boolean? = null
 ) : ProguardIgnore {
     fun toDigitalElevationModelIndex(): DigitalElevationModelIndex {

@@ -31,7 +31,7 @@ class DEMTest {
     @Test
     fun getElevation() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        DependencyRegistry.register(FileSubsystem.getInstance(context))
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
         for (model in models) {
             println("Testing ${model.path}")
             verify(model)

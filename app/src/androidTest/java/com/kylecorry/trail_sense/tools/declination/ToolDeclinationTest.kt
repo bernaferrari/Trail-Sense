@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.declination
 
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.science.geophysics.Geophysics
@@ -23,7 +24,7 @@ class ToolDeclinationTest : ToolTestBase(Tools.DECLINATION) {
             hasText(string(R.string.loading))
         }
 
-        input(R.id.utm, "42, -72")
+        input(id("location"), "42, -72")
 
         // This varies with time, so look it up
         val declination1 = Geophysics.getGeomagneticDeclination(Coordinate(42.0, -72.0))
@@ -32,7 +33,7 @@ class ToolDeclinationTest : ToolTestBase(Tools.DECLINATION) {
         // Verify the declination is displayed
         hasText("$formatted1° (W)")
 
-        input(R.id.utm, "-42, -72")
+        input(id("location"), "-42, -72")
 
         // This varies with time, so look it up
         val declination2 = Geophysics.getGeomagneticDeclination(Coordinate(-42.0, -72.0))

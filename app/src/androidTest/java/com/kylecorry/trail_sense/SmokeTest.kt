@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense
 
+import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.test_utils.views.desc
 import android.Manifest
 import android.os.Build
 import android.util.Log
@@ -146,7 +148,7 @@ class SmokeTest {
 
         click({ viewWithResourceId("$packageName:id/add_btn") })
         click("Camera")
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
         input("Name", "Test Map", index = 1)
         clickOk()
 
@@ -175,7 +177,7 @@ class SmokeTest {
     private fun smokeTestClouds() {
         click({ viewWithResourceId("$packageName:id/add_btn") })
         click("Camera")
-        click(id("capture_button"))
+        click(desc(TestUtils.getString(R.string.camera_capture)))  // The camera is a full screen dialog, so its tags are not exposed
         // Verify a cloud is selected (the top one)
         isChecked({ viewWithResourceId("$packageName:id/checkbox") })
         back()
@@ -213,7 +215,7 @@ class SmokeTest {
         click("Navigate")
         optional { clickOk() }
         hasText("Test beacon")
-        click({ viewWithResourceId("$packageName:id/navigation_cancel") })
+        click(desc(string(R.string.stop)))
         back()
         back()
         back()

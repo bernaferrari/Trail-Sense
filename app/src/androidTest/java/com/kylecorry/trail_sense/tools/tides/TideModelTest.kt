@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.tides
 
+import kotlinx.datetime.toJavaZoneId
+import kotlinx.datetime.toKotlinTimeZone
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.sol.math.optimization.GoldenSearchExtremaFinder
@@ -9,15 +13,12 @@ import com.kylecorry.sol.science.oceanography.TideConstituent
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.waterlevel.HarmonicWaterLevelCalculator
-import com.kylecorry.trail_sense.shared.time.JavaTime.atEndOfDay
-import com.kylecorry.trail_sense.shared.time.JavaTime.atStartOfDay
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -339,7 +340,12 @@ class TideModelTest {
         vararg tides: Pair<LocalTime, Boolean>
     ): List<Tide> {
         return tides.map {
-            Tide(ZonedDateTime.of(date, it.first, ZoneId.of(zoneId)), it.second)
+            val zone = ZoneId.of(zoneId)
+            Tide(
+                ZonedDateTime.of(date, it.first, zone).toInstant().toKotlinInstant(),
+                it.second,
+                timeZone = zone.toKotlinTimeZone()
+            )
         }
     }
 
@@ -349,14 +355,22 @@ class TideModelTest {
         expected: List<Tide>
     ): List<Float> {
         val calculator = HarmonicWaterLevelCalculator(harmonics)
-        val start = expected.first().time.atStartOfDay().minusHours(12)
-        val end = expected.first().time.atEndOfDay().plusHours(12)
-        val actual =
-            Oceanography.getTides(calculator, start, end, GoldenSearchExtremaFinder(30.0, 1.0))
+        val first = expected.first()
+        val zone = first.timeZone.toJavaZoneId()
+        val day = first.time.toJavaInstant().atZone(zone).toLocalDate()
+        val start = day.atStartOfDay(zone).minusHours(12)
+        val end = day.atTime(LocalTime.MAX).atZone(zone).plusHours(12)
+        val actual = Oceanography.getTides(
+            calculator,
+            start.toInstant().toKotlinInstant(),
+            end.toInstant().toKotlinInstant(),
+            first.timeZone,
+            GoldenSearchExtremaFinder(30.0, 1.0)
+        )
         // Match each tide
         val matchedTides = expected.map {
             val closest = actual.minBy { actualTide ->
-                Duration.between(actualTide.time, it.time).abs()
+                (it.time - actualTide.time).absoluteValue
             }
             closest
         }
@@ -378,7 +392,7 @@ class TideModelTest {
         expected: Tide
     ): Float {
         assertEquals(index.toString(), expected.isHigh, actual.isHigh)
-        val delta = Duration.between(actual.time, expected.time).seconds / 60f
+        val delta = (expected.time - actual.time).inWholeSeconds / 60f
         assertEquals(index.toString(), 0f, delta, 65f)
         return delta
     }

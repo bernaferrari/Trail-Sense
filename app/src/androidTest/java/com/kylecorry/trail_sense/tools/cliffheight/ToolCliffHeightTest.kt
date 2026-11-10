@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.cliffheight
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -19,9 +22,17 @@ class ToolCliffHeightTest : ToolTestBase(Tools.CLIFF_HEIGHT) {
 
         // Accept the disclaimer
         clickOk()
-        click(R.id.start_btn)
-        hasText(R.id.cliff_height_title, Regex("[\\d.]+ ft"))
-        click(R.id.start_btn)
-        hasText(R.id.cliff_height_title, Regex("[\\d.]+ ft"))
+        click(id("start_btn"))
+        hasHeight()
+        click(id("start_btn"))
+        hasHeight()
+    }
+
+    /**
+     * The height is drawn as a value with its unit under the Height label.
+     */
+    private fun hasHeight() {
+        hasDataPoint(Regex("[\\d.]+"), string(R.string.height))
+        hasText(id("cliff_height_title"), Regex("ft"))
     }
 }

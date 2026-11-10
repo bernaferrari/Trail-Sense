@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
+import kotlin.time.Clock
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.trail_sense.shared.alerts.IDismissibleAlerter
@@ -17,7 +18,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class StormAlertCommandTest {
     private lateinit var command: StormAlertCommand
@@ -87,7 +88,7 @@ internal class StormAlertCommandTest {
                 emptyList(),
                 emptyList(),
                 null,
-                WeatherArrivalTime(Instant.now(), false),
+                WeatherArrivalTime(Clock.System.now(), false),
                 null,
                 if (hasStorm) listOf(WeatherAlert.Storm) else emptyList()
             ),

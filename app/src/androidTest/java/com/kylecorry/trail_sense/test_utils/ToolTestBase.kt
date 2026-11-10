@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.andromeda.torch.deviceTorch
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.Manifest
@@ -8,7 +9,6 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import androidx.test.core.app.ActivityScenario
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.andromeda.torch.Torch
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
@@ -105,6 +105,8 @@ open class ToolTestBase(
 
 
         TestUtils.setWaitForIdleTimeout()
+        // A test that stopped with the shade open would otherwise cover every test after it
+        TestUtils.closeNotificationShade()
         if (packageName == null) {
             TestUtils.setupApplication()
 
@@ -127,7 +129,8 @@ open class ToolTestBase(
             grantBasicPermissions(packageName)
             TestUtils.launchApp(packageName)
             completeOnboarding()
-            click(Route.Tools)
+            // The Tools tab is identified by its label in the Compose navigation bar
+            click(TestUtils.getString(R.string.tools), exact = true)
             openTool(toolId)
         }
     }
@@ -151,12 +154,14 @@ open class ToolTestBase(
 
     @After
     fun tearDown() {
+        ScreenshotFailureRule.dumpHierarchy()
+        tryOrNothing { TestUtils.closeNotificationShade() }
         TestUtils.unmute(volume)
         TestUtils.stopListeningForCameraUsage()
         TestUtils.stopListeningForTorchUsage()
         tryOrNothing {
             if (TestUtils.isTorchOn) {
-                Torch(context).off()
+                deviceTorch().off()
             }
         }
         if (this::scenario.isInitialized) {

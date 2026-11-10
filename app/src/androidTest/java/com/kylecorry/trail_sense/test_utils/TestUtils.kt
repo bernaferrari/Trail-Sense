@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.test_utils
 
+import android.accessibilityservice.AccessibilityService
+import android.view.accessibility.AccessibilityWindowInfo
+import java.util.regex.Pattern
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.views.TestView
+import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.Manifest
@@ -24,7 +30,13 @@ import androidx.test.uiautomator.UiObject2
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.permissions.SpecialPermission
-import com.kylecorry.andromeda.torch.TorchStateChangedTopic
+import com.kylecorry.andromeda.torch.TorchState
+import com.kylecorry.andromeda.torch.torchStates
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
@@ -66,7 +78,7 @@ object TestUtils {
         }
     }
 
-    private var torchTopic: TorchStateChangedTopic? = null
+    private var torchJob: Job? = null
 
     val context: Context
         get() = InstrumentationRegistry.getInstrumentation().targetContext
@@ -95,10 +107,11 @@ object TestUtils {
     }
 
     fun back(requireSuccess: Boolean = true) {
-        if (requireSuccess) {
-            assertTrue(device.pressBack())
-        } else {
-            device.pressBack()
+        // pressBack reports whether the key was injected and the UI idled in time. Compose transitions often keep
+        // animating past that wait, so a back that worked can report false. Wait for the UI to settle instead and let
+        // the test's next check verify where it landed.
+        if (!device.pressBack() && requireSuccess) {
+            device.waitForIdle()
         }
     }
 
@@ -132,13 +145,15 @@ object TestUtils {
     }
 
     fun listenForTorchUsage() {
-        torchTopic = TorchStateChangedTopic(context)
-        torchTopic?.subscribe(this::onTorchStateChanged)
+        torchJob?.cancel()
+        torchJob = torchStates()
+            .onEach { onTorchStateChanged(it == TorchState.On) }
+            .launchIn(CoroutineScope(Dispatchers.Main))
     }
 
     fun stopListeningForTorchUsage() {
-        torchTopic?.unsubscribe(this::onTorchStateChanged)
-        torchTopic = null
+        torchJob?.cancel()
+        torchJob = null
     }
 
     fun not(action: () -> Unit) {
@@ -239,16 +254,37 @@ object TestUtils {
     }
 
     fun openQuickActions() {
+        // The keyboard covers the bottom navigation
+        hideKeyboard()
+        // Long pressing any bottom navigation tab opens the quick actions. The tabs have no tags, so the tab is the
+        // long-clickable node lowest on the screen.
         waitFor {
-            view(R.id.bottom_navigation, packageName = packageName).longClick()
+            val pkg = packageName ?: context.packageName
+            val tab = device.findObjects(By.longClickable(true).pkg(pkg))
+                .maxByOrNull { it.visibleBounds.bottom }
+                ?: throw AssertionError("Bottom navigation not found")
+            tab.longClick()
         }
         waitFor {
-            view(R.id.quick_actions_sheet, packageName = packageName)
+            view(By.text(getString(R.string.quick_actions)))
+        }
+    }
+
+    fun isKeyboardVisible(): Boolean {
+        return InstrumentationRegistry.getInstrumentation().uiAutomation.windows.any {
+            it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+        }
+    }
+
+    fun hideKeyboard() {
+        if (isKeyboardVisible()) {
+            device.pressBack()
+            waitFor { if (isKeyboardVisible()) throw AssertionError("The keyboard is still visible") }
         }
     }
 
     fun closeQuickActions() {
-        click(R.id.close_button)
+        click(desc(getString(android.R.string.cancel)))
     }
 
     // PERMISSIONS
@@ -337,7 +373,14 @@ object TestUtils {
     }
 
     fun closeNotificationShade() {
-        device.swipe(0, device.displayHeight, 0, 0, 10)
+        // A swipe only collapses the shade one level when quick settings are expanded, so ask the system to dismiss it
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            InstrumentationRegistry.getInstrumentation().uiAutomation
+                .performGlobalAction(AccessibilityService.GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE)
+        } else {
+            device.swipe(0, device.displayHeight, 0, 0, 10)
+        }
+        device.waitForIdle()
     }
 
     // Helpers
@@ -386,26 +429,19 @@ object TestUtils {
         return null
     }
 
+    /**
+     * Picks a date in the Material 3 date picker: switch it to text input, then type the date as digits (the field
+     * adds the separators for the locale's pattern, month first in en-US).
+     */
     fun pickDate(year: Int, month: Int, day: Int, waitForClose: Boolean = true) {
         waitFor {
-            view(
-                com.google.android.material.R.id.mtrl_picker_header_toggle,
-                packageName = packageName
-            ).click()
+            view(By.desc(Pattern.compile("(?i).*(text input|input mode).*"))).click()
         }
 
         waitFor {
-            view(
-                com.google.android.material.R.id.mtrl_picker_text_input_date,
-                packageName = packageName
+            view(By.clazz("android.widget.EditText")).input(
+                month.toString().padStart(2, '0') + day.toString().padStart(2, '0') + year.toString()
             )
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .input(
-                    "${month.toString().padStart(2, '0')}/${
-                        day.toString().padStart(2, '0')
-                    }/${year}"
-                )
         }
 
         waitFor {
@@ -414,69 +450,32 @@ object TestUtils {
 
         if (waitForClose) {
             waitFor {
-                not {
-                    view(
-                        com.google.android.material.R.id.mtrl_calendar_main_pane,
-                        packageName = packageName
-                    )
-                }
+                not { view(By.clazz("android.widget.EditText")) }
             }
         }
     }
 
+    /**
+     * Picks a time on the Material 3 clock dial: tap the hour, then the minute (the dial labels every 5 minutes),
+     * then AM or PM. The header repeats the current hour and minute, so the dial's copy is the lowest match.
+     */
     fun pickTime(hour: Int, minute: Int, am: Boolean, waitForClose: Boolean = true) {
+        require(minute % 5 == 0) { "The clock dial can only be tapped on multiples of 5 minutes" }
+
+        // The View clock labels its numbers with text; the Compose clock only describes them ("8 o'clock")
         waitFor {
-            view(
-                com.google.android.material.R.id.material_timepicker_mode_button,
-                packageName = packageName
+            lowestWithTextOrDesc(hour.toString(), Pattern.compile("${hour} o'clock")).click()
+        }
+
+        waitFor {
+            lowestWithTextOrDesc(
+                minute.toString().padStart(2, '0'),
+                Pattern.compile("0?${minute} minutes?")
             ).click()
         }
 
         waitFor {
-            view(
-                com.google.android.material.R.id.material_hour_text_input,
-                packageName = packageName
-            ).click()
-            view(
-                com.google.android.material.R.id.material_hour_text_input,
-                packageName = packageName
-            )
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .input(
-                    hour.toString()
-                )
-        }
-
-        view(
-            com.google.android.material.R.id.material_minute_text_input,
-            packageName = packageName
-        ).click()
-
-        waitFor {
-            view(
-                com.google.android.material.R.id.material_minute_text_input,
-                packageName = packageName
-            )
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .childWithIndex(0)
-                .input(
-                    minute.toString()
-                )
-        }
-
-        if (am) {
-            view(
-                com.google.android.material.R.id.material_clock_period_am_button,
-                packageName = packageName
-            ).click()
-        } else {
-            view(
-                com.google.android.material.R.id.material_clock_period_pm_button,
-                packageName = packageName
-            ).click()
+            view(By.text(if (am) "AM" else "PM")).click()
         }
 
         waitFor {
@@ -489,6 +488,14 @@ object TestUtils {
             }
         }
     }
+
+    private fun lowestWithTextOrDesc(text: String, desc: Pattern): TestView {
+        val node = (device.findObjects(By.text(text)) + device.findObjects(By.desc(desc)))
+            .maxByOrNull { it.visibleBounds.top }
+            ?: throw AssertionError("Text not found: $text")
+        return TestView(node)
+    }
+
 
     fun isCameraInUse(isBackFacing: Boolean? = null): Boolean {
         val manager = context.getSystemService<CameraManager>() ?: return false
@@ -505,8 +512,16 @@ object TestUtils {
         return false
     }
 
-    fun clickListItemMenu(label: String, index: Int = 0) {
-        click(com.kylecorry.andromeda.views.R.id.menu_btn, index = index)
+    /**
+     * Opens a list row's overflow menu and picks [label]. Compose rows expose the overflow button by its
+     * content description ("More options" unless the screen names it otherwise) or by a testTag.
+     */
+    fun clickListItemMenu(
+        label: String,
+        index: Int = 0,
+        menu: () -> TestView = { view(By.desc(getString(R.string.note_more_options)), index) }
+    ) {
+        click(menu)
         click(label)
     }
 
@@ -521,8 +536,7 @@ object TestUtils {
         }
     }
 
-    private fun onTorchStateChanged(isOn: Boolean): Boolean {
+    private fun onTorchStateChanged(isOn: Boolean) {
         isTorchOn = isOn
-        return true
     }
 }

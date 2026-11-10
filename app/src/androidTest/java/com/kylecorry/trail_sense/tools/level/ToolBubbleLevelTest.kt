@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.level
 
+import java.util.regex.Pattern
+import com.kylecorry.trail_sense.test_utils.views.view
+import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
@@ -12,18 +15,14 @@ class ToolBubbleLevelTest : ToolTestBase(Tools.BUBBLE_LEVEL) {
 
     @Test
     fun verifyBasicFunctionality() {
-        // Verify it shows the current angle (now rendered via Compose with testTag("angle_display"))
-        // Use stable text matcher instead of R.id (Compose migration per SKILL.md)
-        hasText(
-            Regex(
-                string(
-                    R.string.bubble_level_angles,
-                    "\\d+\\.\\d°",
-                    "\\d+\\.\\d°",
-                    "\\d+\\.\\d°"
-                )
-            )
+        // The level reads its angles out through its content description
+        val angles = string(
+            R.string.bubble_level_angles,
+            "\\d+\\.\\d°",
+            "\\d+\\.\\d°",
+            "\\d+\\.\\d°"
         )
+        isVisible({ view(By.desc(Pattern.compile(angles, Pattern.DOTALL))) })
 
         // Verify the level visualization is shown (testTag("level") on the Canvas area)
         isVisible("level")

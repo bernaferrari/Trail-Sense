@@ -11,8 +11,9 @@ import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
-import java.time.LocalDate
-import java.time.Month
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
+import kotlinx.datetime.toJavaLocalDate
 import kotlin.math.roundToInt
 
 class GrowingDegreeDaysThresholdTest {
@@ -22,7 +23,7 @@ class GrowingDegreeDaysThresholdTest {
     @Before
     fun setup() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        DependencyRegistry.register(FileSubsystem.getInstance(context))
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(context))
         weather = WeatherSubsystem.getInstance(context)
     }
 
@@ -47,15 +48,16 @@ class GrowingDegreeDaysThresholdTest {
 
         val dates = Month.entries.flatMap {
             listOf(
-                LocalDate.of(year, it, early),
-                LocalDate.of(year, it, mid),
-                LocalDate.of(year, it, late),
+                LocalDate(year, it, early),
+                LocalDate(year, it, mid),
+                LocalDate(year, it, late),
             )
         }
         val cumulative = Ecology.getCumulativeGrowingDegreeDays(
             dates = dates,
             baseTemperature = baseTemperature,
-            temperatureProvider = { date ->
+            temperatureProvider = { kotlinDate ->
+                val date = kotlinDate
                 val range = temperatures.firstOrNull { it.first == date }?.second
                     ?: temperatures.firstOrNull {
                         it.first.month == date.month && it.first.dayOfMonth == date.dayOfMonth

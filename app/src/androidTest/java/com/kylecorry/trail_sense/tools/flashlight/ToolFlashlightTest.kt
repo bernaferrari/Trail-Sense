@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.flashlight
 
-import com.kylecorry.andromeda.torch.Torch
+import com.kylecorry.trail_sense.test_utils.views.id
+import com.kylecorry.andromeda.torch.isTorchAvailable
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.doesNotHaveNotification
@@ -29,7 +30,7 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
     }
 
     private fun canToggleFlashlight() {
-        if (!Torch.isAvailable(context)) {
+        if (!isTorchAvailable(context)) {
             return
         }
 
@@ -49,12 +50,12 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
         click(id("screen_flashlight_btn"))
         isNotVisible(id("screen_flashlight_btn"))
 
-        click(R.id.red_white_switcher)
-        click(R.id.red_white_switcher)
+        click(id("red_white_switcher"))
+        click(id("red_white_switcher"))
 
-        isVisible(R.id.brightness_seek)
+        isVisible(id("brightness_seek"))
 
-        click(R.id.off_btn)
+        click(id("off_btn"))
 
         isVisible(id("screen_flashlight_btn"))
     }
@@ -62,7 +63,7 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
     private fun verifyQuickAction() {
         openQuickActions()
 
-        if (Torch.isAvailable(context)) {
+        if (isTorchAvailable(context)) {
             click(quickAction(Tools.QUICK_ACTION_FLASHLIGHT))
             hasNotification(
                 FlashlightService.NOTIFICATION_ID,
@@ -76,7 +77,7 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
         }
 
         click(quickAction(Tools.QUICK_ACTION_SCREEN_FLASHLIGHT))
-        isVisible(R.id.screen_flashlight)
+        isVisible("red_white_switcher")
     }
 
 }

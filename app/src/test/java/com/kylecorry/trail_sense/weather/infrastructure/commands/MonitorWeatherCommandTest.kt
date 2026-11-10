@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
+import kotlin.time.Clock
 import com.kylecorry.sol.science.meteorology.PressureCharacteristic
 import com.kylecorry.sol.science.meteorology.PressureTendency
 import com.kylecorry.sol.science.meteorology.WeatherFront
@@ -18,7 +19,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Instant
+import kotlin.time.Instant
 
 internal class MonitorWeatherCommandTest {
 
@@ -44,7 +45,7 @@ internal class MonitorWeatherCommandTest {
                 emptyList(),
                 emptyList(),
                 WeatherFront.Warm,
-                WeatherArrivalTime(Instant.now(), false),
+                WeatherArrivalTime(Clock.System.now(), false),
                 null,
                 emptyList()
             ),
@@ -52,7 +53,7 @@ internal class MonitorWeatherCommandTest {
             null,
             null
         )
-        val observation = Reading(RawWeatherObservation(0, 1000f, 0f, 0f), Instant.now())
+        val observation = Reading(RawWeatherObservation(0, 1000f, 0f, 0f), Clock.System.now())
 
         whenever(observer.getWeatherObservation()).thenReturn(observation)
         whenever(subsystem.getWeather()).thenReturn(weather)

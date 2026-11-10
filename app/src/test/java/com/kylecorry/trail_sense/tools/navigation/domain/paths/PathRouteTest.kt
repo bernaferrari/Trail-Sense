@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.domain.paths
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -9,9 +10,8 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import kotlin.time.Clock
+import kotlin.time.Instant
 import java.util.IdentityHashMap
 
 class PathRouteTest {
@@ -27,7 +27,7 @@ class PathRouteTest {
     private val PathRoute.length: Float
         get() = lengths.getValue(this)
 
-    private fun createRoute(points: List<PathPoint>, clock: Clock = Clock.systemUTC()): PathRoute {
+    private fun createRoute(points: List<PathPoint>, clock: Clock = Clock.System): PathRoute {
         return PathRoute(points, clock).also {
             lengths[it] = RouteGeometry(points.map { point -> point.coordinate }).length
         }
@@ -519,16 +519,14 @@ class PathRouteTest {
         assertTrue(guidance.distanceAlong.meters().value / route.length > 0.5f)
     }
 
-    private class TestClock : Clock() {
-        private var now = Instant.EPOCH
+    private class TestClock : Clock {
+        private var now = Instant.fromEpochMilliseconds(0)
 
         fun advance(seconds: Long) {
-            now = now.plusSeconds(seconds)
+            now = (now + seconds.seconds)
         }
 
-        override fun getZone(): ZoneId = ZoneId.of("UTC")
-        override fun withZone(zone: ZoneId?): Clock = this
-        override fun instant(): Instant = now
+        override fun now(): Instant = now
     }
 
     private fun meters(east: Double, north: Double) = Coordinate(north / 111_195.0, east / 111_195.0)

@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.navigation
 
+import java.util.regex.Pattern
+import androidx.test.uiautomator.By
+import com.kylecorry.trail_sense.test_utils.views.view
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
@@ -28,14 +33,15 @@ import org.junit.Test
 class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.97)) {
     @Test
     fun verifyBasicFunctionality() {
-        // Bearing
-        hasText(Regex("\\s*\\d+°\\s+[NSEW]+"))
-        // Location
-        hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
+        // Heading: the degrees, then the direction spelled out
+        hasText(Regex("\\d+"), exact = true)
+        hasText(COMPASS_DIRECTION)
+        // Location, with hemispheres instead of signs
+        hasText(LOCATION)
         // Elevation
-        hasText(Regex("-?\\d+ ft"))
-        // Speed
-        hasText(Regex("\\d+\\.\\d+ mph"))
+        hasText(Regex("-?\\d+ ft.*"))
+        // Speed is only shown while moving, and the test location stands still
+        not { hasText(Regex(".*\\d+(\\.\\d+)? mph.*")) }
 
         canDisplaySensorStatus()
 
@@ -54,7 +60,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
             scrollUntil { hasText("Tides") }
             scrollUntil { hasText("Photo maps") }
             scrollUntil { hasText("Trail maps") }
-            click(toolbarButton(R.id.title, Side.Right))
+            click(toolbarButton(Side.Right))
         }
     }
 
@@ -64,18 +70,17 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
             { click(R.id.linear_compass, waitForTime = 0) }
         )
 
-        hasText(R.id.navigation_sheet_title, Regex("\\d+° [NSEW]+"))
-        isVisible(R.id.navigation_arrow)
-        hasText(R.id.navigation_target_bearing, Regex("\\d+° [NSEW]+"))
-        hasText(R.id.navigation_tertiary_stat, string(R.string.navigation_facing), childId = R.id.stat_label)
-        hasText(R.id.navigation_tertiary_stat, Regex("\\d+° [NSEW]+"), childId = R.id.stat_value)
+        // The bearing is the destination's name, and the arrow points along it. The card no longer repeats the
+        // facing direction, which is the compass heading at the top of the screen.
+        hasText(Regex("\\d+° [NSEW]+"), exact = true)
+        isVisible(navigationArrow)
 
         cancelNavigation()
-        not { isVisible(R.id.navigation_sheet) }
+        not { isVisible(desc(string(R.string.stop))) }
     }
 
     private fun canNavigate() {
-        click(R.id.beaconBtn)
+        click(string(R.string.navigation_places), exact = true)
 
         // Create a beacon
         click(id("create_btn"))
@@ -84,7 +89,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         input("Location", "1.0, -1.0")
         input("Elevation", "100")
         scrollUntil { input(R.id.comment, "Test Comment") }
-        click(toolbarButton(R.id.create_beacon_title, Side.Right))
+        click(toolbarButton(Side.Right))
 
         // Navigate to it
         isVisible(id("beacon_list"))
@@ -96,14 +101,14 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         hasText("Test Beacon")
         hasText(Regex("1.000000°,\\s+-1.000000°"))
         hasText("100 ft")
-        isVisible(R.id.navigation_arrow)
-        hasText(R.id.navigation_primary_stat, Regex("\\d+(\\.\\d+)? (ft|mi)"), childId = R.id.stat_value)
-        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
-        hasText(R.id.navigation_secondary_stat, Regex("Arrive \\d+:\\d+\\s(AM|PM)"), childId = R.id.stat_label)
-        hasText(R.id.navigation_tertiary_stat, Regex("\\d+ ft"), childId = R.id.stat_value)
+        isVisible(navigationArrow)
+        hasRemaining(Regex("\\d+(\\.\\d+)? (ft|mi)"))
+        // The arrival time needs a speed, so it is only checked when it is shown
+        optional { hasText(Regex("Arrive \\d+:\\d+\\s(AM|PM)")) }
+        hasText(Regex("\\d+ ft"), exact = true)
 
         // The notes are shown on the beacon
-        click(R.id.navigation_sheet_title)
+        click("Test Beacon", exact = true)
         hasText(R.id.beacon_title, "Test Beacon")
         hasText("Test Comment")
         back()
@@ -125,11 +130,11 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun hasWorkingQuickActions() {
-        click(toolbarButton(R.id.navigation_title, Side.Left))
+        click(toolbarButton(Side.Left))
         isVisible(R.id.paths_title)
         back()
 
-        click(toolbarButton(R.id.navigation_title, Side.Right))
+        click(toolbarButton(Side.Right))
         clickOkIfShown()
         isVisible(R.id.map_list_title)
         back()
@@ -145,7 +150,7 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     }
 
     private fun canCreateBeacon() {
-        longClick(R.id.beaconBtn)
+        click(string(R.string.navigation_save_spot), exact = true)
         hasText(string(R.string.create_beacon))
         hasText(Regex("-?\\d+\\.\\d+°,\\s+-?\\d+\\.\\d+°"))
         back()
@@ -177,9 +182,10 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
     fun showsTheCurrentLocation() {
         openWithSavedBeacons()
 
-        hasText("42.030000°,  -71.970000°")
-        hasText("0.0 mph")
-        hasText(string(R.string.true_north))
+        hasText("42.0300° N  71.9700° W")
+        hasText("0 ft elevation")
+        // Standing still shows no speed
+        not { hasText(Regex(".*mph.*")) }
     }
 
     @Test
@@ -188,14 +194,16 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
 
         navigateToBeacon("Summit")
 
-        hasText(R.id.navigation_sheet_title, "Summit")
+        hasText("Summit", exact = true)
+        hasRemaining("40.41 mi")
+        hasText("1000 ft", exact = true)
+        isVisible(desc(string(R.string.navigation_remaining_gain)))
+
+        // The card keeps only what you need while walking: the coordinates and elevation are on the beacon
+        click("Summit", exact = true)
         hasText("42.500000°,  -71.500000°")
-        // Non-breaking spaces keep the elevation together if the subtitle wraps
-        hasText("(Ele. 1000 ft)")
-        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
-        hasText(R.id.navigation_tertiary_stat, "1000 ft", childId = R.id.stat_value)
-        hasText(R.id.navigation_tertiary_stat, string(R.string.navigation_remaining_gain), childId = R.id.stat_label)
-        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
+        hasText("1000 ft")
+        back()
     }
 
     @Test
@@ -203,27 +211,43 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         openWithSavedBeacons()
 
         navigateToBeacon("Summit")
-        hasText(R.id.navigation_primary_stat, "40.41 mi", childId = R.id.stat_value)
+        hasRemaining("40.41 mi")
 
         cancelNavigation()
         not { hasText("Summit") }
 
         navigateToBeacon("Camp")
-        hasText(R.id.navigation_sheet_title, "Camp")
-        hasText(R.id.navigation_primary_stat, "0.69 mi", childId = R.id.stat_value)
+        hasText("Camp", exact = true)
+        hasRemaining("0.69 mi")
         not { hasText("Summit") }
     }
 
+    /** The navigation card's one number: the distance left, over its label. */
+    private fun hasRemaining(distance: String) {
+        hasDataPoint(distance, string(R.string.navigation_remaining))
+    }
+
+    private fun hasRemaining(distance: Regex) {
+        hasDataPoint(distance, string(R.string.navigation_remaining))
+    }
+
+    private val COMPASS_DIRECTION = Regex("(North|South)(east|west)?|East|West")
+    private val LOCATION = Regex("\\d+\\.\\d{4}° [NS]\\s+\\d+\\.\\d{4}° [EW]")
+
+    /** The arrow badge, which is read out as the bearing to the destination. */
+    private val navigationArrow = { view(By.desc(Pattern.compile("\\d+° [NSEW]+"))) }
+
     private fun cancelNavigation() {
-        click(R.id.navigation_cancel)
+        click(desc(string(R.string.stop)))
         // The undo snackbar covers the beacon button until it times out
         hasText(string(R.string.navigation_cancelled))
         not(waitForTime = 15000) { hasText(string(R.string.navigation_cancelled)) }
     }
 
     private fun navigateToBeacon(name: String) {
-        click(R.id.beaconBtn)
-        click(name)
+        click(string(R.string.navigation_places), exact = true)
+        // The list header also names the nearest place, so match the row exactly
+        click(name, exact = true)
         click(string(R.string.navigate))
         // Calibration reminder (only shown when the compass accuracy is poor)
         clickOkIfShown()

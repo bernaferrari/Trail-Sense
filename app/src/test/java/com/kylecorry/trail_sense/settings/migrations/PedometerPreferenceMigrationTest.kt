@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings.migrations
 
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
@@ -12,10 +14,10 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Duration
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 
 internal class PedometerPreferenceMigrationTest {
 
@@ -30,16 +32,16 @@ internal class PedometerPreferenceMigrationTest {
 
         assertEquals(
             listOf(
-                StepAddition(4, start, Duration.ofSeconds(8)),
+                StepAddition(4, start, 8.seconds),
                 StepAddition(
                     3,
                     Instant.parse("2026-06-14T11:00:00Z"),
-                    Duration.ofSeconds(6)
+                    6.seconds
                 ),
                 StepAddition(
                     3,
                     Instant.parse("2026-06-14T12:00:00Z"),
-                    Duration.ofSeconds(6)
+                    6.seconds
                 )
             ),
             stepTracker.addedSteps
@@ -59,16 +61,16 @@ internal class PedometerPreferenceMigrationTest {
 
         assertEquals(
             listOf(
-                StepAddition(30, start, Duration.ofSeconds(60)),
+                StepAddition(30, start, 60.seconds),
                 StepAddition(
                     30,
                     Instant.parse("2026-06-14T02:00:00Z"),
-                    Duration.ofSeconds(60)
+                    60.seconds
                 ),
                 StepAddition(
                     30,
                     Instant.parse("2026-06-14T03:00:00Z"),
-                    Duration.ofSeconds(60)
+                    60.seconds
                 )
             ),
             stepTracker.addedSteps
@@ -95,16 +97,16 @@ internal class PedometerPreferenceMigrationTest {
 
         assertEquals(
             listOf(
-                StepAddition(30, start, Duration.ofSeconds(60)),
+                StepAddition(30, start, 60.seconds),
                 StepAddition(
                     30,
                     Instant.parse("2026-06-14T02:00:00Z"),
-                    Duration.ofSeconds(60)
+                    60.seconds
                 ),
                 StepAddition(
                     30,
                     Instant.parse("2026-06-14T03:00:00Z"),
-                    Duration.ofSeconds(60)
+                    60.seconds
                 )
             ),
             stepTracker.addedSteps
@@ -138,7 +140,7 @@ internal class PedometerPreferenceMigrationTest {
         PedometerPreferenceMigration(stepTracker, prefs) { end }.migrate()
 
         assertEquals(
-            listOf(StepAddition(100, start, Duration.ofMinutes(1))),
+            listOf(StepAddition(100, start, 1.minutes)),
             stepTracker.addedSteps
         )
     }
@@ -156,7 +158,7 @@ internal class PedometerPreferenceMigrationTest {
             }
         }
 
-        assertEquals(listOf(StepAddition(4, start, Duration.ofSeconds(8))), stepTracker.addedSteps)
+        assertEquals(listOf(StepAddition(4, start, 8.seconds)), stepTracker.addedSteps)
         verify(prefs).putLong("cache_steps", 6)
         verify(prefs).putInstant(
             "last_odometer_reset",
@@ -177,16 +179,16 @@ internal class PedometerPreferenceMigrationTest {
 
         assertEquals(
             listOf(
-                StepAddition(4, start, Duration.ofSeconds(8)),
+                StepAddition(4, start, 8.seconds),
                 StepAddition(
                     3,
                     Instant.parse("2026-06-14T11:00:00Z"),
-                    Duration.ofSeconds(6)
+                    6.seconds
                 ),
                 StepAddition(
                     3,
                     Instant.parse("2026-06-14T12:00:00Z"),
-                    Duration.ofSeconds(6)
+                    6.seconds
                 )
             ),
             stepTracker.addedSteps
@@ -225,7 +227,7 @@ internal class PedometerPreferenceMigrationTest {
 
         override suspend fun getHourlyStepCounts(
             date: LocalDate,
-            zoneId: ZoneId
+            zoneId: TimeZone
         ): List<HourlyStepCount> {
             return emptyList()
         }

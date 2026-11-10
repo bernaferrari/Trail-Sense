@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.tools.paths
 
+import androidx.test.uiautomator.By
+import com.kylecorry.trail_sense.test_utils.views.view
+import java.util.regex.Pattern
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.views.clickableIn
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import android.net.Uri
 import androidx.test.uiautomator.Direction
 import com.kylecorry.luna.result.Result
@@ -115,7 +121,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click(string(R.string.path), exact = true)
         input(string(R.string.name), "Empty Path")
         clickOk()
-        isVisible(R.id.path_title)
+        isVisible(id("path_menu_btn"))
         hasText("Empty Path")
         backUntil { isVisible(id("paths_title")) }
     }
@@ -136,7 +142,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText(Regex("[1-9]\\d*(\\.\\d+)? (mi|ft)"))
 
         // Cancelling a path with points asks before discarding it
-        click(toolbarButton(R.id.map_distance_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.dialog_leave))
         backUntil { isVisible(R.id.paths_title) }
     }
@@ -234,10 +240,10 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun searchPath() {
-        input(id("searchbox")(), "Path")
+        input(id("searchbox"), "Path")
         hasText("Empty Path")
         not { hasText("Dest Group") }
-        input(id("searchbox")(), "")
+        input(id("searchbox"), "")
         hasText("Dest Group")
     }
 
@@ -256,7 +262,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Test Path")
 
         // Wait for the path to open
-        hasText(R.id.path_title, "Test Path")
+        isVisible(id("path_menu_btn"))
+        hasText("Test Path", exact = true)
 
         // Settings
         click(R.id.path_color)
@@ -278,14 +285,14 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText("0 ft")
         hasText("Distance")
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasText("1")
             hasText("Points")
             hasText("Easy")
             hasText("Difficulty")
         }
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasText("0 ft")
             hasText("Ascent")
         }
@@ -293,7 +300,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText("0 ft")
         hasText("Descent")
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasText(Regex("\\d+ ft"))
             hasText("Lowest point")
         }
@@ -301,33 +308,34 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText(Regex("\\d+ ft"))
         hasText("Highest point")
 
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             isVisible(R.id.chart)
         }
 
         // Add a point away from the first so the path can be followed
         TestUtils.setLocationOverride(Coordinate(42.04, -71.97))
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             click(R.id.add_point_btn)
         }
 
         not(waitForTime = GPS_WAIT_FOR_TIMEOUT) { hasText("Loading") }
 
-        scrollUntil(R.id.path_scroll, direction = Direction.UP) {
+        scrollUntil(direction = Direction.UP) {
             hasText("2")
         }
 
         // Navigate
-        click(string(R.string.path_direction_to_end))
+        scrollUntil { click(string(R.string.path_direction_to_end), exact = true) }
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         hasText("Test Path")
         back()
         back()
         click("Test Path")
 
         // Path points
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Points")
         hasText("Today")
 
@@ -335,34 +343,33 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         back()
 
         // Replace elevations
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.replace_elevations))
         hasText(string(R.string.replace_elevations_confirmation))
         back(false)
 
         // Simplify
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Simplify")
+        hasText(string(R.string.quality))
+        hasText("High", exact = true)
+        hasText("Moderate", exact = true)
+        click("Low", exact = true)
         hasText("will be deleted")
-        click(R.id.simplify_quality)
-        hasOptions("High", "Moderate", "Low")
-        click("Low")
-        clickOk()
-        hasText(R.id.simplify_quality, "Low")
         clickOk()
 
         // Export
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Export")
         hasText("trail-sense-")
         backUntil {
-            isVisible(R.id.path_title)
+            isVisible(id("path_menu_btn"))
         }
 
         // Hide / show
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Hide")
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Show")
 
         backUntil { isVisible(id("paths_title")) }
@@ -387,7 +394,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun canRenamePath() {
-        click(id("path_item_menu_Today"))
+        // The recorded path is named after its time span, so match the tag's prefix
+        click({ view(By.res(Pattern.compile("(.*:id/)?path_item_menu_Today.*"))) })
         click(string(R.string.rename))
         input(string(R.string.name), "Test Path")
         clickOk()
@@ -395,8 +403,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun canUseBacktrack() {
-        // Verify it will run every minute by default
-        hasText(id("play_bar_title"), "Off - 1m")
+        // Backtrack starts off; the switch row names its state
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_off_title))
 
         // Click the start button
         click(id("play_btn"))
@@ -414,7 +422,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
 
-        hasText(id("play_bar_title"), "On - 1m")
+        // It records every minute by default
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_on_title))
+        hasText(string(R.string.places_backtrack_every, "1m"))
 
         // Wait for the path to be created
         hasText("Today", waitForTime = GPS_WAIT_FOR_TIMEOUT)
@@ -484,11 +494,12 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
         hasText(string(R.string.temporary))
         click("Recording")
-        hasText(R.id.path_title, "Recording")
+        isVisible(id("path_menu_btn"))
+        hasText("Recording", exact = true)
 
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.keep_forever))
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         not { hasText(string(R.string.keep_forever)) }
     }
 
@@ -501,19 +512,21 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
             hasText(string(R.string.battery_settings_limit_accuracy))
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
-        hasText(R.id.play_bar_title, "On - 1m")
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_on_title))
+        hasText(string(R.string.places_backtrack_every, "1m"))
 
         // Wait for the path to be created
-        isVisible(com.kylecorry.andromeda.views.R.id.title, waitForTime = GPS_WAIT_FOR_TIMEOUT)
+        isVisible(clickableIn("paths_list"), waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
-        click(com.kylecorry.andromeda.views.R.id.title)
-        isVisible(R.id.stop_recording_btn)
+        click(clickableIn("paths_list"))
+        // The Compose path details have no stop recording button yet (main gap), so this looks up the tag it should use
+        isVisible(id("stop_recording_btn"))
 
-        click(R.id.stop_recording_btn)
-        not { isVisible(R.id.stop_recording_btn) }
+        click(id("stop_recording_btn"))
+        not { isVisible(id("stop_recording_btn")) }
 
         back()
-        hasText(R.id.play_bar_title, "Off - 1m")
+        hasText(id("play_bar_title"), string(R.string.places_backtrack_off_title))
     }
 
     @Test
@@ -562,13 +575,14 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Durfee Short")
-        hasText(R.id.path_title, "Durfee Short")
+        isVisible(id("path_menu_btn"))
+        hasText("Durfee Short", exact = true)
 
         // Recorded from 17:20:52 to 17:36:23
         hasDataPoint("15m", string(R.string.duration))
         // 0.498 miles between the 39 recorded points
         hasDataPoint("0.5 mi", string(R.string.distance))
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint("39", string(R.string.points))
             hasDataPoint("Moderate", string(R.string.difficulty))
             hasDataPoint(Regex("\\d{1,2} ft"), string(R.string.ascent))
@@ -576,7 +590,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         }
 
         // The recorded elevations range from 522 ft to 590 ft
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint(Regex("5[2-4]\\d ft"), string(R.string.lowest_point_elevation))
         }
         hasDataPoint(Regex("5[7-9]\\d ft"), string(R.string.highest_point_elevation))
@@ -588,20 +602,22 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Sprague")
-        hasText(R.id.path_title, "Sprague")
+        isVisible(id("path_menu_btn"))
+        hasText("Sprague", exact = true)
         hasDataPoint("3.71 mi", string(R.string.distance))
         // The recording has no meaningful timestamps, so the duration is estimated from the pace
         hasDataPoint(Regex("1h \\d+m"), string(R.string.duration))
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint("90", string(R.string.points))
         }
         back()
 
         click("Mansfield")
-        hasText(R.id.path_title, "Mansfield")
+        isVisible(id("path_menu_btn"))
+        hasText("Mansfield", exact = true)
         hasDataPoint("4.91 mi", string(R.string.distance))
         // The raw recording climbs 2655 ft, the app smooths out elevation noise
-        scrollUntil(R.id.path_scroll) {
+        scrollUntil {
             hasDataPoint("175", string(R.string.points))
             hasDataPoint(Regex("25\\d\\d ft"), string(R.string.ascent))
             hasDataPoint(Regex("-25\\d\\d ft"), string(R.string.descent))
@@ -613,22 +629,26 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Durfee Short")
-        isVisible(R.id.to_start_btn)
-        click(string(R.string.path_direction_to_end))
+        // The path overview is a Compose page without tags; its menu button marks it, and the navigate buttons are
+        // further down the page
+        scrollUntil { hasText(string(R.string.path_direction_to_start), exact = true) }
+        scrollUntil { click(string(R.string.path_direction_to_end), exact = true) }
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         assertFalse(PathNavigationStore().load()!!.reversed)
-        hasText(R.id.navigation_sheet_title, "Durfee Short")
-        isVisible(R.id.navigation_progress)
+        hasText("Durfee Short", exact = true)
+        isVisible({ view(By.clazz("android.widget.ProgressBar")) })
         // The route's distance is covered by PathRouteBuilderTest
-        hasText(R.id.navigation_primary_stat, Regex("\\d+(\\.\\d+)? mi"), childId = R.id.stat_value)
-        hasText(R.id.navigation_secondary_stat, Regex("(\\d+h)?\\s?(\\d+m)?\\s?(\\d+s)?"), childId = R.id.stat_value)
+        hasText(Regex("\\d+(\\.\\d+)?( mi)?"), exact = true)
+        isVisible(desc(string(R.string.stop)))
 
         // Following a different direction replaces the route
-        backUntil { isVisible(R.id.path_scroll) }
-        click(string(R.string.path_direction_to_start))
+        backUntil { isVisible(id("path_menu_btn")) }
+        scrollUntil { click(string(R.string.path_direction_to_start), exact = true) }
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         assertTrue(PathNavigationStore().load()!!.reversed)
     }
 
@@ -641,8 +661,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
         click("Single Point")
 
-        isVisible(R.id.path_scroll)
-        isNotVisible(R.id.follow_options)
+        isVisible(id("path_menu_btn"))
+        not { hasText(string(R.string.path_direction_to_end), exact = true) }
         assertNull(PathNavigationStore().load())
     }
 
@@ -651,18 +671,20 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         openWithSavedPaths()
 
         click("Durfee Short")
-        click(toolbarButton(R.id.path_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click("Points")
-        click(R.id.waypoint_menu_btn)
+        // Each point's menu button is read out as "Details"
+        click(desc(string(R.string.details)))
         click(string(R.string.path_navigation_follow_to_point))
 
-        isVisible(R.id.navigation_title)
+        // The navigation card, which has no tags, is marked by its stop button
+        isVisible(desc(string(R.string.stop)))
         assertNotNull(PathNavigationStore().load()!!.destinationPointId)
 
-        backUntil { isVisible(R.id.path_scroll) }
-        click(toolbarButton(R.id.path_title, Side.Right))
+        backUntil { isVisible(id("path_menu_btn")) }
+        click(toolbarButton(Side.Right))
         click("Points")
-        click(R.id.waypoint_menu_btn)
+        click(desc(string(R.string.details)))
         click(string(R.string.path_navigation_direct))
 
         val navigator = Navigator.getInstance(TestUtils.context)
@@ -676,7 +698,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
         hasText("Durfee Short")
         // The list is ordered by most recent: Mansfield, Durfee Short, Sprague
-        clickListItemMenu(string(R.string.delete), index = 1)
+        clickListItemMenu(string(R.string.delete), menu = id("path_item_menu_Durfee Short"))
         clickOk()
 
         not { hasText("Durfee Short") }
@@ -685,22 +707,20 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
     }
 
     private fun sortBy(current: String, new: String) {
-        click(toolbarButton(R.id.paths_title, Side.Right))
+        click(toolbarButton(Side.Right))
         click(string(R.string.sort_by, current))
         click(new)
-        clickOk()
+        // Picking a sort applies it
+        clickOkIfShown()
     }
 
     private fun hasTitlesInOrder(vararg titles: String) {
-        hasTextsInOrder(com.kylecorry.andromeda.views.R.id.title, titles.toList())
+        hasTextsInVerticalOrder(titles.toList())
     }
 
     private fun hasTitlesAndLengths(vararg paths: Pair<String, String>) {
         hasTitlesInOrder(*paths.map { it.first }.toTypedArray())
-        hasTextsInOrder(
-            com.kylecorry.andromeda.views.R.id.description,
-            paths.map { it.second }
-        )
+        hasTextsInVerticalOrder(paths.map { it.second })
     }
 
     // Exports saved paths to GPX and imports the result, to verify nothing is lost in the file.

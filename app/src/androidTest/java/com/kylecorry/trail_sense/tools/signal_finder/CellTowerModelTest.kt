@@ -25,7 +25,7 @@ class CellTowerModelTest {
             // TODO: Add tests for other places
         )
 
-        DependencyRegistry.register(FileSubsystem.getInstance(TestUtils.context))
+        DependencyRegistry.addSingleton(FileSubsystem.getInstance(TestUtils.context))
 
         val errors = knownCellTowers.map { tower ->
             val towers =

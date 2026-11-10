@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.nanoseconds
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
@@ -13,7 +15,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.KalmanGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.SameFixGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.TimeoutGPSModule
-import java.time.Instant
+import kotlin.time.Instant
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.CancellationException
 import org.junit.jupiter.api.Assertions.*
@@ -39,7 +41,7 @@ class GPSPipelineTest {
 
     private fun reading(seconds: Long, longitude: Double = 1.0) = ModularGPSData(
         location = Coordinate(1.0, longitude),
-        eventTime = Instant.EPOCH.plusSeconds(seconds),
+        eventTime = (Instant.fromEpochMilliseconds(0) + seconds.seconds),
         eventTimeElapsedNanos = seconds * 1_000_000_000,
         horizontalAccuracy = 10f,
         hasValidReading = true
@@ -112,7 +114,7 @@ class GPSPipelineTest {
             }
         }))
         assertEquals(GPSUpdateResult.Rejected, pipeline.update(reading(1)))
-        assertEquals(Instant.EPOCH, pipeline.reading.eventTime)
+        assertEquals(Instant.fromEpochMilliseconds(0), pipeline.reading.eventTime)
         assertEquals(GPSUpdateResult.NewFixAccepted, pipeline.update(reading(2)))
         assertEquals(0f, pipeline.reading.altitude)
         assertNull(pipeline.reading.rawBearing)
@@ -196,7 +198,7 @@ class GPSPipelineTest {
         val pipeline = pipeline()
         pipeline.update(reading(1))
         val duplicate = reading(1).apply {
-            eventTime = eventTime.plusNanos(123456)
+            eventTime = (eventTime + 123456.nanoseconds)
             altitude = 20f
         }
         assertEquals(GPSUpdateResult.SameFixUpdated, pipeline.update(duplicate))
@@ -332,7 +334,7 @@ class GPSPipelineTest {
     @Test
     fun emptyCacheDoesNotChangeEmptyReading() = runBlocking<Unit> {
         val pipeline = pipeline()
-        assertEquals(Instant.EPOCH, pipeline.reading.eventTime)
+        assertEquals(Instant.fromEpochMilliseconds(0), pipeline.reading.eventTime)
         assertEquals(Coordinate.zero, pipeline.reading.location)
         assertFalse(pipeline.reinitialize())
     }
@@ -361,11 +363,11 @@ class GPSPipelineTest {
             override suspend fun update(previousData: ModularGPSData, newData: ModularGPSData) = true
 
             override suspend fun start(data: ModularGPSData) {
-                events.add("start:${data.eventTime.epochSecond}")
+                events.add("start:${data.eventTime.epochSeconds}")
             }
 
             override suspend fun stop(data: ModularGPSData) {
-                events.add("stop:${data.eventTime.epochSecond}")
+                events.add("stop:${data.eventTime.epochSeconds}")
             }
         })
         pipeline.start()

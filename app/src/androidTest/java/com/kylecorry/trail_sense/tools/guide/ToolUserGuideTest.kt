@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.guide
 
+import com.kylecorry.trail_sense.test_utils.views.view
+import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
@@ -16,9 +18,12 @@ import org.junit.Test
 
 class ToolUserGuideTest : ToolTestBase(Tools.USER_GUIDE) {
 
+    // The search field is the only text field on the page
+    private val searchBox = { view(By.clazz("android.widget.EditText")) }
+
     @Test
     fun verifyBasicFunctionality() {
-        isVisible(R.id.searchbox)
+        isVisible(searchBox)
 
         // Verify it shows each guide
         val guides = Guides.guides(context)
@@ -46,7 +51,7 @@ class ToolUserGuideTest : ToolTestBase(Tools.USER_GUIDE) {
         }
 
         // Search
-        input(R.id.search_view_edit_text, "Sett")
+        input(searchBox, "Sett")
         hasText("Settings")
 
         verifyQuickAction()

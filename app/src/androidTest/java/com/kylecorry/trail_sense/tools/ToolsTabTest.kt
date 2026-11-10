@@ -1,8 +1,12 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.test_utils.views.id
+import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
@@ -20,6 +24,8 @@ import org.junit.Test
 
 class ToolsTabTest : ToolTestBase(0L) {
 
+    private val searchBox = { view(By.clazz("android.widget.EditText")) }
+
     @Test
     fun verifyBasicFunctionality() {
         canPinTools()
@@ -34,58 +40,48 @@ class ToolsTabTest : ToolTestBase(0L) {
     }
 
     private fun canOpenSettings() {
-        click(R.id.settings_btn)
+        click(desc(string(R.string.settings)))
         hasText(string(R.string.general))
         back()
     }
 
     private fun canSortTools() {
+        // The Compose tools tab always groups by category; choosing a sort (by name) is no longer offered there.
         hasText(string(R.string.tool_category_signaling))
         hasText(string(R.string.flashlight_title))
-
-        click(R.id.icon, index = 1)
-        click(string(R.string.name))
-        clickOk()
-
-        hasText(string(R.string.astronomy))
-        not { hasText(string(R.string.tool_category_signaling)) }
-
-        click(R.id.icon, index = 1)
-        click(string(R.string.category))
-        clickOk()
-
-        hasText(string(R.string.tool_category_signaling))
     }
 
     private fun canPinTools() {
         hasText(string(R.string.pinned))
 
-        // Unpin the core tools
-        click(R.id.icon)
-        hasText(string(android.R.string.ok))
-        click(string(R.string.astronomy))
-        if (Tools.isToolAvailable(context, Tools.WEATHER)) {
-            click(string(R.string.weather))
+        // Unpin the default pins, each from its long-press menu (the pinned tile comes first). The defaults
+        // come from the preferences so the test follows the app's choice of starting pins.
+        val pinned = UserPreferences(context).toolPinnedIds
+            .filter { Tools.isToolAvailable(context, it) }
+            .mapNotNull { Tools.getTool(context, it)?.name }
+        pinned.forEach {
+            longClick(it)
+            click(string(R.string.unpin), exact = true)
         }
-        click(string(R.string.navigation))
-        click(string(R.string.tool_user_guide_title))
-        clickOk()
 
-        not { hasText(string(R.string.astronomy)) }
+        not { hasText(string(R.string.pinned)) }
 
         // Pin Flashlight
         longClick(string(R.string.flashlight_title))
-        click(string(R.string.pin))
+        click(string(R.string.pin), exact = true)
 
+        hasText(string(R.string.pinned))
         hasText(string(R.string.flashlight_title), index = 1)
 
         // Unpin flashlight
         longClick(string(R.string.flashlight_title))
-        click(string(R.string.unpin))
+        click(string(R.string.unpin), exact = true)
     }
 
     private fun canUseQuickActions() {
-        click(quickAction(Tools.QUICK_ACTION_WHISTLE))
+        // The Compose tools tab has no quick action buttons in its toolbar any more, only settings, so the quick
+        // actions are reached from the bottom sheet (canUseBottomSheetQuickActions)
+        not { isVisible({ quickAction(Tools.QUICK_ACTION_WHISTLE) }, waitForTime = 0) }
     }
 
     private fun canUseBottomSheetQuickActions() {
@@ -106,21 +102,21 @@ class ToolsTabTest : ToolTestBase(0L) {
         click(string(R.string.settings))
         hasText(string(R.string.pref_flashlight_control_screen_with_volume_title))
         back()
-        isVisible(R.id.tools)
+        isVisible(desc(string(R.string.settings)))
     }
 
     private fun canSearch() {
-        input(R.id.tool_searchbox, "Sett")
+        input(searchBox, "Sett")
         hasText(string(R.string.settings))
-        input(R.id.tool_searchbox, "")
+        input(searchBox, "")
         hasText(string(R.string.flashlight_title))
     }
 
     private fun canOpenTool() {
         click(string(R.string.flashlight_title))
-        isVisible(R.id.screen_flashlight_btn)
+        isVisible(id("screen_flashlight_btn"))
         back()
-        isVisible(R.id.tools)
+        isVisible(desc(string(R.string.settings)))
     }
 
 }

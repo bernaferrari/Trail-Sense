@@ -1,6 +1,15 @@
 package com.kylecorry.trail_sense.tools.convert
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
+import com.kylecorry.trail_sense.test_utils.views.TestView
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
+import androidx.test.uiautomator.Direction
+import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.doesNotHaveNotification
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasNotification
@@ -30,96 +39,123 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
     }
 
     private fun canConvertCoordinates() {
-        input(R.id.utm, "42, -72")
-        click(R.id.to_units)
-        click(string(R.string.coordinate_format_usng))
-        hasText(R.id.result, "19T BG 51535 54131")
+        // The converter opens on distance, so pick the coordinates category first. It is the first chip, which may
+        // be scrolled out of the category row.
+        scrollUntil({ categoryRow() }, direction = Direction.LEFT) {
+            click(string(R.string.coordinates_tab), exact = true)
+        }
+        inputAmount("42, -72")
+        val format = FormatService.getInstance(TestUtils.context)
+        // The converter remembers the output format, so the second pass (from the quick action) already shows USNG
+        any(
+            {
+                pickUnit(
+                    format.formatCoordinateType(BuiltInCoordinateFormat.entries.first()),
+                    string(R.string.coordinate_format_usng)
+                )
+            },
+            { hasText(string(R.string.coordinate_format_usng), exact = true, waitForTime = 0) }
+        )
+        hasText("19T BG 51535 54131", exact = true)
     }
 
     private fun canConvertDistance() {
         click(string(R.string.distance))
         hasText(string(R.string.unit_meters))
-        input(R.id.unit_edit, "1")
+        inputAmount("1")
 
-        click(R.id.from_units)
-        click(string(R.string.unit_meters))
+        pickUnit(string(R.string.unit_meters), string(R.string.unit_meters))
+        pickUnit(string(R.string.unit_feet), string(R.string.unit_feet))
 
-        click(R.id.to_units)
-        click(string(R.string.unit_feet))
-
-        hasText(R.id.result, "3.2808 ft")
+        hasText("3.2808", exact = true)
 
         // Swap
-        click(R.id.swap_btn)
-        hasText(R.id.result, "0.3048 m")
+        click(desc(string(R.string.convert_swap_units)))
+        hasText("0.3048", exact = true)
     }
 
     private fun canConvertTemperature() {
         click(string(R.string.temperature))
         hasText(string(R.string.celsius))
-        input(R.id.unit_edit, "0")
-        click(R.id.from_units)
-        click(string(R.string.celsius))
+        inputAmount("0")
 
-        click(R.id.to_units)
-        click(string(R.string.fahrenheit))
+        pickUnit(string(R.string.celsius), string(R.string.celsius))
+        pickUnit(string(R.string.fahrenheit), string(R.string.fahrenheit))
 
-        hasText(R.id.result, "32 °F")
+        hasText("32", exact = true)
 
         // Swap
-        click(R.id.swap_btn)
-        hasText(R.id.result, "-17.7778 °C")
+        click(desc(string(R.string.convert_swap_units)))
+        hasText("-17.7778", exact = true)
     }
 
     private fun canConvertVolume() {
         click(string(R.string.volume))
         hasText(string(R.string.liters))
-        input(R.id.unit_edit, "1")
-        click(R.id.from_units)
-        click(string(R.string.liters))
+        inputAmount("1")
 
-        click(R.id.to_units)
-        click(string(R.string.us_gallons))
+        pickUnit(string(R.string.liters), string(R.string.liters))
+        pickUnit(string(R.string.us_gallons), string(R.string.us_gallons))
 
-        hasText(R.id.result, "0.2642 gal")
+        hasText("0.2642", exact = true)
 
         // Swap
-        click(R.id.swap_btn)
-        hasText(R.id.result, "3.7854 l")
+        click(desc(string(R.string.convert_swap_units)))
+        hasText("3.7854", exact = true)
     }
 
     private fun canConvertWeight() {
         click(string(R.string.weight))
         hasText(string(R.string.kilograms))
-        input(R.id.unit_edit, "1")
-        click(R.id.from_units)
-        click(string(R.string.kilograms))
+        inputAmount("1")
 
-        click(R.id.to_units)
-        click(string(R.string.pounds))
+        pickUnit(string(R.string.kilograms), string(R.string.kilograms))
+        pickUnit(string(R.string.pounds), string(R.string.pounds))
 
-        hasText(R.id.result, "2.2046 lb")
+        hasText("2.2046", exact = true)
 
         // Swap
-        click(R.id.swap_btn)
-        hasText(R.id.result, "0.4536 kg")
+        click(desc(string(R.string.convert_swap_units)))
+        hasText("0.4536", exact = true)
     }
 
     private fun canConvertTime() {
         click(string(R.string.time))
         hasText(string(R.string.minutes))
-        input(R.id.unit_edit, "60")
-        click(R.id.from_units)
-        click(string(R.string.minutes))
+        inputAmount("60")
 
-        click(R.id.to_units)
-        click(string(R.string.hours))
+        pickUnit(string(R.string.minutes), string(R.string.minutes))
+        pickUnit(string(R.string.hours), string(R.string.hours))
 
-        hasText(R.id.result, "1 h")
+        hasText("1", exact = true)
 
         // Swap
-        click(R.id.swap_btn)
-        hasText(R.id.result, "3600 m")
+        click(desc(string(R.string.convert_swap_units)))
+        hasText("3600", exact = true)
+    }
+
+    /**
+     * Types into the converter's input row, the only text field on the page.
+     */
+    private fun inputAmount(text: String) {
+        input({ view(By.clazz("android.widget.EditText")) }, text)
+    }
+
+    /**
+     * Opens the units of the row whose pill reads [current] and picks [unit] from the grid that replaces the keyboard.
+     * The grid is under the rows, so when the row already shows [unit] the grid's copy is the second match.
+     */
+    private fun pickUnit(current: String, unit: String) {
+        click(current, exact = true)
+        click(unit, exact = true, index = if (current == unit) 1 else 0)
+    }
+
+    /** The horizontally scrolling row of category chips: the short scrollable at the top of the converter. */
+    private fun categoryRow(): TestView {
+        val row = TestUtils.device.findObjects(By.scrollable(true).pkg(TestUtils.context.packageName))
+            .minByOrNull { it.visibleBounds.height() }
+            ?: throw AssertionError("Category row not found")
+        return TestView(row)
     }
 
     private fun verifyQuickAction() {

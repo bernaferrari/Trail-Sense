@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
+import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.settings.infrastructure.IGPSPreferences
@@ -12,10 +13,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import java.time.Duration
+import kotlin.time.Duration
 
 class AccuracyFilterGPSModuleTest {
-    private val configuredFilter = GPSAccuracyFilter(16f, Duration.ofSeconds(8))
+    private val configuredFilter = GPSAccuracyFilter(16f, 8.seconds)
     private val prefs = mock<IGPSPreferences> {
         on { accuracyFilter }.thenReturn(configuredFilter)
     }
@@ -26,7 +27,7 @@ class AccuracyFilterGPSModuleTest {
     }
     private val module = AccuracyFilterGPSModule(prefs, mock(), timeProvider)
     private val previous = ModularGPSData(location = Coordinate(0.5, 0.5), eventTimeElapsedNanos = 0L)
-    private val accuracyWait = configuredFilter.maxAccuracyWait!!.toMillis()
+    private val accuracyWait = configuredFilter.maxAccuracyWait!!.inWholeMilliseconds
 
     private fun secondsToNanos(seconds: Long) = seconds * 1_000_000_000L
 

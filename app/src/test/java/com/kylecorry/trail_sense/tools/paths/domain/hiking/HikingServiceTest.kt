@@ -109,7 +109,7 @@ class HikingServiceTest {
 
         val duration = HikingService.getHikingDuration(path, oneMeterPerSecond)
 
-        assertEquals(distance.toDouble(), duration.seconds.toDouble(), 1.0)
+        assertEquals(distance.toDouble(), duration.inWholeSeconds.toDouble(), 1.0)
     }
 
     @Test
@@ -119,7 +119,7 @@ class HikingServiceTest {
 
         assertEquals(
             7.92 * 100,
-            (climbing.seconds - flat.seconds).toDouble(),
+            (climbing.inWholeSeconds - flat.inWholeSeconds).toDouble(),
             1.0
         )
     }
@@ -131,8 +131,8 @@ class HikingServiceTest {
         val flat = HikingService.getHikingDuration(Distance.kilometers(3.6f), Distance.meters(0f), speed)
         val climbing = HikingService.getHikingDuration(Distance.kilometers(3.6f), Distance.meters(100f), speed)
 
-        assertEquals(3600L, flat.seconds)
-        assertEquals((3600 + 7.92 * 100).toLong(), climbing.seconds)
+        assertEquals(3600L, flat.inWholeSeconds)
+        assertEquals((3600 + 7.92 * 100).toLong(), climbing.inWholeSeconds)
     }
 
     @Test
@@ -153,7 +153,7 @@ class HikingServiceTest {
             Speed.from(2f, DistanceUnits.Meters, TimeUnits.Seconds)
         )
 
-        assertEquals(slow.seconds / 2.0, fast.seconds.toDouble(), 1.0)
+        assertEquals(slow.inWholeSeconds / 2.0, fast.inWholeSeconds.toDouble(), 1.0)
     }
 
     @Test

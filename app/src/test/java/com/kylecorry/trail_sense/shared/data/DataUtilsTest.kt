@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.shared.data
 
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.Duration
-import java.time.Instant
 
 class DataUtilsTest {
 
@@ -82,9 +82,9 @@ class DataUtilsTest {
 
     @Test
     fun temporalSmoothingKeepsTheReadingTimes() {
-        val start = Instant.ofEpochSecond(1704110400)
+        val start = Instant.fromEpochSeconds(1704110400)
         val data = List(20) {
-            Reading(if (it == 10) 100f else 0f, start.plus(Duration.ofMinutes(it.toLong())))
+            Reading(if (it == 10) 100f else 0f, start + it.minutes)
         }
 
         val smoothed = DataUtils.smoothTemporal(data, 0.3f)
@@ -95,13 +95,13 @@ class DataUtilsTest {
 
     @Test
     fun temporalSmoothingUsesTheTimeBetweenReadingsRatherThanTheirIndex() {
-        val start = Instant.ofEpochSecond(1704110400)
+        val start = Instant.fromEpochSeconds(1704110400)
         // The last reading is far away in time, so it should barely influence the others
         val times = (0 until 19).map { it.toLong() } + 10_000L
         val data = times.mapIndexed { index, minutes ->
             Reading(
                 if (index == times.lastIndex) 1000f else 0f,
-                start.plus(Duration.ofMinutes(minutes))
+                start + minutes.minutes
             )
         }
 
