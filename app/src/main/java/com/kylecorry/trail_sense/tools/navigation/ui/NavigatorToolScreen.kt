@@ -1339,7 +1339,7 @@ private fun NavigatorHost(
                 ) {
                     Box(Modifier.size(compassSize)) {
                         val radarModifier = Modifier.fillMaxSize()
-                        views.radarCompass.Content(radarModifier)
+                        views.radarCompass.Content(radarModifier.testTag("radar_compass"))
                         // Nearby paths are a quiet hint under the dial's marks, not a stripe across it.
                         views.radarCompassMap.Content(radarModifier.then(Modifier.alpha(0.4f)))
                         if (DialVariant.bezel != 5 || DialVariant.hub != 0) {
@@ -1365,6 +1365,7 @@ private fun NavigatorHost(
                     Modifier
                         .align(Alignment.Center)
                         .fillMaxWidth()
+                        .testTag("linear_compass")
                 )
             }
             views.navigationSheet.Content()
