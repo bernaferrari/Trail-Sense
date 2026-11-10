@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import kotlin.time.toJavaDuration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days

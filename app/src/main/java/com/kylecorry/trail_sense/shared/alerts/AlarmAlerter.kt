@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.alerts
 
-import kotlin.time.toJavaDuration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.core.time.once

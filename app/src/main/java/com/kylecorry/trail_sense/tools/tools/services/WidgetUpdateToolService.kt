@@ -5,7 +5,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import kotlin.time.Duration
-import kotlin.time.toJavaDuration
 
 class WidgetUpdateToolService(private val context: Context) : ToolService {
 

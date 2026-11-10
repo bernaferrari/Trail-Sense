@@ -2,7 +2,6 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import kotlin.time.toJavaDuration
 import kotlin.time.toKotlinDuration
 import com.kylecorry.andromeda.core.sensors.read
 

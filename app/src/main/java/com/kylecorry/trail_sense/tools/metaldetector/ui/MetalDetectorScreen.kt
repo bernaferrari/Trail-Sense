@@ -2,7 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
-import kotlin.time.toJavaDuration
 import kotlin.time.Duration.Companion.milliseconds
 import com.kylecorry.andromeda.core.time.once
 import kotlin.time.Duration.Companion.seconds

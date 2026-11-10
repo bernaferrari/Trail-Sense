@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
-import kotlin.time.toJavaDuration
 import com.kylecorry.luna.time.CoroutineTimer
 import kotlin.time.Duration
 import com.kylecorry.andromeda.core.time.interval

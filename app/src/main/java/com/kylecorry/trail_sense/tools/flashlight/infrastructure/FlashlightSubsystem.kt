@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
-import kotlin.time.toJavaDuration
 import com.kylecorry.andromeda.core.time.once
 import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.torch.isTorchAvailable

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles
 
-import kotlin.time.toJavaDuration
 import kotlin.time.Clock
 import kotlin.time.Duration
 import com.kylecorry.andromeda.core.time.interval

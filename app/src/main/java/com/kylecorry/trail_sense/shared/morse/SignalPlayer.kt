@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.morse
 
 import com.kylecorry.andromeda.core.time.once
-import kotlin.time.toJavaDuration
 
 import com.kylecorry.luna.time.CoroutineTimer
 

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
-import kotlin.time.toJavaDuration
 import kotlin.time.Duration
 import com.kylecorry.andromeda.core.time.interval
 
