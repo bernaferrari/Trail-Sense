@@ -67,11 +67,7 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
         pickUnit(string(R.string.unit_meters), string(R.string.unit_meters))
         pickUnit(string(R.string.unit_feet), string(R.string.unit_feet))
 
-        // The converter remembers its units, so the second pass (from the quick action) starts swapped
-        optional {
-            hasText("0.3048", exact = true, waitForTime = 1000)
-            click(desc(string(R.string.convert_swap_units)))
-        }
+        swapBackIfRemembered("0.3048")
         hasText("3.2808", exact = true)
 
         // Swap
@@ -87,6 +83,7 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
         pickUnit(string(R.string.celsius), string(R.string.celsius))
         pickUnit(string(R.string.fahrenheit), string(R.string.fahrenheit))
 
+        swapBackIfRemembered("-17.7778")
         hasText("32", exact = true)
 
         // Swap
@@ -137,6 +134,17 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
         // Swap
         click(desc(string(R.string.convert_swap_units)))
         hasText("3600", exact = true)
+    }
+
+    /**
+     * The converter remembers its units, so the second pass (from the quick action) starts with the
+     * units swapped by the first pass's swap check, showing [swappedResult]. Swap them back.
+     */
+    private fun swapBackIfRemembered(swappedResult: String) {
+        optional {
+            hasText(swappedResult, exact = true, waitForTime = 1000)
+            click(desc(string(R.string.convert_swap_units)))
+        }
     }
 
     /**
