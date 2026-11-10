@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.ballistics
 
+import androidx.test.uiautomator.By
+import com.kylecorry.trail_sense.test_utils.byResName
+import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.views.id
@@ -40,11 +43,12 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
         input(id("distance_to_target"), "100")
 
         input(id("miss_distance_x"), "1")
-        click(string(R.string.right), exact = true)
+        // The adjustment readout also says "Right", so pick the option inside the windage selector
+        click({ view(By.text(string(R.string.right)).hasAncestor(byResName("miss_direction_x"))) })
 
         scrollUntil { isVisible(id("miss_direction_y")) }
         input(id("miss_distance_y"), "2")
-        click(string(R.string.above), exact = true)
+        click({ view(By.text(string(R.string.above)).hasAncestor(byResName("miss_direction_y"))) })
 
         // The distance is in yards now (it was feet): 1 in at 100 yd is about 1 MOA, so 4 clicks of 1/4 MOA
         hasText(id("distance_to_target"), "yd")
