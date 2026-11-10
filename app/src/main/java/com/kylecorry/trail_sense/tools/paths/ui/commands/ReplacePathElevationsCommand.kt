@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
@@ -12,12 +10,13 @@ import com.kylecorry.trail_sense.shared.extensions.withCancelableProgress
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class ReplacePathElevationsCommand(
     private val context: Context,
-    private val lifecycleOwner: LifecycleOwner,
+    private val scope: CoroutineScope,
     private val pathService: IPathService = PathService.getInstance(context)
 ) : IPathCommand {
 
@@ -31,7 +30,7 @@ class ReplacePathElevationsCommand(
                 return@dialog
             }
 
-            lifecycleOwner.inBackground {
+            scope.launch {
                 val elevations = mutableMapOf<Long, Float>()
                 var job: Job? = null
                 Alerts.withCancelableProgress(
@@ -53,7 +52,7 @@ class ReplacePathElevationsCommand(
                 }
 
                 if (job?.isCancelled == true) {
-                    return@inBackground
+                    return@launch
                 }
 
                 val loading = onMain {

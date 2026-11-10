@@ -150,6 +150,7 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.KeepPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.MoveIPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.NavigateToPointCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.RenamePathCommand
+import com.kylecorry.trail_sense.tools.paths.ui.commands.ReplacePathElevationsCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
 import kotlinx.coroutines.Dispatchers
@@ -391,6 +392,7 @@ fun PathOverviewToolScreen(
             PathAction.ToggleVisibility,
             PathAction.Export,
             PathAction.Simplify,
+            PathAction.ReplaceElevations,
             PathAction.ViewPoints,
             PathAction.Move
         )
@@ -407,6 +409,7 @@ fun PathOverviewToolScreen(
 
                 PathAction.Export -> context.getString(R.string.export)
                 PathAction.Simplify -> context.getString(R.string.simplify)
+                PathAction.ReplaceElevations -> context.getString(R.string.replace_elevations)
                 PathAction.ViewPoints -> context.getString(R.string.points)
                 PathAction.Move -> context.getString(R.string.move_to)
                 else -> null
@@ -431,6 +434,8 @@ fun PathOverviewToolScreen(
                             .execute(current)
 
                         PathAction.Simplify -> simplifyCommand.execute(current)
+                        PathAction.ReplaceElevations -> ReplacePathElevationsCommand(context, scope, pathService)
+                            .execute(current)
                         PathAction.ViewPoints -> viewPoints()
                         PathAction.Move -> movePath()
                         else -> {
