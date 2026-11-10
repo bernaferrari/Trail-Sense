@@ -43,7 +43,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
@@ -63,6 +62,7 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.BackfillH
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import kotlinx.coroutines.launch
+import androidx.lifecycle.asLiveData
 
 @Composable
 fun ThermometerSettingsToolScreen() {

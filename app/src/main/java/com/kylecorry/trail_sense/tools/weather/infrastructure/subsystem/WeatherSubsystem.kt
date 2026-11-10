@@ -4,7 +4,6 @@ import com.kylecorry.trail_sense.shared.time.today
 
 import kotlin.time.Clock
 
-import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -56,6 +55,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 
 
 class WeatherSubsystem private constructor(private val context: Context) : IWeatherSubsystem {
@@ -72,6 +78,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
     private var isValid = false
     private var updateWeatherMutex = Mutex()
 
+    private val readingsScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _weatherChanged = Subscription()
     override val weatherChanged: ISubscription = _weatherChanged
 
@@ -89,20 +96,13 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
     ).map { context.getString(it) }
 
     init {
-        sharedPrefs.onChange.subscribe { key ->
+        sharedPrefs.onEachChange { key ->
             if (key in invalidationPrefKeys) {
                 invalidate()
             }
-            true
         }
-        weatherRepo.readingsChanged.subscribe {
-            invalidate()
-            true
-        }
-
-        cloudRepo.readingsChanged.subscribe {
-            invalidate()
-            true
+        readingsScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            merge(weatherRepo.readingsChanged, cloudRepo.readingsChanged).collect { invalidate() }
         }
 
         weatherChanged.subscribe {

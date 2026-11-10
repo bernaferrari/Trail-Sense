@@ -10,10 +10,6 @@ import kotlin.time.Clock
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.luna.topics.generic.ITopic
-import com.kylecorry.luna.topics.generic.Topic
-import com.kylecorry.luna.topics.generic.distinct
-import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.torch.Torch
@@ -32,6 +28,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.Optional
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class FlashlightSubsystem private constructor(private val context: Context) : IFlashlightSubsystem {
 
@@ -41,9 +40,8 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
 
     private val transitionDuration = 1.seconds
 
-    private val _mode = Topic(defaultValue = Optional.of(getMode()))
-    override val mode: ITopic<FlashlightMode>
-        get() = _mode.distinct()
+    private val _mode = MutableStateFlow(FlashlightMode.Off)
+    override val mode: StateFlow<FlashlightMode> = _mode.asStateFlow()
 
     override var selectedMode: FlashlightMode = FlashlightMode.Torch
 
@@ -69,9 +67,10 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     private var systemMonitorJob: Job? = null
 
     init {
-        _mode.subscribe {
-            Tools.broadcast(FlashlightToolRegistration.BROADCAST_FLASHLIGHT_STATE_CHANGED)
-            true
+        scope.launch {
+            _mode.collect {
+                Tools.broadcast(FlashlightToolRegistration.BROADCAST_FLASHLIGHT_STATE_CHANGED)
+            }
         }
         scope.launch {
             brightness = prefs.flashlight.brightness
@@ -124,7 +123,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
             setTimeout()
         }
         val previousMode = getMode()
-        _mode.publish(newMode)
+        _mode.value = newMode
         if (previousMode == FlashlightMode.Off) {
             FlashlightService.start(context)
         }
@@ -133,7 +132,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     private fun off(bySystem: Boolean = false) = synchronized(modeLock) {
         clearTimeout()
         setTransitioning(!bySystem)
-        _mode.publish(FlashlightMode.Off)
+        _mode.value = FlashlightMode.Off
         FlashlightService.stop(context)
         torch?.off()
     }
@@ -155,9 +154,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     }
 
     override fun getMode(): FlashlightMode {
-        return tryOrDefault(FlashlightMode.Off) {
-            mode.getOrNull() ?: FlashlightMode.Off
-        }
+        return mode.value
     }
 
     override fun isAvailable(): Boolean {

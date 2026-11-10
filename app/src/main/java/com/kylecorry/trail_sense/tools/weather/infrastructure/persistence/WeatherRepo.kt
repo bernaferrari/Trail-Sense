@@ -9,8 +9,9 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.topics.ITopic
-import com.kylecorry.luna.topics.Topic
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
@@ -20,8 +21,15 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
 
     private val pressureDao = AppDatabase.getInstance(context).pressureDao()
 
-    private val _readingsChanged = Topic()
-    val readingsChanged: ITopic = _readingsChanged
+    private val _readingsChanged =
+        MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** Emits after readings are added, changed or removed. */
+    val readingsChanged: SharedFlow<Unit> = _readingsChanged
+
+    private fun notifyReadingsChanged() {
+        _readingsChanged.tryEmit(Unit)
+    }
 
     override suspend fun add(reading: Reading<RawWeatherObservation>): Long = onIO {
         val entity = PressureReadingEntity.from(reading)
@@ -32,14 +40,14 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
         } else {
             pressureDao.insert(entity)
         }
-        _readingsChanged.publish()
+        notifyReadingsChanged()
         id
     }
 
     override suspend fun delete(reading: Reading<RawWeatherObservation>) = onIO {
         val entity = PressureReadingEntity.from(reading)
         pressureDao.delete(entity)
-        _readingsChanged.publish()
+        notifyReadingsChanged()
     }
 
     override suspend fun get(id: Long): Reading<RawWeatherObservation>? = onIO {
@@ -73,7 +81,7 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
             pressureDao.bulkUpdate(toUpdate)
         }
 
-        _readingsChanged.publish()
+        notifyReadingsChanged()
     }
 
     suspend fun replaceAll(value: List<Reading<RawWeatherObservation>>) = onIO {
@@ -85,7 +93,7 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
         pressureDao.deleteOlderThan(Clock.System.now().minus(PRESSURE_HISTORY_DURATION).toEpochMilliseconds())
 
         // TODO: Only do this if there was a change
-        _readingsChanged.publish()
+        notifyReadingsChanged()
     }
 
     companion object {

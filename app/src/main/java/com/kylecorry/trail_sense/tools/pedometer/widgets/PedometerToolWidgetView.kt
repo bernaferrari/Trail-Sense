@@ -26,8 +26,8 @@ class PedometerToolWidgetView : SimpleToolWidgetView() {
         val subsystem = PedometerSubsystem.getInstance(context)
         val prefs = UserPreferences(context)
         val formatter = FormatService.getInstance(context)
-        val steps = subsystem.steps.value.getOrNull() ?: 0
-        val distance = subsystem.distance.value.getOrNull() ?: Distance.meters(0f)
+        val steps = subsystem.steps.value
+        val distance = subsystem.distance.value
         val converted = distance.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
         val formattedDistance =
             formatter.formatDistance(converted, Units.getDecimalPlaces(converted.units))

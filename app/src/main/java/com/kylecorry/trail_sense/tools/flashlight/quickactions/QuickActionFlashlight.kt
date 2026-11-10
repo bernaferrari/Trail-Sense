@@ -4,10 +4,6 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.luna.topics.generic.ITopic
-import com.kylecorry.luna.topics.generic.distinct
-import com.kylecorry.luna.topics.generic.map
-import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -15,6 +11,8 @@ import com.kylecorry.trail_sense.shared.quickactions.TopicQuickAction
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
     TopicQuickAction(btn, host, hideWhenUnavailable = true) {
@@ -37,7 +35,7 @@ class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinat
         return true
     }
 
-    override val state: ITopic<FeatureState> = flashlight.mode.map {
+    override val state: Flow<FeatureState> = flashlight.mode.map {
         if (flashlight.isAvailable()) {
             when (it) {
                 FlashlightMode.Torch -> FeatureState.On
@@ -46,6 +44,6 @@ class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinat
         } else {
             FeatureState.Unavailable
         }
-    }.distinct().replay()
+    }
 
 }

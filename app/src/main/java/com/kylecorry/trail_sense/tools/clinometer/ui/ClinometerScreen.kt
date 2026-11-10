@@ -51,7 +51,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.observe
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.time.Throttle
-import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.sense.clinometer.ClinometerSensor

@@ -99,7 +99,6 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
-import com.kylecorry.luna.topics.generic.getOrNull
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -216,7 +215,7 @@ internal fun PedometerScreen(
     val steps = openPeriod?.steps ?: 0L
     val distance = getDistance(steps, paceCalculator, prefs)
     val lastReset = openPeriod?.startTime
-    val state = pedometer.state.getOrNull() ?: FeatureState.Off
+    val state = pedometer.state.value
     val title = formatService.formatDistance(
         distance,
         Units.getDecimalPlaces(distance.units),
@@ -1030,7 +1029,7 @@ fun PedometerToolScreen() {
             }
         },
         onTogglePedometer = {
-            when (pedometer.state.getOrNull()) {
+            when (pedometer.state.value) {
                 FeatureState.On -> pedometer.disable()
                 FeatureState.Off -> startStepCounter()
                 else -> {

@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.shared.sensors
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
-import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -19,6 +18,7 @@ import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
 import kotlin.time.Instant
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 
 class LocationSubsystem private constructor(private val context: Context) {
 
@@ -76,14 +76,13 @@ class LocationSubsystem private constructor(private val context: Context) {
             context.getString(R.string.pref_altitude_override),
             context.getString(R.string.pref_altimeter_calibration_mode)
         )
-        prefs.onChange.subscribe { key ->
+        prefs.onEachChange { key ->
             if (locationChangedPrefs.contains(key)) {
                 Tools.broadcast(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED)
             }
             if (elevationChangedPrefs.contains(key)) {
                 Tools.broadcast(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED)
             }
-            true
         }
     }
 

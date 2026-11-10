@@ -1,10 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.tiles
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.luna.topics.generic.map
-import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
@@ -12,6 +9,9 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.tiles.TopicTile
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 
 class PedometerTile : TopicTile() {
 
@@ -22,14 +22,14 @@ class PedometerTile : TopicTile() {
     override val icon: ImageVector
         get() = TrailIcons.Steps
 
-    override val stateTopic: ITopic<FeatureState>
-        get() = pedometer.state.replay()
+    override val stateTopic: StateFlow<FeatureState>
+        get() = pedometer.state
 
-    override val subtitleTopic: ITopic<String>
+    override val subtitleTopic: Flow<String>
         get() = pedometer.distance.map {
             val converted = it.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
             formatter.formatDistance(converted, Units.getDecimalPlaces(converted.units))
-        }.replay()
+        }
 
     override fun stop() {
         pedometer.disable()

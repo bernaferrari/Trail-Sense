@@ -1,14 +1,13 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem
 
-import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.sol.units.Speed
 import com.kylecorry.trail_sense.shared.FeatureState
+import kotlinx.coroutines.flow.StateFlow
 
 interface IPedometerSubsystem {
-    val steps: ITopic<Long>
-    val distance: ITopic<Distance>
-    val state: ITopic<FeatureState>
+    val steps: StateFlow<Long>
+    val distance: StateFlow<Distance>
+    val state: StateFlow<FeatureState>
 
     fun enable()
     fun disable()

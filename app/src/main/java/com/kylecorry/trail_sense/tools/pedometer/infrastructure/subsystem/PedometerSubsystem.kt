@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem
 
-import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -10,9 +9,6 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
-import com.kylecorry.luna.topics.generic.ITopic
-import com.kylecorry.luna.topics.generic.Topic
-import com.kylecorry.luna.topics.generic.distinct
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -26,25 +22,29 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterServi
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.Optional
-import kotlin.jvm.optionals.getOrDefault
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 
 class PedometerSubsystem private constructor(private val context: Context) : IPedometerSubsystem {
 
     private val sharedPrefs by lazy { PreferencesSubsystem.getInstance(context).preferences }
-    private val prefsChanged by lazy { sharedPrefs.onChange }
     private val prefs by lazy { UserPreferences(context) }
     private val stepTrackerService by lazy { getAppService<StepTrackerService>() }
-    private val _steps = Topic(defaultValue = Optional.of(0L))
-    private val _distance = Topic(defaultValue = Optional.of(calculateDistance()))
-    private val _state = Topic(defaultValue = Optional.of(calculateState()))
+    private val _steps = MutableStateFlow(0L)
+    private val _distance = MutableStateFlow(calculateDistance())
+    private val _state = MutableStateFlow(calculateState())
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    override val steps: ITopic<Long>
-        get() = _steps.distinct()
-    override val distance: ITopic<Distance>
-        get() = _distance.distinct()
-    override val state: ITopic<FeatureState>
-        get() = _state.distinct()
+    override val steps: StateFlow<Long> = _steps.asStateFlow()
+    override val distance: StateFlow<Distance> = _distance.asStateFlow()
+    override val state: StateFlow<FeatureState> = _state.asStateFlow()
 
     override fun enable() {
         prefs.pedometer.isEnabled = true
@@ -83,24 +83,21 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
             }.start()
         }
 
-        // Keep them up to date
-        state.subscribe { true }
-        steps.subscribe { true }
-        distance.subscribe {
-            Tools.broadcast(PedometerToolRegistration.BROADCAST_DISTANCE_CHANGED)
-            true
+        // Tell the rest of the app when the distance changes (a state flow only emits changes)
+        scope.launch {
+            distance.drop(1).collect {
+                Tools.broadcast(PedometerToolRegistration.BROADCAST_DISTANCE_CHANGED)
+            }
         }
 
-        prefsChanged.subscribe {
+        sharedPrefs.onEachChange {
             if (it in stateChangePrefKeys) {
-                _state.publish(calculateState())
+                _state.value = calculateState()
             }
 
             if (it in distanceChangePrefKeys) {
-                _distance.publish(calculateDistance())
+                _distance.value = calculateDistance()
             }
-
-            true
         }
     }
 
@@ -108,8 +105,8 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
         val stepCount = data?.getLong(PedometerToolRegistration.BROADCAST_PARAM_STEPS)
             ?: stepTrackerService.getOpenStepTrackingPeriod()?.steps
             ?: 0L
-        _steps.publish(stepCount)
-        _distance.publish(calculateDistance())
+        _steps.value = stepCount
+        _distance.value = calculateDistance()
     }
 
     private fun calculateState(): FeatureState {
@@ -127,7 +124,7 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
     }
 
     fun recalculateState() {
-        _state.publish(calculateState())
+        _state.value = calculateState()
     }
 
     private fun isDisabled(): Boolean {
@@ -140,7 +137,7 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
 
     private fun calculateDistance(): Distance {
         val paceCalculator = StrideLengthPaceCalculator(prefs.pedometer.strideLength)
-        return paceCalculator.distance(steps.value.getOrDefault(0L)).meters()
+        return paceCalculator.distance(_steps.value).meters()
     }
 
 

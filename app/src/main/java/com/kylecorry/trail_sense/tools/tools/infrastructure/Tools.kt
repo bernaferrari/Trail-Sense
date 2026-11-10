@@ -9,7 +9,6 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.widgets.Widgets
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.luna.topics.generic.Topic
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.luna.subscriptions.EventBus
@@ -66,6 +65,13 @@ import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 object Tools {
 
@@ -119,9 +125,9 @@ object Tools {
         MapToolRegistration,
         MagnifierToolRegistration
     )
-    private val topics = mutableMapOf<String, Topic<Bundle>>()
-    private val topicCallbacks = mutableMapOf<String, MutableMap<(Bundle) -> Unit, (Bundle) -> Boolean>>()
-    private val broadcastScope = CoroutineScope(Dispatchers.Main)
+    private val broadcasts = MutableSharedFlow<Pair<String, Bundle>>(extraBufferCapacity = 64)
+    private val subscriptions = mutableMapOf<Pair<String, (Bundle) -> Unit>, Job>()
+    private val broadcastScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
 
     fun isToolAvailable(context: Context, toolId: Long): Boolean {
@@ -173,30 +179,30 @@ object Tools {
         return listOf(none) + quickActions + toolActions
     }
 
+    /** The broadcasts sent with [toolBroadcastId] from now on; nothing is replayed. */
+    fun broadcastFlow(toolBroadcastId: String): Flow<Bundle> =
+        broadcasts.filter { it.first == toolBroadcastId }.map { it.second }
+
     fun broadcast(toolBroadcastId: String, data: Bundle? = null) {
-        broadcastScope.launch {
-            topics[toolBroadcastId]?.publish(data ?: Bundle())
-        }
+        broadcasts.tryEmit(toolBroadcastId to (data ?: Bundle()))
     }
 
+    /** Calls [callback] on the main thread for each broadcast with [toolBroadcastId] until [unsubscribe]. */
     fun subscribe(toolBroadcastId: String, callback: (Bundle) -> Unit) {
-        val topic = topics.getOrPut(toolBroadcastId) {
-            Topic()
-        }
-        val callbacks = topicCallbacks.getOrPut(toolBroadcastId) { mutableMapOf() }
-        val wrapped = callbacks.getOrPut(callback) {
-            { bundle ->
-                callback(bundle)
-                true
+        val key = toolBroadcastId to callback
+        synchronized(subscriptions) {
+            if (subscriptions.containsKey(key)) return
+            // Undispatched, so the subscription is in place before this returns
+            subscriptions[key] = broadcastScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                broadcastFlow(toolBroadcastId).collect { callback(it) }
             }
         }
-        topic.subscribe(wrapped)
     }
 
     fun unsubscribe(toolBroadcastId: String, callback: (Bundle) -> Unit) {
-        val topic = topics[toolBroadcastId]
-        val wrapped = topicCallbacks[toolBroadcastId]?.remove(callback) ?: return
-        topic?.unsubscribe(wrapped)
+        synchronized(subscriptions) {
+            subscriptions.remove(toolBroadcastId to callback)
+        }?.cancel()
     }
 
     fun getService(context: Context, serviceId: String): ToolService? {

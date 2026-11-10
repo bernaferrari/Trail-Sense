@@ -1,10 +1,15 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.luna.topics.generic.ITopic
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.QuickActionButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 
+/** A quick action that follows a feature's [state] while it is shown: on, off, or (optionally hidden) unavailable. */
 abstract class TopicQuickAction(
     btn: QuickActionButtonView,
     host: TrailSenseDestinationHost,
@@ -12,16 +17,22 @@ abstract class TopicQuickAction(
 ) :
     QuickActionButton(btn, host) {
 
-    abstract val state: ITopic<FeatureState>
+    abstract val state: Flow<FeatureState>
+
+    private var stateJob: Job? = null
 
     override fun onResume() {
         super.onResume()
-        state.subscribe(this::onStateChange)
+        stateJob?.cancel()
+        stateJob = host.lifecycleOwner.lifecycleScope.launch {
+            state.distinctUntilChanged().collect(::onStateChange)
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        state.unsubscribe(this::onStateChange)
+        stateJob?.cancel()
+        stateJob = null
     }
 
     override fun onDestroy() {
@@ -29,11 +40,8 @@ abstract class TopicQuickAction(
         onPause()
     }
 
-    private fun onStateChange(state: FeatureState): Boolean {
+    private fun onStateChange(state: FeatureState) {
         button.isVisible = !hideWhenUnavailable || state != FeatureState.Unavailable
         setState(state == FeatureState.On)
-        return true
     }
-
-
 }

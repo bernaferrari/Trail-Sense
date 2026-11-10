@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.services
 
-import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.content.Context
 import android.os.Bundle
@@ -21,6 +20,7 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackSe
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 
 class BacktrackToolService(private val context: Context) : ToolService {
 
@@ -40,9 +40,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
 
     override val name: String = context.getString(R.string.backtrack)
 
-    init {
-        sharedPreferences.onChange.subscribe(this::onPreferencesChanged)
-    }
+    private val preferenceChanges = sharedPreferences.onEachChange { onPreferencesChanged(it) }
 
     override fun getFrequency(): Duration {
         return prefs.paths.backtrackRecordFrequency
@@ -131,7 +129,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
     }
 
     protected fun finalize() {
-        sharedPreferences.onChange.unsubscribe(this::onPreferencesChanged)
+        preferenceChanges.cancel()
     }
 
     companion object {

@@ -44,7 +44,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.compass.CompassSensor
 import com.kylecorry.andromeda.sense.location.GpsSensor
@@ -63,6 +62,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import androidx.lifecycle.asLiveData
 
 @Composable
 fun CalibrateCompassToolScreen() {

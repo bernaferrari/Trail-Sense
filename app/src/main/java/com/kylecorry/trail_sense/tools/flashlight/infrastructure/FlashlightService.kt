@@ -13,7 +13,6 @@ import com.kylecorry.andromeda.background.services.AndromedaService
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -22,6 +21,12 @@ import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
 import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class FlashlightService : AndromedaService() {
 
@@ -30,7 +35,8 @@ class FlashlightService : AndromedaService() {
 
     private var strategy: IFlashlightStrategy? = null
 
-    private val topic by lazy { flashlight.mode.replay() }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var modeJob: Job? = null
 
     private val offTimer = CoroutineTimer {
         val end = stopAt
@@ -57,7 +63,8 @@ class FlashlightService : AndromedaService() {
     override fun onDestroy() {
         getAppService<Logger>().info(TAG, "Stopped")
         flashlight.stopSystemMonitor()
-        topic.unsubscribe(this::onStateChanged)
+        modeJob?.cancel()
+        scope.cancel()
         offTimer.stop()
         strategy?.stop()
         Notify.cancel(this, NOTIFICATION_ID)
@@ -68,20 +75,21 @@ class FlashlightService : AndromedaService() {
         getAppService<Logger>().info(TAG, "Started (restarted by system: ${intent == null})")
         flashlight.startSystemMonitor()
         DependencyRegistry.get<NotificationSubsystem>().send(NOTIFICATION_ID, getNotification())
-        topic.subscribe(this::onStateChanged)
+        if (modeJob == null) {
+            modeJob = scope.launch { flashlight.mode.collect(::onStateChanged) }
+        }
         stopAt = cache.getInstant(getString(R.string.pref_flashlight_timeout_instant))
         offTimer.interval(1000)
         return START_STICKY
     }
 
-    private fun onStateChanged(mode: FlashlightMode): Boolean {
+    private fun onStateChanged(mode: FlashlightMode) {
         when (mode) {
             FlashlightMode.Torch -> switchStrategy(TorchFlashlightStrategy(flashlight))
             FlashlightMode.Sos -> switchStrategy(SosFlashlightStrategy(flashlight))
             FlashlightMode.Off -> switchStrategy(null)
             else -> switchStrategy(StrobeFlashlightStrategy(flashlight, getInterval(mode)))
         }
-        return true
     }
 
     private fun getInterval(mode: FlashlightMode): Duration {

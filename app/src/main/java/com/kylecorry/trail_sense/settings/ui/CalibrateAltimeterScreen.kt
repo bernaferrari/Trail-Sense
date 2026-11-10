@@ -430,11 +430,10 @@ internal class CalibrateAltimeterViewModel(
     private val updateTimer = CoroutineTimer { updateAltitude() }
     private val overridePopulationRunner = CoroutineQueueRunner(dispatcher = Dispatchers.Default)
     private val onAltimeterReading: () -> Boolean = ::updateAltitude
-    private val onPreferenceChanged: (String) -> Boolean = { key ->
+    private val onPreferenceChanged: (String) -> Unit = { key ->
         if (key == keys.seaLevelPressureOverride) {
             viewModelScope.launch { restartAltimeter() }
         }
-        true
     }
 
     private val _messages = Channel<AltimeterMessage>(Channel.BUFFERED)
@@ -473,7 +472,7 @@ internal class CalibrateAltimeterViewModel(
         lastMode = prefs.altimeterMode
         mode = getModePreference()
         refreshOverrideSummary()
-        cache.onChange.subscribe(onPreferenceChanged)
+        viewModelScope.launch { cache.onChange.collect { onPreferenceChanged(it) } }
         refreshConditionalState()
     }
 
@@ -493,7 +492,6 @@ internal class CalibrateAltimeterViewModel(
 
     override fun onCleared() {
         stop()
-        cache.onChange.unsubscribe(onPreferenceChanged)
     }
 
     fun changeMode(value: String) {

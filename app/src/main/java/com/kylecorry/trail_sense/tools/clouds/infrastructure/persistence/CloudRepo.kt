@@ -7,8 +7,9 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.luna.topics.ITopic
-import com.kylecorry.luna.topics.Topic
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
@@ -16,14 +17,21 @@ import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 class CloudRepo private constructor(private val dao: CloudReadingDao) :
     IReadingRepo<CloudObservation> {
 
-    private val _readingsChanged = Topic()
-    val readingsChanged: ITopic = _readingsChanged
+    private val _readingsChanged =
+        MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** Emits after readings are added, changed or removed. */
+    val readingsChanged: SharedFlow<Unit> = _readingsChanged
+
+    private fun notifyReadingsChanged() {
+        _readingsChanged.tryEmit(Unit)
+    }
 
     override suspend fun clean() = onIO {
         dao.deleteOlderThan(Clock.System.now().minus(CLOUD_HISTORY_DURATION).toEpochMilliseconds())
 
         // TODO: Only do this if there was a change
-        _readingsChanged.publish()
+        notifyReadingsChanged()
     }
 
     override suspend fun add(reading: Reading<CloudObservation>): Long = onIO {
@@ -35,14 +43,14 @@ class CloudRepo private constructor(private val dao: CloudReadingDao) :
         } else {
             dao.insert(entity)
         }
-        _readingsChanged.publish()
+        notifyReadingsChanged()
         id
     }
 
     override suspend fun delete(reading: Reading<CloudObservation>) = onIO {
         val entity = CloudReadingEntity.from(reading)
         dao.delete(entity)
-        _readingsChanged.publish()
+        notifyReadingsChanged()
     }
 
     override suspend fun get(id: Long): Reading<CloudObservation>? = onIO {

@@ -2,18 +2,27 @@ package com.kylecorry.trail_sense.shared.tiles
 
 import android.service.quicksettings.Tile
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.luna.topics.generic.ITopic
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.widgets.tiles.AndromedaTileService
 import com.kylecorry.trail_sense.shared.FeatureState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
+/** A quick settings tile that follows a feature's state and a subtitle while the tile is listening. */
 abstract class TopicTile : AndromedaTileService() {
-    abstract val stateTopic: ITopic<FeatureState>
-    abstract val subtitleTopic: ITopic<String>
+    abstract val stateTopic: StateFlow<FeatureState>
+    abstract val subtitleTopic: Flow<String>
     abstract val icon: ImageVector
 
     abstract fun stop()
     abstract fun start()
+
+    private var listeningScope: CoroutineScope? = null
 
     override fun onTileAdded() {
         super.onTileAdded()
@@ -23,7 +32,7 @@ abstract class TopicTile : AndromedaTileService() {
     override fun onClick() {
         super.onClick()
 
-        when (stateTopic.value.get()) {
+        when (stateTopic.value) {
             FeatureState.On -> stop()
             FeatureState.Off -> start()
             else -> {
@@ -34,23 +43,25 @@ abstract class TopicTile : AndromedaTileService() {
 
     override fun onStartListening() {
         showIcon(icon)
-        subtitleTopic.subscribe(this::onSubtitleChanged)
-        stateTopic.subscribe(this::onStateChanged)
+        listeningScope?.cancel()
+        listeningScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).also { scope ->
+            scope.launch { subtitleTopic.collect(::onSubtitleChanged) }
+            scope.launch { stateTopic.collect(::onStateChanged) }
+        }
     }
 
     override fun onStopListening() {
-        subtitleTopic.unsubscribe(this::onSubtitleChanged)
-        stateTopic.unsubscribe(this::onStateChanged)
+        listeningScope?.cancel()
+        listeningScope = null
     }
 
-    private fun onSubtitleChanged(subtitle: String): Boolean {
+    private fun onSubtitleChanged(subtitle: String) {
         tryOrLog {
             setSubtitle(subtitle)
         }
-        return true
     }
 
-    private fun onStateChanged(state: FeatureState): Boolean {
+    private fun onStateChanged(state: FeatureState) {
         tryOrLog {
             setState(
                 when (state) {
@@ -60,6 +71,5 @@ abstract class TopicTile : AndromedaTileService() {
                 }
             )
         }
-        return true
     }
 }

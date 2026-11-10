@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
 import kotlin.time.Clock
 
-import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 
 class Navigator private constructor(context: Context) {
 
@@ -106,21 +106,19 @@ class Navigator private constructor(context: Context) {
     init {
         listenTask.start()
         val lockBearingKey = context.getString(R.string.pref_lock_bearing_to_location)
-        PreferencesSubsystem.getInstance(context).preferences.onChange.subscribe { key ->
+        PreferencesSubsystem.getInstance(context).preferences.onEachChange { key ->
             if (key == lockBearingKey) {
                 bearingInvalidationKey.update { it + 1 }
             }
-            true
         }
         // Keeps the beacon destination in sync with external changes to the preferences
-        prefs.onChange.subscribe { key ->
+        prefs.onEachChange { key ->
             if (key == BEACON_DESTINATION_ID_KEY) {
                 val id = prefs.getLong(BEACON_DESTINATION_ID_KEY)
                 if (beaconDestinationId.value != id) {
                     updateBeaconDestination(id)
                 }
             }
-            true
         }
     }
 

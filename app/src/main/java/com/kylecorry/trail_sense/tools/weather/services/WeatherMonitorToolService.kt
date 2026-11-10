@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.services
 
-import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.content.Context
 import android.os.Bundle
@@ -20,6 +19,7 @@ import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorScheduler
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorService
 import kotlin.time.Duration
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 
 class WeatherMonitorToolService(private val context: Context) : ToolService {
 
@@ -39,9 +39,7 @@ class WeatherMonitorToolService(private val context: Context) : ToolService {
 
     override val name: String = context.getString(R.string.weather_monitor)
 
-    init {
-        sharedPreferences.onChange.subscribe(this::onPreferencesChanged)
-    }
+    private val preferenceChanges = sharedPreferences.onEachChange { onPreferencesChanged(it) }
 
     override fun getFrequency(): Duration {
         return prefs.weather.weatherUpdateFrequency
@@ -134,7 +132,7 @@ class WeatherMonitorToolService(private val context: Context) : ToolService {
     }
 
     protected fun finalize() {
-        sharedPreferences.onChange.unsubscribe(this::onPreferencesChanged)
+        preferenceChanges.cancel()
     }
 
     companion object {

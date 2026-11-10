@@ -31,7 +31,6 @@ import com.kylecorry.trail_sense.settings.ui.pickOption
 import com.kylecorry.trail_sense.settings.ui.rememberSettingsOptions
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.extensions.asLiveData
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -44,6 +43,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
+import androidx.lifecycle.asLiveData
 
 @Composable
 fun AstronomySettingsToolScreen() {

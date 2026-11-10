@@ -11,13 +11,11 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
-import com.kylecorry.luna.topics.generic.ITopic
-import com.kylecorry.luna.topics.generic.getOrNull
-import com.kylecorry.luna.topics.generic.replay
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.quickactions.TopicQuickAction
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import kotlinx.coroutines.flow.Flow
 
 class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
     TopicQuickAction(btn, host, hideWhenUnavailable = false) {
@@ -37,7 +35,7 @@ class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinati
 
     override fun onClick() {
         super.onClick()
-        when (pedometer.state.getOrNull()) {
+        when (pedometer.state.value) {
             FeatureState.On -> pedometer.disable()
             FeatureState.Off -> startStepCounter()
             else -> {
@@ -59,6 +57,6 @@ class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinati
         }
     }
 
-    override val state: ITopic<FeatureState> = pedometer.state.replay()
+    override val state: Flow<FeatureState> = pedometer.state
 
 }
