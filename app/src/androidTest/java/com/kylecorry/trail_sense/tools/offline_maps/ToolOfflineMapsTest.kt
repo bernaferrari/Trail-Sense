@@ -142,9 +142,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     private fun canExportOfflineMapFromList() {
         input(R.id.searchbox, "Test Map")
         clickListItemMenu(string(R.string.export))
-        backUntil {
-            hasText("test-map.map")
-        }
+        // The system file picker can take a while to open; a back before then cancels it
+        hasText("test-map.map", waitForTime = FILE_PICKER_WAIT_MS)
         backUntil {
             isVisible(R.id.map_list_title)
         }
@@ -158,9 +157,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         }
         click(toolbarButton(Side.Right))
         click(string(R.string.export))
-        backUntil {
-            hasText("test-map.map")
-        }
+        // The system file picker can take a while to open; a back before then cancels it
+        hasText("test-map.map", waitForTime = FILE_PICKER_WAIT_MS)
         backUntil {
             isVisible(R.id.map)
         }
@@ -287,7 +285,7 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         click(R.id.calibration_map, xPercent = 0.7f, yPercent = 0.3f)
         input("Location", "42.1, -72.1")
         click(string(R.string.preview))
-        click("Done")
+        click(string(R.string.finish_calibration))
 
         hasText("Test Map")
         if (goBack) {
@@ -590,4 +588,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         not { hasText("Blank Map") }
     }
 
+
+    companion object {
+        private const val FILE_PICKER_WAIT_MS = 15000L
+    }
 }
