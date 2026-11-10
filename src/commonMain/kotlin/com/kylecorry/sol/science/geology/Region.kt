@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.geology
 
-enum class Region {
+public enum class Region {
     Polar,
     Temperate,
     Tropical

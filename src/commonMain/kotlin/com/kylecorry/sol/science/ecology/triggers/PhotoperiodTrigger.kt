@@ -3,7 +3,7 @@ package com.kylecorry.sol.science.ecology.triggers
 import com.kylecorry.sol.science.ecology.LifecycleEventFactors
 import kotlin.time.Duration
 
-class PhotoperiodTrigger(
+public class PhotoperiodTrigger(
     private val dayLength: Duration,
     private val above: Boolean = true
 ) : LifecycleEventTrigger {

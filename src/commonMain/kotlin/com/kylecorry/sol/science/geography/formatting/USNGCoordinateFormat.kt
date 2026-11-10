@@ -3,7 +3,7 @@ package com.kylecorry.sol.science.geography.formatting
 import com.kylecorry.sol.units.Coordinate
 import gov.nasa.worldwind.geom.coords.MGRSCoordinateFormat as MGRS
 
-class USNGCoordinateFormat(private val precision: Int = 5) : CoordinateFormat {
+public class USNGCoordinateFormat(private val precision: Int = 5) : CoordinateFormat {
     override fun toString(coordinate: Coordinate): String {
         val mgrs = try {
             MGRS.getString(coordinate.latitude, coordinate.longitude, precision)

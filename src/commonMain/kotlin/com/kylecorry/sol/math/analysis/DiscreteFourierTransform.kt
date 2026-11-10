@@ -6,9 +6,9 @@ import com.kylecorry.sol.shared.Guards
 import kotlin.math.cos
 import kotlin.math.sin
 
-object DiscreteFourierTransform {
+public object DiscreteFourierTransform {
 
-    fun single(x: List<Float>, y: List<Float>, frequency: Float): ComplexNumber {
+    public fun single(x: List<Float>, y: List<Float>, frequency: Float): ComplexNumber {
         Guards.isNotEmpty(x, "x")
         Guards.isNotEmpty(y, "y")
         Guards.isPositive(frequency, "frequency")
@@ -28,7 +28,7 @@ object DiscreteFourierTransform {
         return ComplexNumber(real, imaginary)
     }
 
-    fun range(
+    public fun range(
         x: List<Float>,
         y: List<Float>,
         frequencies: Range<Float>,

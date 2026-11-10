@@ -3,25 +3,25 @@ package com.kylecorry.sol.units
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class Distance private constructor(private val measure: Measure) : Comparable<Distance> {
-    val value: Float
+public value class Distance private constructor(private val measure: Measure) : Comparable<Distance> {
+    public val value: Float
         get() = measureValue(measure)
 
-    val units: DistanceUnits
+    public val units: DistanceUnits
         get() = measureUnit<DistanceUnits>(measure)
 
 
-    fun convertTo(newUnits: DistanceUnits): Distance {
+    public fun convertTo(newUnits: DistanceUnits): Distance {
         val m = value * units.meters
         val newDistance = m / newUnits.meters
         return from(newDistance.toFloat(), newUnits)
     }
 
-    fun meters(): Distance {
+    public fun meters(): Distance {
         return convertTo(DistanceUnits.Meters)
     }
 
-    operator fun times(multiplier: Float): Distance {
+    public operator fun times(multiplier: Float): Distance {
         return from(value * multiplier, units)
     }
 
@@ -29,37 +29,37 @@ value class Distance private constructor(private val measure: Measure) : Compara
         return "$value $units"
     }
 
-    companion object {
+    public companion object {
 
-        fun meters(distance: Float): Distance {
+        public fun meters(distance: Float): Distance {
             return from(distance, DistanceUnits.Meters)
         }
 
-        fun feet(distance: Float): Distance {
+        public fun feet(distance: Float): Distance {
             return from(distance, DistanceUnits.Feet)
         }
 
-        fun centimeters(distance: Float): Distance {
+        public fun centimeters(distance: Float): Distance {
             return from(distance, DistanceUnits.Centimeters)
         }
 
-        fun kilometers(distance: Float): Distance {
+        public fun kilometers(distance: Float): Distance {
             return from(distance, DistanceUnits.Kilometers)
         }
 
-        fun miles(distance: Float): Distance {
+        public fun miles(distance: Float): Distance {
             return from(distance, DistanceUnits.Miles)
         }
 
-        fun nauticalMiles(distance: Float): Distance {
+        public fun nauticalMiles(distance: Float): Distance {
             return from(distance, DistanceUnits.NauticalMiles)
         }
 
-        fun yards(distance: Float): Distance {
+        public fun yards(distance: Float): Distance {
             return from(distance, DistanceUnits.Yards)
         }
 
-        fun from(value: Float, unit: DistanceUnits): Distance {
+        public fun from(value: Float, unit: DistanceUnits): Distance {
             return Distance(packMeasure(value, unit))
         }
 

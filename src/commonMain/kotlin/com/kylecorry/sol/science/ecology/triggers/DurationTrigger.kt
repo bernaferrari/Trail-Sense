@@ -6,7 +6,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 
-class DurationTrigger(
+public class DurationTrigger(
     private val baseTrigger: LifecycleEventTrigger,
     private val duration: Duration,
     private val resetWhenBaseNotTriggered: Boolean = false

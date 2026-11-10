@@ -1,8 +1,8 @@
 package com.kylecorry.sol.math.filters
 
-class LowPassFilter(var alpha: Float, initialValue: Float = 0f) : IFilter {
+public class LowPassFilter(public var alpha: Float, initialValue: Float = 0f) : IFilter {
 
-    var value = initialValue
+    public var value: Float = initialValue
 
     override fun filter(measurement: Float): Float {
         value = (1 - alpha) * value + alpha * measurement

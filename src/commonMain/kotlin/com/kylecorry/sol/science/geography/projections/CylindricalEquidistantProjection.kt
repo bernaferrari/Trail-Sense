@@ -7,7 +7,7 @@ import com.kylecorry.sol.math.arithmetic.Arithmetic.clamp
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.units.Coordinate
 
-class CylindricalEquidistantProjection(private val scale: Float = 1f) : IMapProjection {
+public class CylindricalEquidistantProjection(private val scale: Float = 1f) : IMapProjection {
 
     override fun toCoordinate(pixel: Vector2): Coordinate {
         val longitude = (pixel.x / scale).toDouble().toDegrees()
@@ -28,8 +28,8 @@ class CylindricalEquidistantProjection(private val scale: Float = 1f) : IMapProj
         return Vector2(x.toFloat(), y.toFloat())
     }
 
-    companion object {
-        fun getScaleForLatitude(latitude: Double): Float {
+    public companion object {
+        public fun getScaleForLatitude(latitude: Double): Float {
             return cosDegrees(latitude).toFloat()
         }
     }

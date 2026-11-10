@@ -12,7 +12,7 @@ import kotlin.math.tan
  * @param focalLength the focal length in pixels
  * @param k1 the radial distortion coefficient (distorted = undistorted * (1 + k1 * r^2))
  */
-data class PinholeCamera(
+public data class PinholeCamera(
     val width: Int,
     val height: Int,
     val focalLength: Double,
@@ -21,7 +21,7 @@ data class PinholeCamera(
     val centerY: Double = height / 2.0
 ) {
 
-    fun toRay(x: Double, y: Double): Vector3Precise {
+    public fun toRay(x: Double, y: Double): Vector3Precise {
         val xd = (x - centerX) / focalLength
         val yd = (y - centerY) / focalLength
         var xu = xd
@@ -37,7 +37,7 @@ data class PinholeCamera(
     /**
      * @return the pixel or null if the ray is behind the camera
      */
-    fun toPixel(ray: Vector3Precise): Pair<Double, Double>? {
+    public fun toPixel(ray: Vector3Precise): Pair<Double, Double>? {
         if (ray.z <= 0) {
             return null
         }
@@ -47,10 +47,10 @@ data class PinholeCamera(
         return (centerX + focalLength * xu * scale) to (centerY + focalLength * yu * scale)
     }
 
-    companion object {
+    public companion object {
         private const val UNDISTORT_ITERATIONS = 6
 
-        fun fromVerticalFieldOfView(width: Int, height: Int, degrees: Double): PinholeCamera {
+        public fun fromVerticalFieldOfView(width: Int, height: Int, degrees: Double): PinholeCamera {
             val f = (height / 2.0) / tan((degrees / 2 * kotlin.math.PI / 180.0))
             return PinholeCamera(width, height, f)
         }

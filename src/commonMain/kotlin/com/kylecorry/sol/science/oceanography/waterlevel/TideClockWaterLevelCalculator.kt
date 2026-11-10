@@ -8,7 +8,7 @@ import com.kylecorry.sol.science.oceanography.TideConstituent
 import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 
-class TideClockWaterLevelCalculator(
+public class TideClockWaterLevelCalculator(
     private val reference: Tide,
     private val frequency: Float = TideConstituent.M2.speed,
     private val amplitude: Float = 1f,

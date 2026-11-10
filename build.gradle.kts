@@ -1,85 +1,56 @@
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.DetektCreateBaselineTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
+
 plugins {
-    kotlin("multiplatform") version "2.3.0"
-    id("com.vanniktech.maven.publish") version "0.37.0"
-    id("dev.detekt") version "2.0.0-alpha.5"
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.detekt)
 }
 
-val versionName = "19.4.0"
+val versionName = "20.0.0"
 
-mavenPublishing {
-    coordinates("com.kylecorry", "sol", versionName)
-
-    pom {
-        name.set("Sol")
-        description.set("A Kotlin library for science and math in the real world.")
-        url.set("https://github.com/kylecorry31/sol")
-        licenses {
-            license {
-                name.set("MIT License")
-                url.set("https://opensource.org/licenses/MIT")
-            }
-        }
-        developers {
-            developer {
-                id.set("kylecorry31")
-                name.set("Kyle Corry")
-                email.set("kylecorry31@gmail.com")
-            }
-        }
-        scm {
-            connection.set("scm:git:git://github.com/kylecorry31/sol.git")
-            developerConnection.set("scm:git:ssh://github.com:kylecorry31/sol.git")
-            url.set("https://github.com/kylecorry31/sol")
-        }
-    }
-
-    publishToMavenCentral()
-    signAllPublications()
-}
-
-repositories {
-    maven {
-        url = uri("https://jitpack.io")
-        content {
-            includeGroupByRegex("com\\.github.*")
-        }
-    }
-    mavenCentral()
-}
-
-dependencies {
-    detektPlugins("com.kylecorry:orion:1.1.0")
-}
+// Some astronomy tests take several seconds on Wasm. Kotlin/JS is not a target because it stores Float as a
+// 64-bit double, which changes the results of sol's single precision math.
+val MOCHA_TIMEOUT = "120s"
 
 kotlin {
+    explicitApi()
+
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation()
+
+    jvmToolchain(17)
     jvm {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            jvmTarget = JvmTarget.JVM_11
         }
     }
     iosArm64()
     iosSimulatorArm64()
-    jvmToolchain(17)
+    macosArm64()
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        nodejs { testTask { useMocha { timeout = MOCHA_TIMEOUT } } }
+        browser { testTask { enabled = false } }
+    }
 
     sourceSets {
         commonMain.dependencies {
-            api("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
+            api(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.assertk)
         }
-        jvmMain {
-            kotlin.srcDir("src/main/kotlin")
+        webTest.dependencies {
+            implementation(npm("@js-joda/timezone", libs.versions.jsJoda.timezone.get()))
         }
-        jvmTest {
-            kotlin.srcDir("src/test/kotlin")
-            dependencies {
-                implementation("org.junit.jupiter:junit-jupiter-api:5.14.4")
-                implementation("org.junit.jupiter:junit-jupiter-params:5.14.4")
-                implementation("com.willowtreeapps.assertk:assertk-jvm:0.28.1")
-                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.4")
-                runtimeOnly("org.junit.platform:junit-platform-launcher:1.14.4")
-            }
+        jvmTest.dependencies {
+            implementation(project.dependencies.platform(libs.junit.bom))
+            runtimeOnly(libs.junit.platform.launcher)
         }
     }
 }
@@ -88,25 +59,63 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
+mavenPublishing {
+    coordinates("com.kylecorry", "sol", versionName)
+
+    pom {
+        name = "Sol"
+        description = "A Kotlin Multiplatform library for science and math in the real world."
+        url = "https://github.com/kylecorry31/sol"
+        licenses {
+            license {
+                name = "MIT License"
+                url = "https://opensource.org/licenses/MIT"
+            }
+        }
+        developers {
+            developer {
+                id = "kylecorry31"
+                name = "Kyle Corry"
+                email = "kylecorry31@gmail.com"
+            }
+        }
+        scm {
+            connection = "scm:git:git://github.com/kylecorry31/sol.git"
+            developerConnection = "scm:git:ssh://github.com:kylecorry31/sol.git"
+            url = "https://github.com/kylecorry31/sol"
+        }
+    }
+
+    publishToMavenCentral()
+    // Maven Central requires signatures; local and snapshot publishing works without a key
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+        signAllPublications()
+    }
+}
+
+dependencies {
+    detektPlugins(libs.detekt.orion)
+}
+
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     baseline = file("$rootDir/config/detekt/baseline.xml")
 }
 
-tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
-    setSource(files("src/main/kotlin", "src/commonMain/kotlin"))
-    include("**/*.kt", "**/*.kts")
-    exclude("**/build/**")
+// Analyze the production code of every target in one pass
+val productionSources = files(provider {
+    kotlin.sourceSets.filter { it.name.endsWith("Main") }.flatMap { it.kotlin.srcDirs }.filter { it.exists() }
+})
+
+tasks.withType<Detekt>().configureEach {
+    setSource(productionSources)
     exclude("**/gov/nasa/worldwind/**")
     jvmTarget = "11"
 }
 
-tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
-    setSource(files("src/main/kotlin", "src/commonMain/kotlin"))
-    include("**/*.kt", "**/*.kts")
-    exclude("**/build/**")
+tasks.withType<DetektCreateBaselineTask>().configureEach {
+    setSource(productionSources)
     exclude("**/gov/nasa/worldwind/**")
     jvmTarget = "11"
 }
-

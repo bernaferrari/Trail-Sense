@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.algebra.LinearEquation
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 
-data class Line(val start: Vector2, val end: Vector2) {
+public data class Line(val start: Vector2, val end: Vector2) {
 
     val isVertical: Boolean
         get() = Arithmetic.isApproximatelyEqual(start.x, end.x) || slope().isInfinite()
@@ -14,7 +14,7 @@ data class Line(val start: Vector2, val end: Vector2) {
             return Arithmetic.isApproximatelyEqual(start.y, end.y) || Arithmetic.isZero(m) || m.isNaN()
         }
 
-    fun left(): Vector2 {
+    public fun left(): Vector2 {
         return if (start.x < end.x) {
             start
         } else {
@@ -22,7 +22,7 @@ data class Line(val start: Vector2, val end: Vector2) {
         }
     }
 
-    fun right(): Vector2 {
+    public fun right(): Vector2 {
         return if (start.x < end.x) {
             end
         } else {
@@ -30,7 +30,7 @@ data class Line(val start: Vector2, val end: Vector2) {
         }
     }
 
-    fun top(): Vector2 {
+    public fun top(): Vector2 {
         return if (start.y < end.y) {
             end
         } else {
@@ -38,7 +38,7 @@ data class Line(val start: Vector2, val end: Vector2) {
         }
     }
 
-    fun bottom(): Vector2 {
+    public fun bottom(): Vector2 {
         return if (start.y < end.y) {
             start
         } else {
@@ -46,25 +46,25 @@ data class Line(val start: Vector2, val end: Vector2) {
         }
     }
 
-    fun length(): Float {
+    public fun length(): Float {
         return start.distanceTo(end)
     }
 
     /**
      * The slope of the line
      */
-    fun slope(): Float {
+    public fun slope(): Float {
         return (end.y - start.y) / (end.x - start.x)
     }
 
     /**
      * The Y intercept
      */
-    fun intercept(): Float {
+    public fun intercept(): Float {
         return start.y - slope() * start.x
     }
 
-    fun equation(): LinearEquation {
+    public fun equation(): LinearEquation {
         return LinearEquation(slope(), intercept())
     }
 }

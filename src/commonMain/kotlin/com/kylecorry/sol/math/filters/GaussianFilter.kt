@@ -6,20 +6,20 @@ import com.kylecorry.sol.math.RingBuffer
 import com.kylecorry.sol.math.statistics.GaussianDistribution
 import com.kylecorry.sol.math.statistics.Statistics
 
-class GaussianFilter(samples: Int, private val defaultError: Float) : IFilter {
+public class GaussianFilter(samples: Int, private val defaultError: Float) : IFilter {
 
     private val buffer = RingBuffer<GaussianDistribution>(samples)
 
-    var value: Float = 0f
+    public var value: Float = 0f
         private set
 
-    var error: Float? = null
+    public var error: Float? = null
         private set
 
-    val hasValidReading: Boolean
+    public val hasValidReading: Boolean
         get() = buffer.isFull()
 
-    fun filter(measurement: Float, error: Float): Float {
+    public fun filter(measurement: Float, error: Float): Float {
         val variance = error
             .real(defaultError)
             .positive(defaultError)

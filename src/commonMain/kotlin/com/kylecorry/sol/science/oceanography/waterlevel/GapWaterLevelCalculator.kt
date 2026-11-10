@@ -6,7 +6,7 @@ import com.kylecorry.sol.science.oceanography.Tide
 import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 
-class GapWaterLevelCalculator(
+public class GapWaterLevelCalculator(
     private val first: Tide,
     private val second: Tide,
     private val approximateFrequency: Float

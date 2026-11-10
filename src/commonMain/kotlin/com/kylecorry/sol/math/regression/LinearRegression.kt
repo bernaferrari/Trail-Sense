@@ -5,9 +5,9 @@ import com.kylecorry.sol.math.algebra.LinearEquation
 import com.kylecorry.sol.math.arithmetic.Arithmetic.square
 import com.kylecorry.sol.math.statistics.Statistics
 
-class LinearRegression(data: List<Vector2>) : IRegression1D {
+public class LinearRegression(data: List<Vector2>) : IRegression1D {
 
-    val equation = fit(data)
+    public val equation: LinearEquation = fit(data)
 
     override fun predict(x: Float): Float {
         return equation.evaluate(x)

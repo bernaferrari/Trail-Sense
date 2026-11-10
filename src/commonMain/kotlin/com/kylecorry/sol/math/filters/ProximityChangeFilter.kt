@@ -2,11 +2,11 @@ package com.kylecorry.sol.math.filters
 
 import kotlin.math.abs
 
-class ProximityChangeFilter(private val changeThreshold: Float) {
+public class ProximityChangeFilter(private val changeThreshold: Float) {
 
     private var lastValid: Float = Float.NaN
 
-    fun filter(measurement: Float): Float {
+    public fun filter(measurement: Float): Float {
         if (lastValid.isNaN()) {
             lastValid = measurement
             return lastValid

@@ -3,14 +3,14 @@ package com.kylecorry.sol.units
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class Energy private constructor(private val measure: Measure) {
-    val value: Float
+public value class Energy private constructor(private val measure: Measure) {
+    public val value: Float
         get() = measureValue(measure)
 
-    val units: EnergyUnits
+    public val units: EnergyUnits
         get() = measureUnit<EnergyUnits>(measure)
 
-    fun convertTo(newUnits: EnergyUnits): Energy {
+    public fun convertTo(newUnits: EnergyUnits): Energy {
         if (units == newUnits) {
             return this
         }
@@ -22,12 +22,12 @@ value class Energy private constructor(private val measure: Measure) {
         return "$value $units"
     }
 
-    fun joules(): Energy {
+    public fun joules(): Energy {
         return convertTo(EnergyUnits.Joules)
     }
 
-    companion object {
-        fun from(value: Float, units: EnergyUnits): Energy {
+    public companion object {
+        public fun from(value: Float, units: EnergyUnits): Energy {
             return Energy(packMeasure(value, units))
         }
     }

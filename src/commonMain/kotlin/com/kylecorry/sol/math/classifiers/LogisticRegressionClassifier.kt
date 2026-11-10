@@ -17,7 +17,7 @@ import kotlin.math.ln
  * A logistic regression classifier
  * @param weights an RxC matrix where R is the length of X and C is the number of classes
  */
-class LogisticRegressionClassifier(
+public class LogisticRegressionClassifier(
     private val input: Int,
     private val output: Int,
     private var weights: Matrix = Matrix.create(input, output) { _, _ -> kotlin.random.Random.nextFloat() }
@@ -33,7 +33,7 @@ class LogisticRegressionClassifier(
         return z.mapRows { Statistics.softmax(it.toList()).toFloatArray() }
     }
 
-    fun fitClasses(
+    public fun fitClasses(
         input: List<List<Float>>,
         output: List<Int>,
         epochs: Int = 100,
@@ -50,7 +50,7 @@ class LogisticRegressionClassifier(
         return fit(x, y, epochs, learningRate, batchSize, onEpochCompleteFn)
     }
 
-    fun fit(
+    public fun fit(
         input: List<Matrix>,
         output: List<Matrix>,
         epochs: Int = 100,
@@ -103,11 +103,11 @@ class LogisticRegressionClassifier(
         return totalError
     }
 
-    fun dump(): Matrix {
+    public fun dump(): Matrix {
         return weights.mapped { it }
     }
 
-    fun load(weights: Matrix) {
+    public fun load(weights: Matrix) {
         this.weights = weights
     }
 
@@ -122,8 +122,8 @@ class LogisticRegressionClassifier(
         return x.transpose().dot(predictions).divide(n.toFloat())
     }
 
-    companion object {
-        fun fromWeights(weights: Matrix): LogisticRegressionClassifier {
+    public companion object {
+        public fun fromWeights(weights: Matrix): LogisticRegressionClassifier {
             return LogisticRegressionClassifier(weights.rows(), weights.columns(), weights)
         }
     }

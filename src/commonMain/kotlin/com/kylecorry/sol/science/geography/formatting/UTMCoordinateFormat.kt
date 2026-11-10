@@ -8,7 +8,7 @@ import gov.nasa.worldwind.geom.Angle
 import gov.nasa.worldwind.geom.coords.UPSCoord
 import gov.nasa.worldwind.geom.coords.UTMCoord
 
-class UTMCoordinateFormat(private val precision: Int = 7) : CoordinateFormat {
+public class UTMCoordinateFormat(private val precision: Int = 7) : CoordinateFormat {
 
     private val latitudeBands = listOf(
         -72.0 to 'C',

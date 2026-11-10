@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.oceanography
 
-enum class TideFrequency {
+public enum class TideFrequency {
     Diurnal,
     Semidiurnal
 }

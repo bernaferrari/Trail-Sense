@@ -14,12 +14,12 @@ import kotlin.math.sin
  * @param theta the angle from the z-axis (in degrees)
  * @param phi the angle from the x-axis (in degrees)
  */
-data class SphericalCoordinate(
+public data class SphericalCoordinate(
     val r: Float,
     val theta: Float,
     val phi: Float
 ) {
-    fun toCartesian(): Vector3 {
+    public fun toCartesian(): Vector3 {
         val thetaRad = theta.toRadians()
         val phiRad = phi.toRadians()
 
@@ -30,8 +30,8 @@ data class SphericalCoordinate(
         return Vector3(x, y, z)
     }
 
-    companion object {
-        fun fromCartesian(cartesian: Vector3): SphericalCoordinate {
+    public companion object {
+        public fun fromCartesian(cartesian: Vector3): SphericalCoordinate {
             val r = cartesian.magnitude()
             val theta = acos(cartesian.z / r).toDegrees().real(0f)
             val phi = atan2(cartesian.y, cartesian.x).toDegrees().real(0f)

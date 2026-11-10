@@ -2,7 +2,7 @@ package com.kylecorry.sol.math.trigonometry
 
 import kotlin.math.sin
 
-class SineWave(
+public class SineWave(
     override val amplitude: Float,
     override val frequency: Float,
     override val horizontalShift: Float,

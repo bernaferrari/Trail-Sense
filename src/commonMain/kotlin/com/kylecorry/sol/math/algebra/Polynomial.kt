@@ -3,18 +3,18 @@ package com.kylecorry.sol.math.algebra
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.math.sumOfFloat
 
-data class PolynomialTerm(
+public data class PolynomialTerm(
     val coefficient: Float,
     val exponent: Int
 ) {
-    operator fun times(other: PolynomialTerm): PolynomialTerm {
+    public operator fun times(other: PolynomialTerm): PolynomialTerm {
         return PolynomialTerm(this.coefficient * other.coefficient, this.exponent + other.exponent)
     }
 }
 
-class Polynomial(terms: List<PolynomialTerm>) {
+public class Polynomial(terms: List<PolynomialTerm>) {
 
-    val terms = terms
+    public val terms: List<PolynomialTerm> = terms
         .groupBy { it.exponent }
         .map { (exponent, groupedTerms) ->
             val coefficient = groupedTerms.sumOfFloat { it.coefficient }
@@ -23,11 +23,11 @@ class Polynomial(terms: List<PolynomialTerm>) {
         .filter { !Arithmetic.isZero(it.coefficient) }
         .sortedBy { -it.exponent }
 
-    fun evaluate(x: Float): Float {
+    public fun evaluate(x: Float): Float {
         return terms.sumOfFloat { it.coefficient * Arithmetic.power(x, it.exponent) }
     }
 
-    fun derivative(): Polynomial {
+    public fun derivative(): Polynomial {
         val derivedTerms = terms.mapNotNull {
             if (it.exponent == 0) {
                 null
@@ -38,7 +38,7 @@ class Polynomial(terms: List<PolynomialTerm>) {
         return Polynomial(derivedTerms)
     }
 
-    fun integral(c: Float = 0f): Polynomial {
+    public fun integral(c: Float = 0f): Polynomial {
         val integratedTerms = terms.map {
             PolynomialTerm(
                 coefficient = it.coefficient / (it.exponent + 1),
@@ -48,18 +48,18 @@ class Polynomial(terms: List<PolynomialTerm>) {
         return Polynomial(integratedTerms + listOf(PolynomialTerm(c, 0)))
     }
 
-    operator fun plus(other: Polynomial): Polynomial {
+    public operator fun plus(other: Polynomial): Polynomial {
         return Polynomial(this.terms + other.terms)
     }
 
-    operator fun minus(other: Polynomial): Polynomial {
+    public operator fun minus(other: Polynomial): Polynomial {
         val negatedTerms = other.terms.map {
             PolynomialTerm(-it.coefficient, it.exponent)
         }
         return Polynomial(this.terms + negatedTerms)
     }
 
-    operator fun times(other: Polynomial): Polynomial {
+    public operator fun times(other: Polynomial): Polynomial {
         val productTerms = mutableListOf<PolynomialTerm>()
         for (term1 in this.terms) {
             for (term2 in other.terms) {
@@ -105,8 +105,8 @@ class Polynomial(terms: List<PolynomialTerm>) {
         }.replace("+ -", "- ")
     }
 
-    companion object {
-        fun of(vararg terms: PolynomialTerm): Polynomial {
+    public companion object {
+        public fun of(vararg terms: PolynomialTerm): Polynomial {
             return Polynomial(terms.toList())
         }
 
@@ -114,7 +114,7 @@ class Polynomial(terms: List<PolynomialTerm>) {
          * Creates a polynomial from coefficients.
          * The index of the coefficient corresponds to the exponent.
          */
-        fun fromCoefficients(vararg coefficients: Float): Polynomial {
+        public fun fromCoefficients(vararg coefficients: Float): Polynomial {
             val terms = coefficients.mapIndexed { index, coefficient ->
                 PolynomialTerm(coefficient, index)
             }
@@ -125,7 +125,7 @@ class Polynomial(terms: List<PolynomialTerm>) {
          * Creates a polynomial from a string equation.
          * Example inputs: "x^2", "x + 4x^2 + 5", "-2x", "x - 2x^3"
          */
-        fun of(equation: String): Polynomial {
+        public fun of(equation: String): Polynomial {
             val terms = equation
                 .replace(" ", "")
                 .replace("-", "+-")

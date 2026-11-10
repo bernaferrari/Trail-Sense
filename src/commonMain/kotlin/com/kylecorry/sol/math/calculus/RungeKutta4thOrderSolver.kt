@@ -3,7 +3,7 @@ package com.kylecorry.sol.math.calculus
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.Vector
 
-class RungeKutta4thOrderSolver : ODESolver {
+public class RungeKutta4thOrderSolver : ODESolver {
 
     override fun solve(
         xRange: Range<Float>,

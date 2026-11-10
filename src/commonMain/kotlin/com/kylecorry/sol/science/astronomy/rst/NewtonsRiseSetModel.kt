@@ -9,6 +9,7 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
 import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.corrections.EclipticObliquity
 import com.kylecorry.sol.science.astronomy.corrections.LongitudinalNutation
 import com.kylecorry.sol.science.astronomy.corrections.TerrestrialTime
@@ -36,7 +37,7 @@ import kotlin.time.Instant
 internal class NewtonsRiseSetModel {
     @Suppress("LongParameterList")
     fun calculate(locator: ICelestialLocator, date: Instant, zone: TimeZone, location: Coordinate,
-                  standardAltitude: Double, withRefraction: Boolean, withParallax: Boolean): SearchRiseSetTimes {
+                  standardAltitude: Double, withRefraction: Boolean, withParallax: Boolean): RiseSetTransitTimes {
         var rise: Instant? = null
         var transit: Instant? = null
         var set: Instant? = null
@@ -48,12 +49,12 @@ internal class NewtonsRiseSetModel {
             set = set ?: result.set
             if (rise != null && transit != null && set != null) break
         }
-        return SearchRiseSetTimes(rise, transit, set)
+        return RiseSetTransitTimes(rise, transit, set)
     }
 
     @Suppress("LongParameterList")
     private fun calculateHelper(locator: ICelestialLocator, date: Instant, zone: TimeZone, location: Coordinate,
-                                altitude: Double, refraction: Boolean, parallax: Boolean): SearchRiseSetTimes {
+                                altitude: Double, refraction: Boolean, parallax: Boolean): RiseSetTransitTimes {
         val localDate = date.toLocalDateTime(zone).date
         fun compute(time: Instant) =
             getTransitTimesHelper(time, zone, location, altitude, refraction, parallax, locator)
@@ -63,7 +64,7 @@ internal class NewtonsRiseSetModel {
         val noon = LocalDateTime(localDate.year, localDate.month, localDate.day, 12, 0).toInstant(zone)
         val others = listOf(today, compute(noon), compute(date.plus(-1, DateTimeUnit.DAY, zone)),
             compute(date.plus(1, DateTimeUnit.DAY, zone)))
-        return SearchRiseSetTimes(others.mapNotNull { it.rise }.firstOrNull(::isSameDay),
+        return RiseSetTransitTimes(others.mapNotNull { it.rise }.firstOrNull(::isSameDay),
             others.mapNotNull { it.transit }.firstOrNull(::isSameDay),
             others.mapNotNull { it.set }.firstOrNull(::isSameDay))
     }
@@ -81,7 +82,7 @@ internal class NewtonsRiseSetModel {
     @Suppress("LongParameterList")
     private fun getTransitTimesHelper(date: Instant, zone: TimeZone, coordinate: Coordinate, altitude: Double,
                                       refraction: Boolean, parallax: Boolean,
-                                      locator: ICelestialLocator): SearchRiseSetTimes {
+                                      locator: ICelestialLocator): RiseSetTransitTimes {
         val ut = utcMidnightOnDate(date, zone)
         val yesterday = utcMidnightOnDate(date.plus(-1, DateTimeUnit.DAY, zone), zone)
         val tomorrow = utcMidnightOnDate(date.plus(1, DateTimeUnit.DAY, zone), zone)
@@ -94,9 +95,9 @@ internal class NewtonsRiseSetModel {
         val distanceTriple = if (distances.size == 3 && distances.all { it != null })
             Triple(distances[0]!!, distances[1]!!, distances[2]!!) else null
         val times = getRiseSetTransitTimes(ut, coordinate, altitude, refraction, coordinates, distanceTriple)
-            ?: return SearchRiseSetTimes(null, null, null)
+            ?: return RiseSetTransitTimes(null, null, null)
         fun addHours(hours: Double) = ut + (hours * 3600000).toLong().milliseconds
-        return SearchRiseSetTimes(addHours(times.first), addHours(times.second), addHours(times.third))
+        return RiseSetTransitTimes(addHours(times.first), addHours(times.second), addHours(times.third))
     }
 
     private fun siderealToInstant(sidereal: GreenwichSiderealTime, date: LocalDate): Instant {

@@ -3,15 +3,15 @@ package com.kylecorry.sol.units
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class Speed private constructor(private val measure: Measure) {
-    val value: Float
+public value class Speed private constructor(private val measure: Measure) {
+    public val value: Float
         get() = measureValue(measure)
-    val distanceUnits: DistanceUnits
+    public val distanceUnits: DistanceUnits
         get() = measureUnit1<DistanceUnits>(measure)
-    val timeUnits: TimeUnits
+    public val timeUnits: TimeUnits
         get() = measureUnit2<TimeUnits>(measure)
 
-    fun convertTo(newDistanceUnits: DistanceUnits, newTimeUnits: TimeUnits): Speed {
+    public fun convertTo(newDistanceUnits: DistanceUnits, newTimeUnits: TimeUnits): Speed {
         val distance = Distance.from(value, distanceUnits).convertTo(newDistanceUnits).value
         val newSpeed = (distance / timeUnits.seconds) * newTimeUnits.seconds
         return from(newSpeed.toFloat(), newDistanceUnits, newTimeUnits)
@@ -21,8 +21,8 @@ value class Speed private constructor(private val measure: Measure) {
         return "$value $distanceUnits / $timeUnits"
     }
 
-    companion object {
-        fun from(value: Float, distanceUnits: DistanceUnits, timeUnits: TimeUnits): Speed {
+    public companion object {
+        public fun from(value: Float, distanceUnits: DistanceUnits, timeUnits: TimeUnits): Speed {
             return Speed(packMeasureMultiUnit(value, distanceUnits, timeUnits))
         }
     }

@@ -4,7 +4,7 @@ import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-fun Random.nextGaussian(): Double {
+public fun Random.nextGaussian(): Double {
     var v1: Double
     var v2: Double
     var s: Double

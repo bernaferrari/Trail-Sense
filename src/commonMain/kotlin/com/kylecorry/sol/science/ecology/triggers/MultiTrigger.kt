@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.ecology.triggers
 
 import com.kylecorry.sol.science.ecology.LifecycleEventFactors
 
-class MultiTrigger(
+public class MultiTrigger(
     private vararg val triggers: LifecycleEventTrigger,
     private val any: Boolean = false
 ) : LifecycleEventTrigger {

@@ -3,7 +3,7 @@ package com.kylecorry.sol.science.astronomy.eclipse
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-data class Eclipse(
+public data class Eclipse(
     val start: Instant,
     val end: Instant,
     val magnitude: Float,

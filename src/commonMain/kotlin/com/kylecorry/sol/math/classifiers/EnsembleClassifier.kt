@@ -2,7 +2,7 @@ package com.kylecorry.sol.math.classifiers
 
 import com.kylecorry.sol.math.statistics.Statistics
 
-class EnsembleClassifier(private val classifiers: List<IClassifier>) : IClassifier {
+public class EnsembleClassifier(private val classifiers: List<IClassifier>) : IClassifier {
 
     override fun classify(x: List<Float>): List<Float> {
         if (classifiers.isEmpty()) {

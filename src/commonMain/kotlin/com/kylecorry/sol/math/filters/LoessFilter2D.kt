@@ -35,7 +35,7 @@ import kotlin.math.sqrt
  * smoothed get no weight and are not visited, so it bounds the work per point to the points within that distance.
  * Unlike [maximumSpanSize], it is independent of how densely the data was sampled.
  */
-class LoessFilter2D(
+public class LoessFilter2D(
     private val span: Float = 0.3f,
     private val robustnessIterations: Int = 2,
     private val accuracy: Float = 1e-12f,
@@ -253,7 +253,7 @@ class LoessFilter2D(
         return false
     }
 
-    companion object {
+    public companion object {
         // The resolution of the normalized Y values
         private val NOISE = floatUlp(1f)
 
@@ -275,7 +275,7 @@ class LoessFilter2D(
          * @param step the amount to widen the span distance by when searching
          * @return the span distance, from the minimumSpan to the maximumSpan
          */
-        fun getSpanForNoise(
+        public fun getSpanForNoise(
             xs: List<Float>,
             noise: Float,
             targetNoise: Float,

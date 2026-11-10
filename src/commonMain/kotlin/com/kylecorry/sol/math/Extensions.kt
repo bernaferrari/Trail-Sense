@@ -7,20 +7,20 @@ import kotlin.math.floor
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-fun <T> Iterable<T>.sumOfFloat(selector: (value: T) -> Float): Float {
+public fun <T> Iterable<T>.sumOfFloat(selector: (value: T) -> Float): Float {
     return this.sumOf { selector(it).toDouble() }.toFloat()
 }
 
-fun Pair<Float, Float>.toVector2(): Vector2 {
+public fun Pair<Float, Float>.toVector2(): Vector2 {
     return Vector2(first, second)
 }
 
-fun <T> List<T>.split(percent: Float): Pair<List<T>, List<T>> {
+public fun <T> List<T>.split(percent: Float): Pair<List<T>, List<T>> {
     val n = ceil(size * percent).toInt()
     return subList(0, n) to subList(n, size)
 }
 
-fun <T> List<T>.batch(n: Int): List<List<T>> {
+public fun <T> List<T>.batch(n: Int): List<List<T>> {
     Guards.isPositive(n, "n")
 
     val lists = mutableListOf<List<T>>()
@@ -33,23 +33,23 @@ fun <T> List<T>.batch(n: Int): List<List<T>> {
     return lists
 }
 
-fun Float.floorToInt(): Int {
+public fun Float.floorToInt(): Int {
     return floor(this).toInt()
 }
 
-fun Float.ceilToInt(): Int {
+public fun Float.ceilToInt(): Int {
     return ceil(this).toInt()
 }
 
-fun Double.floorToInt(): Int {
+public fun Double.floorToInt(): Int {
     return floor(this).toInt()
 }
 
-fun Double.ceilToInt(): Int {
+public fun Double.ceilToInt(): Int {
     return ceil(this).toInt()
 }
 
-fun Float.safeRoundToInt(default: Int = 0): Int {
+public fun Float.safeRoundToInt(default: Int = 0): Int {
     return try {
         if (isNaN() || isInfinite()) {
             default
@@ -61,7 +61,7 @@ fun Float.safeRoundToInt(default: Int = 0): Int {
     }
 }
 
-fun Float.safeRoundPlaces(places: Int, default: Float = 0f): Float {
+public fun Float.safeRoundPlaces(places: Int, default: Float = 0f): Float {
     return try {
         if (isNaN() || isInfinite()) {
             default
@@ -73,7 +73,7 @@ fun Float.safeRoundPlaces(places: Int, default: Float = 0f): Float {
     }
 }
 
-fun Double.safeRoundToInt(default: Int = 0): Int {
+public fun Double.safeRoundToInt(default: Int = 0): Int {
     return try {
         if (isNaN() || isInfinite()) {
             default
@@ -85,7 +85,7 @@ fun Double.safeRoundToInt(default: Int = 0): Int {
     }
 }
 
-fun Double.safeRoundPlaces(places: Int, default: Double = 0.0): Double {
+public fun Double.safeRoundPlaces(places: Int, default: Double = 0.0): Double {
     return try {
         if (isNaN() || isInfinite()) {
             default

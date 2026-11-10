@@ -2,7 +2,7 @@ package com.kylecorry.sol.math.trigonometry
 
 import kotlin.math.cos
 
-class CosineWave(
+public class CosineWave(
     override val amplitude: Float,
     override val frequency: Float,
     override val horizontalShift: Float,

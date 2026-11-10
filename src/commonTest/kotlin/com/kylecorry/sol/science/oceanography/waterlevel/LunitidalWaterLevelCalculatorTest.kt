@@ -1,0 +1,85 @@
+package com.kylecorry.sol.science.oceanography.waterlevel
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+
+import com.kylecorry.sol.math.Range
+import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.sol.tests.zoned
+import kotlin.time.Duration.Companion.hours
+
+internal class LunitidalWaterLevelCalculatorTest {
+
+    @Test
+    fun calculateWithHighLunitidalInterval() {
+        val location = Coordinate(42.0, -72.0)
+        val range = Range(0f, 12f)
+        val calculator = LunitidalWaterLevelCalculator(
+            2.hours,
+            location,
+            waterLevelRange = range
+        )
+
+        assertEquals(
+            12.0f,
+            calculator.calculate(zoned("2026-04-10T09:20:14.944-04:00[America/New_York]")),
+            0.1f
+        )
+        assertEquals(
+            0.0f,
+            calculator.calculate(zoned("2026-04-10T15:27:34.942-04:00[America/New_York]")),
+            0.1f
+        )
+        assertEquals(
+            6.0f,
+            calculator.calculate(zoned("2026-04-10T12:23:54.943-04:00[America/New_York]")),
+            0.1f
+        )
+        assertEquals(
+            10.2f,
+            calculator.calculate(zoned("2026-04-10T10:51:44.944-04:00[America/New_York]")),
+            0.1f
+        )
+    }
+
+    @Test
+    fun calculateWithLowLunitidalInterval() {
+        val location = Coordinate(42.0, -72.0)
+        val range = Range(0f, 12f)
+        val calculator = LunitidalWaterLevelCalculator(
+            2.hours,
+            location,
+            lowLunitidalInterval = 8.hours,
+            waterLevelRange = range
+        )
+
+        assertEquals(
+            12.0f,
+            calculator.calculate(zoned("2026-04-10T09:12:34.011-04:00[America/New_York]")),
+            0.1f
+        )
+        assertEquals(
+            0.0f,
+            calculator.calculate(zoned("2026-04-10T15:22:34.009-04:00[America/New_York]")),
+            0.1f
+        )
+        assertEquals(
+            6.0f,
+            calculator.calculate(zoned("2026-04-10T12:17:34.010-04:00[America/New_York]")),
+            0.1f
+        )
+        assertEquals(
+            10.3f,
+            calculator.calculate(zoned("2026-04-10T10:45:04.011-04:00[America/New_York]")),
+            0.1f
+        )
+    }
+
+    @Test
+    fun constructorRejectsDescendingWaterLevelRange() {
+        assertFailsWith<IllegalArgumentException> {
+            LunitidalWaterLevelCalculator(2.hours, waterLevelRange = Range(12f, 0f))
+        }
+    }
+}

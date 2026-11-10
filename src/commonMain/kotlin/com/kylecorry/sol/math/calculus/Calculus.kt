@@ -9,17 +9,17 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-object Calculus {
+public object Calculus {
 
-    fun derivative(polynomial: Polynomial): Polynomial {
+    public fun derivative(polynomial: Polynomial): Polynomial {
         return polynomial.derivative()
     }
 
-    fun derivative(equation: QuadraticEquation): LinearEquation {
+    public fun derivative(equation: QuadraticEquation): LinearEquation {
         return LinearEquation(equation.a * 2, equation.b)
     }
 
-    fun derivative(equation: LinearEquation): Float {
+    public fun derivative(equation: LinearEquation): Float {
         return equation.m
     }
 
@@ -30,11 +30,11 @@ object Calculus {
      * @param finiteDifferenceOrder The order of the finite difference to use (1, 2, or 3). Default is 1.
      * @return The derivative samples
      */
-    fun derivative(values: List<Vector2>, finiteDifferenceOrder: Int = 1): List<Vector2> {
+    public fun derivative(values: List<Vector2>, finiteDifferenceOrder: Int = 1): List<Vector2> {
         return NumericDifferentiation.finiteDifference(values, finiteDifferenceOrder)
     }
 
-    fun derivative(
+    public fun derivative(
         x: Double,
         step: Double = 0.0001,
         fn: (x: Double) -> Double
@@ -43,7 +43,7 @@ object Calculus {
         return (fn(x + step) - current) / step
     }
 
-    fun derivative(
+    public fun derivative(
         x: Double,
         y: Double,
         step: Double = 0.0001,
@@ -55,7 +55,7 @@ object Calculus {
         return xGrad to yGrad
     }
 
-    fun integral(
+    public fun integral(
         startX: Double,
         endX: Double,
         step: Double = 0.0001,
@@ -91,14 +91,14 @@ object Calculus {
         return multiplier * total
     }
 
-    fun integral(polynomial: Polynomial, c: Float = 0f): Polynomial {
+    public fun integral(polynomial: Polynomial, c: Float = 0f): Polynomial {
         return polynomial.integral(c)
     }
 
     /**
      * Calculate the root of the provided function using Newton's Method
      */
-    fun root(
+    public fun root(
         fn: (x: Double) -> Double,
         fnPrime: (x: Double) -> Double = { derivative(it, fn = fn) },
         guess: Double = 0.0,

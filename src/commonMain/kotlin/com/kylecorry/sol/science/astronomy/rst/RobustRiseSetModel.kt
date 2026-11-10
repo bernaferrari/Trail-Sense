@@ -1,5 +1,6 @@
 package com.kylecorry.sol.science.astronomy.rst
 
+import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator
 import com.kylecorry.sol.units.Coordinate
 import kotlinx.datetime.TimeZone
@@ -11,7 +12,7 @@ internal class RobustRiseSetModel {
     fun calculate(
         locator: ICelestialLocator, time: Instant, zone: TimeZone, location: Coordinate,
         standardAltitude: Double, withRefraction: Boolean, withParallax: Boolean
-    ): SearchRiseSetTimes {
+    ): RiseSetTransitTimes {
         val newtons = NewtonsRiseSetModel().calculate(
             locator, time, zone, location, standardAltitude, withRefraction, withParallax
         )
@@ -19,7 +20,7 @@ internal class RobustRiseSetModel {
         val search = SearchRiseSetModel().calculate(
             locator, time.toLocalDateTime(zone).date, zone, location, standardAltitude, withRefraction, withParallax
         )
-        return SearchRiseSetTimes(
+        return RiseSetTransitTimes(
             newtons.rise ?: search.rise, newtons.transit ?: search.transit, newtons.set ?: search.set
         )
     }

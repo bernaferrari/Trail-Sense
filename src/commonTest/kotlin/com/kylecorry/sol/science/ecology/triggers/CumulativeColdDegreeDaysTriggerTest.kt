@@ -1,0 +1,63 @@
+package com.kylecorry.sol.science.ecology.triggers
+
+import kotlin.test.Test
+import kotlin.test.assertTrue
+import kotlin.test.assertFalse
+
+import com.kylecorry.sol.math.Range
+import com.kylecorry.sol.science.ecology.LifecycleEventFactors
+import com.kylecorry.sol.units.Temperature
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlinx.datetime.LocalDate
+
+class CumulativeColdDegreeDaysTriggerTest {
+
+    @Test
+    fun triggersWhenCumulativeCddReachesMinimum() {
+        val trigger = CumulativeColdDegreeDaysTrigger(10f, baseTemperature = Temperature.celsius(10f))
+
+        assertFalse(trigger.isTriggered(factors(0f, 10f)))
+        assertTrue(trigger.isTriggered(factors(0f, 10f)))
+    }
+
+    @Test
+    fun resetClearsAccumulatedCdd() {
+        val trigger = CumulativeColdDegreeDaysTrigger(8f, baseTemperature = Temperature.celsius(10f))
+
+        assertFalse(trigger.isTriggered(factors(0f, 10f)))
+        trigger.reset()
+
+        assertFalse(trigger.isTriggered(factors(0f, 10f)))
+    }
+
+    @Test
+    fun zeroCddDayResetsAccumulationByDefault() {
+        val trigger = CumulativeColdDegreeDaysTrigger(9f, baseTemperature = Temperature.celsius(10f))
+
+        assertFalse(trigger.isTriggered(factors(0f, 10f)))
+        assertFalse(trigger.isTriggered(factors(10f, 10f)))
+        assertFalse(trigger.isTriggered(factors(0f, 10f)))
+    }
+
+    @Test
+    fun zeroCddResetHonorsZeroCountBeforeReset() {
+        val trigger = CumulativeColdDegreeDaysTrigger(
+            9f,
+            baseTemperature = Temperature.celsius(10f),
+            zeroCountBeforeReset = 2
+        )
+
+        assertFalse(trigger.isTriggered(factors(0f, 10f)))
+        assertFalse(trigger.isTriggered(factors(10f, 10f)))
+        assertTrue(trigger.isTriggered(factors(0f, 10f)))
+    }
+
+    private fun factors(lowC: Float, highC: Float): LifecycleEventFactors {
+        return LifecycleEventFactors(
+            lengthOfDay = 12.hours,
+            temperature = Range(Temperature.celsius(lowC), Temperature.celsius(highC)),
+            date = LocalDate(2025, 1, 1)
+        )
+    }
+}

@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology.clouds
 
-enum class CloudCategory(val id: Long) {
+public enum class CloudCategory(public val id: Long) {
     Cumulo(1),
     Cirro(2),
     Strato(3),

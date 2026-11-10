@@ -2,13 +2,13 @@ package com.kylecorry.sol.math.filters
 
 import kotlin.math.abs
 
-class ProximityChangeFilterGeneric<T>(
+public class ProximityChangeFilterGeneric<T>(
     private val changeThreshold: Float,
     private val fillFn: ((previous: T, current: T) -> T)? = null,
     private val distanceFn: (start: T, end: T) -> Float
 ) {
 
-    fun filter(points: List<T>): List<T> {
+    public fun filter(points: List<T>): List<T> {
 
         if (points.isEmpty()) {
             return emptyList()

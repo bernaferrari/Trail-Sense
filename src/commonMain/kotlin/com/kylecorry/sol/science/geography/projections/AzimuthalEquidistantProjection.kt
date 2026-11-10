@@ -10,7 +10,7 @@ import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import kotlin.math.atan2
 
-class AzimuthalEquidistantProjection(
+public class AzimuthalEquidistantProjection(
     private val centerLocation: Coordinate,
     private val centerPixel: Vector2 = Vector2.zero,
     private val scale: Float = 1f,

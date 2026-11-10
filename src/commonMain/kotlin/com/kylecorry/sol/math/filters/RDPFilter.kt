@@ -6,12 +6,12 @@ import kotlin.math.abs
  * The Ramer–Douglas–Peucker path simplification algorithm
  * Adapted from https://www.youtube.com/watch?v=nSYw9GrakjY
  */
-class RDPFilter<T>(
+public class RDPFilter<T>(
     private val epsilon: Float,
     private val crossTrackDistance: (point: T, start: T, end: T) -> Float
 ) {
 
-    fun filter(points: List<T>): List<T> {
+    public fun filter(points: List<T>): List<T> {
         if (points.size < 2) {
             return points
         }

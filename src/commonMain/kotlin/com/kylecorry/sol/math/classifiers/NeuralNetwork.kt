@@ -20,7 +20,7 @@ import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.pow
 
-class NeuralNetwork(
+public class NeuralNetwork(
     private val layers: List<Layer>,
     weights: List<LayerWeights>? = null
 ) : IClassifier {
@@ -35,7 +35,7 @@ class NeuralNetwork(
         weights?.let { load(it) }
     }
 
-    fun predict(x: List<Float>): List<Float> {
+    public fun predict(x: List<Float>): List<Float> {
         val input = Matrix.column(values = x.toFloatArray())
         return predict(input).getColumn(0).toList()
     }
@@ -55,7 +55,7 @@ class NeuralNetwork(
         return input
     }
 
-    fun fitClasses(
+    public fun fitClasses(
         input: List<List<Float>>,
         output: List<Int>,
         epochs: Int = 100,
@@ -73,7 +73,7 @@ class NeuralNetwork(
         return fit(x, y, epochs, learningRate, regularization, batchSize, onEpochCompleteFn)
     }
 
-    fun fit(
+    public fun fit(
         input: List<Matrix>,
         output: List<Matrix>,
         epochs: Int = 100,
@@ -156,7 +156,7 @@ class NeuralNetwork(
             .sum() / layers.first().inputSize + regularization / 2 * sumSquareWeights
     }
 
-    fun load(weights: List<LayerWeights>) {
+    public fun load(weights: List<LayerWeights>) {
         require(weights.size == layers.size) {
             "Weights and bias lists must be same size as layers"
         }
@@ -178,13 +178,13 @@ class NeuralNetwork(
         }
     }
 
-    fun dump(): List<LayerWeights> {
+    public fun dump(): List<LayerWeights> {
         return layers.map { LayerWeights(it.weights, it.bias) }
     }
 
 
-    class LayerWeights(val weights: Matrix, val bias: Matrix) {
-        fun format(): String {
+    public class LayerWeights(public val weights: Matrix, public val bias: Matrix) {
+        public fun format(): String {
             val builder = StringBuilder()
             for (row in 0..<weights.rows()) {
                 val weightRow = weights.getRow(row)
@@ -195,8 +195,8 @@ class NeuralNetwork(
             return builder.toString().trim()
         }
 
-        companion object {
-            fun parse(data: String): LayerWeights {
+        public companion object {
+            public fun parse(data: String): LayerWeights {
                 val parsed = data.split("\n").map {
                     val row = it.split(",").mapNotNull { cell -> cell.toFloatOrNull() }
                     row.take(row.size - 1).toFloatArray() to row.takeLast(1).toFloatArray()
@@ -208,12 +208,12 @@ class NeuralNetwork(
         }
     }
 
-    class Layer(
-        val inputSize: Int,
-        val outputSize: Int,
+    public class Layer(
+        public val inputSize: Int,
+        public val outputSize: Int,
         private val activationFn: (Matrix) -> Matrix,
         private val activationDerivativeFn: (Matrix) -> Matrix,
-        val isClassifier: Boolean = false
+        public val isClassifier: Boolean = false
     ) {
 
         internal var weights: Matrix
@@ -242,8 +242,8 @@ class NeuralNetwork(
             return Matrix.create(rows, columns) { _, _ -> kotlin.random.Random.nextFloat() }
         }
 
-        companion object {
-            fun functionalLayer(
+        public companion object {
+            public fun functionalLayer(
                 input: Int,
                 output: Int,
                 activationFn: (Float) -> Float,
@@ -259,7 +259,7 @@ class NeuralNetwork(
                 )
             }
 
-            fun softmax(input: Int, output: Int): Layer {
+            public fun softmax(input: Int, output: Int): Layer {
                 val grad = { x: FloatArray ->
                     val softmax = Statistics.softmax(x.toList()).toFloatArray()
                     val diag = Matrix.diagonal(values = softmax)
@@ -277,7 +277,7 @@ class NeuralNetwork(
                 )
             }
 
-            fun binary(input: Int, output: Int): Layer {
+            public fun binary(input: Int, output: Int): Layer {
                 return functionalLayer(
                     input,
                     output,
@@ -285,7 +285,7 @@ class NeuralNetwork(
                     { 0f })
             }
 
-            fun linear(input: Int, output: Int): Layer {
+            public fun linear(input: Int, output: Int): Layer {
                 return functionalLayer(
                     input,
                     output,
@@ -293,7 +293,7 @@ class NeuralNetwork(
                     { 1f })
             }
 
-            fun leakyRelu(input: Int, output: Int): Layer {
+            public fun leakyRelu(input: Int, output: Int): Layer {
                 return functionalLayer(
                     input,
                     output,
@@ -301,7 +301,7 @@ class NeuralNetwork(
                     { if (it > 0) 1f else 0.01f })
             }
 
-            fun relu(input: Int, output: Int): Layer {
+            public fun relu(input: Int, output: Int): Layer {
                 return functionalLayer(
                     input,
                     output,
@@ -309,7 +309,7 @@ class NeuralNetwork(
                     { if (it > 0) 1f else 0f })
             }
 
-            fun sigmoid(input: Int, output: Int): Layer {
+            public fun sigmoid(input: Int, output: Int): Layer {
                 return functionalLayer(
                     input,
                     output,
@@ -320,7 +320,7 @@ class NeuralNetwork(
                     })
             }
 
-            fun softplus(input: Int, output: Int): Layer {
+            public fun softplus(input: Int, output: Int): Layer {
                 return functionalLayer(
                     input,
                     output,
@@ -328,7 +328,7 @@ class NeuralNetwork(
                     { 1f / (1 + exp(-it)) })
             }
 
-            fun tanh(input: Int, output: Int): Layer {
+            public fun tanh(input: Int, output: Int): Layer {
                 return functionalLayer(
                     input,
                     output,

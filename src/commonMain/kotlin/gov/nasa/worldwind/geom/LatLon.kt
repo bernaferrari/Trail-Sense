@@ -1,5 +1,8 @@
 package gov.nasa.worldwind.geom
 
+import com.kylecorry.sol.shared.DecimalFormatter
+import com.kylecorry.sol.shared.NumberLocale
+
 /**
  * Represents a point on the two-dimensional surface of a globe. Latitude is the degrees North and ranges between [-90,
  * 90], while longitude refers to degrees East, and ranges between (-180, 180].
@@ -10,20 +13,20 @@ package gov.nasa.worldwind.geom
  * @author Tom Gaskins
  * @version $Id$
  */
-open class LatLon {
+internal open class LatLon {
     /**
      * Obtains the latitude of this `LatLon`.
      *
      * @return this `LatLon`'s latitude
      */
-    val latitude: Angle
+    internal val latitude: Angle
 
     /**
      * Obtains the longitude of this `LatLon`.
      *
      * @return this `LatLon`'s longitude
      */
-    val longitude: Angle
+    internal val longitude: Angle
 
     /**
      * Constructs a new  `LatLon` from two angles. Neither angle may be null.
@@ -32,12 +35,12 @@ open class LatLon {
      * @param longitude longitude
      * @throws IllegalArgumentException if `latitude` or `longitude` is null
      */
-    constructor(latitude: Angle, longitude: Angle) {
+    internal constructor(latitude: Angle, longitude: Angle) {
         this.latitude = latitude
         this.longitude = longitude
     }
 
-    fun add(that: LatLon): LatLon {
+    internal fun add(that: LatLon): LatLon {
 
         val lat = Angle.normalizedLatitude(this.latitude.add(that.latitude))
         val lon = Angle.normalizedLongitude(this.longitude.add(that.longitude))
@@ -45,7 +48,7 @@ open class LatLon {
         return LatLon(lat, lon)
     }
 
-    fun subtract(that: LatLon): LatLon {
+    internal fun subtract(that: LatLon): LatLon {
 
         val lat = Angle.normalizedLatitude(this.latitude.subtract(that.latitude))
         val lon = Angle.normalizedLongitude(this.longitude.subtract(that.longitude))
@@ -54,8 +57,8 @@ open class LatLon {
     }
 
     override fun toString(): String {
-        val las = "Lat ${com.kylecorry.sol.shared.DecimalFormatter.format(this.latitude.degrees, 4).padStart(7)}\u00B0"
-        val los = "Lon ${com.kylecorry.sol.shared.DecimalFormatter.format(this.longitude.degrees, 4).padStart(7)}\u00B0"
+        val las = "Lat ${DecimalFormatter.format(latitude.degrees, 4, locale = NumberLocale.Invariant).padStart(7)}\u00B0"
+        val los = "Lon ${DecimalFormatter.format(longitude.degrees, 4, locale = NumberLocale.Invariant).padStart(7)}\u00B0"
         return "($las, $los)"
     }
 
@@ -74,7 +77,7 @@ open class LatLon {
         return result
     }
 
-    companion object {
-        val ZERO: LatLon = LatLon(Angle.ZERO, Angle.ZERO)
+    internal companion object {
+        internal val ZERO: LatLon = LatLon(Angle.ZERO, Angle.ZERO)
     }
 }

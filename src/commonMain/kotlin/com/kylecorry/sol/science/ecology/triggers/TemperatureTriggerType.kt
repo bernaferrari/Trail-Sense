@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.ecology.triggers
 
-enum class TemperatureTriggerType {
+public enum class TemperatureTriggerType {
     High,
     Low,
     Average

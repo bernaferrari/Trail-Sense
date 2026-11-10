@@ -7,7 +7,7 @@ import com.kylecorry.sol.science.ecology.LifecycleEventFactors
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 
-class CumulativeGrowingDegreeDaysTrigger(
+public class CumulativeGrowingDegreeDaysTrigger(
     minimum: Float,
     units: TemperatureUnits = TemperatureUnits.Celsius,
     private val baseTemperature: Temperature = Temperature.zero,

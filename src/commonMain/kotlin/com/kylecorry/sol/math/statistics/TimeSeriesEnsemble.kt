@@ -4,11 +4,11 @@ import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.ensemble.Ensemble
 import com.kylecorry.sol.math.regression.ITimeSeriesPredictor
 
-class TimeSeriesEnsemble(
+public class TimeSeriesEnsemble(
     private val predictors: List<ITimeSeriesPredictor>,
     private val confidenceIntervalSize: Float = 0.95f
 ) {
-    fun predictNext(samples: List<Vector2>, n: Int, step: Float? = null): List<ConfidenceInterval<Vector2>> {
+    public fun predictNext(samples: List<Vector2>, n: Int, step: Float? = null): List<ConfidenceInterval<Vector2>> {
         val predictions = predictors.map { it.predictNext(samples, n, step) }
         val result = mutableListOf<ConfidenceInterval<Vector2>>()
         for (i in 0..<n) {

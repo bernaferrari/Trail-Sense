@@ -6,7 +6,7 @@ import com.kylecorry.sol.math.statistics.Statistics
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 
-data class Polygon(val vertices: List<Vector2>) {
+public data class Polygon(val vertices: List<Vector2>) {
     val edges: List<Line>
         get() {
             val edges = mutableListOf<Line>()
@@ -18,11 +18,11 @@ data class Polygon(val vertices: List<Vector2>) {
             return edges
         }
 
-    fun area(): Float {
+    public fun area(): Float {
         return signedArea().absoluteValue
     }
 
-    fun signedArea(): Float {
+    public fun signedArea(): Float {
         var area2 = 0f
         for (i in vertices.indices) {
             val next = vertices[getIndex(i + 1)]
@@ -31,7 +31,7 @@ data class Polygon(val vertices: List<Vector2>) {
         return area2 / 2f
     }
 
-    fun centroid(): Vector2 {
+    public fun centroid(): Vector2 {
         var cx = 0f
         var cy = 0f
         var area2 = 0f
@@ -50,7 +50,7 @@ data class Polygon(val vertices: List<Vector2>) {
         return Vector2(cx / (6f * area), cy / (6f * area))
     }
 
-    fun isConvex(): Boolean {
+    public fun isConvex(): Boolean {
         var isPositive: Boolean? = null
 
         for (i in vertices.indices) {
@@ -76,8 +76,8 @@ data class Polygon(val vertices: List<Vector2>) {
         return i % vertices.size
     }
 
-    companion object {
-        fun connectCounterClockwise(points: List<Vector2>): Polygon {
+    public companion object {
+        public fun connectCounterClockwise(points: List<Vector2>): Polygon {
             val centerX = Statistics.mean(points.map { it.x })
             val centerY = Statistics.mean(points.map { it.y })
             val ordered = points.sortedBy {

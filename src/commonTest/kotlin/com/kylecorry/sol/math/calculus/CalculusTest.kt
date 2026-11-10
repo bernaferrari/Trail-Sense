@@ -1,0 +1,156 @@
+package com.kylecorry.sol.math.calculus
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+import com.kylecorry.sol.math.arithmetic.Arithmetic.cube
+import com.kylecorry.sol.math.arithmetic.Arithmetic.square
+import com.kylecorry.sol.math.Vector2
+import com.kylecorry.sol.math.algebra.LinearEquation
+import com.kylecorry.sol.math.algebra.Polynomial
+import com.kylecorry.sol.math.algebra.QuadraticEquation
+
+internal class CalculusTest {
+
+    @Test
+    fun derivativeLinear() {
+        val eq = LinearEquation(2f, 5f)
+        assertEquals(2f, Calculus.derivative(eq))
+    }
+
+    @Test
+    fun derivativeQuadratic() {
+        val eq = QuadraticEquation(1f, 4f, 5f)
+        val d = Calculus.derivative(eq)
+        assertEquals(d.m, 2f)
+        assertEquals(d.b, 4f)
+    }
+
+    @Test
+    fun derivative1Var() {
+        val fn1 = { x: Double -> x * x }
+        val gradFn1 = { x: Double -> 2 * x }
+
+        val fn2 = { x: Double -> cube(x) }
+        val gradFn2 = { x: Double -> 3 * square(x) }
+
+        assertEquals(
+            gradFn1(1.0),
+            Calculus.derivative(1.0, step = 0.000001, fn = fn1),
+            0.0001
+        )
+        assertEquals(
+            gradFn2(4.0),
+            Calculus.derivative(4.0, step = 0.000001, fn = fn2),
+            0.0001
+        )
+    }
+
+    @Test
+    fun derivative2Var() {
+        val fn1 = { x: Double, y: Double -> x * x + y * y }
+        val gradFn1 = { x: Double, y: Double -> 2 * x to 2 * y }
+
+        val fn2 = { x: Double, y: Double -> cube(x) }
+        val gradFn2 = { x: Double, y: Double -> 3 * square(x) to 0.0 }
+
+        assertEquals(
+            gradFn1(1.0, 3.0).first,
+            Calculus.derivative(1.0, 3.0, step = 0.000001, fn = fn1).first,
+            0.0001
+        )
+        assertEquals(
+            gradFn1(1.0, 3.0).second,
+            Calculus.derivative(1.0, 3.0, step = 0.000001, fn = fn1).second,
+            0.0001
+        )
+
+        assertEquals(
+            gradFn2(4.0, 3.0).first,
+            Calculus.derivative(4.0, 3.0, step = 0.000001, fn = fn2).first,
+            0.0001
+        )
+        assertEquals(
+            gradFn2(4.0, 3.0).second,
+            Calculus.derivative(4.0, 3.0, step = 0.000001, fn = fn2).second,
+            0.0001
+        )
+    }
+
+    @Test
+    fun derivativeSamples() {
+        derivativeSamples(1)
+        derivativeSamples(2)
+        derivativeSamples(3)
+    }
+
+    private fun derivativeSamples(finiteDifferenceOrder: Int) {
+        // y = x^2
+        val polynomial = Polynomial.of("x^2")
+        val derivativePolynomial = polynomial.derivative()
+
+        val samples = (1..1000).map {
+            val x = it / 100f
+            Vector2(x, polynomial.evaluate(x))
+        }
+
+        val derivative = Calculus.derivative(samples, finiteDifferenceOrder)
+
+        val expected = samples.map {
+            Vector2(it.x, derivativePolynomial.evaluate(it.x))
+        }
+
+        for (i in derivative.indices) {
+            assertEquals(expected[i].x, derivative[i].x, 0.01f, "X at index $i")
+            assertEquals(expected[i].y, derivative[i].y, 0.01f, "Y at index $i")
+        }
+    }
+
+    @Test
+    fun integral1Var() {
+        val fn1 = { x: Double -> square(x) }
+        val integralFn1 = { x: Double -> cube(x) / 3 }
+
+        assertEquals(
+            integralFn1(5.0) - integralFn1(1.0),
+            Calculus.integral(1.0, 5.0, step = 0.000001, fn = fn1),
+            0.0001
+        )
+    }
+
+    @Test
+    fun integral1VarPartialStep() {
+        val fn = { x: Double -> x }
+
+        assertEquals(
+            0.01125,
+            Calculus.integral(0.0, 0.15, step = 0.1, fn = fn),
+            0.000001
+        )
+    }
+
+    @Test
+    fun derivativeSamplesShortInputHighOrderFallsBackToAvailableStencil() {
+        val samples = listOf(
+            Vector2(0f, 0f),
+            Vector2(1f, 1f)
+        )
+
+        val derivative = Calculus.derivative(samples, finiteDifferenceOrder = 3)
+
+        assertEquals(samples.size, derivative.size)
+        assertEquals(0f, derivative[0].x, 0.0001f)
+        assertEquals(1f, derivative[1].x, 0.0001f)
+        assertEquals(1f, derivative[0].y, 0.0001f)
+        assertEquals(1f, derivative[1].y, 0.0001f)
+    }
+
+    @Test
+    fun root() {
+        val fn = { x: Double -> square(x) - 9 }
+        val root1 = Calculus.root(fn, guess = 0.1, maxIterations = 15)
+        val root2 = Calculus.root(fn, guess = -0.1, maxIterations = 15)
+        assertEquals(3.0, root1, 0.0001)
+        assertEquals(-3.0, root2, 0.0001)
+    }
+}

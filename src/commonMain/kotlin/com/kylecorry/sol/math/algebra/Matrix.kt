@@ -6,17 +6,17 @@ import com.kylecorry.sol.math.Vector
 import kotlin.math.sqrt
 
 @JvmInline
-value class Matrix internal constructor(private val rawData: FloatArray) {
+public value class Matrix internal constructor(private val rawData: FloatArray) {
 
-    operator fun get(row: Int, column: Int): Float {
+    public operator fun get(row: Int, column: Int): Float {
         return rawData[getIndex(row, column)]
     }
 
-    operator fun set(row: Int, column: Int, value: Float) {
+    public operator fun set(row: Int, column: Int, value: Float) {
         rawData[getIndex(row, column)] = value
     }
 
-    fun sum(): Float {
+    public fun sum(): Float {
         var sum = 0.0
         for (i in 2..rawData.lastIndex) {
             sum += rawData[i]
@@ -24,7 +24,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         return sum.toFloat()
     }
 
-    fun max(): Float {
+    public fun max(): Float {
         if (rawData.size <= 2) {
             return 0f
         }
@@ -35,7 +35,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         return max
     }
 
-    fun norm(): Float {
+    public fun norm(): Float {
         var sum = 0.0
         for (i in 2..rawData.lastIndex) {
             sum += rawData[i] * rawData[i].toDouble()
@@ -44,23 +44,23 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         return sqrt(sum.toFloat())
     }
 
-    fun rows(): Int {
+    public fun rows(): Int {
         return rawData[0].toRawBits()
     }
 
-    fun columns(): Int {
+    public fun columns(): Int {
         return rawData[1].toRawBits()
     }
 
-    fun size(): Int {
+    public fun size(): Int {
         return rows() * columns()
     }
 
-    fun clone(): Matrix {
+    public fun clone(): Matrix {
         return Matrix(rawData.copyOf())
     }
 
-    fun setRow(row: Int, rowData: FloatArray) {
+    public fun setRow(row: Int, rowData: FloatArray) {
         require(rowData.size == columns()) {
             "Expected row to be of length ${columns()} but got ${rowData.size}"
         }
@@ -68,7 +68,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         rowData.copyInto(rawData, startIndex)
     }
 
-    fun getRow(row: Int, destination: FloatArray = FloatArray(columns())): FloatArray {
+    public fun getRow(row: Int, destination: FloatArray = FloatArray(columns())): FloatArray {
         require(destination.size == columns()) {
             "Expected destination to be of length ${columns()} but got ${destination.size}"
         }
@@ -77,7 +77,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         return destination
     }
 
-    fun setColumn(column: Int, columnData: FloatArray) {
+    public fun setColumn(column: Int, columnData: FloatArray) {
         require(columnData.size == rows()) {
             "Expected column to be of length ${rows()} but got ${columnData.size}"
         }
@@ -86,7 +86,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         }
     }
 
-    fun getColumn(column: Int, destination: FloatArray = FloatArray(rows())): FloatArray {
+    public fun getColumn(column: Int, destination: FloatArray = FloatArray(rows())): FloatArray {
         require(destination.size == rows()) {
             "Expected destination to be of length ${rows()} but got ${destination.size}"
         }
@@ -96,13 +96,13 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         return destination
     }
 
-    fun swapRows(row1: Int, row2: Int) {
+    public fun swapRows(row1: Int, row2: Int) {
         val temp = getRow(row1)
         setRow(row1, getRow(row2))
         setRow(row2, temp)
     }
 
-    fun toVector(): Vector {
+    public fun toVector(): Vector {
         require(rows() == 1 || columns() == 1) { "Expected the matrix to be a row or column matrix" }
         return Vector(if (rows() == 1) getRow(0) else getColumn(0))
     }
@@ -117,8 +117,8 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
         return 2 + columns() * row + column
     }
 
-    companion object {
-        fun zeros(rows: Int, columns: Int): Matrix {
+    public companion object {
+        public fun zeros(rows: Int, columns: Int): Matrix {
             require(rows >= 0) { "rows must be non-negative, but was $rows" }
             require(columns >= 0) { "columns must be non-negative, but was $columns" }
             val data = FloatArray(rows * columns + 2)
@@ -130,7 +130,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
             return matrix
         }
 
-        fun create(rows: Int, columns: Int, value: Float = 0f): Matrix {
+        public fun create(rows: Int, columns: Int, value: Float = 0f): Matrix {
             require(rows >= 0) { "rows must be non-negative, but was $rows" }
             require(columns >= 0) { "columns must be non-negative, but was $columns" }
             val data = FloatArray(rows * columns + 2) { value }
@@ -142,11 +142,11 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
             return matrix
         }
 
-        fun createFromRawData(data: FloatArray): Matrix {
+        public fun createFromRawData(data: FloatArray): Matrix {
             return Matrix(data)
         }
 
-        fun create(rows: Int, columns: Int, data: FloatArray): Matrix {
+        public fun create(rows: Int, columns: Int, data: FloatArray): Matrix {
             require(rows >= 0) { "rows must be non-negative, but was $rows" }
             require(columns >= 0) { "columns must be non-negative, but was $columns" }
             require(data.size == rows * columns) {
@@ -162,7 +162,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
             return matrix
         }
 
-        fun identity(size: Int): Matrix {
+        public fun identity(size: Int): Matrix {
             require(size >= 0) { "size must be non-negative, but was $size" }
             val matrix = diagonal(values = FloatArray(size) { 1f })
             check(matrix.rows() == size) { "The matrix doesn't have the right number of rows" }
@@ -170,28 +170,28 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
             return matrix
         }
 
-        fun diagonal(vararg values: Float): Matrix {
+        public fun diagonal(vararg values: Float): Matrix {
             val matrix = create(values.size, values.size) { r, c -> if (r == c) values[r] else 0f }
             check(matrix.rows() == values.size) { "The matrix doesn't have the right number of rows" }
             check(matrix.columns() == values.size) { "The matrix doesn't have the right number of columns" }
             return matrix
         }
 
-        fun column(vararg values: Float): Matrix {
+        public fun column(vararg values: Float): Matrix {
             val matrix = create(values.size, 1) { r, _ -> values[r] }
             check(matrix.rows() == values.size) { "The matrix doesn't have the right number of rows" }
             check(matrix.columns() == 1) { "The matrix doesn't have the right number of columns" }
             return matrix
         }
 
-        fun row(vararg values: Float): Matrix {
+        public fun row(vararg values: Float): Matrix {
             val matrix = create(1, values.size) { _, c -> values[c] }
             check(matrix.rows() == 1) { "The matrix doesn't have the right number of rows" }
             check(matrix.columns() == values.size) { "The matrix doesn't have the right number of columns" }
             return matrix
         }
 
-        fun create(oldMatrix: Array<FloatArray>): Matrix {
+        public fun create(oldMatrix: Array<FloatArray>): Matrix {
             val rows = oldMatrix.size
             val columns = oldMatrix.getOrNull(0)?.size ?: 0
             val matrix = create(rows, columns) { r, c ->
@@ -202,7 +202,7 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
             return matrix
         }
 
-        inline fun create(
+        public inline fun create(
             rows: Int,
             columns: Int,
             crossinline initialize: (row: Int, column: Int) -> Float
@@ -229,63 +229,63 @@ value class Matrix internal constructor(private val rawData: FloatArray) {
 }
 
 
-fun Matrix.dot(other: Matrix): Matrix {
+public fun Matrix.dot(other: Matrix): Matrix {
     return LinearAlgebra.dot(this, other)
 }
 
-fun Matrix.dot(other: Vector): Matrix {
+public fun Matrix.dot(other: Vector): Matrix {
     return LinearAlgebra.dot(this, other)
 }
 
-fun Matrix.add(other: Matrix): Matrix {
+public fun Matrix.add(other: Matrix): Matrix {
     return LinearAlgebra.add(this, other)
 }
 
-fun Matrix.add(value: Float): Matrix {
+public fun Matrix.add(value: Float): Matrix {
     return LinearAlgebra.add(this, value)
 }
 
-fun Matrix.subtract(other: Matrix): Matrix {
+public fun Matrix.subtract(other: Matrix): Matrix {
     return LinearAlgebra.subtract(this, other)
 }
 
-fun Matrix.subtract(value: Float): Matrix {
+public fun Matrix.subtract(value: Float): Matrix {
     return LinearAlgebra.subtract(this, value)
 }
 
-fun Matrix.multiply(other: Matrix): Matrix {
+public fun Matrix.multiply(other: Matrix): Matrix {
     return LinearAlgebra.multiply(this, other)
 }
 
-fun Matrix.multiply(scale: Float): Matrix {
+public fun Matrix.multiply(scale: Float): Matrix {
     return LinearAlgebra.multiply(this, scale)
 }
 
-fun Matrix.divide(other: Matrix): Matrix {
+public fun Matrix.divide(other: Matrix): Matrix {
     return LinearAlgebra.divide(this, other)
 }
 
-fun Matrix.divide(scale: Float): Matrix {
+public fun Matrix.divide(scale: Float): Matrix {
     return LinearAlgebra.divide(this, scale)
 }
 
-fun Matrix.transpose(): Matrix {
+public fun Matrix.transpose(): Matrix {
     return LinearAlgebra.transpose(this)
 }
 
-fun Matrix.mapped(fn: (Float) -> Float): Matrix {
+public fun Matrix.mapped(fn: (Float) -> Float): Matrix {
     return LinearAlgebra.map(this, fn)
 }
 
-fun Matrix.mapRows(fn: (FloatArray) -> FloatArray): Matrix {
+public fun Matrix.mapRows(fn: (FloatArray) -> FloatArray): Matrix {
     return LinearAlgebra.mapRows(this, fn)
 }
 
-fun Matrix.mapColumns(fn: (FloatArray) -> FloatArray): Matrix {
+public fun Matrix.mapColumns(fn: (FloatArray) -> FloatArray): Matrix {
     return LinearAlgebra.mapColumns(this, fn)
 }
 
-inline fun Matrix.forEach(crossinline fn: (value: Float) -> Unit) {
+public inline fun Matrix.forEach(crossinline fn: (value: Float) -> Unit) {
     for (row in 0..<rows()) {
         for (column in 0..<columns()) {
             fn(get(row, column))
@@ -293,50 +293,50 @@ inline fun Matrix.forEach(crossinline fn: (value: Float) -> Unit) {
     }
 }
 
-fun Matrix.sumRows(): Matrix {
+public fun Matrix.sumRows(): Matrix {
     return LinearAlgebra.sumRows(this)
 }
 
-fun Matrix.sumColumns(): Matrix {
+public fun Matrix.sumColumns(): Matrix {
     return LinearAlgebra.sumColumns(this)
 }
 
-fun Matrix.maxRows(): Matrix {
+public fun Matrix.maxRows(): Matrix {
     return LinearAlgebra.maxRows(this)
 }
 
-fun Matrix.maxColumns(): Matrix {
+public fun Matrix.maxColumns(): Matrix {
     return LinearAlgebra.maxColumns(this)
 }
 
-fun Matrix.inverse(): Matrix {
+public fun Matrix.inverse(): Matrix {
     return LinearAlgebra.inverse(this)
 }
 
-fun Matrix.adjugate(): Matrix {
+public fun Matrix.adjugate(): Matrix {
     return LinearAlgebra.adjugate(this)
 }
 
-fun Matrix.det(): Float {
+public fun Matrix.det(): Float {
     return LinearAlgebra.determinant(this)
 }
 
-fun Matrix.cofactor(r: Int, c: Int): Matrix {
+public fun Matrix.cofactor(r: Int, c: Int): Matrix {
     return LinearAlgebra.cofactor(this, r, c)
 }
 
-fun Matrix.appendColumn(col: FloatArray): Matrix {
+public fun Matrix.appendColumn(col: FloatArray): Matrix {
     return LinearAlgebra.appendColumn(this, col)
 }
 
-fun Matrix.appendColumn(value: Float): Matrix {
+public fun Matrix.appendColumn(value: Float): Matrix {
     return LinearAlgebra.appendColumn(this, value)
 }
 
-fun Matrix.appendRow(row: FloatArray): Matrix {
+public fun Matrix.appendRow(row: FloatArray): Matrix {
     return LinearAlgebra.appendRow(this, row)
 }
 
-fun Matrix.appendRow(value: Float): Matrix {
+public fun Matrix.appendRow(value: Float): Matrix {
     return LinearAlgebra.appendRow(this, value)
 }

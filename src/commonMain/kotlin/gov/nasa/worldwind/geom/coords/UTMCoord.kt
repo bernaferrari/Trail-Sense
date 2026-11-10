@@ -15,9 +15,9 @@ import gov.nasa.worldwind.geom.LatLon
  * @author Patrick Murris
  * @version $Id$
  */
-class UTMCoord(
-    val latitude: Angle, val longitude: Angle, val zone: Int,
-    private val hemisphere: String?, val easting: Double, val northing: Double
+internal class UTMCoord(
+    internal val latitude: Angle, internal val longitude: Angle, internal val zone: Int,
+    private val hemisphere: String?, internal val easting: Double, internal val northing: Double
 ) {
 
     override fun toString(): String {
@@ -29,8 +29,8 @@ class UTMCoord(
         return sb.toString()
     }
 
-    companion object {
-        fun fromLatLon(latitude: Angle, longitude: Angle): UTMCoord {
+    internal companion object {
+        internal fun fromLatLon(latitude: Angle, longitude: Angle): UTMCoord {
             val converter = UTMCoordConverter()
             val err = converter.convertGeodeticToUTM(latitude.radians, longitude.radians)
 
@@ -42,7 +42,7 @@ class UTMCoord(
             )
         }
 
-        fun fromUTM(zone: Int, hemisphere: String, easting: Double, northing: Double): UTMCoord {
+        internal fun fromUTM(zone: Int, hemisphere: String, easting: Double, northing: Double): UTMCoord {
             val converter = UTMCoordConverter()
             val err = converter.convertUTMToGeodetic(zone.toLong(), hemisphere, easting, northing)
 
@@ -55,7 +55,7 @@ class UTMCoord(
             )
         }
 
-        fun locationFromUTMCoord(zone: Int, hemisphere: String, easting: Double, northing: Double): LatLon {
+        internal fun locationFromUTMCoord(zone: Int, hemisphere: String, easting: Double, northing: Double): LatLon {
             val coord: UTMCoord = fromUTM(zone, hemisphere, easting, northing)
             return LatLon(coord.latitude, coord.longitude)
         }

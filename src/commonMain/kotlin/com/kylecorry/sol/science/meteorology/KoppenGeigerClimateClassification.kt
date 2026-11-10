@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology
 
-data class KoppenGeigerClimateClassification(
+public data class KoppenGeigerClimateClassification(
     val climateGroup: KoppenGeigerClimateGroup,
     val seasonalPrecipitationPattern: KoppenGeigerSeasonalPrecipitationPattern?,
     val temperaturePattern: KoppenGeigerTemperaturePattern?,
@@ -9,7 +9,7 @@ data class KoppenGeigerClimateClassification(
         "${climateGroup.code}${seasonalPrecipitationPattern?.code ?: ""}${temperaturePattern?.code ?: ""}"
 }
 
-enum class KoppenGeigerClimateGroup(val code: Char) {
+public enum class KoppenGeigerClimateGroup(public val code: Char) {
     Tropical('A'),
     Dry('B'),
     Temperate('C'),
@@ -17,7 +17,7 @@ enum class KoppenGeigerClimateGroup(val code: Char) {
     Polar('E'),
 }
 
-enum class KoppenGeigerSeasonalPrecipitationPattern(val code: Char) {
+public enum class KoppenGeigerSeasonalPrecipitationPattern(public val code: Char) {
     Rainforest('f'),
     Monsoon('m'),
     Savanna('s'),
@@ -30,7 +30,7 @@ enum class KoppenGeigerSeasonalPrecipitationPattern(val code: Char) {
     IceCap('F'),
 }
 
-enum class KoppenGeigerTemperaturePattern(val code: Char) {
+public enum class KoppenGeigerTemperaturePattern(public val code: Char) {
     Hot('h'),
     Cold('k'),
     HotSummer('a'),

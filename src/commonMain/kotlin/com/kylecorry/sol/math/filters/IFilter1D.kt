@@ -1,5 +1,5 @@
 package com.kylecorry.sol.math.filters
 
-interface IFilter1D {
-    fun filter(data: List<Float>): List<Float>
+public interface IFilter1D {
+    public fun filter(data: List<Float>): List<Float>
 }

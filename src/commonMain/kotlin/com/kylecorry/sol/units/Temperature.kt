@@ -5,14 +5,14 @@ import kotlin.jvm.JvmInline
 import com.kylecorry.sol.math.Range
 
 @JvmInline
-value class Temperature private constructor(private val measure: Measure) : Comparable<Temperature> {
-    val value: Float
+public value class Temperature private constructor(private val measure: Measure) : Comparable<Temperature> {
+    public val value: Float
         get() = measureValue(measure)
 
-    val units: TemperatureUnits
+    public val units: TemperatureUnits
         get() = measureUnit<TemperatureUnits>(measure)
 
-    fun convertTo(toUnits: TemperatureUnits): Temperature {
+    public fun convertTo(toUnits: TemperatureUnits): Temperature {
         if (units == toUnits) {
             return this
         }
@@ -30,7 +30,7 @@ value class Temperature private constructor(private val measure: Measure) : Comp
         return from(newTemp.toFloat(), toUnits)
     }
 
-    fun celsius(): Temperature {
+    public fun celsius(): Temperature {
         return convertTo(TemperatureUnits.Celsius)
     }
 
@@ -42,26 +42,26 @@ value class Temperature private constructor(private val measure: Measure) : Comp
         return celsius().value.compareTo(other.celsius().value)
     }
 
-    companion object {
-        val zero = celsius(0f)
+    public companion object {
+        public val zero: Temperature = celsius(0f)
 
-        val ABSOLUTE_ZERO = celsius(-273.15f)
+        public val ABSOLUTE_ZERO: Temperature = celsius(-273.15f)
 
-        fun from(value: Float, unit: TemperatureUnits): Temperature {
+        public fun from(value: Float, unit: TemperatureUnits): Temperature {
             return Temperature(packMeasure(value, unit))
         }
 
-        fun celsius(temperature: Float): Temperature {
+        public fun celsius(temperature: Float): Temperature {
             return from(temperature, TemperatureUnits.Celsius)
         }
 
-        fun fahrenheit(temperature: Float): Temperature {
+        public fun fahrenheit(temperature: Float): Temperature {
             return from(temperature, TemperatureUnits.Fahrenheit)
         }
     }
 }
 
-fun Range<Temperature>.average(): Temperature {
+public fun Range<Temperature>.average(): Temperature {
     val startC = start.celsius().value
     val endC = end.celsius().value
     val averageC = (startC + endC) / 2

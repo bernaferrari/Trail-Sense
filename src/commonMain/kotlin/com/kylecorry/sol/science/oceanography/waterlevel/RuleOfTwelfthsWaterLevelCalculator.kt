@@ -6,7 +6,7 @@ import com.kylecorry.sol.science.oceanography.Tide
 import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 
-class RuleOfTwelfthsWaterLevelCalculator(
+public class RuleOfTwelfthsWaterLevelCalculator(
     private val first: Tide,
     private val second: Tide
 ) : IWaterLevelCalculator {

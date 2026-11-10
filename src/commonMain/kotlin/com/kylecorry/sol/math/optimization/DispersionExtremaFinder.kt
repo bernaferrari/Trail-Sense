@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.statistics.Statistics
 import kotlin.math.max
 
-class DispersionExtremaFinder(
+public class DispersionExtremaFinder(
     private val lag: Int,
     private val threshold: Float,
     private val influence: Float

@@ -9,7 +9,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * rather than the points from the beginning.
  */
 @OptIn(ExperimentalAtomicApi::class)
-class LocalNewtonInterpolator(points: List<Vector2>, private val order: Int) : Interpolator {
+public class LocalNewtonInterpolator(points: List<Vector2>, private val order: Int) : Interpolator {
     private val sortedPoints = points.sortedBy { it.x }
     private val cache = AtomicReference<Pair<List<Vector2>, NewtonInterpolator>?>(null)
 

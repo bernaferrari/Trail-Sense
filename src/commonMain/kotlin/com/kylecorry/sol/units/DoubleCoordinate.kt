@@ -1,7 +1,7 @@
 package com.kylecorry.sol.units
 
 
-data class DoubleCoordinate(
+public data class DoubleCoordinate(
     override val latitude: Double,
     override val longitude: Double
 ) : ICoordinate {
@@ -10,19 +10,19 @@ data class DoubleCoordinate(
         return "$latitude, $longitude"
     }
 
-    fun toCoordinate(): Coordinate {
+    public fun toCoordinate(): Coordinate {
         return Coordinate(latitude, longitude)
     }
 
 
-    companion object {
-        val zero = DoubleCoordinate(0.0, 0.0)
+    public companion object {
+        public val zero: DoubleCoordinate = DoubleCoordinate(0.0, 0.0)
 
-        fun from(coordinate: Coordinate): DoubleCoordinate {
+        public fun from(coordinate: Coordinate): DoubleCoordinate {
             return DoubleCoordinate(coordinate.latitude, coordinate.longitude)
         }
 
-        fun constrained(latitude: Double, longitude: Double): DoubleCoordinate {
+        public fun constrained(latitude: Double, longitude: Double): DoubleCoordinate {
             return DoubleCoordinate(latitude.coerceIn(-90.0, 90.0), Coordinate.toLongitude(longitude))
         }
     }

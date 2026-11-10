@@ -5,12 +5,12 @@ import com.kylecorry.sol.math.algebra.LinearEquation
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class WeightedLinearRegression(data: List<Vector2>, weights: List<Float>, accuracy: Float = 0f) :
+public class WeightedLinearRegression(data: List<Vector2>, weights: List<Float>, accuracy: Float = 0f) :
     IRegression1D {
 
-    var hasBadFit = false
+    public var hasBadFit: Boolean = false
         private set
-    val equation = fit(data, weights, accuracy)
+    public val equation: LinearEquation = fit(data, weights, accuracy)
 
     override fun predict(x: Float): Float {
         return equation.evaluate(x)

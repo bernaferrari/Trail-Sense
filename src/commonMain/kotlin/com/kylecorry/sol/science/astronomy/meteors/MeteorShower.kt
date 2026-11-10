@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.astronomy.meteors
 
-enum class MeteorShower(val solarLongitude: Float, val rate: Int, val activeDays: Int) {
+public enum class MeteorShower(public val solarLongitude: Float, public val rate: Int, public val activeDays: Int) {
     Quadrantids(283.3f, 120, 20),
     Lyrids(32.4f, 18, 10),
     EtaAquariids(46.2f, 50, 40),

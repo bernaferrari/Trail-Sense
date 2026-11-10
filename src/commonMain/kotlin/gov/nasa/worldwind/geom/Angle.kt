@@ -9,25 +9,25 @@ import kotlin.math.PI
  * @author Tom Gaskins
  * @version $Id$
  */
-class Angle : Comparable<Angle?> {
+internal class Angle : Comparable<Angle?> {
     /**
      * Retrieves the size of this angle in degrees. This method may be faster than first obtaining the radians and then
      * converting to degrees.
      *
      * @return the size of this angle in degrees.
      */
-    val degrees: Double
+    internal val degrees: Double
 
     /**
-     * Retrieves the size of this angle in radians. This may be useful for `java.lang.Math` functions, which
+     * Retrieves the size of this angle in radians. This may be useful for `kotlin.math` functions, which
      * generally take radians as trigonometric arguments. This method may be faster that first obtaining the degrees and
      * then converting to radians.
      *
      * @return the size of this angle in radians.
      */
-    val radians: Double
+    internal val radians: Double
 
-    constructor(angle: Angle) {
+    internal constructor(angle: Angle) {
         this.degrees = angle.degrees
         this.radians = angle.radians
     }
@@ -48,7 +48,7 @@ class Angle : Comparable<Angle?> {
      *
      * @throws IllegalArgumentException if angle is null.
      */
-    fun add(angle: Angle): Angle {
+    internal fun add(angle: Angle): Angle {
 
         return fromDegrees(this.degrees + angle.degrees)
     }
@@ -63,7 +63,7 @@ class Angle : Comparable<Angle?> {
      *
      * @throws IllegalArgumentException if angle is null.
      */
-    fun subtract(angle: Angle): Angle {
+    internal fun subtract(angle: Angle): Angle {
 
         return fromDegrees(this.degrees - angle.degrees)
     }
@@ -73,7 +73,7 @@ class Angle : Comparable<Angle?> {
      *
      * @return the trigonometric sine of this angle.
      */
-    fun sin(): Double {
+    internal fun sin(): Double {
         return kotlin.math.sin(this.radians)
     }
 
@@ -82,7 +82,7 @@ class Angle : Comparable<Angle?> {
      *
      * @return the trigonometric cosine of this angle.
      */
-    fun cos(): Double {
+    internal fun cos(): Double {
         return kotlin.math.cos(this.radians)
     }
 
@@ -127,10 +127,10 @@ class Angle : Comparable<Angle?> {
         return (temp xor (temp ushr 32)).toInt()
     }
 
-    companion object {
+    internal companion object {
 
         /** Represents an angle of zero degrees  */
-        val ZERO: Angle = fromDegrees(0.0)
+        internal val ZERO: Angle = fromDegrees(0.0)
 
         private const val DEGREES_TO_RADIANS = PI / 180.0
         private const val RADIANS_TO_DEGREES = 180.0 / PI
@@ -142,7 +142,7 @@ class Angle : Comparable<Angle?> {
          *
          * @return a new angle, whose size in degrees is given by `degrees`
          */
-        fun fromDegrees(degrees: Double): Angle {
+        internal fun fromDegrees(degrees: Double): Angle {
             return Angle(degrees, DEGREES_TO_RADIANS * degrees)
         }
 
@@ -153,13 +153,13 @@ class Angle : Comparable<Angle?> {
          *
          * @return a new angle, whose size in radians is given by `radians`.
          */
-        fun fromRadians(radians: Double): Angle {
+        internal fun fromRadians(radians: Double): Angle {
             return Angle(RADIANS_TO_DEGREES * radians, radians)
         }
 
         private const val HALF_PI = PI / 2
 
-        fun fromDegreesLatitude(degrees: Double): Angle {
+        internal fun fromDegreesLatitude(degrees: Double): Angle {
             var degrees = degrees
             degrees = if (degrees < -90) -90.0 else if (degrees > 90) 90.0 else degrees
             var radians: Double = DEGREES_TO_RADIANS * degrees
@@ -168,7 +168,7 @@ class Angle : Comparable<Angle?> {
             return Angle(degrees, radians)
         }
 
-        fun fromDegreesLongitude(degrees: Double): Angle {
+        internal fun fromDegreesLongitude(degrees: Double): Angle {
             var degrees = degrees
             degrees = if (degrees < -180) -180.0 else if (degrees > 180) 180.0 else degrees
             var radians: Double = DEGREES_TO_RADIANS * degrees
@@ -177,15 +177,15 @@ class Angle : Comparable<Angle?> {
             return Angle(degrees, radians)
         }
 
-        fun asin(sine: Double): Angle {
+        internal fun asin(sine: Double): Angle {
             return fromRadians(kotlin.math.asin(sine))
         }
 
-        fun acos(cosine: Double): Angle {   //Tom: this method is not used, should we delete it? (13th Dec 06)
+        internal fun acos(cosine: Double): Angle {   //Tom: this method is not used, should we delete it? (13th Dec 06)
             return fromRadians(kotlin.math.acos(cosine))
         }
 
-        fun atan(tan: Double): Angle {   //Tom: this method is not used, should we delete it? (13th Dec 06)
+        internal fun atan(tan: Double): Angle {   //Tom: this method is not used, should we delete it? (13th Dec 06)
             return fromRadians(kotlin.math.atan(tan))
         }
 
@@ -199,7 +199,7 @@ class Angle : Comparable<Angle?> {
          *
          * @throws IllegalArgumentException if `a` or `b` is null
          */
-        fun average(a: Angle, b: Angle): Angle {
+        internal fun average(a: Angle, b: Angle): Angle {
             return fromDegrees(0.5 * (a.degrees + b.degrees))
         }
 
@@ -214,7 +214,7 @@ class Angle : Comparable<Angle?> {
          *
          * @throws IllegalArgumentException if `a`, `b` or `c` is null.
          */
-        fun average(a: Angle, b: Angle, c: Angle): Angle {
+        internal fun average(a: Angle, b: Angle, c: Angle): Angle {
             return fromDegrees((a.degrees + b.degrees + c.degrees) / 3)
         }
 
@@ -228,19 +228,19 @@ class Angle : Comparable<Angle?> {
             return if (lon > 180) lon - 360 else if (lon < -180) 360 + lon else lon
         }
 
-        fun normalizedLatitude(unnormalizedAngle: Angle): Angle {
+        internal fun normalizedLatitude(unnormalizedAngle: Angle): Angle {
             return fromDegrees(normalizedDegreesLatitude(unnormalizedAngle.degrees))
         }
 
-        fun normalizedLongitude(unnormalizedAngle: Angle): Angle {
+        internal fun normalizedLongitude(unnormalizedAngle: Angle): Angle {
             return fromDegrees(normalizedDegreesLongitude(unnormalizedAngle.degrees))
         }
 
-        fun max(a: Angle, b: Angle): Angle {
+        internal fun max(a: Angle, b: Angle): Angle {
             return if (a.degrees >= b.degrees) a else b
         }
 
-        fun min(a: Angle, b: Angle): Angle {
+        internal fun min(a: Angle, b: Angle): Angle {
             return if (a.degrees <= b.degrees) a else b
         }
     }

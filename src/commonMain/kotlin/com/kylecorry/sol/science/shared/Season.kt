@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.shared
 
-enum class Season {
+public enum class Season {
     Winter,
     Spring,
     Summer,

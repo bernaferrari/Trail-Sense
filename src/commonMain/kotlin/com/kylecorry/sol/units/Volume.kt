@@ -3,14 +3,14 @@ package com.kylecorry.sol.units
 import kotlin.jvm.JvmInline
 
 @JvmInline
-value class Volume private constructor(private val measure: Measure) {
-    val value: Float
+public value class Volume private constructor(private val measure: Measure) {
+    public val value: Float
         get() = measureValue(measure)
 
-    val units: VolumeUnits
+    public val units: VolumeUnits
         get() = measureUnit<VolumeUnits>(measure)
 
-    fun convertTo(newUnits: VolumeUnits): Volume {
+    public fun convertTo(newUnits: VolumeUnits): Volume {
         if (units == newUnits) {
             return this
         }
@@ -22,8 +22,8 @@ value class Volume private constructor(private val measure: Measure) {
         return "$value $units"
     }
 
-    companion object {
-        fun from(value: Float, unit: VolumeUnits): Volume {
+    public companion object {
+        public fun from(value: Float, unit: VolumeUnits): Volume {
             return Volume(packMeasure(value, unit))
         }
     }

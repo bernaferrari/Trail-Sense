@@ -24,20 +24,20 @@ import com.kylecorry.sol.units.WeightUnits
 import kotlin.time.Duration
 import kotlin.math.absoluteValue
 
-object Physics {
+public object Physics {
 
     private val solver = RungeKutta4thOrderSolver()
 
-    fun fallHeight(time: Duration, gravity: Float = Geophysics.GRAVITY): Distance {
+    public fun fallHeight(time: Duration, gravity: Float = Geophysics.GRAVITY): Distance {
         val seconds = time.inWholeMilliseconds / 1000f
         return Distance.from(0.5f * gravity * seconds * seconds, DistanceUnits.Meters)
     }
 
-    fun isMetal(magneticField: Vector3, threshold: Float = 65f): Boolean {
+    public fun isMetal(magneticField: Vector3, threshold: Float = 65f): Boolean {
         return isMetal(magneticField.magnitude(), threshold)
     }
 
-    fun isMetal(fieldStrength: Float, threshold: Float = 65f): Boolean {
+    public fun isMetal(fieldStrength: Float, threshold: Float = 65f): Boolean {
         return fieldStrength >= threshold
     }
 
@@ -45,7 +45,7 @@ object Physics {
      * Removes the geomagnetic field from a raw magnetometer reading.
      * The orientation changes is the changes in phone orientation from the point the geomagnetic field was taken.
      */
-    fun removeGeomagneticField(
+    public fun removeGeomagneticField(
         rawMagneticField: Vector3,
         geomagneticField: Vector3,
         orientationChange: Quaternion? = null
@@ -59,7 +59,7 @@ object Physics {
      * Calculates the direction to a piece of metal
      * @return The poles pointing to and away from the metal (unable to determine which)
      */
-    fun getMetalDirection(
+    public fun getMetalDirection(
         magneticField: Vector3,
         gravity: Vector3
     ): Pair<Bearing, Bearing> {
@@ -70,7 +70,7 @@ object Physics {
     /**
      * Calculates the trajectory of a projectile in 2D space.
      */
-    fun getTrajectory2D(
+    public fun getTrajectory2D(
         initialPosition: Vector2 = Vector2.zero,
         initialVelocity: Vector2 = Vector2.zero,
         dragModel: DragModel = NoDragModel(),
@@ -107,7 +107,7 @@ object Physics {
     /**
      * Calculates the required velocity vector for an impact at a target position with the given velocity.
      */
-    fun getVelocityVectorForImpact(
+    public fun getVelocityVectorForImpact(
         targetPosition: Vector2,
         velocity: Float,
         initialPosition: Vector2 = Vector2.zero,
@@ -153,7 +153,7 @@ object Physics {
     /**
      * Calculates the kinetic energy of an object moving at a given speed.
      */
-    fun getKineticEnergy(mass: Weight, speed: Speed): Energy {
+    public fun getKineticEnergy(mass: Weight, speed: Speed): Energy {
         val massKg = mass.convertTo(WeightUnits.Kilograms).value
         val speedMps = speed.convertTo(DistanceUnits.Meters, TimeUnits.Seconds).value
         val joules = 0.5f * massKg * speedMps * speedMps

@@ -1,6 +1,6 @@
 package com.kylecorry.sol.shared
 
-class SequentialExecutor : Executor {
+public class SequentialExecutor : Executor {
     override fun <T> map(tasks: List<() -> T>): List<T> {
         return tasks.map { it() }
     }

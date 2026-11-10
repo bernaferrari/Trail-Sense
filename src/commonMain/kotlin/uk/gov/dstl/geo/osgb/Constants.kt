@@ -23,18 +23,18 @@ package uk.gov.dstl.geo.osgb
  * <p>Values taken from
  * https://www.ordnancesurvey.co.uk/documents/resources/guide-coordinate-systems-great-britain.pdf
  */
-object Constants {
-    const val NATIONALGRID_F0 = 0.9996012717
+internal object Constants {
+    internal const val NATIONALGRID_F0 = 0.9996012717
     // In degrees
-    const val NATIONALGRID_LAT0 = 49.0
+    internal const val NATIONALGRID_LAT0 = 49.0
     // In degrees
-    const val NATIONALGRID_LON0 = -2.0
-    const val NATIONALGRID_E0 = 400000.0
-    const val NATIONALGRID_N0 = -100000.0
+    internal const val NATIONALGRID_LON0 = -2.0
+    internal const val NATIONALGRID_E0 = 400000.0
+    internal const val NATIONALGRID_N0 = -100000.0
 
-    const val ELLIPSOID_AIRY1830_MAJORAXIS = 6377563.396
-    const val ELLIPSOID_AIRY1830_MINORAXIS = 6356256.909
+    internal const val ELLIPSOID_AIRY1830_MAJORAXIS = 6377563.396
+    internal const val ELLIPSOID_AIRY1830_MINORAXIS = 6356256.909
 
-    const val ELLIPSOID_GRS80_MAJORAXIS = 6378137.000
-    const val ELLIPSOID_GRS80_MINORAXIS = 6356752.3141
+    internal const val ELLIPSOID_GRS80_MAJORAXIS = 6378137.000
+    internal const val ELLIPSOID_GRS80_MINORAXIS = 6356752.3141
 }

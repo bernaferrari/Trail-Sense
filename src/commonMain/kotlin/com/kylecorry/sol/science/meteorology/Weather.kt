@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology
 
-enum class Weather {
+public enum class Weather {
     ImprovingFast,
     WorseningFast,
     ImprovingSlow,

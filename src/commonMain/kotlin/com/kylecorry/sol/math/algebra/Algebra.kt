@@ -4,11 +4,11 @@ import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import kotlin.math.sqrt
 
-object Algebra {
+public object Algebra {
     /**
      * Solves an equation of form mx + b = 0
      */
-    fun solve(equation: LinearEquation): Float? {
+    public fun solve(equation: LinearEquation): Float? {
         require(equation.m.isFinite()) { "m must be finite" }
         require(equation.b.isFinite()) { "b must be finite" }
         if (Arithmetic.isZero(equation.m)) {
@@ -22,7 +22,7 @@ object Algebra {
         return solution
     }
 
-    fun solve(equation: QuadraticEquation): Pair<Float, Float>? {
+    public fun solve(equation: QuadraticEquation): Pair<Float, Float>? {
         require(equation.a.isFinite()) { "a must be finite" }
         require(equation.b.isFinite()) { "b must be finite" }
         require(equation.c.isFinite()) { "c must be finite" }
@@ -46,7 +46,7 @@ object Algebra {
         return x1 to x2
     }
 
-    fun inverse(equation: LinearEquation): LinearEquation {
+    public fun inverse(equation: LinearEquation): LinearEquation {
         require(equation.m.isFinite()) { "m must be finite" }
         require(!Arithmetic.isZero(equation.m)) { "m must not be zero" }
         require(equation.b.isFinite()) { "b must be finite" }
@@ -61,7 +61,7 @@ object Algebra {
      * Ex. 1 + 2x + 5x^2 + x^4
      * polynomial(x, 1, 2, 5, 0, 1)
      */
-    fun polynomial(x: Double, vararg coefficients: Double): Double {
+    public fun polynomial(x: Double, vararg coefficients: Double): Double {
         require(x.isFinite()) { "x must be finite" }
         var runningTotal = 0.0
         var xPower = 1.0
@@ -75,7 +75,7 @@ object Algebra {
         return runningTotal
     }
 
-    fun getIntersection(equation1: LinearEquation, equation2: LinearEquation): Vector2? {
+    public fun getIntersection(equation1: LinearEquation, equation2: LinearEquation): Vector2? {
         require(equation1.m.isFinite()) { "equation1.m must be finite" }
         require(equation1.b.isFinite()) { "equation1.b must be finite" }
         require(equation2.m.isFinite()) { "equation2.m must be finite" }

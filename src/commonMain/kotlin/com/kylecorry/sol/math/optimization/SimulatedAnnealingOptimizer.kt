@@ -5,7 +5,7 @@ import com.kylecorry.sol.math.interpolation.Interpolation.lerp
 import kotlin.math.exp
 import kotlin.random.Random
 
-class SimulatedAnnealingOptimizer(
+public class SimulatedAnnealingOptimizer(
     private val startingTemperature: Double,
     private val stepSize: Double,
     private val maxIterations: Int = 1000,

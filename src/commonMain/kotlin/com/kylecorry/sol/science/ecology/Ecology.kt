@@ -8,9 +8,9 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 import kotlinx.datetime.minus
 
-object Ecology {
+public object Ecology {
 
-    fun getGrowingDegreeDays(
+    public fun getGrowingDegreeDays(
         temperature: Range<Temperature>,
         baseTemperature: Temperature,
         limit: Float = Float.MAX_VALUE,
@@ -29,7 +29,7 @@ object Ecology {
         return (average - baseTemperature.celsius().value).coerceAtLeast(0f)
     }
 
-    fun getColdDegreeDays(
+    public fun getColdDegreeDays(
         temperature: Range<Temperature>,
         baseTemperature: Temperature,
         limit: Float = Float.MAX_VALUE
@@ -40,7 +40,7 @@ object Ecology {
         return (baseTemperature.celsius().value - average).coerceAtLeast(0f)
     }
 
-    fun getCumulativeGrowingDegreeDays(
+    public fun getCumulativeGrowingDegreeDays(
         dates: List<LocalDate>,
         baseTemperature: Temperature,
         temperatureProvider: (LocalDate) -> Range<Temperature>,
@@ -87,7 +87,7 @@ object Ecology {
         return gdd
     }
 
-    fun getLifecycleEventDates(
+    public fun getLifecycleEventDates(
         events: List<LifecycleEvent>,
         dateRange: Range<LocalDate>,
         dayLengthProvider: (LocalDate) -> Duration,
@@ -133,7 +133,7 @@ object Ecology {
         return lifecycleEvents.sortedBy { it.first }
     }
 
-    fun getActivePeriodsForYear(
+    public fun getActivePeriodsForYear(
         year: Int,
         events: List<Pair<LocalDate, LifecycleEvent>>,
         activeStart: String,

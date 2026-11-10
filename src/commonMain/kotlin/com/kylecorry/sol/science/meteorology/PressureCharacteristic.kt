@@ -1,6 +1,10 @@
 package com.kylecorry.sol.science.meteorology
 
-enum class PressureCharacteristic(val isFalling: Boolean, val isRising: Boolean, val isRapid: Boolean) {
+public enum class PressureCharacteristic(
+    public val isFalling: Boolean,
+    public val isRising: Boolean,
+    public val isRapid: Boolean
+) {
     Falling(true, false, false),
     FallingFast(true, false, true),
     Rising(false, true, false),

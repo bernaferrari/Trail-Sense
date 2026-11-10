@@ -1,11 +1,11 @@
 package com.kylecorry.sol.math.filters
 
-class DeadReckoning(initialPosition: Float = 0f) {
+public class DeadReckoning(initialPosition: Float = 0f) {
 
-    var position: Float = initialPosition
+    public var position: Float = initialPosition
         private set
 
-    fun calculate(velocity: Float, dt: Float): Float {
+    public fun calculate(velocity: Float, dt: Float): Float {
         position += velocity * dt
         return position
     }

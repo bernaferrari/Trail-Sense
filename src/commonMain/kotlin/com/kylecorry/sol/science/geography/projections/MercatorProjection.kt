@@ -11,13 +11,14 @@ import kotlin.math.atan
 import kotlin.math.ln
 import kotlin.math.sinh
 
-class MercatorProjection(private val scale: Float = 1f) : IMapProjection {
+public class MercatorProjection(private val scale: Float = 1f) : IMapProjection {
     override fun toCoordinate(pixel: Vector2): Coordinate {
-        val longitude = (pixel.x / scale).toDegrees()
-        val latitude = (atan(sinh(pixel.y / scale))).toDegrees()
+        // Double math keeps the inverse projection precise near the poles on every platform
+        val longitude = (pixel.x.toDouble() / scale).toDegrees()
+        val latitude = atan(sinh(pixel.y.toDouble() / scale)).toDegrees()
         return Coordinate(
-            clamp(latitude.toDouble(), -90.0, 90.0),
-            Coordinate.toLongitude(longitude.toDouble())
+            clamp(latitude, -90.0, 90.0),
+            Coordinate.toLongitude(longitude)
         )
     }
 
@@ -32,13 +33,13 @@ class MercatorProjection(private val scale: Float = 1f) : IMapProjection {
         return Vector2(x.toFloat(), y.toFloat())
     }
 
-    companion object {
-        fun getScaleForLatitude(latitude: Double): Float {
+    public companion object {
+        public fun getScaleForLatitude(latitude: Double): Float {
             return cosDegrees(latitude).toFloat()
         }
 
-        const val MAX_LATITUDE = 85.05112878
-        const val MIN_LATITUDE = -85.05112878
+        public const val MAX_LATITUDE: Double = 85.05112878
+        public const val MIN_LATITUDE: Double = -85.05112878
     }
 
 }

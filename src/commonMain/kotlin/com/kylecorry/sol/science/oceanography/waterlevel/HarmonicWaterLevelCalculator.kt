@@ -8,7 +8,7 @@ import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @OptIn(ExperimentalAtomicApi::class)
-class HarmonicWaterLevelCalculator(private val harmonics: List<TidalHarmonic>) :
+public class HarmonicWaterLevelCalculator(private val harmonics: List<TidalHarmonic>) :
     IWaterLevelCalculator {
 
     private class NodalCorrections(val day: Long, val f: DoubleArray, val u: DoubleArray)

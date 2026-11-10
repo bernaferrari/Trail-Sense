@@ -7,9 +7,9 @@ import com.kylecorry.sol.shared.SequentialExecutor
 import kotlin.math.ceil
 import kotlin.math.floor
 
-object Interpolation {
+public object Interpolation {
 
-    fun resample(
+    public fun resample(
         interpolator: Interpolator,
         startX: Float,
         endX: Float,
@@ -26,7 +26,7 @@ object Interpolation {
      * @param point2: The second control point (to the right of x)
      * @return The y value of the interpolation
      */
-    fun linear(x: Float, point1: Vector2, point2: Vector2): Float {
+    public fun linear(x: Float, point1: Vector2, point2: Vector2): Float {
         val x1 = point1.x
         val y1 = point1.y
         val x2 = point2.x
@@ -43,7 +43,7 @@ object Interpolation {
      * @param y2: The y value of the second control point (to the right of x)
      * @return The y value of the interpolation
      */
-    fun linear(x: Float, x1: Float, y1: Float, x2: Float, y2: Float): Float {
+    public fun linear(x: Float, x1: Float, y1: Float, x2: Float, y2: Float): Float {
         return y1 + (x - x1) * (y2 - y1) / (x2 - x1)
     }
 
@@ -56,7 +56,7 @@ object Interpolation {
      * @param point3: The fourth control point (to the right of point 2)
      * @return The y value of the approximation
      */
-    fun cubic(
+    public fun cubic(
         x: Float,
         point0: Vector2,
         point1: Vector2,
@@ -88,7 +88,7 @@ object Interpolation {
      * @param y3: The y value of the fourth control point (to the right of x2)
      * @return The y value of the approximation
      */
-    fun cubic(
+    public fun cubic(
         x: Float,
         x0: Float,
         y0: Float,
@@ -116,7 +116,7 @@ object Interpolation {
      * @param order: The order of the interpolation (default is xs.size - 1)
      * @return The y value of the interpolation
      */
-    fun interpolate(
+    public fun interpolate(
         x: Float,
         xs: List<Float>,
         ys: List<Float>,
@@ -143,7 +143,7 @@ object Interpolation {
      * @param y3: The third control point (end)
      * @return The interpolated value
      */
-    fun catmullRom(
+    public fun catmullRom(
         n: Double,
         y1: Double,
         y2: Double,
@@ -167,7 +167,7 @@ object Interpolation {
      * and returns the interpolated point.
      * @return A list of isoline segments.
      */
-    fun <T> getIsoline(
+    public fun <T> getIsoline(
         grid: List<List<Pair<T, Float>>>,
         threshold: Float,
         executor: Executor = SequentialExecutor(),
@@ -188,7 +188,7 @@ object Interpolation {
      * @param multiple The number to find multiples of.
      * @return An array of multiples of the given number between the start and end values.
      */
-    fun getMultiplesBetween(
+    public fun getMultiplesBetween(
         start: Double,
         end: Double,
         multiple: Double
@@ -207,7 +207,7 @@ object Interpolation {
         return result
     }
 
-    fun getMultiplesBetween(
+    public fun getMultiplesBetween(
         start: Float,
         end: Float,
         multiple: Float
@@ -226,7 +226,7 @@ object Interpolation {
         return result
     }
 
-    fun lerp(percent: Float, start: Float, end: Float, shouldClamp: Boolean = false): Float {
+    public fun lerp(percent: Float, start: Float, end: Float, shouldClamp: Boolean = false): Float {
         val value = start + (end - start) * percent
 
         return if (shouldClamp) {
@@ -236,7 +236,7 @@ object Interpolation {
         }
     }
 
-    fun lerp(percent: Double, start: Double, end: Double, shouldClamp: Boolean = false): Double {
+    public fun lerp(percent: Double, start: Double, end: Double, shouldClamp: Boolean = false): Double {
         val value = start + (end - start) * percent
 
         return if (shouldClamp) {
@@ -246,7 +246,7 @@ object Interpolation {
         }
     }
 
-    fun map(
+    public fun map(
         value: Double,
         originalMin: Double,
         originalMax: Double,
@@ -258,7 +258,7 @@ object Interpolation {
         return lerp(normal, newMin, newMax, shouldClamp)
     }
 
-    fun map(
+    public fun map(
         value: Float,
         originalMin: Float,
         originalMax: Float,
@@ -270,7 +270,7 @@ object Interpolation {
         return lerp(normal, newMin, newMax, shouldClamp)
     }
 
-    fun norm(value: Double, minimum: Double, maximum: Double, shouldClamp: Boolean = false): Double {
+    public fun norm(value: Double, minimum: Double, maximum: Double, shouldClamp: Boolean = false): Double {
         val range = maximum - minimum
         if (range == 0.0) {
             return 0.0
@@ -284,7 +284,7 @@ object Interpolation {
         }
     }
 
-    fun norm(value: Float, minimum: Float, maximum: Float, shouldClamp: Boolean = false): Float {
+    public fun norm(value: Float, minimum: Float, maximum: Float, shouldClamp: Boolean = false): Float {
         val range = maximum - minimum
         if (Arithmetic.isZero(range)) {
             return 0f

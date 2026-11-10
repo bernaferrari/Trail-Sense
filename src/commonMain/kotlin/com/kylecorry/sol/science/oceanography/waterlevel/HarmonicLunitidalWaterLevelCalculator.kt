@@ -7,7 +7,7 @@ import kotlin.time.Duration
 import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 
-class HarmonicLunitidalWaterLevelCalculator(
+public class HarmonicLunitidalWaterLevelCalculator(
     lunitidalInterval: Duration,
     location: Coordinate = Coordinate.zero
 ) : IWaterLevelCalculator {

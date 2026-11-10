@@ -90,7 +90,7 @@ import gov.nasa.worldwind.avlist.AVKey
  * @author Garrett Headley, Patrick Murris
  * @version $Id$
  */
-class UPSCoordConverter
+internal class UPSCoordConverter
 internal constructor() {
     private var UPS_Origin_Latitude: Double = MAX_ORIGIN_LAT /*set default = North Hemisphere */
     private val UPS_Origin_Longitude = 0.0
@@ -107,28 +107,28 @@ internal constructor() {
 
     /** @return Easting/X in meters
      */
-    var easting: Double = 0.0
+    internal var easting: Double = 0.0
         private set
 
     /** @return Northing/Y in meters
      */
-    var northing: Double = 0.0
+    internal var northing: Double = 0.0
         private set
 
     /**
      * @return Hemisphere, either [AVKey.NORTH] or [         ][AVKey.SOUTH].
      */
-    var hemisphere: String = AVKey.NORTH
+    internal var hemisphere: String = AVKey.NORTH
         private set
 
     /** @return Latitude in radians.
      */
-    var latitude: Double = 0.0
+    internal var latitude: Double = 0.0
         private set
 
     /** @return Longitude in radians.
      */
-    var longitude: Double = 0.0
+    internal var longitude: Double = 0.0
         private set
 
     private val polarConverter = PolarCoordConverter()
@@ -143,7 +143,7 @@ internal constructor() {
      *
      * @return error code
      */
-    fun convertGeodeticToUPS(latitude: Double, longitude: Double): Long {
+    internal fun convertGeodeticToUPS(latitude: Double, longitude: Double): Long {
         if ((latitude < -MAX_LAT) || (latitude > MAX_LAT)) {   /* latitude out of range */
             return UPS_LAT_ERROR.toLong()
         }
@@ -191,7 +191,7 @@ internal constructor() {
      *
      * @return error code
      */
-    fun convertUPSToGeodetic(Hemisphere: String?, Easting: Double, Northing: Double): Long {
+    internal fun convertUPSToGeodetic(Hemisphere: String?, Easting: Double, Northing: Double): Long {
         var Error_Code = UPS_NO_ERROR.toLong()
 
         if (AVKey.NORTH != Hemisphere && AVKey.SOUTH != Hemisphere) Error_Code =
@@ -226,13 +226,13 @@ internal constructor() {
         return Error_Code
     }
 
-    companion object {
-        const val UPS_NO_ERROR: Int = 0x0000
+    internal companion object {
+        internal const val UPS_NO_ERROR: Int = 0x0000
         private const val UPS_LAT_ERROR = 0x0001
         private const val UPS_LON_ERROR = 0x0002
-        const val UPS_HEMISPHERE_ERROR: Int = 0x0004
-        const val UPS_EASTING_ERROR: Int = 0x0008
-        const val UPS_NORTHING_ERROR: Int = 0x0010
+        internal const val UPS_HEMISPHERE_ERROR: Int = 0x0004
+        internal const val UPS_EASTING_ERROR: Int = 0x0008
+        internal const val UPS_NORTHING_ERROR: Int = 0x0010
 
         private const val PI = 3.14159265358979323
         private const val MAX_LAT: Double = (PI * 90) / 180.0 // 90 degrees in radians

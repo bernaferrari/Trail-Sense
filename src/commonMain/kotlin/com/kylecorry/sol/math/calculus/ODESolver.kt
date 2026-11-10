@@ -4,8 +4,8 @@ import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.Vector
 import com.kylecorry.sol.math.Vector2
 
-interface ODESolver {
-    fun solve(
+public interface ODESolver {
+    public fun solve(
         xRange: Range<Float>,
         stepSize: Float,
         initialY: Vector,
@@ -13,7 +13,7 @@ interface ODESolver {
     ): List<Pair<Float, Vector>>
 }
 
-fun ODESolver.solve(
+public fun ODESolver.solve(
     xRange: Range<Float>,
     stepSize: Float,
     initialY: Vector2,
@@ -30,7 +30,7 @@ fun ODESolver.solve(
     return result.map { Pair(it.first, Vector2(it.second[0], it.second[1])) }
 }
 
-fun ODESolver.solve(
+public fun ODESolver.solve(
     xRange: Range<Float>,
     stepSize: Float,
     initialY: Float,

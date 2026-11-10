@@ -8,7 +8,7 @@ import com.kylecorry.sol.math.Vector2
  * @param robustnessIterations the number of iterations to do for the robustness step for outlier removal
  * @param accuracy the threshold to stop the robustness at (short circuit)
  */
-class LoessFilter1D(
+public class LoessFilter1D(
     private val span: Float = 0.3f,
     private val robustnessIterations: Int = 2,
     private val accuracy: Float = 1e-12f,

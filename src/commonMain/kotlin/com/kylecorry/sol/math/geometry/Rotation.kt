@@ -6,9 +6,9 @@ import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
 
-class Rotation private constructor(private val values: DoubleArray) {
+public class Rotation private constructor(private val values: DoubleArray) {
 
-    fun rotate(vector: Vector3Precise): Vector3Precise {
+    public fun rotate(vector: Vector3Precise): Vector3Precise {
         return Vector3Precise(
             values[0] * vector.x + values[1] * vector.y + values[2] * vector.z,
             values[3] * vector.x + values[4] * vector.y + values[5] * vector.z,
@@ -16,7 +16,7 @@ class Rotation private constructor(private val values: DoubleArray) {
         )
     }
 
-    fun inverse(): Rotation {
+    public fun inverse(): Rotation {
         return Rotation(
             doubleArrayOf(
                 values[0], values[3], values[6],
@@ -26,7 +26,7 @@ class Rotation private constructor(private val values: DoubleArray) {
         )
     }
 
-    operator fun times(other: Rotation): Rotation {
+    public operator fun times(other: Rotation): Rotation {
         val out = DoubleArray(9)
         for (i in 0..2) {
             for (j in 0..2) {
@@ -43,14 +43,14 @@ class Rotation private constructor(private val values: DoubleArray) {
     /**
      * @return the row major matrix
      */
-    fun toDoubleArray(): DoubleArray {
+    public fun toDoubleArray(): DoubleArray {
         return values.copyOf()
     }
 
     /**
      * The angle of this rotation in degrees
      */
-    fun angle(): Double {
+    public fun angle(): Double {
         val trace = values[0] + values[4] + values[8]
         return (acos(((trace - 1) / 2).coerceIn(-1.0, 1.0)) * 180.0 / kotlin.math.PI)
     }
@@ -63,13 +63,13 @@ class Rotation private constructor(private val values: DoubleArray) {
         return values.contentHashCode()
     }
 
-    companion object {
-        val identity = Rotation(doubleArrayOf(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
+    public companion object {
+        public val identity: Rotation = Rotation(doubleArrayOf(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
 
         /**
          * @param values a row major 3x3 rotation matrix
          */
-        fun fromMatrix(values: DoubleArray): Rotation {
+        public fun fromMatrix(values: DoubleArray): Rotation {
             require(values.size == 9) { "A rotation matrix must have 9 values" }
             return Rotation(values.copyOf())
         }
@@ -77,7 +77,7 @@ class Rotation private constructor(private val values: DoubleArray) {
         /**
          * A right handed rotation about an axis
          */
-        fun fromAxisAngle(axis: Vector3Precise, degrees: Double): Rotation {
+        public fun fromAxisAngle(axis: Vector3Precise, degrees: Double): Rotation {
             val n = axis.normalize()
             val t = (degrees * kotlin.math.PI / 180.0)
             val c = cos(t)
@@ -92,7 +92,7 @@ class Rotation private constructor(private val values: DoubleArray) {
             )
         }
 
-        fun fromQuaternion(w: Double, x: Double, y: Double, z: Double): Rotation {
+        public fun fromQuaternion(w: Double, x: Double, y: Double, z: Double): Rotation {
             return Rotation(
                 doubleArrayOf(
                     1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w),
@@ -106,7 +106,7 @@ class Rotation private constructor(private val values: DoubleArray) {
          * TRIAD: the rotation that maps from1 exactly onto to1 and from2 as close as possible to to2.
          * @return the rotation or null if either pair of vectors is parallel
          */
-        fun triad(
+        public fun triad(
             from1: Vector3Precise,
             from2: Vector3Precise,
             to1: Vector3Precise,
@@ -138,7 +138,7 @@ class Rotation private constructor(private val values: DoubleArray) {
          * The least squares rotation that maps each from vector onto its to vector (Wahba's problem),
          * solved with Horn's quaternion method.
          */
-        fun fit(
+        public fun fit(
             from: List<Vector3Precise>,
             to: List<Vector3Precise>,
             weights: List<Double>? = null

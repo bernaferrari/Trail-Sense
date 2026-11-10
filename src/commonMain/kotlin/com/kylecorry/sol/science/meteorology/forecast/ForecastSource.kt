@@ -1,6 +1,6 @@
 package com.kylecorry.sol.science.meteorology.forecast
 
-enum class ForecastSource {
+public enum class ForecastSource {
     Sol,
     Zambretti
 }

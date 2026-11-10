@@ -15,8 +15,8 @@ import gov.nasa.worldwind.geom.Angle
  * @author Patrick Murris
  * @version $Id$
  */
-object MGRSCoordinateFormat {
-    fun getString(latitude: Double, longitude: Double, precision: Int): String {
+internal object MGRSCoordinateFormat {
+    internal fun getString(latitude: Double, longitude: Double, precision: Int): String {
         val converter = MGRSCoordConverter()
         val error = converter.convertGeodeticToMGRS(
             Angle.fromDegreesLatitude(latitude).radians,
@@ -27,7 +27,7 @@ object MGRSCoordinateFormat {
         return converter.mgrsString.trim()
     }
 
-    fun fromString(str: String): Coordinate {
+    internal fun fromString(str: String): Coordinate {
         val upperString = str.uppercase().replace(" ", "")
         val converter = MGRSCoordConverter()
         val error = converter.convertMGRSToGeodetic(upperString)

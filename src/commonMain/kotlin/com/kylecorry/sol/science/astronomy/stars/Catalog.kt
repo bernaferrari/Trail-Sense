@@ -2,7 +2,7 @@ package com.kylecorry.sol.science.astronomy.stars
 
 import com.kylecorry.sol.science.astronomy.units.EquatorialCoordinate
 
-val STAR_CATALOG = listOf(
+public val STAR_CATALOG: List<Star> = listOf(
     Star(
         677,
         "Alpheratz",
@@ -5831,7 +5831,7 @@ val STAR_CATALOG = listOf(
 
 internal val STAR_CATALOG_BY_HIP = STAR_CATALOG.associateBy { it.hipDesignation }
 
-val CONSTELLATIONS = listOf(
+public val CONSTELLATIONS: List<Constellation> = listOf(
     Constellation(
         "Andromeda",
         listOf(

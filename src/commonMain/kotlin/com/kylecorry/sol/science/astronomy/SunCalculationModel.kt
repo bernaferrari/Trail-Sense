@@ -1,21 +1,17 @@
-@file:Suppress("ComplexCondition")
-
 package com.kylecorry.sol.science.astronomy
 
+import com.kylecorry.sol.time.Time.atEndOfDayIn
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
 import com.kylecorry.sol.science.astronomy.locators.SunModel
 import com.kylecorry.sol.science.astronomy.rst.RobustRiseSetModel
-import com.kylecorry.sol.science.astronomy.rst.SearchRiseSetTimes
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.sol.science.astronomy.units.EclipticCoordinate
 import com.kylecorry.sol.science.astronomy.units.JulianDay
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.toInstant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
@@ -26,10 +22,15 @@ import kotlin.time.Instant
 internal object SunCalculationModel {
     private val sun = SunModel()
 
+    @Suppress("LongParameterList")
     fun events(
-        time: Instant, zone: TimeZone, location: Coordinate, mode: SunTimesMode,
-        withRefraction: Boolean, withParallax: Boolean
-    ): SearchRiseSetTimes {
+        time: Instant,
+        zone: TimeZone,
+        location: Coordinate,
+        mode: SunTimesMode,
+        withRefraction: Boolean,
+        withParallax: Boolean
+    ): RiseSetTransitTimes {
         val altitude = when (mode) {
             SunTimesMode.Actual -> -0.8333
             SunTimesMode.Civil -> -6.0
@@ -40,19 +41,29 @@ internal object SunCalculationModel {
     }
 
     fun position(
-        time: Instant, location: Coordinate, withRefraction: Boolean, withParallax: Boolean
+        time: Instant,
+        location: Coordinate,
+        withRefraction: Boolean,
+        withParallax: Boolean
     ): CelestialObservation {
         val distance = sun.getDistance(time)
         val horizon = AstroUtils.getLocation(sun, time, location, withRefraction, withParallax, distance)
         return CelestialObservation(
-            Bearing.from(horizon.azimuth.toFloat()), horizon.altitude.toFloat(),
-            sun.getAngularDiameter(time, distance).toFloat(), distance = distance
+            Bearing.from(horizon.azimuth.toFloat()),
+            horizon.altitude.toFloat(),
+            sun.getAngularDiameter(time, distance).toFloat(),
+            distance = distance
         )
     }
 
-    fun longitude(time: Instant): Float = EclipticCoordinate.fromEquatorial(
-        sun.getCoordinates(time), JulianDay.centuries(time)
-    ).eclipticLongitude.toFloat()
+    /**
+     * The apparent ecliptic longitude of the sun in degrees.
+     */
+    fun longitude(time: Instant): Float = eclipticLongitude(time).toFloat()
+
+    /**
+     * Gets the next time on or after [today] when the sun reaches the given ecliptic [longitude].
+     */
     fun nextAtLongitude(longitude: Float, today: Instant, zone: TimeZone): Instant {
         var date = today
         for (i in 0..365) {
@@ -67,9 +78,7 @@ internal object SunCalculationModel {
         var iterations = 0
         do {
             val time = JulianDay.from(jd)
-            val solarLongitude = EclipticCoordinate.fromEquatorial(sun.getCoordinates(time), JulianDay.centuries(time))
-                .eclipticLongitude
-            correction = 58 * sinDegrees(longitude - solarLongitude)
+            correction = 58 * sinDegrees(longitude - eclipticLongitude(time))
             jd += correction
             iterations++
         } while (correction.absoluteValue > 0.00001 && iterations < 100)
@@ -77,20 +86,46 @@ internal object SunCalculationModel {
         return JulianDay.from(jd)
     }
 
+    /**
+     * Gets the night (sunset to sunrise) closest to [time]. During polar night, the whole local day is returned.
+     */
     fun closestNight(time: Instant, zone: TimeZone, location: Coordinate, mode: SunTimesMode): Range<Instant>? {
         val yesterday = events(time.plus(-1, DateTimeUnit.DAY, zone), zone, location, mode, false, false)
         val today = events(time, zone, location, mode, false, false)
         val tomorrow = events(time.plus(1, DateTimeUnit.DAY, zone), zone, location, mode, false, false)
-        if (yesterday.set == null || today.set == null || today.rise == null || tomorrow.rise == null) {
-            return if (!(position(time, location, false, false).altitude > 0) && today.rise == null) {
-                val date = time.toLocalDateTime(zone).date
-                Range(date.atStartOfDayIn(zone), LocalDateTime(date.year, date.month, date.day, 23, 59, 59, 999999999)
-                    .toInstant(zone))
-            } else null
+
+        val lastNight = rangeOrNull(yesterday.set, today.rise)
+        val tonight = rangeOrNull(today.set, tomorrow.rise)
+        if (lastNight == null || tonight == null) {
+            return polarNight(time, zone, location, today)
         }
-        val lastNight = Range(yesterday.set, today.rise)
-        val tonight = Range(today.set, tomorrow.rise)
-        return if ((lastNight.end - time).absoluteValue < (tonight.start - time).absoluteValue) lastNight else tonight
+
+        val isLastNightCloser = (lastNight.end - time).absoluteValue < (tonight.start - time).absoluteValue
+        return if (isLastNightCloser) lastNight else tonight
     }
 
+    /**
+     * The whole local day if the sun stays down all day, otherwise null.
+     */
+    private fun polarNight(
+        time: Instant,
+        zone: TimeZone,
+        location: Coordinate,
+        today: RiseSetTransitTimes
+    ): Range<Instant>? {
+        val isPolarNight = today.rise == null && position(time, location, false, false).altitude <= 0
+        if (!isPolarNight) {
+            return null
+        }
+        val date = time.toLocalDateTime(zone).date
+        return Range(date.atStartOfDayIn(zone), date.atEndOfDayIn(zone))
+    }
+
+    private fun rangeOrNull(start: Instant?, end: Instant?): Range<Instant>? {
+        return if (start != null && end != null) Range(start, end) else null
+    }
+
+    private fun eclipticLongitude(time: Instant): Double {
+        return EclipticCoordinate.fromEquatorial(sun.getCoordinates(time), JulianDay.centuries(time)).eclipticLongitude
+    }
 }

@@ -3,6 +3,7 @@ package com.kylecorry.sol.science.astronomy.rst
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.astronomy.AstroSearch
 import com.kylecorry.sol.science.astronomy.AstroUtils
+import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.locators.ICelestialLocator
 import com.kylecorry.sol.units.Coordinate
 import kotlinx.datetime.LocalDate
@@ -13,14 +14,12 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
-internal data class SearchRiseSetTimes(val rise: Instant?, val transit: Instant?, val set: Instant?)
-
 internal class SearchRiseSetModel {
     @Suppress("LongParameterList")
     fun calculate(
         locator: ICelestialLocator, date: LocalDate, zone: TimeZone, location: Coordinate,
         standardAltitude: Double, withRefraction: Boolean, withParallax: Boolean
-    ): SearchRiseSetTimes {
+    ): RiseSetTransitTimes {
         fun altitude(time: Instant): Float =
             AstroUtils.getAltitude(locator, time, location, withRefraction, withParallax)
         fun refinedAltitude(time: Instant): Float =
@@ -38,7 +37,7 @@ internal class SearchRiseSetModel {
             val peak = AstroSearch.findPeak(searchRange(it), 1.minutes) { t -> refinedAltitude(t) }
             peak.takeIf { t -> altitude(t) >= standardAltitude }
         }
-        return SearchRiseSetTimes(rise, transit, set)
+        return RiseSetTransitTimes(rise, transit, set)
     }
 
     private fun findRanges(

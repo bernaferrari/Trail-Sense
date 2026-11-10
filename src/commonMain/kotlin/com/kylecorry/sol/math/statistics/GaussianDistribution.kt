@@ -6,10 +6,10 @@ import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sqrt
 
-data class GaussianDistribution(val mean: Float, val standardDeviation: Float) {
-    val variance = square(standardDeviation)
+public data class GaussianDistribution(val mean: Float, val standardDeviation: Float) {
+    val variance: Float = square(standardDeviation)
 
-    fun probability(x: Float): Float {
+    public fun probability(x: Float): Float {
         if (Arithmetic.isZero(mean) && Arithmetic.isApproximatelyEqual(standardDeviation, 1f)) {
             // Normal distribution
             return exp(-square(x) / 2) / sqrt(2 * PI).toFloat()

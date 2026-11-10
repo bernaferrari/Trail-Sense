@@ -4,7 +4,7 @@ import com.kylecorry.sol.math.geometry.Geometry
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class LeastSquaresOptimizer {
+public class LeastSquaresOptimizer {
 
     /**
      * Minimizes the sum of squared weighted residuals (error - distance) using the Levenberg-Marquardt method.
@@ -13,7 +13,7 @@ class LeastSquaresOptimizer {
      * @param dampingFactor scales each step
      * @throws IllegalStateException if a value does not affect any residual
      */
-    fun optimize(
+    public fun optimize(
         points: List<List<Float>>,
         errors: List<Float>,
         maxIterations: Int = 100,

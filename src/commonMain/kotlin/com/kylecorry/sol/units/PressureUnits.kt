@@ -1,6 +1,6 @@
 package com.kylecorry.sol.units
 
-enum class PressureUnits(val id: Int, val hpa: Double) {
+public enum class PressureUnits(public val id: Int, public val hpa: Double) {
     Hpa(1, 1.0),
     Mbar(2, 1.0),
     Inhg(3, 1 / 0.02953),

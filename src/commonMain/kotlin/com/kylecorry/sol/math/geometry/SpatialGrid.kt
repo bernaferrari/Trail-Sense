@@ -9,12 +9,12 @@ import kotlin.math.floor
  * @param points the points to index, all with the same number of coordinates
  * @param cellSize the size of a cell in every dimension, must be greater than 0
  */
-class SpatialGrid(points: List<List<Float>>, val cellSize: Float) {
+public class SpatialGrid(points: List<List<Float>>, public val cellSize: Float) {
 
     private val dimensions = points.firstOrNull()?.size ?: 0
     private val cells = HashMap<List<Long>, MutableList<Int>>()
 
-    val size = points.size
+    public val size: Int = points.size
 
     init {
         require(cellSize > 0f) { "The cell size must be greater than 0" }
@@ -27,7 +27,7 @@ class SpatialGrid(points: List<List<Float>>, val cellSize: Float) {
      * Gets the indices of the points that could be within [cellSize] of the point in every coordinate. All
      * such points are returned, along with some that are not, so check the actual distance.
      */
-    fun getCandidates(point: List<Float>): List<Int> {
+    public fun getCandidates(point: List<Float>): List<Int> {
         val candidates = IntArray(size)
         return candidates.asList().subList(0, getCandidates(point, candidates))
     }
@@ -36,7 +36,7 @@ class SpatialGrid(points: List<List<Float>>, val cellSize: Float) {
      * Writes the candidates to [out] (which must hold [size] indices) instead of allocating a list.
      * @return the number of indices written
      */
-    fun getCandidates(point: List<Float>, out: IntArray): Int {
+    public fun getCandidates(point: List<Float>, out: IntArray): Int {
         if (dimensions == 0) {
             return 0
         }
