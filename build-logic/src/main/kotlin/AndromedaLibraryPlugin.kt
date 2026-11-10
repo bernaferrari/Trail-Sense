@@ -62,8 +62,8 @@ class AndromedaLibraryPlugin : Plugin<Project> {
             abiValidation()
         }
 
-        // Bytecode stays loadable by apps that still target Java 11
-        tasks.withType<KotlinJvmCompile>().configureEach { compilerOptions.jvmTarget.set(JvmTarget.JVM_11) }
+        // Java 17 bytecode, like Trail Sense, sol and the toolchain (Android's D8 accepts it at minSdk 24)
+        tasks.withType<KotlinJvmCompile>().configureEach { compilerOptions.jvmTarget.set(JvmTarget.JVM_17) }
         tasks.withType<Test>().configureEach { useJUnitPlatform() }
 
         group = GROUP
