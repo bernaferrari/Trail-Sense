@@ -754,7 +754,7 @@ private fun ViewPhotoMapHost(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        views.map.Content(Modifier.fillMaxSize())
+        views.map.Content(Modifier.fillMaxSize().testTag("map"))
         if (views.mapAttribution.isVisible) {
             Surface(
                 modifier = Modifier

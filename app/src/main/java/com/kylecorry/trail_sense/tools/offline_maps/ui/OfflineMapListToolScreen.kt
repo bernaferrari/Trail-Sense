@@ -277,7 +277,8 @@ fun OfflineMapListToolScreen(
         sortMenuText = stringResource(R.string.sort_by, stringResource(viewModel.sort.label())),
         searchText = viewModel.searchText,
         items = viewModel.items,
-        isEmpty = viewModel.items.isEmpty(),
+        // A search with no matches still shows the search box, so it can be cleared
+        isEmpty = viewModel.items.isEmpty() && viewModel.searchText.isBlank(),
         resetKey = viewModel.resetKey,
         isCreateMenuOpen = isCreateMenuOpen,
         isCreateEnabled = viewModel.isCreateEnabled,
