@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -150,6 +151,7 @@ class CameraState(val context: Context) {
     private var hasPendingChanges = false
     private var hasSetInitialZoom = false
     private var composeLifecycleOwner: LifecycleOwner? = null
+    private var pendingStart: (() -> Unit)? = null
     private val startLock = Any()
 
     fun start(
@@ -161,7 +163,16 @@ class CameraState(val context: Context) {
         preferBackCamera: Boolean = true,
         onImage: ((Bitmap) -> Unit)? = null
     ) {
-        val owner = lifecycleOwner ?: composeLifecycleOwner ?: return
+        val owner = lifecycleOwner ?: composeLifecycleOwner
+        if (owner == null) {
+            // A screen can ask for the camera before its CameraPreview is composed (the clinometer shows the preview
+            // only once the phone is held upright). Start once the preview supplies its lifecycle, instead of never.
+            pendingStart = {
+                start(resolution, null, captureSettings, readFrames, shouldStabilizePreview, preferBackCamera, onImage)
+            }
+            return
+        }
+        pendingStart = null
         if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
             return
         }
@@ -205,6 +216,7 @@ class CameraState(val context: Context) {
     }
 
     fun stop() {
+        pendingStart = null
         camera?.stop(this::onCameraUpdate)
         camera = null
         surfaceRequest = null
@@ -356,6 +368,13 @@ class CameraState(val context: Context) {
         composeLifecycleOwner = owner
     }
 
+    /** Runs a [start] that was asked for before a [CameraPreview] supplied its lifecycle. */
+    internal fun startIfPending() {
+        val start = pendingStart ?: return
+        pendingStart = null
+        start()
+    }
+
     internal fun setViewfinderSize(width: Int, height: Int) {
         viewfinderWidth = width
         viewfinderHeight = height
@@ -417,6 +436,7 @@ fun CameraPreview(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     state.setLifecycleOwner(lifecycleOwner)
+    SideEffect { state.startIfPending() }
     Box(
         modifier = modifier
             .then(if (state.keepScreenOn) Modifier.keepScreenOn() else Modifier)
