@@ -2211,6 +2211,8 @@
     <string name="settings_tools_summary">Quick actions, widgets and bottom navigation</string>
     <!-- Family redesign: beacons, notes -->
     <string name="more_options">More options</string>
+    <string name="from_you">From you</string>
+    <string name="elevation_change">Elevation change</string>
     <string name="note_more_options">More options</string>
     <string name="notes_empty_description">Write down anything you want to keep with you on the trail.</string>
     <string name="beacon_more_options">More options</string>

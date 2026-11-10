@@ -32,8 +32,16 @@ interface ScreenEffects {
     /** A snackbar; returns true when its action was pressed. */
     suspend fun showSnackbar(message: String, actionLabel: String? = null, long: Boolean = false): Boolean
 
-    /** The family's action sheet; returns the chosen action, or null when dismissed. */
-    suspend fun chooseAction(title: String, subtitle: String? = null, actions: List<ActionItem>): ActionItem?
+    /**
+     * The family's action sheet; returns the chosen action, or null when dismissed. [stats] are shown as a row of values
+     * between the subtitle and the actions.
+     */
+    suspend fun chooseAction(
+        title: String,
+        subtitle: String? = null,
+        actions: List<ActionItem>,
+        stats: List<TrailSenseStat> = emptyList()
+    ): ActionItem?
 
     /** Takes or picks a photo and returns its URI as a string, or null when cancelled. */
     suspend fun capturePhoto(maxWidth: Int? = null, maxHeight: Int? = null, zeroShutterLag: Boolean = false): String?

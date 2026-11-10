@@ -23,6 +23,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.foundation.layout.fillMaxWidth
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -30,7 +32,8 @@ fun ActionSheetContent(
     subtitle: String?,
     actions: List<ActionItem>,
     onAction: (ActionItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    stats: List<TrailSenseStat> = emptyList()
 ) {
     // The sheet supplies the title and the padding
     Column(modifier = modifier) {
@@ -39,6 +42,13 @@ fun ActionSheetContent(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (stats.isNotEmpty()) {
+            TrailSenseStatGrid(
+                stats = stats,
+                columns = stats.size.coerceIn(1, 3),
+                modifier = Modifier.padding(top = TrailSenseSpacing.md)
             )
         }
         FlowRow(

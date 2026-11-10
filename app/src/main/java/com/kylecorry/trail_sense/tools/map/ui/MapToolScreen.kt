@@ -107,6 +107,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.rememberNavigationSensors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.views.compose.locationDetailStats
 
 /** The map tool: the map with its controls and sheets, or a prompt to add one when no visible map can be drawn. */
 @Composable
@@ -214,6 +215,7 @@ private class MapController(
     // Plain values the views' callbacks read; they don't drive composition
     private var shouldSaveState = false
     private var userLocation = Coordinate.zero
+    private var userElevation: Distance? = null
     private var lastBounds: CoordinateBounds? = null
     private var lastLayersKey: Int? = null
 
@@ -250,6 +252,7 @@ private class MapController(
         val layersKey = manager.key
         SideEffect {
             userLocation = navigation.location
+            userElevation = navigation.elevation
         }
 
         // Time
@@ -525,6 +528,15 @@ private class MapController(
         manager.setSelectedLocation(location)
         lifecycleOwner.inBackground {
             val elevation = Distance.meters(DEM.getElevation(location).elevation)
+            val stats = locationDetailStats(
+                context,
+                formatter,
+                prefs.baseDistanceUnits,
+                userLocation,
+                userElevation,
+                location,
+                elevation
+            )
 
             // The sheet outlives this pause-bound job, so its choice is handled on the screen's scope
             lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
@@ -553,7 +565,8 @@ private class MapController(
                             startDistanceMeasurement(location, true)
                             manager.setSelectedLocation(null)
                         },
-                    )
+                    ),
+                    stats = stats
                 )
                 if (chosen != null) {
                     chosen.action()

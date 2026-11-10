@@ -95,9 +95,10 @@ class TrailSenseComposeDestinationHost(
         title: String,
         subtitle: String?,
         actions: List<ActionItem>,
+        stats: List<TrailSenseStat> = emptyList(),
         onAction: (ActionItem?) -> Unit
     ) {
-        actionSheet = ActionSheetState(title, subtitle, actions, onAction)
+        actionSheet = ActionSheetState(title, subtitle, actions, stats, onAction)
     }
 
     fun showPhotoImport(
@@ -327,6 +328,7 @@ class TrailSenseComposeDestinationHost(
                     ActionSheetContent(
                         subtitle = currentActionSheet.subtitle,
                         actions = currentActionSheet.actions,
+                        stats = currentActionSheet.stats,
                         onAction = ::dismissActionSheet,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -374,9 +376,10 @@ class TrailSenseComposeDestinationHost(
     override suspend fun chooseAction(
         title: String,
         subtitle: String?,
-        actions: List<ActionItem>
+        actions: List<ActionItem>,
+        stats: List<TrailSenseStat>
     ): ActionItem? = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
-        showActionSheet(title, subtitle, actions) { if (continuation.isActive) continuation.resume(it) { } }
+        showActionSheet(title, subtitle, actions, stats) { if (continuation.isActive) continuation.resume(it) { } }
     }
 
     override suspend fun capturePhoto(maxWidth: Int?, maxHeight: Int?, zeroShutterLag: Boolean): String? =
@@ -391,5 +394,6 @@ private data class ActionSheetState(
     val title: String,
     val subtitle: String?,
     val actions: List<ActionItem>,
+    val stats: List<TrailSenseStat>,
     val onAction: (ActionItem?) -> Unit
 )

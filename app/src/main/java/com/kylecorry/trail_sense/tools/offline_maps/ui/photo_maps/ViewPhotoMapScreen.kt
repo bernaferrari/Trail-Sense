@@ -95,6 +95,7 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathC
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import com.kylecorry.trail_sense.shared.views.compose.locationDetailStats
 
 @Composable
 internal fun ViewPhotoMapToolScreen(
@@ -425,6 +426,15 @@ private class ViewPhotoMapRenderer(
 
         scope.launch {
             val elevation = onIO { Distance.meters(DEM.getElevation(location).elevation) }
+            val stats = locationDetailStats(
+                context,
+                formatService,
+                prefs.baseDistanceUnits,
+                gps.location,
+                Distance.meters(altimeter.altitude),
+                location,
+                elevation
+            )
 
             val chosen = effects.chooseAction(
                 formatService.formatLocation(location),
@@ -445,7 +455,8 @@ private class ViewPhotoMapRenderer(
                         startDistanceMeasurement(arrayOf(gps.location, location))
                         selectLocation(null)
                     },
-                )
+                ),
+                stats = stats
             )
             if (chosen != null) {
                 chosen.action()
