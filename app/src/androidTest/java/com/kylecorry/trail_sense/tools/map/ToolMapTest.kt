@@ -21,6 +21,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.longClick
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestData
 import com.kylecorry.trail_sense.test_utils.TestUtils
@@ -329,6 +330,12 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
         // The next point is added after the selected point instead of at the end
         longPressAt(pathEast)
+        // Holding toggles the selection, and a slow emulator can turn the start of the drag above
+        // into a hold that already selected this point, so hold again if that deselected it
+        optional {
+            hasText(string(R.string.path_edit_hint), exact = true, waitForTime = 1500)
+            longPressAt(pathEast)
+        }
         val added = Coordinate(pathEast.latitude + 0.0005, pathEast.longitude + 0.0005)
         tapAt(added)
         assertMeasuredPath(listOf(pathStart, pathEast, added, pathSouth, pathStart))
