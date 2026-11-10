@@ -427,7 +427,7 @@ private class AugmentedRealityController(
         val initialTime = viewModel.consumeInitialTime()
         val desiredMode = mode
         mode = ARMode.Normal
-        setMode(desiredMode, initialTime)
+        setMode(ARMode.Normal)
 
         views.calibrateBtn.onLongClick = {
             Alerts.dialog(
@@ -452,10 +452,19 @@ private class AugmentedRealityController(
             views.focusActionButton.isVisible = false
         }
 
-        ARCalibrateDisclaimer(context).alert()
-
-        if (!Sensors.hasGyroscope(context)) {
-            ARNoGyroAlert(context).alert()
+        // The disclaimers come first, one at a time; astronomy mode opens its target picker (a sheet) after them so
+        // the sheet doesn't cover them.
+        ARCalibrateDisclaimer(context).alert {
+            val applyMode = {
+                if (desiredMode != ARMode.Normal) {
+                    setMode(desiredMode, initialTime)
+                }
+            }
+            if (!Sensors.hasGyroscope(context)) {
+                ARNoGyroAlert(context).alert(applyMode)
+            } else {
+                applyMode()
+            }
         }
     }
 
