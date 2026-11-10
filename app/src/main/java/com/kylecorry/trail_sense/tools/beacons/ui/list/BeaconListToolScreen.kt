@@ -474,7 +474,6 @@ fun BeaconListToolScreen(
                 onClose = { hideQrImport() },
                 onCameraReady = { camera ->
                     qrImportCamera = camera
-                    camera.clipToOutline = true
                     camera.start(QR_IMPORT_CAMERA_SIZE) { bitmap ->
                         onQrImportCameraUpdate(bitmap)
                     }

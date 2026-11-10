@@ -35,7 +35,7 @@ class ImportPackingListCommand(
                 items = importService.import()
             }
 
-            // If items are null or empty, show a toast and return
+            // If items are null or empty, show a message and return
             if (items.isNullOrEmpty()) {
                 effects.showMessage(context.getString(R.string.no_items_found))
                 return@launch

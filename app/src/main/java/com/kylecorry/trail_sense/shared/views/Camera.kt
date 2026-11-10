@@ -102,13 +102,6 @@ class CameraState(val context: Context) {
             }
         }
 
-    /**
-     * Has no effect: the viewfinder always clips to the shape its [CameraPreview] modifier gives it. Kept until the
-     * beacon list's QR import stops setting it.
-     */
-    @Deprecated("The viewfinder clips to its modifier's shape; clip the CameraPreview instead.")
-    var clipToOutline: Boolean = true
-
     /** When true, touches on the preview zoom the camera but are left for whatever is under or around it. */
     var passThroughTouchEvents = false
 
