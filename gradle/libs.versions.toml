@@ -27,8 +27,11 @@ atomicfu = "0.33.0"
 ksp = "2.3.13"
 composeBom = "2026.09.00"
 composeMultiplatform = "1.12.2"
-# CMP 1.12 ships Material 3 1.9.0 (no M3 Expressive); the expressive APIs used in :shared need the 1.12 alpha line
+# CMP 1.12 ships Material 3 1.9.0 (no M3 Expressive); the expressive APIs used in :shared need the 1.12 alpha line.
+# 1.12.0-alpha03 is its last build; 1.13.0-beta02 would pull the whole CMP 1.13 beta stack over stable 1.12.2.
 composeMultiplatformMaterial3 = "1.12.0-alpha03"
+# Latest stable Material 3 is 1.4.0, which has no M3 Expressive API (MotionScheme, MaterialShapes, ButtonGroup,
+# LoadingIndicator...): building :app on it fails with 897 errors in 91 files. 1.5.0-rc01 is the newest release.
 material3Compose = "1.5.0-rc01"
 nav3 = "1.2.1"
 lifecycleVersion = "2.11.0"
