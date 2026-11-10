@@ -519,7 +519,6 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         isVisible(clickableIn("paths_list"), waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
         click(clickableIn("paths_list"))
-        // The Compose path details have no stop recording button yet (main gap), so this looks up the tag it should use
         isVisible(id("stop_recording_btn"))
 
         click(id("stop_recording_btn"))

@@ -178,6 +178,12 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import android.os.Bundle
+import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
+import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
+import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.luna.concurrency.onIO
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -204,7 +210,9 @@ fun PathOverviewToolScreen(
             declinationProvider = DeclinationFactory().getDeclinationStrategy(userPrefs, gps),
             baseDistanceUnits = userPrefs.baseDistanceUnits,
             isDebug = isDebug(),
-            debugElevations = { raw, smoothed -> DebugPathElevationsCommand(appContext, raw, smoothed).execute() }
+            debugElevations = { raw, smoothed -> DebugPathElevationsCommand(appContext, raw, smoothed).execute() },
+            isBacktrackOn = { BacktrackScheduler.isOn(appContext) },
+            stopBacktrack = { Tools.getService(appContext, PathsToolRegistration.SERVICE_BACKTRACK)?.disable() }
         )
     }
     val prefs = remember(appContext) { UserPreferences(appContext) }
@@ -562,7 +570,9 @@ fun PathOverviewToolScreen(
             viewModel.path?.let { ChangePointStyleCommand(context, scope).execute(it) }
         },
         timing = viewModel.debugTiming,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        isRecording = viewModel.isRecording,
+        onStopRecording = viewModel::stopRecording
     )
 
     if (showPathPointsSheet) {
@@ -643,7 +653,9 @@ internal class PathOverviewViewModel(
     private val declinationProvider: IDeclinationStrategy,
     private val baseDistanceUnits: DistanceUnits,
     private val isDebug: Boolean,
-    private val debugElevations: suspend (List<PathPoint>, List<PathPoint>) -> Unit
+    private val debugElevations: suspend (List<PathPoint>, List<PathPoint>) -> Unit,
+    private val isBacktrackOn: () -> Boolean,
+    private val stopBacktrack: suspend () -> Unit
 ) : ViewModel() {
 
     private val hikingService = HikingService
@@ -689,6 +701,12 @@ internal class PathOverviewViewModel(
     var userAzimuth by mutableStateOf<Bearing?>(null)
         private set
 
+    /** Whether Backtrack is recording into this path right now. */
+    var isRecording by mutableStateOf(false)
+        private set
+
+    private val onBacktrackChanged: (Bundle) -> Unit = { refreshRecording() }
+
     private val _navigationStarted = Channel<Unit>(Channel.BUFFERED)
 
     /** One event each time navigation along the path starts, so the screen can open the compass. */
@@ -707,6 +725,8 @@ internal class PathOverviewViewModel(
     }
 
     init {
+        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+        refreshRecording()
         viewModelScope.launch {
             pathService.getLivePath(pathId).asFlow().collect {
                 path = it
@@ -735,6 +755,21 @@ internal class PathOverviewViewModel(
 
     override fun onCleared() {
         stopSensors()
+        Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+    }
+
+    fun refreshRecording() {
+        viewModelScope.launch {
+            isRecording = onIO { pathService.getBacktrackPathId() == pathId && isBacktrackOn() }
+        }
+    }
+
+    /** Turns Backtrack off, which ends the recording of this path. */
+    fun stopRecording() {
+        viewModelScope.launch {
+            onIO { stopBacktrack() }
+            refreshRecording()
+        }
     }
 
     /** Selects [point], or clears the selection if it is the selected one. */
@@ -904,7 +939,9 @@ private fun PathOverviewHost(
     onLineStyleClick: () -> Unit,
     onPointStyleClick: () -> Unit,
     timing: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isRecording: Boolean = false,
+    onStopRecording: () -> Unit = {}
 ) {
     val density = LocalDensity.current
     val context = LocalContext.current
@@ -958,6 +995,12 @@ private fun PathOverviewHost(
                 Box(Modifier.animateItem()) {
                     selectedPoint()
                 }
+            }
+        }
+
+        if (isRecording) {
+            item(key = "recording") {
+                PathRecordingBanner(onStop = onStopRecording, modifier = Modifier.animateItem())
             }
         }
 
@@ -1284,6 +1327,38 @@ private fun PathIconButton(
             contentDescription = stringResource(contentDescription),
             modifier = Modifier.size(TrailSenseSize.leadingIcon)
         )
+    }
+}
+
+/** Shown while Backtrack records into this path, with a button that stops it. */
+@Composable
+private fun PathRecordingBanner(onStop: () -> Unit, modifier: Modifier = Modifier) {
+    TrailSenseGroupCard(
+        position = TrailSenseGroupPosition.Single,
+        modifier = modifier.testTag("path_recording_banner"),
+        contentPadding = PaddingValues(
+            start = TrailSenseSpacing.lg,
+            end = TrailSenseSpacing.sm,
+            top = TrailSenseSpacing.xs,
+            bottom = TrailSenseSpacing.xs
+        )
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.recording),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            FilledTonalIconButton(
+                onClick = onStop,
+                modifier = Modifier.testTag("stop_recording_btn")
+            ) {
+                Icon(
+                    painter = rememberVectorPainter(TrailIcons.BaselineStop24),
+                    contentDescription = stringResource(R.string.stop)
+                )
+            }
+        }
     }
 }
 
