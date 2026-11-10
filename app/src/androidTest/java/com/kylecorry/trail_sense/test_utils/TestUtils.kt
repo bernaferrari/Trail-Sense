@@ -447,13 +447,20 @@ object TestUtils {
             )
         }
 
-        waitFor {
-            viewWithText(android.R.string.ok).click()
+        if (!waitForClose) {
+            waitFor {
+                viewWithText(android.R.string.ok).click()
+            }
+            return
         }
 
-        if (waitForClose) {
-            waitFor {
-                not { view(By.clazz("android.widget.EditText")) }
+        // OK can be tapped before the typed date is accepted, which leaves the picker open, so tap it
+        // until the picker (its input mode toggle) is gone. The screen below can have text fields too.
+        val inputModeToggle = By.desc(Pattern.compile("(?i).*(text input|input mode).*"))
+        waitFor {
+            if (device.hasObject(inputModeToggle)) {
+                viewWithText(android.R.string.ok).click()
+                throw AssertionError("The date picker is still open")
             }
         }
     }
