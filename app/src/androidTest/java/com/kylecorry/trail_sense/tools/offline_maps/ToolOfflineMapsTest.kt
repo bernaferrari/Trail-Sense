@@ -148,6 +148,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
             isVisible(R.id.map_list_title)
         }
         input(R.id.searchbox, "")
+        // Until the cleared search reaches the field, the first "Test Map" on screen is the search text, not the row
+        hasText("Second Map")
     }
 
     private fun canExportOpenedOfflineMap() {
