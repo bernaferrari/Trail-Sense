@@ -413,6 +413,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Test Map", index = 1)
         hasText(Regex("\\d+(\\.\\d+)? (mi|ft)"))
         click(desc(string(R.string.stop)))
+        // The "Navigation cancelled" snackbar covers the bottom of the distance sheet until it times out
+        not(waitForTime = SNACKBAR_WAIT_MS) { hasText(string(R.string.navigation_cancelled)) }
 
         longClick(R.id.map)
         click("Distance")
@@ -599,5 +601,6 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
     companion object {
         private const val FILE_PICKER_WAIT_MS = 15000L
         private const val PHOTO_SAVE_WAIT_MS = 15000L
+        private const val SNACKBAR_WAIT_MS = 15000L
     }
 }
