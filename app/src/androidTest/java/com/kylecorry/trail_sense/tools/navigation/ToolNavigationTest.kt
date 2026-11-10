@@ -91,11 +91,12 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
                 click(string(R.string.beacon), exact = true)
             }
         )
-        input("Name", "Test Beacon")
-        input("Location", "1.0, -1.0")
-        input("Elevation", "100")
+        // The form's labels are placeholders inside the fields, so type by field id as the Places test does
+        input(id("beacon_name"), "Test Beacon")
+        input(id("beacon_location"), "1.0, -1.0")
+        input(id("beacon_elevation"), "100")
         scrollUntil { input(R.id.comment, "Test Comment") }
-        click(toolbarButton(Side.Right))
+        scrollUntil { click(id("create_beacon_save_btn"), waitForTime = 0) }
 
         // Navigate to it
         isVisible(id("beacon_list"))
