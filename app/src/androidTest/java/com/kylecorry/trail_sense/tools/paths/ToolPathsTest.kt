@@ -251,8 +251,9 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click("Dest Group")
         click(string(R.string.move))
 
-        // Delete path
-        click(id("path_item_menu_Empty Path"))
+        // Delete path: Empty Path is now in Dest Group, so the root's remaining path is the
+        // second list item, the one upstream deletes (index 1)
+        click(id("path_item_menu_Test Path"))
         click(string(R.string.delete))
         clickOk()
         not { hasText("Empty Path 2") }
@@ -270,7 +271,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         click(id("paths_menu_btn"))
         click(string(R.string.sort_by, string(R.string.most_recent)))
         click(string(R.string.name))
-        clickOk()
+        // The sort picker applies the tapped option and closes
+        clickOkIfShown()
         click(id("paths_menu_btn"))
         hasText(string(R.string.sort_by, string(R.string.name)))
         back(false)
