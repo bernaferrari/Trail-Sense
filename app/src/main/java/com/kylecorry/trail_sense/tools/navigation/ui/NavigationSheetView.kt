@@ -253,6 +253,15 @@ class NavigationSheetView(private val context: Context) {
                                 maxLines = 1
                             )
                         }
+                        state.location?.let { location ->
+                            Text(
+                                text = location,
+                                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
+                                color = scheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                     // The distance: the one number on the card.
                     state.distance?.let { distance ->
@@ -452,8 +461,7 @@ class NavigationSheetView(private val context: Context) {
                 context.getString(R.string.navigation_remaining_loss)
             )
         }
-        // The beacon's coordinates and elevation live on its details page (tap the name); the card keeps only
-        // what you need while walking.
+        val elevation = beacon.elevation?.let { formatter.formatElevation(Distance.meters(it)) }
         model = direction.asModel(
             title = beacon.name,
             titleDescription = titled(R.string.beacon, beacon.name),
@@ -462,7 +470,8 @@ class NavigationSheetView(private val context: Context) {
                 SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
             },
             details = details,
-            badgeShape = beacon.shape
+            badgeShape = beacon.shape,
+            location = listOfNotNull(formatter.formatLocation(beacon.coordinate), elevation).joinToString("  ·  ")
         )
     }
 
@@ -616,10 +625,12 @@ class NavigationSheetView(private val context: Context) {
             progress: Float = 0f,
             distance: SheetStat?,
             details: List<SheetDetail>,
-            badgeShape: com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape? = null
+            badgeShape: com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape? = null,
+            location: String? = null
         ): SheetModel {
             return SheetModel(
                 badgeShape = badgeShape,
+                location = location,
                 title = title,
                 titleDescription = titleDescription,
                 showCancel = showCancel,
@@ -655,7 +666,9 @@ class NavigationSheetView(private val context: Context) {
         val distance: SheetStat? = null,
         val details: List<SheetDetail> = emptyList(),
         /** The beacon's own shape for the badge (null: the default cookie). */
-        val badgeShape: com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape? = null
+        val badgeShape: com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape? = null,
+        /** The destination's coordinates (and elevation, when known), as upstream's card showed. */
+        val location: String? = null
     )
 
     companion object {
