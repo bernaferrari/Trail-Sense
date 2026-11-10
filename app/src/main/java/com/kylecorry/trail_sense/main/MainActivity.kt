@@ -20,7 +20,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,8 +45,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import com.google.android.material.color.DynamicColors
-import com.google.android.material.color.DynamicColorsOptions
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Screen
@@ -86,6 +83,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPrio
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
+import androidx.core.graphics.drawable.toDrawable
+import android.content.res.Configuration
 
 class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
@@ -144,16 +143,14 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
 
     override fun attachBaseContext(newBase: Context) {
-        // This is needed to prevent old colors from remaining when the theme changes
-        // Dynamic colors are only disabled until onCreate is called since it needs the activity to be created
-        applyThemeMode(themeProvider.getThemeMode(), false)
         super.attachBaseContext(newBase)
+        // The person's light or dark choice reaches the platform side too (the window, system pickers and any
+        // resource read through this activity), not only the Compose theme, which picks its colors itself.
+        nightModeOverride(newBase, themeProvider.getThemeMode())?.let { applyOverrideConfiguration(it) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ExceptionHandler.initialize(this)
-
-        updateTheme()
 
         val isBlackTheme =
             userPrefs.theme == UserPreferences.Theme.Black
@@ -202,7 +199,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
         // Handle black theme
         if (isBlackTheme) {
-            window.decorView.rootView.setBackgroundColor(Color.BLACK)
+            window.setBackgroundDrawable(Color.BLACK.toDrawable())
             bottomNavigation.useBlackTheme = true
         }
 
@@ -264,31 +261,15 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         bottomNavigation.showAllLabels = userPrefs.useShowAllBottomNavigationLabels
     }
 
-    private fun updateTheme() {
-        val mode = themeProvider.getThemeMode()
-        applyThemeMode(mode, true)
-    }
-
-    private fun applyThemeMode(mode: AppThemeMode, applyPalette: Boolean) {
-        AppCompatDelegate.setDefaultNightMode(
-            when (mode) {
-                AppThemeMode.Light -> AppCompatDelegate.MODE_NIGHT_NO
-                AppThemeMode.Dark -> AppCompatDelegate.MODE_NIGHT_YES
-                AppThemeMode.System -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            }
-        )
-        // The platform's own surfaces (the windows behind Compose dialogs, system pickers) take the same colors as
-        // Compose: the wallpaper's, or a scheme built from the chosen seed.
-        if (applyPalette) {
-            val seed = userPrefs.palette.seed
-            if (seed == null) {
-                DynamicColors.applyToActivityIfAvailable(this)
-            } else {
-                DynamicColors.applyToActivityIfAvailable(
-                    this,
-                    DynamicColorsOptions.Builder().setContentBasedSource(seed.toArgb()).build()
-                )
-            }
+    /** A configuration with the app's own light or dark mode, or null to follow the system's. */
+    private fun nightModeOverride(base: Context, mode: AppThemeMode): Configuration? {
+        val night = when (mode) {
+            AppThemeMode.Light -> Configuration.UI_MODE_NIGHT_NO
+            AppThemeMode.Dark -> Configuration.UI_MODE_NIGHT_YES
+            AppThemeMode.System -> return null
+        }
+        return Configuration().apply {
+            uiMode = (base.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or night
         }
     }
 
@@ -311,7 +292,6 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
     }
 
     fun reloadTheme() {
-        updateTheme()
         updateFullscreenMode()
         recreate()
     }

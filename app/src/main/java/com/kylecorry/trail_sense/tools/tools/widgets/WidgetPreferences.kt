@@ -10,17 +10,11 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 
-enum class WidgetTheme(override val id: Long, val themeId: Int?) :
-    Identifiable {
-    System(1, R.style.WidgetTheme),
-    TransparentBlack(
-        2,
-        R.style.WidgetTheme_TransparentBlack
-    ),
-    TransparentWhite(
-        3,
-        R.style.WidgetTheme_TransparentWhite
-    ),
+/** How a widget is drawn; the Glance content picks its colors from this (see ToolWidgetGlanceContent). */
+enum class WidgetTheme(override val id: Long) : Identifiable {
+    System(1),
+    TransparentBlack(2),
+    TransparentWhite(3),
 }
 
 class WidgetPreferences(

@@ -159,7 +159,6 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     // AndroidX
-    implementation(libs.appcompat)
     implementation(libs.core.ktx)
     implementation(libs.documentfile)
     implementation(libs.gridlayout)
@@ -205,7 +204,6 @@ dependencies {
     androidTestImplementation(libs.compose.ui.test.junit4)
 
     // Material
-    implementation(libs.material)
     implementation(libs.flexbox)
 
     // Andromeda

@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared
 
 import android.content.Context
 import android.hardware.SensorManager
-import com.google.android.material.color.DynamicColors
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.andromeda.preferences.BooleanPreference
@@ -61,6 +60,7 @@ import com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.TurnBackPreferences
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterBoilTimerPreferences
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherPreferences
+import com.kylecorry.trail_sense.main.theme.isDynamicColorAvailable
 
 class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
@@ -276,7 +276,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
                 _useDynamicColors -> TrailSensePalette.Wallpaper
                 else -> TrailSensePalette.Default
             }
-            return if (palette == TrailSensePalette.Wallpaper && !DynamicColors.isDynamicColorAvailable()) {
+            return if (palette == TrailSensePalette.Wallpaper && !isDynamicColorAvailable()) {
                 TrailSensePalette.Default
             } else {
                 palette
@@ -302,7 +302,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
     )
 
     val useDynamicColorsOnCompass: Boolean
-        get() = DynamicColors.isDynamicColorAvailable() && _useDynamicColorsOnCompass
+        get() = isDynamicColorAvailable() && _useDynamicColorsOnCompass
 
     var useCompactMode by BooleanPreference(
         cache,

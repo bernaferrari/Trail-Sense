@@ -83,6 +83,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
+import com.kylecorry.trail_sense.main.theme.isDynamicColorAvailable
 
 private val navigationMap = mapOf(
     R.string.pref_unit_settings to Route.UnitSettings,
@@ -119,7 +120,7 @@ fun SettingsToolScreen() {
             val compassColorsKey = stringResource(R.string.pref_use_dynamic_colors_on_compass)
             ThemeAppearanceControls(
                 prefs = prefs,
-                wallpaperAvailable = remember { com.google.android.material.color.DynamicColors.isDynamicColorAvailable() },
+                wallpaperAvailable = remember { isDynamicColorAvailable() },
                 nightFullscreen = remember { cache.getBoolean(fullscreenKey) ?: false },
                 compassWallpaperColors = remember { cache.getBoolean(compassColorsKey) ?: false },
                 onThemeChanged = {

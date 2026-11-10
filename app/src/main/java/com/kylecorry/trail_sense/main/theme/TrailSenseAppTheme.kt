@@ -2,7 +2,6 @@
 
 package com.kylecorry.trail_sense.main.theme
 
-import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -49,7 +48,7 @@ fun TrailSenseAppTheme(
     val chosenPalette = palette ?: prefs.palette
     val chosenStyle = style ?: prefs.colorStyle
     val wallpaperScheme = if (
-        chosenPalette == TrailSensePalette.Wallpaper && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        chosenPalette == TrailSensePalette.Wallpaper && isDynamicColorAvailable()
     ) {
         if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     } else {

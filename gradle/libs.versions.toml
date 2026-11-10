@@ -13,7 +13,6 @@ glance = "1.2.0"
 andromedaVersion = "26.0.0"
 cameraxVersion = "1.6.2"
 coreKtx = "1.19.1"
-appcompat = "1.8.0"
 detekt = "2.0.0-alpha.6"
 desugar_jdk_libs = "2.1.5"
 flexbox = "3.0.0"
@@ -34,7 +33,6 @@ composeMultiplatformMaterial3 = "1.12.0-alpha03"
 material3Compose = "1.5.0-rc01"
 nav3 = "1.2.1"
 lifecycleVersion = "2.11.0"
-material = "1.14.0"
 luna = "2.4.1"
 mockitoKotlin = "6.4.0"
 mapsforge = "32021e8ff7"
@@ -103,7 +101,6 @@ compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
 ext-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
@@ -128,7 +125,6 @@ lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.r
 luna = { module = "com.kylecorry:luna", version.ref = "luna" }
 mapsforge-map-android = { module = "com.github.kylecorry31.mapsforge:mapsforge-map-android", version.ref = "mapsforge" }
 mapsforge-map-reader = { module = "com.github.kylecorry31.mapsforge:mapsforge-map-reader", version.ref = "mapsforge" }
-material = { module = "com.google.android.material:material", version.ref = "material" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3" }
