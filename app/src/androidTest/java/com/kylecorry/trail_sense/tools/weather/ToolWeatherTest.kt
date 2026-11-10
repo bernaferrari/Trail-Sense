@@ -97,7 +97,8 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
     }
 
     private fun canUseWeatherMonitor() {
-        hasText(id("play_bar_title"), "Off - 30m")
+        // Without a forecast yet, the empty state's button starts the monitor and its row only shows once it is on;
+        // with one, its row has the switch
         click(id("play_btn"))
 
         // TODO: Figure out how to check this on staging builds
@@ -114,7 +115,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
 
-        hasText(id("play_bar_title"), "On - 30m")
+        hasText(id("play_bar_title"), "On · 30m")
 
         click(id("play_btn"))
 
