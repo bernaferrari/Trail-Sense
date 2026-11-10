@@ -64,6 +64,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -368,6 +369,7 @@ private fun CloudScreen(
                 ) {
                     readings.forEach { reading ->
                         row { position ->
+                            key(reading.value.id) {
                             CloudReadingRow(
                                 reading = reading,
                                 position = position,
@@ -375,6 +377,7 @@ private fun CloudScreen(
                                 onCloudImageClick = onCloudImageClick,
                                 onDeleteCloud = onDeleteCloud
                             )
+                            }
                         }
                     }
                 }
@@ -468,7 +471,7 @@ private fun CloudReadingRow(
                 ) {
                     Icon(
                         imageVector = TrailIcons.MenuDots,
-                        contentDescription = name,
+                        contentDescription = stringResource(R.string.more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
