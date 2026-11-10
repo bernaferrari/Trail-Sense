@@ -299,7 +299,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         changePointStyle("None", "Elevation")
         changePointStyle("Elevation", "None")
 
-        // Stats
+        // Stats: the stats sit above the appearance rows scrolled to above
+        scrollToStart()
         hasText("0m")
         hasText("Duration")
 
