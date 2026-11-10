@@ -194,7 +194,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         hasText("Test beacon 2")
         back(false)
         hasText("Test group")
-        hasText("1 beacon")
+        hasText("1 place")
         hasText("Test beacon")
     }
 
@@ -203,7 +203,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         click("Move to")
         click("Test group")
         click("Move")
-        hasText("2 beacons")
+        hasText("2 places")
         not { hasText("Test beacon", exact = true) }
 
         click("Test group")
