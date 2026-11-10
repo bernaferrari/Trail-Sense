@@ -76,6 +76,8 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
             if (!Sensors.hasGyroscope(TestUtils.context)) {
                 clickOk()
             }
+            // Astronomy mode then asks what to locate (after the disclaimers here); cancel it, as upstream's test did
+            click(string(android.R.string.cancel), exact = true)
             isVisible(desc(string(R.string.calibrate)))
         } else {
             not { isVisible(id("button_3d"), waitForTime = 0) }
