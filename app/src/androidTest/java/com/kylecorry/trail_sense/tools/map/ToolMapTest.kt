@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map
 
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import com.kylecorry.trail_sense.test_utils.views.desc
 import android.graphics.Point
@@ -225,7 +226,9 @@ class ToolMapTest : ToolTestBase(Tools.MAP, location) {
 
         click(mapControl(R.string.map_options))
         click("Layers")
-        back()
+        // Close the sheet once it is open (a back while it slides in leaves it open)
+        isVisible(desc(string(R.string.move_layer_up)))
+        backUntil { isVisible(mapControl(R.string.map_options)) }
     }
 
     // The map is drawn on a canvas, so these tests find where something should be on the screen using
