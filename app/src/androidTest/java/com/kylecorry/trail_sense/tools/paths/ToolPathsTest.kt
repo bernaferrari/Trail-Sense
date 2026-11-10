@@ -27,6 +27,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInOrder
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotVisible
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
@@ -285,8 +286,12 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText("Test Path", exact = true)
 
         // Settings
-        scrollUntil { click(R.id.path_color) }
-        clickOk()
+        // A tap that lands while the scroll is still settling is lost, so tap the color row again if no dialog opens
+        scrollUntil { isVisible(R.id.path_color, waitForTime = 0) }
+        any(
+            { click(R.id.path_color); clickOk() },
+            { click(R.id.path_color); clickOk() }
+        )
 
         // The line style row can be below the fold under the color row
         scrollUntil { click("Dotted") }

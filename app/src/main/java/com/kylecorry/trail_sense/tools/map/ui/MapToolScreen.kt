@@ -480,10 +480,16 @@ private class MapController(
             if (startWithUserLocation) userLocation else null,
             location
         )
+        // A path drawn from scratch is the user's work, so cancelling it asks first, as upstream did
+        val isCreatingPath = initialPoints.isEmpty()
         manager.startDistanceMeasurement(initialPoints)
         distanceSheet.show()
         distanceSheet.cancelListener = {
-            stopDistanceMeasurement()
+            if (isCreatingPath && manager.getDistanceMeasurementPoints().isNotEmpty()) {
+                CustomUiUtils.confirmDiscardChanges(context) { stopDistanceMeasurement() }
+            } else {
+                stopDistanceMeasurement()
+            }
         }
         distanceSheet.createPathListener = {
             lifecycleOwner.inBackground {
