@@ -42,12 +42,12 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
 
         input(id("distance_to_target"), "100")
 
-        input(id("miss_distance_x"), "1")
+        input(id("miss_distance_x"), "1", closeKeyboardOnCompletion = true)
         // The adjustment readout also says "Right", so pick the option inside the windage selector
         click({ view(By.text(string(R.string.right)).hasAncestor(byResName("miss_direction_x"))) })
 
         scrollUntil { isVisible(id("miss_direction_y")) }
-        input(id("miss_distance_y"), "2")
+        input(id("miss_distance_y"), "2", closeKeyboardOnCompletion = true)
         click({ view(By.text(string(R.string.above)).hasAncestor(byResName("miss_direction_y"))) })
 
         // The distance is in yards now (it was feet): 1 in at 100 yd is about 1 MOA, so 4 clicks of 1/4 MOA
