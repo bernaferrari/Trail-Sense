@@ -25,7 +25,7 @@ kotlin {
     jvmToolchain(17)
     jvm {
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_11
+            jvmTarget = JvmTarget.JVM_17
         }
     }
     iosArm64()
@@ -111,11 +111,11 @@ val productionSources = files(provider {
 tasks.withType<Detekt>().configureEach {
     setSource(productionSources)
     exclude("**/gov/nasa/worldwind/**")
-    jvmTarget = "11"
+    jvmTarget = "17"
 }
 
 tasks.withType<DetektCreateBaselineTask>().configureEach {
     setSource(productionSources)
     exclude("**/gov/nasa/worldwind/**")
-    jvmTarget = "11"
+    jvmTarget = "17"
 }
