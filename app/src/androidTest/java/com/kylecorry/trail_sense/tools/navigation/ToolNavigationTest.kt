@@ -83,8 +83,14 @@ class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.
         click(string(R.string.navigation_places), exact = true)
 
         // Create a beacon
-        click(id("create_btn"))
-        click("Place", exact = true)
+        // An empty list offers its own "Save a place" button instead of the create menu
+        any(
+            { click(id("save_place_btn"), waitForTime = 0) },
+            {
+                click(id("create_btn"))
+                click(string(R.string.beacon), exact = true)
+            }
+        )
         input("Name", "Test Beacon")
         input("Location", "1.0, -1.0")
         input("Elevation", "100")

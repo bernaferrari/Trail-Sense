@@ -6,6 +6,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVertical
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
@@ -51,8 +52,14 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun createBeacon() {
-        click(id("create_btn"))
-        click(string(R.string.beacon), exact = true)
+        // An empty list offers its own "Save a place" button instead of the create menu
+        any(
+            { click(id("save_place_btn"), waitForTime = 0) },
+            {
+                click(id("create_btn"))
+                click(string(R.string.beacon), exact = true)
+            }
+        )
 
         hasText(string(R.string.create_beacon))
 
