@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityWindowInfo
 import java.util.regex.Pattern
@@ -323,6 +324,8 @@ object TestUtils {
     fun setupDefaultPreferences() {
         val prefs = PreferencesSubsystem.getInstance(context).preferences
         prefs.clear()
+        // Session state (such as a path being followed) outlives the database, so a test must not inherit it
+        SessionStateSubsystem.getInstance(context).preferences.clear()
 
         val migrator = PreferenceMigrator.getInstance()
         migrator.migrate(context)

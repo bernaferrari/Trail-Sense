@@ -4,7 +4,6 @@ import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.test_utils.views.view
 import java.util.regex.Pattern
 import com.kylecorry.trail_sense.test_utils.views.desc
-import com.kylecorry.trail_sense.test_utils.views.clickableIn
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import android.net.Uri
 import androidx.test.uiautomator.Direction
@@ -128,6 +127,8 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
     @Test
     fun canCreatePathOnMap() {
+        // The map only draws (and so only starts a path) when there is a visible offline map
+        relaunchTool { TestData.addOfflineMap("Test Map") }
         click(R.id.add_btn)
         click(string(R.string.create_path_on_map))
         clickOkIfShown()
@@ -266,7 +267,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText("Test Path", exact = true)
 
         // Settings
-        click(R.id.path_color)
+        scrollUntil { click(R.id.path_color) }
         clickOk()
 
         click("Dotted")
@@ -516,9 +517,14 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         hasText(string(R.string.places_backtrack_every, "1m"))
 
         // Wait for the path to be created
-        isVisible(clickableIn("paths_list"), waitForTime = GPS_WAIT_FOR_TIMEOUT)
+        // The backtrack bar is the first clickable in the list, so look for the recorded path's row by its
+        // point count
+        val recordedPath = {
+            view(By.clickable(true).hasDescendant(By.text(Pattern.compile("\\d+ points?"))))
+        }
+        isVisible(recordedPath, waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
-        click(clickableIn("paths_list"))
+        click(recordedPath)
         isVisible(id("stop_recording_btn"))
 
         click(id("stop_recording_btn"))
@@ -592,7 +598,10 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         scrollUntil {
             hasDataPoint(Regex("5[2-4]\\d ft"), string(R.string.lowest_point_elevation))
         }
-        hasDataPoint(Regex("5[7-9]\\d ft"), string(R.string.highest_point_elevation))
+        // The add point button can cover the value until the row is scrolled above it
+        scrollUntil {
+            hasDataPoint(Regex("5[7-9]\\d ft"), string(R.string.highest_point_elevation))
+        }
         isVisible(R.id.chart)
     }
 
