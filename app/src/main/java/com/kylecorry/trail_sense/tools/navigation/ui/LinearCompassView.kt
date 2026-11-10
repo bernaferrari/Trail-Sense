@@ -22,6 +22,8 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.camera.AugmentedRealityUtils
 import com.kylecorry.trail_sense.shared.extensions.getValuesBetween
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 class LinearCompassView(
     context: Context
@@ -82,7 +84,7 @@ class LinearCompassView(
         paint.isAntiAlias = true
         paint.isFilterBitmap = true
         paint.colorFilter = PorterDuffColorFilter(
-            Resources.androidTextColorPrimary(context),
+            TrailSenseColors.current.onSurface.toArgb(),
             PorterDuff.Mode.SRC_IN
         )
         nativeCanvas.drawBitmap(bitmap, canvasWidth / 2f - iconSize / 2f, 0f, paint)
@@ -93,7 +95,7 @@ class LinearCompassView(
         val nativeCanvas = canvas ?: return
         val values = getValuesBetween(rawMinimum, rawMaximum, 5f).map { it.toInt() }
         val primaryColor = Resources.getCardinalDirectionColor(context)
-        val secondaryColor = Resources.androidTextColorPrimary(context)
+        val secondaryColor = TrailSenseColors.current.onSurface.toArgb()
 
         values.forEach {
             val x = toPixel(it.toFloat())

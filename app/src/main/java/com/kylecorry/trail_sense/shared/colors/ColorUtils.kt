@@ -7,6 +7,8 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.UserPreferences
 import kotlin.math.max
 import kotlin.math.min
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 object ColorUtils {
 
@@ -50,7 +52,7 @@ object ColorUtils {
         if (theme == UserPreferences.Theme.Black || theme == UserPreferences.Theme.Night) {
             return Color.BLACK
         }
-        return Resources.androidBackgroundColorPrimary(context)
+        return TrailSenseColors.current.background.toArgb()
     }
 
 }

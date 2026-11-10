@@ -79,6 +79,8 @@ import kotlinx.datetime.LocalTime
 import kotlin.math.floor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 object CustomUiUtils {
     /** Snackbar lengths for [snackbar], the same values as Material's Snackbar.LENGTH_SHORT and LENGTH_LONG. */
@@ -664,22 +666,13 @@ object CustomUiUtils {
         )
     }
 
+    /** The theme's primary color, for drawing outside composition; composables use MaterialTheme.colorScheme. */
     fun Resources.getPrimaryColor(context: Context): Int {
-        return try {
-            getAndroidColorAttr(context, androidx.appcompat.R.attr.colorPrimary)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            AppColor.Orange.color
-        }
+        return TrailSenseColors.current.primary.toArgb()
     }
 
     fun Resources.getColorOnPrimary(context: Context): Int {
-        return try {
-            getAndroidColorAttr(context, com.google.android.material.R.attr.colorOnPrimary)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Color.WHITE
-        }
+        return TrailSenseColors.current.onPrimary.toArgb()
     }
 
     fun Resources.getCardinalDirectionColor(context: Context): Int {

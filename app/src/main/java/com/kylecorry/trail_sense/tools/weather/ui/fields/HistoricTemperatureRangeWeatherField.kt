@@ -9,6 +9,8 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 class HistoricTemperatureRangeWeatherField(
     private val low: Temperature?,
@@ -37,7 +39,7 @@ class HistoricTemperatureRangeWeatherField(
             }
 
             else -> {
-                Resources.androidTextColorSecondary(context)
+                TrailSenseColors.current.onSurfaceVariant.toArgb()
             }
         }
 

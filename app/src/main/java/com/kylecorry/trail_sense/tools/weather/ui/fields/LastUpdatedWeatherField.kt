@@ -7,6 +7,8 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import kotlin.time.Instant
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 class LastUpdatedWeatherField(private val time: Instant?) : WeatherField {
 
@@ -15,7 +17,7 @@ class LastUpdatedWeatherField(private val time: Instant?) : WeatherField {
     override fun getListItem(context: Context): WeatherListItem? {
         time ?: return null
 
-        val color = Resources.androidTextColorSecondary(context)
+        val color = TrailSenseColors.current.onSurfaceVariant.toArgb()
 
         return WeatherListItem(
             8,

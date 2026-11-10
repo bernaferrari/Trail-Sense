@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.scales.IColorScale
+import androidx.compose.material3.MaterialTheme
 
 class ColorScaleState {
     var colorScale by mutableStateOf<IColorScale?>(null)
@@ -29,7 +30,7 @@ fun ColorScaleContent(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val textColor = Color(Resources.androidTextColorSecondary(context))
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
     val textSize = 12.sp
 
     Canvas(modifier = modifier.fillMaxSize()) {

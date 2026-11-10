@@ -10,6 +10,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 // TODO: Build chart into this
 class TemperatureWeatherField(
@@ -36,7 +38,7 @@ class TemperatureWeatherField(
             }
 
             else -> {
-                Resources.androidTextColorSecondary(context)
+                TrailSenseColors.current.onSurfaceVariant.toArgb()
             }
         }
 

@@ -144,6 +144,8 @@ import kotlinx.coroutines.launch
 import kotlin.time.Instant
 import kotlin.math.hypot
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 fun openAugmentedReality(
     appNavigator: TrailSenseNavigator,
@@ -1054,7 +1056,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     val guideIcon = ArGuideIconView()
     val guideCancel = createTransparentIconButton(
         TrailIcons.Cancel,
-        Resources.androidTextColorSecondary(context),
+        TrailSenseColors.current.onSurfaceVariant.toArgb(),
         android.R.string.cancel
     )
     val guideName = ArTextView(

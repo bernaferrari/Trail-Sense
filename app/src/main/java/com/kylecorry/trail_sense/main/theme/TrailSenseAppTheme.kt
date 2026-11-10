@@ -17,6 +17,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSenseColorStyle
 import com.kylecorry.trail_sense.shared.views.TrailSensePalette
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
+import androidx.compose.material3.MaterialTheme
 
 /** Bumped when the palette or color style changes, so every themed surface picks up the new colors at once. */
 object ThemeChoices {
@@ -66,6 +68,8 @@ fun TrailSenseAppTheme(
             modifier = Modifier.semantics { testTagsAsResourceId = true },
             propagateMinConstraints = true
         ) {
+            // Drawing code outside composition (canvas layers, map sources) reads the same colors.
+            TrailSenseColors.current = MaterialTheme.colorScheme
             content()
         }
     }

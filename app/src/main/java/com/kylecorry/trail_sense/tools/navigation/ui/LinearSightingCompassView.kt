@@ -282,7 +282,7 @@ class LinearSightingCompassView(private val context: Context) : ICompassView {
                             .align(Alignment.Center)
                             .width(1.dp)
                             .height(200.dp)
-                            .background(ComposeColor(Resources.getPrimaryColor(context)))
+                            .background(MaterialTheme.colorScheme.primary)
                     )
                 }
                 linearCompass.Content(

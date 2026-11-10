@@ -87,6 +87,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 class NavigationSheetView(private val context: Context) {
 
@@ -548,7 +550,7 @@ class NavigationSheetView(private val context: Context) {
             return DirectionState(
                 arrowIcon = TrailIcons.CompassUnavailable,
                 arrowRotation = 0f,
-                arrowColor = Color(Resources.androidTextColorSecondary(context)),
+                arrowColor = Color(TrailSenseColors.current.onSurfaceVariant.toArgb()),
                 bearingText = bearingText,
                 offCourse = null
             )

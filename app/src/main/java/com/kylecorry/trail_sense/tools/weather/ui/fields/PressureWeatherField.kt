@@ -8,13 +8,15 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 class PressureWeatherField(private val pressure: Pressure?) : WeatherField {
     override fun getListItem(context: Context): WeatherListItem? {
         pressure ?: return null
         val formatter = FormatService.getInstance(context)
         val units = UserPreferences(context).pressureUnits
-        val color = Resources.androidTextColorSecondary(context)
+        val color = TrailSenseColors.current.onSurfaceVariant.toArgb()
         val value = formatter.formatPressure(
             pressure.convertTo(units),
             Units.getDecimalPlaces(units)

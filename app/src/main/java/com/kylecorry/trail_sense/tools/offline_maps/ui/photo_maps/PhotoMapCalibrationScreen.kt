@@ -244,9 +244,9 @@ internal fun PhotoMapCalibrationToolScreen(
             else -> TrailIcons.Info
         },
         iconTint = when {
-            notice.isNotBlank() -> Color(getErrorColor(context))
+            notice.isNotBlank() -> MaterialTheme.colorScheme.error
             isPointCalibrated -> Color(AppColor.Green.color)
-            else -> Color(Resources.androidTextColorSecondary(context))
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         },
         nextText = stringResource(
             when {
@@ -294,13 +294,6 @@ private fun getCalibrationNotice(result: MapCalibrationValidationResult): String
         MapCalibrationValidationResult.ImplausibleScale ->
             stringResource(R.string.map_calibration_error_implausible_scale)
     }
-}
-
-private fun getErrorColor(context: Context): Int {
-    return Resources.getAndroidColorAttr(
-        context,
-        androidx.appcompat.R.attr.colorError
-    )
 }
 
 internal class PhotoMapCalibrationViewModel(
@@ -729,12 +722,7 @@ private class PhotoMapCalibrationPanelState(
                         Text(
                             text = notice,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(
-                                Resources.getAndroidColorAttr(
-                                    context,
-                                    androidx.appcompat.R.attr.colorError
-                                )
-                            )
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
