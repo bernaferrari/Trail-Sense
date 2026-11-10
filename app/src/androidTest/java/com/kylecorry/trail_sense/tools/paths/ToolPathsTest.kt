@@ -63,6 +63,7 @@ import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -76,6 +77,19 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
+
+    // Each navigator listens for location changes for as long as the process lives and saves its own
+    // session when one arrives, so one left over from an earlier test would overwrite this test's session
+    private val navigators = mutableListOf<PathNavigator>()
+
+    private fun newNavigator(): PathNavigator {
+        return PathNavigator(TestUtils.context).also { navigators.add(it) }
+    }
+
+    @After
+    fun cancelNavigators() {
+        navigators.forEach { it.cancel() }
+    }
     @Test
     fun verifyBasicFunctionality() {
         hasText(id("paths_title"), string(R.string.paths))
@@ -825,7 +839,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         waitFor { assertNotNull(PathNavigationStore().load()?.progress) }
 
         // A new navigator is what the app has after it is restarted
-        val restored = PathNavigator(TestUtils.context)
+        val restored = newNavigator()
         restored.awaitRestore()
         val destination = restored.destination.first()
 
@@ -837,21 +851,21 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
     @Test
     fun navigatingToAnotherPathReplacesThePreviousOneUntilItIsStopped() = runBlocking {
-        val navigator = PathNavigator(TestUtils.context)
+        val navigator = newNavigator()
         follow(OUT_AND_BACK, reversed = false, from = coordinatesOf(OUT_AND_BACK)[0], navigator)
         assertEquals("Durfee Out", navigator.destination.first()!!.path.name)
 
         follow(LOOP, reversed = false, from = coordinatesOf(LOOP)[0], navigator)
 
         assertEquals("Durfee Short", navigator.destination.first()!!.path.name)
-        val restored = PathNavigator(TestUtils.context)
+        val restored = newNavigator()
         restored.awaitRestore()
         assertEquals("Durfee Short", restored.destination.first()!!.path.name)
 
         navigator.cancel()
 
         assertNull(navigator.destination.first())
-        val restoredAfterStopping = PathNavigator(TestUtils.context)
+        val restoredAfterStopping = newNavigator()
         restoredAfterStopping.awaitRestore()
         assertNull(restoredAfterStopping.destination.first())
     }
@@ -865,7 +879,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
             .navigate(start).remainingElevationGain.meters().value
         PreferencesSubsystem.getInstance(TestUtils.context).preferences
             .putInt(TestUtils.context.getString(R.string.pref_elevation_smoothing), 1000)
-        val restored = PathNavigator(TestUtils.context)
+        val restored = newNavigator()
         restored.awaitRestore()
         val smoothedGain = restored.destination.first()!!.route
             .navigate(start).remainingElevationGain.meters().value
@@ -893,7 +907,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         asset: String,
         reversed: Boolean,
         from: Coordinate,
-        navigator: PathNavigator = PathNavigator(TestUtils.context)
+        navigator: PathNavigator = newNavigator()
     ): PathRoute {
         assumeFalse(isStagingBuild)
         UserPreferences(TestUtils.context).gps.locationOverride = from
