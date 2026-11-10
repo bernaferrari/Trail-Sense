@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.map.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.kylecorry.andromeda.torch.screenBrightness
 
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
@@ -109,7 +110,7 @@ import kotlinx.coroutines.withContext
 
 /** The map tool: the map with its controls and sheets, or a prompt to add one when no visible map can be drawn. */
 @Composable
-fun MapToolScreen(modifier: Modifier = Modifier) {
+fun MapToolScreen(startPathCreation: Boolean = false, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val appContext = context.applicationContext
     val navigator = LocalNavigator.current
@@ -122,6 +123,14 @@ fun MapToolScreen(modifier: Modifier = Modifier) {
     val controller = remember { MapController(context, navigator, effects, lifecycleOwner) }
     LaunchedEffect(viewModel, resumeCount) {
         viewModel.refreshMaps()
+    }
+    // Opened to draw a path: start once, when the map is first shown (not again after returning to it)
+    var pendingPathCreation by rememberSaveable { mutableStateOf(startPathCreation) }
+    LaunchedEffect(viewModel.hasRenderableMap, pendingPathCreation) {
+        if (pendingPathCreation && viewModel.hasRenderableMap == true) {
+            pendingPathCreation = false
+            controller.startPathCreation()
+        }
     }
     controller.Content(
         hasRenderableMap = viewModel.hasRenderableMap,
@@ -454,6 +463,11 @@ private class MapController(
         manager.setOnDistanceEditStateChangedCallback(null)
         manager.stopDistanceMeasurement()
         views.distanceSheet.hide()
+    }
+
+    /** Starts drawing a new path from no points, as the map menu's Create path does. */
+    fun startPathCreation() {
+        startDistanceMeasurement(null, false)
     }
 
     private fun startDistanceMeasurement(location: Coordinate?, startWithUserLocation: Boolean) {

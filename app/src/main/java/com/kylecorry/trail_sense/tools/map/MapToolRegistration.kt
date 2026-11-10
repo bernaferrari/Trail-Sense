@@ -50,7 +50,7 @@ object MapToolRegistration : ToolRegistration {
             Tools.MAP,
             context.getString(R.string.map),
             TrailIcons.Maps,
-            Route.Map,
+            Route.Map(),
             ToolCategory.Location,
             settingsRoute = Route.MapSettings,
             guideId = R.raw.guide_tool_map,

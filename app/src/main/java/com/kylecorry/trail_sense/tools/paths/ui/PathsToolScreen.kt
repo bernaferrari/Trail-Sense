@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathDialog
@@ -301,6 +302,7 @@ fun PathsToolScreen(
                 viewModel.refresh()
             }
         },
+        onCreatePathOnMap = { appNavigator.navigate(Route.Map(startPathCreation = true)) },
         onCreatePath = {
             scope.launch {
                 CreatePathCommand(context, pathService, prefs.paths).execute(viewModel.rootId)?.let {
@@ -503,6 +505,7 @@ private fun PathsScreen(
     onImportPath: () -> Unit,
     onCreateGroup: () -> Unit,
     onCreatePath: () -> Unit,
+    onCreatePathOnMap: () -> Unit,
     onBacktrackFrequencyClick: () -> Unit,
     onBacktrackToggleClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -531,7 +534,8 @@ private fun PathsScreen(
                 PathsCreateMenu(
                     onImportPath = onImportPath,
                     onCreateGroup = onCreateGroup,
-                    onCreatePath = onCreatePath
+                    onCreatePath = onCreatePath,
+                    onCreatePathOnMap = onCreatePathOnMap
                 )
             }
         ) {
@@ -669,7 +673,8 @@ private fun PathsOverflowMenu(
 private fun PathsCreateMenu(
     onImportPath: () -> Unit,
     onCreateGroup: () -> Unit,
-    onCreatePath: () -> Unit
+    onCreatePath: () -> Unit,
+    onCreatePathOnMap: () -> Unit
 ) {
     var isOpen by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = isOpen) { isOpen = false }
@@ -731,6 +736,14 @@ private fun PathsCreateMenu(
             },
             icon = { Icon(rememberVectorPainter(TrailIcons.PathSolid), contentDescription = null) },
             text = { Text(stringResource(R.string.path)) }
+        )
+        FloatingActionButtonMenuItem(
+            onClick = {
+                isOpen = false
+                onCreatePathOnMap()
+            },
+            icon = { Icon(rememberVectorPainter(TrailIcons.Maps), contentDescription = null) },
+            text = { Text(stringResource(R.string.create_path_on_map)) }
         )
     }
 }
@@ -1028,6 +1041,7 @@ private fun PathsScreenPreview() {
             onImportPath = {},
             onCreateGroup = {},
             onCreatePath = {},
+            onCreatePathOnMap = {},
             onBacktrackFrequencyClick = {},
             onBacktrackToggleClick = {}
         )

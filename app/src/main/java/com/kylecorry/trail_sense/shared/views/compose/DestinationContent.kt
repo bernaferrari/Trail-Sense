@@ -183,7 +183,7 @@ fun DestinationContent(
             Route.PathsSettings -> PathsSettingsToolScreen()
             Route.AstronomySettings -> AstronomySettingsToolScreen()
 
-            Route.Map -> MapToolScreen()
+            is Route.Map -> MapToolScreen(startPathCreation = route.startPathCreation)
 
             // --- Tools with a disclaimer, camera permission or plugin details ---
             Route.CliffHeight -> CliffHeightToolScreen()
