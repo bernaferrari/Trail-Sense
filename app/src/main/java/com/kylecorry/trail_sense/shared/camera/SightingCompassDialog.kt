@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.camera
 
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
 import android.content.Context
@@ -133,6 +134,8 @@ class SightingCompassDialog(
                 },
                 compassRange = compassRange,
                 modifier = Modifier
+                    // A dialog is its own window, so it repeats the app root's test tag setting for UiAutomator
+                    .semantics { testTagsAsResourceId = true }
                     .fillMaxSize()
                     .focusRequester(focusRequester)
                     .focusable()

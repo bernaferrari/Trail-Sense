@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.camera
 
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
@@ -134,6 +135,8 @@ class PhotoImportDialog(
                     startCamera(it)
                 },
                 modifier = Modifier
+                    // A dialog is its own window, so it repeats the app root's test tag setting for UiAutomator
+                    .semantics { testTagsAsResourceId = true }
                     .fillMaxSize()
                     .focusRequester(focusRequester)
                     .focusable()

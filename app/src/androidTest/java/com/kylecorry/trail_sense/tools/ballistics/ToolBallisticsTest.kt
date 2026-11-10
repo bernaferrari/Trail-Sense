@@ -16,6 +16,7 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToStart
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
@@ -57,6 +58,8 @@ class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
     }
 
     private fun energy(){
+        // The scope page scrolled the choices out of view
+        scrollToStart()
         click("Energy")
 
         input(id("bullet_speed"), "750")

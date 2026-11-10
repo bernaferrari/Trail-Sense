@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.semantics
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -97,6 +99,8 @@ private fun SurvivalGuideQuickSearchSheet(
     ) {
         Column(
             modifier = Modifier
+                // The sheet is its own window, so it repeats the app root's test tag setting for UiAutomator
+                .semantics { testTagsAsResourceId = true }
                 .fillMaxWidth()
                 .padding(horizontal = TrailSenseSpacing.screen)
                 .padding(bottom = TrailSenseSpacing.xl),

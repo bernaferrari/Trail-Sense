@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import androidx.compose.ui.platform.testTag
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -1197,7 +1198,7 @@ private fun NavigationTitle(
 ) {
     if (!state.isTitleVisible) return
     // The heading sits inside the dial, like a watch face: the number on the lubber line, the direction under it.
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier.testTag("navigation_title"), horizontalAlignment = Alignment.CenterHorizontally) {
         // The number is centred on its own; the degree sign hangs to its right (an invisible twin on the left
         // balances it), so "40°" never sits left of centre.
         val digits = state.title.removeSuffix("°")
@@ -1232,7 +1233,7 @@ private fun NavigationClassicHeading(state: NavigationTitleState, modifier: Modi
                 pop()
             }
         },
-        modifier = modifier,
+        modifier = modifier.testTag("navigation_title"),
         style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurface,
