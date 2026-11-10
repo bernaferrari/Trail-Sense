@@ -156,12 +156,17 @@ fun <T : Serializable> SimpleConvertScreen(
             }
         }
 
+        // The grid keeps the row it was opened for while it animates away, and ignores taps then: otherwise a tap
+        // during the exit would land on the top row's units (and could swap the rows).
+        val lastTarget = remember { mutableListOf(true) }
+        picking?.let { lastTarget[0] = it }
         AnimatedVisibility(visible = picking != null) {
-            val target = picking ?: true
+            val target = picking ?: lastTarget[0]
             ConvertUnitGrid(
                 options = units.map { ConvertUnitOption(it, getUnitName(it), symbolOf(it).ifBlank { null }) },
                 selected = if (target) top else bottom,
-                onPick = { unit ->
+                onPick = onPick@{ unit ->
+                    if (picking == null) return@onPick
                     val other = if (target) bottom else top
                     if (unit == other) {
                         // Picking the unit the other row shows just swaps them.
