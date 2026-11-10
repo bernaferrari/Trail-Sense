@@ -67,6 +67,11 @@ class ToolConvertTest : ToolTestBase(Tools.CONVERT) {
         pickUnit(string(R.string.unit_meters), string(R.string.unit_meters))
         pickUnit(string(R.string.unit_feet), string(R.string.unit_feet))
 
+        // The converter remembers its units, so the second pass (from the quick action) starts swapped
+        optional {
+            hasText("0.3048", exact = true, waitForTime = 1000)
+            click(desc(string(R.string.convert_swap_units)))
+        }
         hasText("3.2808", exact = true)
 
         // Swap
