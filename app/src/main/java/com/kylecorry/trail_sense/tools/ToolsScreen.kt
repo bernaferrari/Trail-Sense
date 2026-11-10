@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.tools.ui
 
+import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
@@ -101,6 +104,7 @@ import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
 @Composable
 fun ToolsScreen(
     pinnedToolIds: List<Long>,
+    quickActions: List<ComposeQuickActionButtonView> = emptyList(),
     onToolClick: (Tool) -> Unit,
     onToolLongClick: (Tool) -> Unit,
     onSettingsClick: () -> Unit,
@@ -171,6 +175,20 @@ fun ToolsScreen(
                     .fillMaxWidth()
                     .focusRequester(searchFocusRequester)
             )
+        }
+
+        if (!isSearching && quickActions.isNotEmpty()) {
+            item("quick_actions") {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("tool_quick_actions"),
+                    horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
+                ) {
+                    quickActions.forEach { it.Content() }
+                }
+            }
         }
 
         if (isSearching) {

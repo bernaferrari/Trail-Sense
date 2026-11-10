@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,7 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
 
     override var isVisible by mutableStateOf(false)
     override var contentDescription by mutableStateOf<CharSequence?>(null)
+    override var testTag by mutableStateOf<String?>(null)
     var isClickable by mutableStateOf(true)
     private var iconVector by mutableStateOf<ImageVector?>(null)
     private var isOn by mutableStateOf(false)
@@ -96,7 +98,9 @@ class ComposeQuickActionButtonView : QuickActionButtonView {
         )
 
         Surface(
-            modifier = modifier.size(52.dp),
+            modifier = modifier
+                .size(52.dp)
+                .then(testTag?.let { Modifier.testTag(it) } ?: Modifier),
             shape = RoundedCornerShape(percent = corner),
             color = container
         ) {

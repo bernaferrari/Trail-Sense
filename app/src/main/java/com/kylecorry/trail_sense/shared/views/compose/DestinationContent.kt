@@ -201,7 +201,7 @@ fun DestinationContent(
             )
 
             // --- Tools with their own state holder ---
-            Route.Tools -> ToolsHomeScreen(onController = { screenController = it })
+            Route.Tools -> ToolsHomeScreen(quickActionHost = this, onController = { screenController = it })
             Route.ScreenFlashlight -> ScreenFlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
             Route.Notes -> NotesToolScreen()
             is Route.NoteEditor -> NoteEditorToolScreen(route)

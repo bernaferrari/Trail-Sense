@@ -10,6 +10,9 @@ interface QuickActionButtonView {
     var isVisible: Boolean
     var contentDescription: CharSequence?
 
+    /** A stable automation handle (exposed as the test tag / resource id), separate from the spoken label. */
+    var testTag: String?
+
     fun setIcon(icon: ImageVector)
     fun setState(isOn: Boolean)
     fun setOnClickListener(listener: (() -> Unit)?)

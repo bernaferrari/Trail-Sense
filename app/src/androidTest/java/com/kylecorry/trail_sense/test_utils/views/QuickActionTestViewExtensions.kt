@@ -4,9 +4,10 @@ import androidx.annotation.IdRes
 import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.byResId
+import com.kylecorry.trail_sense.test_utils.byResName
 
 fun quickAction(quickActionId: Int, @IdRes containerRes: Int? = null, index: Int = 0): TestView {
-    var selector = By.desc("quick_action_$quickActionId")
+    var selector = byResName("quick_action_$quickActionId")
     if (containerRes != null) {
         selector =
             selector.hasAncestor(byResId(containerRes, packageName = AutomationLibrary.packageName))

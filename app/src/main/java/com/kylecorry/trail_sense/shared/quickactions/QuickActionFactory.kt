@@ -13,9 +13,11 @@ class QuickActionFactory {
         host: TrailSenseDestinationHost
     ): QuickActionButton {
         val quickActions = Tools.getQuickActions(host.context)
-        button.contentDescription = "quick_action_$id"
-        return quickActions.firstOrNull { it.id == id }?.create?.invoke(button, host)
-            ?: QuickActionNone(button, host)
+        val action = quickActions.firstOrNull { it.id == id }
+        // Spoken label for TalkBack; the id stays reachable for automation through the test tag
+        button.contentDescription = action?.name
+        button.testTag = "quick_action_$id"
+        return action?.create?.invoke(button, host) ?: QuickActionNone(button, host)
     }
 
 }

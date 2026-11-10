@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.tools.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
+import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import android.app.PendingIntent
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -27,7 +31,10 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
  * activity the screen's [ToolSearchFocusable] while it is shown (null once it leaves).
  */
 @Composable
-fun ToolsHomeScreen(onController: (ToolSearchFocusable?) -> Unit) {
+fun ToolsHomeScreen(
+    quickActionHost: TrailSenseDestinationHost,
+    onController: (ToolSearchFocusable?) -> Unit
+) {
     val context = LocalContext.current
     val appContext = context.applicationContext
     val navigator = LocalNavigator.current
@@ -38,8 +45,20 @@ fun ToolsHomeScreen(onController: (ToolSearchFocusable?) -> Unit) {
         onController(searchFocus)
         onDispose { onController(null) }
     }
+    // The user's chosen quick actions (Settings > Tools), shown above the tool grid as they were before Compose
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val quickActionIds = remember { UserPreferences(appContext).toolQuickActions.sorted() }
+    val quickActionButtons = remember(quickActionIds) { quickActionIds.map { ComposeQuickActionButtonView() } }
+    DisposableEffect(quickActionHost, lifecycleOwner, quickActionButtons) {
+        val factory = QuickActionFactory()
+        val actions = quickActionIds.zip(quickActionButtons) { id, button ->
+            factory.create(id, button, quickActionHost).also { it.bind(lifecycleOwner) }
+        }
+        onDispose { actions.forEach { it.unbind(lifecycleOwner) } }
+    }
     ToolsScreen(
         pinnedToolIds = viewModel.pinnedToolIds,
+        quickActions = quickActionButtons,
         onToolClick = { tool ->
             navigator.navigate(tool.route)
         },
