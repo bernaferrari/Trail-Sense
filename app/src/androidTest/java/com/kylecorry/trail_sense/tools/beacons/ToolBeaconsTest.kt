@@ -5,6 +5,7 @@ import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
@@ -154,7 +155,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun deleteBeacon() {
-        click("Test group")
+        openTestGroup()
         click(id("beacon_item_menu"))
         click("Delete")
         clickOk()
@@ -164,12 +165,22 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
     }
 
     private fun toggleVisibility() {
-        // The previous step leaves the group without waiting; wait for the top-level list before opening it again
-        isVisible(id("beacon_group_menu"))
-        click("Test group")
+        openTestGroup()
         click(id("beacon_visibility_toggle"))
         click(id("beacon_visibility_toggle"))
         back(false)
+    }
+
+    /**
+     * Opens the group, which holds places at this point. The previous step leaves a screen without waiting, so a tap
+     * can land while the top-level list is still settling; tap again until the group's places show.
+     */
+    private fun openTestGroup() {
+        isVisible(id("beacon_group_menu"))
+        waitFor {
+            click("Test group", waitForTime = 0)
+            isVisible(id("beacon_item_menu"), waitForTime = OPEN_GROUP_WAIT_MS)
+        }
     }
 
     private fun createGroup() {
@@ -371,4 +382,7 @@ class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
         back()
     }
 
+    companion object {
+        private const val OPEN_GROUP_WAIT_MS = 2000L
+    }
 }
