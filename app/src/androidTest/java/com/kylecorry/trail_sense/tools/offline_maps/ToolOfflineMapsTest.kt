@@ -200,7 +200,8 @@ class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
         hasText("Test Map 2")
         click(id("vector_map_menu_Test Map 2"))
         click(string(R.string.attribution))
-        input(string(R.string.attribution), "Test Attribution")
+        // The dialog title and its field are both "Attribution"; the field is the second
+        input(string(R.string.attribution), "Test Attribution", index = 1)
         clickOk()
     }
 
