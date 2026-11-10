@@ -654,6 +654,7 @@ private fun PackItemRow(
 ) {
     val context = LocalContext.current
     val formatService = remember(context) { FormatService.getInstance(context) }
+    val categoryName = remember(context, item.category) { ItemCategoryStringMapper(context).getString(item.category) }
     val count = formatItemCount(item)
     val packedWeight = item.weight?.let {
         item.packedWeight?.let { weight ->
@@ -721,7 +722,15 @@ private fun PackItemRow(
             overflow = TextOverflow.Ellipsis
         )
         Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
+            Text(
+                text = categoryName,
+                modifier = Modifier.testTag("item_category"),
+                style = supporting,
+                color = supportingColor,
+                maxLines = 1
+            )
             if (packedWeight != null) {
+                Text("·", style = supporting, color = supportingColor)
                 Text(
                     text = packedWeight,
                     modifier = Modifier.testTag("item_weight"),
@@ -730,7 +739,7 @@ private fun PackItemRow(
                 )
             }
             if (item.isOptional) {
-                if (packedWeight != null) Text("·", style = supporting, color = supportingColor)
+                Text("·", style = supporting, color = supportingColor)
                 Text(
                     text = stringResource(R.string.packing_list_optional),
                     modifier = Modifier.testTag("item_optional"),
