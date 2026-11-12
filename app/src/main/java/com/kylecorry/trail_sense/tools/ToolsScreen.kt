@@ -46,6 +46,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTile
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTileGrid
 import com.kylecorry.trail_sense.shared.views.compose.rememberTileTitleSize
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolKeywordLoader
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSearch
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
@@ -67,7 +68,9 @@ fun ToolsScreen(
 ) {
     val context = LocalContext.current
     val allTools = remember { Tools.getTools(context) }
-    val toolSearch = remember { ToolSearch(context) }
+    var keywords by remember { mutableStateOf<Map<Long, Set<String>>>(emptyMap()) }
+    LaunchedEffect(Unit) { keywords = ToolKeywordLoader.load() }
+    val toolSearch = remember(allTools, keywords) { ToolSearch(allTools, keywords) }
     val sorter = remember { CategoricalToolSort() }
     val searchFocusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
-import android.content.Context
 import com.kylecorry.trail_sense.shared.text.search.AggregateSearchStrategy
 import com.kylecorry.trail_sense.shared.text.search.KeywordMatchSearchStrategy
 import com.kylecorry.trail_sense.shared.text.search.MultilingualFuzzySearchStrategy
@@ -8,10 +7,11 @@ import com.kylecorry.trail_sense.shared.text.search.SearchItem
 import com.kylecorry.trail_sense.shared.text.search.TextMatchStrategy
 import com.kylecorry.trail_sense.shared.text.search.TitleMatchSearchStrategy
 
-class ToolSearch(context: Context) {
+class ToolSearch<T : ToolDescriptor>(
+    private val tools: List<T>,
+    private val keywords: Map<Long, Set<String>>
+) {
 
-    private val tools = Tools.getTools(context)
-    private val keywords = ToolKeywordLoader.load(context)
     private val strategy = AggregateSearchStrategy(
         TitleMatchSearchStrategy(TextMatchStrategy.StartsWith) to 0.5f,
         TitleMatchSearchStrategy(TextMatchStrategy.Contains) to 0.2f,
@@ -19,7 +19,7 @@ class ToolSearch(context: Context) {
         MultilingualFuzzySearchStrategy() to 0.1f
     )
 
-    fun search(query: String): List<Tool> {
+    fun search(query: String): List<T> {
         if (query.isBlank()) return emptyList()
 
         val scored = tools.mapNotNull { tool ->

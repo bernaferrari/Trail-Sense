@@ -1,22 +1,25 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
-import android.content.Context
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.RawTextReader
+import com.kylecorry.trail_sense.shared.text.RawTexts
 
 object ToolKeywordLoader {
 
-    fun load(context: Context): Map<Long, Set<String>> {
-        val text = context.resources.openRawResource(R.raw.tool_keywords)
-            .bufferedReader()
-            .use { it.readText() }
+    suspend fun load(reader: RawTextReader = getAppService()): Map<Long, Set<String>> {
+        return parse(reader.read(RawTexts.tool_keywords))
+    }
 
+    /**
+     * Reads lines of the form `ID (Tool Name): keyword1, keyword2, keyword3`.
+     */
+    fun parse(text: String): Map<Long, Set<String>> {
         val map = mutableMapOf<Long, Set<String>>()
 
         for (line in text.lines()) {
             val trimmed = line.trim()
             if (trimmed.isEmpty()) continue
 
-            // Format: ID (Tool Name): keyword1, keyword2, keyword3
             val colonIndex = trimmed.indexOf(':')
             if (colonIndex == -1) continue
 
