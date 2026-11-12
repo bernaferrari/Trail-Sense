@@ -2,9 +2,11 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+
 import com.kylecorry.trail_sense.main.getAppService
-import androidx.compose.runtime.SideEffect
-import androidx.compose.material3.SliderState
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -12,8 +14,6 @@ import androidx.compose.foundation.clickable
 
 import androidx.compose.foundation.layout.wrapContentHeight
 
-import androidx.compose.ui.graphics.asComposePath
-import androidx.graphics.shapes.toPath
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -56,7 +56,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,15 +73,33 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.Path
+import androidx.graphics.shapes.Morph
+import com.kylecorry.trail_sense.shared.haptics.IHapticSubsystem
+import com.kylecorry.trail_sense.shared.sound.TonePlayerFactory
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -90,8 +107,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.andromeda.sound.SoundPlayer
-import com.kylecorry.andromeda.sound.AudioTrackSoundPlayer
-import com.kylecorry.andromeda.sound.ToneGenerator
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.luna.time.Throttle
@@ -101,12 +116,9 @@ import com.kylecorry.sol.math.filters.LowPassFilter
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.physics.Physics
 import com.kylecorry.sol.units.Bearing
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -126,16 +138,14 @@ import kotlin.math.min
 fun MetalDetectorToolScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val viewModel = viewModel {
         MetalDetectorViewModel(
             sensors = getAppService<SensorService>(),
-            prefs = UserPreferences(appContext),
-            haptics = HapticSubsystem.getInstance(appContext)
+            prefs = getAppService<UserPreferences>(),
+            haptics = getAppService<IHapticSubsystem>()
         )
     }
-    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val formatService = remember { FormatService.getInstance() }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
@@ -145,7 +155,7 @@ fun MetalDetectorToolScreen(
     MetalDetectorScreen(
         title = viewModel.magneticField?.let { formatService.formatMagneticField(it) } ?: "",
         fieldValue = viewModel.magneticField?.let { DecimalFormatter.format(it.toDouble(), 0) } ?: "--",
-        fieldUnit = stringResource(R.string.magnetic_field_format_precise, "").trim(),
+        fieldUnit = appString(Res.string.magnetic_field_format_precise, "").trim(),
         thresholdText = formatService.formatMagneticField(viewModel.threshold, decimalPlaces = 1),
         isHighSensitivity = viewModel.isHighSensitivity,
         audioEnabled = viewModel.audioEnabled,
@@ -181,7 +191,7 @@ fun MetalDetectorToolScreen(
 internal class MetalDetectorViewModel(
     sensors: SensorService,
     private val prefs: UserPreferences,
-    private val haptics: HapticSubsystem
+    private val haptics: IHapticSubsystem
 ) : ViewModel() {
     val magnetometer = sensors.getMagnetometer()
     private val lowPassMagnetometer = sensors.getMagnetometer(true)
@@ -191,7 +201,7 @@ internal class MetalDetectorViewModel(
     private val filter = LowPassFilter(0.2f, 0f)
 
     private var isVibrating = false
-    private var lastReadingTime = System.currentTimeMillis() + 1000L
+    private var lastReadingTime = Clock.System.now().toEpochMilliseconds() + 1000L
 
     private val readings = mutableListOf<Float>()
 
@@ -208,7 +218,7 @@ internal class MetalDetectorViewModel(
     private val isMetalDetected = Debouncer(100.milliseconds)
 
     private var audio: SoundPlayer? = null
-    private val audioLock = Any()
+    private val audioLock = Mutex()
 
     /** The field strength shown, or null before the first reading. */
     var magneticField by mutableStateOf<Float?>(null)
@@ -405,7 +415,7 @@ internal class MetalDetectorViewModel(
     }
 
     private fun canAddReading(reading: Float): Boolean {
-        return System.currentTimeMillis() - lastReadingTime > 20 && reading != 0f
+        return Clock.System.now().toEpochMilliseconds() - lastReadingTime > 20 && reading != 0f
     }
 
     private fun updateThreshold() {
@@ -417,7 +427,7 @@ internal class MetalDetectorViewModel(
         if (readings.size > 150) {
             readings.removeAt(0)
         }
-        lastReadingTime = System.currentTimeMillis()
+        lastReadingTime = Clock.System.now().toEpochMilliseconds()
     }
 
     private fun updateChart() {
@@ -435,9 +445,10 @@ internal class MetalDetectorViewModel(
         viewModelScope.launch {
             val initialized = onDefault {
                 try {
-                    synchronized(audioLock) {
+                    audioLock.withLock {
                         if (audio == null) {
-                            audio = AudioTrackSoundPlayer(ToneGenerator().getTone(AUDIO_FREQUENCY))
+                            // Platforms without a tone player leave it unregistered; the sound toggle then hides.
+                            audio = getAppService<TonePlayerFactory>().create(AUDIO_FREQUENCY)
                         }
                     }
                     true
@@ -496,14 +507,14 @@ private fun MetalDetectorScreen(
     modifier: Modifier = Modifier
 ) {
     TrailSenseInstrumentScaffold(
-        title = stringResource(R.string.tool_metal_detector_title),
+        title = appString(Res.string.tool_metal_detector_title),
         modifier = modifier,
         actions = {
             ToolToggle(
                 checked = vibrationEnabled,
                 onToggle = onVibrationToggle,
                 icon = TrailIcons.Vibrate,
-                label = stringResource(R.string.tool_vibration),
+                label = appString(Res.string.tool_vibration),
                 shake = metalDetected && vibrationEnabled,
                 modifier = Modifier.testTag("metal_vibration_btn")
             )
@@ -512,7 +523,7 @@ private fun MetalDetectorScreen(
                     checked = audioEnabled,
                     onToggle = onAudioToggle,
                     icon = TrailIcons.VolumeUp,
-                    label = stringResource(R.string.tool_sound),
+                    label = appString(Res.string.tool_sound),
                     modifier = Modifier.testTag("metal_audio_btn")
                 )
             }
@@ -561,7 +572,7 @@ private fun MetalDetectorScreen(
                         position = TrailSenseGroupPosition(isFirst = true, isLast = false)
                     ) {
                         Text(
-                            text = stringResource(R.string.threshold),
+                            text = appString(Res.string.threshold),
                             style = MaterialTheme.typography.titleMedium
                         )
                         ThresholdSlider(
@@ -571,8 +582,8 @@ private fun MetalDetectorScreen(
                         )
                     }
                     TrailSenseListItem(
-                        title = stringResource(R.string.calibrate),
-                        subtitle = stringResource(R.string.metal_detector_calibrate_hint),
+                        title = appString(Res.string.calibrate),
+                        subtitle = appString(Res.string.metal_detector_calibrate_hint),
                         icon = rememberVectorPainter(TrailIcons.Recenter),
                         position = TrailSenseGroupPosition(isFirst = false, isLast = false),
                         onClick = onCalibrate,
@@ -585,7 +596,7 @@ private fun MetalDetectorScreen(
                         }
                     )
                     TrailSenseSwitchRow(
-                        label = stringResource(R.string.high_sensitivity),
+                        label = appString(Res.string.high_sensitivity),
                         checked = isHighSensitivity,
                         onCheckedChange = onHighSensitivityChange,
                         position = TrailSenseGroupPosition(isFirst = false, isLast = true),
@@ -594,7 +605,7 @@ private fun MetalDetectorScreen(
                 }
 
                 Text(
-                    text = stringResource(R.string.metal_detector_disclaimer),
+                    text = appString(Res.string.metal_detector_disclaimer),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = TrailSenseSpacing.lg),
@@ -660,7 +671,7 @@ private fun MetalHero(
         label = "ripple"
     )
     val turn by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(30_000, easing = LinearEasing)), label = "turn")
-    val morph = remember { androidx.graphics.shapes.Morph(MaterialShapes.Cookie12Sided, MaterialShapes.Burst) }
+    val morph = remember { Morph(MaterialShapes.Cookie12Sided, MaterialShapes.Burst) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -701,7 +712,7 @@ private fun MetalHero(
                     val count = chartReadings.size
                     fun point(age: Int, value: Float): androidx.compose.ui.geometry.Offset {
                         // Newest at the top; older readings run back anticlockwise.
-                        val angle = Math.toRadians((-90.0 - age * 360.0 / TRACE_CAPACITY))
+                        val angle = ((-90.0 - age * 360.0 / TRACE_CAPACITY)).toRadians()
                         val deviation = ((value - middle) / halfBand).coerceIn(-2f, 2f) * reach / 2f
                         val r = mid + deviation
                         return androidx.compose.ui.geometry.Offset(
@@ -728,14 +739,15 @@ private fun MetalHero(
 
                 // The core: grows and sharpens as the field strengthens.
                 val coreSize = radius * 2f * (0.50f + 0.18f * strength)
-                val path = morph.toPath(strength)
-                val matrix = android.graphics.Matrix().apply {
-                    setScale(coreSize, coreSize)
-                    postTranslate(center.x - coreSize / 2f, center.y - coreSize / 2f)
-                    postRotate(turn, center.x, center.y)
+                val path = morph.toComposePath(strength)
+                val matrix = Matrix().apply {
+                    translate(center.x, center.y)
+                    rotateZ(turn)
+                    translate(-coreSize / 2f, -coreSize / 2f)
+                    scale(coreSize, coreSize)
                 }
                 path.transform(matrix)
-                drawPath(path.asComposePath(), core)
+                drawPath(path, core)
             }
             TrailSenseReading(
                 value = fieldValue,
@@ -750,7 +762,7 @@ private fun MetalHero(
             )
         }
         Text(
-            text = stringResource(if (metalDetected) R.string.metal_detected else R.string.metal_not_detected),
+            text = appString(if (metalDetected) Res.string.metal_detected else Res.string.metal_not_detected),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
             color = verdictColor,
@@ -768,56 +780,81 @@ private const val TRACE_CAPACITY = 150
  * The threshold as one thick rounded track that fills to the value, with the value itself riding in the thumb, so
  * the control reads as one object rather than two bars and a dot.
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun ThresholdSlider(value: Float, label: String, onValueChange: (Float) -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    val sliderState = remember { SliderState(value = value, trackRange = 0f..100f) }
-    SideEffect { sliderState.value = value }
-    Slider(
-        state = sliderState,
-        onValueChange = onValueChange,
+    val range = 0f..100f
+    val current = value.coerceIn(range)
+    val fraction = (current - range.start) / (range.endInclusive - range.start)
+    val latestOnValueChange by rememberUpdatedState(onValueChange)
+    var widthPx by remember { mutableFloatStateOf(0f) }
+    var thumbWidthPx by remember { mutableIntStateOf(0) }
+
+    // A drag or tap sets the value under the finger, measured along the track.
+    fun valueAt(x: Float): Float? {
+        if (widthPx <= 0f) return null
+        return range.start + (x / widthPx).coerceIn(0f, 1f) * (range.endInclusive - range.start)
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = TrailSenseSpacing.sm)
-            .testTag("threshold"),
-        thumb = {
-            Surface(
-                shape = CircleShape,
-                color = scheme.primary,
-                contentColor = scheme.onPrimary,
-                shadowElevation = 2.dp
-            ) {
-                Text(
-                    text = label,
-                    modifier = Modifier
-                        .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
-                        .testTag("threshold_amount"),
-                    style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
-                )
+            .testTag("threshold")
+            .onSizeChanged { widthPx = it.width.toFloat() }
+            .pointerInput(Unit) {
+                detectTapGestures { offset -> valueAt(offset.x)?.let { latestOnValueChange(it) } }
             }
-        },
-        track = { state ->
-            val fraction = state.coercedValueAsFraction
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { change, _ ->
+                    change.consume()
+                    valueAt(change.position.x)?.let { latestOnValueChange(it) }
+                }
+            }
+            .semantics {
+                progressBarRangeInfo = ProgressBarRangeInfo(current, range)
+                setProgress { target ->
+                    latestOnValueChange(target.coerceIn(range))
+                    true
+                }
+            },
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(14.dp)
+                .clip(CircleShape)
+                .background(scheme.surfaceContainerHighest)
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(14.dp)
+                    .fillMaxWidth(fraction)
+                    .fillMaxHeight()
                     .clip(CircleShape)
-                    .background(scheme.surfaceContainerHighest)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction)
-                        .fillMaxHeight()
-                        .clip(CircleShape)
-                        .background(scheme.primary)
-                )
-            }
+                    .background(scheme.primary)
+            )
         }
-    )
+        Surface(
+            shape = CircleShape,
+            color = scheme.primary,
+            contentColor = scheme.onPrimary,
+            shadowElevation = 2.dp,
+            modifier = Modifier
+                .onSizeChanged { thumbWidthPx = it.width }
+                .offset { IntOffset(((widthPx - thumbWidthPx).coerceAtLeast(0f) * fraction).roundToInt(), 0) }
+        ) {
+            Text(
+                text = label,
+                modifier = Modifier
+                    .padding(horizontal = TrailSenseSpacing.md, vertical = TrailSenseSpacing.sm)
+                    .testTag("threshold_amount"),
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
+        }
+    }
 }
 
 /** A top-bar toggle: filled tonal while on, plain while off, always labelled. */
@@ -860,7 +897,6 @@ private fun AccuracyBadge(
     magnetometer: Sensor,
     onClick: () -> Unit
 ) {
-    val context = LocalContext.current
     val hasCompass = remember { getAppService<SensorService>().hasCompass() }
     if (!hasCompass) {
         return
@@ -880,7 +916,7 @@ private fun AccuracyBadge(
 
     // A plain label, no pill, dot or icon: the sensor's accuracy in words, tappable for the tips.
     Text(
-        text = stringResource(R.string.metal_detector_accuracy, badge.name),
+        text = appString(Res.string.metal_detector_accuracy, badge.name),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
@@ -905,9 +941,8 @@ private fun MagnetometerDirection(
     sensitivity: Float,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val formatter = androidx.compose.runtime.remember {
-        FormatService.getInstance(context)
+        FormatService.getInstance()
     }
     val reading = formatter.formatMagneticField(fieldStrength)
     val scheme = MaterialTheme.colorScheme
@@ -954,4 +989,23 @@ private fun MagnetometerDirection(
             color = if (detected) scheme.primary else scheme.onSurface
         )
     }
+}
+
+/** The morph at [progress] as a Compose path, in the shapes' unit square. */
+private fun Morph.toComposePath(progress: Float): Path {
+    val path = Path()
+    var first = true
+    forEachCubic(progress) { cubic ->
+        if (first) {
+            path.moveTo(cubic.anchor0X, cubic.anchor0Y)
+            first = false
+        }
+        path.cubicTo(
+            cubic.control0X, cubic.control0Y,
+            cubic.control1X, cubic.control1Y,
+            cubic.anchor1X, cubic.anchor1Y
+        )
+    }
+    path.close()
+    return path
 }

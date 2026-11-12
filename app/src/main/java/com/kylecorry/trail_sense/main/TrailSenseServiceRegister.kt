@@ -42,6 +42,9 @@ import com.kylecorry.trail_sense.shared.device.DeviceSubsystem
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.haptics.IHapticSubsystem
+import com.kylecorry.trail_sense.shared.sound.TonePlayerFactory
+import com.kylecorry.andromeda.sound.AudioTrackSoundPlayer
+import com.kylecorry.andromeda.sound.ToneGenerator
 import com.kylecorry.trail_sense.shared.images.AndroidBundledImages
 import com.kylecorry.trail_sense.shared.images.BundledImages
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
@@ -129,6 +132,9 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(PluginSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(HapticSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton<IHapticSubsystem>(HapticSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(TonePlayerFactory::class) {
+            TonePlayerFactory { frequency -> AudioTrackSoundPlayer(ToneGenerator().getTone(frequency)) }
+        }
         DependencyRegistry.addSingleton(IPathRepo::class) { PathRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(TideHarmonicsSource::class) { AndroidTideHarmonicsSource(appContext) }
         DependencyRegistry.addSingleton(IPathService::class) { PathService.getInstance() }
