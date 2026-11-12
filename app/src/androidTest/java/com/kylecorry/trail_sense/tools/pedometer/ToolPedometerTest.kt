@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer
 
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.doesNotHaveNotification
@@ -9,23 +10,22 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.closeQuickActions
-import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.openQuickActions
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.DistanceAlerter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
-import org.junit.Test
 import kotlin.text.Regex
+import org.junit.Test
 
 class ToolPedometerTest : ToolTestBase(ToolIds.PEDOMETER) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, ToolIds.PEDOMETER)) {
+        if (!getAppService<ToolCatalog>().isToolAvailable(ToolIds.PEDOMETER)) {
             return
         }
 

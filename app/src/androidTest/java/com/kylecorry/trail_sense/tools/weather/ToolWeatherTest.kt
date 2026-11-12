@@ -1,10 +1,11 @@
 package com.kylecorry.trail_sense.tools.weather
 
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.doesNotHaveNotification
@@ -23,19 +24,19 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorService
+import java.time.Duration
 import org.junit.Assume.assumeFalse
 import org.junit.Assume.assumeTrue
 import org.junit.Test
-import java.time.Duration
 
 class ToolWeatherTest : ToolTestBase(ToolIds.WEATHER) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, ToolIds.WEATHER)) {
+        if (!getAppService<ToolCatalog>().isToolAvailable(ToolIds.WEATHER)) {
             return
         }
 
@@ -253,7 +254,7 @@ class ToolWeatherTest : ToolTestBase(ToolIds.WEATHER) {
         units: String = "hpa"
     ) {
         assumeFalse(isStagingBuild)
-        assumeTrue(Tools.isToolAvailable(TestUtils.context, ToolIds.WEATHER))
+        assumeTrue(getAppService<ToolCatalog>().isToolAvailable(ToolIds.WEATHER))
         setPressureUnits(units)
         relaunchTool {
             TestData.addPressureTrend(start, end, duration, interval = interval)

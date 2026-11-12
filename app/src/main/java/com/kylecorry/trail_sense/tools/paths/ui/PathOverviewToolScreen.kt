@@ -174,7 +174,7 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathDialog
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathRequest
 import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.Dispatchers
@@ -213,7 +213,7 @@ fun PathOverviewToolScreen(
             isDebug = isDebug(),
             debugElevations = { raw, smoothed -> DebugPathElevationsCommand(appContext, raw, smoothed).execute() },
             isBacktrackOn = { BacktrackScheduler.isOn(appContext) },
-            stopBacktrack = { Tools.getService(appContext, PathsToolRegistration.SERVICE_BACKTRACK)?.disable() }
+            stopBacktrack = { getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK)?.disable() }
         )
     }
     val prefs = remember(appContext) { UserPreferences(appContext) }

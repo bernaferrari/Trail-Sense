@@ -4,12 +4,13 @@ import android.service.quicksettings.Tile
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.widgets.tiles.AndromedaTileService
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.getInstance
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ abstract class ToolServiceTile(
     private val icon: ImageVector,
     private val isForegroundService: Boolean = false
 ) : AndromedaTileService() {
-    protected val service by lazy { Tools.getService(this, serviceId) }
+    protected val service by lazy { getAppService<ToolCatalog>().getService(serviceId) }
 
     private val formatter by lazy { FormatService.getInstance(this) }
 

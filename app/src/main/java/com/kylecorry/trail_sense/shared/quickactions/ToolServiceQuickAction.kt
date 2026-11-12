@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 
 abstract class ToolServiceQuickAction(
@@ -16,7 +17,7 @@ abstract class ToolServiceQuickAction(
     private val hideWhenUnavailable: Boolean = false
 ) : QuickActionButton(btn, host) {
 
-    protected val service by lazy { Tools.getService(context, serviceId) }
+    protected val service by lazy { getAppService<ToolCatalog>().getService(serviceId) }
     protected val state: FeatureState
         get() = service?.getFeatureState() ?: FeatureState.Unavailable
 

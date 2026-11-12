@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
 import android.content.Context
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticScanner
@@ -18,7 +18,7 @@ class WeatherMonitorDiagnosticScanner : ToolDiagnosticScanner {
     override fun quickScan(context: Context): List<ToolDiagnosticResult> {
         if (Sensors.hasBarometer(context)) {
             val isRunning =
-                Tools.getService(context, WeatherToolRegistration.SERVICE_WEATHER_MONITOR)
+                getAppService<ToolCatalog>().getService(WeatherToolRegistration.SERVICE_WEATHER_MONITOR)
                     ?.isRunning() == true
             if (!isRunning) {
                 return listOf(

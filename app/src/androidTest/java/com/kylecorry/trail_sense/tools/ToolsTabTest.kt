@@ -1,11 +1,9 @@
 package com.kylecorry.trail_sense.tools
 
-import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.test_utils.views.id
 import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.test_utils.views.desc
-import com.kylecorry.trail_sense.test_utils.views.view
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
@@ -18,9 +16,13 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.closeQuickActions
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.openQuickActions
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
+import com.kylecorry.trail_sense.test_utils.views.desc
+import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.test_utils.views.view
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import org.junit.Test
 
 class ToolsTabTest : ToolTestBase(0L) {
@@ -58,7 +60,7 @@ class ToolsTabTest : ToolTestBase(0L) {
         // Unpin the default pins, each from its long-press menu (the pinned tile comes first). The defaults
         // come from the preferences so the test follows the app's choice of starting pins.
         val pinned = UserPreferences(context).toolPinnedIds
-            .filter { Tools.isToolAvailable(context, it) }
+            .filter { getAppService<ToolCatalog>().isToolAvailable(it) }
             .mapNotNull { Tools.getTool(context, it)?.name }
         pinned.forEach {
             longClick(it)

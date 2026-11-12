@@ -1,18 +1,18 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import androidx.lifecycle.lifecycleScope
-
 import android.content.Context
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.commands.Command
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -41,7 +41,7 @@ class ToggleBacktrackCommand(
 
     override fun execute() {
         scope.launch {
-            val service = Tools.getService(context, PathsToolRegistration.SERVICE_BACKTRACK) ?: return@launch
+            val service = getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK) ?: return@launch
             when (service.getFeatureState()) {
                 FeatureState.On -> service.disable()
                 FeatureState.Off -> {

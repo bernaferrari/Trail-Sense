@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 
 object BacktrackScheduler {
 
@@ -39,7 +39,7 @@ object BacktrackScheduler {
     }
 
     fun isOn(context: Context): Boolean {
-        return Tools.getService(context, PathsToolRegistration.SERVICE_BACKTRACK)
+        return getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK)
             ?.isEnabled() == true
     }
 

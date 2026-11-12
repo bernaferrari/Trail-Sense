@@ -1,23 +1,23 @@
 package com.kylecorry.trail_sense.tools.solarpanel
 
+import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
+import com.kylecorry.andromeda.core.time.ZonedDateTime
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
-import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
-import com.kylecorry.andromeda.core.time.ZonedDateTime
-import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Test
-import kotlin.time.Instant
 
 class ToolSolarPanelAlignerTest : ToolTestBase(ToolIds.SOLAR_PANEL_ALIGNER, location) {
 
@@ -34,7 +34,7 @@ class ToolSolarPanelAlignerTest : ToolTestBase(ToolIds.SOLAR_PANEL_ALIGNER, loca
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, ToolIds.SOLAR_PANEL_ALIGNER)) {
+        if (!getAppService<ToolCatalog>().isToolAvailable(ToolIds.SOLAR_PANEL_ALIGNER)) {
             return
         }
 

@@ -131,8 +131,8 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathRequest
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ViewPathCommand
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -154,7 +154,7 @@ fun PathsToolScreen(
         PathsViewModel(
             pathService = getAppService<IPathService>(),
             preferences = UserPreferences(appContext).paths,
-            backtrack = Tools.getService(appContext, PathsToolRegistration.SERVICE_BACKTRACK),
+            backtrack = getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK),
             gps = getAppService<SensorService>().getGPS()
         )
     }

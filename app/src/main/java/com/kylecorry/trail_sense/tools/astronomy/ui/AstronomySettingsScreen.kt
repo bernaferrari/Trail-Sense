@@ -2,12 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import kotlin.time.Duration.Companion.minutes
-
-import com.kylecorry.trail_sense.shared.preferences.onChange
-
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -19,11 +13,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.settings.ui.SettingsOption
 import com.kylecorry.trail_sense.settings.ui.SettingsPickerRow
 import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
@@ -31,9 +28,11 @@ import com.kylecorry.trail_sense.settings.ui.optionLabel
 import com.kylecorry.trail_sense.settings.ui.pickOption
 import com.kylecorry.trail_sense.settings.ui.rememberSettingsOptions
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.preferences.onChange
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
@@ -42,11 +41,12 @@ import com.kylecorry.trail_sense.tools.astronomy.infrastructure.AstronomyPrefere
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunriseAlarmReceiver
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunsetAlarmReceiver
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.launch
-import androidx.lifecycle.asLiveData
 
 @Composable
 fun AstronomySettingsToolScreen() {
@@ -60,8 +60,8 @@ fun AstronomySettingsToolScreen() {
         AstronomySettingsViewModel(
             prefs = UserPreferences(appContext).astronomy,
             cache = PreferencesSubsystem.getInstance(appContext).preferences,
-            sunsetService = Tools.getService(appContext, AstronomyToolRegistration.SERVICE_SUNSET_ALERTS)!!,
-            sunriseService = Tools.getService(appContext, AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS)!!,
+            sunsetService = getAppService<ToolCatalog>().getService(AstronomyToolRegistration.SERVICE_SUNSET_ALERTS)!!,
+            sunriseService = getAppService<ToolCatalog>().getService(AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS)!!,
             keys = AstronomySettingsKeys(
                 sunTimeMode = PreferenceKeys.sunTimeMode,
                 centerSunAndMoon = PreferenceKeys.centerSunAndMoon,
@@ -102,7 +102,7 @@ fun AstronomySettingsToolScreen() {
         timeOptions(formatter, listOf(0L, 15L, 30L, 45L, 60L, 90L, 120L))
     }
     val showStartCameraIn3D = remember(context) {
-        Tools.isToolAvailable(context, ToolIds.AUGMENTED_REALITY)
+        getAppService<ToolCatalog>().isToolAvailable(ToolIds.AUGMENTED_REALITY)
     }
 
     val generalTitle = stringResource(R.string.general)

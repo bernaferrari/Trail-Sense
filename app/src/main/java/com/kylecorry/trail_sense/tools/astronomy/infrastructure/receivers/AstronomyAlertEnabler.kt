@@ -3,11 +3,12 @@ package com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers
 import android.content.Context
 import android.os.Build
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.permissions.RequestBackgroundLocationCommand
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -21,7 +22,7 @@ internal suspend fun enableAstronomyAlert(
     effects: ScreenEffects?,
     scope: CoroutineScope
 ) {
-    val service = Tools.getService(context, serviceId)
+    val service = getAppService<ToolCatalog>().getService(serviceId)
     service?.enable()
     if (effects == null) {
         return

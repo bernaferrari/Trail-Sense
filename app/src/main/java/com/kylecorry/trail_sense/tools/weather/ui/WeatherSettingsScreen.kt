@@ -25,6 +25,7 @@ import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
 import com.kylecorry.trail_sense.settings.ui.SettingsInfoRow
@@ -54,6 +55,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
@@ -85,7 +87,7 @@ fun WeatherSettingsToolScreen() {
         WeatherSettingsViewModel(
             prefs = UserPreferences(appContext).weather,
             cache = PreferencesSubsystem.getInstance(appContext).preferences,
-            monitor = Tools.getService(appContext, WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
+            monitor = getAppService<ToolCatalog>().getService(WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
             repo = WeatherRepo.getInstance(appContext),
             isNotificationBlocked = {
                 Notify.isChannelBlocked(appContext, CurrentWeatherAlerter.WEATHER_CHANNEL_ID)

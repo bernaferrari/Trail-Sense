@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.tools.metaldetector
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isChecked
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
-import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.mute
 import com.kylecorry.trail_sense.test_utils.TestUtils.unmute
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
@@ -17,7 +17,7 @@ class ToolMetalDetectorTest : ToolTestBase(ToolIds.METAL_DETECTOR) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, ToolIds.METAL_DETECTOR)) {
+        if (!getAppService<ToolCatalog>().isToolAvailable(ToolIds.METAL_DETECTOR)) {
             return
         }
 

@@ -39,6 +39,8 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import com.kylecorry.trail_sense.tools.tools.infrastructure.AndroidToolCatalog
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 object TrailSenseServiceRegister {
@@ -55,6 +57,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<Preferences>(PreferencesSubsystem.getInstance(appContext).preferences)
         DependencyRegistry.addSingleton(SessionStateSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton<DeviceProfile>(AndroidDeviceProfile(appContext))
+        DependencyRegistry.addSingleton<ToolCatalog>(AndroidToolCatalog(appContext))
         DependencyRegistry.addSingleton(UserPreferences(appContext))
         DependencyRegistry.addSingleton<GeoidService>(AltitudeCorrection)
         DependencyRegistry.addSingleton(NotificationSubsystem(appContext))

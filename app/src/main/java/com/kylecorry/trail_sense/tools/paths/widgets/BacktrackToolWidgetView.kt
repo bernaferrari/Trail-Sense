@@ -13,8 +13,8 @@ import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
@@ -28,7 +28,7 @@ class BacktrackToolWidgetView : SimpleToolWidgetView() {
     ): ToolWidgetContent {
         val pathService = getAppService<IPathService>()
         val isBacktrackActive =
-            Tools.getService(context, PathsToolRegistration.SERVICE_BACKTRACK)?.isEnabled() == true
+            getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK)?.isEnabled() == true
         val backtrackPathId = pathService.getBacktrackPathId()
         val path = backtrackPathId?.let { pathService.getPath(it) }
         val distance = path?.metadata?.distance ?: Distance.meters(0f)

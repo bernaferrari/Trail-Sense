@@ -77,6 +77,7 @@ import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
@@ -105,8 +106,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.drawTrailSenseNowDot
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
@@ -157,7 +158,7 @@ fun WeatherToolScreen(
         WeatherViewModel(
             weatherSubsystem = WeatherSubsystem.getInstance(appContext),
             prefs = prefs,
-            monitorService = Tools.getService(appContext, WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
+            monitorService = getAppService<ToolCatalog>().getService(WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
             createLogger = { indicator ->
                 WeatherLogger(appContext, 30.seconds, 500.milliseconds, indicator)
             }

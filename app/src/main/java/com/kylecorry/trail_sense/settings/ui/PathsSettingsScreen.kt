@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
@@ -47,7 +48,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CoroutineScope
@@ -63,7 +64,7 @@ fun PathsSettingsToolScreen() {
     val prefs = remember(context) { UserPreferences(context) }
     val pathStyleOptions = rememberSettingsOptions(R.array.line_style_entries, R.array.line_style_values)
     val isBacktrackBlocked = remember {
-        Tools.getService(context, PathsToolRegistration.SERVICE_BACKTRACK)?.isBlocked() ?: false
+        getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK)?.isBlocked() ?: false
     }
 
     var backtrackEnabled by remember { mutableStateOf(prefs.paths.backtrackEnabled) }
@@ -318,7 +319,7 @@ private suspend fun toggleBacktrack(
     scope: CoroutineScope,
     onPermissionDenied: () -> Unit
 ) {
-    val service = Tools.getService(context, PathsToolRegistration.SERVICE_BACKTRACK) ?: return
+    val service = getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK) ?: return
     when (service.getFeatureState()) {
         FeatureState.On -> service.disable()
         FeatureState.Off -> {

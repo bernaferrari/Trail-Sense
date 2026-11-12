@@ -49,6 +49,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.errors.ExceptionHandler
 import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.errors.TrailSenseExceptionHandler
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.main.theme.AppThemeMode
 import com.kylecorry.trail_sense.main.theme.ThemeProvider
 import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
@@ -81,6 +82,7 @@ import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -379,7 +381,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
             NotifyForkPoliciesCommand(this)
         ).execute()
 
-        if (!Tools.isToolAvailable(this, ToolIds.WEATHER)) {
+        if (!getAppService<ToolCatalog>().isToolAvailable(ToolIds.WEATHER)) {
             bottomNavigation.items.replaceAll {
                 if (it.route == Route.Weather) {
                     it.copy(visible = false)

@@ -1,15 +1,11 @@
 package com.kylecorry.trail_sense.tools.astronomy
 
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
-import com.kylecorry.trail_sense.test_utils.views.desc
-import com.kylecorry.trail_sense.test_utils.byResName
-import java.util.regex.Pattern
 import androidx.test.uiautomator.By
-import org.junit.Assert.assertEquals
-import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
@@ -18,16 +14,21 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.longClick
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.handleExactAlarmsDialog
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
+import com.kylecorry.trail_sense.test_utils.byResName
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.test_utils.views.view
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import java.util.regex.Pattern
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -61,7 +62,7 @@ class ToolAstronomyTest : ToolTestBase(ToolIds.ASTRONOMY, location) {
         verifyQuickActions()
 
         // Verify the View in 3D button is visible and works
-        if (Tools.isToolAvailable(TestUtils.context, ToolIds.AUGMENTED_REALITY)) {
+        if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.AUGMENTED_REALITY)) {
             // Wait for the disclaimer to disappear: it is a long snackbar now (with a learn more action), not a toast
             not(waitForTime = 15000) {
                 hasText(

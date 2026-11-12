@@ -1,11 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-
-
-
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,7 +58,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.text.capitalizeWords
@@ -72,14 +66,17 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -87,8 +84,17 @@ import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonVie
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.time.atEndOfDay
+import com.kylecorry.trail_sense.shared.time.atStartOfDay
+import com.kylecorry.trail_sense.shared.time.minusDays
+import com.kylecorry.trail_sense.shared.time.plusDays
+import com.kylecorry.trail_sense.shared.time.systemTimeZone
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
@@ -116,30 +122,21 @@ import com.kylecorry.trail_sense.tools.astronomy.ui.items.SolarEclipseListItemPr
 import com.kylecorry.trail_sense.tools.astronomy.ui.items.SunListItemProducer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMode
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.openAugmentedReality
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
-import kotlin.time.Clock
-import com.kylecorry.trail_sense.shared.time.atEndOfDay
-import com.kylecorry.trail_sense.shared.time.atStartOfDay
-import com.kylecorry.trail_sense.shared.time.minusDays
-import com.kylecorry.trail_sense.shared.time.plusDays
-import com.kylecorry.trail_sense.shared.time.systemTimeZone
-import com.kylecorry.trail_sense.shared.time.toLocalTime
-import com.kylecorry.trail_sense.shared.time.today
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.withLoading
 
 @Composable
 fun AstronomyToolScreen(
@@ -271,7 +268,7 @@ fun AstronomyToolScreen(
         null
     }
 
-    val show3d = remember(context) { Tools.isToolAvailable(context, ToolIds.AUGMENTED_REALITY) } && seeker == null
+    val show3d = remember(context) { getAppService<ToolCatalog>().isToolAvailable(ToolIds.AUGMENTED_REALITY) } && seeker == null
 
     val searchOptions = remember {
         listOf(
