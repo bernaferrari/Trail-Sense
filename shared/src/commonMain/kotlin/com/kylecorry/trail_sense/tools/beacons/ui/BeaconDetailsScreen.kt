@@ -4,6 +4,12 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,9 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,14 +55,11 @@ import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Temperature
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -68,7 +69,6 @@ import com.kylecorry.trail_sense.shared.time.toLocalTime
 import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -78,9 +78,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.icon
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.BeaconSender
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.tides.domain.TideDetails
 import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
@@ -95,25 +93,22 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+fun BeaconDetailsToolScreen(route: Route.BeaconDetails, onShare: (Beacon) -> Unit) {
     val navigator = LocalNavigator.current
-    val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val prefs = remember { getAppService<UserPreferences>() }
     val viewModel = viewModel {
         BeaconDetailsViewModel(
             beaconId = route.beaconId,
-            beaconRepo = BeaconRepo.getInstance(appContext),
+            beacons = getAppService<IBeaconService>(),
             weather = getAppService<IWeatherSubsystem>(),
-            tides = TidesSubsystem.getInstance(appContext),
+            tides = TidesSubsystem.getInstance(),
             sunTimesMode = prefs.astronomy.sunTimesMode
         )
     }
-    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
-    val tideFormatter = remember(appContext) { TideFormatter() }
-    val gps = remember(appContext) { getAppService<SensorService>().getGPS() }
+    val formatService = remember { FormatService.getInstance() }
+    val tideFormatter = remember { TideFormatter() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     var location by remember { mutableStateOf(gps.location) }
 
     // Loads each time the page is shown, so an edit made in the editor shows on return.
@@ -143,7 +138,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
     val isHere = meters != null && meters < HERE_METERS
     val distance = when {
         meters == null || !loaded -> ""
-        isHere -> stringResource(R.string.place_you_are_here)
+        isHere -> appString(Res.string.place_you_are_here)
         else -> {
             val d = Distance.meters(meters).convertTo(prefs.baseDistanceUnits).toRelativeDistance()
             formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
@@ -154,8 +149,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
         isHere -> ""
         else -> {
             val bearing = NavigationService().navigate(location, beacon.coordinate, 0f).direction
-            stringResource(
-                R.string.beacon_direction_value,
+            appString(Res.string.beacon_direction_value,
                 formatService.formatDegrees(bearing.value, replace360 = true),
                 formatService.formatDirection(bearing.direction)
             )
@@ -167,8 +161,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
     }
     val temperature = viewModel.temperatureRange?.let { range ->
         val units = prefs.temperatureUnits
-        stringResource(
-            R.string.slash_separated_pair,
+        appString(Res.string.slash_separated_pair,
             formatService.formatTemperature(range.end.convertTo(units)),
             formatService.formatTemperature(range.start.convertTo(units))
         )
@@ -191,14 +184,13 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
             TrailIcons.TideHalf
         },
         onShare = {
-            viewModel.beacon?.let { BeaconSender(context, effects, navigator, scope).send(it) }
+            viewModel.beacon?.let(onShare)
         },
         onDelete = {
             val current = viewModel.beacon
             if (current != null) {
-                Alerts.dialog(
-                    context,
-                    context.getString(R.string.delete),
+                Alerts.dialog(AppHost.current(),
+                    getAppService<AppStrings>().get(Res.string.delete),
                     current.name
                 ) { cancelled ->
                     if (!cancelled) {
@@ -229,7 +221,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
  */
 internal class BeaconDetailsViewModel(
     private val beaconId: Long,
-    private val beaconRepo: BeaconRepo,
+    private val beacons: IBeaconService,
     private val weather: IWeatherSubsystem,
     private val tides: TidesSubsystem,
     private val sunTimesMode: SunTimesMode
@@ -259,7 +251,7 @@ internal class BeaconDetailsViewModel(
 
     suspend fun load() {
         val loaded = withContext(Dispatchers.IO) {
-            beaconRepo.getBeacon(beaconId)?.toBeacon()
+            beacons.getBeacon(beaconId)
         }
         beacon = loaded
         loaded ?: return
@@ -280,7 +272,7 @@ internal class BeaconDetailsViewModel(
     fun delete(beacon: Beacon) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                beaconRepo.deleteBeacon(BeaconEntity.from(beacon))
+                beacons.delete(beacon)
             }
             _deleted.trySend(Unit)
         }
@@ -310,20 +302,19 @@ private fun BeaconDetailsScreen(
     onTemperatureClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val dispatcher = rememberSystemBack()
     val coordinates = beacon?.coordinate?.let {
-        FormatService.getInstance(context).formatLocation(it)
+        FormatService.getInstance().formatLocation(it)
     }.orEmpty()
     val comment = beacon?.comment.orEmpty()
     val placeholder = VALUE_PLACEHOLDER
-    val detailsTitle = stringResource(R.string.details)
-    val notesTitle = stringResource(R.string.notes)
+    val detailsTitle = appString(Res.string.details)
+    val notesTitle = appString(Res.string.notes)
 
     TrailSensePage(
         title = beacon?.name.orEmpty(),
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier.testTag("beacon_title"),
         actions = {
             if (beacon != null) {
@@ -368,7 +359,7 @@ private fun BeaconDetailsScreen(
                     }
                     Spacer(Modifier.height(TrailSenseSpacing.sm))
                     com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                        text = stringResource(R.string.navigate),
+                        text = appString(Res.string.navigate),
                         onClick = onNavigate,
                         icon = TrailIcons.NavigationArrow
                     )
@@ -380,23 +371,23 @@ private fun BeaconDetailsScreen(
         item(key = "conditions") {
             val tiles = listOfNotNull(
                 altitude?.let {
-                    BeaconTile("beacon_altitude", stringResource(R.string.elevation), it, TrailIcons.Altitude)
+                    BeaconTile("beacon_altitude", appString(Res.string.elevation), it, TrailIcons.Altitude)
                 },
                 BeaconTile(
                     "beacon_temperature",
-                    stringResource(R.string.temperature_high_low),
+                    appString(Res.string.temperature_high_low),
                     temperature.ifBlank { placeholder },
                     TrailIcons.TemperatureRange,
                     onClick = onTemperatureClick
                 ),
                 sunrise?.let {
-                    BeaconTile("beacon_sunrise", stringResource(R.string.sunrise), it, TrailIcons.SunriseNotification, warm = true)
+                    BeaconTile("beacon_sunrise", appString(Res.string.sunrise), it, TrailIcons.SunriseNotification, warm = true)
                 },
                 sunset?.let {
-                    BeaconTile("beacon_sunset", stringResource(R.string.sunset), it, TrailIcons.SunsetNotification, warm = true)
+                    BeaconTile("beacon_sunset", appString(Res.string.sunset), it, TrailIcons.SunsetNotification, warm = true)
                 },
                 tide?.let {
-                    BeaconTile("beacon_tide", stringResource(R.string.tide), it, tideIcon)
+                    BeaconTile("beacon_tide", appString(Res.string.tide), it, tideIcon)
                 }
             )
             Column {
@@ -442,7 +433,7 @@ private fun BeaconDetailsActions(
         ) {
             Icon(
                 painter = rememberVectorPainter(TrailIcons.Edit),
-                contentDescription = stringResource(R.string.edit)
+                contentDescription = appString(Res.string.edit)
             )
         }
     }
@@ -453,7 +444,7 @@ private fun BeaconDetailsActions(
         ) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
-                contentDescription = stringResource(R.string.beacon_more_options)
+                contentDescription = appString(Res.string.beacon_more_options)
             )
         }
         DropdownMenu(
@@ -461,7 +452,7 @@ private fun BeaconDetailsActions(
             onDismissRequest = { isMenuOpen = false }
         ) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.share_ellipsis)) },
+                text = { Text(appString(Res.string.share_ellipsis)) },
                 leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Share), contentDescription = null) },
                 onClick = {
                     isMenuOpen = false
@@ -469,7 +460,7 @@ private fun BeaconDetailsActions(
                 }
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.delete)) },
+                text = { Text(appString(Res.string.delete)) },
                 leadingIcon = { Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null) },
                 onClick = {
                     isMenuOpen = false

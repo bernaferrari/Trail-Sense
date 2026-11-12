@@ -866,8 +866,8 @@ private fun AccuracyBadge(
         return
     }
 
-    val provider = remember(magnetometer, context) {
-        SensorStatusBadgeProvider(magnetometer, context, TrailIcons.CompassIcon)
+    val provider = remember(magnetometer) {
+        SensorStatusBadgeProvider(magnetometer, TrailIcons.CompassIcon)
     }
     var badge by remember { mutableStateOf(provider.getBadge()) }
 

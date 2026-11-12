@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.tides.subsystem
 
-import android.annotation.SuppressLint
-import android.content.Context
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
@@ -14,15 +12,17 @@ import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.DailyTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.loading.TideLoaderFactory
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
+import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideHarmonicsSource
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import com.kylecorry.trail_sense.tools.tides.ui.DailyTideData
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 
-class TidesSubsystem private constructor(private val context: Context) {
+class TidesSubsystem private constructor(harmonicsSource: TideHarmonicsSource) {
 
-    private val tideService = TideService(context)
+    private val tideService = TideService(harmonicsSource)
     private val tideLoaderFactory = TideLoaderFactory()
 
     private var lastTable: TideTable? = null
@@ -91,15 +91,11 @@ class TidesSubsystem private constructor(private val context: Context) {
     }
 
     companion object {
-        @SuppressLint("StaticFieldLeak")
         private var instance: TidesSubsystem? = null
+        private val lock = SynchronizedObject()
 
-        @Synchronized
-        fun getInstance(context: Context): TidesSubsystem {
-            if (instance == null) {
-                instance = TidesSubsystem(context.applicationContext)
-            }
-            return instance!!
+        fun getInstance(): TidesSubsystem = synchronized(lock) {
+            instance ?: TidesSubsystem(getAppService<TideHarmonicsSource>()).also { instance = it }
         }
     }
 

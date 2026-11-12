@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.rememberBeaconShare
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.kylecorry.andromeda.core.tryOrNothing
@@ -226,7 +227,7 @@ fun DestinationContent(
                 route = route,
                 onController = { screenController = it }
             )
-            is Route.BeaconDetails -> BeaconDetailsToolScreen(route)
+            is Route.BeaconDetails -> BeaconDetailsToolScreen(route, onShare = rememberBeaconShare())
             is Route.PlaceBeacon -> PlaceBeaconToolScreen(route)
             is Route.OfflineMapList -> OfflineMapListToolScreen(route)
             Route.ScanQr -> ScanQRToolScreen()

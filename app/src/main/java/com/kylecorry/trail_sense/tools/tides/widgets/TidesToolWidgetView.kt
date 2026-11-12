@@ -18,7 +18,7 @@ class TidesToolWidgetView : SimpleToolWidgetView() {
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
         val formatter = TideFormatter()
-        val tide = TidesSubsystem.getInstance(context).getNearestTide()
+        val tide = TidesSubsystem.getInstance().getNearestTide()
         val tideName = tide?.let { formatter.getTideTypeName(it.now.type) }
 
         return ToolWidgetContent.Simple(

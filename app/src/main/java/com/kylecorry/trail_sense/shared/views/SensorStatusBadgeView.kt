@@ -218,7 +218,7 @@ class SensorStatusBadgeView(
         this.gps = gps
         this.compassSensor = compass
         gpsStatusBadgeProvider = gps?.let { GpsStatusBadgeProvider(it, context) }
-        compassStatusBadgeProvider = SensorStatusBadgeProvider(compass, context, TrailIcons.CompassIcon)
+        compassStatusBadgeProvider = SensorStatusBadgeProvider(compass, TrailIcons.CompassIcon)
         // Immediately update so badges don't show stale data
         updateBadges()
     }

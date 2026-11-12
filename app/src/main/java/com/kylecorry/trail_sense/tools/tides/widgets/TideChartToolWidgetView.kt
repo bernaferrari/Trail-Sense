@@ -30,7 +30,7 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
         context: Context,
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
-        val tides = TidesSubsystem.getInstance(context)
+        val tides = TidesSubsystem.getInstance()
         val tide = tides.getNearestTide()
         val currentWaterLevel = tide?.today?.waterLevels?.minByOrNull {
             (it.time - (kotlin.time.Clock.System.now())).absoluteValue

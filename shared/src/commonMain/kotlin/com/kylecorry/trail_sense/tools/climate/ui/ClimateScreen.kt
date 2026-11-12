@@ -6,13 +6,18 @@
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
+import org.jetbrains.compose.resources.StringResource
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.appString
+
+import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.from
 
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
-import android.content.Context
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -62,9 +67,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -94,19 +97,16 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Temperature
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
 import com.kylecorry.trail_sense.shared.time.DateNameWidth
 import com.kylecorry.trail_sense.shared.time.displayName
 import com.kylecorry.trail_sense.shared.time.today
@@ -129,7 +129,6 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
-import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -143,10 +142,9 @@ import kotlinx.datetime.number
 
 @Composable
 fun ClimateToolScreen() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
-    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
-    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val formatter = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>() }
+    val strings = remember { getAppService<AppStrings>() }
     val viewModel = viewModel {
         ClimateViewModel(
             locationSubsystem = getAppService<ILocationSubsystem>(),
@@ -170,16 +168,16 @@ fun ClimateToolScreen() {
         return DecimalFormatter.format(value.value, if (precipitationUnits.isMetric) 0 else 1, strict = false)
     }
 
-    val climateName = viewModel.climate?.let { stringResource(it.nameRes()) }
+    val climateName = viewModel.climate?.let { appString(it.nameRes()) }
     ClimateScreen(
-        title = stringResource(R.string.tool_climate),
-        subtitle = climateName?.let { stringResource(R.string.climate_zone_subtitle, it) }
-            ?: stringResource(R.string.historic_temperature_years, 30),
-        place = getPlaceText(context, formatter, viewModel.location, viewModel.elevation),
+        title = appString(Res.string.tool_climate),
+        subtitle = climateName?.let { appString(Res.string.climate_zone_subtitle, it) }
+            ?: appString(Res.string.historic_temperature_years, 30),
+        place = getPlaceText(strings, formatter, viewModel.location, viewModel.elevation),
         months = viewModel.months,
         selectedMonth = viewModel.selectedMonth,
         currentMonth = today().month,
-        verdict = selected?.let { getVerdict(context, it, ::formatPrecipitation) },
+        verdict = selected?.let { getVerdict(strings, it, ::formatPrecipitation) },
         formatTemperature = { formatter.formatDegrees(Temperature.celsius(it).convertTo(units).value) },
         formatPrecipitation = ::formatPrecipitation,
         formatPrecipitationValue = ::formatPrecipitationValue,
@@ -221,17 +219,16 @@ private enum class ClimateKind {
     Continental
 }
 
-@StringRes
-private fun ClimateKind.nameRes(): Int = when (this) {
-    ClimateKind.TropicalMonsoon -> R.string.climate_tropical_monsoon
-    ClimateKind.TropicalSavanna -> R.string.climate_tropical_savanna
-    ClimateKind.TropicalRainforest -> R.string.climate_tropical_rainforest
-    ClimateKind.Desert -> R.string.climate_desert
-    ClimateKind.Steppe -> R.string.climate_steppe
-    ClimateKind.Tundra -> R.string.climate_tundra
-    ClimateKind.IceCap -> R.string.climate_ice_cap
-    ClimateKind.Temperate -> R.string.climate_temperate
-    ClimateKind.Continental -> R.string.climate_continental
+private fun ClimateKind.nameRes(): StringResource = when (this) {
+    ClimateKind.TropicalMonsoon -> Res.string.climate_tropical_monsoon
+    ClimateKind.TropicalSavanna -> Res.string.climate_tropical_savanna
+    ClimateKind.TropicalRainforest -> Res.string.climate_tropical_rainforest
+    ClimateKind.Desert -> Res.string.climate_desert
+    ClimateKind.Steppe -> Res.string.climate_steppe
+    ClimateKind.Tundra -> Res.string.climate_tundra
+    ClimateKind.IceCap -> Res.string.climate_ice_cap
+    ClimateKind.Temperate -> Res.string.climate_temperate
+    ClimateKind.Continental -> Res.string.climate_continental
 }
 
 /**
@@ -384,15 +381,15 @@ private class ClimateViewModel(
 }
 
 private fun getPlaceText(
-    context: Context,
+    strings: AppStrings,
     formatter: FormatService,
     location: Coordinate?,
     elevation: Distance?
 ): String {
-    val coordinate = location?.let { formatter.formatLocation(it) } ?: return context.getString(R.string.location)
+    val coordinate = location?.let { formatter.formatLocation(it) } ?: return strings.get(Res.string.location)
     val height = elevation ?: return coordinate
-    return context.getString(
-        R.string.climate_place_line,
+    return strings.get(
+        Res.string.climate_place_line,
         coordinate,
         formatter.formatDistance(height, Units.getDecimalPlaces(height.units))
     )
@@ -400,41 +397,41 @@ private fun getPlaceText(
 
 /** "Mild, wet: 92 mm of rain": how the month feels, then what falls. */
 private fun getVerdict(
-    context: Context,
+    strings: AppStrings,
     month: ClimateMonth,
     formatPrecipitation: (Distance) -> String
 ): String {
     val mean = (month.lowCelsius + month.highCelsius) / 2f
-    val feel = context.getString(
+    val feel = strings.get(
         when {
-            mean < 0f -> R.string.climate_feel_freezing
-            mean < 8f -> R.string.climate_feel_cold
-            mean < 14f -> R.string.climate_feel_cool
-            mean < 20f -> R.string.climate_feel_mild
-            mean < 26f -> R.string.climate_feel_warm
-            else -> R.string.climate_feel_hot
+            mean < 0f -> Res.string.climate_feel_freezing
+            mean < 8f -> Res.string.climate_feel_cold
+            mean < 14f -> Res.string.climate_feel_cool
+            mean < 20f -> Res.string.climate_feel_mild
+            mean < 26f -> Res.string.climate_feel_warm
+            else -> Res.string.climate_feel_hot
         }
     )
     val precipitation = month.precipitation ?: return feel
     val millimeters = precipitation.convertTo(DistanceUnits.Millimeters).value
     val wetness = when {
-        millimeters < 20f -> R.string.climate_feel_dry
-        millimeters >= 200f -> R.string.climate_feel_very_wet
-        millimeters >= 100f -> R.string.climate_feel_wet
+        millimeters < 20f -> Res.string.climate_feel_dry
+        millimeters >= 200f -> Res.string.climate_feel_very_wet
+        millimeters >= 100f -> Res.string.climate_feel_wet
         else -> null
-    }?.let { context.getString(it) }
-    val amount = context.getString(
+    }?.let { strings.get(it) }
+    val amount = strings.get(
         when {
-            month.highCelsius <= 0f -> R.string.climate_snow_amount
-            month.lowCelsius < 0f -> R.string.climate_rain_snow_amount
-            else -> R.string.climate_rain_amount
+            month.highCelsius <= 0f -> Res.string.climate_snow_amount
+            month.lowCelsius < 0f -> Res.string.climate_rain_snow_amount
+            else -> Res.string.climate_rain_amount
         },
         formatPrecipitation(precipitation)
     )
     return if (wetness == null) {
-        context.getString(R.string.climate_verdict, feel, amount)
+        strings.get(Res.string.climate_verdict, feel, amount)
     } else {
-        context.getString(R.string.climate_verdict_wetness, feel, wetness, amount)
+        strings.get(Res.string.climate_verdict_wetness, feel, wetness, amount)
     }
 }
 
@@ -481,7 +478,7 @@ private fun ClimateScreen(
     TrailSensePage(
         title = title,
         subtitle = subtitle,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier.testTag("climate_scroll")
     ) {
         item(key = "place") {
@@ -520,7 +517,7 @@ private fun ClimateScreen(
                         onMonthSelected = onMonthSelected
                     )
                     Text(
-                        text = stringResource(R.string.climate_sources),
+                        text = appString(Res.string.climate_sources),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(
@@ -537,7 +534,7 @@ private fun ClimateScreen(
     if (isPlaceOpen) {
         TrailSenseSheet(
             onDismissRequest = { isPlaceOpen = false },
-            title = stringResource(R.string.location)
+            title = appString(Res.string.location)
         ) {
             TrailSenseRowGroup {
                 row { position ->
@@ -562,7 +559,7 @@ private fun ClimateScreen(
             }
             Spacer(Modifier.height(TrailSenseSpacing.xl))
             TrailSenseButton(
-                text = stringResource(R.string.done),
+                text = appString(Res.string.done),
                 onClick = { isPlaceOpen = false },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -581,7 +578,7 @@ private fun ClimatePlaceLine(text: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .heightIn(min = TrailSenseSize.minimumTouchTarget)
             .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
-            .clickable(onClickLabel = stringResource(R.string.location), role = Role.Button, onClick = onClick)
+            .clickable(onClickLabel = appString(Res.string.location), role = Role.Button, onClick = onClick)
             .padding(horizontal = TrailSenseSpacing.lg)
             .testTag("climate_location"),
         verticalAlignment = Alignment.CenterVertically
@@ -769,15 +766,12 @@ private fun ClimateMonthColumn(
     reveal: () -> Float,
     onClick: () -> Unit
 ) {
-    val locale = Locale.getDefault()
     val label = month.month.displayName(
         if (width >= 40.dp) DateNameWidth.Short else DateNameWidth.Narrow,
-        standalone = true,
-        locale = locale
+        standalone = true
     )
-    val description = stringResource(
-        R.string.climate_month_row_description,
-        month.month.displayName(standalone = true, locale = locale),
+    val description = appString(Res.string.climate_month_row_description,
+        month.month.displayName(standalone = true),
         low,
         high,
         precipitation.orEmpty()
@@ -950,9 +944,8 @@ private fun CoordinateInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var locationText by remember(location, formatter) {
@@ -998,12 +991,12 @@ private fun CoordinateInput(
             locationText = it
             onLocationChange(Coordinate.parse(it))
         },
-        label = stringResource(R.string.location),
+        label = appString(Res.string.location),
         modifier = modifier.testTag("utm"),
         position = position,
         keyboardType = KeyboardType.Text,
         isError = locationText.isNotBlank() && parsedCoordinate == null,
-        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        errorText = appString(Res.string.coordinate_input_invalid_location),
         enabled = !isLoadingLocation,
         leadingIcon = {
             if (isLoadingLocation) {
@@ -1016,12 +1009,11 @@ private fun CoordinateInput(
             } else {
                 IconButton(
                     onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
+                    Pickers.item(AppHost.current(),
+                        getAppService<AppStrings>().get(Res.string.autofill_source),
                         listOf(
-                            context.getString(R.string.gps),
-                            context.getString(R.string.beacon)
+                            getAppService<AppStrings>().get(Res.string.gps),
+                            getAppService<AppStrings>().get(Res.string.beacon)
                         ),
                         0
                     ) { selection ->
@@ -1029,7 +1021,7 @@ private fun CoordinateInput(
                             0 -> autofillFromGps()
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    AppHost.from(context),
+                                    AppHost.current(),
                                     sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) ?: return@launch
                                 locationText = formatter.formatLocation(beacon.coordinate)
@@ -1041,7 +1033,7 @@ private fun CoordinateInput(
 },
                     modifier = Modifier.testTag("gps_btn")
                 ) {
-                    Icon(imageVector = TrailIcons.Location, contentDescription = stringResource(R.string.gps))
+                    Icon(imageVector = TrailIcons.Location, contentDescription = appString(Res.string.gps))
                 }
             }
         },
@@ -1052,7 +1044,7 @@ private fun CoordinateInput(
             ) {
                 Icon(
                     imageVector = TrailIcons.Help,
-                    contentDescription = stringResource(R.string.location_input_help_title),
+                    contentDescription = appString(Res.string.location_input_help_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1062,10 +1054,10 @@ private fun CoordinateInput(
     if (showHelp) {
         TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            title = stringResource(R.string.location_input_help_title),
-            confirmText = stringResource(android.R.string.ok)
+            title = appString(Res.string.location_input_help_title),
+            confirmText = systemString(SystemString.Ok)
         ) {
-            Text(stringResource(R.string.location_input_help))
+            Text(appString(Res.string.location_input_help))
         }
     }
 }
@@ -1079,16 +1071,15 @@ private fun ElevationInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     val units = remember {
         formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)
     }
     var unit by remember(units) {
-        mutableStateOf(elevation?.units ?: UserPreferences(context).baseDistanceUnits)
+        mutableStateOf(elevation?.units ?: getAppService<UserPreferences>().baseDistanceUnits)
     }
     var elevationText by remember {
         mutableStateOf(formatElevationAmount(elevation, unit))
@@ -1136,7 +1127,7 @@ private fun ElevationInput(
             elevationText = it
             publish(text = it)
         },
-        label = stringResource(R.string.elevation),
+        label = appString(Res.string.elevation),
         modifier = modifier.testTag("elevation_input"),
         position = position,
         enabled = !isLoadingElevation,
@@ -1153,12 +1144,11 @@ private fun ElevationInput(
             } else {
                 IconButton(
                     onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
+                    Pickers.item(AppHost.current(),
+                        getAppService<AppStrings>().get(Res.string.autofill_source),
                         listOf(
-                            context.getString(R.string.pref_altimeter_calibration_title),
-                            context.getString(R.string.beacon)
+                            getAppService<AppStrings>().get(Res.string.pref_altimeter_calibration_title),
+                            getAppService<AppStrings>().get(Res.string.beacon)
                         ),
                         0
                     ) { selection ->
@@ -1166,7 +1156,7 @@ private fun ElevationInput(
                             0 -> autofillFromAltimeter()
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    AppHost.from(context),
+                                    AppHost.current(),
                                     sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) { beacons: List<IBeacon> ->
                                     beacons.filterIsInstance<Beacon>().filter { it.elevation != null }
@@ -1180,7 +1170,7 @@ private fun ElevationInput(
 },
                     modifier = Modifier.testTag("elevation_gps_btn")
                 ) {
-                    Icon(imageVector = TrailIcons.Altitude, contentDescription = stringResource(R.string.elevation))
+                    Icon(imageVector = TrailIcons.Altitude, contentDescription = appString(Res.string.elevation))
                 }
             }
         }
@@ -1188,7 +1178,7 @@ private fun ElevationInput(
 
     if (isUnitOpen) {
         TrailSenseOptionsDialog(
-            title = stringResource(R.string.elevation),
+            title = appString(Res.string.elevation),
             options = units.map { formatter.getDistanceUnitName(it, false) to it },
             selected = unit,
             onSelect = { option ->
