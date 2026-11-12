@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -946,7 +948,7 @@ private fun CoordinateInput(
         scope.launch {
             isLoadingLocation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getLocation(SensorRefreshPolicy.Refresh)
             }
             coordinateText = formatter.formatLocation(updated)
             onCoordinateChange(updated)

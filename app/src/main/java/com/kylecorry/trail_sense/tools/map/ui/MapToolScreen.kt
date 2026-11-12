@@ -937,7 +937,7 @@ private fun createMapViews(context: Context): MapViews {
         isVisible = false
     }
 
-    val distanceSheet = MapDistanceSheetState(context)
+    val distanceSheet = MapDistanceSheetState()
 
     val timeSheet = DateTimeSliderSheetState(context)
 

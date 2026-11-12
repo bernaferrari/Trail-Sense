@@ -19,7 +19,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.TimezoneGPS
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import kotlin.time.Duration
 
-class SensorSubsystem private constructor(private val context: Context) {
+class SensorSubsystem private constructor(private val context: Context) : ISensorSubsystem {
     private val sensorService by lazy { getAppService<SensorService>() }
     private val userPrefs by lazy { UserPreferences(context) }
     private val prefs by lazy { PreferencesSubsystem.getInstance(context).preferences }
@@ -30,7 +30,7 @@ class SensorSubsystem private constructor(private val context: Context) {
      * Get the last known location without starting the GPS. May be stale.
      * @return the last known location, may be Coordinate.zero if the location is unknown
      */
-    val lastKnownLocation: Coordinate
+    override val lastKnownLocation: Coordinate
         get() {
             return when (gpsSourceSelector.getSource(useCache = true)) {
                 GPSSource.Override -> userPrefs.gps.locationOverride
@@ -51,7 +51,7 @@ class SensorSubsystem private constructor(private val context: Context) {
      * Get the horizontal accuracy of the last known location without starting the GPS.
      * @return the accuracy, or null if it is unknown (ex. the location is overridden)
      */
-    val lastKnownLocationAccuracy: Distance?
+    override val lastKnownLocationAccuracy: Distance?
         get() {
             return when (gpsSourceSelector.getSource(useCache = true)) {
                 GPSSource.Override, GPSSource.Timezone -> null
@@ -63,7 +63,7 @@ class SensorSubsystem private constructor(private val context: Context) {
      * Get the last known elevation without starting the altimeter. May be stale.
      * @return the last known elevation, may be Distance.meters(0f) if elevation is unknown
      */
-    val lastKnownElevation: Distance
+    override val lastKnownElevation: Distance
         get() {
             val mode = userPrefs.altimeterMode
             val altimeter = when (mode) {
@@ -85,9 +85,9 @@ class SensorSubsystem private constructor(private val context: Context) {
      * @param timeout the maximum time to wait for the location
      * @return the location, may be Coordinate.zero if the location is unknown
      */
-    suspend fun getLocation(
-        preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
+    override suspend fun getLocation(
+        preferredPolicy: SensorRefreshPolicy,
+        timeout: Duration
     ): Coordinate {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownLocation
@@ -110,9 +110,9 @@ class SensorSubsystem private constructor(private val context: Context) {
      * @param timeout the maximum time to wait for the elevation
      * @return the elevation, may be Distance.meters(0f) if elevation is unknown
      */
-    suspend fun getElevation(
-        preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
+    override suspend fun getElevation(
+        preferredPolicy: SensorRefreshPolicy,
+        timeout: Duration
     ): Distance {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownElevation
@@ -136,9 +136,9 @@ class SensorSubsystem private constructor(private val context: Context) {
      * @param timeout the maximum time to wait for the readings
      * @return the location and elevation, which may be Coordinate.zero / Distance.meters(0f) if unknown
      */
-    suspend fun getLocationAndElevation(
-        preferredPolicy: SensorRefreshPolicy = SensorRefreshPolicy.RefreshIfInvalid,
-        timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
+    override suspend fun getLocationAndElevation(
+        preferredPolicy: SensorRefreshPolicy,
+        timeout: Duration
     ): Pair<Coordinate, Distance> {
         if (preferredPolicy == SensorRefreshPolicy.Cache) {
             return lastKnownLocation to lastKnownElevation
@@ -154,12 +154,6 @@ class SensorSubsystem private constructor(private val context: Context) {
         )
 
         return gps.location to Distance.meters(altimeter.altitude)
-    }
-
-    enum class SensorRefreshPolicy {
-        RefreshIfInvalid,
-        Refresh,
-        Cache
     }
 
     companion object {

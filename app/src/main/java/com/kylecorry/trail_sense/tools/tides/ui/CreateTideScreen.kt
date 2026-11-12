@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -697,7 +699,7 @@ private fun TideLocationInput(
                             0 -> scope.launch {
                                 isLoadingLocation = true
                                 val updated = withContext(Dispatchers.IO) {
-                                    sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                                    sensors.getLocation(SensorRefreshPolicy.Refresh)
                                 }
                                 locationText = formatter.formatLocation(updated)
                                 onLocationChange(updated)

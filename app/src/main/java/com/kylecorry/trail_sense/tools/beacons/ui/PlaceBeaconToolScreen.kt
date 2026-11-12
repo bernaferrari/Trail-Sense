@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -684,7 +686,7 @@ private fun CoordinateInput(
         scope.launch {
             isLoadingLocation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getLocation(SensorRefreshPolicy.Refresh)
             }
             coordinateText = formatter.formatLocation(updated)
             onCoordinateChange(updated)
@@ -820,7 +822,7 @@ private fun ElevationInput(
         scope.launch {
             isLoadingElevation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getElevation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getElevation(SensorRefreshPolicy.Refresh)
             }.convertTo(unit)
             elevationText = formatDistanceAmount(updated, unit)
             onElevationChange(updated)

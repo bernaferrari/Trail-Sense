@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -501,7 +503,7 @@ private fun CoordinateInput(
         scope.launch {
             isLoadingLocation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getLocation(SensorRefreshPolicy.Refresh)
             }
             locationText = formatter.formatLocation(updated)
             onLocationChange(updated)
@@ -631,7 +633,7 @@ private fun ElevationInput(
         scope.launch {
             isLoadingElevation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getElevation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getElevation(SensorRefreshPolicy.Refresh)
             }.convertTo(unit)
             elevationText = formatElevationAmount(updated, unit)
             onElevationChange(updated)

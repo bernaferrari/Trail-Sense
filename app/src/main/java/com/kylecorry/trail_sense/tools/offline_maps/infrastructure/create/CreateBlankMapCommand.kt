@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import android.content.Context
 import android.graphics.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -304,7 +306,7 @@ private fun BlankMapCoordinateInput(
         scope.launch {
             isLoadingLocation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getLocation(SensorRefreshPolicy.Refresh)
             }
             coordinateText = formatter.formatLocation(updated)
             onCoordinateChange(updated)

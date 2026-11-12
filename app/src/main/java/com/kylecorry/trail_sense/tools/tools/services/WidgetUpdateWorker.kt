@@ -15,7 +15,7 @@ import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canGetLocationCustom
 import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem.SensorRefreshPolicy
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes

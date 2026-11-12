@@ -3,6 +3,15 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.disclaimer
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,17 +35,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -85,16 +90,16 @@ fun SurvivalGuideListScreen(
     // One question: what do I do now? Search answers it (with the best passage up front); the chapters follow.
     val dispatcher = rememberSystemBack()
     TrailSensePage(
-        title = stringResource(R.string.survival_guide),
+        title = appString(Res.string.survival_guide),
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(R.string.back)
+        backLabel = appString(Res.string.back)
     ) {
         item(key = "search") {
             TrailSenseSearchBar(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = stringResource(R.string.search),
-                clearContentDescription = stringResource(R.string.survival_guide_clear_search),
+                placeholder = appString(Res.string.search),
+                clearContentDescription = appString(Res.string.survival_guide_clear_search),
                 modifier = Modifier.testTag("search")
             )
         }
@@ -122,7 +127,7 @@ fun SurvivalGuideListScreen(
                         row { position ->
                             SurvivalGuideRow(
                                 item = overview.copy(
-                                    subtitle = stringResource(R.string.sky_survival_chapters, listItems.size - 1)
+                                    subtitle = appString(Res.string.sky_survival_chapters, listItems.size - 1)
                                 ),
                                 position = position,
                                 index = 0,
@@ -152,7 +157,7 @@ fun SurvivalGuideListScreen(
 }
 
 @Composable
-internal fun SurvivalGuideSummary(
+fun SurvivalGuideSummary(
     summary: String,
     result: SurvivalGuideSearchResult,
     markdown: MarkdownService,
@@ -269,8 +274,6 @@ private fun getSummaryTitle(result: SurvivalGuideSearchResult): String {
 /** The survival guide's chapters, or the search results for its query; back clears the query first. */
 @Composable
 fun SurvivalGuideListToolScreen(route: Route.SurvivalGuideList) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val viewModel = viewModel {
         SurvivalGuideListViewModel(
@@ -280,10 +283,9 @@ fun SurvivalGuideListToolScreen(route: Route.SurvivalGuideList) {
         )
     }
     LaunchedEffect(Unit) {
-        CustomUiUtils.disclaimer(
-            context,
-            context.getString(R.string.survival_guide),
-            context.getString(R.string.survival_guide_disclaimer),
+        Alerts.disclaimer(AppHost.current(),
+            getAppService<AppStrings>().get(Res.string.survival_guide),
+            getAppService<AppStrings>().get(Res.string.survival_guide_disclaimer),
             "pref_survival_guide_disclaimer_shown",
             cancelText = null
         )
@@ -301,7 +303,7 @@ fun SurvivalGuideListToolScreen(route: Route.SurvivalGuideList) {
             )
         )
     }
-    val overview = stringResource(R.string.overview)
+    val overview = appString(Res.string.overview)
     val listItems = if (viewModel.query.isBlank() || viewModel.searchResults.isEmpty()) {
         viewModel.chapters.map {
             SurvivalGuideListItem(

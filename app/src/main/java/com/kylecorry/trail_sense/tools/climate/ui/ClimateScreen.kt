@@ -6,6 +6,8 @@
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
@@ -966,7 +968,7 @@ private fun CoordinateInput(
         scope.launch {
             isLoadingLocation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getLocation(SensorRefreshPolicy.Refresh)
             }
             locationText = formatter.formatLocation(updated)
             onLocationChange(updated)
@@ -1102,7 +1104,7 @@ private fun ElevationInput(
         scope.launch {
             isLoadingElevation = true
             val updated = withContext(Dispatchers.IO) {
-                sensors.getElevation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                sensors.getElevation(SensorRefreshPolicy.Refresh)
             }.convertTo(unit)
             elevationText = formatElevationAmount(updated, unit)
             onElevationChange(updated)

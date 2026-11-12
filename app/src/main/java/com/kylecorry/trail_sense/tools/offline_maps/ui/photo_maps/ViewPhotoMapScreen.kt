@@ -831,7 +831,7 @@ private fun createViewPhotoMapViews(context: Context): ViewPhotoMapViews {
             isVisible = false
         }
 
-    val distanceSheet = MapDistanceSheetState(context)
+    val distanceSheet = MapDistanceSheetState()
 
     return ViewPhotoMapViews(
         map = map,

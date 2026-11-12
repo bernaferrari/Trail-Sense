@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.quickactions
 
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -39,7 +41,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: AndroidDestinatio
             val job = launch {
                 val (location, elevation) = SensorSubsystem.getInstance(host.context)
                     .getLocationAndElevation(
-                        SensorSubsystem.SensorRefreshPolicy.Refresh,
+                        SensorRefreshPolicy.Refresh,
                         timeout = SensorService.EXTENDED_GPS_READ_TIMEOUT
                     )
 

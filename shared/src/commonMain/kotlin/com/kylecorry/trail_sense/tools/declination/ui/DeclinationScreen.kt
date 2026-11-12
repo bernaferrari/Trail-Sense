@@ -4,6 +4,17 @@
 
 package com.kylecorry.trail_sense.tools.declination.ui
 
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
+import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.drawText
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,8 +46,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.geometry.Offset
@@ -43,9 +53,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,10 +62,7 @@ import kotlin.math.abs
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.units.CompassDirection
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -80,9 +85,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 fun DeclinationScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     var location by remember { mutableStateOf(sensors.lastKnownLocation) }
     var isLocationUpToDate by remember { mutableStateOf(false) }
     var declination by remember { mutableStateOf(0f) }
@@ -90,7 +94,7 @@ fun DeclinationScreen(
 
     LaunchedEffect(Unit) {
         location = withContext(Dispatchers.IO) {
-            sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.RefreshIfInvalid)
+            sensors.getLocation(SensorRefreshPolicy.RefreshIfInvalid)
         }
         isLocationUpToDate = true
     }
@@ -119,9 +123,9 @@ fun DeclinationScreen(
 
     // One question: how far is magnetic north from true north here, and which way?
     TrailSensePage(
-        title = stringResource(R.string.declination),
+        title = appString(Res.string.declination),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier
     ) {
         item("declination") {
@@ -129,10 +133,10 @@ fun DeclinationScreen(
             DeclinationHeroCard(
                 title = title,
                 verdict = if (aligned) {
-                    stringResource(R.string.declination_verdict_aligned)
+                    appString(Res.string.declination_verdict_aligned)
                 } else {
-                    stringResource(
-                        if (declination < 0) R.string.declination_west_of_true else R.string.declination_east_of_true
+                    appString(
+                        if (declination < 0) Res.string.declination_west_of_true else Res.string.declination_east_of_true
                     )
                 },
                 declination = declination,
@@ -154,26 +158,26 @@ fun DeclinationScreen(
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
             ) {
                 Text(
-                    text = stringResource(R.string.declination_bearing_from),
+                    text = appString(Res.string.declination_bearing_from),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 TrailSenseConnectedChoice(
                     options = listOf(
-                        TrailSenseChoice(true, stringResource(R.string.declination_from_compass)),
-                        TrailSenseChoice(false, stringResource(R.string.declination_from_map))
+                        TrailSenseChoice(true, appString(Res.string.declination_from_compass)),
+                        TrailSenseChoice(false, appString(Res.string.declination_from_map))
                     ),
                     selected = fromCompass,
                     onSelect = { fromCompass = it }
                 )
                 Text(
                     text = when {
-                        aligned -> stringResource(R.string.declination_no_correction)
+                        aligned -> appString(Res.string.declination_no_correction)
                         // A compass bearing is magnetic: true = magnetic + declination (east is positive).
-                        fromCompass && east -> stringResource(R.string.declination_compass_add, amount)
-                        fromCompass -> stringResource(R.string.declination_compass_subtract, amount)
-                        east -> stringResource(R.string.declination_map_subtract, amount)
-                        else -> stringResource(R.string.declination_map_add, amount)
+                        fromCompass && east -> appString(Res.string.declination_compass_add, amount)
+                        fromCompass -> appString(Res.string.declination_compass_subtract, amount)
+                        east -> appString(Res.string.declination_map_subtract, amount)
+                        else -> appString(Res.string.declination_map_add, amount)
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -186,7 +190,7 @@ fun DeclinationScreen(
         trailSenseSection(
             key = "location",
             title = null,
-            footer = if (isLocationUpToDate) null else context.getString(R.string.loading)
+            footer = if (isLocationUpToDate) null else getAppService<AppStrings>().get(Res.string.loading)
         ) {
             row { position ->
                 CoordinateInput(
@@ -261,9 +265,8 @@ private fun CoordinateInput(
     onLocationChanged: (Coordinate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val scope = rememberCoroutineScope()
     var coordinateText by remember(location, formatter) { mutableStateOf(formatter.formatLocation(location)) }
     val parsedCoordinate = remember(coordinateText) { Coordinate.parse(coordinateText) }
@@ -283,12 +286,12 @@ private fun CoordinateInput(
             coordinateText = it
             Coordinate.parse(it)?.let(onLocationChanged)
         },
-        label = stringResource(R.string.location),
+        label = appString(Res.string.location),
         modifier = modifier.testTag("utm"),
         position = position,
         keyboardType = KeyboardType.Text,
         isError = coordinateText.isNotBlank() && parsedCoordinate == null,
-        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        errorText = appString(Res.string.coordinate_input_invalid_location),
         enabled = !isLoadingLocation,
         leadingIcon = {
             Box(
@@ -308,7 +311,7 @@ private fun CoordinateInput(
                             scope.launch {
                                 isLoadingLocation = true
                                 val updated = withContext(Dispatchers.IO) {
-                                    sensors.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+                                    sensors.getLocation(SensorRefreshPolicy.Refresh)
                                 }
                                 onLocationChanged(updated)
                                 isLoadingLocation = false
@@ -318,7 +321,7 @@ private fun CoordinateInput(
                     ) {
                         Icon(
                             painter = rememberVectorPainter(TrailIcons.Location),
-                            contentDescription = stringResource(R.string.gps),
+                            contentDescription = appString(Res.string.gps),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -332,7 +335,7 @@ private fun CoordinateInput(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.Help),
-                    contentDescription = stringResource(R.string.location_input_help_title),
+                    contentDescription = appString(Res.string.location_input_help_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -342,10 +345,10 @@ private fun CoordinateInput(
     if (showHelp) {
         TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            title = stringResource(R.string.location_input_help_title),
-            confirmText = stringResource(R.string.done)
+            title = appString(Res.string.location_input_help_title),
+            confirmText = appString(Res.string.done)
         ) {
-            Text(stringResource(R.string.location_input_help))
+            Text(appString(Res.string.location_input_help))
         }
     }
 }
@@ -363,12 +366,16 @@ private fun DeclinationArrow(
     val wedge = scheme.primary.copy(alpha = 0.32f)
     val letterColor = scheme.onSurface
     val letters = listOf(
-        stringResource(R.string.direction_north),
-        stringResource(R.string.direction_east),
-        stringResource(R.string.direction_south),
-        stringResource(R.string.direction_west)
+        appString(Res.string.direction_north),
+        appString(Res.string.direction_east),
+        appString(Res.string.direction_south),
+        appString(Res.string.direction_west)
     )
-    val letterSize = with(androidx.compose.ui.platform.LocalDensity.current) { 15.sp.toPx() }
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val letterStyle = androidx.compose.ui.text.TextStyle(
+        fontSize = 15.sp,
+        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+    )
     // The magnetic needle swings in from true north with a springy overshoot.
     val needleAngle = remember { androidx.compose.animation.core.Animatable(0f) }
     LaunchedEffect(declination) {
@@ -384,20 +391,19 @@ private fun DeclinationArrow(
         val needle = radius * 0.64f // the head stays clear of the N
 
         // N, E, S and W just inside the rim; ticks every 15 degrees between them.
-        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            textAlign = android.graphics.Paint.Align.CENTER
-            textSize = letterSize
-            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
-        }
         letters.forEachIndexed { i, letter ->
-            val angle = Math.toRadians((i * 90 - 90).toDouble())
+            val angle = (i * 90 - 90).toDouble().toRadians()
             val r = radius - 22.dp.toPx()
-            paint.color = (if (i == 0) letterColor else letterColor.copy(alpha = 0.7f)).toArgb()
-            drawContext.canvas.nativeCanvas.drawText(
+            val layout = textMeasurer.measure(
                 letter,
-                c.x + (kotlin.math.cos(angle) * r).toFloat(),
-                c.y + (kotlin.math.sin(angle) * r).toFloat() + letterSize / 3f,
-                paint
+                letterStyle.copy(color = if (i == 0) letterColor else letterColor.copy(alpha = 0.7f))
+            )
+            drawText(
+                layout,
+                topLeft = Offset(
+                    c.x + (kotlin.math.cos(angle) * r).toFloat() - layout.size.width / 2f,
+                    c.y + (kotlin.math.sin(angle) * r).toFloat() - layout.size.height / 2f
+                )
             )
         }
         for (i in 0 until 24) {

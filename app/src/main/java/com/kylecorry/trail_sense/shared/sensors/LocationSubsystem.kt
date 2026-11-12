@@ -86,7 +86,7 @@ class LocationSubsystem private constructor(private val context: Context) : ILoc
     }
 
     override suspend fun updateLocation() {
-        sensorSubsystem.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
+        sensorSubsystem.getLocation(SensorRefreshPolicy.Refresh)
     }
 
     private val userPrefs by lazy { UserPreferences(context) }

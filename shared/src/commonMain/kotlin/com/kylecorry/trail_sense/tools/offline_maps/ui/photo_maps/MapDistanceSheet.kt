@@ -1,7 +1,12 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.SystemString
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,20 +26,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
 
-class MapDistanceSheetState(context: Context) {
+class MapDistanceSheetState {
 
-    private val formatter = FormatService.getInstance(context)
+    private val formatter = FormatService.getInstance()
 
     var cancelListener: (() -> Unit)? = null
     var undoListener: (() -> Unit)? = null
@@ -75,8 +77,8 @@ class MapDistanceSheetState(context: Context) {
             distance = distanceText,
             canUndo = canUndo,
             canRedo = canRedo,
-            hint = stringResource(
-                if (hasSelection) R.string.path_edit_hint_selected else R.string.path_edit_hint
+            hint = appString(
+                if (hasSelection) Res.string.path_edit_hint_selected else Res.string.path_edit_hint
             ),
             onUndo = { undoListener?.invoke() },
             onRedo = { redoListener?.invoke() },
@@ -132,7 +134,7 @@ private fun MapDistanceSheetContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = stringResource(R.string.distance),
+                        text = appString(Res.string.distance),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -148,7 +150,7 @@ private fun MapDistanceSheetContent(
                 IconButton(onClick = onCancel) {
                     Icon(
                         imageVector = TrailIcons.Cancel,
-                        contentDescription = stringResource(android.R.string.cancel)
+                        contentDescription = systemString(SystemString.Cancel)
                     )
                 }
             }
@@ -171,17 +173,17 @@ private fun MapDistanceSheetContent(
                 IconButton(onClick = onUndo, enabled = canUndo) {
                     Icon(
                         imageVector = TrailIcons.Undo,
-                        contentDescription = stringResource(R.string.undo)
+                        contentDescription = appString(Res.string.undo)
                     )
                 }
                 IconButton(onClick = onRedo, enabled = canRedo) {
                     Icon(
                         imageVector = TrailIcons.Redo,
-                        contentDescription = stringResource(R.string.redo)
+                        contentDescription = appString(Res.string.redo)
                     )
                 }
                 com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                    text = stringResource(R.string.create_path),
+                    text = appString(Res.string.create_path),
                     onClick = onCreatePath,
                     modifier = Modifier.padding(start = TrailSenseSpacing.lg)
                 )
