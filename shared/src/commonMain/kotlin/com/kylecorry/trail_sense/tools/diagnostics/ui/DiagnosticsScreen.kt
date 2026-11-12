@@ -46,8 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
-import org.jetbrains.compose.resources.pluralStringResource
-import org.jetbrains.compose.resources.stringResource
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.icons.trail.Altitude
 import com.kylecorry.trail_sense.shared.icons.trail.BackupRestore
@@ -137,13 +137,13 @@ fun DiagnosticsScreen(
     val warnings = items.filter { it.result.severity == ToolDiagnosticSeverity.Warning }
 
     // One question: is anything stopping a tool from working? The issue count answers it; each issue is one row.
-    val toolsTitle = stringResource(Res.string.sky_diagnostics_tools)
-    val errorsTitle = pluralStringResource(Res.plurals.diagnostics_error_count, errors.size, errors.size)
-    val warningsTitle = pluralStringResource(Res.plurals.diagnostics_warning_count, warnings.size, warnings.size)
+    val toolsTitle = appString(Res.string.sky_diagnostics_tools)
+    val errorsTitle = appPluralString(Res.plurals.diagnostics_error_count, errors.size, errors.size)
+    val warningsTitle = appPluralString(Res.plurals.diagnostics_warning_count, warnings.size, warnings.size)
     TrailSensePage(
-        title = stringResource(Res.string.diagnostics),
+        title = appString(Res.string.diagnostics),
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(Res.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier.testTag("diagnostics_list")
     ) {
         item(key = "hero") {
@@ -172,8 +172,8 @@ fun DiagnosticsScreen(
         trailSenseSection(key = "actions", title = toolsTitle) {
             row { position ->
                 SkyValueRow(
-                    title = stringResource(Res.string.pref_sensor_details_title),
-                    subtitle = stringResource(Res.string.diagnostics_sensor_details_summary),
+                    title = appString(Res.string.pref_sensor_details_title),
+                    subtitle = appString(Res.string.diagnostics_sensor_details_summary),
                     icon = Icons.Default.Sensors,
                     position = position,
                     onClick = onShowSensorDetails,
@@ -183,8 +183,8 @@ fun DiagnosticsScreen(
             }
             row { position ->
                 SkyValueRow(
-                    title = stringResource(Res.string.export_logs),
-                    subtitle = stringResource(Res.string.diagnostics_export_logs_summary),
+                    title = appString(Res.string.export_logs),
+                    subtitle = appString(Res.string.diagnostics_export_logs_summary),
                     icon = Icons.Default.Download,
                     position = position,
                     onClick = onExportLogs,
@@ -225,15 +225,15 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
     val issueCount = errorCount + warningCount
     val title = when {
         // The count is in the cookie, so the title is only the words.
-        issueCount > 0 -> pluralStringResource(Res.plurals.diagnostics_issues_found, issueCount)
-        loaded -> stringResource(Res.string.no_issues)
-        else -> stringResource(Res.string.diagnostics_checking)
+        issueCount > 0 -> appPluralString(Res.plurals.diagnostics_issues_found, issueCount)
+        loaded -> appString(Res.string.no_issues)
+        else -> appString(Res.string.diagnostics_checking)
     }
     // One quiet line under the count only when there are none, saying why that is good news; the sections below
     // already split errors from warnings.
     val supporting = when {
         issueCount > 0 -> null
-        loaded -> stringResource(Res.string.diagnostics_no_issues_summary)
+        loaded -> appString(Res.string.diagnostics_no_issues_summary)
         else -> null
     }
     val progress by animateFloatAsState(
@@ -290,7 +290,7 @@ private fun DiagnosticListItem(
 ) {
     val severity = item.result.severity
     val isError = severity == ToolDiagnosticSeverity.Error
-    val severityLabel = stringResource(if (isError) Res.string.error else Res.string.warning)
+    val severityLabel = appString(if (isError) Res.string.error else Res.string.warning)
     SkyValueRow(
         title = item.result.name,
         subtitle = item.result.description,
