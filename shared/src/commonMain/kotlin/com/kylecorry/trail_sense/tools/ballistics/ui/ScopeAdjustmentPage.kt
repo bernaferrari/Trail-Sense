@@ -1,53 +1,32 @@
 package com.kylecorry.trail_sense.tools.ballistics.ui
 
-import androidx.compose.ui.graphics.graphicsLayer
-
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.ui.semantics.Role
-import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroupScope
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
-import com.kylecorry.trail_sense.shared.icons.trail.Arrow
-import com.kylecorry.trail_sense.shared.icons.trail.Check
-import com.kylecorry.trail_sense.shared.icons.trail.Ballistics
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpotlight
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,11 +34,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.preferences.Preferences
@@ -70,21 +57,26 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.icons.trail.Arrow
+import com.kylecorry.trail_sense.shared.icons.trail.Ballistics
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
-import androidx.compose.material.icons.rounded.ArrowDropDown
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroupScope
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 
@@ -108,12 +100,12 @@ fun ScopeAdjustmentPage(
 
     val clickAmounts = remember {
         listOf(
-            R.string.moa_amount to "1/8" to Distance.from(0.125f, DistanceUnits.Inches),
-            R.string.moa_amount to "1/4" to Distance.from(0.25f, DistanceUnits.Inches),
-            R.string.moa_amount to "1/2" to Distance.from(0.5f, DistanceUnits.Inches),
-            R.string.moa_amount to "1" to Distance.from(1f, DistanceUnits.Inches),
-            R.string.mil_amount to DecimalFormatter.format(0.1, 1) to Distance.from(0.36f, DistanceUnits.Inches),
-            R.string.mil_amount to DecimalFormatter.format(0.05, 2) to Distance.from(0.18f, DistanceUnits.Inches)
+            Res.string.moa_amount to "1/8" to Distance.from(0.125f, DistanceUnits.Inches),
+            Res.string.moa_amount to "1/4" to Distance.from(0.25f, DistanceUnits.Inches),
+            Res.string.moa_amount to "1/2" to Distance.from(0.5f, DistanceUnits.Inches),
+            Res.string.moa_amount to "1" to Distance.from(1f, DistanceUnits.Inches),
+            Res.string.mil_amount to DecimalFormatter.format(0.1, 1) to Distance.from(0.36f, DistanceUnits.Inches),
+            Res.string.mil_amount to DecimalFormatter.format(0.05, 2) to Distance.from(0.18f, DistanceUnits.Inches)
         )
     }
 
@@ -141,7 +133,7 @@ fun ScopeAdjustmentPage(
     }
     val adjustmentText = listOfNotNull(adjustmentX, adjustmentY).joinToString("\n") {
         "${it.direction.name} ${it.clicks} clicks"
-    }.ifBlank { stringResource(R.string.none) }
+    }.ifBlank { appString(Res.string.none) }
 
     BallisticsForm(modifier = modifier) {
         ScopeHero(
@@ -158,7 +150,7 @@ fun ScopeAdjustmentPage(
         TrailSenseRowGroup {
             row { position ->
                 DistanceField(
-                    label = stringResource(R.string.distance_to_target),
+                    label = appString(Res.string.distance_to_target),
                     value = distanceToTarget,
                     units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
                     defaultUnit = DistanceUnits.Yards,
@@ -169,10 +161,10 @@ fun ScopeAdjustmentPage(
             }
             row { position ->
                 UnitPickerField(
-                    label = stringResource(R.string.adjustment_per_click),
+                    label = appString(Res.string.adjustment_per_click),
                     selected = selectedClickAmount,
                     options = clickAmounts.map { amount ->
-                        stringResource(amount.first.first, amount.first.second) to amount.second
+                        appString(amount.first.first, amount.first.second) to amount.second
                     },
                     onSelected = setDistancePerClick,
                     position = position,
@@ -182,13 +174,13 @@ fun ScopeAdjustmentPage(
         }
 
         val missUnits = formatter.sortDistanceUnits(DistanceUtils.rulerDistanceUnits)
-        val leftLabel = stringResource(R.string.left)
-        val rightLabel = stringResource(R.string.right)
-        val aboveLabel = stringResource(R.string.above)
-        val belowLabel = stringResource(R.string.below)
-        val windageLabel = stringResource(R.string.windage_miss)
-        val elevationLabel = stringResource(R.string.elevation_miss)
-        val whereHitLabel = stringResource(R.string.ballistics_where_hit)
+        val leftLabel = appString(Res.string.left)
+        val rightLabel = appString(Res.string.right)
+        val aboveLabel = appString(Res.string.above)
+        val belowLabel = appString(Res.string.below)
+        val windageLabel = appString(Res.string.windage_miss)
+        val elevationLabel = appString(Res.string.elevation_miss)
+        val whereHitLabel = appString(Res.string.ballistics_where_hit)
         // Each miss is a real field (how far, with its unit) and, right under it, which side: the kit's selection.
         TrailSenseRowGroup(title = whereHitLabel) {
             missRows(
@@ -328,7 +320,7 @@ private fun ScopeHero(
         when {
             // Idle: the reticle at rest and one instruction line.
             waiting -> Text(
-                stringResource(R.string.ballistics_waiting_hint),
+                appString(Res.string.ballistics_waiting_hint),
                 style = MaterialTheme.typography.bodyLarge,
                 color = scheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -336,7 +328,7 @@ private fun ScopeHero(
             )
 
             onTarget -> Text(
-                stringResource(R.string.ballistics_on_target),
+                appString(Res.string.ballistics_on_target),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold
             )
@@ -376,20 +368,20 @@ private fun TurretMove(adjustment: ScopeAdjustment?) {
         Column {
             Text(
                 text = if (adjustment == null) {
-                    stringResource(R.string.dash)
+                    appString(Res.string.dash)
                 } else {
-                    pluralStringResource(R.plurals.ballistics_clicks, adjustment.clicks, adjustment.clicks)
+                    appPluralString(Res.plurals.ballistics_clicks, adjustment.clicks, adjustment.clicks)
                 },
                 style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = when (adjustment?.direction) {
-                    ScopeDirection.Left -> stringResource(R.string.left)
-                    ScopeDirection.Right -> stringResource(R.string.right)
-                    ScopeDirection.Up -> stringResource(R.string.ballistics_up)
-                    ScopeDirection.Down -> stringResource(R.string.ballistics_down)
-                    null -> stringResource(R.string.ballistics_enter_distance)
+                    ScopeDirection.Left -> appString(Res.string.left)
+                    ScopeDirection.Right -> appString(Res.string.right)
+                    ScopeDirection.Up -> appString(Res.string.ballistics_up)
+                    ScopeDirection.Down -> appString(Res.string.ballistics_down)
+                    null -> appString(Res.string.ballistics_enter_distance)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.onSurfaceVariant
@@ -586,7 +578,7 @@ private fun <T, U> UnitAmountField(
 
     if (isPickingUnit) {
         TrailSenseOptionsDialog(
-            title = stringResource(R.string.units),
+            title = appString(Res.string.units),
             options = units.map { getUnitName(it) to it },
             selected = unit,
             onSelect = {
@@ -640,7 +632,7 @@ internal fun <T> UnitPickerField(
 
 @Composable
 internal fun rememberDistancePreference(key: String): Pair<Distance?, (Distance?) -> Unit> {
-    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { getAppService<Preferences>() }
     var value by remember(key) { mutableStateOf(prefs.getDistance(key)) }
     val setter: (Distance?) -> Unit = {
         prefs.putDistance(key, it)
@@ -651,7 +643,7 @@ internal fun rememberDistancePreference(key: String): Pair<Distance?, (Distance?
 
 @Composable
 internal fun rememberSpeedPreference(key: String): Pair<Speed?, (Speed?) -> Unit> {
-    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { getAppService<Preferences>() }
     var value by remember(key) { mutableStateOf(prefs.getSpeed(key)) }
     val setter: (Speed?) -> Unit = {
         prefs.putSpeed(key, it)
@@ -662,7 +654,7 @@ internal fun rememberSpeedPreference(key: String): Pair<Speed?, (Speed?) -> Unit
 
 @Composable
 internal fun rememberWeightPreference(key: String): Pair<Weight?, (Weight?) -> Unit> {
-    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { getAppService<Preferences>() }
     var value by remember(key) { mutableStateOf(prefs.getWeight(key)) }
     val setter: (Weight?) -> Unit = {
         prefs.putWeight(key, it)
@@ -673,7 +665,7 @@ internal fun rememberWeightPreference(key: String): Pair<Weight?, (Weight?) -> U
 
 @Composable
 internal fun rememberFloatPreference(key: String): Pair<Float?, (Float?) -> Unit> {
-    val prefs = remember { DependencyRegistry.get<PreferencesSubsystem>().preferences }
+    val prefs = remember { getAppService<Preferences>() }
     var value by remember(key) { mutableStateOf(prefs.getFloat(key)) }
     val setter: (Float?) -> Unit = {
         if (it == null) {

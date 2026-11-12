@@ -14,8 +14,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -31,15 +31,15 @@ fun BallisticsScreen(
     val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
     val options = listOf(
-        TrailSenseChoice(0, stringResource(R.string.scope)),
-        TrailSenseChoice(1, stringResource(R.string.ballistics)),
-        TrailSenseChoice(2, stringResource(R.string.energy))
+        TrailSenseChoice(0, appString(Res.string.scope)),
+        TrailSenseChoice(1, appString(Res.string.ballistics)),
+        TrailSenseChoice(2, appString(Res.string.energy))
     )
 
     TrailSensePage(
-        title = stringResource(R.string.ballistics),
+        title = appString(Res.string.ballistics),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier
     ) {
         item("calculator") {

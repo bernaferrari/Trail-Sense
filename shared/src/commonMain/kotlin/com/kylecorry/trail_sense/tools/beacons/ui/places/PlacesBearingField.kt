@@ -4,9 +4,6 @@ package com.kylecorry.trail_sense.tools.beacons.ui.places
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -23,6 +21,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
@@ -39,33 +38,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.units.Bearing
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.icons.trail.Camera
 import com.kylecorry.trail_sense.shared.icons.trail.Cancel
 import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
 import com.kylecorry.trail_sense.shared.icons.trail.Edit
 import com.kylecorry.trail_sense.shared.icons.trail.NavigationArrow
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.semantics.Role
 
 /**
  * A bearing as one row of a group: the direction in a cookie whose arrow points that way, the value large with its
@@ -86,8 +86,7 @@ fun PlacesBearingField(
     tag: String? = null,
     containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainer
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
     var showManualEntry by remember { mutableStateOf(false) }
     val isSet = bearing != null
     val scheme = MaterialTheme.colorScheme
@@ -120,13 +119,13 @@ fun PlacesBearingField(
                 Spacer(Modifier.width(TrailSenseSpacing.lg))
                 Column(Modifier.weight(1f)) {
                     Text(
-                        stringResource(R.string.bearing),
+                        appString(Res.string.bearing),
                         style = MaterialTheme.typography.labelLarge,
                         color = scheme.onSurfaceVariant
                     )
                     Text(
                         text = bearing?.let { formatter.formatDegrees(it, replace360 = true) }
-                            ?: stringResource(R.string.direction_not_set),
+                            ?: appString(Res.string.direction_not_set),
                         modifier = Modifier.testTag("bearing"),
                         style = if (isSet) {
                             MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum")
@@ -149,7 +148,7 @@ fun PlacesBearingField(
                             )
                             Spacer(Modifier.width(TrailSenseSpacing.xs))
                             Text(
-                                stringResource(if (trueNorth) R.string.true_north else R.string.magnetic_north),
+                                appString(if (trueNorth) Res.string.true_north else Res.string.magnetic_north),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = scheme.onSurfaceVariant
                             )
@@ -163,7 +162,7 @@ fun PlacesBearingField(
                     ) {
                         Icon(
                             TrailIcons.Cancel,
-                            contentDescription = stringResource(android.R.string.cancel),
+                            contentDescription = systemString(SystemString.Cancel),
                             tint = scheme.onSurfaceVariant
                         )
                     }
@@ -178,7 +177,7 @@ fun PlacesBearingField(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (hasCompass) {
-                    val compassLabel = stringResource(R.string.places_triangulate_compass)
+                    val compassLabel = appString(Res.string.places_triangulate_compass)
                     Box(Modifier.weight(1f).testTag("compass_btn")) {
                         TrailSenseButton(
                             text = compassBearingText,
@@ -196,7 +195,7 @@ fun PlacesBearingField(
                             .size(56.dp)
                             .testTag("camera_btn")
                     ) {
-                        Icon(TrailIcons.Camera, contentDescription = stringResource(R.string.camera))
+                        Icon(TrailIcons.Camera, contentDescription = appString(Res.string.camera))
                     }
                     FilledTonalIconButton(
                         onClick = { showManualEntry = true },
@@ -204,11 +203,11 @@ fun PlacesBearingField(
                             .size(56.dp)
                             .testTag("manual_bearing")
                     ) {
-                        Icon(TrailIcons.Edit, contentDescription = stringResource(R.string.enter_manually))
+                        Icon(TrailIcons.Edit, contentDescription = appString(Res.string.enter_manually))
                     }
                 } else {
                     TrailSenseButton(
-                        text = stringResource(R.string.enter_manually),
+                        text = appString(Res.string.enter_manually),
                         onClick = { showManualEntry = true },
                         icon = TrailIcons.Edit,
                         style = TrailSenseButtonStyle.Tonal,
@@ -235,7 +234,7 @@ fun PlacesBearingField(
 }
 
 @Composable
-internal fun PlacesBearingDialog(
+fun PlacesBearingDialog(
     initialBearing: Float?,
     initialTrueNorth: Boolean,
     onDismiss: () -> Unit,
@@ -249,16 +248,16 @@ internal fun PlacesBearingDialog(
 
     TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = stringResource(R.string.direction),
-        confirmText = stringResource(android.R.string.ok),
+        title = appString(Res.string.direction),
+        confirmText = systemString(SystemString.Ok),
         onConfirm = { onConfirm(parsedBearing, trueNorth) },
-        dismissText = stringResource(android.R.string.cancel)
+        dismissText = systemString(SystemString.Cancel)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
             TrailSenseInputField(
                 value = bearingText,
                 onValueChange = { bearingText = it },
-                label = stringResource(R.string.bearing),
+                label = appString(Res.string.bearing),
                 keyboardType = KeyboardType.Number,
                 unit = "°",
                 modifier = Modifier.testTag("bearing")
@@ -276,7 +275,7 @@ internal fun PlacesBearingDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.true_north),
+                    text = appString(Res.string.true_north),
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyLarge
                 )

@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.main
 
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.andromeda.markdown.MarkdownDelimiter
 import androidx.compose.ui.text.ParagraphStyle
@@ -14,6 +15,8 @@ import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.GeoidService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
+import com.kylecorry.trail_sense.shared.device.AndroidDeviceProfile
+import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.device.DeviceSubsystem
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
@@ -43,7 +46,9 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<AppStrings>(AndroidAppStrings(appContext))
         DependencyRegistry.addSingleton(FormatService.getInstance(appContext))
         DependencyRegistry.addSingleton(PreferencesSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton<Preferences>(PreferencesSubsystem.getInstance(appContext).preferences)
         DependencyRegistry.addSingleton(SessionStateSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton<DeviceProfile>(AndroidDeviceProfile(appContext))
         DependencyRegistry.addSingleton(UserPreferences(appContext))
         DependencyRegistry.addSingleton<GeoidService>(AltitudeCorrection)
         DependencyRegistry.addSingleton(NotificationSubsystem(appContext))
