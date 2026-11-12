@@ -982,3 +982,15 @@ percent_packed
 places_packs_items
 places_percent
 sort
+places_turn_back_before_dark_in
+places_turn_back_idle_title
+places_turn_back_pick_hint
+places_turn_back_set_return_time
+places_turn_back_sunset_hint
+places_turn_back_turn_around_at
+places_turn_back_turn_around_now
+return_before_dark
+return_time
+turn_back_alert_set
+turn_back_cancel
+turn_back_empty_description

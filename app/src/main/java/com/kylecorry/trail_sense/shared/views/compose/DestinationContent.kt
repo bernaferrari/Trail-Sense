@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.tools.turn_back.infrastructure.rememberTurnBackAlarm
 import com.kylecorry.trail_sense.tools.packs.ui.commands.rememberPackingListFiles
 import com.kylecorry.trail_sense.tools.astronomy.quickactions.bindAstronomyQuickActions
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.rememberBeaconShare
@@ -218,7 +219,7 @@ fun DestinationContent(
             Route.Triangulate -> TriangulateToolScreen()
             Route.Clock -> ClockToolScreen()
             Route.SignalFinder -> SignalFinderToolScreen()
-            Route.TurnBack -> TurnBackToolScreen()
+            Route.TurnBack -> TurnBackToolScreen(rememberTurnBackAlarm())
             Route.Settings -> SettingsToolScreen()
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen()
             is Route.Clouds -> CloudToolScreen(route)

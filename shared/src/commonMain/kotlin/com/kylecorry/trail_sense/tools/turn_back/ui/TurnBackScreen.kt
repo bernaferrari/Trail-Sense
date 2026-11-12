@@ -4,8 +4,14 @@
 
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
-import android.content.Context
-import android.os.Build
+import kotlin.math.PI
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -29,42 +35,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.permissions.IsBackgroundLocationRequired
-import com.kylecorry.trail_sense.shared.preferences.PreferencesFlag
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
-import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.shared.time.nowLocal
 import com.kylecorry.trail_sense.shared.time.plusDays
 import com.kylecorry.trail_sense.shared.time.toLocalTime
 import com.kylecorry.trail_sense.shared.time.withTime
 import com.kylecorry.trail_sense.shared.views.TurnBackEmptyIllustration
-import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
@@ -74,8 +65,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
-import kotlin.coroutines.resume
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.withCancelableLoading
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -88,7 +79,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalTime
 
@@ -98,30 +88,26 @@ object TurnBackKeys {
 }
 
 @Composable
-fun TurnBackToolScreen() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+fun TurnBackToolScreen(alarm: TurnBackAlarm) {
+    val host = AppHost.current()
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
     val viewModel = viewModel {
         TurnBackViewModel(
-            preferences = PreferencesSubsystem.getInstance(appContext).preferences,
+            preferences = getAppService<Preferences>(),
             locationSubsystem = getAppService<ILocationSubsystem>(),
-            sensorSubsystem = SensorSubsystem.getInstance(appContext)
+            sensorSubsystem = getAppService<ISensorSubsystem>()
         )
     }
-    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
-    val userPrefs = remember(appContext) { UserPreferences(appContext) }
+    val formatter = remember { FormatService.getInstance() }
+    val userPrefs = remember { getAppService<UserPreferences>() }
 
     LaunchedEffect(viewModel) {
         viewModel.alertSet.collect {
             scope.launch {
-                // Exact alarms first; the alarm starts whether or not they were granted, as it always has.
-                effects.requestPermission(AppPermission.ExactAlarms)
-                TurnBackAlarmReceiver.start(context)
-                requestBackgroundLocation(context, viewModel.preferences, effects)
+                alarm.start()
             }
-            effects.showMessage(context.getString(R.string.turn_back_alert_set))
+            effects.showMessage(getAppService<AppStrings>().get(Res.string.turn_back_alert_set))
         }
     }
 
@@ -130,8 +116,8 @@ fun TurnBackToolScreen() {
         loadTurnBackTime = viewModel::turnBackTime,
         loadReturnTime = viewModel::returnTime,
         onPickReturnTime = { currentReturnTime ->
-            CustomUiUtils.pickTime(
-                context,
+            Pickers.time(
+                host,
                 userPrefs.use24HourTime,
                 currentReturnTime?.toLocalTime() ?: nowLocal().time
             ) {
@@ -143,8 +129,8 @@ fun TurnBackToolScreen() {
         onUseSunset = {
             val job = viewModel.setReturnTimeToSunset()
             Alerts.withCancelableLoading(
-                context,
-                context.getString(R.string.loading),
+                host,
+                getAppService<AppStrings>().get(Res.string.loading),
                 onCancel = { job.cancel() }
             ) {
                 // The sunset lookup runs in the ViewModel; the dialog only offers to cancel it.
@@ -153,7 +139,7 @@ fun TurnBackToolScreen() {
         loadSunset = viewModel::getNextSunset,
         onCancel = {
             viewModel.cancelTurnBack()
-            TurnBackAlarmReceiver.stop(context)
+            alarm.stop()
         }
     )
 }
@@ -163,10 +149,10 @@ fun TurnBackToolScreen() {
  * preferences and location subsystems; [alertSet] fires once a new return time is stored so the screen can start the
  * alarm and ask for its permissions.
  */
-internal class TurnBackViewModel(
+class TurnBackViewModel(
     val preferences: Preferences,
     private val locationSubsystem: ILocationSubsystem,
-    private val sensorSubsystem: SensorSubsystem
+    private val sensorSubsystem: ISensorSubsystem
 ) : ViewModel() {
 
     private val astronomy = AstronomyService()
@@ -231,48 +217,6 @@ internal class TurnBackViewModel(
     }
 }
 
-/** Once, when the alarm needs it, offers background location so the alert can find the sunset while closed. */
-private suspend fun requestBackgroundLocation(context: Context, preferences: Preferences, effects: ScreenEffects) {
-    val shownFlag = PreferencesFlag(preferences, "cache_background_location_requested")
-    if (!IsBackgroundLocationRequired().isSatisfiedBy(context)) {
-        shownFlag.set(false)
-        return
-    }
-    if (shownFlag.get()) {
-        return
-    }
-
-    shownFlag.set(true)
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-        return
-    }
-
-    val learnMore = effects.showSnackbar(
-        context.getString(R.string.sunset_alerts_background_location_disclaimer),
-        actionLabel = context.getString(R.string.learn_more),
-        long = true
-    )
-    if (!learnMore) {
-        return
-    }
-    val markdown = DependencyRegistry.get<MarkdownService>()
-    val contents = markdown.toMarkdown(context.getString(R.string.access_background_location_rationale))
-    val cancelled = suspendCancellableCoroutine { continuation ->
-        Alerts.dialog(
-            context,
-            context.getString(R.string.access_background_location),
-            contents,
-            okText = context.getString(R.string.settings),
-            allowLinks = true
-        ) { cancelled ->
-            if (continuation.isActive) continuation.resume(cancelled)
-        }
-    }
-    if (!cancelled) {
-        effects.requestPermission(AppPermission.BackgroundLocation)
-    }
-}
-
 /**
  * The object: the sun on its arc over a horizon. Its height is the share of the time before you're due back that you
  * can still spend going on, so it touches the horizon exactly when it's time to turn around, and then warms.
@@ -307,7 +251,7 @@ private fun TurnBackSun(height: Float, isDue: Boolean, modifier: Modifier = Modi
             )
         )
         // From high noon (1) down the right of the arc to the horizon (0).
-        val theta = (1f - h) * (Math.PI.toFloat() / 2f)
+        val theta = (1f - h) * (PI.toFloat() / 2f)
         val sun = Offset(center.x + radius * kotlin.math.sin(theta), center.y - radius * kotlin.math.cos(theta))
         drawCircle(sunColor.copy(alpha = 0.22f), 26.dp.toPx(), sun)
         drawCircle(sunColor, 16.dp.toPx(), sun)
@@ -374,7 +318,7 @@ private fun TurnBackScreen(
     val isDue = isActive && remaining == Duration.ZERO
 
     TrailSensePage(
-        title = stringResource(R.string.tool_turn_back),
+        title = appString(Res.string.tool_turn_back),
         onBack = rememberTrailSenseBack(),
         modifier = modifier
     ) {
@@ -383,12 +327,12 @@ private fun TurnBackScreen(
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolClock,
                     illustration = { TurnBackEmptyIllustration() },
-                    title = stringResource(R.string.places_turn_back_idle_title),
-                    description = stringResource(R.string.turn_back_empty_description),
+                    title = appString(Res.string.places_turn_back_idle_title),
+                    description = appString(Res.string.turn_back_empty_description),
                     modifier = Modifier
                         .fillParentMaxHeight(0.9f)
                         .testTag("instructions"),
-                    actionLabel = stringResource(R.string.places_turn_back_set_return_time),
+                    actionLabel = appString(Res.string.places_turn_back_set_return_time),
                     onAction = { onPickReturnTime(returnTime) },
                     actionModifier = Modifier.testTag("edittext"),
                     action = {
@@ -398,12 +342,11 @@ private fun TurnBackScreen(
                         val untilSunset = sunset?.let { (it - now) }?.takeIf { !it.isNegative() }
                         TrailSenseButton(
                             text = if (untilSunset != null) {
-                                stringResource(
-                                    R.string.places_turn_back_before_dark_in,
+                                appString(Res.string.places_turn_back_before_dark_in,
                                     formatter.formatDuration(untilSunset, short = true)
                                 )
                             } else {
-                                stringResource(R.string.return_before_dark)
+                                appString(Res.string.return_before_dark)
                             },
                             onClick = onUseSunset,
                             style = TrailSenseButtonStyle.Text,
@@ -449,9 +392,9 @@ private fun TurnBackScreen(
                 )
                 Text(
                     if (isDue || formattedTurnBackTime == null) {
-                        stringResource(R.string.places_turn_back_turn_around_now)
+                        appString(Res.string.places_turn_back_turn_around_now)
                     } else {
-                        stringResource(R.string.places_turn_back_turn_around_at, formattedTurnBackTime)
+                        appString(Res.string.places_turn_back_turn_around_at, formattedTurnBackTime)
                     },
                     style = MaterialTheme.typography.headlineSmall,
                     color = if (isDue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
@@ -463,8 +406,8 @@ private fun TurnBackScreen(
         trailSenseSection(key = "return") {
             row { position ->
                 TrailSenseListItem(
-                    title = stringResource(R.string.return_time),
-                    subtitle = stringResource(R.string.places_turn_back_pick_hint),
+                    title = appString(Res.string.return_time),
+                    subtitle = appString(Res.string.places_turn_back_pick_hint),
                     icon = rememberVectorPainter(TrailIcons.ToolClock),
                     trailingText = formattedReturnTime,
                     position = position,
@@ -474,8 +417,8 @@ private fun TurnBackScreen(
             }
             row { position ->
                 TrailSenseListItem(
-                    title = stringResource(R.string.return_before_dark),
-                    subtitle = stringResource(R.string.places_turn_back_sunset_hint),
+                    title = appString(Res.string.return_before_dark),
+                    subtitle = appString(Res.string.places_turn_back_sunset_hint),
                     icon = rememberVectorPainter(TrailIcons.SunsetNotification),
                     trailingText = formattedSunset,
                     position = position,
@@ -487,7 +430,7 @@ private fun TurnBackScreen(
 
         item("cancel") {
             TrailSenseButton(
-                text = stringResource(R.string.turn_back_cancel),
+                text = appString(Res.string.turn_back_cancel),
                 onClick = onCancel,
                 icon = TrailIcons.Cancel,
                 style = TrailSenseButtonStyle.Tonal,

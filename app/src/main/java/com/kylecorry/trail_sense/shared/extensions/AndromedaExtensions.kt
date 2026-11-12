@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.extensions
 
+import com.kylecorry.trail_sense.shared.dialogs.cancelableLoading
 import android.app.ForegroundServiceStartNotAllowedException
 import android.content.Context
 import android.app.Service
@@ -93,27 +94,7 @@ fun Alerts.cancelableLoading(
     cancelText: CharSequence = context.getString(android.R.string.cancel),
     onCanceled: (() -> Unit)? = null
 ): TrailSenseDialog {
-    return dialog(
-        context,
-        title,
-        okText = null,
-        cancelText = cancelText,
-        cancelOnOutsideTouch = false,
-        body = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-    ) { cancelled ->
-        if (cancelled) {
-            onCanceled?.invoke()
-        }
-    }
+    return cancelableLoading(AppHost.from(context), title, cancelText, onCanceled)
 }
 
 fun Path.drawLines(lines: FloatArray, smooth: Boolean = false) {
