@@ -13,7 +13,7 @@ import kotlin.time.Instant
 
 class ClimateSubsystem private constructor(private val context: Context) : ITemperatureRepo {
 
-    private val temperatureRepo = HistoricTemperatureRepo(context)
+    private val temperatureRepo = HistoricTemperatureRepo()
 
     override suspend fun getYearlyTemperatures(
         year: Int,

@@ -4,63 +4,20 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
-import com.kylecorry.trail_sense.shared.time.today
-
-import com.kylecorry.trail_sense.shared.time.toLocalTime
-
-import com.kylecorry.trail_sense.shared.time.toLocalDate
-
-import com.kylecorry.trail_sense.shared.time.minusDays
-
-import com.kylecorry.trail_sense.shared.time.plusDays
-
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.minutes
-
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.sp
-import kotlin.math.PI
-import kotlin.math.sin
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.Surface
-import androidx.compose.material3.toShape
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.text.font.FontWeight
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.Canvas
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,10 +34,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,48 +53,80 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
+import com.kylecorry.trail_sense.shared.time.minusDays
+import com.kylecorry.trail_sense.shared.time.plusDays
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSmoothPath
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.DailyTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.LoadTideTableCommand
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
+import kotlin.math.PI
+import kotlin.math.sin
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun TidesToolScreen() {
@@ -144,7 +137,7 @@ fun TidesToolScreen() {
         TidesViewModel(
             tideService = TideService(appContext),
             loadTable = LoadTideTableCommand(appContext)::execute,
-            locationSubsystem = LocationSubsystem.getInstance(appContext)
+            locationSubsystem = getAppService<ILocationSubsystem>()
         )
     }
     val formatService = remember(context) { FormatService.getInstance(context) }
@@ -273,7 +266,7 @@ fun TidesToolScreen() {
 internal class TidesViewModel(
     private val tideService: TideService,
     private val loadTable: suspend () -> TideTable?,
-    private val locationSubsystem: LocationSubsystem
+    private val locationSubsystem: ILocationSubsystem
 ) : ViewModel() {
 
     private val currentTideCommand = CurrentTideCommand(tideService)

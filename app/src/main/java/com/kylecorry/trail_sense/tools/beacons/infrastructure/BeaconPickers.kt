@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.beacons.infrastructure
 
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.grouping.picker.GroupablePickers
@@ -9,13 +10,13 @@ import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.loading.BeaconLoader
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.IBeaconSort
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.NameBeaconSort
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 object BeaconPickers {
 
@@ -27,7 +28,7 @@ object BeaconPickers {
         sort: IBeaconSort = NameBeaconSort(),
         filter: (List<IBeacon>) -> List<IBeacon> = { it }
     ): Beacon? = suspendCoroutine { cont ->
-        val loader = BeaconLoader(BeaconService(context), UserPreferences(context).beacons)
+        val loader = BeaconLoader(getAppService<IBeaconService>(), UserPreferences(context).beacons)
         val manager = GroupListManager(
             scope,
             loader,
@@ -60,7 +61,7 @@ object BeaconPickers {
         sort: IBeaconSort = NameBeaconSort(),
         filter: (List<BeaconGroup>) -> List<BeaconGroup> = { it }
     ): Pair<Boolean, BeaconGroup?> = suspendCoroutine { cont ->
-        val loader = BeaconLoader(BeaconService(context), UserPreferences(context).beacons)
+        val loader = BeaconLoader(getAppService<IBeaconService>(), UserPreferences(context).beacons)
         val manager = GroupListManager(
             scope,
             loader,

@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.tools.services
 
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.CoroutineWorker
@@ -15,11 +13,13 @@ import com.kylecorry.andromeda.widgets.Widgets
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canGetLocationCustom
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem.SensorRefreshPolicy
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
@@ -46,7 +46,7 @@ class WidgetUpdateWorker(context: Context, params: WorkerParameters) :
     }
 
     private suspend fun updateStaleSensorData() {
-        val locationSubsystem = LocationSubsystem.getInstance(applicationContext)
+        val locationSubsystem = getAppService<ILocationSubsystem>()
         val sensorSubsystem = SensorSubsystem.getInstance(applicationContext)
 
         if (!Permissions.canGetLocationCustom(applicationContext)) {

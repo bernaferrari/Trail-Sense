@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
 import android.content.Context
-import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.luna.concurrency.onDefault
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -22,7 +23,7 @@ object BacktrackScheduler {
 
     suspend fun start(context: Context, startNewPath: Boolean) = onDefault {
         if (startNewPath) {
-            PathService.getInstance(context).endBacktrackPath()
+            getAppService<IPathService>().endBacktrackPath()
         }
 
         if (!BacktrackIsAvailable().isSatisfiedBy(context)) {

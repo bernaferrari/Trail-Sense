@@ -139,7 +139,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.IBeaconNavigator
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
 import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
@@ -147,6 +147,7 @@ import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathFollow
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathDirection
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -157,7 +158,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingDifficulty
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.AddPathPointCommand
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePathColorCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePathLineStyleCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePointStyleCommand
@@ -203,7 +203,7 @@ fun PathOverviewToolScreen(
         val gps = sensorService.getGPS()
         PathOverviewViewModel(
             pathId = route.pathId,
-            pathService = PathService.getInstance(appContext),
+            pathService = getAppService<IPathService>(),
             navigator = Navigator.getInstance(appContext),
             gps = gps,
             compass = sensorService.getCompass(),
@@ -255,7 +255,7 @@ fun PathOverviewToolScreen(
     }
     val beaconNavigator: IBeaconNavigator = remember(appContext, appNavigator) {
         BeaconNavigator(
-            BeaconService(appContext),
+            getAppService<IBeaconService>(),
             TrailSenseAppNavigation(appNavigator),
             Navigator.getInstance(appContext)
         )
@@ -428,8 +428,8 @@ fun PathOverviewToolScreen(
                         ).execute(current)
 
                         PathAction.Rename -> RenamePathCommand(context, scope, pathService).execute(current)
-                        PathAction.Keep -> KeepPathCommand(context, scope, pathService).execute(current)
-                        PathAction.ToggleVisibility -> TogglePathVisibilityCommand(context, scope, pathService)
+                        PathAction.Keep -> KeepPathCommand(scope, pathService).execute(current)
+                        PathAction.ToggleVisibility -> TogglePathVisibilityCommand(scope, pathService)
                             .execute(current)
 
                         PathAction.Simplify -> simplifyCommand.execute(current)
@@ -454,7 +454,7 @@ fun PathOverviewToolScreen(
         scope.launch {
             var wasSuccessful = false
             val job = launch {
-                AddPathPointCommand(context, viewModel.pathId).execute()
+                AddPathPointCommand(viewModel.pathId).execute()
                 wasSuccessful = true
             }
 
@@ -650,7 +650,7 @@ fun PathOverviewToolScreen(
  */
 internal class PathOverviewViewModel(
     val pathId: Long,
-    val pathService: PathService,
+    val pathService: IPathService,
     private val navigator: Navigator,
     private val gps: GpsSensor,
     private val compass: CompassSensor,

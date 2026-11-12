@@ -3,12 +3,6 @@
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
-import kotlin.time.Duration.Companion.days
-
-import kotlin.time.Duration.Companion.seconds
-
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -81,18 +75,20 @@ import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.DropDownExpanded
 import com.kylecorry.trail_sense.shared.icons.trail.Thermometer
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.icons.trail.Wind
 import com.kylecorry.trail_sense.shared.safeRoundToInt
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -104,9 +100,11 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.launch
 
 private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnits) {
     KilometersPerHour(DistanceUnits.Kilometers, TimeUnits.Hours),
@@ -120,7 +118,7 @@ fun TemperatureEstimationToolScreen() {
     val sensorService = remember { getAppService<SensorService>() }
     val thermometer = remember { sensorService.getThermometer() }
     val prefs = remember { UserPreferences(context) }
-    val location = remember { LocationSubsystem.getInstance(context) }
+    val location = remember { getAppService<ILocationSubsystem>() }
     val formatService = remember { FormatService.getInstance(context) }
 
     TemperatureEstimationScreen(

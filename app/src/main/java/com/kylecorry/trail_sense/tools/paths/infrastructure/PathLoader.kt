@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
-import kotlin.time.Clock
-
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.ShouldLoadPathSpecification
 import com.kylecorry.trail_sense.tools.paths.domain.ShouldUnloadPathSpecification
+import kotlin.time.Clock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -26,7 +26,7 @@ class PathLoader(private val pathService: IPathService) {
             return@onIO pointsLock.withLock { points.toMap() }
         }
 
-        val locationSubsystem = LocationSubsystem.getInstance(context)
+        val locationSubsystem = getAppService<ILocationSubsystem>()
         val location = locationSubsystem.location
         val altitude = locationSubsystem.elevation
         pointsLock.withLock {

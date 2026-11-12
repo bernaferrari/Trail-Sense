@@ -15,6 +15,7 @@ import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRe
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence.NavigationBearingService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.MapCleanupCommand
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
@@ -36,7 +37,7 @@ class RepoCleanupWorker(
 
         // Named explicitly because class names are obfuscated in release builds
         val cleanables: List<Pair<String, ICleanable>> = listOf(
-            "PathService" to PathService.getInstance(context),
+            "PathService" to getAppService<IPathService>(),
             "WeatherRepo" to WeatherRepo.getInstance(context),
             "CloudRepo" to CloudRepo.getInstance(context),
             "LightningRepo" to LightningRepo.getInstance(context),

@@ -1,27 +1,25 @@
 package com.kylecorry.trail_sense.tools.beacons.quickactions
 
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import kotlin.time.Clock
-
 import androidx.lifecycle.lifecycleScope
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListControllerHost
+import kotlin.time.Clock
 import kotlinx.coroutines.launch
 
 class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: AndroidDestinationHost) :
@@ -50,7 +48,7 @@ class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: AndroidDestinatio
                 val time = formatter.formatDateTime(Clock.System.now())
 
                 val prefs = UserPreferences(host.context)
-                val beaconService = BeaconService(host.context)
+                val beaconService = getAppService<IBeaconService>()
                 id = beaconService.add(
                     Beacon(
                         0,

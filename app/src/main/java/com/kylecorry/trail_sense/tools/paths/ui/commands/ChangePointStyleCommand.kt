@@ -1,24 +1,23 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.item
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathPointColoringStyle
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.ui.getPointStyleNames
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.dialogs.item
-
 
 class ChangePointStyleCommand(
     private val context: Context,
     private val scope: CoroutineScope,
-    private val pathService: IPathService = PathService.getInstance(context)
+    private val pathService: IPathService = getAppService<IPathService>()
 ) : IPathCommand {
 
     override fun execute(path: Path) {

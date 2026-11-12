@@ -2,51 +2,16 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.tools.beacons.domain.icon
-import kotlin.time.Clock
-
 import android.content.Context
 import android.content.ContextWrapper
-import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.sense.location.GpsSensor
-import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.settings.infrastructure.IBeaconPreferences
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.views.compose.AppPermission
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-import com.kylecorry.trail_sense.shared.navigation.toGeoUri
-
-import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.tools.beacons.ui.polygon
-import com.kylecorry.trail_sense.shared.views.PlacesEmptyIllustration
-import androidx.compose.foundation.layout.size
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Bitmap
 import android.util.Size
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -61,69 +26,94 @@ import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults
-import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.luna.extensions.filterIndices
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.gpx.GPXData
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.qr.QR
+import com.kylecorry.andromeda.sense.location.GpsSensor
+import com.kylecorry.luna.extensions.filterIndices
+import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.infrastructure.IBeaconPreferences
 import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
-import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.items
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
 import com.kylecorry.trail_sense.shared.from
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.IOFactory
-import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.navigation.toGeoUri
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
+import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.CameraState
+import com.kylecorry.trail_sense.shared.views.PlacesEmptyIllustration
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.sol.units.Distance
-import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
-import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
-import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
+import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
+import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.CreateBeaconGroupCommand
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.DeleteBeaconCommand
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.MoveBeaconCommand
@@ -133,22 +123,28 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.commands.cell.Navi
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.export.BeaconGpxConverter
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.export.BeaconGpxImporter
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.loading.BeaconLoader
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.BeaconSender
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.BeaconSortMethod
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.MostRecentBeaconSort
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.NameBeaconSort
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
+import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
+import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import com.kylecorry.trail_sense.tools.qr.ui.QRImportContent
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.items
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
-import com.kylecorry.trail_sense.shared.dialogs.withLoading
+import kotlin.time.Clock
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 interface BeaconListControllerHost {
     fun refreshBeaconList()
@@ -169,7 +165,7 @@ fun BeaconListToolScreen(
     val viewModel = viewModel {
         BeaconListViewModel(
             route = route,
-            beaconService = BeaconService(appContext),
+            beaconService = getAppService<IBeaconService>(),
             preferences = UserPreferences(appContext).beacons,
             gps = getAppService<SensorService>().getGPS(),
             importer = BeaconGpxImporter(appContext)
@@ -499,7 +495,7 @@ fun BeaconListToolScreen(
  */
 internal class BeaconListViewModel(
     route: Route.BeaconList,
-    val beaconService: BeaconService,
+    val beaconService: IBeaconService,
     private val preferences: IBeaconPreferences,
     private val gps: GpsSensor,
     private val importer: BeaconGpxImporter

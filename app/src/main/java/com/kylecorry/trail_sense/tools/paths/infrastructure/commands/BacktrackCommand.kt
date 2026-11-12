@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.commands
 
-import kotlin.time.Clock
-
 import android.content.Context
 import android.os.SystemClock
 import com.kylecorry.andromeda.core.time.SystemTimeProvider
@@ -17,10 +15,11 @@ import com.kylecorry.trail_sense.shared.safeRoundPlaces
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.age
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.ShouldRecordBacktrackPoint
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import kotlin.time.Clock
 
 class BacktrackCommand(private val context: Context) : CoroutineCommand {
 
@@ -32,7 +31,7 @@ class BacktrackCommand(private val context: Context) : CoroutineCommand {
     private val cellSignalSensor =
         if (prefs.paths.backtrackSaveCellHistory) sensorService.getCellSignal() else null
 
-    private val pathService = PathService.getInstance(context)
+    private val pathService = getAppService<IPathService>()
 
     override suspend fun execute() = onDefault {
         val start = SystemClock.elapsedRealtime()

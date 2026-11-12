@@ -52,7 +52,7 @@ fun StrideLengthEstimationToolScreen() {
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
     val estimator = remember(context) {
-        StrideLengthEstimatorFactory(context).getEstimator()
+        StrideLengthEstimatorFactory().getEstimator()
     }
     val formatter = remember(context) { FormatService.getInstance(context) }
     val prefs = remember(context) { UserPreferences(context) }

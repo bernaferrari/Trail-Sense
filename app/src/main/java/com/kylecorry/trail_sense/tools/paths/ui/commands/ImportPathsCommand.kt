@@ -1,18 +1,19 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-
-
 import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.andromeda.gpx.GPXData
+import com.kylecorry.andromeda.gpx.GPXWaypoint
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.extensions.filterIndices
-import com.kylecorry.andromeda.gpx.GPXData
-import com.kylecorry.andromeda.gpx.GPXWaypoint
-import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.items
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
 import com.kylecorry.trail_sense.shared.io.ImportService
 import com.kylecorry.trail_sense.tools.paths.domain.FullPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
@@ -22,17 +23,14 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathMetadata
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.PathSimplificationQuality
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IPathPreferences
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.kylecorry.trail_sense.shared.dialogs.items
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
-import com.kylecorry.trail_sense.shared.dialogs.withLoading
 
 class ImportPathsCommand(
     private val context: Context,
     private val scope: CoroutineScope,
     private val gpxService: ImportService<GPXData>,
-    private val pathService: IPathService = PathService.getInstance(context),
+    private val pathService: IPathService = getAppService<IPathService>(),
     private val prefs: IPathPreferences = UserPreferences(context).paths
 ) {
 

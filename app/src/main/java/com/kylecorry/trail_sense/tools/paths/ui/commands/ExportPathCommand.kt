@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import kotlin.time.Clock
-
 import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.andromeda.gpx.GPXData
-import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.items
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 import com.kylecorry.trail_sense.shared.io.IOService
 import com.kylecorry.trail_sense.tools.paths.domain.FullPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
@@ -17,18 +17,16 @@ import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGPXConverter
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.ui.PathNameFactory
+import kotlin.time.Clock
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.kylecorry.trail_sense.shared.dialogs.items
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
-
 
 class ExportPathCommand(
     private val context: Context,
     private val scope: CoroutineScope,
     private val gpxService: IOService<GPXData>,
-    private val pathService: IPathService = PathService.getInstance(context)
+    private val pathService: IPathService = getAppService<IPathService>()
 ) {
 
     private val pathNameFactory = PathNameFactory(context)

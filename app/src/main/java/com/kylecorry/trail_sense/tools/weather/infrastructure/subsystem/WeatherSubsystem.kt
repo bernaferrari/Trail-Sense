@@ -1,37 +1,33 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem
 
-import com.kylecorry.trail_sense.tools.weather.domain.TemperatureThresholds
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import com.kylecorry.trail_sense.shared.time.today
-
-import kotlin.time.Clock
-
-
 import android.annotation.SuppressLint
 import android.content.Context
+import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.cache.MemoryCachedValue
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.subscriptions.ISubscription
 import com.kylecorry.luna.subscriptions.Subscription
-import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateClassification
 import com.kylecorry.sol.science.meteorology.Meteorology
-import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
+import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.shared.debugging.DebugWeatherCommand
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
+import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.tools.climate.infrastructure.ClimateSubsystem
 import com.kylecorry.trail_sense.tools.climate.infrastructure.precipitation.HistoricMonthlyPrecipitationRepo
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
@@ -39,6 +35,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
+import com.kylecorry.trail_sense.tools.weather.domain.TemperatureThresholds
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.IWeatherForecaster
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.MonteCarloPressureForecaster
@@ -50,20 +47,19 @@ import com.kylecorry.trail_sense.tools.weather.domain.sealevel.SeaLevelCalibrati
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.MonitorWeatherCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.SendWeatherAlertsCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
 import kotlin.time.Instant
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
-import com.kylecorry.trail_sense.shared.preferences.onEachChange
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 
 class WeatherSubsystem private constructor(private val context: Context) : IWeatherSubsystem {
 
@@ -72,7 +68,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
     private val cloudRepo by lazy { CloudRepo.getInstance(context) }
     private val prefs by lazy { UserPreferences(context) }
     private val sharedPrefs by lazy { PreferencesSubsystem.getInstance(context).preferences }
-    private val location by lazy { LocationSubsystem.getInstance(context) }
+    private val location by lazy { getAppService<ILocationSubsystem>() }
 
     private var cachedValue = MemoryCachedValue<CurrentWeather>()
     private var validLock = Any()

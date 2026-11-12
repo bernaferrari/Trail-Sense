@@ -19,20 +19,20 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
-class LocationSubsystem private constructor(private val context: Context) {
+class LocationSubsystem private constructor(private val context: Context) : ILocationSubsystem {
 
     private val sensorService by lazy { getAppService<SensorService>() }
     private val sensorSubsystem by lazy { SensorSubsystem.getInstance(context) }
 
     private val prefs by lazy { PreferencesSubsystem.getInstance(context).preferences }
 
-    val location: Coordinate
+    override val location: Coordinate
         get() = sensorSubsystem.lastKnownLocation
 
-    val locationAccuracy: Distance?
+    override val locationAccuracy: Distance?
         get() = sensorSubsystem.lastKnownLocationAccuracy
 
-    val locationAge: Duration
+    override val locationAge: Duration
         get() {
             if (isGPSOverridden()) {
                 return Duration.ZERO
@@ -44,13 +44,13 @@ class LocationSubsystem private constructor(private val context: Context) {
             return (Clock.System.now() - lastUpdate)
         }
 
-    val isLocationStale: Boolean
+    override val isLocationStale: Boolean
         get() = locationAge > STALE_LOCATION_AGE
 
-    val elevation: Distance
+    override val elevation: Distance
         get() = sensorSubsystem.lastKnownElevation
 
-    val elevationAge: Duration
+    override val elevationAge: Duration
         get() {
             if (isAltimeterOverridden()) {
                 return Duration.ZERO
@@ -85,7 +85,7 @@ class LocationSubsystem private constructor(private val context: Context) {
         }
     }
 
-    suspend fun updateLocation() {
+    override suspend fun updateLocation() {
         sensorSubsystem.getLocation(SensorSubsystem.SensorRefreshPolicy.Refresh)
     }
 

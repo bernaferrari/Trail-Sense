@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.tools.tides.subsystem
 
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
-import com.kylecorry.trail_sense.shared.time.today
-
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
+import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.tools.tides.domain.TideDetails
 import com.kylecorry.trail_sense.tools.tides.domain.TideLocationKey
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
@@ -15,6 +14,7 @@ import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.DailyTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.loading.TideLoaderFactory
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import com.kylecorry.trail_sense.tools.tides.ui.DailyTideData
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -35,7 +35,7 @@ class TidesSubsystem private constructor(private val context: Context) {
         val table = getTideTable(location) ?: return null
         // Automatic nearby tides require on the fly locations rather than the location being part of the model
         val resolvedLocation = if (table.isAutomaticNearbyTide) {
-            TideLocationKey.of(location ?: LocationSubsystem.getInstance(context).location)
+            TideLocationKey.of(location ?: getAppService<ILocationSubsystem>().location)
         } else {
             null
         }

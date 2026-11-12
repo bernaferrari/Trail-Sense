@@ -1,8 +1,5 @@
 package com.kylecorry.trail_sense.shared.sensors.speedometer
 
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
-
 import android.content.Context
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Speedometer
@@ -11,21 +8,24 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.ApproximateCoordinate
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.specifications.LocationChangedSpecification
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
-import kotlin.time.Instant
 
 class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speedometer {
 
-    private val pathService by lazy { PathService.getInstance(context) }
+    private val pathService by lazy { getAppService<IPathService>() }
     private val prefs by lazy { UserPreferences(context) }
 
     private val scope = CoroutineScope(Dispatchers.Default)

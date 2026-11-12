@@ -7,6 +7,7 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -15,7 +16,7 @@ import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import com.kylecorry.trail_sense.tools.beacons.subsystem.BeaconsSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
@@ -37,7 +38,7 @@ class NearbyBeaconsToolWidgetView : ToolWidgetView {
         val subsystem = BeaconsSubsystem.getInstance(context)
         val prefs = UserPreferences(context)
         val beacons = subsystem.getNearbyBeacons().take(10)
-        val location = LocationSubsystem.getInstance(context).location
+        val location = getAppService<ILocationSubsystem>().location
         val formatter = FormatService.getInstance(context)
 
         val items = beacons.map { beacon ->

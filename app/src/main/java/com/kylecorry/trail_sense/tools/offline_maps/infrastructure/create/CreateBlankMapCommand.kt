@@ -64,14 +64,14 @@ import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationPoint
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
@@ -89,7 +89,7 @@ class CreateBlankMapCommand(
 ) : ICreateMapCommand {
 
     private val files = FileSubsystem.getInstance(context)
-    private val location = LocationSubsystem.getInstance(context)
+    private val location = getAppService<ILocationSubsystem>()
     private val prefs = UserPreferences(context)
     private val formatter = FormatService.getInstance(context)
     private val service = getAppService<MapService>()
@@ -341,7 +341,7 @@ private fun BlankMapCoordinateInput(
                         1 -> scope.launch {
                             val beacon = BeaconPickers.pickBeacon(
                                 context,
-                                sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                             ) ?: return@launch
                             coordinateText = formatter.formatLocation(beacon.coordinate)
                             onCoordinateChange(beacon.coordinate)

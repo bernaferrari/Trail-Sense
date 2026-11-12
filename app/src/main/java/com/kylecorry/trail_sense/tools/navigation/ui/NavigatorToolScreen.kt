@@ -72,7 +72,7 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.shareLocation
 import com.kylecorry.trail_sense.tools.navigation.quickactions.NavigationQuickActionBinder
 import com.kylecorry.trail_sense.tools.navigation.ui.errors.NavigatorUserErrors
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
@@ -103,7 +103,7 @@ fun NavigatorToolScreen(
             sensors = sensors,
             navigator = Navigator.getInstance(appContext),
             beaconRepo = BeaconRepo.getInstance(appContext),
-            pathService = PathService.getInstance(appContext),
+            pathService = getAppService<IPathService>(),
             weatherRepo = WeatherRepo.getInstance(appContext),
             prefs = userPrefs.navigation,
             useTrueNorth = userPrefs.compass.useTrueNorth,

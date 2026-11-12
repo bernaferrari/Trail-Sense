@@ -5,16 +5,17 @@ import android.content.Context
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.geology.Geofence
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.NearbyBeaconFilter
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import kotlin.math.max
 
 class BeaconsSubsystem(context: Context) {
 
-    private val service = BeaconService(context)
-    private val location = LocationSubsystem.getInstance(context)
+    private val service = getAppService<IBeaconService>()
+    private val location = getAppService<ILocationSubsystem>()
 
     /**
      * Get nearby beacons. The max distance is specified through user preferences.

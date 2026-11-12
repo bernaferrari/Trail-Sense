@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.sensors
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.tools.sensors.quickactions.QuickActionRecalibrateAltimeter
 import com.kylecorry.trail_sense.tools.sensors.widgets.AppWidgetElevation
 import com.kylecorry.trail_sense.tools.sensors.widgets.AppWidgetLocation
 import com.kylecorry.trail_sense.tools.sensors.widgets.ElevationWidgetView
@@ -14,12 +15,11 @@ import com.kylecorry.trail_sense.tools.sensors.widgets.LocationWidgetView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
-import com.kylecorry.trail_sense.tools.sensors.quickactions.QuickActionRecalibrateAltimeter
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object SensorsToolRegistration : ToolRegistration {
@@ -39,7 +39,7 @@ object SensorsToolRegistration : ToolRegistration {
                 )
             ),
             initialize = {
-                LocationSubsystem.getInstance(it)
+                getAppService<ILocationSubsystem>()
                 SensorSubsystem.getInstance(it)
             },
             diagnostics = listOf(

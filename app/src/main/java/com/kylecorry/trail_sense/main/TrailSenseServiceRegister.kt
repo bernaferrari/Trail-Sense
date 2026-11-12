@@ -1,23 +1,22 @@
 package com.kylecorry.trail_sense.main
 
 import android.content.Context
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.andromeda.preferences.Preferences
-import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
-import com.kylecorry.andromeda.markdown.MarkdownDelimiter
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.andromeda.markdown.MarkdownDelimiter
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.AltitudeCorrection
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.GeoidService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.device.AndroidDeviceProfile
 import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.device.DeviceSubsystem
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.logging.AndroidLogger
@@ -27,13 +26,19 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPref
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.AndroidSensorService
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.text.AndroidAppStrings
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.text.StringLoader
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 object TrailSenseServiceRegister {
@@ -70,9 +75,12 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(AppDatabase.getInstance(appContext))
         DependencyRegistry.addSingleton(SensorSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(LocationSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton<ILocationSubsystem>(LocationSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(DeviceSubsystem(appContext))
         DependencyRegistry.addSingleton(PluginSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(HapticSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton<IPathService>(PathService.getInstance(appContext))
+        DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
 
         // Map layers
         DependencyRegistry.addSingleton(MapLayerLoader(appContext))

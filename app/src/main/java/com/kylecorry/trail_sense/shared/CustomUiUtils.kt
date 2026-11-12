@@ -55,7 +55,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.time.nowLocal
 import com.kylecorry.trail_sense.shared.time.today
@@ -66,7 +66,7 @@ import com.kylecorry.trail_sense.shared.views.useDynamicColors
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
 import kotlin.math.floor
@@ -260,7 +260,7 @@ object CustomUiUtils {
         val formatter = remember(context) { FormatService.getInstance(context) }
         val sensorService = remember(context) { getAppService<SensorService>() }
         val altimeter = remember(sensorService) { sensorService.getAltimeter() }
-        val location = remember(context) { LocationSubsystem.getInstance(context) }
+        val location = remember(context) { getAppService<ILocationSubsystem>() }
         val scope = rememberCoroutineScope()
         val units = remember(formatter) {
             formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)
@@ -322,7 +322,7 @@ object CustomUiUtils {
                                 val beacon = BeaconPickers.pickBeacon(
                                     context,
                                     sort = ClosestBeaconSort(
-                                        BeaconService(context),
+                                        getAppService<IBeaconService>(),
                                         location::location
                                     )
                                 ) { beacons ->

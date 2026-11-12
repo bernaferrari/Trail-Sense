@@ -2,45 +2,16 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import kotlin.time.Duration.Companion.minutes
-
 import android.content.Context
 import android.content.ContextWrapper
-import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.sense.location.GpsSensor
-import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
-import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathDialog
-import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathRequest
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-
-import com.kylecorry.trail_sense.shared.views.PathsEmptyIllustration
-import androidx.compose.foundation.layout.padding
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import androidx.compose.material3.ToggleFloatingActionButtonDefaults
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -56,26 +27,28 @@ import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults
 import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
 import androidx.compose.ui.graphics.luminance
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -84,30 +57,51 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.IOFactory
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
+import com.kylecorry.trail_sense.shared.views.PathsEmptyIllustration
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
@@ -117,7 +111,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.pathsort.MostRecentPathSortS
 import com.kylecorry.trail_sense.tools.paths.domain.pathsort.NamePathSortStrategy
 import com.kylecorry.trail_sense.tools.paths.domain.pathsort.ShortestPathSortStrategy
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathGroupLoader
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.CreatePathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.CreatePathGroupCommand
@@ -131,16 +125,20 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.MoveIPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.RenamePathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.RenamePathGroupGroupCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathCommand
+import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathDialog
+import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathRequest
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ViewPathCommand
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.withLoading
+import kotlinx.coroutines.withContext
 
 @Composable
 fun PathsToolScreen(
@@ -153,7 +151,7 @@ fun PathsToolScreen(
     val scope = rememberCoroutineScope()
     val viewModel = viewModel {
         PathsViewModel(
-            pathService = PathService.getInstance(appContext),
+            pathService = getAppService<IPathService>(),
             preferences = UserPreferences(appContext).paths,
             backtrack = Tools.getService(appContext, PathsToolRegistration.SERVICE_BACKTRACK),
             gps = getAppService<SensorService>().getGPS()
@@ -253,8 +251,8 @@ fun PathsToolScreen(
             PathAction.Merge -> MergePathCommand(context, scope, pathService).execute(path)
             PathAction.Show -> ViewPathCommand(appNavigator).execute(path)
             PathAction.Rename -> RenamePathCommand(context, scope, pathService).execute(path)
-            PathAction.Keep -> KeepPathCommand(context, scope, pathService).execute(path)
-            PathAction.ToggleVisibility -> TogglePathVisibilityCommand(context, scope, pathService).execute(path)
+            PathAction.Keep -> KeepPathCommand(scope, pathService).execute(path)
+            PathAction.ToggleVisibility -> TogglePathVisibilityCommand(scope, pathService).execute(path)
             PathAction.Simplify -> simplifyCommand.execute(path)
             PathAction.Move -> movePath(path)
             else -> {}
@@ -358,7 +356,7 @@ fun PathsToolScreen(
  * status, plain Kotlin with no Android UI types. The screen shows the commands' dialogs and the file pickers.
  */
 internal class PathsViewModel(
-    val pathService: PathService,
+    val pathService: IPathService,
     private val preferences: PathsPreferences,
     private val backtrack: ToolService?,
     private val gps: GpsSensor

@@ -3,17 +3,16 @@ package com.kylecorry.trail_sense.tools.paths.ui.commands
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
+import com.kylecorry.trail_sense.shared.dialogs.text
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import com.kylecorry.trail_sense.shared.dialogs.text
-
 
 class CreatePathGroupCommand(
     private val context: Context,
-    private val pathService: IPathService = PathService.getInstance(context)
+    private val pathService: IPathService = getAppService<IPathService>()
 ) {
 
     suspend fun execute(parentId: Long?) {

@@ -1,15 +1,14 @@
 package com.kylecorry.trail_sense.shared.sensors.thermometer
 
-import kotlin.time.Clock
-
-import kotlin.time.Duration.Companion.seconds
-
 import android.content.Context
 import com.kylecorry.andromeda.core.sensors.Thermometer
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.sensors.CoroutineIntervalSensor
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class HistoricThermometer(
     context: Context,
@@ -17,7 +16,7 @@ class HistoricThermometer(
 ) :
     CoroutineIntervalSensor(frequency), Thermometer {
 
-    private val location = LocationSubsystem.getInstance(context)
+    private val location = getAppService<ILocationSubsystem>()
     private val weather = WeatherSubsystem.getInstance(context)
 
     override var temperature: Float = 0f

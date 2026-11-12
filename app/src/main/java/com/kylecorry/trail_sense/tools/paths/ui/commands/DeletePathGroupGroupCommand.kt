@@ -1,19 +1,18 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-
 
 class DeletePathGroupGroupCommand(
     private val context: Context,
-    private val pathService: IPathService = PathService.getInstance(context)
+    private val pathService: IPathService = getAppService<IPathService>()
 ) : ISuspendPathGroupCommand {
 
     override suspend fun execute(group: PathGroup) {

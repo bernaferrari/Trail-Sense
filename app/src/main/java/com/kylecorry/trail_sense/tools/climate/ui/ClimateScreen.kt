@@ -6,13 +6,7 @@
 
 package com.kylecorry.trail_sense.tools.climate.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.time.DateNameWidth
-import com.kylecorry.trail_sense.shared.time.displayName
-import kotlinx.datetime.number
-
-import com.kylecorry.trail_sense.shared.time.today
-
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
@@ -22,16 +16,22 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -72,15 +72,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
@@ -93,23 +90,24 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.time.DateNameWidth
+import com.kylecorry.trail_sense.shared.time.displayName
+import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
-import android.content.Context
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
@@ -123,9 +121,10 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -135,8 +134,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
-import java.util.Locale
-import com.kylecorry.trail_sense.shared.dialogs.item
+import kotlinx.datetime.number
 
 @Composable
 fun ClimateToolScreen() {
@@ -146,7 +144,7 @@ fun ClimateToolScreen() {
     val prefs = remember(appContext) { UserPreferences(appContext) }
     val viewModel = viewModel {
         ClimateViewModel(
-            locationSubsystem = LocationSubsystem.getInstance(appContext),
+            locationSubsystem = getAppService<ILocationSubsystem>(),
             weatherSubsystem = WeatherSubsystem.getInstance(appContext),
             distanceUnits = { prefs.baseDistanceUnits }
         )
@@ -236,7 +234,7 @@ private fun ClimateKind.nameRes(): Int = when (this) {
  * and the place's 30-year monthly normals and climate zone, reloaded whenever the place changes.
  */
 private class ClimateViewModel(
-    private val locationSubsystem: LocationSubsystem,
+    private val locationSubsystem: ILocationSubsystem,
     private val weatherSubsystem: WeatherSubsystem,
     private val distanceUnits: () -> DistanceUnits
 ) : ViewModel() {
@@ -1027,7 +1025,7 @@ private fun CoordinateInput(
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
                                     context,
-                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                    sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) ?: return@launch
                                 locationText = formatter.formatLocation(beacon.coordinate)
                                 onLocationChange(beacon.coordinate)
@@ -1164,7 +1162,7 @@ private fun ElevationInput(
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
                                     context,
-                                    sort = ClosestBeaconSort(BeaconService(context), gps::location)
+                                    sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) { beacons: List<IBeacon> ->
                                     beacons.filterIsInstance<Beacon>().filter { it.elevation != null }
                                 } ?: return@launch

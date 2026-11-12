@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures
 
 import kotlin.time.Duration.Companion.minutes
 
-import android.content.Context
 import com.kylecorry.sol.time.Time
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.math.Range
@@ -17,7 +16,7 @@ import kotlin.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
-internal class HistoricTemperatureRepo(private val context: Context) : ITemperatureRepo {
+internal class HistoricTemperatureRepo() : ITemperatureRepo {
 
     private val highInterpolator = MonthlyValueInterpolator()
     private val lowInterpolator = MonthlyValueInterpolator()

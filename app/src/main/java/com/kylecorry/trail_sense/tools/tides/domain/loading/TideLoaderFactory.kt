@@ -2,14 +2,15 @@ package com.kylecorry.trail_sense.tools.tides.domain.loading
 
 import android.content.Context
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.tools.tides.domain.selection.DefaultTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.domain.selection.EstimateTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.domain.selection.FallbackTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.domain.selection.LastTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.domain.selection.NearestTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
-import com.kylecorry.trail_sense.shared.UserPreferences
 
 class TideLoaderFactory {
 
@@ -19,7 +20,7 @@ class TideLoaderFactory {
         locationOverride: Coordinate? = null
     ): ITideLoader {
         val prefs = UserPreferences(context).tides
-        val location = LocationSubsystem.getInstance(context)
+        val location = getAppService<ILocationSubsystem>()
         val strategy = if (prefs.showNearestTide && useLastTide) {
             FallbackTideSelectionStrategy(
                 LastTideSelectionStrategy(prefs, true),

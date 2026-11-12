@@ -1,21 +1,21 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.commands
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class MoveBeaconGroupCommand(
     private val context: Context,
     private val scope: CoroutineScope,
-    private val service: BeaconService,
+    private val service: IBeaconService,
     private val onMoved: () -> Unit
 ) {
 

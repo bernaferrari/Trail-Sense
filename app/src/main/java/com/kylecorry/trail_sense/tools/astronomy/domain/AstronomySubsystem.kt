@@ -1,22 +1,22 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
-import kotlin.time.Duration.Companion.minutes
-
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.time.today
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 
 class AstronomySubsystem(context: Context) {
 
     private val astronomyService = AstronomyService()
-    private val location = LocationSubsystem.getInstance(context)
+    private val location = getAppService<ILocationSubsystem>()
     private val prefs = UserPreferences(context)
     private val hooks = Hooks()
     private val hookTriggers = HookTriggers()

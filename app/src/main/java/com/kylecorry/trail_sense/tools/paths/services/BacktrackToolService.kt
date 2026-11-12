@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.services
 
-
 import android.content.Context
 import android.os.Bundle
 import com.kylecorry.andromeda.permissions.Permissions
@@ -14,14 +13,14 @@ import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundService
 import com.kylecorry.trail_sense.shared.permissions.isAppForeground
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
-import com.kylecorry.trail_sense.shared.preferences.onEachChange
 
 class BacktrackToolService(private val context: Context) : ToolService {
 
@@ -81,7 +80,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
         prefs.paths.backtrackEnabled = false
         Tools.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED)
         stop()
-        PathService.getInstance(context).endBacktrackPath()
+        getAppService<IPathService>().endBacktrackPath()
     }
 
     override suspend fun restart() {

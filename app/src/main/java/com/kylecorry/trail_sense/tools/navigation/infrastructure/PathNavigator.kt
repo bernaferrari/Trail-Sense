@@ -15,9 +15,9 @@ import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathGuidance
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathNavigationSession
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathNavigationSessionProgress
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathRouteBuilder
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CancellationException
@@ -37,7 +37,7 @@ class PathNavigator(context: Context) {
     private val prefs = getAppService<UserPreferences>().paths
     private val locationSubsystem = DependencyRegistry.get<LocationSubsystem>()
     private val store = PathNavigationStore()
-    private val paths = PathService.getInstance(context)
+    private val paths = getAppService<IPathService>()
     private val destinationState = MutableStateFlow<Destination.Path?>(null)
     private val restoringState = MutableStateFlow(false)
     val isRestoring = restoringState.asStateFlow()

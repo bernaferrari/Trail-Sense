@@ -4,17 +4,18 @@ import android.content.Context
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
-import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 
 internal class CellSignalLookup(
     context: Context
 ) {
     private val formatter = FormatService.getInstance(context)
-    private val pathService = PathService.getInstance(context)
+    private val pathService = getAppService<IPathService>()
 
     private val maxDistance = Distance.miles(50f).meters().value
 
