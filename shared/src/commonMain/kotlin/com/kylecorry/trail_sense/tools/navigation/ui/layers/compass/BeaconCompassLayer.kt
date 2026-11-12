@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
 
+import kotlinx.coroutines.IO
+import kotlinx.atomicfu.locks.synchronized
+import kotlinx.atomicfu.locks.SynchronizedObject
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.shared.colors.ColorInts
@@ -24,7 +27,7 @@ class BeaconCompassLayer(
     private val _beacons = mutableListOf<Beacon>()
     private var _highlighted: Beacon? = null
 
-    private val lock = Any()
+    private val lock = SynchronizedObject()
 
     private val runner = CoroutineQueueRunner()
     private val scope = CoroutineScope(Dispatchers.IO)

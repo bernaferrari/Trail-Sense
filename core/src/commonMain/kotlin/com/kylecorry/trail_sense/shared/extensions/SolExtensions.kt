@@ -2,13 +2,8 @@ package com.kylecorry.trail_sense.shared.extensions
 
 import com.kylecorry.sol.math.MathExtensions.roundNearest
 import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.geology.Geofence
-
-fun Size.toAndroidSize(): android.util.Size {
-    return android.util.Size(width.toInt(), height.toInt())
-}
 
 fun CoordinateBounds.Companion.from(geofences: List<Geofence>): CoordinateBounds {
     val bounds = geofences.map { from(it) }

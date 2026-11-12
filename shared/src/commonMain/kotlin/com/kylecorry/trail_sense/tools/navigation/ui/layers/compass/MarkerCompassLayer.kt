@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
+import kotlinx.atomicfu.locks.synchronized
+import kotlinx.atomicfu.locks.SynchronizedObject
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableReferencePoint
 
 open class MarkerCompassLayer : ICompassLayer {
 
     private val markers = mutableListOf<Pair<IMappableReferencePoint, Int?>>()
-    private val lock = Any()
+    private val lock = SynchronizedObject()
 
     fun setMarkers(markers: List<IMappableReferencePoint>) {
         synchronized(lock) {

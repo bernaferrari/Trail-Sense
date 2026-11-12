@@ -13,7 +13,7 @@ import com.kylecorry.trail_sense.shared.extensions.range
 import com.kylecorry.trail_sense.tools.climate.infrastructure.temperatures.ITemperatureRepo
 import kotlinx.datetime.LocalDate
 
-internal class HistoricTemperatureService(
+class HistoricTemperatureService(
     private val repo: ITemperatureRepo,
     private val location: Coordinate,
     private val elevation: Distance = Distance.meters(0f)

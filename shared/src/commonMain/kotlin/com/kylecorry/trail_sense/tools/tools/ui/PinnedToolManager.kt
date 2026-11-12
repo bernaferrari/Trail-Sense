@@ -1,12 +1,14 @@
 package com.kylecorry.trail_sense.tools.tools.ui
 
+import kotlinx.atomicfu.locks.synchronized
+import kotlinx.atomicfu.locks.SynchronizedObject
 import androidx.compose.runtime.mutableStateOf
 import com.kylecorry.trail_sense.shared.UserPreferences
 
 class PinnedToolManager(private val prefs: UserPreferences) {
 
     private val pinned = mutableSetOf<Long>()
-    private val lock = Any()
+    private val lock = SynchronizedObject()
 
     /** The pinned tools in the order they were pinned, observable so the Tools page updates the moment one changes. */
     val pinnedIds = mutableStateOf<List<Long>>(emptyList())
