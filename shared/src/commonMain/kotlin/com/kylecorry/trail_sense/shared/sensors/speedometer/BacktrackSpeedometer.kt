@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.sensors.speedometer
 
-import android.content.Context
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.luna.concurrency.onMain
@@ -23,10 +22,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speedometer {
+class BacktrackSpeedometer : SharedSensor(), Speedometer {
 
     private val pathService by lazy { getAppService<IPathService>() }
-    private val prefs by lazy { UserPreferences(context) }
+    private val prefs by lazy { getAppService<UserPreferences>() }
 
     private val scope = CoroutineScope(Dispatchers.Default)
     private var loadJob: Job? = null

@@ -24,9 +24,7 @@ class DownloadDiagnosticsLogsCommand(
             "application/zip"
         ) ?: return
 
-        val indicator = AlertLoadingIndicator(
-            context,
-            context.getString(R.string.exporting)
+        val indicator = AlertLoadingIndicator(context.getString(R.string.exporting)
         )
         try {
             indicator.show()

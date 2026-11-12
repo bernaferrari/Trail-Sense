@@ -116,7 +116,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
         )
     }
     val formatService = remember(appContext) { FormatService.getInstance(appContext) }
-    val tideFormatter = remember(appContext) { TideFormatter(appContext) }
+    val tideFormatter = remember(appContext) { TideFormatter() }
     val gps = remember(appContext) { getAppService<SensorService>().getGPS() }
     var location by remember { mutableStateOf(gps.location) }
 

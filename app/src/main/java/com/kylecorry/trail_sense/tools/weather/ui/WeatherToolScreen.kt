@@ -374,7 +374,7 @@ fun WeatherToolScreen(
                 when (viewModel.toggleMonitor()) {
                     FeatureState.Off -> RequestRemoveBatteryRestrictionCommand(
                         context,
-                        WeatherBatteryRestrictionsAlerter(context, effects, scope)
+                        WeatherBatteryRestrictionsAlerter(effects, scope)
                     ).execute()
 
                     FeatureState.Unavailable -> effects.showMessage(

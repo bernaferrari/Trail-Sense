@@ -125,7 +125,7 @@ class AndroidSensorService(ctx: Context) : SensorService {
 
     override fun getSpeedometer(gps: GpsSensor?, tag: String?): Speedometer {
         return when (userPrefs.navigation.speedometerMode) {
-            NavigationPreferences.SpeedometerMode.Backtrack -> BacktrackSpeedometer(context)
+            NavigationPreferences.SpeedometerMode.Backtrack -> BacktrackSpeedometer()
             NavigationPreferences.SpeedometerMode.GPS -> gps ?: getGPS(tag = tag)
             NavigationPreferences.SpeedometerMode.CurrentPace -> CurrentPaceSpeedometer(
                 getPedometer(), StrideLengthPaceCalculator(userPrefs.pedometer.strideLength)

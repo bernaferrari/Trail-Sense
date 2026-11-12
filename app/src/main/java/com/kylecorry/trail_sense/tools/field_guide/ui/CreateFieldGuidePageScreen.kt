@@ -109,7 +109,7 @@ fun CreateFieldGuidePageToolScreen(route: Route.CreateFieldGuidePage) {
     val resultRetriever = LocalActivity.current as IntentResultRetriever
     val scope = rememberCoroutineScope()
     val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
-    val tagNameMapper = remember(appContext) { FieldGuideTagNameMapper(appContext) }
+    val tagNameMapper = remember(appContext) { FieldGuideTagNameMapper() }
     val viewModel = viewModel {
         CreateFieldGuidePageViewModel(
             route = route,

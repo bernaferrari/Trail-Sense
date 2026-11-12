@@ -376,7 +376,7 @@ fun PathOverviewToolScreen(
 
     fun deleteWaypoint(point: PathPoint) {
         val current = viewModel.path ?: return
-        DeletePointCommand(context, scope).execute(current, point)
+        DeletePointCommand(scope).execute(current, point)
     }
 
     fun createBeacon(point: PathPoint) {
@@ -428,7 +428,7 @@ fun PathOverviewToolScreen(
                             pathService
                         ).execute(current)
 
-                        PathAction.Rename -> RenamePathCommand(context, scope, pathService).execute(current)
+                        PathAction.Rename -> RenamePathCommand(scope, pathService).execute(current)
                         PathAction.Keep -> KeepPathCommand(scope, pathService).execute(current)
                         PathAction.ToggleVisibility -> TogglePathVisibilityCommand(scope, pathService)
                             .execute(current)

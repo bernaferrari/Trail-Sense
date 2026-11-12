@@ -168,7 +168,7 @@ fun BeaconListToolScreen(
             beaconService = getAppService<IBeaconService>(),
             preferences = UserPreferences(appContext).beacons,
             gps = getAppService<SensorService>().getGPS(),
-            importer = BeaconGpxImporter(appContext)
+            importer = BeaconGpxImporter()
         )
     }
     val prefs = remember(appContext) { UserPreferences(appContext) }
@@ -376,7 +376,7 @@ fun BeaconListToolScreen(
 
             BeaconCreateAction.ImportGpx -> importBeacons()
             BeaconCreateAction.CreateGroup -> {
-                CreateBeaconGroupCommand(context, scope, viewModel.beaconService) {
+                CreateBeaconGroupCommand(scope, viewModel.beaconService) {
                     viewModel.refresh()
                 }.execute(viewModel.rootId)
             }
@@ -391,7 +391,7 @@ fun BeaconListToolScreen(
             BeaconGroupAction.Open -> viewModel.open(group.id)
             BeaconGroupAction.ShowAll -> setGroupVisibility(group, true)
             BeaconGroupAction.HideAll -> setGroupVisibility(group, false)
-            BeaconGroupAction.Edit -> RenameBeaconGroupCommand(context, scope, viewModel.beaconService) {
+            BeaconGroupAction.Edit -> RenameBeaconGroupCommand(scope, viewModel.beaconService) {
                 viewModel.refresh()
             }.execute(group)
 
@@ -411,7 +411,7 @@ fun BeaconListToolScreen(
                 appNavigator.navigate(Route.Navigation())
             }
 
-            BeaconAction.Delete -> DeleteBeaconCommand(context, scope, viewModel.beaconService) {
+            BeaconAction.Delete -> DeleteBeaconCommand(scope, viewModel.beaconService) {
                 viewModel.refresh()
             }.execute(beacon)
 

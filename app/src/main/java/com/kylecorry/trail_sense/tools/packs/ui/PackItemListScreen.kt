@@ -406,7 +406,7 @@ private fun PackItemScreen(
     onBack: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val categoryNames = remember(context) { ItemCategoryStringMapper(context) }
+    val categoryNames = remember(context) { ItemCategoryStringMapper() }
 
     // Group consecutive items by category, preserving the sorted order.
     val groups = remember(items) {
@@ -653,7 +653,7 @@ private fun PackItemRow(
 ) {
     val context = LocalContext.current
     val formatService = remember(context) { FormatService.getInstance(context) }
-    val categoryName = remember(context, item.category) { ItemCategoryStringMapper(context).getString(item.category) }
+    val categoryName = remember(context, item.category) { ItemCategoryStringMapper().getString(item.category) }
     val count = formatItemCount(item)
     val packedWeight = item.weight?.let {
         item.packedWeight?.let { weight ->

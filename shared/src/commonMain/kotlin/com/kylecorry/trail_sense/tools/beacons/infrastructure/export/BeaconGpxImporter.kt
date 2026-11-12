@@ -1,19 +1,17 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.export
 
-import android.content.Context
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 
-class BeaconGpxImporter(private val context: Context) {
+class BeaconGpxImporter {
 
     private val service by lazy { getAppService<IBeaconService>() }
-    private val formatService by lazy { FormatService.getInstance(context) }
+    private val formatService by lazy { FormatService.getInstance() }
 
     suspend fun import(gpx: GPXData, parent: Long? = null): Int {
         val waypoints = gpx.waypoints

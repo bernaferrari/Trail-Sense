@@ -77,7 +77,7 @@ fun CreateItemToolScreen(route: Route.CreatePackItem) {
             preferences = DependencyRegistry.get<PreferencesSubsystem>().preferences
         )
     }
-    val nameMapper = remember(context) { ItemCategoryStringMapper(context) }
+    val nameMapper = remember(context) { ItemCategoryStringMapper() }
     val formatService = remember(context) { FormatService.getInstance(context) }
     val categories = remember(nameMapper) {
         ItemCategory.entries.map { it to nameMapper.getString(it) }.sortedBy { it.second }

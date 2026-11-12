@@ -142,7 +142,7 @@ fun TidesToolScreen() {
     }
     val formatService = remember(context) { FormatService.getInstance(context) }
     val units = remember(context) { UserPreferences(context).baseDistanceUnits }
-    val tideFormatter = remember(context) { TideFormatter(context) }
+    val tideFormatter = remember(context) { TideFormatter() }
     val dispatcher = rememberSystemBack()
     val lifecycleOwner = LocalLifecycleOwner.current
 

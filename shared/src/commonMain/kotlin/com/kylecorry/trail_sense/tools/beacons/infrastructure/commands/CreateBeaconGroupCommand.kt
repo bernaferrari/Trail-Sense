@@ -1,38 +1,39 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.commands
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.text
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-class RenameBeaconGroupCommand(
-    private val context: Context,
+class CreateBeaconGroupCommand(
     private val scope: CoroutineScope,
     private val service: IBeaconService,
-    private val onRenamed: () -> Unit
+    private val onCreated: () -> Unit
 ) {
 
-    fun execute(group: BeaconGroup) {
+    fun execute(parent: Long?) {
         Pickers.text(
-            context,
-            context.getString(R.string.group),
+            AppHost.current(),
+            getAppService<AppStrings>().get(Res.string.group),
             null,
-            group.name,
-            context.getString(R.string.name)
+            null,
+            getAppService<AppStrings>().get(Res.string.name)
         ) {
             if (it != null) {
                 scope.launch {
                     onIO {
-                        service.add(group.copy(name = it))
+                        service.add(BeaconGroup(0, it, parent))
                     }
+
                     onMain {
-                        onRenamed()
+                        onCreated()
                     }
                 }
             }

@@ -45,7 +45,7 @@ class BacktrackCommand(private val context: Context) : CoroutineCommand {
                 "Cell Signal: ${cellSignalSensor?.hasValidReading ?: "N/A"})"
         )
         if (point != null) {
-            CreateLastSignalBeaconCommand(context).execute(point)
+            CreateLastSignalBeaconCommand().execute(point)
         }
         showNotification()
     }

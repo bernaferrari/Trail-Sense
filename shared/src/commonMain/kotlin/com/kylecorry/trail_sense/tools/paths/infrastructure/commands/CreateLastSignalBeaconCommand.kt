@@ -1,22 +1,21 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.commands
 
-import android.content.Context
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 
-class CreateLastSignalBeaconCommand(private val context: Context) {
+class CreateLastSignalBeaconCommand {
 
     private val beaconService = getAppService<IBeaconService>()
-    private val formatter = FormatService.getInstance(context)
+    private val formatter = FormatService.getInstance()
 
     suspend fun execute(point: PathPoint) {
         val cellSignal = point.cellSignal ?: return
@@ -24,8 +23,8 @@ class CreateLastSignalBeaconCommand(private val context: Context) {
             beaconService.add(
                 Beacon(
                     0L,
-                    context.getString(
-                        R.string.last_signal_beacon_name,
+                    getAppService<AppStrings>().get(
+                        Res.string.last_signal_beacon_name,
                         formatter.formatCellNetwork(
                             CellNetwork.entries
                                 .first { it.id == cellSignal.network.id }

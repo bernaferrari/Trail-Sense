@@ -231,7 +231,7 @@ fun ThermometerSettingsToolScreen() {
                                 if (!it) {
                                     scope.launch {
                                         val loading =
-                                            AlertLoadingIndicator(context, context.getString(R.string.updating))
+                                            AlertLoadingIndicator(context.getString(R.string.updating))
                                         loading.show()
                                         BackfillHistoricalTemperaturesCommand.create(appContext).execute()
                                         loading.hide()

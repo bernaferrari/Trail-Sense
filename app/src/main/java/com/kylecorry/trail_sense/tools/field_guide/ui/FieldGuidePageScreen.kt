@@ -77,7 +77,7 @@ fun FieldGuidePageToolScreen(route: Route.FieldGuidePage) {
         FieldGuidePageViewModel(route.pageId.takeIf { it != 0L }, FieldGuideRepo.getInstance(context))
     }
     val files = remember(context) { FileSubsystem.getInstance(context) }
-    val tagNameMapper = remember(context) { FieldGuideTagNameMapper(context) }
+    val tagNameMapper = remember(context) { FieldGuideTagNameMapper() }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.loadPage()

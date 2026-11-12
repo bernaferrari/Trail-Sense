@@ -232,9 +232,7 @@ private suspend fun scanFromGallery(context: Context, onImage: (Bitmap) -> Unit)
         .open(listOf("image/*"))
         .getOrNull() ?: return
 
-    val indicator = AlertLoadingIndicator(
-        context,
-        context.getString(R.string.scanning_image)
+    val indicator = AlertLoadingIndicator(context.getString(R.string.scanning_image)
     )
     try {
         indicator.show()

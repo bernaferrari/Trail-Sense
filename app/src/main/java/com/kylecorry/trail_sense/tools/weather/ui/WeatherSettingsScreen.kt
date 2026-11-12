@@ -113,7 +113,7 @@ fun WeatherSettingsToolScreen() {
             when (it) {
                 WeatherSettingsEvent.MonitorEnabled -> RequestRemoveBatteryRestrictionCommand(
                     context,
-                    WeatherBatteryRestrictionsAlerter(context, effects, scope)
+                    WeatherBatteryRestrictionsAlerter(effects, scope)
                 ).execute()
             }
         }

@@ -228,12 +228,12 @@ fun PathsToolScreen(
     fun handleGroupAction(group: PathGroup, action: PathGroupAction) {
         when (action) {
             PathGroupAction.Delete -> scope.launch {
-                DeletePathGroupGroupCommand(context, pathService).execute(group)
+                DeletePathGroupGroupCommand(pathService).execute(group)
                 viewModel.refresh()
             }
 
             PathGroupAction.Rename -> scope.launch {
-                RenamePathGroupGroupCommand(context, pathService).execute(group)
+                RenamePathGroupGroupCommand(pathService).execute(group)
                 viewModel.refresh()
             }
 
@@ -248,10 +248,10 @@ fun PathsToolScreen(
     fun handleAction(path: Path, action: PathAction) {
         when (action) {
             PathAction.Export -> exportPath(path)
-            PathAction.Delete -> DeletePathCommand(context, scope, pathService).execute(path)
+            PathAction.Delete -> DeletePathCommand(scope, pathService).execute(path)
             PathAction.Merge -> MergePathCommand(context, scope, pathService).execute(path)
             PathAction.Show -> ViewPathCommand(appNavigator).execute(path)
-            PathAction.Rename -> RenamePathCommand(context, scope, pathService).execute(path)
+            PathAction.Rename -> RenamePathCommand(scope, pathService).execute(path)
             PathAction.Keep -> KeepPathCommand(scope, pathService).execute(path)
             PathAction.ToggleVisibility -> TogglePathVisibilityCommand(scope, pathService).execute(path)
             PathAction.Simplify -> simplifyCommand.execute(path)
@@ -301,7 +301,7 @@ fun PathsToolScreen(
         },
         onCreateGroup = {
             scope.launch {
-                CreatePathGroupCommand(context, pathService).execute(viewModel.rootId)
+                CreatePathGroupCommand(pathService).execute(viewModel.rootId)
                 viewModel.refresh()
             }
         },

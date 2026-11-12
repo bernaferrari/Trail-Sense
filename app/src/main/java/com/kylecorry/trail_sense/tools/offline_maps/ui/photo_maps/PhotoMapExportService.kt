@@ -28,9 +28,7 @@ class PhotoMapExportService(
         intentResultRetriever,
         context
     )
-    private val loading = AlertLoadingIndicator(
-        context,
-        context.getString(R.string.exporting_map)
+    private val loading = AlertLoadingIndicator(context.getString(R.string.exporting_map)
     )
     private val exporter = MapExportService(
         context,

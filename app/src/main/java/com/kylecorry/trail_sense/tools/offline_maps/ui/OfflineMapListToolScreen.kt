@@ -146,7 +146,7 @@ fun OfflineMapListToolScreen(
     val intentResultRetriever = remember(context) { requireNotNull(context.findMainActivity()) }
     val uriPicker = remember(context) { IntentUriPicker(intentResultRetriever, context) }
     val mapImportingIndicator = remember(context) {
-        AlertLoadingIndicator(context, context.getString(R.string.importing_map))
+        AlertLoadingIndicator(context.getString(R.string.importing_map))
     }
     val exportService = remember(context, effects, lifecycleOwner) {
         PhotoMapExportService(context, intentResultRetriever, effects, lifecycleOwner)

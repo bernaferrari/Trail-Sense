@@ -1,20 +1,19 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
-import kotlin.time.Clock
-
-import android.content.Context
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.TimeUnits
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
+import kotlin.time.Clock
 
-internal class PedometerSessionFormatter(
-    private val context: Context,
+class PedometerSessionFormatter(
     private val paceCalculator: StrideLengthPaceCalculator,
     private val formatter: FormatService,
     private val prefs: UserPreferences
@@ -37,7 +36,7 @@ internal class PedometerSessionFormatter(
             .convertTo(DistanceUnits.Meters, TimeUnits.Seconds)
         val steps = period.steps.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         return formatter.join(
-            context.resources.getQuantityString(R.plurals.step_count, steps, steps),
+            getAppService<AppStrings>().plural(Res.plurals.step_count, steps, steps),
             formatter.formatDistance(
                 distance,
                 Units.getDecimalPlaces(distance.units),
@@ -46,7 +45,7 @@ internal class PedometerSessionFormatter(
             if (duration.inWholeSeconds > 0) {
                 formatter.formatSpeed(speed.value)
             } else {
-                context.getString(R.string.dash)
+                getAppService<AppStrings>().get(Res.string.dash)
             },
             formatter.formatDuration(duration, short = true),
             separator = FormatService.Separator.Dot

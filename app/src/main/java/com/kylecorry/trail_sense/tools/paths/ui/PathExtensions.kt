@@ -111,7 +111,7 @@ fun getPointFactory(
         PathPointColoringStyle.CellSignal -> CellSignalPointDisplayFactory(context)
         PathPointColoringStyle.Altitude -> AltitudePointDisplayFactory(context)
         PathPointColoringStyle.Time -> TimePointDisplayFactory(context)
-        PathPointColoringStyle.Slope -> SlopePointDisplayFactory(context)
+        PathPointColoringStyle.Slope -> SlopePointDisplayFactory()
     }
 }
 

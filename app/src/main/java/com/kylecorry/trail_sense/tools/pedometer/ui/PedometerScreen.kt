@@ -139,7 +139,7 @@ internal fun PedometerScreen(
         StrideLengthPaceCalculator(prefs.pedometer.strideLength)
     }
     val sessionFormatter = remember(paceCalculator, prefs) {
-        PedometerSessionFormatter(context, paceCalculator, formatService, prefs)
+        PedometerSessionFormatter(paceCalculator, formatService, prefs)
     }
     val averageSpeedometer = remember(stepTracker, paceCalculator, prefs.pedometer.averagePaceTimeMode) {
         AveragePaceSpeedometer(stepTracker, paceCalculator, prefs.pedometer)

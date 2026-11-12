@@ -83,7 +83,7 @@ fun FieldGuideToolScreen() {
     val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val formatter = remember(appContext) { FieldGuideFormatService(UserPreferences(appContext)) }
-    val tagNameMapper = remember(appContext) { FieldGuideTagNameMapper(appContext) }
+    val tagNameMapper = remember(appContext) { FieldGuideTagNameMapper() }
     val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
     val viewModel = viewModel {
         FieldGuideListViewModel(
