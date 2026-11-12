@@ -663,3 +663,6 @@ pref_flashlight_timeout_title
 pref_flashlight_toggle_with_volume_summary
 pref_flashlight_toggle_with_volume_title
 screen_flashlight
+disclaimer_estimated_tide
+tide_instructions
+tide_user_guide_recommendation

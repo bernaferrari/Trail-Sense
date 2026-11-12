@@ -4,6 +4,8 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -152,7 +154,7 @@ fun TidesToolScreen() {
                 Lifecycle.Event.ON_RESUME -> {
                     if (viewModel.needsTable) {
                         viewModel.resetDisplayDate()
-                        ShowTideDisclaimerCommand(context, navigator) {
+                        ShowTideDisclaimerCommand(AppHost.from(context), navigator) {
                             viewModel.loadTideTable()
                         }.execute()
                     } else {
