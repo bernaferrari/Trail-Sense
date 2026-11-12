@@ -38,6 +38,7 @@ import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
+import com.kylecorry.trail_sense.shared.views.compose.from
 
 /**
  * Records a sighting on a field guide page picked from a searchable list, at the current location, as upstream's

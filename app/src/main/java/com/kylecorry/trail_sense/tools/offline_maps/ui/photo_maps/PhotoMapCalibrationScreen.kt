@@ -99,6 +99,8 @@ import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
 
 @Composable
 internal fun PhotoMapCalibrationToolScreen(

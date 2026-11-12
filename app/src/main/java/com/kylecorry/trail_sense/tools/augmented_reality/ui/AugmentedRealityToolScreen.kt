@@ -147,6 +147,8 @@ import kotlin.math.hypot
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
 
 fun openAugmentedReality(
     appNavigator: TrailSenseNavigator,

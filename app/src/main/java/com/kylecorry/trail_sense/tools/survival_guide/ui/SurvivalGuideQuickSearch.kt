@@ -41,6 +41,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
 import kotlinx.coroutines.delay
+import com.kylecorry.trail_sense.shared.views.compose.from
 
 /**
  * The survival guide quick action: a sheet over the current screen with a search and its best answer, as upstream's

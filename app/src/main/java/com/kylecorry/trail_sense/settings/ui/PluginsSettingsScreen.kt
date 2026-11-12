@@ -26,6 +26,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun PluginsSettingsToolScreen() {

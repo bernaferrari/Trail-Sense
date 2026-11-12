@@ -107,6 +107,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun CreateFieldGuidePageToolScreen(route: Route.CreateFieldGuidePage) {

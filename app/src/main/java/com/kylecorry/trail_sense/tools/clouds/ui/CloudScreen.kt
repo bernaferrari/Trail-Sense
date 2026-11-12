@@ -113,6 +113,7 @@ import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudOb
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import kotlin.time.Instant
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun CloudToolScreen(route: Route.Clouds) {

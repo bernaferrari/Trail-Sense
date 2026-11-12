@@ -88,6 +88,7 @@ import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import androidx.core.graphics.drawable.toDrawable
 import android.content.res.Configuration
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 

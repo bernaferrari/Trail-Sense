@@ -65,6 +65,8 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeather
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import kotlinx.coroutines.launch
 import androidx.lifecycle.asLiveData
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.number
 
 @Composable
 fun ThermometerSettingsToolScreen() {

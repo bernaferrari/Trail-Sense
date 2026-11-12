@@ -7,6 +7,7 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.weather.domain.isHigh
 import com.kylecorry.trail_sense.tools.weather.domain.isLow
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class PressureSystemWeatherField(private val pressure: Pressure?) : WeatherField {
     override fun getListItem(context: Context): WeatherListItem? {

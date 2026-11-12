@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.shared.dialogs
 
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * A dialog the app's [TrailSenseDialogHost] is showing. Callers keep it to close the dialog from code:
@@ -68,13 +70,12 @@ fun TrailSenseDialogHost(state: TrailSenseDialogHostState) {
     }
 }
 
-private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-/** Dialogs can be opened and closed from any thread; the state they live in changes on the main thread. */
-internal fun onMain(action: () -> Unit) {
-    if (Looper.myLooper() == Looper.getMainLooper()) {
-        action()
-    } else {
-        mainHandler.post(action)
-    }
+/**
+ * Dialogs can be opened and closed from any thread; the state they live in changes on the main thread (right away
+ * when already on it).
+ */
+fun onMain(action: () -> Unit) {
+    mainScope.launch { action() }
 }

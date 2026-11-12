@@ -99,6 +99,7 @@ import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import androidx.compose.ui.text.input.KeyboardType
+import com.kylecorry.trail_sense.shared.dialogs.item
 
 @Composable
 fun CalibrateGPSToolScreen() {

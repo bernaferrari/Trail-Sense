@@ -62,6 +62,7 @@ import kotlin.time.Duration
 import kotlin.coroutines.resume
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 /**
  * The camera behind a [CameraPreview]: a CameraX camera bound to a lifecycle, whose picture is drawn by CameraX's

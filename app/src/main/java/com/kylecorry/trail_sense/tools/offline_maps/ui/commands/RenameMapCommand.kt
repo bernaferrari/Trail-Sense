@@ -9,6 +9,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.shared.dialogs.text
 
 class RenameMapCommand(private val context: Context, private val service: MapService) :
     CoroutineCommand<IMap> {

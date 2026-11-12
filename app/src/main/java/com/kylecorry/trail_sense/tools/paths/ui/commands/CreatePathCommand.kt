@@ -11,6 +11,7 @@ import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathMetadata
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IPathPreferences
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import com.kylecorry.trail_sense.shared.dialogs.text
 
 
 class CreatePathCommand(

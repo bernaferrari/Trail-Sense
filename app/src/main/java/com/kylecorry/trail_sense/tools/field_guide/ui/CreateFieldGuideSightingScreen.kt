@@ -88,6 +88,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import com.kylecorry.trail_sense.shared.time.toInstant
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
 
 @Composable
 fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {

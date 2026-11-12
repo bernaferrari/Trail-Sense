@@ -9,6 +9,8 @@ import com.kylecorry.andromeda.core.system.pickDirectory
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.Command
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class ChangeAutomaticBackupDirectoryCommand(
     private val context: Context,

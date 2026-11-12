@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.ProgressBody
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 import com.kylecorry.trail_sense.shared.dialogs.onMain
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.main.getAppService

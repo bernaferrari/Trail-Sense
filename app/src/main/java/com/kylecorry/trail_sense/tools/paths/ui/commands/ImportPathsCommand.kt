@@ -24,6 +24,9 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathSimplificationQuality
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IPathPreferences
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.items
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
 
 class ImportPathsCommand(
     private val context: Context,

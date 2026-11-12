@@ -61,6 +61,7 @@ import com.kylecorry.trail_sense.shared.time.displayName
 import com.kylecorry.trail_sense.shared.time.toLocalDate
 import kotlinx.datetime.yearMonth
 import java.util.Locale
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun SightingListToolScreen(route: Route.SightingList) {

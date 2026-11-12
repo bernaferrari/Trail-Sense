@@ -96,7 +96,7 @@ fun AugmentedRealitySettingsToolScreen() {
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.view_distance),
-                        summary = context.formatDistance(formatter, beaconViewDistance),
+                        summary = formatDistance(formatter, beaconViewDistance),
                         onClick = {
                             context.pickDistance(
                                 distanceUnits,
@@ -128,7 +128,7 @@ fun AugmentedRealitySettingsToolScreen() {
                 row { position ->
                     SettingsActionRow(
                         label = stringResource(R.string.view_distance),
-                        summary = context.formatDistance(formatter, pathViewDistance),
+                        summary = formatDistance(formatter, pathViewDistance),
                         onClick = {
                             context.pickDistance(
                                 distanceUnits,

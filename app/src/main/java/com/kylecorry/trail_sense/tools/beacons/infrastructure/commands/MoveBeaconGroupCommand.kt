@@ -10,6 +10,7 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class MoveBeaconGroupCommand(
     private val context: Context,

@@ -155,6 +155,7 @@ import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun TidesToolScreen() {

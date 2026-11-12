@@ -79,6 +79,10 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.items
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class MapLayersSheetState(
     private val mapId: String,

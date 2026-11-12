@@ -94,6 +94,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.text.readRawText
+import com.kylecorry.trail_sense.shared.dialogs.loading
 
 /**
  * One survival guide chapter: the chapter's introduction as plain reading text, then its sections as one group of

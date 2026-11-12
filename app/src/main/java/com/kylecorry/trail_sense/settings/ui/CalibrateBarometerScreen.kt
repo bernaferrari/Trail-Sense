@@ -46,6 +46,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun CalibrateBarometerToolScreen() {

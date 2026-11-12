@@ -121,7 +121,7 @@ fun AstronomySettingsToolScreen() {
                     label = stringResource(R.string.pref_sun_time_mode_title),
                     selected = optionLabel(sunTimeOptions, viewModel.sunTimeMode),
                     onClick = {
-                        context.pickOption(
+                        pickOption(
                             context.getString(R.string.pref_sun_time_mode_title),
                             sunTimeOptions,
                             viewModel.sunTimeMode,
@@ -152,7 +152,7 @@ fun AstronomySettingsToolScreen() {
                     label = stringResource(R.string.left_quick_action),
                     selected = optionLabel(quickActionOptions, viewModel.leftQuickAction),
                     onClick = {
-                        context.pickOption(
+                        pickOption(
                             context.getString(R.string.left_quick_action),
                             quickActionOptions,
                             viewModel.leftQuickAction,
@@ -167,7 +167,7 @@ fun AstronomySettingsToolScreen() {
                     label = stringResource(R.string.right_quick_action),
                     selected = optionLabel(quickActionOptions, viewModel.rightQuickAction),
                     onClick = {
-                        context.pickOption(
+                        pickOption(
                             context.getString(R.string.right_quick_action),
                             quickActionOptions,
                             viewModel.rightQuickAction,
@@ -211,7 +211,7 @@ fun AstronomySettingsToolScreen() {
                         label = stringResource(R.string.pref_sunset_alert_time_title),
                         selected = optionLabel(sunsetTimeOptions, viewModel.sunsetAlertTime),
                         onClick = {
-                            context.pickOption(
+                            pickOption(
                                 context.getString(R.string.pref_sunset_alert_time_title),
                                 sunsetTimeOptions,
                                 viewModel.sunsetAlertTime,
@@ -253,7 +253,7 @@ fun AstronomySettingsToolScreen() {
                         label = stringResource(R.string.pref_sunrise_alert_time_title),
                         selected = optionLabel(sunriseTimeOptions, viewModel.sunriseAlertTime),
                         onClick = {
-                            context.pickOption(
+                            pickOption(
                                 context.getString(R.string.pref_sunrise_alert_time_title),
                                 sunriseTimeOptions,
                                 viewModel.sunriseAlertTime,

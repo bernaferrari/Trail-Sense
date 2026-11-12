@@ -111,6 +111,8 @@ import com.kylecorry.trail_sense.shared.time.toLocalDateTime
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 @Composable
 fun ClockToolScreen() {

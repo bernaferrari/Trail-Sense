@@ -114,6 +114,7 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 private val QR_CAMERA_SIZE = Size(200, 200)
 private const val MEDIA_MAX_WIDTH = 500

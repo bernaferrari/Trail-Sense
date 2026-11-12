@@ -10,6 +10,7 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathServ
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.dialogs.text
 
 
 class RenamePathCommand(

@@ -13,6 +13,8 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathServ
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.loading
 
 class ReplacePathElevationsCommand(
     private val context: Context,

@@ -5,6 +5,7 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.system.Package
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.commands.Command
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class NotifyForkPoliciesCommand(private val context: Context) : Command {
     override fun execute() {

@@ -13,8 +13,6 @@ import com.kylecorry.trail_sense.shared.time.toLocalDate
 
 import com.kylecorry.trail_sense.shared.time.atStartOfDay
 
-import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,6 +81,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.kylecorry.luna.text.toDoubleCompat
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.toAnnotatedString
@@ -96,7 +96,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 /*
  * Trail Sense's dialogs, drawn in Compose so they look like the rest of the app (28 dp corners, a headline title, the
  * app's colors and type). They keep Andromeda's names and parameters, so callers open them imperatively from any
- * code with a Context; each dialog is a Compose Dialog that the activity's AppHost draws.
+ * code with the [AppHost] to draw them in; each dialog is a Compose Dialog that host draws. (On Android, overloads
+ * taking a Context find the activity's host.)
  */
 
 /**
@@ -104,13 +105,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  * outside (when allowed), or the cancel button's own handling.
  */
 fun showComposeDialog(
-    context: Context,
+    host: AppHost,
     cancelable: Boolean = true,
     cancelOnOutsideTouch: Boolean = true,
     onCancel: () -> Unit = {},
     content: @Composable ColumnScope.(dismiss: () -> Unit) -> Unit
 ): TrailSenseDialog {
-    return AppHost.from(context).dialogs.show(onCancel = onCancel) { dialog ->
+    return host.dialogs.show(onCancel = onCancel) { dialog ->
         Dialog(
             onDismissRequest = { dialog.cancel() },
             properties = DialogProperties(
@@ -196,11 +197,11 @@ private fun DialogButtons(
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.End)
     ) {
         if (cancelText != null) {
-            TextButton(onClick = onCancel, shapes = ButtonDefaults.shapes()) { Text(cancelText.toString()) }
+            TextButton(onClick = onCancel, shapes = ButtonDefaults.shapes()) { Text(cancelText.label()) }
         }
         if (okText != null) {
             Button(onClick = onOk, enabled = okEnabled, shapes = ButtonDefaults.shapes()) {
-                Text(okText.toString())
+                Text(okText.label())
             }
         }
     }
@@ -212,11 +213,11 @@ object Alerts {
      * A dialog with a [title], an optional [content] message, and an optional [body] drawn below it.
      */
     fun dialog(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         content: CharSequence? = null,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel),
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel,
         allowLinks: Boolean = false,
         cancelable: Boolean = true,
         cancelOnOutsideTouch: Boolean = true,
@@ -232,7 +233,7 @@ object Alerts {
         }
         val hasBody = body != null
         return showComposeDialog(
-            context,
+            host,
             cancelable = cancelable,
             cancelOnOutsideTouch = cancelOnOutsideTouch,
             onCancel = { close(true) }
@@ -273,13 +274,13 @@ object Alerts {
      * A short message that needs no answer, as a snackbar in the app-wide [AppHost] (a Compose SnackbarHostState).
      * Asked for while the app is in the background, it waits and shows once the app is on screen again.
      */
-    fun snackbar(context: Context, text: CharSequence, short: Boolean = true) {
-        AppHost.from(context).snackbar(text.toString(), long = !short)
+    fun snackbar(host: AppHost, text: CharSequence, short: Boolean = true) {
+        host.snackbar(text.toString(), long = !short)
     }
 
     /** A dialog with [title] and a spinner that can't be dismissed by the person; dismiss it when the work is done. */
-    fun loading(context: Context, title: CharSequence): TrailSenseDialog {
-        return showComposeDialog(context, cancelable = false, cancelOnOutsideTouch = false) {
+    fun loading(host: AppHost, title: CharSequence): TrailSenseDialog {
+        return showComposeDialog(host, cancelable = false, cancelOnOutsideTouch = false) {
             DialogTitle(title)
             Box(
                 modifier = Modifier
@@ -293,9 +294,9 @@ object Alerts {
     }
 
     /** A dialog with [title] and a progress bar; the returned function sets the progress (0 to 1) from any thread. */
-    fun progress(context: Context, title: CharSequence): Pair<TrailSenseDialog, (Float) -> Unit> {
+    fun progress(host: AppHost, title: CharSequence): Pair<TrailSenseDialog, (Float) -> Unit> {
         val progress = mutableFloatStateOf(0f)
-        val dialog = showComposeDialog(context, cancelable = false, cancelOnOutsideTouch = false) {
+        val dialog = showComposeDialog(host, cancelable = false, cancelOnOutsideTouch = false) {
             DialogTitle(title)
             ProgressBody(progress = { progress.floatValue })
             Spacer(Modifier.size(TrailSenseSpacing.xl))
@@ -303,8 +304,8 @@ object Alerts {
         return dialog to { value -> onMain { progress.floatValue = value.coerceIn(0f, 1f) } }
     }
 
-    inline fun <T> withLoading(context: Context, title: CharSequence, action: () -> T): T {
-        val loading = loading(context, title)
+    inline fun <T> withLoading(host: AppHost, title: CharSequence, action: () -> T): T {
+        val loading = loading(host, title)
         try {
             return action()
         } finally {
@@ -312,8 +313,8 @@ object Alerts {
         }
     }
 
-    inline fun <T> withProgress(context: Context, title: CharSequence, action: ((Float) -> Unit) -> T): T {
-        val (dialog, setProgress) = progress(context, title)
+    inline fun <T> withProgress(host: AppHost, title: CharSequence, action: ((Float) -> Unit) -> T): T {
+        val (dialog, setProgress) = progress(host, title)
         try {
             return action(setProgress)
         } finally {
@@ -336,11 +337,11 @@ fun ProgressBody(progress: () -> Float, modifier: Modifier = Modifier) {
 object CoroutineAlerts {
     /** Returns true if cancelled. */
     suspend fun dialog(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         content: CharSequence? = null,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel),
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel,
         allowLinks: Boolean = false,
         cancelable: Boolean = true,
         cancelOnOutsideTouch: Boolean = true,
@@ -348,7 +349,7 @@ object CoroutineAlerts {
         body: (@Composable () -> Unit)? = null
     ): Boolean = suspendCancellableCoroutine { continuation ->
         val dialog = Alerts.dialog(
-            context, title, content, okText, cancelText, allowLinks, cancelable,
+            host, title, content, okText, cancelText, allowLinks, cancelable,
             cancelOnOutsideTouch, scrollable, body
         ) { cancelled ->
             if (continuation.isActive) continuation.resume(cancelled)
@@ -361,12 +362,12 @@ object Pickers {
 
     /** One choice: tapping a row picks it and closes, like Android's own lists. */
     fun item(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         items: List<CharSequence>,
         defaultSelectedIndex: Int = -1,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel),
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel,
         onPick: (selectedIndex: Int?) -> Unit
     ) {
         var done = false
@@ -375,7 +376,7 @@ object Pickers {
             done = true
             onPick(index)
         }
-        showComposeDialog(context, onCancel = { pick(null) }) { dismiss ->
+        showComposeDialog(host, onCancel = { pick(null) }) { dismiss ->
             DialogTitle(title)
             val listState = rememberLazyListState(initialFirstVisibleItemIndex = (defaultSelectedIndex - 2).coerceAtLeast(0))
             LazyColumn(
@@ -405,12 +406,12 @@ object Pickers {
 
     /** Several choices, confirmed with OK. */
     fun items(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         items: List<CharSequence>,
         defaultSelectedIndices: List<Int> = emptyList(),
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel),
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel,
         onPick: (selectedIndices: List<Int>?) -> Unit
     ) {
         var done = false
@@ -419,7 +420,7 @@ object Pickers {
             done = true
             onPick(indices)
         }
-        showComposeDialog(context, onCancel = { pick(null) }) { dismiss ->
+        showComposeDialog(host, onCancel = { pick(null) }) { dismiss ->
             var selected by remember { mutableStateOf(defaultSelectedIndices.toSet()) }
             DialogTitle(title)
             LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
@@ -448,35 +449,35 @@ object Pickers {
     }
 
     fun text(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         description: CharSequence? = null,
         default: String? = null,
         hint: CharSequence? = null,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel),
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel,
         onTextPick: (text: String?) -> Unit
     ) {
-        inputDialog(context, title, description, default, hint, KeyboardType.Text, okText, cancelText) {
+        inputDialog(host, title, description, default, hint, KeyboardType.Text, okText, cancelText) {
             onTextPick(it)
         }
     }
 
     fun number(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         description: CharSequence? = null,
         default: Number? = null,
         allowDecimals: Boolean = true,
         allowNegative: Boolean = false,
         hint: CharSequence? = null,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel),
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel,
         onNumberPick: (number: Number?) -> Unit
     ) {
         val start = default?.let { if (allowDecimals) it.toString() else it.toLong().toString() }
         inputDialog(
-            context, title, description, start, hint,
+            host, title, description, start, hint,
             if (allowDecimals) KeyboardType.Decimal else KeyboardType.Number, okText, cancelText,
             accept = { text ->
                 val value = text.toDoubleCompat()
@@ -495,7 +496,7 @@ object Pickers {
     }
 
     private fun inputDialog(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         description: CharSequence?,
         default: String?,
@@ -512,7 +513,7 @@ object Pickers {
             done = true
             onPick(text)
         }
-        showComposeDialog(context, cancelOnOutsideTouch = false, onCancel = { pick(null) }) { dismiss ->
+        showComposeDialog(host, cancelOnOutsideTouch = false, onCancel = { pick(null) }) { dismiss ->
             val initial = default ?: ""
             var value by remember { mutableStateOf(TextFieldValue(initial, TextRange(0, initial.length))) }
             val focus = remember { FocusRequester() }
@@ -559,7 +560,7 @@ object Pickers {
 
     /** The Material time picker (a dial), in 24-hour time when [use24Hours]. */
     fun time(
-        context: Context,
+        host: AppHost,
         use24Hours: Boolean,
         default: LocalTime = nowLocal().time,
         onTimePick: (time: LocalTime?) -> Unit
@@ -570,7 +571,7 @@ object Pickers {
             done = true
             onTimePick(time)
         }
-        showComposeDialog(context, onCancel = { pick(null) }) { dismiss ->
+        showComposeDialog(host, onCancel = { pick(null) }) { dismiss ->
             val state = rememberTimePickerState(default.hour, default.minute, use24Hours)
             Box(
                 modifier = Modifier
@@ -581,8 +582,8 @@ object Pickers {
                 TimePicker(state = state)
             }
             DialogButtons(
-                okText = context.getString(android.R.string.ok),
-                cancelText = context.getString(android.R.string.cancel),
+                okText = DialogLabels.Ok,
+                cancelText = DialogLabels.Cancel,
                 onOk = {
                     dismiss()
                     pick(LocalTime(state.hour, state.minute))
@@ -597,7 +598,7 @@ object Pickers {
 
     /** The Material date picker (a calendar). */
     fun date(
-        context: Context,
+        host: AppHost,
         default: LocalDate = today(),
         onDatePick: (date: LocalDate?) -> Unit
     ) {
@@ -607,8 +608,7 @@ object Pickers {
             done = true
             onDatePick(date)
         }
-        val host = AppHost.from(context).dialogs
-        host.show(onCancel = { pick(null) }) { dialog ->
+        host.dialogs.show(onCancel = { pick(null) }) { dialog ->
             val state = rememberDatePickerState(
                 initialSelectedDateMillis = default.atStartOfDay(TimeZone.UTC).toEpochMilliseconds()
             )
@@ -623,11 +623,11 @@ object Pickers {
                             } ?: default)
                         },
                         shapes = ButtonDefaults.shapes()
-                    ) { Text(context.getString(android.R.string.ok)) }
+                    ) { Text(systemString(SystemString.Ok)) }
                 },
                 dismissButton = {
                     TextButton(onClick = { dialog.cancel() }, shapes = ButtonDefaults.shapes()) {
-                        Text(context.getString(android.R.string.cancel))
+                        Text(systemString(SystemString.Cancel))
                     }
                 }
             ) {
@@ -637,17 +637,17 @@ object Pickers {
     }
 
     fun datetime(
-        context: Context,
+        host: AppHost,
         use24Hours: Boolean,
         default: LocalDateTime = nowLocal(),
         onDatetimePick: (value: LocalDateTime?) -> Unit
     ) {
-        date(context, default.date) { date ->
+        date(host, default.date) { date ->
             if (date == null) {
                 onDatetimePick(null)
                 return@date
             }
-            time(context, use24Hours, default.time) { time ->
+            time(host, use24Hours, default.time) { time ->
                 onDatetimePick(time?.let { LocalDateTime(date, it) })
             }
         }
@@ -657,8 +657,8 @@ object Pickers {
      * A menu of [items] (null items are left out) at the top end of the screen; [onSelection] gets the index of the
      * chosen item.
      */
-    fun menu(context: Context, items: List<CharSequence?>, onSelection: (index: Int) -> Boolean) {
-        AppHost.from(context).dialogs.show { dialog ->
+    fun menu(host: AppHost, items: List<CharSequence?>, onSelection: (index: Int) -> Boolean) {
+        host.dialogs.show { dialog ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -711,70 +711,86 @@ private fun ChoiceRow(label: CharSequence, selected: Boolean, multiple: Boolean,
 
 object CoroutinePickers {
     suspend fun text(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         description: CharSequence? = null,
         default: String? = null,
         hint: CharSequence? = null,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel)
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel
     ): String? = suspendCancellableCoroutine { c ->
-        Pickers.text(context, title, description, default, hint, okText, cancelText) { if (c.isActive) c.resume(it) }
+        Pickers.text(host, title, description, default, hint, okText, cancelText) { if (c.isActive) c.resume(it) }
     }
 
     suspend fun number(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         description: CharSequence? = null,
         default: Number? = null,
         allowDecimals: Boolean = true,
         allowNegative: Boolean = false,
         hint: CharSequence? = null,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel)
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel
     ): Number? = suspendCancellableCoroutine { c ->
-        Pickers.number(context, title, description, default, allowDecimals, allowNegative, hint, okText, cancelText) {
+        Pickers.number(host, title, description, default, allowDecimals, allowNegative, hint, okText, cancelText) {
             if (c.isActive) c.resume(it)
         }
     }
 
     suspend fun item(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         items: List<CharSequence>,
         defaultSelectedIndex: Int = -1,
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel)
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel
     ): Int? = suspendCancellableCoroutine { c ->
-        Pickers.item(context, title, items, defaultSelectedIndex, okText, cancelText) { if (c.isActive) c.resume(it) }
+        Pickers.item(host, title, items, defaultSelectedIndex, okText, cancelText) { if (c.isActive) c.resume(it) }
     }
 
     suspend fun items(
-        context: Context,
+        host: AppHost,
         title: CharSequence,
         items: List<CharSequence>,
         defaultSelectedIndices: List<Int> = emptyList(),
-        okText: CharSequence? = context.getString(android.R.string.ok),
-        cancelText: CharSequence? = context.getString(android.R.string.cancel)
+        okText: CharSequence? = DialogLabels.Ok,
+        cancelText: CharSequence? = DialogLabels.Cancel
     ): List<Int>? = suspendCancellableCoroutine { c ->
-        Pickers.items(context, title, items, defaultSelectedIndices, okText, cancelText) { if (c.isActive) c.resume(it) }
+        Pickers.items(host, title, items, defaultSelectedIndices, okText, cancelText) { if (c.isActive) c.resume(it) }
     }
 
-    suspend fun time(context: Context, use24Hours: Boolean, default: LocalTime = nowLocal().time): LocalTime? =
+    suspend fun time(host: AppHost, use24Hours: Boolean, default: LocalTime = nowLocal().time): LocalTime? =
         suspendCancellableCoroutine { c ->
-            Pickers.time(context, use24Hours, default) { if (c.isActive) c.resume(it) }
+            Pickers.time(host, use24Hours, default) { if (c.isActive) c.resume(it) }
         }
 
-    suspend fun date(context: Context, default: LocalDate = today()): LocalDate? =
+    suspend fun date(host: AppHost, default: LocalDate = today()): LocalDate? =
         suspendCancellableCoroutine { c ->
-            Pickers.date(context, default) { if (c.isActive) c.resume(it) }
+            Pickers.date(host, default) { if (c.isActive) c.resume(it) }
         }
 
     suspend fun datetime(
-        context: Context,
+        host: AppHost,
         use24Hours: Boolean,
         default: LocalDateTime = nowLocal()
     ): LocalDateTime? = suspendCancellableCoroutine { c ->
-        Pickers.datetime(context, use24Hours, default) { if (c.isActive) c.resume(it) }
+        Pickers.datetime(host, use24Hours, default) { if (c.isActive) c.resume(it) }
     }
+}
+
+/**
+ * Button labels the platform translates, used as the dialogs' default OK and Cancel text (pass null to hide a
+ * button, or any text to replace it).
+ */
+object DialogLabels {
+    val Ok: CharSequence = SystemLabel(SystemString.Ok)
+    val Cancel: CharSequence = SystemLabel(SystemString.Cancel)
+}
+
+private class SystemLabel(val string: SystemString) : CharSequence by string.name
+
+@Composable
+private fun CharSequence.label(): String {
+    return if (this is SystemLabel) systemString(string) else toString()
 }

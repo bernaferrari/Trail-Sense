@@ -134,6 +134,7 @@ import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlinx.datetime.LocalTime
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 object TurnBackKeys {
     const val PREF_TURN_BACK_TIME = "pref_turn_back_time"

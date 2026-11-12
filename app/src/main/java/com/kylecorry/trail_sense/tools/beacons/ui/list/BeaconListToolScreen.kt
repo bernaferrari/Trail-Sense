@@ -143,6 +143,11 @@ import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import com.kylecorry.trail_sense.tools.qr.ui.QRImportContent
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.items
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
 
 interface BeaconListControllerHost {
     fun refreshBeaconList()

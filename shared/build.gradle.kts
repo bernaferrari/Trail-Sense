@@ -31,6 +31,9 @@ kotlin {
             api(libs.androidx.navigation3.runtime)
             // System back (gesture, button) as common navigation events
             implementation(libs.cmp.navigationevent.compose)
+            // Screen view models and lifecycle effects
+            implementation(libs.cmp.lifecycle.viewmodel.compose)
+            implementation(libs.cmp.lifecycle.runtime.compose)
             api(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.atomicfu)

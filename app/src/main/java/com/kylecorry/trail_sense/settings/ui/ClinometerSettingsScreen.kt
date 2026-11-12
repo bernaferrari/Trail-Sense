@@ -48,7 +48,7 @@ fun ClinometerSettingsToolScreen() {
             row { position ->
                 SettingsActionRow(
                     label = baselineTitle,
-                    summary = context.formatDistance(formatter, baselineDistance),
+                    summary = formatDistance(formatter, baselineDistance),
                     onClick = {
                         context.pickBaselineDistance(prefs, formatter, baselineTitle, baselineDistance) {
                             baselineDistance = it

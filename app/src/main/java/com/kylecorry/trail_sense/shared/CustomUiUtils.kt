@@ -82,6 +82,11 @@ import kotlin.coroutines.suspendCoroutine
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 import com.kylecorry.trail_sense.shared.views.useDynamicColors
+import com.kylecorry.trail_sense.shared.dialogs.date
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.dialogs.time
 
 object CustomUiUtils {
     /** Snackbar lengths for [snackbar], the same values as Material's Snackbar.LENGTH_SHORT and LENGTH_LONG. */

@@ -20,6 +20,7 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.AppOverlay
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerCanvas
+import com.kylecorry.trail_sense.shared.views.compose.from
 
 /** Shows an 80 dp ruler along the screen's start edge, above the navigation bar, until tapped again. */
 class QuickActionRuler(

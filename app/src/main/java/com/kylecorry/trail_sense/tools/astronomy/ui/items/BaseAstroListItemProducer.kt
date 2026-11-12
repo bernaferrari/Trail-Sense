@@ -23,6 +23,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.time.Instant
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 abstract class BaseAstroListItemProducer(protected val context: Context) :
     AstronomyListItemProducer {

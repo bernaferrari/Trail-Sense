@@ -92,6 +92,7 @@ import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 /**
  * The notes list: newest first, one grouped card of rows (title, then the date and the start of the note), with the

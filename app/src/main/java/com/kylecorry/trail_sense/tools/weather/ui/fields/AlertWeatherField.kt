@@ -6,6 +6,7 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherAlert
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class AlertWeatherField(private val alerts: List<WeatherAlert>) : WeatherField {
     override fun getListItem(context: Context): WeatherListItem? {

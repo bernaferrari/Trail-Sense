@@ -57,6 +57,7 @@ import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonVie
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetViewBinder
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetSnapshot
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class QuickActionSheetState(private val context: Context) {
 

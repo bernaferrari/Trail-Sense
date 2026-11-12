@@ -7,6 +7,7 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Android
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class MissingSensorAlert(private val context: Context) : IValueAlerter<String> {
 

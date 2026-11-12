@@ -14,6 +14,7 @@ import com.kylecorry.trail_sense.settings.licenses.Library
 import com.kylecorry.trail_sense.settings.licenses.Licenses
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun LicensesToolScreen() {

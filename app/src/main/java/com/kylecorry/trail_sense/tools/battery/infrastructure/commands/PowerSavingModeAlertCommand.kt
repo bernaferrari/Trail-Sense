@@ -5,6 +5,7 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.Command
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class PowerSavingModeAlertCommand(private val context: Context) : Command {
 

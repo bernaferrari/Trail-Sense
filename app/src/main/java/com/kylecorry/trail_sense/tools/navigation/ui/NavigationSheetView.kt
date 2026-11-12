@@ -89,6 +89,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
+import com.kylecorry.trail_sense.shared.views.compose.from
 
 class NavigationSheetView(private val context: Context) {
 

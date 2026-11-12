@@ -165,6 +165,7 @@ import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlin.math.abs
 import kotlin.math.max
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 /**
  * The weather tool. [bindQuickActions] binds the forecast's two quick action buttons; the activity's quick actions

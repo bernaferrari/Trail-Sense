@@ -138,6 +138,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlin.time.Duration
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
 
 @Composable
 fun PathsToolScreen(

@@ -48,6 +48,7 @@ import com.kylecorry.andromeda.core.system.CurrentApp
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 internal fun ErrorHandlerScreen(

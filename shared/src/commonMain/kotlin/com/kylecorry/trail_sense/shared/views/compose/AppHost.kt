@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,8 +12,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ProcessLifecycleOwner
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialogHost
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialogHostState
 import com.kylecorry.trail_sense.shared.dialogs.onMain
@@ -26,9 +22,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
- * What the activity draws above every screen and that any code can reach from a Context: dialogs, the snackbar and
- * overlays (such as the quick ruler). The activity owns one ([AppHostOwner]) and renders it with [AppHostDialogs],
- * [AppHostSnackbar] and [AppHostOverlays].
+ * What the app's window draws above every screen and that any code can reach: dialogs, the snackbar and overlays
+ * (such as the quick ruler). The window owns one ([AppHostOwner]), attaches it while alive, and renders it with
+ * [AppHostDialogs], [AppHostSnackbar] and [AppHostOverlays].
  */
 class AppHost {
     val dialogs = TrailSenseDialogHostState()
@@ -70,47 +66,33 @@ class AppHost {
     }
 
     companion object {
-        private var current: AppHost? = null
+        private var attached: AppHost? = null
         private val detached by lazy { AppHost() }
 
-        /** The host of the activity behind [context], or the running activity's when [context] isn't one. */
-        fun from(context: Context): AppHost {
-            return attachedTo(context) ?: detached
+        /** The host the running window draws, or null when none is attached. */
+        val attachedHost: AppHost?
+            get() = attached
+
+        /** The host the running window draws; with none attached, one that nothing draws. */
+        fun current(): AppHost {
+            return attached ?: detached
         }
 
-        /**
-         * The host that is on screen right now (the activity behind [context], or the running one), or null while the
-         * app is in the background and nothing would draw it.
-         */
-        fun visible(context: Context): AppHost? {
-            val isForeground = ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
-            return if (isForeground) attachedTo(context) else null
-        }
-
-        private fun attachedTo(context: Context): AppHost? {
-            var c: Context? = context
-            while (c != null) {
-                if (c is AppHostOwner) return c.appHost
-                c = (c as? ContextWrapper)?.baseContext
-            }
-            return current
-        }
-
-        /** Called by the owning activity while it's alive. */
+        /** Called by the owning window while it's alive. */
         fun attach(host: AppHost) {
-            current = host
+            attached = host
         }
 
         fun detach(host: AppHost) {
-            if (current === host) {
-                current = null
+            if (attached === host) {
+                attached = null
             }
             host.close()
         }
     }
 }
 
-/** An Activity that draws an [AppHost]. */
+/** A window (on Android, an Activity) that draws an [AppHost]. */
 interface AppHostOwner {
     val appHost: AppHost
 }

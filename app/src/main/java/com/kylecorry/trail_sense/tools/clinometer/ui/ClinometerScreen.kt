@@ -128,6 +128,7 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARMarkerLayer
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import com.kylecorry.trail_sense.shared.dialogs.item
 
 @Composable
 fun ClinometerToolScreen(

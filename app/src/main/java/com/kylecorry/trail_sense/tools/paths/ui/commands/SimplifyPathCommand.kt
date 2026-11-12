@@ -51,6 +51,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.dialogs.loading
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 /** A path and its points, ready for the simplify preview. */
 class SimplifyPathRequest(val path: Path, val points: List<PathPoint>)

@@ -65,6 +65,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import androidx.lifecycle.asLiveData
+import com.kylecorry.trail_sense.shared.dialogs.number
 
 @Composable
 fun CalibrateCompassToolScreen() {
@@ -314,7 +315,7 @@ private fun CalibrateCompassContent(viewModel: CalibrateCompassViewModel, cache:
                         label = sourceTitle,
                         selected = optionLabel(compassSourceOptions, source),
                         onClick = {
-                            context.pickOption(sourceTitle, compassSourceOptions, source) {
+                            pickOption(sourceTitle, compassSourceOptions, source) {
                                 source = it
                                 cache.putString(PreferenceKeys.compassSource, it)
                                 viewModel.resetCompass()

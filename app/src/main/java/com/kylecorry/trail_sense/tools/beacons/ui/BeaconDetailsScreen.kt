@@ -117,6 +117,7 @@ import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperature
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {

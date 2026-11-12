@@ -70,6 +70,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 import kotlinx.datetime.LocalTime
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.dialogs.time
 
 @Composable
 fun WeatherSettingsToolScreen() {
@@ -150,7 +152,7 @@ fun WeatherSettingsToolScreen() {
     val updateFrequencyTitle = stringResource(R.string.pref_weather_update_frequency_title)
 
     fun pickChoice(title: String, options: List<SettingsOption>, choice: WeatherChoice) {
-        context.pickOption(title, options, viewModel.choice(choice)) {
+        pickOption(title, options, viewModel.choice(choice)) {
             viewModel.changeChoice(choice, it)
         }
     }

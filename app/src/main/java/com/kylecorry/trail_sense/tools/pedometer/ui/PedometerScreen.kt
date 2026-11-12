@@ -141,6 +141,8 @@ import kotlinx.datetime.LocalDate
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
+import com.kylecorry.trail_sense.shared.dialogs.date
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 /**
  * Pedometer, an instrument like the boil timer. One question: how far have I walked? A ring of footprints holds the

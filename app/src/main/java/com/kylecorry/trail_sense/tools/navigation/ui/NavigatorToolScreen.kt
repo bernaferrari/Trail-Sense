@@ -79,6 +79,7 @@ import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.shareLocation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import com.kylecorry.trail_sense.shared.dialogs.item
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

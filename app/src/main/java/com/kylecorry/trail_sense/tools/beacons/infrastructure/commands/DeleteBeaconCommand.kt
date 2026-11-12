@@ -9,6 +9,7 @@ import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class DeleteBeaconCommand(
     private val context: Context,

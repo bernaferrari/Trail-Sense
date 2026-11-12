@@ -104,6 +104,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.Location
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 private const val WHISTLE = "whistle"
 

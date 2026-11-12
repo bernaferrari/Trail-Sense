@@ -106,6 +106,7 @@ import com.kylecorry.trail_sense.shared.sensors.overrides.OverrideGPS
 import com.kylecorry.trail_sense.shared.time.displayName
 import kotlinx.datetime.TimeZone
 import java.util.Locale
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun SensorDetailsToolScreen() {

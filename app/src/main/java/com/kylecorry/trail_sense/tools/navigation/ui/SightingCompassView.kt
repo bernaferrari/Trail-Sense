@@ -12,6 +12,7 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class SightingCompassView(
     private val camera: CameraState,

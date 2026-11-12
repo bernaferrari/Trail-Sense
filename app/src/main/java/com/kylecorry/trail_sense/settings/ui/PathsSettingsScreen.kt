@@ -51,6 +51,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.number
 
 @Composable
 fun PathsSettingsToolScreen() {
@@ -200,7 +201,7 @@ fun PathsSettingsToolScreen() {
                     label = pathStyleTitle,
                     selected = optionLabel(pathStyleOptions, pathStyle),
                     onClick = {
-                        context.pickOption(pathStyleTitle, pathStyleOptions, pathStyle) {
+                        pickOption(pathStyleTitle, pathStyleOptions, pathStyle) {
                             pathStyle = it
                             cache.putString(PreferenceKeys.backtrackPathStyle, it)
                         }

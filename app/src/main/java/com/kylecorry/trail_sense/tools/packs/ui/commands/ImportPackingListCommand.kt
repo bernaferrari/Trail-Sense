@@ -15,6 +15,8 @@ import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
 import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.dialogs.text
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
 
 /** Imports a LighterPack CSV as a new pack and opens it; [context] is the screen's (it shows dialogs). */
 class ImportPackingListCommand(

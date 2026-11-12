@@ -27,6 +27,8 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.items
 
 @Composable
 fun ToolsSettingsToolScreen() {
@@ -74,7 +76,7 @@ fun ToolsSettingsToolScreen() {
                     label = stringResource(R.string.default_widget_theme),
                     selected = optionLabel(widgetThemeOptions, widgetTheme),
                     onClick = {
-                        context.pickOption(context.getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
+                        pickOption(context.getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
                             widgetTheme = it
                             cache.putString(PreferenceKeys.defaultWidgetTheme, it)
                             Tools.triggerWidgetUpdate(context, null)

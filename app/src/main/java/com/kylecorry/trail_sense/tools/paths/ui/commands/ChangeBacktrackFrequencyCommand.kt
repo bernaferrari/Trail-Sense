@@ -10,6 +10,7 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class ChangeBacktrackFrequencyCommand(
     private val context: Context,

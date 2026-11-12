@@ -71,6 +71,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.number
+import com.kylecorry.trail_sense.shared.dialogs.withLoading
+import com.kylecorry.trail_sense.shared.dialogs.withProgress
 
 @Composable
 fun CalibrateAltimeterToolScreen() {
@@ -158,7 +163,7 @@ fun CalibrateAltimeterToolScreen() {
                     label = sourceTitle,
                     selected = optionLabel(modeOptions, mode),
                     onClick = {
-                        context.pickOption(sourceTitle, modeOptions, mode) {
+                        pickOption(sourceTitle, modeOptions, mode) {
                             viewModel.changeMode(it)
                         }
                     },

@@ -47,6 +47,7 @@ import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class AstronomyGuidanceTargetPicker(
     private val astronomyService: AstronomyService,

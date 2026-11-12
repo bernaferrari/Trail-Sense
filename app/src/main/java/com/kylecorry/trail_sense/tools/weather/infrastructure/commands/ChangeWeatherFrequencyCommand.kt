@@ -8,6 +8,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorScheduler
 import kotlin.time.Duration
+import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 class ChangeWeatherFrequencyCommand(
     private val context: Context,
