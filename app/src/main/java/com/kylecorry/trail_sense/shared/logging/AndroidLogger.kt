@@ -14,7 +14,8 @@ import kotlinx.coroutines.delay
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.time.Duration.Companion.milliseconds
 
-class Logger(context: Context) {
+/** Logs to Logcat and to a rolling log file in the app cache. */
+class AndroidLogger(context: Context) : Logger {
 
     private val files = CacheFileSystem(context)
     private val queue = ConcurrentLinkedQueue<String>()
@@ -70,7 +71,7 @@ class Logger(context: Context) {
     }
 
     @Suppress("TooGenericExceptionCaught")
-    fun flush() {
+    override fun flush() {
         try {
             writeQueuedLogs()
         } catch (e: Exception) {
@@ -78,50 +79,46 @@ class Logger(context: Context) {
         }
     }
 
-    fun getLogFile(): File {
-        return files.getFile(LOG_FILE_NAME, false)
-    }
-
-    fun debug(tag: String?, message: String, writeToFile: Boolean = true) {
+    override fun debug(tag: String?, message: String, writeToFile: Boolean) {
         Log.d(tag, message)
         if (writeToFile) {
             report(formatLog("D", tag, message, null))
         }
     }
 
-    fun debug(tag: String?, message: String, throwable: Throwable?, writeToFile: Boolean = true) {
+    override fun debug(tag: String?, message: String, throwable: Throwable?, writeToFile: Boolean) {
         Log.d(tag, message, throwable)
         if (writeToFile) {
             report(formatLog("D", tag, message, throwable))
         }
     }
 
-    fun info(tag: String?, message: String) {
+    override fun info(tag: String?, message: String) {
         Log.i(tag, message)
         report(formatLog("I", tag, message, null))
     }
 
-    fun info(tag: String?, message: String, throwable: Throwable?) {
+    override fun info(tag: String?, message: String, throwable: Throwable?) {
         Log.i(tag, message, throwable)
         report(formatLog("I", tag, message, throwable))
     }
 
-    fun warn(tag: String?, message: String) {
+    override fun warn(tag: String?, message: String) {
         Log.w(tag, message)
         report(formatLog("W", tag, message, null))
     }
 
-    fun warn(tag: String?, message: String, throwable: Throwable?) {
+    override fun warn(tag: String?, message: String, throwable: Throwable?) {
         Log.w(tag, message, throwable)
         report(formatLog("W", tag, message, throwable))
     }
 
-    fun error(tag: String?, message: String) {
+    override fun error(tag: String?, message: String) {
         Log.e(tag, message)
         report(formatLog("E", tag, message, null))
     }
 
-    fun error(tag: String?, message: String, throwable: Throwable?) {
+    override fun error(tag: String?, message: String, throwable: Throwable?) {
         Log.e(tag, message, throwable)
         report(formatLog("E", tag, message, throwable))
     }
@@ -136,6 +133,11 @@ class Logger(context: Context) {
     }
 
     companion object {
+        /** The file the log is written to (it may not exist yet). */
+        fun getLogFile(context: Context): File {
+            return CacheFileSystem(context).getFile(LOG_FILE_NAME, false)
+        }
+
         private const val TAG = "Logger"
         private const val LOG_FILE_NAME = "log.txt"
 

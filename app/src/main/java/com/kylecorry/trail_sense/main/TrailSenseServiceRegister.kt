@@ -16,6 +16,7 @@ import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.device.DeviceSubsystem
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.logging.AndroidLogger
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerLoader
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
@@ -34,7 +35,7 @@ object TrailSenseServiceRegister {
 
         // Shared services
         DependencyRegistry.addSingleton(appContext)
-        DependencyRegistry.addSingleton(Logger(appContext))
+        DependencyRegistry.addSingleton<Logger>(AndroidLogger(appContext))
         DependencyRegistry.addSingleton(StringLoader(appContext))
         DependencyRegistry.addSingleton(FormatService.getInstance(appContext))
         DependencyRegistry.addSingleton(PreferencesSubsystem.getInstance(appContext))

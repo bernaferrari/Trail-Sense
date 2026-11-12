@@ -17,9 +17,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.getSystemService
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.logging.Logger
+import com.kylecorry.trail_sense.shared.logging.AndroidLogger
 import java.io.File
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
@@ -132,7 +131,7 @@ class DiagnosticsLogExportService(
     }
 
     private fun addAppLogs(zip: ZipOutputStream) {
-        val log = getAppService<Logger>().getLogFile()
+        val log = AndroidLogger.getLogFile(context)
         if (!log.isFile) {
             return
         }
