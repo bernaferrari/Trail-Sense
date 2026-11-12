@@ -23,14 +23,19 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.dialogs.showComposeDialog
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.andromeda.sense.readAll
+import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideFormatService
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
@@ -110,21 +115,59 @@ class QuickActionRecordSighting(btn: QuickActionButtonView, host: AndroidDestina
     }
 
     private fun recordSighting(page: FieldGuidePage) {
-        val location = DependencyRegistry.get<LocationSubsystem>()
+        val context = host.context
+        val navigator = host.navigator
         host.lifecycleOwner.lifecycleScope.launch {
+            // As upstream: take a fresh fix rather than a stale (or unknown, 0, 0) cached location
+            var reading: Pair<Coordinate, Float>? = null
+            var cancelled = false
+            val job = launch {
+                val sensors = getAppService<SensorService>()
+                val gps = sensors.getGPS(tag = "QuickActionRecordSighting")
+                val altimeter = sensors.getAltimeter(gps = gps, tag = "QuickActionRecordSighting")
+                readAll(listOf(gps, altimeter))
+                if (gps.hasValidReading) {
+                    reading = gps.location to altimeter.altitude
+                }
+            }
+
+            val pageName = FieldGuideFormatService(getAppService()).formatName(page)
+            Alerts.withSuspendableCancelableLoading(
+                context,
+                context.getString(R.string.recording_sighting_for_page, pageName),
+                onCancel = {
+                    cancelled = true
+                    job.cancel()
+                }
+            ) {
+                job.join()
+            }
+
+            if (cancelled) {
+                return@launch
+            }
+
+            val fix = reading
+            if (fix == null) {
+                // No fix: open a new sighting for the page so the user can fill in where it was
+                navigator.navigate(Route.FieldGuidePage(pageId = page.id))
+                navigator.navigate(Route.SightingList(pageId = page.id))
+                navigator.navigate(Route.CreateFieldGuideSighting(pageId = page.id))
+                return@launch
+            }
+
             val id = repo.addSighting(
                 Sighting(
                     0,
                     page.id,
                     Clock.System.now(),
-                    location.location,
-                    location.elevation.meters().value
+                    fix.first,
+                    fix.second
                 )
             )
-            val navigator = host.navigator
-            AppHost.from(host.context).snackbar(
-                host.context.getString(R.string.created),
-                host.context.getString(R.string.view),
+            AppHost.from(context).snackbar(
+                context.getString(R.string.created),
+                context.getString(R.string.view),
                 long = true
             ) {
                 // As upstream's deep link: the page and its sightings sit under the sighting, so saving it returns to
