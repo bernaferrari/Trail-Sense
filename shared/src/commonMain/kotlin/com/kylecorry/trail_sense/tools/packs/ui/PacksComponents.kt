@@ -52,7 +52,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun PacksGroupRow(
+fun PacksGroupRow(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
@@ -116,11 +116,11 @@ internal fun PacksGroupRow(
 }
 
 /** One entry of a [PacksOverflowMenu]. */
-internal data class PacksMenuAction(val label: String, val onClick: () -> Unit)
+data class PacksMenuAction(val label: String, val onClick: () -> Unit)
 
 /** A three-dot button and its menu, used on rows and in the top bar. */
 @Composable
-internal fun PacksOverflowMenu(
+fun PacksOverflowMenu(
     contentDescription: String,
     actions: List<PacksMenuAction>,
     modifier: Modifier = Modifier

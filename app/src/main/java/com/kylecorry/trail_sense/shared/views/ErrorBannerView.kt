@@ -132,9 +132,10 @@ private fun ErrorBannerContent(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f)
             )
-            if (!error.action.isNullOrEmpty()) {
+            val action = error.action
+            if (!action.isNullOrEmpty()) {
                 TextButton(onClick = onAction) {
-                    Text(text = error.action)
+                    Text(text = action)
                 }
             }
             IconButton(onClick = onClose) {

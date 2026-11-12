@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
  * every row after the first is pulled up so rows sit 2 dp apart, the family's group gap. Long path lists stay lazy
  * instead of composing every row in a single section item.
  */
-internal fun Modifier.pathsGroupedRowGap(isFirst: Boolean): Modifier {
+fun Modifier.pathsGroupedRowGap(isFirst: Boolean): Modifier {
     if (isFirst) return this
     return layout { measurable, constraints ->
         val pull = (TrailSenseSpacing.lg - TrailSenseSpacing.xxs).roundToPx()

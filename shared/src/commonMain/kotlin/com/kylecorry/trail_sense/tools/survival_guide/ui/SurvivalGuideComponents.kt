@@ -43,7 +43,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 
 /** A tappable surface that settles in slightly while pressed, the family's press feedback. */
 @Composable
-internal fun SurvivalGuidePressableSurface(
+fun SurvivalGuidePressableSurface(
     onClick: () -> Unit,
     shape: Shape,
     color: Color,
@@ -88,7 +88,7 @@ internal fun SurvivalGuidePressableSurface(
  */
 @Composable
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
-internal fun SurvivalGuideGroupRow(
+fun SurvivalGuideGroupRow(
     title: String,
     position: TrailSenseGroupPosition,
     onClick: () -> Unit,

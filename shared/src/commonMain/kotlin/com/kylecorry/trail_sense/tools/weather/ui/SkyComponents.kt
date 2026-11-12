@@ -51,7 +51,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 
 /** A still expressive shape behind an icon (or a short text): only ever the screen's live object or empty state. */
 @Composable
-internal fun SkyFocalShape(
+fun SkyFocalShape(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     text: String? = null,
@@ -95,7 +95,7 @@ internal fun SkyFocalShape(
  * trailing value. [iconContainerColor] changes only for meaning (an error row), never for decoration.
  */
 @Composable
-internal fun SkyValueRow(
+fun SkyValueRow(
     title: String,
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
@@ -211,7 +211,7 @@ private fun SkyPill(
  * kept inside the chart's edges.
  */
 @Composable
-internal fun SkyChartCallout(fraction: Float, text: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+fun SkyChartCallout(fraction: Float, text: String, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     androidx.compose.ui.layout.Layout(
         content = {
             SkyPill(

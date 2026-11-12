@@ -32,7 +32,8 @@ class SurvivalGuideSearch(context: Context) {
         private const val MIN_SUBSECTION_SCORE = 0.6f
 
         fun shouldUseSubsection(result: SurvivalGuideSearchResult): Boolean {
-            return result.bestSubsection != null && result.bestSubsection.score >= MIN_SUBSECTION_SCORE
+            val subsection = result.bestSubsection ?: return false
+            return subsection.score >= MIN_SUBSECTION_SCORE
         }
 
     }
