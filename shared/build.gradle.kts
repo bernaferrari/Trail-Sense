@@ -45,6 +45,11 @@ kotlin {
             implementation("com.materialkolor:material-kolor-material3:6.0.0")
         }
 
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+        }
+
         androidMain.dependencies {
             api(libs.compose.foundation)
             api(libs.compose.material3)
