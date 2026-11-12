@@ -2,7 +2,8 @@
 
 package com.kylecorry.trail_sense.shared.views
 
-import android.provider.Settings
+import com.kylecorry.trail_sense.shared.views.compose.rememberSystemAnimationsEnabled
+
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -41,7 +42,6 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import kotlin.math.PI
@@ -433,15 +433,8 @@ private fun rememberLoop(
     reverse: Boolean = false,
     easing: Easing = LinearEasing
 ): State<Float> {
-    val context = LocalContext.current
     val inspecting = LocalInspectionMode.current
-    val animate = remember(context, inspecting) {
-        !inspecting && Settings.Global.getFloat(
-            context.contentResolver,
-            Settings.Global.ANIMATOR_DURATION_SCALE,
-            1f
-        ) > 0f
-    }
+    val animate = !inspecting && rememberSystemAnimationsEnabled()
     return if (animate) {
         rememberInfiniteTransition(label = "illustration").animateFloat(
             initialValue = 0f,
