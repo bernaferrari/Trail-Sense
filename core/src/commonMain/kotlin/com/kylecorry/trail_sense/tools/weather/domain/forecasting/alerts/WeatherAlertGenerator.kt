@@ -3,9 +3,9 @@ package com.kylecorry.trail_sense.tools.weather.domain.forecasting.alerts
 import com.kylecorry.sol.science.meteorology.WeatherCondition
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherAlert
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.domain.TemperatureThresholds
 
-internal class WeatherAlertGenerator : IWeatherAlertGenerator {
+class WeatherAlertGenerator : IWeatherAlertGenerator {
     override fun getAlerts(weather: CurrentWeather): List<WeatherAlert> {
         val alerts = mutableListOf<WeatherAlert>()
 
@@ -23,11 +23,11 @@ internal class WeatherAlertGenerator : IWeatherAlertGenerator {
 
         val alerts = mutableListOf<WeatherAlert>()
 
-        if (temperature.low.celsius().value <= WeatherSubsystem.COLD) {
+        if (temperature.low.celsius().value <= TemperatureThresholds.COLD) {
             alerts.add(WeatherAlert.Cold)
         }
 
-        if (temperature.high.celsius().value >= WeatherSubsystem.HOT) {
+        if (temperature.high.celsius().value >= TemperatureThresholds.HOT) {
             alerts.add(WeatherAlert.Hot)
         }
 

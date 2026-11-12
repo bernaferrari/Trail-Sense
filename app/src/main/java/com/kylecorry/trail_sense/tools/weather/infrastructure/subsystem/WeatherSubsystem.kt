@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem
 
+import com.kylecorry.trail_sense.tools.weather.domain.TemperatureThresholds
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.time.today
 
@@ -434,8 +435,8 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
             return instance!!
         }
 
-        const val COLD = 5f
-        const val HOT = 32.5f
+        const val COLD = TemperatureThresholds.COLD
+        const val HOT = TemperatureThresholds.HOT
 
     }
 

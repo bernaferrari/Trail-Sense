@@ -30,7 +30,7 @@ import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlin.math.absoluteValue
 
-internal class WeatherForecaster(
+class WeatherForecaster(
     private val temperatureService: ITemperatureService,
     prefs: IWeatherPreferences,
     private val forecastSource: () -> ForecastSource = { ForecastSource.Sol }
