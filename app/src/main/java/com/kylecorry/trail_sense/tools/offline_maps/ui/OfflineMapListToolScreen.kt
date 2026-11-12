@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
 import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import android.content.Context
@@ -239,7 +241,7 @@ fun OfflineMapListToolScreen(
 
     fun delete(map: IMap) = runAndRefresh { DeleteMapCommand(viewModel.mapService).execute(map) }
     fun rename(map: IMap) = runAndRefresh { RenameMapCommand(viewModel.mapService).execute(map) }
-    fun move(map: IMap) = runAndRefresh { MoveMapCommand(context, viewModel.mapService).execute(map) }
+    fun move(map: IMap) = runAndRefresh { MoveMapCommand(AppHost.from(context), viewModel.mapService).execute(map) }
 
     fun view(map: IMap) {
         when (map) {

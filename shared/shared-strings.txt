@@ -666,3 +666,7 @@ screen_flashlight
 disclaimer_estimated_tide
 tide_instructions
 tide_user_guide_recommendation
+move
+moved_to
+no_group
+photo_maps

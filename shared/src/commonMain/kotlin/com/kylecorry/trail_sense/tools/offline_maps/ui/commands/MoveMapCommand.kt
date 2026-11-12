@@ -1,9 +1,11 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
-import android.content.Context
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
@@ -11,15 +13,15 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapPickers
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
-class MoveMapCommand(private val context: Context, private val service: MapService) :
+class MoveMapCommand(private val host: AppHost, private val service: MapService) :
     CoroutineCommand<IMap> {
     override suspend fun execute(value: IMap) {
+        val strings = getAppService<AppStrings>()
         val results = MapPickers.pickGroup(
-            context,
+            host,
             null,
-            context.getString(R.string.move),
+            strings.get(Res.string.move),
             initialGroup = value.parentId
         ) {
             it.filter {
@@ -41,13 +43,10 @@ class MoveMapCommand(private val context: Context, private val service: MapServi
             is VectorMap -> service.add(value.copy(parentId = results.second?.id))
         }
 
-        val groupName = results.second?.name ?: context.getString(R.string.no_group)
+        val groupName = results.second?.name ?: strings.get(Res.string.no_group)
 
         onMain {
-            Alerts.snackbar(
-                context,
-                context.getString(R.string.moved_to, groupName)
-            )
+            Alerts.snackbar(host, strings.get(Res.string.moved_to, groupName))
         }
     }
 }
