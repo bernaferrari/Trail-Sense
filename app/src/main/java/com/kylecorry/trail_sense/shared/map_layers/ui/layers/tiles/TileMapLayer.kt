@@ -5,18 +5,13 @@ import kotlin.time.Duration
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.Rect
+import androidx.compose.ui.graphics.Matrix
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
 import android.os.Build
 import android.os.Bundle
-import androidx.core.graphics.BlendModeCompat
-import androidx.core.graphics.setBlendMode
-import androidx.core.graphics.withMatrix
-import androidx.core.graphics.withSave
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
+import com.kylecorry.trail_sense.shared.canvas.setPolyToPoly
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.concurrency.BackgroundTask
@@ -70,23 +65,12 @@ open class TileMapLayer<T : TileSource>(
 
     private var loader: TileLoader? = null
     private val queue = TileQueue()
-    private val layerPaint = Paint()
-    private val tilePaint = Paint().apply {
-        isAntiAlias = false
-        isFilterBitmap = true
-    }
     var multiplyAlpha: Int = 255
-        set(value) {
-            field = value
-            layerPaint.alpha = value
-        }
     private var updateListener: (() -> Unit)? = null
     private var zoomOffset: Int = 0
     private val renderMatrix = Matrix()
     private val srcPoints = FloatArray(8)
     private val dstPoints = FloatArray(8)
-    private val srcRect = Rect()
-    private val destRect = Rect()
     private val clipPath = Path()
     protected var layerPreferences: Bundle = Bundle()
     private var featureId: String? = null
@@ -120,11 +104,6 @@ open class TileMapLayer<T : TileSource>(
     }
 
     init {
-        if (shouldMultiply && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            layerPaint.setBlendMode(BlendModeCompat.MULTIPLY)
-        } else {
-            layerPaint.setBlendMode(BlendModeCompat.SRC_OVER)
-        }
         taskRunner.addTask { _: Context, _: Rectangle, _: CoordinateBounds, projection: IMapViewProjection ->
             queue.setMapProjection(projection)
         }
@@ -150,24 +129,20 @@ open class TileMapLayer<T : TileSource>(
         refresh()
     }
 
-    override fun draw(context: Context, drawer: ICanvasDrawer, map: IMapView) {
+    override fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
         // Avoid drawing while in safe mode
         if (SafeMode.isEnabled()) {
             return
         }
 
         // Render loaded tiles
-        var shouldSaveLayer = false
-        try {
-            if (shouldMultiply) {
-                drawer.canvas.saveLayer(null, layerPaint)
-                shouldSaveLayer = true
+        if (shouldMultiply) {
+            // Before Android 10 there is no separable multiply blend, so the layer is only made translucent
+            drawer.withLayer(multiplyAlpha, multiply = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                renderTiles(context, drawer, map)
             }
-            renderTiles(context, drawer.canvas, map)
-        } finally {
-            if (shouldSaveLayer) {
-                drawer.pop()
-            }
+        } else {
+            renderTiles(context, drawer, map)
         }
     }
 
@@ -184,7 +159,7 @@ open class TileMapLayer<T : TileSource>(
         )
     }
 
-    override fun drawOverlay(context: Context, drawer: ICanvasDrawer, map: IMapView) {
+    override fun drawOverlay(context: Context, drawer: MapDrawer, map: IMapView) {
         // Do nothing
     }
 
@@ -196,11 +171,11 @@ open class TileMapLayer<T : TileSource>(
         updateListener?.invoke()
     }
 
-    override fun onClick(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
+    override fun onClick(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
         return false
     }
 
-    private fun renderTiles(context: Context, canvas: Canvas, map: IMapView) {
+    private fun renderTiles(context: Context, drawer: MapDrawer, map: IMapView) {
         val bounds = map.mapBounds
         val projection = map.mapProjection
         val desiredTiles = visibleTiles.get(bounds, projection.zoom.roundToInt(), zoomOffset)
@@ -237,6 +212,9 @@ open class TileMapLayer<T : TileSource>(
         }
         wasOverTileLimit = isOverTileLimit
 
+        // Tiles are drawn hard-edged so neighbors meet without seams, untinted, each with its own fade
+        drawer.noTint()
+        drawer.noSmooth()
         getTilesToRender(desiredTiles).forEach { renderTile ->
             renderTile.imageTile.withImage { bitmap ->
                 bitmap ?: return@withImage
@@ -245,17 +223,19 @@ open class TileMapLayer<T : TileSource>(
                     if (clipTile != null) {
                         renderTileClipped(
                             renderTile.imageTile,
-                            canvas,
+                            drawer,
                             projection,
                             bitmap,
                             clipTile
                         )
                     } else {
-                        renderTile(renderTile.imageTile, canvas, projection, bitmap)
+                        renderTile(renderTile.imageTile, drawer, projection, bitmap)
                     }
                 }
             }
         }
+        drawer.opacity(255)
+        drawer.smooth()
         if (hasFadingTiles) {
             notifyListeners()
         }
@@ -343,8 +323,8 @@ open class TileMapLayer<T : TileSource>(
         topRight: PixelCoordinate,
         bottomLeft: PixelCoordinate,
         bottomRight: PixelCoordinate,
-        canvasWidth: Int,
-        canvasHeight: Int
+        canvasWidth: Float,
+        canvasHeight: Float
     ): Boolean {
         val buffer = canvasHeight.coerceAtLeast(canvasWidth) * 2
         val minX = minOf(topLeft.x, bottomLeft.x)
@@ -360,7 +340,7 @@ open class TileMapLayer<T : TileSource>(
 
     private fun renderTile(
         imageTile: ImageTile,
-        canvas: Canvas,
+        drawer: MapDrawer,
         projection: IMapViewProjection,
         bitmap: Bitmap
     ) {
@@ -380,8 +360,8 @@ open class TileMapLayer<T : TileSource>(
                 topRightPixel,
                 bottomLeftPixel,
                 bottomRightPixel,
-                canvas.width,
-                canvas.height
+                drawer.width,
+                drawer.height
             )
         ) {
             return
@@ -419,42 +399,37 @@ open class TileMapLayer<T : TileSource>(
         dstPoints[6] = bottomRightPixel.x
         dstPoints[7] = bottomRightPixel.y
 
-        renderMatrix.reset()
-        renderMatrix.setPolyToPoly(srcPoints, 0, dstPoints, 0, 4)
+        if (!renderMatrix.setPolyToPoly(srcPoints, dstPoints)) {
+            return
+        }
 
-        canvas.withMatrix(renderMatrix) {
-            // The region of the bitmap that is valid (no borders)
-            srcRect.set(
+        // Fade the tile in
+        val alpha = imageTile.getAlpha()
+        // There are still tiles being faded in, so keep re-rendering the map
+        if (alpha != 255) {
+            hasFadingTiles = true
+        }
+        drawer.opacity(alpha)
+
+        drawer.withTransform(renderMatrix) {
+            // Only the region of the bitmap inside its border, drawn at its own size
+            drawer.image(
+                bitmap.asImageBitmap(),
                 borderPixels,
                 borderPixels,
-                bitmap.width - borderPixels,
-                bitmap.height - borderPixels
-            )
-            // The actual bitmap dimensions (after cropping)
-            destRect.set(
-                0,
-                0,
                 actualWidth,
-                actualHeight
+                actualHeight,
+                0f,
+                0f,
+                actualWidth.toFloat(),
+                actualHeight.toFloat()
             )
-
-            // Calculate alpha for fade-in effect
-            val originalAlpha = tilePaint.alpha
-            tilePaint.alpha = imageTile.getAlpha()
-            // There are still tiles being faded in, so keep re-rendering the map
-            if (tilePaint.alpha != 255) {
-                hasFadingTiles = true
-            }
-
-            drawBitmap(bitmap, srcRect, destRect, tilePaint)
-
-            tilePaint.alpha = originalAlpha
         }
     }
 
     private fun renderTileClipped(
         imageTile: ImageTile,
-        canvas: Canvas,
+        drawer: MapDrawer,
         projection: IMapViewProjection,
         bitmap: Bitmap,
         clipTile: Tile
@@ -465,15 +440,18 @@ open class TileMapLayer<T : TileSource>(
         val clipBottomRight = corners[2]
         val clipBottomLeft = corners[3]
 
-        canvas.withSave {
+        drawer.push()
+        try {
             clipPath.rewind()
             clipPath.moveTo(clipTopLeft.x, clipTopLeft.y)
             clipPath.lineTo(clipTopRight.x, clipTopRight.y)
             clipPath.lineTo(clipBottomRight.x, clipBottomRight.y)
             clipPath.lineTo(clipBottomLeft.x, clipBottomLeft.y)
             clipPath.close()
-            clipPath(clipPath)
-            renderTile(imageTile, this, projection, bitmap)
+            drawer.clip(clipPath)
+            renderTile(imageTile, drawer, projection, bitmap)
+        } finally {
+            drawer.pop()
         }
     }
 

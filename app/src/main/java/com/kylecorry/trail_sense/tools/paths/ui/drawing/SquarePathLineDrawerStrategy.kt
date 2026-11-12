@@ -1,15 +1,16 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapPathEffects
 class SquarePathLineDrawerStrategy : IPathLineDrawerStrategy {
     override fun draw(
-        canvasDrawer: ICanvasDrawer,
+        canvasDrawer: MapDrawer,
         color: Int,
         strokeScale: Float,
-        block: ICanvasDrawer.() -> Unit
+        block: MapDrawer.() -> Unit
     ) {
         val size = 8f / strokeScale
-        val dotted = SquarePathEffect(size, size * 2)
+        val dotted = MapPathEffects.square(size, size * 2)
         canvasDrawer.apply {
             pathEffect(dotted)
             noStroke()

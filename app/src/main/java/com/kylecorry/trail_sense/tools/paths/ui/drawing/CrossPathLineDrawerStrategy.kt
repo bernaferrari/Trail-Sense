@@ -1,15 +1,16 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapPathEffects
 class CrossPathLineDrawerStrategy : IPathLineDrawerStrategy {
     override fun draw(
-        canvasDrawer: ICanvasDrawer,
+        canvasDrawer: MapDrawer,
         color: Int,
         strokeScale: Float,
-        block: ICanvasDrawer.() -> Unit
+        block: MapDrawer.() -> Unit
     ) {
         val size = 12f / strokeScale
-        val effect = CrossPathEffect(size, size * 2)
+        val effect = MapPathEffects.cross(size, size * 2)
         canvasDrawer.apply {
             pathEffect(effect)
             noFill()

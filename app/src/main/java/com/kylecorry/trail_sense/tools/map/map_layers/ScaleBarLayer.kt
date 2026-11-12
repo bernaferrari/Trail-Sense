@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Path
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import androidx.compose.ui.graphics.Path
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.FormatService
@@ -31,24 +31,24 @@ class ScaleBarLayer : OverlayLayer() {
 
     override fun drawOverlay(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView
     ) {
         drawer.noFill()
 
         val scaleSize =
-            distanceScale.getScaleDistance(units, drawer.canvas.width / 2f, map.resolutionPixels)
+            distanceScale.getScaleDistance(units, drawer.width / 2f, map.resolutionPixels)
 
         scaleBar.reset()
         distanceScale.getScaleBar(scaleSize, map.resolutionPixels, scaleBar)
-        val start = drawer.canvas.width - drawer.dp(16f) - drawer.pathWidth(scaleBar)
-        val y = drawer.canvas.height - drawer.dp(bottomMargin)
+        val start = drawer.width - drawer.dp(16f) - drawer.pathWidth(scaleBar)
+        val y = drawer.height - drawer.dp(bottomMargin)
         drawer.push()
         drawer.translate(start, y)
-        drawer.stroke(Color.BLACK)
+        drawer.stroke(ColorInts.Black)
         drawer.strokeWeight(8f)
         drawer.path(scaleBar)
-        drawer.stroke(Color.WHITE)
+        drawer.stroke(ColorInts.White)
         drawer.strokeWeight(4f)
         drawer.path(scaleBar)
         drawer.pop()
@@ -56,8 +56,8 @@ class ScaleBarLayer : OverlayLayer() {
         drawer.textMode(TextMode.Corner)
         drawer.textSize(drawer.sp(12f))
         drawer.strokeWeight(4f)
-        drawer.stroke(Color.BLACK)
-        drawer.fill(Color.WHITE)
+        drawer.stroke(ColorInts.Black)
+        drawer.fill(ColorInts.White)
         val scaleText =
             formatter.formatDistance(scaleSize, Units.getDecimalPlaces(scaleSize.units), false)
         drawer.text(

@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Matrix
-import android.graphics.Path
-import androidx.core.graphics.withMatrix
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import androidx.compose.ui.graphics.Matrix
+import com.kylecorry.trail_sense.shared.canvas.mapPoints
+import androidx.compose.ui.graphics.Path
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.StrokeCap
 import com.kylecorry.andromeda.canvas.StrokeJoin
 import com.kylecorry.andromeda.canvas.TextMode
@@ -23,7 +23,7 @@ import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.canvas.LineClipper
 import com.kylecorry.trail_sense.shared.extensions.DEFAULT_LINE_STRING_STROKE_WEIGHT_DP
-import com.kylecorry.trail_sense.shared.extensions.drawLines
+import com.kylecorry.trail_sense.shared.canvas.drawLines
 import com.kylecorry.trail_sense.shared.extensions.getColor
 import com.kylecorry.trail_sense.shared.extensions.getLineStyle
 import com.kylecorry.trail_sense.shared.extensions.getName
@@ -81,8 +81,8 @@ class GeoJsonLineStringRenderer : FeatureRenderer() {
     fun setBackgroundColor(color: PathBackgroundColor) {
         backgroundColor = when (color) {
             PathBackgroundColor.None -> null
-            PathBackgroundColor.Black -> Color.BLACK
-            PathBackgroundColor.White -> Color.WHITE
+            PathBackgroundColor.Black -> ColorInts.Black
+            PathBackgroundColor.White -> ColorInts.White
         }
     }
 
@@ -173,7 +173,7 @@ class GeoJsonLineStringRenderer : FeatureRenderer() {
                 coordinates,
                 lineSegments,
                 name,
-                it.getColor() ?: Color.TRANSPARENT,
+                it.getColor() ?: ColorInts.Transparent,
                 it.getLineStyle() ?: LineStyle.Solid,
                 (it.getStrokeWeight()
                     ?: DEFAULT_LINE_STRING_STROKE_WEIGHT_DP) / DEFAULT_LINE_STRING_STROKE_WEIGHT_DP,
@@ -236,7 +236,7 @@ class GeoJsonLineStringRenderer : FeatureRenderer() {
 
     override fun draw(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         features: List<GeoJsonFeature>
     ) {
@@ -259,7 +259,7 @@ class GeoJsonLineStringRenderer : FeatureRenderer() {
 
                 val pathDrawer = factory.create(path.lineStyle)
 
-                drawer.canvas.withMatrix(matrix) {
+                drawer.withTransform(matrix) {
                     drawer.strokeJoin(StrokeJoin.Round)
                     drawer.strokeCap(StrokeCap.Round)
 
@@ -294,13 +294,13 @@ class GeoJsonLineStringRenderer : FeatureRenderer() {
         }
 
         drawer.noStroke()
-        drawer.fill(Color.WHITE)
+        drawer.fill(ColorInts.White)
         drawer.noPathEffect()
     }
 
 
     private fun drawLabels(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         path: PrecomputedLineString,
         matrix: Matrix
@@ -315,8 +315,8 @@ class GeoJsonLineStringRenderer : FeatureRenderer() {
 
             drawer.strokeWeight(strokeWeight)
             drawer.textMode(TextMode.Center)
-            drawer.stroke(Color.WHITE)
-            drawer.fill(Color.BLACK)
+            drawer.stroke(ColorInts.White)
+            drawer.fill(ColorInts.Black)
             drawer.noPathEffect()
 
             val placements = path.labelPlacements

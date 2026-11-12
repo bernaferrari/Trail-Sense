@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
 import android.content.Context
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.sol.math.geometry.Rectangle
@@ -46,12 +46,12 @@ abstract class FeatureRenderer : IGeoJsonFeatureRenderer {
 
     abstract fun draw(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         features: List<GeoJsonFeature>
     )
 
-    override fun draw(context: Context, drawer: ICanvasDrawer, map: IMapView) {
+    override fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
         // Avoid drawing while in safe mode
         if (SafeMode.isEnabled()) {
             return
@@ -100,7 +100,7 @@ abstract class FeatureRenderer : IGeoJsonFeatureRenderer {
     }
 
     override fun onClick(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         pixel: PixelCoordinate
     ): Boolean {

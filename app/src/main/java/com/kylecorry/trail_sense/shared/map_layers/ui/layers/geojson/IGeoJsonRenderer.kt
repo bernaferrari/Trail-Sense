@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
 import android.content.Context
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.shared.map_layers.MapViewState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 
 interface IGeoJsonRenderer {
     fun setHasUpdateListener(listener: (() -> Unit)?)
-    fun draw(context: Context, drawer: ICanvasDrawer, map: IMapView)
+    fun draw(context: Context, drawer: MapDrawer, map: IMapView)
     fun onViewChanged(state: MapViewState)
     fun invalidate()
-    fun onClick(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean
+    fun onClick(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean
 }

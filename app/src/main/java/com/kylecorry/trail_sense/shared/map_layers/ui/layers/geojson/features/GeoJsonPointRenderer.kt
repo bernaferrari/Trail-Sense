@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
 import android.content.Context
-import android.graphics.Color
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -28,7 +28,7 @@ import com.kylecorry.trail_sense.shared.extensions.getSizeUnit
 import com.kylecorry.trail_sense.shared.extensions.getStrokeColor
 import com.kylecorry.trail_sense.shared.extensions.getStrokeWeight
 import com.kylecorry.trail_sense.shared.extensions.isClickable
-import com.kylecorry.trail_sense.shared.getBounds
+import com.kylecorry.trail_sense.shared.canvas.getBounds
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.SizeUnit
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toPixel
@@ -36,7 +36,7 @@ import com.kylecorry.trail_sense.shared.toVector2
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.beacons.domain.icon
-import com.kylecorry.trail_sense.tools.navigation.ui.DrawerBitmapLoader
+import com.kylecorry.trail_sense.shared.icons.toImageBitmap
 import com.kylecorry.trail_sense.tools.navigation.ui.markers.BitmapMapMarker
 import com.kylecorry.trail_sense.tools.navigation.ui.markers.CircleMapMarker
 import com.kylecorry.trail_sense.tools.navigation.ui.markers.MapMarker
@@ -44,15 +44,14 @@ import com.kylecorry.trail_sense.tools.navigation.ui.markers.TextMapMarker
 
 class GeoJsonPointRenderer : FeatureRenderer() {
 
-    private var lastHeight = 0
-    private var lastWidth = 0
+    private var lastHeight = 0f
+    private var lastWidth = 0f
     private var cachedBounds = Rectangle(0f, 0f, 0f, 0f)
     private var markers = listOf<MapMarker>()
     private var showLabels = false
 
     private var onClickListener: (feature: GeoJsonFeature) -> Boolean = { false }
 
-    private var bitmapLoader: DrawerBitmapLoader? = null
 
     private var featuresChanged = false
     private var selectedFeatureId: String? = null
@@ -85,11 +84,7 @@ class GeoJsonPointRenderer : FeatureRenderer() {
 
 
     // TODO: Instead of map markers, render the geojson directly
-    private fun convertFeaturesToMarkers(drawer: ICanvasDrawer, features: List<GeoJsonFeature>) {
-        if (bitmapLoader == null) {
-            bitmapLoader = DrawerBitmapLoader(drawer)
-        }
-
+    private fun convertFeaturesToMarkers(drawer: MapDrawer, features: List<GeoJsonFeature>) {
         if (featuresChanged) {
             val newMarkers = mutableListOf<MapMarker>()
             features.forEach { feature ->
@@ -118,8 +113,8 @@ class GeoJsonPointRenderer : FeatureRenderer() {
                     newMarkers.add(
                         CircleMapMarker(
                             if (moveWithUserLocation) null else point.coordinate,
-                            Color.TRANSPARENT,
-                            Color.BLACK,
+                            ColorInts.Transparent,
+                            ColorInts.Black,
                             255,
                             ringSize + HIGHLIGHT_RING_SIZE,
                             HIGHLIGHT_OUTER_STROKE_WEIGHT,
@@ -133,8 +128,8 @@ class GeoJsonPointRenderer : FeatureRenderer() {
                     newMarkers.add(
                         CircleMapMarker(
                             if (moveWithUserLocation) null else point.coordinate,
-                            Color.TRANSPARENT,
-                            Color.WHITE,
+                            ColorInts.Transparent,
+                            ColorInts.White,
                             255,
                             ringSize + HIGHLIGHT_RING_SIZE,
                             HIGHLIGHT_INNER_STROKE_WEIGHT,
@@ -149,7 +144,7 @@ class GeoJsonPointRenderer : FeatureRenderer() {
                     newMarkers.add(
                         CircleMapMarker(
                             if (moveWithUserLocation) null else point.coordinate,
-                            feature.getColor() ?: Color.TRANSPARENT,
+                            feature.getColor() ?: ColorInts.Transparent,
                             feature.getStrokeColor(),
                             feature.getOpacity(),
                             if (scaleToLocationAccuracy) 1f else size,
@@ -166,7 +161,7 @@ class GeoJsonPointRenderer : FeatureRenderer() {
                 }
 
                 if (iconRes != null) {
-                    val iconBitmap = bitmapLoader!!.load(iconRes, (iconSize * 2).toInt())
+                    val iconBitmap = iconRes.toImageBitmap((iconSize * 2).toInt())
                     newMarkers.add(
                         BitmapMapMarker(
                             if (moveWithUserLocation) null else point.coordinate,
@@ -202,9 +197,9 @@ class GeoJsonPointRenderer : FeatureRenderer() {
 
                 if (showLabels && !name.isNullOrBlank()) {
                     val color = Colors.mostContrastingColor(
-                        Color.WHITE,
-                        Color.BLACK,
-                        feature.getColor() ?: Color.BLACK
+                        ColorInts.White,
+                        ColorInts.Black,
+                        feature.getColor() ?: ColorInts.Black
                     )
                     newMarkers.add(
                         TextMapMarker(
@@ -229,7 +224,7 @@ class GeoJsonPointRenderer : FeatureRenderer() {
 
     override fun draw(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         features: List<GeoJsonFeature>
     ) {
@@ -253,7 +248,7 @@ class GeoJsonPointRenderer : FeatureRenderer() {
         }
     }
 
-    override fun onClick(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
+    override fun onClick(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
         val points = markers.map {
             val anchor = map.toPixel(it.location ?: map.userLocation)
             val radius = it.calculateSizeInPixels(
@@ -282,10 +277,10 @@ class GeoJsonPointRenderer : FeatureRenderer() {
         return false
     }
 
-    private fun getBounds(drawer: ICanvasDrawer): Rectangle {
-        if (drawer.canvas.height != lastHeight || drawer.canvas.width != lastWidth) {
-            lastHeight = drawer.canvas.height
-            lastWidth = drawer.canvas.width
+    private fun getBounds(drawer: MapDrawer): Rectangle {
+        if (drawer.height != lastHeight || drawer.width != lastWidth) {
+            lastHeight = drawer.height
+            lastWidth = drawer.width
             // Rotating by map rotation wasn't working around 90/270 degrees - this is a workaround
             // It will just render slightly more of the path than needed, but never less (since 45 is when the area is at its largest)
             cachedBounds = drawer.getBounds(45f)
@@ -297,7 +292,6 @@ class GeoJsonPointRenderer : FeatureRenderer() {
         markers = emptyList()
         super.setFeatures(emptyList())
         featuresChanged = true
-        bitmapLoader = null
     }
 
     companion object {

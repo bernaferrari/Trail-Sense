@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
-import android.graphics.Matrix
+import androidx.compose.ui.graphics.Matrix
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
-import kotlin.math.sqrt
+import com.kylecorry.trail_sense.shared.canvas.scaleX
+import com.kylecorry.trail_sense.shared.canvas.setPolyToPoly
 
 internal class GeoJsonRenderTransform {
     val matrix = Matrix()
     var scale = 1f
         private set
     private val destination = FloatArray(8)
-    private val values = FloatArray(9)
     private var lastProjection: IMapViewProjection? = null
     private var lastBounds: CoordinateBounds? = null
     private var lastCorners: FloatArray? = null
@@ -31,12 +31,8 @@ internal class GeoJsonRenderTransform {
         destination[5] = se.y
         destination[6] = sw.x
         destination[7] = sw.y
-        matrix.reset()
-        matrix.setPolyToPoly(corners, 0, destination, 0, 4)
-        matrix.getValues(values)
-        val scaleX = values[Matrix.MSCALE_X]
-        val skewY = values[Matrix.MSKEW_Y]
-        scale = sqrt(scaleX * scaleX + skewY * skewY)
+        matrix.setPolyToPoly(corners, destination)
+        scale = matrix.scaleX
         lastProjection = projection
         lastBounds = bounds
         lastCorners = corners

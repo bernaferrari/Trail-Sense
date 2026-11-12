@@ -4,7 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Path
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
 import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Resources
@@ -71,15 +75,10 @@ class MapToolWidgetView : ChartToolWidgetViewBase() {
         mapView.backgroundColorOverride = Color.rgb(127, 127, 127)
         mapView.clipPath = Path().apply {
             if (drawAsCircle) {
-                addCircle(size / 2f, size / 2f, size / 2f, Path.Direction.CW)
+                addOval(Rect(Offset(size / 2f, size / 2f), size / 2f))
             } else {
                 addRoundRect(
-                    0f,
-                    0f,
-                    size.toFloat(),
-                    size.toFloat(),
-                    FloatArray(8) { cornerRadius },
-                    Path.Direction.CW
+                    RoundRect(0f, 0f, size.toFloat(), size.toFloat(), CornerRadius(cornerRadius))
                 )
             }
         }

@@ -3,7 +3,8 @@ package com.kylecorry.trail_sense.tools.map.ui
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Canvas as AndroidCanvas
-import android.graphics.Path
+import androidx.compose.ui.graphics.Canvas as ComposeCanvas
+import androidx.compose.ui.graphics.Path
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -12,14 +13,13 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
-import com.kylecorry.andromeda.canvas.CanvasDrawer
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.ComposeMapDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.sol.science.geography.projections.IMapProjection
@@ -59,7 +59,7 @@ class MapView(private val context: Context) : IMapView {
     var clipPath: Path? by mutableStateOf(null)
     var backgroundColorOverride: Int? by mutableStateOf(null)
 
-    private lateinit var drawer: ICanvasDrawer
+    private lateinit var drawer: ComposeMapDrawer
 
     /** Bumped when a layer or a caller asks for a redraw; the camera's own state redraws on its own. */
     private var renderVersion by mutableIntStateOf(0)
@@ -198,11 +198,10 @@ class MapView(private val context: Context) : IMapView {
                     }
             ) {
                 renderVersion
-                if (::drawer.isInitialized) {
-                    drawer.canvas = drawContext.canvas.nativeCanvas
-                } else {
-                    drawer = CanvasDrawer(context, drawContext.canvas.nativeCanvas)
+                if (!::drawer.isInitialized) {
+                    drawer = ComposeMapDrawer(density, fontScale)
                 }
+                drawer.setCanvas(drawContext.canvas, size.width, size.height)
                 setupIfNeeded()
                 render()
             }
@@ -252,11 +251,13 @@ class MapView(private val context: Context) : IMapView {
     }
 
     fun draw(canvas: AndroidCanvas) {
-        if (::drawer.isInitialized) {
-            drawer.canvas = canvas
-        } else {
-            drawer = CanvasDrawer(context, canvas)
+        if (!::drawer.isInitialized) {
+            drawer = ComposeMapDrawer(
+                context.resources.displayMetrics.density,
+                context.resources.configuration.fontScale
+            )
         }
+        drawer.setCanvas(ComposeCanvas(canvas), canvas.width.toFloat(), canvas.height.toFloat())
         setupIfNeeded()
         render()
     }

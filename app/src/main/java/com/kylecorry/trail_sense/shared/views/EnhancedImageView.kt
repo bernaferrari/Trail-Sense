@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import android.graphics.Path
 import android.graphics.PointF
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -10,11 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import com.kylecorry.andromeda.canvas.CanvasDrawer
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.ComposeMapDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.geometry.Size
@@ -38,7 +38,9 @@ open class EnhancedImageView(
     }
 
     private var backgroundColorOverride by mutableStateOf<Int?>(null)
-    protected lateinit var drawer: ICanvasDrawer
+    private lateinit var composeDrawer: ComposeMapDrawer
+    protected val drawer: MapDrawer
+        get() = composeDrawer
     private var isSetup = false
     private var renderVersion by mutableIntStateOf(0)
 
@@ -101,12 +103,10 @@ open class EnhancedImageView(
             ) {
                 renderVersion
                 drawIntoCanvas {
-                    val canvas = it.nativeCanvas
-                    if (::drawer.isInitialized) {
-                        drawer.canvas = canvas
-                    } else {
-                        drawer = CanvasDrawer(context, canvas)
+                    if (!::composeDrawer.isInitialized) {
+                        composeDrawer = ComposeMapDrawer(density, fontScale)
                     }
+                    composeDrawer.setCanvas(it, size.width, size.height)
                     renderOverlay()
                 }
             }
@@ -153,13 +153,7 @@ open class EnhancedImageView(
             rewind()
             val topLeft = toView(0f, 0f) ?: return@apply
             val bottomRight = toView(imageWidth.toFloat(), imageHeight.toFloat()) ?: return@apply
-            addRect(
-                topLeft.x,
-                topLeft.y,
-                bottomRight.x,
-                bottomRight.y,
-                Path.Direction.CW
-            )
+            addRect(Rect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y))
         }
 
         if (scale != lastScale) {

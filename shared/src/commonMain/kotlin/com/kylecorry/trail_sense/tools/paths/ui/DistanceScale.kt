@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.graphics.Path
+import androidx.compose.ui.graphics.Path
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 

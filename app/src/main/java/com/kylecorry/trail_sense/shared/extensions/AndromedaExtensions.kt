@@ -160,7 +160,7 @@ fun Path.drawLines(lines: FloatArray, smooth: Boolean = false) {
         if (smooth) {
             val mx = (x1 + x2) / 2f
             val my = (y1 + y2) / 2f
-            quadTo(x1, x2, mx, my)
+            quadTo(x1, y1, mx, my)
         } else {
             lineTo(x2, y2)
         }

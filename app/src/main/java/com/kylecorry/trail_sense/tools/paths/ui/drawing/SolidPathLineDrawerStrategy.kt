@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 class SolidPathLineDrawerStrategy : IPathLineDrawerStrategy {
     override fun draw(
-        canvasDrawer: ICanvasDrawer,
+        canvasDrawer: MapDrawer,
         color: Int,
         strokeScale: Float,
-        block: ICanvasDrawer.() -> Unit
+        block: MapDrawer.() -> Unit
     ) {
         canvasDrawer.apply {
             noPathEffect()

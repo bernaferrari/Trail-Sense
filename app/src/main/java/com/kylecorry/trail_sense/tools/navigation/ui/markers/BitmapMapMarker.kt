@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.markers
 
-import android.graphics.Bitmap
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import androidx.compose.ui.graphics.ImageBitmap
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.ImageMode
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.units.Coordinate
 
 class BitmapMapMarker(
     override val location: Coordinate?,
-    private val bitmap: Bitmap,
+    private val bitmap: ImageBitmap,
     override val size: Float = 12f,
     override val rotation: Float? = null,
     override val rotateWithUser: Boolean = false,
@@ -17,7 +17,7 @@ class BitmapMapMarker(
     private val onClickFn: () -> Boolean = { false }
 ) : MapMarker {
     override fun draw(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         anchor: PixelCoordinate,
         scale: Float,
         rotation: Float,
@@ -52,7 +52,7 @@ class BitmapMapMarker(
     }
 
     override fun calculateSizeInPixels(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         metersPerPixel: Float,
         scale: Float
     ): Float {

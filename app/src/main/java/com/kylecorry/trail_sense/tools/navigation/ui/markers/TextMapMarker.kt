@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.markers
 
-import android.graphics.Color
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import androidx.annotation.ColorInt
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.units.Coordinate
@@ -22,7 +22,7 @@ class TextMapMarker(
     private val onClickFn: () -> Boolean = { false }
 ) : MapMarker {
     override fun draw(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         anchor: PixelCoordinate,
         scale: Float,
         rotation: Float,
@@ -30,13 +30,13 @@ class TextMapMarker(
     ) {
         val size = drawer.sp(this.size)
         drawer.noTint()
-        if (strokeColor != null && strokeColor != Color.TRANSPARENT) {
+        if (strokeColor != null && strokeColor != ColorInts.Transparent) {
             drawer.stroke(strokeColor)
             drawer.strokeWeight(drawer.dp(strokeWeight) * scale)
         } else {
             drawer.noStroke()
         }
-        if (color != Color.TRANSPARENT) {
+        if (color != ColorInts.Transparent) {
             drawer.fill(color)
             drawer.opacity(opacity)
             drawer.textSize(size * scale)
@@ -54,7 +54,7 @@ class TextMapMarker(
     }
 
     override fun calculateSizeInPixels(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         metersPerPixel: Float,
         scale: Float
     ): Float {

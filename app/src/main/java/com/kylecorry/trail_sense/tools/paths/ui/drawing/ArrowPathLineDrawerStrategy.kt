@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
-import com.kylecorry.andromeda.canvas.ArrowPathEffect
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapPathEffects
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 class ArrowPathLineDrawerStrategy : IPathLineDrawerStrategy {
     override fun draw(
-        canvasDrawer: ICanvasDrawer,
+        canvasDrawer: MapDrawer,
         color: Int,
         strokeScale: Float,
-        block: ICanvasDrawer.() -> Unit
+        block: MapDrawer.() -> Unit
     ) {
-        val arrow = ArrowPathEffect(6f / strokeScale, 10f / strokeScale)
+        val arrow = MapPathEffects.arrow(6f / strokeScale, 10f / strokeScale)
         canvasDrawer.apply {
             pathEffect(arrow)
             noStroke()

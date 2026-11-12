@@ -1,8 +1,9 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
-import android.graphics.Color
-import android.graphics.Path
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Path
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import kotlin.math.min
 
@@ -10,18 +11,18 @@ class MapMagnifier {
 
     private val clipPath = Path()
 
-    fun draw(drawer: ICanvasDrawer, touch: PixelCoordinate, drawMap: () -> Unit) {
-        val width = drawer.canvas.width
-        val size = min(width, drawer.canvas.height) / 4f
+    fun draw(drawer: MapDrawer, touch: PixelCoordinate, drawMap: () -> Unit) {
+        val width = drawer.width
+        val size = min(width, drawer.height) / 4f
         val left = getLeft(drawer, touch, size)
         val center = PixelCoordinate(left + size / 2f, size / 2f)
 
         clipPath.reset()
-        clipPath.addRect(left, 0f, left + size, size, Path.Direction.CW)
+        clipPath.addRect(Rect(left, 0f, left + size, size))
 
         drawer.push()
         drawer.clip(clipPath)
-        drawer.background(Color.BLACK)
+        drawer.background(ColorInts.Black)
         drawer.translate(center.x, center.y)
         drawer.scale(ZOOM)
         drawer.translate(-touch.x, -touch.y)
@@ -29,13 +30,13 @@ class MapMagnifier {
         drawer.pop()
 
         drawer.noFill()
-        drawer.stroke(Color.WHITE)
+        drawer.stroke(ColorInts.White)
         drawer.strokeWeight(drawer.dp(OUTLINE_DP))
         drawer.path(clipPath)
     }
 
-    private fun getLeft(drawer: ICanvasDrawer, touch: PixelCoordinate, size: Float): Float {
-        val width = drawer.canvas.width
+    private fun getLeft(drawer: MapDrawer, touch: PixelCoordinate, size: Float): Float {
+        val width = drawer.width
         return if (touch.x > width / 2f) {
             0f
         } else {

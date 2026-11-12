@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.map_layers.ui.layers
 
 import android.content.Context
 import android.os.Bundle
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.interpolation.Interpolation
 
@@ -40,13 +40,13 @@ interface ILayer {
      * Draw the layer on the map.
      * Transforms are already applied to the canvas.
      */
-    fun draw(context: Context, drawer: ICanvasDrawer, map: IMapView)
+    fun draw(context: Context, drawer: MapDrawer, map: IMapView)
 
     /**
      * Draw the overlay on the map.
      * This is drawn on top of the map and is not transformed.
      */
-    fun drawOverlay(context: Context, drawer: ICanvasDrawer, map: IMapView)
+    fun drawOverlay(context: Context, drawer: MapDrawer, map: IMapView)
 
     /**
      * Invalidate the layer
@@ -57,13 +57,13 @@ interface ILayer {
      * Called when the layer is clicked.
      * @return true if the click event was handled by this layer, false otherwise
      */
-    fun onClick(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean
+    fun onClick(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean
 
     /**
      * Called when the layer is long pressed.
      * @return true if the long press was handled by this layer, false otherwise
      */
-    fun onLongPress(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
+    fun onLongPress(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
         return false
     }
 

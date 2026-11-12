@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.shared.extensions
 
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.Color
 import com.kylecorry.andromeda.geojson.GeoJsonBoundingBox
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -133,8 +135,12 @@ fun GeoJsonFeature.getScaleToLocationAccuracy(): Boolean {
     return getBooleanProperty(GEO_JSON_PROPERTY_SCALE_TO_LOCATION_ACCURACY) ?: false
 }
 
-fun GeoJsonFeature.getBitmap(): Bitmap? {
-    return properties?.get(GEO_JSON_PROPERTY_BITMAP) as? Bitmap
+fun GeoJsonFeature.getBitmap(): ImageBitmap? {
+    return when (val bitmap = properties?.get(GEO_JSON_PROPERTY_BITMAP)) {
+        is ImageBitmap -> bitmap
+        is Bitmap -> bitmap.asImageBitmap()
+        else -> null
+    }
 }
 
 fun GeoJsonFeature.getIcon(): Long? {

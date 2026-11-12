@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
-import androidx.annotation.ColorInt
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 interface IPathLineDrawerStrategy {
     fun draw(
-        canvasDrawer: ICanvasDrawer,
-        @ColorInt color: Int,
+        canvasDrawer: MapDrawer,
+        color: Int,
         strokeScale: Float = 1f,
-        block: ICanvasDrawer.() -> Unit
+        block: MapDrawer.() -> Unit
     )
 }

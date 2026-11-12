@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.shared.map_layers.ui.layers.overlay
 
 import android.content.Context
 import android.os.Bundle
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
@@ -15,7 +15,7 @@ abstract class OverlayLayer : ILayer {
 
     override fun draw(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView
     ) {
         // Do nothing
@@ -26,7 +26,7 @@ abstract class OverlayLayer : ILayer {
     }
 
     override fun onClick(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         pixel: PixelCoordinate
     ): Boolean {

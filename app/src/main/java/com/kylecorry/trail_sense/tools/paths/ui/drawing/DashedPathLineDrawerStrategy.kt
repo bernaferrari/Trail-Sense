@@ -1,17 +1,15 @@
 package com.kylecorry.trail_sense.tools.paths.ui.drawing
 
-import android.graphics.DashPathEffect
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapPathEffects
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 class DashedPathLineDrawerStrategy : IPathLineDrawerStrategy {
     override fun draw(
-        canvasDrawer: ICanvasDrawer,
+        canvasDrawer: MapDrawer,
         color: Int,
         strokeScale: Float,
-        block: ICanvasDrawer.() -> Unit
+        block: MapDrawer.() -> Unit
     ) {
-        val dotted = DashPathEffect(
-            floatArrayOf(3f / strokeScale, 10f / strokeScale), 0f
-        )
+        val dotted = MapPathEffects.dashed(3f / strokeScale, 10f / strokeScale)
         canvasDrawer.apply {
             pathEffect(dotted)
             noFill()

@@ -1,7 +1,10 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
 import android.content.Context
-import android.graphics.Path
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -98,9 +101,9 @@ class RadarCompassView(
         val centerX = width / 2f
         val centerY = height / 2f
         map.clipPath = Path().apply {
-            addCircle(centerX, centerY, geometry.clipRadius, Path.Direction.CW)
-            addCircle(centerX, centerY, geometry.headingClearRadius, Path.Direction.CW)
-            fillType = Path.FillType.EVEN_ODD
+            addOval(Rect(Offset(centerX, centerY), geometry.clipRadius))
+            addOval(Rect(Offset(centerX, centerY), geometry.headingClearRadius))
+            fillType = PathFillType.EvenOdd
         }
     }
 

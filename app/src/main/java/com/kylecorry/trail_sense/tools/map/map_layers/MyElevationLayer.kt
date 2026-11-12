@@ -2,9 +2,9 @@ package com.kylecorry.trail_sense.tools.map.map_layers
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import android.graphics.Color
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import android.os.Bundle
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.ImageMode
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -16,7 +16,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.overlay.OverlayLayer
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import com.kylecorry.trail_sense.tools.navigation.ui.DrawerBitmapLoader
+import com.kylecorry.trail_sense.shared.icons.toImageBitmap
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
@@ -41,32 +41,29 @@ class MyElevationLayer : OverlayLayer() {
 
     private var elevationString = ""
 
-    private var bitmapLoader: DrawerBitmapLoader? = null
-
     override fun start() {
         Tools.subscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
     }
 
     override fun drawOverlay(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView
     ) {
-        val loader = bitmapLoader ?: DrawerBitmapLoader(drawer).also { bitmapLoader = it }
-        val elevationIcon = loader.load(TrailIcons.Altitude, drawer.sp(20f).toInt())
+        val elevationIcon = TrailIcons.Altitude.toImageBitmap(drawer.sp(20f).toInt())
 
         drawer.push()
-        drawer.translate(drawer.dp(bottomLeft.x), drawer.canvas.height + drawer.dp(bottomLeft.y))
+        drawer.translate(drawer.dp(bottomLeft.x), drawer.height + drawer.dp(bottomLeft.y))
         drawer.textMode(TextMode.Corner)
         drawer.textSize(drawer.sp(12f))
         drawer.strokeWeight(4f)
-        drawer.stroke(Color.BLACK)
-        drawer.fill(Color.WHITE)
+        drawer.stroke(ColorInts.Black)
+        drawer.fill(ColorInts.White)
 
-        drawer.tint(Color.BLACK)
+        drawer.tint(ColorInts.Black)
         drawer.imageMode(ImageMode.Corner)
         drawer.image(elevationIcon, 0f, -elevationIcon.height / 2f)
-        drawer.tint(Color.WHITE)
+        drawer.tint(ColorInts.White)
         drawer.image(
             elevationIcon,
             4f,
@@ -86,8 +83,6 @@ class MyElevationLayer : OverlayLayer() {
 
     override fun stop() {
         Tools.unsubscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
-        bitmapLoader?.clear()
-        bitmapLoader = null
     }
 
     private fun onElevationChange(ignored: Bundle) {

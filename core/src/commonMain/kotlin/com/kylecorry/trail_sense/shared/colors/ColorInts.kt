@@ -9,4 +9,7 @@ object ColorInts {
 
     @ColorInt
     const val White: Int = -0x1
+
+    @ColorInt
+    const val Transparent: Int = 0
 }

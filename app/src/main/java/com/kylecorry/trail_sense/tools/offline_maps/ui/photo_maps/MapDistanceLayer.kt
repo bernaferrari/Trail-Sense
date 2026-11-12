@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
-import android.graphics.Color
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import android.os.Bundle
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
@@ -13,7 +13,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toCoordinate
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.toPixel
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.beacons.domain.icon
-import com.kylecorry.trail_sense.tools.navigation.ui.DrawerBitmapLoader
+import com.kylecorry.trail_sense.shared.icons.toImageBitmap
 import com.kylecorry.trail_sense.tools.navigation.ui.markers.BitmapMapMarker
 import com.kylecorry.trail_sense.tools.navigation.ui.markers.CircleMapMarker
 import com.kylecorry.trail_sense.tools.navigation.ui.markers.MapMarker
@@ -35,7 +35,6 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
     private val editor = PathEditor()
     private var updateListener: (() -> Unit)? = null
     private var drag: Drag? = null
-    private var bitmapLoader: DrawerBitmapLoader? = null
 
     val editState: PathEditState
         get() = editor.state
@@ -94,7 +93,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
         updateListener = listener
     }
 
-    override fun draw(context: Context, drawer: ICanvasDrawer, map: IMapView) {
+    override fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
         val points = editor.points
         if (!isEnabled || points.isEmpty()) {
             return
@@ -106,24 +105,23 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
         drawPoints(drawer, map, pixels)
     }
 
-    private fun drawLine(drawer: ICanvasDrawer, pixels: List<PixelCoordinate>) {
+    private fun drawLine(drawer: MapDrawer, pixels: List<PixelCoordinate>) {
         drawer.noFill()
         drawer.strokeWeight(drawer.dp(LINE_WIDTH_DP + LINE_OUTLINE_DP))
-        drawer.stroke(Color.WHITE)
+        drawer.stroke(ColorInts.White)
         drawSegments(drawer, pixels)
         drawer.strokeWeight(drawer.dp(LINE_WIDTH_DP))
         drawer.stroke(PATH_COLOR)
         drawSegments(drawer, pixels)
     }
 
-    private fun drawSegments(drawer: ICanvasDrawer, pixels: List<PixelCoordinate>) {
+    private fun drawSegments(drawer: MapDrawer, pixels: List<PixelCoordinate>) {
         for (i in 0 until pixels.size - 1) {
             drawer.line(pixels[i].x, pixels[i].y, pixels[i + 1].x, pixels[i + 1].y)
         }
     }
 
-    private fun drawPoints(drawer: ICanvasDrawer, map: IMapView, pixels: List<PixelCoordinate>) {
-        val loader = bitmapLoader ?: DrawerBitmapLoader(drawer).also { bitmapLoader = it }
+    private fun drawPoints(drawer: MapDrawer, map: IMapView, pixels: List<PixelCoordinate>) {
         val selected = editor.selectedIndex
         val last = pixels.lastIndex
         val rotation = map.mapAzimuth + map.mapRotation
@@ -140,12 +138,12 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
             }
 
             if (index == last && last > 0) {
-                draw(circle(Color.WHITE, PATH_COLOR, END_SIZE_DP * sizeScale, OUTLINE_DP), index)
+                draw(circle(ColorInts.White, PATH_COLOR, END_SIZE_DP * sizeScale, OUTLINE_DP), index)
                 val iconSize = END_ICON_SIZE_DP * sizeScale
-                val flag = loader.load(BeaconIcon.Flag.icon, (drawer.dp(iconSize) * 2).toInt())
+                val flag = BeaconIcon.Flag.icon.toImageBitmap((drawer.dp(iconSize) * 2).toInt())
                 draw(BitmapMapMarker(null, flag, iconSize, tint = PATH_COLOR), index)
             } else {
-                draw(circle(PATH_COLOR, Color.WHITE, POINT_SIZE_DP * sizeScale, OUTLINE_DP), index)
+                draw(circle(PATH_COLOR, ColorInts.White, POINT_SIZE_DP * sizeScale, OUTLINE_DP), index)
             }
         }
     }
@@ -162,7 +160,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
 
     override fun drawOverlay(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView
     ) {
         // Do nothing
@@ -172,7 +170,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
         // Do nothing
     }
 
-    override fun onClick(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
+    override fun onClick(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
         if (!isEnabled) {
             return false
         }
@@ -190,7 +188,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
     }
 
     override fun onLongPress(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         pixel: PixelCoordinate
     ): Boolean {
@@ -206,7 +204,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
     }
 
     override fun onDragStart(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         pixel: PixelCoordinate
     ): Boolean {
@@ -219,7 +217,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
         return true
     }
 
-    override fun onDrag(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate) {
+    override fun onDrag(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate) {
         val drag = drag ?: return
         if (!drag.hasMoved) {
             if (distance(drag.startPixel, pixel) < drawer.dp(DRAG_SLOP_DP)) {
@@ -234,7 +232,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
         updateListener?.invoke()
     }
 
-    override fun onDragEnd(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate) {
+    override fun onDragEnd(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate) {
         val drag = drag ?: return
         this.drag = null
 
@@ -248,7 +246,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
      * are selected when added), followed by the one latest in the path.
      */
     private fun findPoint(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         pixels: List<PixelCoordinate>,
         pixel: PixelCoordinate
     ): Int? {
@@ -278,7 +276,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
     companion object {
         const val LAYER_ID = "map_distance"
 
-        private const val PATH_COLOR = Color.BLACK
+        private const val PATH_COLOR = ColorInts.Black
 
         private const val LINE_WIDTH_DP = 2.25f
         private const val LINE_OUTLINE_DP = 2f

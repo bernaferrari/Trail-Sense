@@ -5,7 +5,7 @@ import kotlin.time.Duration
 
 import android.content.Context
 import android.os.Bundle
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.concurrency.BackgroundTask
@@ -153,7 +153,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
 
     override fun draw(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView
     ) {
         if (isStopped) return
@@ -180,7 +180,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
 
     override fun drawOverlay(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView
     ) {
         // Do nothing
@@ -193,7 +193,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     override fun onClick(
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         pixel: PixelCoordinate
     ): Boolean {

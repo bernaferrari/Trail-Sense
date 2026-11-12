@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Path
-import androidx.core.graphics.withMatrix
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.StrokeCap
 import com.kylecorry.andromeda.canvas.StrokeJoin
 import com.kylecorry.luna.cache.ObjectPool
@@ -129,7 +129,7 @@ class GeoJsonPolygonRenderer : FeatureRenderer() {
 
     override fun draw(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView,
         features: List<GeoJsonFeature>
     ) {
@@ -149,7 +149,7 @@ class GeoJsonPolygonRenderer : FeatureRenderer() {
                 val matrix = transform.matrix
                 val relativeScale = transform.scale
 
-                drawer.canvas.withMatrix(matrix) {
+                drawer.withTransform(matrix) {
 
                     if (polygon.fillColor != null) {
                         drawer.fill(polygon.fillColor.withAlpha(polygon.opacity))
@@ -172,7 +172,7 @@ class GeoJsonPolygonRenderer : FeatureRenderer() {
         }
 
         drawer.noStroke()
-        drawer.fill(Color.WHITE)
+        drawer.fill(ColorInts.White)
     }
 
     private fun render(
@@ -181,7 +181,7 @@ class GeoJsonPolygonRenderer : FeatureRenderer() {
         projection: IMapViewProjection
     ) {
         polygon.path.reset()
-        polygon.path.fillType = Path.FillType.EVEN_ODD
+        polygon.path.fillType = PathFillType.EvenOdd
 
         polygon.rings.forEach { ring ->
             if (ring.isEmpty()) {

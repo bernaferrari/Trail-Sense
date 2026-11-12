@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.navigation.map_layers
 
 import android.content.Context
-import android.graphics.Color
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getCardinalDirectionColor
@@ -31,7 +31,7 @@ class CompassOverlayLayer : OverlayLayer() {
 
     override fun drawOverlay(
         context: Context,
-        drawer: ICanvasDrawer,
+        drawer: MapDrawer,
         map: IMapView
     ) {
         if (backgroundColor == null) {
@@ -46,7 +46,7 @@ class CompassOverlayLayer : OverlayLayer() {
         val arrowWidth = drawer.dp(5f)
         val arrowMargin = drawer.dp(3f)
         val location = com.kylecorry.andromeda.core.units.PixelCoordinate(
-            drawer.canvas.width - drawer.dp(paddingRightDp + compassSize / 2f),
+            drawer.width - drawer.dp(paddingRightDp + compassSize / 2f),
             drawer.dp(paddingTopDp + compassSize / 2f)
         )
         drawer.push()
@@ -54,14 +54,14 @@ class CompassOverlayLayer : OverlayLayer() {
 
         // Background circle
         drawer.noTint()
-        drawer.fill(backgroundColor ?: Color.WHITE)
-        drawer.stroke(Color.WHITE)
+        drawer.fill(backgroundColor ?: ColorInts.White)
+        drawer.stroke(ColorInts.White)
         drawer.strokeWeight(drawer.dp(1f))
         drawer.circle(location.x, location.y, compassSize)
 
         // Top triangle
         drawer.noStroke()
-        drawer.fill(cardinalDirectionColor ?: Color.WHITE)
+        drawer.fill(cardinalDirectionColor ?: ColorInts.White)
         drawer.triangle(
             location.x,
             location.y - compassSize / 2f + arrowMargin,
@@ -72,7 +72,7 @@ class CompassOverlayLayer : OverlayLayer() {
         )
 
         // Bottom triangle
-        drawer.fill(Color.WHITE)
+        drawer.fill(ColorInts.White)
         drawer.triangle(
             location.x,
             location.y + compassSize / 2f - arrowMargin,

@@ -39,6 +39,12 @@ interface MapDrawer {
     fun tint(color: Int)
     fun noTint()
 
+    /** Anti-aliases the edges of shapes and images (the default). */
+    fun smooth()
+
+    /** Draws hard edges, so adjoining images (such as map tiles) leave no seams between them. */
+    fun noSmooth()
+
     // Text
     fun textSize(pixels: Float)
     fun textMode(mode: TextMode)

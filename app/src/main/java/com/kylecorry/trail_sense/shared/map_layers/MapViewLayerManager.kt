@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers
 
 import android.content.Context
-import com.kylecorry.andromeda.canvas.ICanvasDrawer
-import com.kylecorry.andromeda.canvas.withLayerOpacity
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
+import com.kylecorry.trail_sense.shared.canvas.withLayerOpacity
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.OnGeoJsonFeatureClickListener
-import com.kylecorry.trail_sense.shared.getBounds
+import com.kylecorry.trail_sense.shared.canvas.getBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -107,7 +107,7 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
     }
 
 
-    fun drawOverlay(context: Context, drawer: ICanvasDrawer, map: IMapView) {
+    fun drawOverlay(context: Context, drawer: MapDrawer, map: IMapView) {
         layers.forEach {
             try {
                 drawer.withLayerOpacity(it.opacity) {
@@ -120,7 +120,7 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         }
     }
 
-    fun draw(context: Context, drawer: ICanvasDrawer, map: IMapView) {
+    fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
         publishViewState(context, drawer, map)
         layers.forEach {
             try {
@@ -134,7 +134,7 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         }
     }
 
-    private fun publishViewState(context: Context, drawer: ICanvasDrawer, map: IMapView) {
+    private fun publishViewState(context: Context, drawer: MapDrawer, map: IMapView) {
         val projection = map.mapProjection
         val bounds = map.mapBounds
         val current = viewState.value
@@ -154,7 +154,7 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         }
     }
 
-    fun onClick(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate) {
+    fun onClick(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate) {
         for (layer in layers.reversed()) {
             try {
 
@@ -169,22 +169,22 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         }
     }
 
-    fun onLongPress(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
+    fun onLongPress(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
         return layers.reversed().any { it.onLongPress(drawer, map, pixel) }
     }
 
-    fun onDragStart(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
+    fun onDragStart(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate): Boolean {
         dragLayer = layers.reversed()
             .filterIsInstance<IDraggableLayer>()
             .firstOrNull { it.onDragStart(drawer, map, pixel) }
         return dragLayer != null
     }
 
-    fun onDrag(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate) {
+    fun onDrag(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate) {
         dragLayer?.onDrag(drawer, map, pixel)
     }
 
-    fun onDragEnd(drawer: ICanvasDrawer, map: IMapView, pixel: PixelCoordinate) {
+    fun onDragEnd(drawer: MapDrawer, map: IMapView, pixel: PixelCoordinate) {
         dragLayer?.onDragEnd(drawer, map, pixel)
         dragLayer = null
     }

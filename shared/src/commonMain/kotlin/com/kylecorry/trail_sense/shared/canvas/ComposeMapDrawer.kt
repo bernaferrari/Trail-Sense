@@ -144,6 +144,16 @@ class ComposeMapDrawer(
         strokePaint.colorFilter = null
     }
 
+    override fun smooth() {
+        fillPaint.isAntiAlias = true
+        strokePaint.isAntiAlias = true
+    }
+
+    override fun noSmooth() {
+        fillPaint.isAntiAlias = false
+        strokePaint.isAntiAlias = false
+    }
+
     override fun textSize(pixels: Float) {
         textSize = pixels
     }
