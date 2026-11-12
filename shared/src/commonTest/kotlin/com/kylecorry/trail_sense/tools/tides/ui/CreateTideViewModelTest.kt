@@ -4,20 +4,21 @@ import kotlin.time.Duration.Companion.hours
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
-import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
-import org.mockito.kotlin.mock
+import com.kylecorry.sol.science.oceanography.Tide
+import com.kylecorry.trail_sense.tools.tides.domain.TideTable
+import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 
 class CreateTideViewModelTest {
 
     private fun newViewModel(includeHarmonic: Boolean = false) = CreateTideViewModel(
         editTideId = 0L,
-        tideRepo = mock<TideTableRepo>(),
+        tideRepo = EmptyTideTableRepo,
         units = DistanceUnits.Meters,
         includeHarmonic = includeHarmonic
     )
@@ -69,4 +70,13 @@ class CreateTideViewModelTest {
         assertFalse(EstimateType.Harmonic in newViewModel().estimateTypes)
         assertTrue(EstimateType.Harmonic in newViewModel(includeHarmonic = true).estimateTypes)
     }
+}
+
+private object EmptyTideTableRepo : ITideTableRepo {
+    override suspend fun getTideTables(): List<TideTable> = emptyList()
+    override suspend fun getTideTable(id: Long): TideTable? = null
+    override suspend fun addTideTable(table: TideTable): Long = 0
+    override suspend fun deleteTideTable(table: TideTable) {}
+    override suspend fun addTides(tableId: Long, tides: List<Tide>) {}
+    override suspend fun deleteTides(tableId: Long) {}
 }

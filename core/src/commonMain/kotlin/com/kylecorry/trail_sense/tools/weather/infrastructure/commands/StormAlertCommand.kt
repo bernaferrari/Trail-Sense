@@ -1,17 +1,11 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
-import android.content.Context
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.IDismissibleAlerter
 import com.kylecorry.trail_sense.shared.commands.generic.Command
 import com.kylecorry.trail_sense.shared.preferences.Flag
-import com.kylecorry.trail_sense.shared.preferences.PreferencesFlag
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherAlert
 import com.kylecorry.trail_sense.tools.weather.infrastructure.IWeatherPreferences
-import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.StormAlerter
 
 class StormAlertCommand(
     private val justShownFlag: Flag,
@@ -33,17 +27,4 @@ class StormAlertCommand(
             justShownFlag.set(false)
         }
     }
-
-    companion object {
-        fun create(context: Context): StormAlertCommand {
-            val prefs = PreferencesSubsystem.getInstance(context).preferences
-            return StormAlertCommand(
-                PreferencesFlag(prefs, PreferenceKeys.justSentAlert),
-                UserPreferences(context).weather,
-                StormAlerter(context)
-            )
-        }
-
-    }
-
 }

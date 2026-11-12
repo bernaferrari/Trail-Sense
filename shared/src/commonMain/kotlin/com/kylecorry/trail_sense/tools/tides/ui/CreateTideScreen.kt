@@ -2,8 +2,15 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.dialogs.UnitPickers
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.from
 
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
@@ -45,9 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -63,22 +68,18 @@ import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
 import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.time.nowLocal
 import com.kylecorry.trail_sense.shared.time.toInstant
@@ -116,12 +117,10 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun CreateTideToolScreen(route: Route.CreateTide) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val prefs = remember { getAppService<UserPreferences>() }
     val viewModel = viewModel {
         CreateTideViewModel(
             editTideId = route.editTideId,
@@ -130,23 +129,23 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
             includeHarmonic = isDebug()
         )
     }
-    val formatService = remember(context) { FormatService.getInstance(context) }
+    val formatService = remember { FormatService.getInstance() }
     val dispatcher = rememberSystemBack()
 
     val estimateTypeNames = mapOf(
-        EstimateType.Clock to stringResource(R.string.tide_clock),
-        EstimateType.LunitidalIntervalAuto to stringResource(R.string.lunitidal_interval_auto),
-        EstimateType.LunitidalIntervalManualLocal to stringResource(R.string.lunitidal_interval_local),
-        EstimateType.LunitidalIntervalManualUTC to stringResource(R.string.lunitidal_interval_utc),
-        EstimateType.TideModel to stringResource(R.string.tide_model_auto),
-        EstimateType.Harmonic to stringResource(R.string.harmonic)
+        EstimateType.Clock to appString(Res.string.tide_clock),
+        EstimateType.LunitidalIntervalAuto to appString(Res.string.lunitidal_interval_auto),
+        EstimateType.LunitidalIntervalManualLocal to appString(Res.string.lunitidal_interval_local),
+        EstimateType.LunitidalIntervalManualUTC to appString(Res.string.lunitidal_interval_utc),
+        EstimateType.TideModel to appString(Res.string.tide_model_auto),
+        EstimateType.Harmonic to appString(Res.string.harmonic)
     )
     val estimateTypeDescriptions = mapOf(
-        EstimateType.Clock to stringResource(R.string.tide_estimation_description_tide_clock),
-        EstimateType.LunitidalIntervalAuto to stringResource(R.string.tide_estimation_description_lunitidal_interval_auto),
-        EstimateType.LunitidalIntervalManualLocal to stringResource(R.string.tide_estimation_description_lunitidal_interval_local),
-        EstimateType.LunitidalIntervalManualUTC to stringResource(R.string.tide_estimation_description_lunitidal_interval_utc),
-        EstimateType.TideModel to stringResource(R.string.tide_estimation_description_tide_model),
+        EstimateType.Clock to appString(Res.string.tide_estimation_description_tide_clock),
+        EstimateType.LunitidalIntervalAuto to appString(Res.string.tide_estimation_description_lunitidal_interval_auto),
+        EstimateType.LunitidalIntervalManualLocal to appString(Res.string.tide_estimation_description_lunitidal_interval_local),
+        EstimateType.LunitidalIntervalManualUTC to appString(Res.string.tide_estimation_description_lunitidal_interval_utc),
+        EstimateType.TideModel to appString(Res.string.tide_estimation_description_tide_model),
         EstimateType.Harmonic to "!! NEED TO MANUALLY INSERT INTO DB !!"
     )
 
@@ -181,8 +180,8 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
             viewModel.deleteTideEntry(entry)
             scope.launch {
                 val undo = effects.showSnackbar(
-                    context.getString(R.string.tide_deleted),
-                    actionLabel = context.getString(R.string.undo)
+                    getAppService<AppStrings>().get(Res.string.tide_deleted),
+                    actionLabel = getAppService<AppStrings>().get(Res.string.undo)
                 )
                 if (undo) {
                     viewModel.restoreTideEntry(entry)
@@ -190,8 +189,7 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
             }
         },
         onTideTimeClick = { entry ->
-            CustomUiUtils.pickDatetime(
-                context,
+            Pickers.datetime(AppHost.current(),
                 prefs.use24HourTime,
                 entry.time?.toLocalDateTime() ?: nowLocal()
             ) {
@@ -202,11 +200,10 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
         },
         onTideHeightClick = { entry ->
             val distanceUnits = formatService.sortDistanceUnits(DistanceUtils.humanDistanceUnits)
-            CustomUiUtils.pickDistance(
-                context,
+            UnitPickers.distance(AppHost.current(),
                 distanceUnits,
                 entry.height,
-                context.getString(R.string.height)
+                getAppService<AppStrings>().get(Res.string.height)
             ) { distance, cancelled ->
                 if (!cancelled) {
                     viewModel.updateTideEntry(entry.copy(height = distance))
@@ -483,18 +480,18 @@ private fun CreateTideScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
-    val estimateTitle = stringResource(R.string.estimate_method)
+    val estimateTitle = appString(Res.string.estimate_method)
     Box(modifier = modifier.testTag("create_tide_title")) {
         TrailSensePage(
-            title = stringResource(R.string.tide_table),
+            title = appString(Res.string.tide_table),
             onBack = onBack,
-            backLabel = stringResource(R.string.back),
+            backLabel = appString(Res.string.back),
             modifier = Modifier.testTag("scroll_view"),
             actions = {
                 IconButton(onClick = onHelp, modifier = Modifier.testTag("create_tide_help_btn")) {
                     Icon(
                         painter = rememberVectorPainter(TrailIcons.Help),
-                        contentDescription = stringResource(R.string.help)
+                        contentDescription = appString(Res.string.help)
                     )
                 }
             }
@@ -504,7 +501,7 @@ private fun CreateTideScreen(
                     TrailSenseGroupCard(position = position) {
                         TideTextInput(
                             text = name,
-                            label = stringResource(R.string.name),
+                            label = appString(Res.string.name),
                             tag = "tide_name",
                             onTextChange = onNameChange
                         )
@@ -513,22 +510,22 @@ private fun CreateTideScreen(
                 row { position ->
                     TrailSenseGroupCard(position = position) {
                         Text(
-                            text = stringResource(R.string.frequency),
+                            text = appString(Res.string.frequency),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = stringResource(R.string.tide_frequency_description),
+                            text = appString(Res.string.tide_frequency_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(TrailSenseSpacing.md))
                         TidesConnectedChoice(
                             options = listOf(
-                                TidesChoice(false, stringResource(R.string.tide_diurnal), "tide_frequency_diurnal"),
+                                TidesChoice(false, appString(Res.string.tide_diurnal), "tide_frequency_diurnal"),
                                 TidesChoice(
                                     true,
-                                    stringResource(R.string.tide_semidiurnal),
+                                    appString(Res.string.tide_semidiurnal),
                                     "tide_frequency_semidiurnal"
                                 )
                             ),
@@ -564,7 +561,7 @@ private fun CreateTideScreen(
                     row { position ->
                         TrailSenseGroupCard(position = position) {
                             Text(
-                                text = stringResource(R.string.lunitidal_interval),
+                                text = appString(Res.string.lunitidal_interval),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -583,7 +580,7 @@ private fun CreateTideScreen(
                     modifier = Modifier
                         .animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
                         .testTag("tide_times"),
-                    title = stringResource(R.string.tides)
+                    title = appString(Res.string.tides)
                 ) {
                     tideEntries.forEach { entry ->
                         row { position ->
@@ -607,7 +604,7 @@ private fun CreateTideScreen(
                             leading = { com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(rememberVectorPainter(TrailIcons.Add)) }
                         ) {
                             Text(
-                                text = stringResource(R.string.add),
+                                text = appString(Res.string.add),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -618,7 +615,7 @@ private fun CreateTideScreen(
 
             item(key = "save") {
                 com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                    text = stringResource(R.string.save),
+                    text = appString(Res.string.save),
                     onClick = onSave,
                     enabled = canSave,
                     modifier = Modifier
@@ -655,9 +652,8 @@ private fun TideLocationInput(
     onLocationChange: (Coordinate?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var locationText by remember(location, formatter) {
@@ -689,12 +685,11 @@ private fun TideLocationInput(
         } else {
             IconButton(
                 onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
+                    Pickers.item(AppHost.current(),
+                        getAppService<AppStrings>().get(Res.string.autofill_source),
                         listOf(
-                            context.getString(R.string.gps),
-                            context.getString(R.string.beacon)
+                            getAppService<AppStrings>().get(Res.string.gps),
+                            getAppService<AppStrings>().get(Res.string.beacon)
                         ),
                         0
                     ) { selection ->
@@ -711,7 +706,7 @@ private fun TideLocationInput(
 
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    AppHost.from(context),
+                                    AppHost.current(),
                                     sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) ?: return@launch
                                 locationText = formatter.formatLocation(beacon.coordinate)
@@ -726,7 +721,7 @@ private fun TideLocationInput(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.Location),
-                    contentDescription = stringResource(R.string.gps)
+                    contentDescription = appString(Res.string.gps)
                 )
             }
         }
@@ -742,13 +737,13 @@ private fun TideLocationInput(
                 .weight(1f)
                 .testTag("utm"),
             label = if (isRequired) {
-                stringResource(R.string.field_required, stringResource(R.string.location))
+                appString(Res.string.field_required, appString(Res.string.location))
             } else {
-                stringResource(R.string.location)
+                appString(Res.string.location)
             },
             keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
             isError = isInvalidLocation,
-            errorText = stringResource(R.string.coordinate_input_invalid_location),
+            errorText = appString(Res.string.coordinate_input_invalid_location),
             enabled = !isLoadingLocation,
             inCard = true
         )
@@ -761,7 +756,7 @@ private fun TideLocationInput(
         ) {
             Icon(
                 painter = rememberVectorPainter(TrailIcons.Help),
-                contentDescription = stringResource(R.string.location_input_help_title)
+                contentDescription = appString(Res.string.location_input_help_title)
             )
         }
     }
@@ -769,10 +764,10 @@ private fun TideLocationInput(
     if (showHelp) {
         TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            title = stringResource(R.string.location_input_help_title),
-            confirmText = stringResource(android.R.string.ok)
+            title = appString(Res.string.location_input_help_title),
+            confirmText = systemString(SystemString.Ok)
         ) {
-            Text(stringResource(R.string.location_input_help))
+            Text(appString(Res.string.location_input_help))
         }
     }
 }
@@ -787,7 +782,7 @@ private fun EstimateTypeInput(
     onEstimateTypeChange: (EstimateType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val method = stringResource(R.string.estimate_method)
+    val method = appString(Res.string.estimate_method)
     var isOpen by remember { mutableStateOf(false) }
     val selected = estimateTypeNames[estimateType].orEmpty()
     val description = estimateTypeDescriptions[estimateType]
@@ -896,8 +891,8 @@ private fun LunitidalIntervalInput(
         ) {
             Icon(
                 painter = rememberVectorPainter(if (isNegative) TrailIcons.Minus else TrailIcons.Add),
-                contentDescription = stringResource(
-                    if (isNegative) R.string.add else R.string.subtract
+                contentDescription = appString(
+                    if (isNegative) Res.string.add else Res.string.subtract
                 )
             )
         }
@@ -910,7 +905,7 @@ private fun LunitidalIntervalInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("duration_hours"),
-            label = stringResource(R.string.hours),
+            label = appString(Res.string.hours),
             keyboardType = KeyboardType.Number,
             inCard = true
         )
@@ -924,7 +919,7 @@ private fun LunitidalIntervalInput(
             modifier = Modifier
                 .weight(1f)
                 .testTag("duration_minutes"),
-            label = stringResource(R.string.minutes),
+            label = appString(Res.string.minutes),
             keyboardType = KeyboardType.Number,
             inCard = true
         )
@@ -972,13 +967,13 @@ private fun TideEntryCard(
     onHeightClick: (TideEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tideType = stringResource(if (entry.isHigh) R.string.high_tide_letter else R.string.low_tide_letter)
-    val tideTypeName = stringResource(if (entry.isHigh) R.string.high_tide else R.string.low_tide)
+    val tideType = appString(if (entry.isHigh) Res.string.high_tide_letter else Res.string.low_tide_letter)
+    val tideTypeName = appString(if (entry.isHigh) Res.string.high_tide else Res.string.low_tide)
 
     val defaultTimeText = if (isTideTableRequired) {
-        stringResource(R.string.field_required, stringResource(R.string.time_not_set))
+        appString(Res.string.field_required, appString(Res.string.time_not_set))
     } else {
-        stringResource(R.string.time_not_set)
+        appString(Res.string.time_not_set)
     }
 
     val timeText = entry.time?.let {
@@ -987,7 +982,7 @@ private fun TideEntryCard(
 
     val heightText = entry.height?.let {
         formatService.formatDistance(it, 2)
-    } ?: stringResource(R.string.dash)
+    } ?: appString(Res.string.dash)
 
     val badgeColor by animateColorAsState(
         targetValue = if (entry.isHigh) {
@@ -1035,7 +1030,7 @@ private fun TideEntryCard(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.Cancel),
-                    contentDescription = stringResource(R.string.delete),
+                    contentDescription = appString(Res.string.delete),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1106,7 +1101,7 @@ private fun CreateTideScreenPreview() {
             isLocationRequired = false,
             isDurationVisible = false,
             isTideTableRequired = true,
-            formatService = FormatService.getInstance(androidx.compose.ui.platform.LocalContext.current),
+            formatService = FormatService.getInstance(),
             onNameChange = {},
             onLocationChange = {},
             onFrequencyChange = {},

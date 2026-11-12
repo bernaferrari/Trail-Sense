@@ -1,17 +1,13 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
-import android.content.Context
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.commands.generic.Command
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
-import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
-import kotlin.time.Duration.Companion.seconds
 
-internal class MonitorWeatherCommand(
+class MonitorWeatherCommand(
     private val repo: IReadingRepo<RawWeatherObservation>,
     private val observer: IWeatherObserver,
     private val subsystem: IWeatherSubsystem,
@@ -32,16 +28,4 @@ internal class MonitorWeatherCommand(
         val weather = subsystem.getWeather()
         alerter.execute(weather)
     }
-
-    companion object {
-        fun create(context: Context): MonitorWeatherCommand {
-            return MonitorWeatherCommand(
-                WeatherRepo.getInstance(context),
-                WeatherObserver(context, 10.seconds),
-                getAppService<IWeatherSubsystem>(),
-                SendWeatherAlertsCommand(context)
-            )
-        }
-    }
-
 }

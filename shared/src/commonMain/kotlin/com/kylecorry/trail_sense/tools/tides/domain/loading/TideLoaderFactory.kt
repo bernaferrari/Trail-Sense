@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.tides.domain.loading
 
-import android.content.Context
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -15,11 +14,10 @@ import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTab
 class TideLoaderFactory {
 
     fun getTideLoader(
-        context: Context,
         useLastTide: Boolean = true,
         locationOverride: Coordinate? = null
     ): ITideLoader {
-        val prefs = UserPreferences(context).tides
+        val prefs = getAppService<UserPreferences>().tides
         val location = getAppService<ILocationSubsystem>()
         val strategy = if (prefs.showNearestTide && useLastTide) {
             FallbackTideSelectionStrategy(

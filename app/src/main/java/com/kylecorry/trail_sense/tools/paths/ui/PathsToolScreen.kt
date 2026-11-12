@@ -311,7 +311,7 @@ fun PathsToolScreen(
         onCreatePathOnMap = { appNavigator.navigate(Route.Map(startPathCreation = true)) },
         onCreatePath = {
             scope.launch {
-                CreatePathCommand(context, pathService, prefs.paths).execute(viewModel.rootId)?.let {
+                CreatePathCommand(AppHost.from(context), pathService, prefs.paths).execute(viewModel.rootId)?.let {
                     ViewPathCommand(appNavigator).execute(it)
                 }
             }

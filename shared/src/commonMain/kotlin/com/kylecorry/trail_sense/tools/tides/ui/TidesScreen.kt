@@ -4,8 +4,16 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideHarmonicsSource
+
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.from
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -58,9 +66,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -78,15 +84,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -113,7 +115,6 @@ import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.DailyTideCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.LoadTideTableCommand
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.time.Clock
@@ -132,19 +133,17 @@ import kotlinx.datetime.LocalTime
 
 @Composable
 fun TidesToolScreen() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val viewModel = viewModel {
         TidesViewModel(
-            tideService = TideService(appContext),
-            loadTable = LoadTideTableCommand(appContext)::execute,
+            tideService = TideService(getAppService<TideHarmonicsSource>()),
+            loadTable = LoadTideTableCommand()::execute,
             locationSubsystem = getAppService<ILocationSubsystem>()
         )
     }
-    val formatService = remember(context) { FormatService.getInstance(context) }
-    val units = remember(context) { UserPreferences(context).baseDistanceUnits }
-    val tideFormatter = remember(context) { TideFormatter() }
+    val formatService = remember { FormatService.getInstance() }
+    val units = remember { getAppService<UserPreferences>().baseDistanceUnits }
+    val tideFormatter = remember { TideFormatter() }
     val dispatcher = rememberSystemBack()
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -154,7 +153,7 @@ fun TidesToolScreen() {
                 Lifecycle.Event.ON_RESUME -> {
                     if (viewModel.needsTable) {
                         viewModel.resetDisplayDate()
-                        ShowTideDisclaimerCommand(AppHost.from(context), navigator) {
+                        ShowTideDisclaimerCommand(AppHost.current(), navigator) {
                             viewModel.loadTideTable()
                         }.execute()
                     } else {
@@ -176,10 +175,9 @@ fun TidesToolScreen() {
 
     LaunchedEffect(viewModel) {
         viewModel.noTides.collect {
-            val cancelled = CoroutineAlerts.dialog(
-                context,
-                context.getString(R.string.no_tides),
-                context.getString(R.string.calibrate_new_tide)
+            val cancelled = CoroutineAlerts.dialog(AppHost.current(),
+                getAppService<AppStrings>().get(Res.string.no_tides),
+                getAppService<AppStrings>().get(Res.string.calibrate_new_tide)
             )
             if (!cancelled) {
                 navigator.navigate(Route.TideList)
@@ -209,12 +207,11 @@ fun TidesToolScreen() {
     // list), or the table you picked by name. Empty until the tide is known, so loading never shows a bare "Nearby".
     val subtitle = when {
         table == null || current == null -> ""
-        table.isAutomaticNearbyTide -> stringResource(R.string.tides_source_nearby)
-        else -> stringResource(
-            R.string.tides_source_table,
+        table.isAutomaticNearbyTide -> appString(Res.string.tides_source_nearby)
+        else -> appString(Res.string.tides_source_table,
             table.name
                 ?: table.location?.let { formatService.formatLocation(it) }
-                ?: stringResource(android.R.string.untitled)
+                ?: systemString(SystemString.Untitled)
         )
     }
 
@@ -223,11 +220,10 @@ fun TidesToolScreen() {
     val nextTideText = nextTide?.let { tide ->
         val time = formatService.formatTime(tide.time.toLocalTime(), includeSeconds = false)
         when (current?.rising) {
-            true -> stringResource(R.string.tides_rising_until, time)
-            false -> stringResource(R.string.tides_falling_until, time)
-            null -> stringResource(
-                R.string.tides_next_tide,
-                stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
+            true -> appString(Res.string.tides_rising_until, time)
+            false -> appString(Res.string.tides_falling_until, time)
+            null -> appString(Res.string.tides_next_tide,
+                appString(if (tide.isHigh) Res.string.high_tide else Res.string.low_tide),
                 time
             )
         }
@@ -472,15 +468,15 @@ private fun TidesScreen(
 ) {
     val waiting = isLoading || (title == "--" && timeUntilNextTide == null)
     TrailSensePage(
-        title = stringResource(R.string.tides),
+        title = appString(Res.string.tides),
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier,
         actions = {
             IconButton(onClick = onOpenTideList, modifier = Modifier.testTag("tide_table_btn")) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.TideTable),
-                    contentDescription = stringResource(R.string.tide_table)
+                    contentDescription = appString(Res.string.tide_table)
                 )
             }
         }
@@ -524,7 +520,7 @@ private fun TidesScreen(
                                 row { position ->
                                     TidesGroupRow(position = position) {
                                         Text(
-                                            text = stringResource(R.string.no_tides),
+                                            text = appString(Res.string.no_tides),
                                             style = MaterialTheme.typography.bodyLarge,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -536,7 +532,7 @@ private fun TidesScreen(
                             }
                         }
                         Text(
-                            text = stringResource(R.string.disclaimer_estimated_tide),
+                            text = appString(Res.string.disclaimer_estimated_tide),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
@@ -586,7 +582,7 @@ private fun TideHero(
             isRising = isRising,
             waiting = waiting,
             label = if (!waiting && timeUntilNextTide != null) {
-                stringResource(if (nextTideIsHigh == true) R.string.tides_until_high else R.string.tides_until_low)
+                appString(if (nextTideIsHigh == true) Res.string.tides_until_high else Res.string.tides_until_low)
             } else {
                 null
             },
@@ -594,7 +590,7 @@ private fun TideHero(
             value = if (waiting) null else timeUntilNextTide ?: title
         )
         Text(
-            text = if (waiting) stringResource(R.string.sky_tides_loading) else nextTide ?: title,
+            text = if (waiting) appString(Res.string.sky_tides_loading) else nextTide ?: title,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
@@ -659,7 +655,7 @@ private fun TideWell(
         false -> drift
         null -> 0f
     }
-    val direction = isRising?.let { stringResource(if (it) R.string.tides_rising else R.string.tides_falling) }
+    val direction = isRising?.let { appString(if (it) Res.string.tides_rising else Res.string.tides_falling) }
     val ringColor = scheme.primary
     val waterColor = scheme.primaryContainer
     val ink = scheme.onPrimaryContainer
@@ -803,10 +799,9 @@ private fun TideDayHeader(
     onDateChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember(context) { FormatService.getInstance(context) }
-    val dateLabel = stringResource(R.string.date)
-    val todayLabel = stringResource(R.string.today)
+    val formatter = remember { FormatService.getInstance() }
+    val dateLabel = appString(Res.string.date)
+    val todayLabel = appString(Res.string.today)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -822,7 +817,7 @@ private fun TideDayHeader(
                     onLongClickLabel = todayLabel,
                     role = Role.Button,
                     onClick = {
-                        CustomUiUtils.pickDate(context, date) {
+                        Pickers.date(AppHost.current(), date) {
                             if (it != null) {
                                 onDateChange(it)
                             }
@@ -856,7 +851,7 @@ private fun TideDayHeader(
         ) {
             Icon(
                 painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
-                contentDescription = stringResource(R.string.previous),
+                contentDescription = appString(Res.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
             )
@@ -867,7 +862,7 @@ private fun TideDayHeader(
         ) {
             Icon(
                 painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
-                contentDescription = stringResource(R.string.next),
+                contentDescription = appString(Res.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -887,8 +882,7 @@ private fun TideChartView(
     displayDate: LocalDate,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember(context) { FormatService.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
     val dailyData = daily
     val levelColor = MaterialTheme.colorScheme.primary
     val nowColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
@@ -912,13 +906,13 @@ private fun TideChartView(
             contentAlignment = Alignment.Center
         ) {
             TrailSenseChartFrame(
-                yLabels = listOf(stringResource(R.string.high), stringResource(R.string.low)),
+                yLabels = listOf(appString(Res.string.high), appString(Res.string.low)),
                 modifier = Modifier.fillMaxSize()
             ) {
                 if (dailyData == null || dailyData.waterLevels.isEmpty()) {
                     if (dailyData != null) {
                         Text(
-                            text = stringResource(R.string.no_data),
+                            text = appString(Res.string.no_data),
                             color = textColor,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.align(Alignment.Center)
@@ -1024,9 +1018,8 @@ private fun TideRow(
     tide: Tide,
     position: TrailSenseGroupPosition
 ) {
-    val context = LocalContext.current
-    val formatter = remember(context) { FormatService.getInstance(context) }
-    val units = remember(context) { UserPreferences(context).baseDistanceUnits }
+    val formatter = remember { FormatService.getInstance() }
+    val units = remember { getAppService<UserPreferences>().baseDistanceUnits }
     val height = tide.height
     val scheme = MaterialTheme.colorScheme
     val isPast = tide.time < Clock.System.now()
@@ -1036,10 +1029,9 @@ private fun TideRow(
         position = position,
         onClick = if (height == null) {
             {
-                Alerts.dialog(
-                    context,
-                    context.getString(R.string.disclaimer_estimated_tide_title),
-                    context.getString(R.string.disclaimer_estimated_tide),
+                Alerts.dialog(AppHost.current(),
+                    getAppService<AppStrings>().get(Res.string.disclaimer_estimated_tide_title),
+                    getAppService<AppStrings>().get(Res.string.disclaimer_estimated_tide),
                     cancelText = null
                 )
             }
@@ -1075,7 +1067,7 @@ private fun TideRow(
         }
     ) {
         Text(
-            text = stringResource(if (tide.isHigh) R.string.high_tide else R.string.low_tide),
+            text = appString(if (tide.isHigh) Res.string.high_tide else Res.string.low_tide),
             modifier = Modifier.testTag("tide_event_title"),
             style = MaterialTheme.typography.titleMedium,
             color = if (isPast) scheme.onSurfaceVariant else scheme.onSurface

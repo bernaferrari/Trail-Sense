@@ -13,7 +13,7 @@ import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.isClickable
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerBackgroundTask
 import com.kylecorry.trail_sense.shared.map_layers.MapViewState
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceKeys
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IFeatureClickableLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
@@ -22,7 +22,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.OnGeoJsonFeatureClickListener
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.shared.withId
-import com.kylecorry.trail_sense.tools.map.MapToolRegistration
+import com.kylecorry.trail_sense.tools.map.MapBroadcasts
 import com.kylecorry.trail_sense.tools.paths.ui.PathBackgroundColor
 import kotlin.concurrent.Volatile
 import kotlin.math.roundToInt
@@ -129,22 +129,22 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     override fun setPreferences(preferences: MapLayerValues) {
         layerPreferences = preferences
         percentOpacity = preferences.getInt(
-            DefaultMapLayerDefinitions.OPACITY,
-            DefaultMapLayerDefinitions.DEFAULT_OPACITY
+            MapLayerPreferenceKeys.OPACITY,
+            MapLayerPreferenceKeys.DEFAULT_OPACITY
         ) / 100f
         // TODO: Eventually make this a geojson feature property instead of a global setting
-        if (preferences.containsKey(DefaultMapLayerDefinitions.BACKGROUND_COLOR)) {
+        if (preferences.containsKey(MapLayerPreferenceKeys.BACKGROUND_COLOR)) {
             val backgroundColorId =
-                preferences.getString(DefaultMapLayerDefinitions.BACKGROUND_COLOR)?.toLongOrNull()
+                preferences.getString(MapLayerPreferenceKeys.BACKGROUND_COLOR)?.toLongOrNull()
             renderer.configureLineStringRenderer(
                 backgroundColor = PathBackgroundColor.entries.withId(backgroundColorId ?: 0)
                     ?: PathBackgroundColor.None
             )
         }
-        if (preferences.containsKey(DefaultMapLayerDefinitions.SHOW_LABELS)) {
+        if (preferences.containsKey(MapLayerPreferenceKeys.SHOW_LABELS)) {
             renderer.configureLineStringRenderer(
                 shouldRenderLabels = preferences.getBoolean(
-                    DefaultMapLayerDefinitions.SHOW_LABELS,
+                    MapLayerPreferenceKeys.SHOW_LABELS,
                     true
                 )
             )
@@ -213,7 +213,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         isStopped = false
         invalidate()
         ToolBroadcasts.subscribe(
-            MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED,
+            MapBroadcasts.GEOJSON_FEATURE_SELECTION_CHANGED,
             this::onSelectionBroadcast
         )
         refreshBroadcasts.forEach {
@@ -225,7 +225,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     override fun stop() {
         isStopped = true
         ToolBroadcasts.unsubscribe(
-            MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED,
+            MapBroadcasts.GEOJSON_FEATURE_SELECTION_CHANGED,
             this::onSelectionBroadcast
         )
         refreshBroadcasts.forEach {
@@ -241,9 +241,9 @@ open class GeoJsonLayer<T : GeoJsonSource>(
 
     private fun onSelectionBroadcast(bundle: EventData) {
         val broadcastLayerId =
-            bundle.getString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_LAYER_ID)
+            bundle.getString(MapBroadcasts.PARAM_GEOJSON_LAYER_ID)
         if (broadcastLayerId == layerId) {
-            val featureId = bundle.getString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_FEATURE_ID)
+            val featureId = bundle.getString(MapBroadcasts.PARAM_GEOJSON_FEATURE_ID)
             renderer.setSelectedFeature(featureId)
         }
     }

@@ -4,6 +4,15 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideHarmonicsSource
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -24,9 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
@@ -37,14 +44,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.sol.science.oceanography.TideType
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.infrastructure.TidePreferences
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -61,7 +65,6 @@ import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideTypeCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.ToggleTideTableVisibilityCommand
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -70,20 +73,18 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun TideListToolScreen() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val viewModel = viewModel {
         val gps = getAppService<SensorService>().getGPS()
         TideListViewModel(
             tideRepo = getAppService<ITideTableRepo>(),
-            tideTypeCommand = CurrentTideTypeCommand(TideService(appContext)),
+            tideTypeCommand = CurrentTideTypeCommand(TideService(getAppService<TideHarmonicsSource>())),
             toggleVisibilityCommand = ToggleTideTableVisibilityCommand(),
-            tidePreferences = UserPreferences(appContext).tides,
+            tidePreferences = getAppService<UserPreferences>().tides,
             currentLocation = { gps.location }
         )
     }
-    val formatService = remember(context) { FormatService.getInstance(context) }
+    val formatService = remember { FormatService.getInstance() }
     val dispatcher = rememberSystemBack()
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -116,11 +117,10 @@ fun TideListToolScreen() {
             val title = tide.name ?: tide.location?.let {
                 formatService.formatLocation(it)
             } ?: run {
-                context.getString(android.R.string.untitled)
+                getAppService<AppStrings>().system(SystemString.Untitled)
             }
-            Alerts.dialog(
-                context,
-                context.getString(R.string.delete_tide_prompt),
+            Alerts.dialog(AppHost.current(),
+                getAppService<AppStrings>().get(Res.string.delete_tide_prompt),
                 title
             ) { cancelled ->
                 if (!cancelled) {
@@ -226,15 +226,15 @@ private fun TideListScreen(
     val entered = tides.filter { it.first.isEditable }
 
     TrailSensePage(
-        title = stringResource(R.string.tides),
+        title = appString(Res.string.tides),
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = Modifier.testTag("tide_list_title"),
         floatingActionButton = {
             if (loaded && tides.isNotEmpty()) ExtendedFloatingActionButton(
                 onClick = onCreate,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.tide_table)) },
+                text = { Text(appString(Res.string.tide_table)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.testTag("add_btn")
@@ -247,9 +247,9 @@ private fun TideListScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = TrailIcons.TideTable,
-                    title = stringResource(R.string.no_tides),
-                    description = stringResource(R.string.tides_empty_description),
-                    actionLabel = stringResource(R.string.tide_table),
+                    title = appString(Res.string.no_tides),
+                    description = appString(Res.string.tides_empty_description),
+                    actionLabel = appString(Res.string.tide_table),
                     actionIcon = TrailIcons.Add,
                     onAction = onCreate,
                     actionModifier = Modifier.testTag("add_btn"),
@@ -298,10 +298,9 @@ private fun TideTableRow(
     onDelete: (TideTable) -> Unit,
     onToggleVisibility: (TideTable) -> Unit
 ) {
-    val context = LocalContext.current
-    val formatter = remember(context) { FormatService.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
     val description = getTideDescription(tide)
-    val hidden = stringResource(R.string.tides_hidden)
+    val hidden = appString(Res.string.tides_hidden)
 
     TidesGroupRow(
         position = position,
@@ -329,14 +328,14 @@ private fun TideTableRow(
         trailing = if (tide.isEditable) {
             {
                 TidesOverflowMenu(
-                    contentDescription = stringResource(R.string.tides_more_options),
+                    contentDescription = appString(Res.string.tides_more_options),
                     modifier = Modifier.testTag("tide_table_menu"),
                     actions = listOf(
-                        TidesMenuAction(stringResource(R.string.edit)) { onEdit(tide) },
+                        TidesMenuAction(appString(Res.string.edit)) { onEdit(tide) },
                         TidesMenuAction(
-                            stringResource(if (tide.isVisible) R.string.hide else R.string.show)
+                            appString(if (tide.isVisible) Res.string.hide else Res.string.show)
                         ) { onToggleVisibility(tide) },
-                        TidesMenuAction(stringResource(R.string.delete)) { onDelete(tide) }
+                        TidesMenuAction(appString(Res.string.delete)) { onDelete(tide) }
                     )
                 )
             }
@@ -372,11 +371,10 @@ private fun getTideIcon(tide: TideType?): ImageVector {
 @Composable
 private fun getTideDescription(tide: TideTable): String {
     if (!tide.isEditable) {
-        return stringResource(R.string.tide_model_auto)
+        return appString(Res.string.tide_model_auto)
     }
 
-    return LocalContext.current.resources.getQuantityString(
-        R.plurals.tides_entered_count,
+    return getAppService<AppStrings>().plural(Res.plurals.tides_entered_count,
         tide.tides.size,
         tide.tides.size
     )

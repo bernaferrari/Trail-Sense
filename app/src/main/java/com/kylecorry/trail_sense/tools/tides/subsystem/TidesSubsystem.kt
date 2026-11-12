@@ -61,7 +61,7 @@ class TidesSubsystem private constructor(private val context: Context) {
     }
 
     private suspend fun getTideTable(location: Coordinate?): TideTable? {
-        val loader = tideLoaderFactory.getTideLoader(context, false, location)
+        val loader = tideLoaderFactory.getTideLoader(false, location)
         val table = loader.getTideTable() ?: return null
 
         if (table.isEditable || location == null) {

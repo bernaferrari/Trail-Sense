@@ -9,9 +9,9 @@ class SendWeatherAlertsCommand(private val context: Context) : Command<CurrentWe
 
     override fun execute(value: CurrentWeather) {
         val command = ComposedCommand(
-            DailyWeatherAlertCommand.create(context),
-            StormAlertCommand.create(context),
-            CurrentWeatherAlertCommand.create(context)
+            WeatherAlertCommands.daily(context),
+            WeatherAlertCommands.storm(context),
+            WeatherAlertCommands.current(context)
         )
         command.execute(value)
     }

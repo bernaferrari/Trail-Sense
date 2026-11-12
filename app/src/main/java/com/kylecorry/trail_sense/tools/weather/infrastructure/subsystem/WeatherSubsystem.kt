@@ -44,7 +44,7 @@ import com.kylecorry.trail_sense.tools.weather.domain.forecasting.temperatures.C
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.temperatures.HistoricTemperatureService
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.temperatures.ITemperatureService
 import com.kylecorry.trail_sense.tools.weather.domain.sealevel.SeaLevelCalibrationFactory
-import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.MonitorWeatherCommand
+import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.WeatherAlertCommands
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.SendWeatherAlertsCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import kotlin.time.Clock
@@ -275,7 +275,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
                 return@onDefault
             }
 
-            MonitorWeatherCommand.create(context).execute()
+            WeatherAlertCommands.monitor(context).execute()
         }
     }
 

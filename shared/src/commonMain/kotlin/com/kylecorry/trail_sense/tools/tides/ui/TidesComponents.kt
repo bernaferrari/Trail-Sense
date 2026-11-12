@@ -25,6 +25,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
+import com.kylecorry.trail_sense.shared.views.compose.toggleButtonColors
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -59,7 +60,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun TidesGroupRow(
+fun TidesGroupRow(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
@@ -124,11 +125,11 @@ internal fun TidesGroupRow(
 }
 
 /** One entry of a [TidesOverflowMenu]. */
-internal data class TidesMenuAction(val label: String, val onClick: () -> Unit)
+data class TidesMenuAction(val label: String, val onClick: () -> Unit)
 
 /** A three-dot button and its menu, used on rows and in the top bar. */
 @Composable
-internal fun TidesOverflowMenu(
+fun TidesOverflowMenu(
     contentDescription: String,
     actions: List<TidesMenuAction>,
     modifier: Modifier = Modifier
@@ -160,7 +161,7 @@ internal fun TidesOverflowMenu(
 }
 
 /** One option of a [TidesConnectedChoice], with its own test tag. */
-internal data class TidesChoice<T>(val value: T, val label: String, val tag: String)
+data class TidesChoice<T>(val value: T, val label: String, val tag: String)
 
 /**
  * The kit's connected choice (solid primary with a check when chosen, raised segments otherwise), with a test tag on
@@ -168,7 +169,7 @@ internal data class TidesChoice<T>(val value: T, val label: String, val tag: Str
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun <T> TidesConnectedChoice(
+fun <T> TidesConnectedChoice(
     options: List<TidesChoice<T>>,
     selected: T,
     onSelect: (T) -> Unit,
@@ -195,7 +196,7 @@ internal fun <T> TidesConnectedChoice(
                     options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                 },
-                colors = ToggleButtonDefaults.colors(
+                colors = toggleButtonColors(
                     checkedContainerColor = MaterialTheme.colorScheme.primary,
                     checkedContentColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,

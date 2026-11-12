@@ -311,8 +311,7 @@ object MapToolRegistration : ToolRegistration {
 
     const val MAP_ID = "map"
 
-    const val BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED =
-        "map-broadcast-geojson-feature-selection-changed"
-    const val BROADCAST_PARAM_GEOJSON_FEATURE_ID = "featureId"
-    const val BROADCAST_PARAM_GEOJSON_LAYER_ID = "layerId"
+    const val BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED = MapBroadcasts.GEOJSON_FEATURE_SELECTION_CHANGED
+    const val BROADCAST_PARAM_GEOJSON_FEATURE_ID = MapBroadcasts.PARAM_GEOJSON_FEATURE_ID
+    const val BROADCAST_PARAM_GEOJSON_LAYER_ID = MapBroadcasts.PARAM_GEOJSON_LAYER_ID
 }
